@@ -385,13 +385,15 @@ struct VehicleSettings {
 struct CargodestSettings {
 	uint8  mode;                             ///< flags specifying which cargos are routed to specific destinations, @see CargoRoutingMode
 	uint8  base_town_links[2];               ///< minimum number of town demand links for (1) all cargos except (2) symmetric cargos
-	uint8  base_ind_links[2];                ///< minimum number of industry demand links for (1) all cargos except (2) town cargos
+	uint8  base_ind_links[3];                ///< minimum number of industry demand links for (1) all cargos except (2) town cargos and (3) symmetric cargos
 	uint8  city_town_links;                  ///< additional number of links for cities
 	uint8  town_chances_town[4];             ///< chances a link from a town to a town has a specific destination class (@see FindTownDestination)
 	uint8  town_chances_city[4];             ///< chances a link from a city to a town has a specific destination class (@see FindTownDestination)
+	uint8  ind_chances[3];                   ///< chances a link to an industry has a specific destination class (@see FindIndustryDestination)
 	uint8  random_dest_chance;               ///< percentage for traffic with random destination
 	uint32 big_town_pop[2];                  ///< (1) mail, (2) passenger amount to count as a big town
 	uint16 pop_scale_town[4];                ///< population/cargo amount scale divisor for (1) all cargos (2) for big towns except (3) passengers (4) for big towns
+	uint16 cargo_scale_ind[2];               ///< cargo amount scale divisor for (1) all cargos except (2) town cargos
 	uint16 min_weight_town[2];               ///< minimum link weight for (1) all cargos except (2) passengers
 	uint16 weight_scale_town[4];             ///< weight scale divisor for (1) all cargos (2) for big towns except (3) passengers (4) for big towns
 	uint32 town_nearby_dist;                 ///< squared distance (on a 256x256 map) inside which a town is considered nearby

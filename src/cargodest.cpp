@@ -116,6 +116,22 @@ static bool EnumAnyIndustry(const Industry *ind, void *data)
 	return EnumAnyDest(ind, erd) && ind->AcceptsCargo(erd->cid);
 }
 
+/** Enumerate nearby industries. */
+static bool EnumNearbyIndustry(const Industry *ind, void *data)
+{
+	EnumRandomData *erd = (EnumRandomData *)data;
+	/* Scale distance by 1D map size to make sure that there are still
+	 * candidates left on larger maps with few industries, but don't scale
+	 * by 2D map size so the map still feels bigger. */
+	return EnumAnyIndustry(ind, data) && DistanceSquare(ind->location.tile, erd->source_xy) < ScaleByMapSize1D(_settings_game.economy.cargodest.ind_nearby_dist);
+}
+
+/** Enumerate industries that are producing cargo. */
+static bool EnumProducingIndustry(const Industry *ind, void *data)
+{
+	return EnumAnyIndustry(ind, data) && (ind->produced_cargo[0] != CT_INVALID || ind->produced_cargo[1] != CT_INVALID);
+}
+
 /** Enumerate cargo sources supplying a specific cargo. */
 template <typename T>
 static bool EnumAnySupplier(const T *css, void *data)
@@ -174,11 +190,32 @@ static CargoSourceSink *FindTownDestination(byte &weight_mod, CargoSourceSink *s
 }
 
 /** Find an industry as a destination. */
-static CargoSourceSink *FindIndustryDestination(CargoSourceSink *source, CargoID cid, IndustryID skip = INVALID_INDUSTRY)
+static CargoSourceSink *FindIndustryDestination(byte &weight_mod, CargoSourceSink *source, TileIndex source_xy, CargoID cid, IndustryID skip = INVALID_INDUSTRY)
 {
-	EnumRandomData erd = {source, INVALID_TILE, cid, IsSymmetricCargo(cid)};
+	/* Enum functions for: nearby industry, producing industry, and any industry. */
+	static const Industry::EnumIndustryProc destclass_enum[] = {
+		&EnumNearbyIndustry, &EnumProducingIndustry, &EnumAnyIndustry
+	};
+	static const byte weight_mods[] = {5, 7, 3};
+	assert_compile(lengthof(destclass_enum) == lengthof(_settings_game.economy.cargodest.ind_chances));
 
-	return Industry::GetRandom(&EnumAnyIndustry, skip, &erd);
+	EnumRandomData erd = {source, source_xy, cid, IsSymmetricCargo(cid)};
+
+	/* Determine destination class. If no industry is found in this class,
+	 * the search falls through to the following classes. */
+	byte destclass = RandomRange(*lastof(_settings_game.economy.cargodest.ind_chances));
+
+	weight_mod = 1;
+	Industry *dest = NULL;
+	for (uint i = 0; i < lengthof(destclass_enum) && dest == NULL; i++) {
+		/* Skip if destination class not reached. */
+		if (destclass > _settings_game.economy.cargodest.ind_chances[i]) continue;
+
+		dest = Industry::GetRandom(destclass_enum[i], skip, &erd);
+		weight_mod = weight_mods[i];
+	}
+
+	return dest;
 }
 
 /** Find a supply for a cargo type. */
@@ -285,9 +322,9 @@ static void CreateNewLinks(CargoSourceSink *source, TileIndex source_xy, CargoID
 		if (Chance16(chance_a, chance_b)) {
 			dest = FindTownDestination(weight_mod, source, source_xy, cid, town_chance, skip_town);
 			/* No town found? Try an industry. */
-			if (dest == NULL) dest = FindIndustryDestination(source, cid, skip_ind);
+			if (dest == NULL) dest = FindIndustryDestination(weight_mod, source, source_xy, cid, skip_ind);
 		} else {
-			dest = FindIndustryDestination(source, cid, skip_ind);
+			dest = FindIndustryDestination(weight_mod, source, source_xy, cid, skip_ind);
 			/* No industry found? Try a town. */
 			if (dest == NULL) dest = FindTownDestination(weight_mod, source, source_xy, cid, town_chance, skip_town);
 		}
@@ -373,7 +410,12 @@ void UpdateExpectedLinks(Industry *ind)
 		if (CargoHasDestinations(cid)) {
 			ind->CreateSpecialLinks(cid);
 
-			uint num_links = _settings_game.economy.cargodest.base_ind_links[IsTownCargo(cid) ? 1 : 0];
+			uint num_links;
+			/* Use different base values for symmetric cargos, cargos
+			 * with a town effect and all other cargos. */
+			num_links = _settings_game.economy.cargodest.base_ind_links[IsSymmetricCargo(cid) ? 2 : (IsTownCargo(cid) ? 1 : 0)];
+			/* Add links based on the average industry production. */
+			num_links += ind->average_production[i] / _settings_game.economy.cargodest.cargo_scale_ind[IsTownCargo(cid) ? 1 : 0];
 
 			/* Account for the one special link. */
 			num_links++;
