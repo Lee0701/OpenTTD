@@ -305,7 +305,7 @@ public:
 	void Truncate(uint max_remaining);
 
 	template <class Tother_inst>
-	bool MoveTo(Tother_inst *dest, uint count, MoveToAction mta, CargoPayment *payment, uint data = 0);
+	bool MoveTo(Tother_inst *dest, uint count, MoveToAction mta, CargoPayment *payment, uint data = 0, OrderID cur_order = INVALID_ORDER, bool *did_transfer = NULL);
 
 	void InvalidateCache();
 };
