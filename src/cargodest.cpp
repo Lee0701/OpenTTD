@@ -701,7 +701,7 @@ void UpdateVehicleRouteLinks(const Vehicle *v, Station *from, OrderID from_oid, 
 
 		/* No link found? Append a new one. */
 		if (link == from->goods[cid].routes.end() && RouteLink::CanAllocateItem()) {
-			from->goods[cid].routes.push_back(new RouteLink(to_id, from_oid, to_oid, v->owner, travel_time));
+			from->goods[cid].routes.push_back(new RouteLink(to_id, from_oid, to_oid, v->owner, travel_time, v->type));
 		}
 	}
 }
