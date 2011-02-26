@@ -232,6 +232,19 @@ Order::Order(uint32 packed)
 }
 
 /**
+ * Invalidating some stuff after removing item from the pool.
+ * @param index index of deleted item.
+ */
+/* static */ void Order::PostDestructor(size_t index)
+{
+	Vehicle *v;
+	FOR_ALL_VEHICLES(v) {
+		if (v->current_order.index == index) v->current_order.index = INVALID_ORDER;
+		if (v->last_order_id == index) v->last_order_id = INVALID_ORDER;
+	}
+}
+
+/**
  *
  * Updates the widgets of a vehicle which contains the order-data
  *
