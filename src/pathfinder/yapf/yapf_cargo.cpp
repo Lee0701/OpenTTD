@@ -89,6 +89,7 @@ class CYapfCostRouteLinkT {
 
 	/** To access inherited path finder. */
 	FORCEINLINE Tpf& Yapf() { return *static_cast<Tpf*>(this); }
+	FORCEINLINE const Tpf& Yapf() const { return *static_cast<const Tpf*>(this); }
 
 	/** Check if this is a valid connection. */
 	FORCEINLINE bool ValidLink(const RouteLink *link, const RouteLink *parent) const
@@ -119,6 +120,11 @@ class CYapfCostRouteLinkT {
 		const Station *from = Station::Get(parent->GetDestination());
 		const Station *to = Station::Get(link->GetDestination());
 		cost = DistanceManhattan(from->xy, to->xy) * this->Yapf().PfGetSettings().route_distance_factor;
+
+		/* Transfer penalty when switching vehicles or forced unloading. */
+		if (link->GetOriginOrderId() != parent->GetDestOrderId() || (Order::Get(link->GetOriginOrderId())->GetUnloadType() & OUFB_UNLOAD) != 0) {
+			cost += this->Yapf().PfGetSettings().route_transfer_cost;
+		}
 
 		return cost;
 	}
@@ -163,6 +169,7 @@ class CYapfOriginRouteLinkT {
 
 	CargoID   m_cid;
 	TileIndex m_src;
+	OrderID   m_order;
 	SmallVector<RouteLink, 2> m_origin;
 
 	/** To access inherited path finder. */
@@ -176,13 +183,14 @@ public:
 	}
 
 	/** Set origin. */
-	void SetOrigin(CargoID cid, TileIndex src, const StationList *stations)
+	void SetOrigin(CargoID cid, TileIndex src, const StationList *stations, OrderID order)
 	{
 		this->m_cid = cid;
 		this->m_src = src;
+		this->m_order = order;
 		/* Create fake links for the origin stations. */
 		for (const Station * const *st = stations->Begin(); st != stations->End(); st++) {
-			*this->m_origin.Append() = RouteLink((*st)->index);
+			*this->m_origin.Append() = RouteLink((*st)->index, INVALID_ORDER, this->m_order);
 		}
 	}
 
@@ -294,11 +302,11 @@ public:
 	}
 
 	/** Find the best cargo routing from a station to a destination. */
-	static RouteLink *ChooseRouteLink(CargoID cid, const StationList *stations, TileIndex src, const TileArea &dest, StationID *start_station, bool *found)
+	static RouteLink *ChooseRouteLink(CargoID cid, const StationList *stations, TileIndex src, const TileArea &dest, StationID *start_station, bool *found, OrderID order)
 	{
 		/* Initialize pathfinder instance. */
 		Tpf pf;
-		pf.SetOrigin(cid, src, stations);
+		pf.SetOrigin(cid, src, stations, order);
 		pf.SetDestination(dest);
 
 		/* Do it. Exit if we didn't find a path. */
@@ -346,9 +354,10 @@ struct CYapfRouteLink : CYapfT<CYapfRouteLink_TypesT<CYapfRouteLink> > {};
  * @param dest     Destination tile area.
  * @param[out] start_station Station the best route link originates from.
  * @param[out] found True if a link was found.
+ * @param order    Order the vehicle arrived at the origin station.
  * @return The best RouteLink to the target or NULL if either no link found or one of the origin stations is the best destination.
  */
-RouteLink *YapfChooseRouteLink(CargoID cid, const StationList *stations, TileIndex src, const TileArea &dest, StationID *start_station, bool *found)
+RouteLink *YapfChooseRouteLink(CargoID cid, const StationList *stations, TileIndex src, const TileArea &dest, StationID *start_station, bool *found, OrderID order)
 {
-	return CYapfRouteLink::ChooseRouteLink(cid, stations, src, dest, start_station, found);
+	return CYapfRouteLink::ChooseRouteLink(cid, stations, src, dest, start_station, found, order);
 }
