@@ -680,8 +680,9 @@ INSTANTIATE_POOL_METHODS(RouteLink)
  * @param from_oid Originating order.
  * @param to_id Destination station ID.
  * @param to_oid Destination order.
+ * @param travel_time Travel time for the route.
  */
-void UpdateVehicleRouteLinks(const Vehicle *v, Station *from, OrderID from_oid, StationID to_id, OrderID to_oid)
+void UpdateVehicleRouteLinks(const Vehicle *v, Station *from, OrderID from_oid, StationID to_id, OrderID to_oid, uint32 travel_time)
 {
 	CargoID cid;
 	FOR_EACH_SET_CARGO_ID(cid, v->vcache.cached_cargo_mask) {
@@ -693,13 +694,14 @@ void UpdateVehicleRouteLinks(const Vehicle *v, Station *from, OrderID from_oid, 
 			if ((*link)->GetOriginOrderId() == from_oid) {
 				/* Update destination if necessary. */
 				(*link)->SetDestination(to_id, to_oid);
+				(*link)->UpdateTravelTime(travel_time);
 				break;
 			}
 		}
 
 		/* No link found? Append a new one. */
 		if (link == from->goods[cid].routes.end() && RouteLink::CanAllocateItem()) {
-			from->goods[cid].routes.push_back(new RouteLink(to_id, from_oid, to_oid, v->owner));
+			from->goods[cid].routes.push_back(new RouteLink(to_id, from_oid, to_oid, v->owner, travel_time));
 		}
 	}
 }
@@ -720,7 +722,7 @@ void UpdateVehicleRouteLinks(const Vehicle *v, StationID arrived_at)
 	Station *to = Station::Get(arrived_at);
 
 	/* Update incoming route link. */
-	UpdateVehicleRouteLinks(v, from, v->last_order_id, arrived_at, v->current_order.index);
+	UpdateVehicleRouteLinks(v, from, v->last_order_id, arrived_at, v->current_order.index, v->travel_time);
 
 	/* Update outgoing links. */
 	CargoID cid;
@@ -768,7 +770,8 @@ void PrefillRouteLinks(const Vehicle *v)
 			if (prev_order != NULL && prev_order != order) {
 				Station *from = Station::Get(prev_order->GetDestination());
 				Station *to = Station::Get(order->GetDestination());
-				UpdateVehicleRouteLinks(v, from, prev_order->index, order->GetDestination(), order->index);
+				/* Use DistanceManhatten * 4 as a stupid guess for the initial travel time. */
+				UpdateVehicleRouteLinks(v, from, prev_order->index, order->GetDestination(), order->index, DistanceManhattan(from->xy, to->xy) * 4);
 			}
 
 			prev_order = order;
