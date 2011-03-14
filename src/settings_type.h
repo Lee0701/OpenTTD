@@ -395,6 +395,7 @@ struct CargodestSettings {
 	uint16 min_weight_town[2];               ///< minimum link weight for (1) all cargos except (2) passengers
 	uint16 weight_scale_town[4];             ///< weight scale divisor for (1) all cargos (2) for big towns except (3) passengers (4) for big towns
 	uint32 town_nearby_dist;                 ///< squared distance (on a 256x256 map) inside which a town is considered nearby
+	uint32 ind_nearby_dist;                  ///< squared distance (on a 256x256 map) inside which an industry is considered nearby
 };
 
 /** Settings related to the economy. */
