@@ -386,6 +386,12 @@ struct CargodestSettings {
 	uint8  mode;                             ///< flags specifying which cargos are routed to specific destinations, @see CargoRoutingMode
 	uint8  base_town_links[2];               ///< minimum number of town demand links for (1) all cargos except (2) symmetric cargos
 	uint8  base_ind_links[2];                ///< minimum number of industry demand links for (1) all cargos except (2) town cargos
+	uint8  city_town_links;                  ///< additional number of links for cities
+	uint8  town_chances_town[4];             ///< chances a link from a town to a town has a specific destination class (@see FindTownDestination)
+	uint8  town_chances_city[4];             ///< chances a link from a city to a town has a specific destination class (@see FindTownDestination)
+	uint32 big_town_pop[2];                  ///< (1) mail, (2) passenger amount to count as a big town
+	uint16 pop_scale_town[4];                ///< population/cargo amount scale divisor for (1) all cargos (2) for big towns except (3) passengers (4) for big towns
+	uint32 town_nearby_dist;                 ///< squared distance (on a 256x256 map) inside which a town is considered nearby
 };
 
 /** Settings related to the economy. */
