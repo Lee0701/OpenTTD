@@ -361,6 +361,61 @@ void UpdateCargoLinks(Industry *ind)
 	}
 }
 
+/* virtual */ uint Town::GetDestinationWeight(CargoID cid, byte weight_mod) const
+{
+	uint idx = IsPassengerCargo(cid) ? 1 : 0;
+	uint max_amt = IsPassengerCargo(cid) ? this->pass.old_max : this->mail.old_max;
+	uint big_amt = _settings_game.economy.cargodest.big_town_pop[idx];
+
+	/* The weight is calculated by a piecewise function. We start with a predefined
+	 * minimum weight and then add the weight for the cargo amount up to the big
+	 * town amount. If the amount is more than the big town amount, this is also
+	 * added to the weight with a different scale factor to make sure that big towns
+	 * don't siphon the cargo away too much from the smaller destinations. */
+	uint weight = _settings_game.economy.cargodest.min_weight_town[idx];
+	weight += min(max_amt, big_amt) * weight_mod / _settings_game.economy.cargodest.weight_scale_town[idx * 2];
+	if (max_amt > big_amt) weight += (max_amt - big_amt) * weight_mod / _settings_game.economy.cargodest.weight_scale_town[idx * 2 + 1];
+
+	return weight;
+}
+
+/* virtual */ uint Industry::GetDestinationWeight(CargoID cid, byte weight_mod) const
+{
+	return weight_mod;
+}
+
+/** Recalculate the link weights. */
+void UpdateLinkWeights(Town *t)
+{
+	for (CargoID cid = 0; cid < NUM_CARGO; cid++) {
+		uint weight_sum = 0;
+
+		if (t->cargo_links[cid].Length() == 0) continue;
+
+		t->cargo_links[cid].Begin()->amount.NewMonth();
+
+		/* Skip the special link for undetermined destinations. */
+		for (CargoLink *l = t->cargo_links[cid].Begin() + 1; l != t->cargo_links[cid].End(); l++) {
+			l->weight = l->dest->GetDestinationWeight(cid, l->weight_mod);
+			weight_sum += l->weight;
+
+			l->amount.NewMonth();
+		}
+
+		/* Limit the weight of the in-town link to at most 1/3 of the total weight. */
+		if (t->cargo_links[cid].Length() > 1 && t->cargo_links[cid].Get(1)->dest == t) {
+			uint new_weight = min(t->cargo_links[cid].Get(1)->weight, weight_sum / 3);
+			weight_sum -= t->cargo_links[cid].Get(1)->weight - new_weight;
+			t->cargo_links[cid].Get(1)->weight = new_weight;
+		}
+
+		/* Set weight for the undetermined destination link to random_dest_chance%. */
+		t->cargo_links[cid].Begin()->weight = weight_sum == 0 ? 1 : (weight_sum * _settings_game.economy.cargodest.random_dest_chance) / (100 - _settings_game.economy.cargodest.random_dest_chance);
+
+		t->cargo_links_weight[cid] = weight_sum + t->cargo_links[cid].Begin()->weight;
+	}
+}
+
 /** Recalculate the link weights. */
 void UpdateLinkWeights(CargoSourceSink *css)
 {
