@@ -3132,9 +3132,17 @@
     <ClInclude Include="..\src\thread.h">
       <Filter>Threading</Filter>
     </ClInclude>
+    <ClCompile Include="..\src\terminal_gui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\media\openttd.ico" />
     <None Include="..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\terminal_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

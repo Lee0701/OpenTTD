@@ -31,11 +31,14 @@
 #include "town.h"
 #include "linkgraph/linkgraph.h"
 #include "zoom_func.h"
+#include "company_gui.h"
+#include "terminal_func.h"
 
 #include "widgets/station_widget.h"
 
 #include "table/strings.h"
 
+#include <sstream>
 #include <set>
 #include <vector>
 
@@ -814,8 +817,7 @@ static const NWidgetPart _nested_station_view_widgets[] = {
 			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_RENAME), SetMinimalSize(45, 12), SetResize(1, 0), SetFill(1, 1),
 					SetDataTip(STR_BUTTON_RENAME, STR_STATION_VIEW_RENAME_TOOLTIP),
 		EndContainer(),
-		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SV_CLOSE_AIRPORT), SetMinimalSize(45, 12), SetResize(1, 0), SetFill(1, 1),
-				SetDataTip(STR_STATION_VIEW_CLOSE_AIRPORT, STR_STATION_VIEW_CLOSE_AIRPORT_TOOLTIP),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_AIRPORT_CONTROL), SetMinimalSize(45, 12), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_STATION_VIEW_AIRPORT_CONTROL, STR_STATION_VIEW_AIRPORT_CONTROL_TOOLTIP),
 		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SV_CATCHMENT), SetMinimalSize(14, 12), SetFill(0, 1), SetDataTip(STR_BUTTON_CATCHMENT, STR_TOOLTIP_CATCHMENT),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_TRAINS), SetMinimalSize(14, 12), SetFill(0, 1), SetDataTip(STR_TRAIN, STR_STATION_VIEW_SCHEDULED_TRAINS_TOOLTIP),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_ROADVEHS), SetMinimalSize(14, 12), SetFill(0, 1), SetDataTip(STR_LORRY, STR_STATION_VIEW_SCHEDULED_ROAD_VEHICLES_TOOLTIP),
@@ -1400,7 +1402,7 @@ struct StationViewWindow : public Window {
 				size->height = WD_FRAMERECT_TOP + ((this->GetWidget<NWidgetCore>(WID_SV_ACCEPTS_RATINGS)->widget_data == STR_STATION_VIEW_RATINGS_BUTTON) ? this->accepts_lines : this->rating_lines) * FONT_HEIGHT_NORMAL + WD_FRAMERECT_BOTTOM;
 				break;
 
-			case WID_SV_CLOSE_AIRPORT:
+			case WID_SV_AIRPORT_CONTROL:
 				if (!(Station::Get(this->window_number)->facilities & FACIL_AIRPORT)) {
 					/* Hide 'Close Airport' button if no airport present. */
 					size->width = 0;
@@ -1425,8 +1427,8 @@ struct StationViewWindow : public Window {
 		this->SetWidgetDisabledState(WID_SV_ROADVEHS, !(st->facilities & FACIL_TRUCK_STOP) && !(st->facilities & FACIL_BUS_STOP));
 		this->SetWidgetDisabledState(WID_SV_SHIPS,    !(st->facilities & FACIL_DOCK));
 		this->SetWidgetDisabledState(WID_SV_PLANES,   !(st->facilities & FACIL_AIRPORT));
-		this->SetWidgetDisabledState(WID_SV_CLOSE_AIRPORT, !(st->facilities & FACIL_AIRPORT) || st->owner != _local_company || st->owner == OWNER_NONE); // Also consider SE, where _local_company == OWNER_NONE
-		this->SetWidgetLoweredState(WID_SV_CLOSE_AIRPORT, (st->facilities & FACIL_AIRPORT) && (st->airport.flags & AIRPORT_CLOSED_block) != 0);
+		this->SetWidgetDisabledState(WID_SV_AIRPORT_CONTROL, !(st->facilities & FACIL_AIRPORT) || st->owner != _local_company || st->owner == OWNER_NONE); // Also consider SE, where _local_company == OWNER_NONE
+		//this->SetWidgetLoweredState(WID_SV_AIRPORT_CONTROL, (st->facilities & FACIL_AIRPORT) && (st->airport.flags1 & AIRPORT_CLOSED_block) != 0);
 
 		extern const Station *_viewport_highlight_station;
 		this->SetWidgetDisabledState(WID_SV_CATCHMENT, st->facilities == FACIL_NONE);
@@ -1946,16 +1948,21 @@ struct StationViewWindow : public Window {
 						this, CS_ALPHANUMERAL, QSF_ENABLE_DEFAULT | QSF_LEN_IN_CHARS);
 				break;
 
-			case WID_SV_CLOSE_AIRPORT:
-				DoCommandP(0, this->window_number, 0, CMD_OPEN_CLOSE_AIRPORT);
+			case WID_SV_AIRPORT_CONTROL:
+				ShowAirportControlWindow((StationID)this->window_number);
 				break;
 
 			case WID_SV_TRAINS:   // Show list of scheduled trains to this station
 			case WID_SV_ROADVEHS: // Show list of scheduled road-vehicles to this station
-			case WID_SV_SHIPS:    // Show list of scheduled ships to this station
-			case WID_SV_PLANES: { // Show list of scheduled aircraft to this station
+			case WID_SV_SHIPS: {  // Show list of scheduled ships to this station
 				Owner owner = Station::Get(this->window_number)->owner;
 				ShowVehicleListWindow(owner, (VehicleType)(widget - WID_SV_TRAINS), (StationID)this->window_number);
+				break;
+			}
+
+			case WID_SV_PLANES: { // Show list of scheduled aircraft to this station
+				//Owner owner = Station::Get(this->window_number)->owner;
+				ShowVehicleListWindow(_local_company, (VehicleType)(widget - WID_SV_TRAINS), (StationID)this->window_number);
 				break;
 			}
 
@@ -2473,4 +2480,310 @@ void ShowSelectStationIfNeeded(const CommandContainer &cmd, TileArea ta)
 void ShowSelectWaypointIfNeeded(const CommandContainer &cmd, TileArea ta)
 {
 	ShowSelectBaseStationIfNeeded<Waypoint>(cmd, ta);
+}
+
+uint numPassTerms;        ///< Number of Passenger terminals at this airport
+uint numPassSpots;        ///< Used in the creation of the window
+uint numCargoTerms;       ///< Number of Cargo terminals at this airport
+uint numCargoSpots;        ///< Used in the creation of the window
+
+/** GUI for accessing terminals. */
+struct AirportControlWindow : Window
+{
+	const Station * st;        ///< Selected Station.
+	StationID sID;            ///< Used to set the Caption.
+	uint64 fullload;          ///< Which terminals are restricted against Full Load Orders.
+	uint64 terminal;          ///< Terminal selected.
+	CompanyID TerminalCompany; ///< Terminal Owner
+	
+	/**
+	 * Construct the window.
+	 * @param desc The description of the window.
+	 * @param window_number The window number, in this case the tileIndex of the terminal.
+	 */
+	AirportControlWindow(WindowDesc * desc, StationID station) : Window(desc)
+	{
+		sID = station;
+		st = Station::Get(station);
+		fullload = st->airport.fullload;
+		numPassTerms = st->airport.GetNumPassengerTerminals();
+		numPassSpots = numPassTerms * 2;
+		if (numPassSpots % 9 != 0)
+			 numPassSpots += 9 - (numPassSpots % 9);
+		numCargoTerms = st->airport.GetNumCargoTerminals();
+		numCargoSpots = numCargoTerms * 2;
+		if (numCargoSpots % 6 != 0)
+			numCargoSpots += 6 - (numCargoSpots % 6);
+		//terminal = st->airport.;
+		//numPassTerms = 48;
+		//numCargoTerms = 12;
+		
+		this->CreateNestedTree();
+		this->FinishInitNested(station);
+		
+		this->flags |= WF_DISABLE_VP_SCROLL;
+		
+		//NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_T_VIEWPORT);
+		//nvp->InitializeViewport(this, tile, ZOOM_LVL_VIEWPORT);
+		//TerminalCompany = GetTileOwner(tile);
+		
+		this->owner = st->owner;
+		
+		this->OnInvalidateData();
+	}
+	
+	~AirportControlWindow()
+	{
+				//DeleteWindowById(WC_TERMINAL_VIEW, this->window_number, false);
+	}
+	
+	virtual void SetStringParameters(int widget) const
+	{
+		if (widget != WID_AC_CAPTION) return;
+		SetDParam(0, VEH_AIRCRAFT);
+		SetDParam(1, sID);
+		//SetDParam(2, terminal);
+	}
+	
+	virtual void OnClick(Point pt, int widget, int click_count)
+	{
+		switch (widget) {
+		case WID_SV_CLOSE_AIRPORT:
+			DoCommandP(0, this->window_number, 0, CMD_OPEN_CLOSE_AIRPORT);
+			break;
+			
+		case WID_SV_RESET_AIRPORT:
+			DoCommandP(0, this->window_number, 0, CMD_RESET_AIRPORT);
+			break;
+		
+		
+		}
+
+		/* Check which button is clicked */
+		if (IsInsideMM(widget, WID_AC_TERMINAL_PASS_FIRST, WID_AC_TERMINAL_PASS_FIRST + numPassSpots)) {
+			uint64 selected = widget - WID_AC_TERMINAL_PASS_FIRST;
+			uint64 selectedTerm = (selected - (((selected / 9) / 2) * 9));
+			if (selected < 9 || (selected >= 18 && selected < 27) || (selected >= 36 && selected < 45) || (selected >= 54 && selected < 63)) {
+				if (selectedTerm >= numPassTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 9);
+				ShowTerminalWindow(st->airport.GetTerminalTile(term));
+				
+			} else {
+				selectedTerm -= 9;
+				if (selectedTerm >= numPassTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 9);
+				DoCommandP(st->airport.GetTerminalTile(term), this->sID, 0, CMD_TERMINAL_CHANGE_FULLLOAD, NULL, NULL);
+				this->InvalidateData();
+				InvalidateWindowClassesData(WC_TERMINAL_VIEW);
+			}
+		}
+
+		/* Check which button is clicked */
+		if (IsInsideMM(widget, WID_AC_TERMINAL_CARGO_FIRST, WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots)) {
+			uint64 selected = widget - WID_AC_TERMINAL_CARGO_FIRST;
+			uint64 selectedTerm = (selected - (((selected / 6) / 2) * 6));
+			if (selected < 6 || (selected >= 12 && selected < 18)) {
+				if (selectedTerm >= numPassTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 45);
+				ShowTerminalWindow(st->airport.GetTerminalTile(term));
+			} else {
+				selectedTerm -= 6;
+				if (selectedTerm >= numPassTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 45);
+				DoCommandP(st->airport.GetTerminalTile(term), this->sID, 0, CMD_TERMINAL_CHANGE_FULLLOAD, NULL, NULL);
+				this->InvalidateData();
+				InvalidateWindowClassesData(WC_TERMINAL_VIEW);
+			}
+		}
+	}
+	
+	/**
+	 * Some data on this window has become invalid.
+	 * @param data Information about the changed data.
+	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
+	*/
+	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	{
+		if (!gui_scope) return;
+		
+		fullload = st->airport.fullload;
+		
+		if ((st->facilities & FACIL_AIRPORT) && (st->airport.flags1 & AIRPORT_CLOSED_block) != 0)
+			this->LowerWidget(WID_SV_CLOSE_AIRPORT);
+		else
+			this->RaiseWidget(WID_SV_CLOSE_AIRPORT);
+		
+		if (st->airport.GetNumCargoTerminals() <= 0)
+			this->DisableWidget(WID_AC_CARGOTERM);
+		else
+			this->EnableWidget(WID_AC_CARGOTERM);
+		
+		for (uint64 x = WID_AC_TERMINAL_PASS_FIRST; x < WID_AC_TERMINAL_PASS_FIRST + numPassSpots; x++)
+		{
+			uint64 y = x - WID_AC_TERMINAL_PASS_FIRST;
+			if (y < 9 || (y >= 18 && y < 27) || (y >= 36 && y < 45) || (y >= 54 && y < 63)) {
+				this->RaiseWidget(x);
+			} else {
+				uint64 selectedTerm = (y - (((y / 9) / 2) * 9)) - 9;
+				uint64 term = (uint64)1 << (selectedTerm + 9);
+				if (term & st->airport.fullload) {
+					this->LowerWidget(x);
+				} else {
+					this->RaiseWidget(x);
+				}
+			}
+		}
+		
+		for (uint64 x = WID_AC_TERMINAL_CARGO_FIRST; x < WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots; x++)
+		{
+			uint64 y = x - WID_AC_TERMINAL_CARGO_FIRST;
+			if (y < 6 || (y >= 12 && y < 18)) {
+				this->RaiseWidget(x);
+			} else {
+				uint64 selectedTerm = (y - (((y / 6) / 2) * 6)) - 6;
+				uint64 term = (uint64)1 << (selectedTerm + 45);
+				if (term & st->airport.fullload) {
+					this->LowerWidget(x);
+				} else {
+					this->RaiseWidget(x);
+				}
+			}
+		}
+	}
+	
+	virtual void OnResize()
+	{
+		/*if (this->viewport != NULL) {
+		  NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_T_VIEWPORT);
+		  nvp->UpdateViewportCoordinates(this);
+		  //this->wp->UpdateVirtCoord();
+		  ScrollWindowToTile(this->window_number, this, true); // Re-center viewport.
+		}*/
+	}
+	
+	virtual void OnQueryTextFinished(char* str)
+	{
+		if (str == NULL) return;
+			//DoCommandP(0, this->window_number, 0, CMD_RENAME_WAYPOINT | CMD_MSG(STR_ERROR_CAN_T_CHANGE_WAYPOINT_NAME), NULL, str);
+	}
+	
+	virtual void DrawWidget(const Rect & r, int widget) const
+	{
+		if (IsInsideMM(widget, WID_AC_TERMINAL_PASS_FIRST, WID_AC_TERMINAL_PASS_FIRST + numPassSpots)) {
+			uint64 selected = widget - WID_AC_TERMINAL_PASS_FIRST;
+			uint64 selectedTerm = (selected - (((selected / 9) / 2) * 9));
+			if (selected < 9 || (selected >= 18 && selected < 27) || (selected >= 36 && selected < 45) || (selected >= 54 && selected < 63)) {
+				if (selectedTerm >= numPassTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 9);
+				CompanyID cid = GetTileOwner(st->airport.GetTerminalTile(term));
+				if (Company::IsValidID(cid) || cid == OWNER_TOWN) {
+					Dimension sprite_size = GetSpriteSize(SPR_COMPANY_ICON);
+					DrawCompanyIcon(cid, (r.left + r.right - sprite_size.width) / 2, (r.top + r.bottom - sprite_size.height) / 2);
+					std::string str = std::to_string(selectedTerm + 1);
+					DrawString(r.left, r.right, r.top + 2, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
+				}
+				return;
+			} else {
+				if (selectedTerm >= numPassTerms + 9) return;
+				DrawString(r.left, r.right, r.top + 2, "FLL", TC_BLACK, SA_CENTER, false, FS_NORMAL);
+				return;
+			}
+		}
+
+		if (IsInsideMM(widget, WID_AC_TERMINAL_CARGO_FIRST, WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots)) {
+			uint64 selected = widget - WID_AC_TERMINAL_CARGO_FIRST;
+			uint64 selectedTerm = (selected - (((selected / 6) / 2) * 6));
+			if (selected < 6 || (selected >= 12 && selected < 18)) {
+				if (selectedTerm >= numCargoTerms) return;
+				uint64 term = (uint64)1 << (selectedTerm + 45);
+				CompanyID cid = GetTileOwner(st->airport.GetTerminalTile(term));
+				if (Company::IsValidID(cid) || cid == OWNER_TOWN) {
+					Dimension sprite_size = GetSpriteSize(SPR_COMPANY_ICON);
+					DrawCompanyIcon(cid, (r.left + r.right - sprite_size.width) / 2, (r.top + r.bottom - sprite_size.height) / 2);
+					std::string str = std::to_string(selectedTerm + 1);
+					DrawString(r.left, r.right, r.top + 2, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
+				}
+				return;
+			} else {
+				if (selectedTerm >= numCargoTerms + 6) return;
+				DrawString(r.left, r.right, r.top + 2, "FLL", TC_BLACK, SA_CENTER, false, FS_NORMAL);
+				return;
+			}
+		}
+	}
+	
+	//virtual void OnPaint()
+	//{
+	//	st = Station::Get(this->window_number);
+	//	this->SetWidgetLoweredState(WID_SV_CLOSE_AIRPORT, (st->facilities & FACIL_AIRPORT) && (st->airport.flags1 & AIRPORT_CLOSED_block) != 0);
+	//}
+};
+
+/** Make a number of rows with buttons for each Passenger Terminal for the Airport Control window. */
+NWidgetBase * MakeCompanyButtonRowsGUIACPass(int* biggest_index)
+{
+	return MakeCompanyButtonRows(biggest_index, WID_AC_TERMINAL_PASS_FIRST, WID_AC_TERMINAL_PASS_FIRST + numPassSpots - 1, 9, STR_AIRPORT_CONTROL_PASSENGER_TOOLTIP);
+}
+
+/** Make a number of rows with buttons for each Cargo Terminal for the Airport Control window. */
+NWidgetBase * MakeCompanyButtonRowsGUIACCargo(int* biggest_index)
+{
+	return MakeCompanyButtonRows(biggest_index, WID_AC_TERMINAL_CARGO_FIRST, WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots - 1, 6, STR_AIRPORT_CONTROL_CARGO_TOOLTIP);
+}
+
+/** The widgets of the terminal view. */
+static const NWidgetPart _nested_airport_control_widgets[] = {
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_CLOSEBOX, COLOUR_GREY),
+NWidget(WWT_CAPTION, COLOUR_GREY, WID_AC_CAPTION), SetDataTip(STR_AIRPORT_CONTROL_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+NWidget(WWT_SHADEBOX, COLOUR_GREY),
+NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
+NWidget(WWT_STICKYBOX, COLOUR_GREY),
+EndContainer(),
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SV_CLOSE_AIRPORT), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_CLOSE_AIRPORT, STR_STATION_VIEW_CLOSE_AIRPORT_TOOLTIP),
+EndContainer(),
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_RESET_AIRPORT), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_RESET_AIRPORT, STR_STATION_VIEW_RESET_AIRPORT_TOOLTIP),
+EndContainer(),
+		//NWidget(WWT_PANEL, COLOUR_GREY),
+		//	NWidget(WWT_INSET, COLOUR_GREY), SetPadding(2, 2, 2, 2),
+		//		NWidget(NWID_VIEWPORT, COLOUR_GREY, WID_T_VIEWPORT), SetMinimalSize(256, 88), SetPadding(1, 1, 1, 1), SetResize(1, 1),
+		//	EndContainer(),
+		//EndContainer(),
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_CAPTION, COLOUR_GREY, WID_AC_PASSTERM), SetDataTip(STR_AIRPORT_CONTROL_PASS_CAPTION, STR_AIRPORT_CONTROL_PASS_CAPTION_TOOLTIP),
+EndContainer(),
+NWidget(WWT_PANEL, COLOUR_GREY),
+NWidgetFunction(MakeCompanyButtonRowsGUIACPass), SetPadding(0, 1, 1, 2),
+EndContainer(),
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_CAPTION, COLOUR_GREY, WID_AC_CARGOTERM), SetDataTip(STR_AIRPORT_CONTROL_CARGO_CAPTION, STR_AIRPORT_CONTROL_CARGO_CAPTION_TOOLTIP),
+EndContainer(),
+NWidget(WWT_PANEL, COLOUR_GREY),
+NWidgetFunction(MakeCompanyButtonRowsGUIACCargo), SetPadding(0, 1, 1, 2),
+EndContainer(),
+NWidget(NWID_HORIZONTAL),
+NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_AC_CENTER_VIEW), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_BUTTON_LOCATION, STR_TERMINAL_VIEW_CENTER_TOOLTIP),
+NWidget(WWT_RESIZEBOX, COLOUR_GREY),
+EndContainer(),
+};
+
+/** The description of the Airport Control. */
+static WindowDesc _airport_control_desc(
+	WDP_AUTO, "Airport_Control", 260, 118,
+	WC_AIRPORT_CONTROL, WC_NONE,
+	0,
+	_nested_airport_control_widgets, lengthof(_nested_airport_control_widgets)
+);
+
+/**
+ * Show the control window for the given Airport.
+ * @param tile The station to show the window for.
+*/
+void ShowAirportControlWindow(StationID station)
+{
+	if (BringWindowToFrontById(WC_AIRPORT_CONTROL, station) != NULL) return;
+	
+	new AirportControlWindow(&_airport_control_desc, station);
 }

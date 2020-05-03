@@ -751,10 +751,11 @@ CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 	 * and has the correct flags if any */
 	switch (new_order.GetType()) {
 		case OT_GOTO_STATION: {
-			const Station *st = Station::GetIfValid(new_order.GetDestination());
+			Station * st = Station::GetIfValid(new_order.GetDestination());
 			if (st == nullptr) return CMD_ERROR;
 
-			if (st->owner != OWNER_NONE) {
+			// If an owner owns a terminal at a station, then skip the station owner check.
+			if (st->owner != OWNER_NONE && !st->airport.GetTerminalOwner(_local_company)) {
 				CommandCost ret = CheckOwnership(st->owner);
 				if (ret.Failed()) return ret;
 			}
@@ -797,12 +798,15 @@ CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		case OT_GOTO_DEPOT: {
 			if ((new_order.GetDepotActionType() & ODATFB_NEAREST_DEPOT) == 0) {
 				if (v->type == VEH_AIRCRAFT) {
-					const Station *st = Station::GetIfValid(new_order.GetDestination());
+					Station * st = Station::GetIfValid(new_order.GetDestination());
 
 					if (st == nullptr) return CMD_ERROR;
 
-					CommandCost ret = CheckOwnership(st->owner);
-					if (ret.Failed()) return ret;
+					// If an owner owns a terminal at a station, then skip the station owner check.
+					if (st->owner != OWNER_NONE && !st->airport.GetTerminalOwner(_local_company)) {
+						CommandCost ret = CheckOwnership(st->owner);
+						if (ret.Failed()) return ret;
+					}
 
 					if (!CanVehicleUseStation(v, st) || !st->airport.HasHangar()) {
 						return CMD_ERROR;

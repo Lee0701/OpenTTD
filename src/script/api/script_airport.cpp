@@ -30,7 +30,10 @@
 	if (!IsValidAirportType(type)) return -1;
 
 	const AirportSpec *as = ::AirportSpec::Get(type);
-	return _price[PR_BUILD_STATION_AIRPORT] * as->size_x * as->size_y;
+	if (as->cls_id == APC_TERMINUS)
+		return (_price[PR_BUILD_STATION_AIRPORT] * 401) * as->size_x * as->size_y;  // Makes it about .5M per tile...  50M, 100M, 150M, 250M approx.
+	else
+		return _price[PR_BUILD_STATION_AIRPORT] * as->size_x * as->size_y;
 }
 
 /* static */ bool ScriptAirport::IsHangarTile(TileIndex tile)

@@ -28,6 +28,8 @@ void ShowStationViewWindow(StationID station);
 void UpdateAllStationVirtCoords();
 void ClearAllStationCachedNames();
 
+void ShowAirportControlWindow(StationID station);
+
 CargoArray GetProductionAroundTiles(TileIndex tile, int w, int h, int rad);
 CargoArray GetAcceptanceAroundTiles(TileIndex tile, int w, int h, int rad, CargoTypes *always_accepted = nullptr);
 

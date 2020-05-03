@@ -26,6 +26,8 @@ enum Owner : byte {
 	OWNER_WATER     = 0x11, ///< The tile/execution is done by "water"
 	OWNER_DEITY     = 0x12, ///< The object is owned by a superuser / goal script
 	OWNER_END,              ///< Last + 1 owner
+	OWNER_SUB_BEGIN = 0x80, ///< Airports, Start. Allows other companies to use a player controlled airport.
+	OWNER_SUB_END   = 0x8E, ///< Airports, End. Allows other companies to use a player controlled airport.
 	INVALID_OWNER   = 0xFF, ///< An invalid owner
 	INVALID_COMPANY = 0xFF, ///< An invalid company
 

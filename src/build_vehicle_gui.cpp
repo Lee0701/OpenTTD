@@ -1111,7 +1111,14 @@ struct BuildVehicleWindow : Window {
 
 		this->FinishInitNested(tile == INVALID_TILE ? (int)type : tile);
 
-		this->owner = (tile != INVALID_TILE) ? GetTileOwner(tile) : _local_company;
+		if (type == VEH_AIRCRAFT) {
+			BaseStation * bst = BaseStation::GetByTile(tile);
+			Station * st = Station::From(bst);
+			if (st->airport.GetTerminalOwner(_local_company))
+				this->owner = _local_company;
+		}
+		else
+			this->owner = (tile != INVALID_TILE) ? GetTileOwner(tile) : _local_company;
 
 		this->eng_list.ForceRebuild();
 		this->GenerateBuildList(); // generate the list, since we need it in the next line

@@ -24,16 +24,31 @@ public:
 	 */
 	enum AirportType {
 		/* Note: these values represent part of the in-game AirportTypes enum */
-		AT_SMALL         = ::AT_SMALL,         ///< The small airport.
-		AT_LARGE         = ::AT_LARGE,         ///< The large airport.
-		AT_METROPOLITAN  = ::AT_METROPOLITAN,  ///< The metropolitan airport.
-		AT_INTERNATIONAL = ::AT_INTERNATIONAL, ///< The international airport.
-		AT_COMMUTER      = ::AT_COMMUTER,      ///< The commuter airport.
-		AT_INTERCON      = ::AT_INTERCON,      ///< The intercontinental airport.
-		AT_HELIPORT      = ::AT_HELIPORT,      ///< The heliport.
-		AT_HELISTATION   = ::AT_HELISTATION,   ///< The helistation.
-		AT_HELIDEPOT     = ::AT_HELIDEPOT,     ///< The helidepot.
-		AT_INVALID       = ::AT_INVALID,       ///< Invalid airport.
+		/* If you add more airports, look at aircraft_cmd.cpp in the AirportFindFreeTerminal function.  Adjust the numbers there.  */
+		/* OLD NEW  If more are added, then the NEWGRF numbers will be off for NEW*/
+		AT_SMALL = ::AT_SMALL,                 ///<  0  14  The small airport. (Country)
+		AT_LARGE = ::AT_LARGE,                 ///<  1  16  The large airport. (City)
+		AT_METROPOLITAN = ::AT_METROPOLITAN,   ///<  3  17  The metropolitan airport.
+		AT_INTERNATIONAL = ::AT_INTERNATIONAL, ///<  4  18  The international airport.
+		AT_COMMUTER = ::AT_COMMUTER,           ///<  5  15  The commuter airport.
+		AT_INTERCON = ::AT_INTERCON,           ///<  7  19  The intercontinental airport.
+		AT_HELIPORT = ::AT_HELIPORT,           ///<  2  20  The heliport.
+		AT_HELISTATION = ::AT_HELISTATION,     ///<  8  21  The helistation.
+		AT_HELIDEPOT = ::AT_HELIDEPOT,         ///<  6  22  The helidepot.
+		AT_TERMINUS1 = ::AT_TERMINUS1,         ///<  9  23  Terminus 1
+		AT_TERMINUS2 = ::AT_TERMINUS2,         ///< 10  24  Terminus 2
+		AT_TERMINUS3 = ::AT_TERMINUS3,         ///< 11  25  Terminus 3
+		AT_TERMINUS4 = ::AT_TERMINUS4,         ///< 12  26  Terminus 4
+		AT_SANFRAN = ::AT_SANFRAN,             ///< 13  
+		AT_LEIPZIG = ::AT_LEIPZIG,             ///< 14
+		AT_CARGOS = ::AT_CARGOS,		       ///< 15
+		AT_CARGOL = ::AT_CARGOL,		       ///< 16
+		AT_CARGOX = ::AT_CARGOX,               ///< 17
+		AT_COMMUTERL = ::AT_COMMUTERL,	       ///< 18
+		AT_WINDY = ::AT_WINDY,		           ///< 19
+		AT_INDIANAPOLIS = ::AT_INDIANAPOLIS,   ///< 20
+		AT_SCHIPHOL = ::AT_SCHIPHOL,           ///< 21
+		AT_INVALID = ::AT_INVALID,             ///< 22  27  Invalid airport.
 	};
 
 	/**

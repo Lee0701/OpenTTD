@@ -20,43 +20,59 @@
  * Define a generic airport.
  * @param name Suffix of the names of the airport data.
  * @param terminals The terminals.
+ * @param num_cargo_term Number of cargo terminals. (Uses Helipads)
  * @param num_helipads Number of heli pads.
  * @param flags Information about the class of FTA.
  * @param delta_z Height of the airport above the land.
  */
-#define AIRPORT_GENERIC(name, terminals, num_helipads, flags, delta_z) \
-	static const AirportFTAClass _airportfta_ ## name(_airport_moving_data_ ## name, terminals, \
-			num_helipads, _airport_entries_ ## name, flags, _airport_fta_ ## name, delta_z);
+#define AIRPORT_GENERIC(name, terminals, num_cargo_term, num_helipads, flags, delta_z) \
+	static AirportFTAClass _airportfta_ ## name(_airport_moving_data_ ## name, terminals, num_cargo_term, \
+			num_helipads, _airport_entries_ ## name, _airport_helientry_ ## name, flags, _airport_fta_ ## name, delta_z);
 
 /**
  * Define an airport.
  * @param name Suffix of the names of the airport data.
+ * @param num_cargo_term Number of cargo terminals. (Uses Helipads)
  * @param num_helipads Number of heli pads.
  * @param short_strip Airport has a short land/take-off strip.
  */
-#define AIRPORT(name, num_helipads, short_strip) \
-	AIRPORT_GENERIC(name, _airport_terminal_ ## name, num_helipads, AirportFTAClass::ALL | (short_strip ? AirportFTAClass::SHORT_STRIP : (AirportFTAClass::Flags)0), 0)
+#define AIRPORT(name, num_cargo_term, num_helipads, short_strip) \
+	AIRPORT_GENERIC(name, _airport_terminal_ ## name, num_cargo_term, num_helipads, AirportFTAClass::ALL | (short_strip ? AirportFTAClass::SHORT_STRIP : (AirportFTAClass::Flags)0), 0)
 
 /**
  * Define a heliport.
  * @param name Suffix of the names of the helipad data.
+ * @param num_cargo_term Number of cargo terminals. (Uses Helipads)
  * @param num_helipads Number of heli pads.
  * @param delta_z Height of the airport above the land.
  */
-#define HELIPORT(name, num_helipads, delta_z) \
-	AIRPORT_GENERIC(name, nullptr, num_helipads, AirportFTAClass::HELICOPTERS, delta_z)
+#define HELIPORT(name, num_cargo_term, num_helipads, delta_z) \
+	AIRPORT_GENERIC(name, NULL, num_cargo_term, num_helipads, AirportFTAClass::HELICOPTERS, delta_z)
 
-AIRPORT(country, 0, true)
-AIRPORT(city, 0, false)
-HELIPORT(heliport, 1, 60)
-AIRPORT(metropolitan, 0, false)
-AIRPORT(international, 2, false)
-AIRPORT(commuter, 2, true)
-HELIPORT(helidepot, 1, 0)
-AIRPORT(intercontinental, 2, false)
-HELIPORT(helistation, 3, 0)
-HELIPORT(oilrig, 1, 54)
-AIRPORT_GENERIC(dummy, nullptr, 0, AirportFTAClass::ALL, 0)
+AIRPORT(country, 0, 0, true)
+AIRPORT(city, 0, 0, false)
+HELIPORT(heliport, 0, 1, 60)
+AIRPORT(metropolitan, 0, 0, false)
+AIRPORT(international, 2, 2, false)
+AIRPORT(commuter, 2, 2, true)
+HELIPORT(helidepot, 0, 1, 0)
+AIRPORT(intercontinental, 2, 2, false)
+HELIPORT(helistation, 0, 3, 0)
+HELIPORT(oilrig, 0, 1, 54)
+AIRPORT(terminus1, 3, 3, false)
+AIRPORT(terminus2, 6, 6, false)
+AIRPORT(terminus3, 9, 9, false)
+AIRPORT(terminus4, 12, 12, false)
+AIRPORT(sanfran, 4, 2, false)
+AIRPORT(leipzig, 4, 2, false)
+AIRPORT(cargos, 4, 4, false)
+AIRPORT(cargol, 8, 8, false)
+AIRPORT(cargox, 12, 12, false)
+AIRPORT(commuterl, 2, 2, false)
+AIRPORT(windy, 1, 1, false)
+AIRPORT(indianapolis, 6, 2, false)
+AIRPORT(schiphol, 4, 2, false)
+AIRPORT_GENERIC(dummy, NULL, 0, 0, AirportFTAClass::ALL, 0)
 
 #undef HELIPORT
 #undef AIRPORT
@@ -111,17 +127,21 @@ AirportMovingData RotateAirportMovingData(const AirportMovingData *orig, Directi
 AirportFTAClass::AirportFTAClass(
 	const AirportMovingData *moving_data_,
 	const byte *terminals_,
+	const byte num_cargo_term_,
 	const byte num_helipads_,
 	const byte *entry_points_,
+	const byte *heli_entry_point_,
 	Flags flags_,
 	const AirportFTAbuildup *apFA,
 	byte delta_z_
 ) :
 	moving_data(moving_data_),
 	terminals(terminals_),
+	num_cargo_term(num_cargo_term_),
 	num_helipads(num_helipads_),
 	flags(flags_),
 	nofelements(AirportGetNofElements(apFA)),
+	heli_entry_point(heli_entry_point_),
 	entry_points(entry_points_),
 	delta_z(delta_z_)
 {
@@ -177,7 +197,8 @@ static AirportFTA *AirportBuildAutomata(uint nofelements, const AirportFTAbuildu
 		AirportFTA *current = &FAutomata[i];
 		current->position      = apFA[internalcounter].position;
 		current->heading       = apFA[internalcounter].heading;
-		current->block         = apFA[internalcounter].block;
+		current->block1	       = apFA[internalcounter].block1;
+		current->block2        = apFA[internalcounter].block2;
 		current->next_position = apFA[internalcounter].next;
 
 		/* outgoing nodes from the same position, create linked list */
@@ -186,7 +207,8 @@ static AirportFTA *AirportBuildAutomata(uint nofelements, const AirportFTAbuildu
 
 			newNode->position      = apFA[internalcounter + 1].position;
 			newNode->heading       = apFA[internalcounter + 1].heading;
-			newNode->block         = apFA[internalcounter + 1].block;
+			newNode->block1        = apFA[internalcounter + 1].block1;
+			newNode->block2        = apFA[internalcounter + 1].block2;
 			newNode->next_position = apFA[internalcounter + 1].next;
 			/* create link */
 			current->next = newNode;

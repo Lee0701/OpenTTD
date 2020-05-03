@@ -443,6 +443,14 @@ struct MainWindow : Window
 
 	void OnMouseWheel(int wheel) override
 	{
+		if (_alt_pressed) {
+			Window * w = FindWindowById(WC_BUILD_STATION, TRANSPORT_AIR);
+			if (w != NULL) {
+				w->OnMouseWheel(wheel);
+				return;
+			}
+		}
+
 		if (_settings_client.gui.scrollwheel_scrolling != 2) {
 			ZoomInOrOutToCursorWindow(wheel < 0, this);
 		}

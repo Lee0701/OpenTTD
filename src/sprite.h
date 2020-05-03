@@ -78,6 +78,7 @@ struct DrawBuildingsTileStruct {
 /** Iterate through all DrawTileSeqStructs in DrawTileSprites. */
 #define foreach_draw_tile_seq(idx, list) for (idx = list; !idx->IsTerminator(); idx++)
 
+void DrawCommonTileSeqHighlight(const struct TileInfo* ti, const DrawTileSprites * dts, TransparencyOption to, int32 orig_offset, uint32 newgrf_offset, PaletteID default_palette, bool child_offset_is_unsigned);
 void DrawCommonTileSeq(const struct TileInfo *ti, const DrawTileSprites *dts, TransparencyOption to, int32 orig_offset, uint32 newgrf_offset, PaletteID default_palette, bool child_offset_is_unsigned);
 void DrawCommonTileSeqInGUI(int x, int y, const DrawTileSprites *dts, int32 orig_offset, uint32 newgrf_offset, PaletteID default_palette, bool child_offset_is_unsigned);
 

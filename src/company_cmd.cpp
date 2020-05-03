@@ -396,8 +396,8 @@ bad_town_name:;
 	}
 }
 
-/** Sorting weights for the company colours. */
-static const byte _colour_sort[COLOUR_END] = {2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 1, 1, 1};
+/** Sorting weights for the company colours. Removed COLOUR_GREY*/
+static const byte _colour_sort[COLOUR_END - 1] = { 2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 1, 1 };
 /** Similar colours, so we can try to prevent same coloured companies. */
 static const Colours _similar_colour[COLOUR_END][2] = {
 	{ COLOUR_BLUE,       COLOUR_LIGHT_BLUE }, // COLOUR_DARK_BLUE
@@ -424,20 +424,27 @@ static const Colours _similar_colour[COLOUR_END][2] = {
  */
 static Colours GenerateCompanyColour()
 {
-	Colours colours[COLOUR_END];
+	Colours colours[COLOUR_END - 1];
 
 	/* Initialize array */
-	for (uint i = 0; i < COLOUR_END; i++) colours[i] = (Colours)i;
+	// Reserve the COLOUR_GREY for OWNER_TOWN
+	for (uint i = 0; i < COLOUR_END - 1; i++) {
+		if ((Colours)i == COLOUR_GREY)
+			 colours[i] = (Colours)(i + 1);
+		else
+			 colours[i] = (Colours)i;
+	}
 
 	/* And randomize it */
 	for (uint i = 0; i < 100; i++) {
 		uint r = Random();
-		Swap(colours[GB(r, 0, 4)], colours[GB(r, 4, 4)]);
+		if (GB(r, 0, 4) < (COLOUR_END - 1) && GB(r, 4, 4) < (COLOUR_END - 1))
+			Swap(colours[GB(r, 0, 4)], colours[GB(r, 4, 4)]);
 	}
 
 	/* Bubble sort it according to the values in table 1 */
-	for (uint i = 0; i < COLOUR_END; i++) {
-		for (uint j = 1; j < COLOUR_END; j++) {
+	for (uint i = 0; i < COLOUR_END - 1; i++) {
+		for (uint j = 1; j < COLOUR_END - 1; j++) {
 			if (_colour_sort[colours[j - 1]] < _colour_sort[colours[j]]) {
 				Swap(colours[j - 1], colours[j]);
 			}
@@ -448,7 +455,7 @@ static Colours GenerateCompanyColour()
 	for (const Company *c : Company::Iterate()) {
 		Colours pcolour = (Colours)c->colour;
 
-		for (uint i = 0; i < COLOUR_END; i++) {
+		for (uint i = 0; i < COLOUR_END - 1; i++) {
 			if (colours[i] == pcolour) {
 				colours[i] = INVALID_COLOUR;
 				break;
@@ -459,14 +466,14 @@ static Colours GenerateCompanyColour()
 			Colours similar = _similar_colour[pcolour][j];
 			if (similar == INVALID_COLOUR) break;
 
-			for (uint i = 1; i < COLOUR_END; i++) {
+			for (uint i = 1; i < COLOUR_END - 1; i++) {
 				if (colours[i - 1] == similar) Swap(colours[i - 1], colours[i]);
 			}
 		}
 	}
 
 	/* Return the first available colour */
-	for (uint i = 0; i < COLOUR_END; i++) {
+	for (uint i = 0; i < COLOUR_END - 1; i++) {
 		if (colours[i] != INVALID_COLOUR) return colours[i];
 	}
 
@@ -910,6 +917,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 	InvalidateWindowClassesData(WC_GAME_OPTIONS);
 	InvalidateWindowClassesData(WC_AI_SETTINGS);
 	InvalidateWindowClassesData(WC_AI_LIST);
+	InvalidateWindowClassesData(WC_TERMINAL_VIEW);
 
 	return CommandCost();
 }

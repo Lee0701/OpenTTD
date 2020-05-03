@@ -67,9 +67,11 @@ public:
 /** List of default airport classes. */
 enum AirportClassID {
 	APC_BEGIN     = 0,  ///< Lowest valid airport class id
-	APC_SMALL     = 0,  ///< id for small airports class
-	APC_LARGE,          ///< id for large airports class
-	APC_HUB,            ///< id for hub airports class
+	APC_CARGO     = 0,	///< id for cargo airports class
+	APC_SMALL,			///< id for small airports class  Runways of either 4 or 5 length
+	APC_MEDIUM,         ///< id for medium airports class Runways of either 6 or 7 length
+	APC_LARGE,          ///< id for large airports class  Runways of 8+ length.
+	APC_TERMINUS,       ///< id for terminus airports class
 	APC_HELIPORT,       ///< id for heliports
 	APC_MAX       = 16, ///< maximum number of airport classes
 };
@@ -92,30 +94,47 @@ struct HangarTileTable {
 	byte hangar_num;   ///< The hangar to which this tile belongs.
 };
 
+/** A list of all terminal tiles in an airport */
+struct TerminalTileTable {
+	TileIndexDiffC ti; ///< Tile offset from the top-most airport tile.
+	uint64 terminal;   ///< The Terminal to which this tile belongs.
+};
+
+/** A list of all runways in an airport */
+struct RunwayTerminalTable {
+	uint64 terminals;  ///< Terminal Flags.  Which terminals that this runway services.
+	uint64 flags1;     ///< Runway01 through Runway06 are in flags1
+	uint64 flags2;     ///< Runway07 and Runway08 are in flags2
+};
+
 /**
  * Defines the data structure for an airport.
  */
 struct AirportSpec {
-	const struct AirportFTAClass *fsm;     ///< the finite statemachine for the default airports
-	const AirportTileTable * const *table; ///< list of the tiles composing the airport
-	const Direction *rotation;             ///< the rotation of each tiletable
-	byte num_table;                        ///< number of elements in the table
-	const HangarTileTable *depot_table;    ///< gives the position of the depots on the airports
-	byte nof_depots;                       ///< the number of hangar tiles in this airport
-	byte size_x;                           ///< size of airport in x direction
-	byte size_y;                           ///< size of airport in y direction
-	byte noise_level;                      ///< noise that this airport generates
-	byte catchment;                        ///< catchment area of this airport
-	Year min_year;                         ///< first year the airport is available
-	Year max_year;                         ///< last year the airport is available
-	StringID name;                         ///< name of this airport
-	TTDPAirportType ttd_airport_type;      ///< ttdpatch airport type (Small/Large/Helipad/Oilrig)
-	AirportClassID cls_id;                 ///< the class to which this airport type belongs
-	SpriteID preview_sprite;               ///< preview sprite for this airport
-	uint16 maintenance_cost;               ///< maintenance cost multiplier
-	/* Newgrf data */
-	bool enabled;                          ///< Entity still available (by default true). Newgrf can disable it, though.
-	struct GRFFileProps grf_prop;          ///< Properties related to the grf file.
+	const struct AirportFTAClass* fsm;        ///< the finite statemachine for the default airports
+	const AirportTileTable* const* table;     ///< list of the tiles composing the airport
+	Direction * rotation;                     ///< the rotation of each tiletable
+	byte num_table;                           ///< number of elements in the table
+	const HangarTileTable * depot_table;      ///< gives the position of the depots on the airports
+	byte nof_depots;                          ///< the number of hangar tiles in this airport
+	const TerminalTileTable * terminal_table; ///< gives the position of the terminals on the airports
+	byte nof_terminals;                       ///< the number of terminal tiles in this airport
+	const RunwayTerminalTable * runway_table; ///< gives the list of terminals this runway services.
+	byte nof_runways;                         ///< the number of runways in this airport
+	byte size_x;                              ///< size of airport in x direction
+	byte size_y;                              ///< size of airport in y direction
+	byte noise_level;                         ///< noise that this airport generates
+	byte catchment;                           ///< catchment area of this airport
+	Year min_year;                            ///< first year the airport is available
+	Year max_year;                            ///< last year the airport is available
+	StringID name;                            ///< name of this airport
+	TTDPAirportType ttd_airport_type;         ///< ttdpatch airport type (Small/Large/Helipad/Oilrig)
+	AirportClassID cls_id;                    ///< the class to which this airport type belongs
+	SpriteID preview_sprite;                  ///< preview sprite for this airport
+	uint16 maintenance_cost;                  ///< maintenance cost multiplier
+		/* Newgrf data */
+	bool enabled;                             ///< Entity still available (by default true). Newgrf can disable it, though.
+	struct GRFFileProps grf_prop;             ///< Properties related to the grf file.
 
 	static const AirportSpec *Get(byte type);
 	static AirportSpec *GetWithoutOverride(byte type);

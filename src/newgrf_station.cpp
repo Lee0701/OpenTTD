@@ -406,8 +406,8 @@ uint32 Station::GetNewGRFVariable(const ResolverObject &object, byte variable, b
 		case 0xF1: return (this->airport.tile != INVALID_TILE) ? this->airport.GetSpec()->ttd_airport_type : ATP_TTDP_LARGE;
 		case 0xF2: return (this->truck_stops != nullptr) ? this->truck_stops->status : 0;
 		case 0xF3: return (this->bus_stops != nullptr)   ? this->bus_stops->status   : 0;
-		case 0xF6: return this->airport.flags;
-		case 0xF7: return GB(this->airport.flags, 8, 8);
+		case 0xF6: return this->airport.flags1;
+		case 0xF7: return GB(this->airport.flags1, 8, 8);
 	}
 
 	/* Handle cargo variables with parameter, 0x60 to 0x65 and 0x69 */

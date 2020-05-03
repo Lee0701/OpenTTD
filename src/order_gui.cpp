@@ -363,14 +363,28 @@ static Order GetOrderCmdFromTile(const Vehicle *v, TileIndex tile)
 	order.index = 0;
 
 	/* check depot first */
-	if (IsDepotTypeTile(tile, (TransportType)(uint)v->type) && IsTileOwner(tile, _local_company)) {
-		order.MakeGoToDepot(v->type == VEH_AIRCRAFT ? GetStationIndex(tile) : GetDepotIndex(tile),
-				ODTFB_PART_OF_ORDERS,
+	if (v->type == VEH_AIRCRAFT) {
+		if (!IsTileType(tile, MP_STATION))
+			 return order;
+		StationID st_index = GetStationIndex(tile);
+		Station * st = Station::Get(st_index);
+		if (IsDepotTypeTile(tile, (TransportType)(uint)v->type) && (st->airport.GetTerminalOwner(_local_company) || IsTileOwner(tile, _local_company))) {
+			order.MakeGoToDepot(GetStationIndex(tile), ODTFB_PART_OF_ORDERS,
 				(_settings_client.gui.new_nonstop && v->IsGroundVehicle()) ? ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS : ONSF_STOP_EVERYWHERE);
 
-		if (_ctrl_pressed) order.SetDepotOrderType((OrderDepotTypeFlags)(order.GetDepotOrderType() ^ ODTFB_SERVICE));
+			if (_ctrl_pressed) order.SetDepotOrderType((OrderDepotTypeFlags)(order.GetDepotOrderType() ^ ODTFB_SERVICE));
 
-		return order;
+			return order;
+		}
+	} else {
+		if (IsDepotTypeTile(tile, (TransportType)(uint)v->type) && IsTileOwner(tile, _local_company)) {
+			order.MakeGoToDepot(GetDepotIndex(tile), ODTFB_PART_OF_ORDERS,
+				(_settings_client.gui.new_nonstop && v->IsGroundVehicle()) ? ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS : ONSF_STOP_EVERYWHERE);
+			
+			if (_ctrl_pressed) order.SetDepotOrderType((OrderDepotTypeFlags)(order.GetDepotOrderType() ^ ODTFB_SERVICE));
+			
+			return order;
+		}
 	}
 
 	/* check rail waypoint */
@@ -390,7 +404,7 @@ static Order GetOrderCmdFromTile(const Vehicle *v, TileIndex tile)
 
 	/* check for station or industry with neutral station */
 	if (IsTileType(tile, MP_STATION) || IsTileType(tile, MP_INDUSTRY)) {
-		const Station *st = nullptr;
+		Station *st = nullptr;
 
 		if (IsTileType(tile, MP_STATION)) {
 			st = Station::GetByTile(tile);
@@ -398,7 +412,7 @@ static Order GetOrderCmdFromTile(const Vehicle *v, TileIndex tile)
 			const Industry *in = Industry::GetByTile(tile);
 			st = in->neutral_station;
 		}
-		if (st != nullptr && (st->owner == _local_company || st->owner == OWNER_NONE)) {
+		if (st != nullptr && (st->owner == _local_company || st->owner == OWNER_NONE || st->airport.GetTerminalOwner(_local_company))) {
 			byte facil;
 			switch (v->type) {
 				case VEH_SHIP:     facil = FACIL_DOCK;    break;

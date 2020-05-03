@@ -26,6 +26,7 @@
 #include "vehiclelist.h"
 #include "order_backup.h"
 #include "zoom_func.h"
+#include "station_base.h"
 
 #include "widgets/depot_widget.h"
 
@@ -287,7 +288,15 @@ struct DepotWindow : Window {
 		this->SetupWidgetData(type);
 		this->FinishInitNested(tile);
 
-		this->owner = GetTileOwner(tile);
+		if (this->type == VEH_AIRCRAFT) {
+			BaseStation * bst = BaseStation::GetByTile(tile);
+			Station * st = Station::From(bst);
+			if (st->airport.GetTerminalOwner(_local_company))
+				this->owner = _local_company;
+		}
+		else
+			this->owner = GetTileOwner(tile);
+
 		OrderBackup::Reset();
 	}
 
@@ -693,6 +702,8 @@ struct DepotWindow : Window {
 		}
 	}
 
+	bool disabled;
+
 	/**
 	 * Some data on this window has become invalid.
 	 * @param data Information about the changed data.
@@ -701,10 +712,55 @@ struct DepotWindow : Window {
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		this->generate_list = true;
+
+		if (this->type == VEH_AIRCRAFT) {
+			BaseStation * bst = BaseStation::GetByTile(this->window_number);
+			Station * st = Station::From(bst);
+			disabled = true;
+			
+			if (st != NULL && this->owner != _local_company && st->airport.GetTerminalOwner(_local_company)) {
+				disabled = false;
+				this->owner = _local_company;
+			} else
+				if (this->owner == _local_company) {
+					disabled = false;
+				} else {
+					this->owner = GetTileOwner(this->window_number);
+				}
+				this->SetDirty();
+		}
 	}
 
 	void OnPaint() override
 	{
+		if (this->type == VEH_AIRCRAFT) {
+			this->SetWidgetsDisabledState(disabled,
+				WID_D_STOP_ALL,
+				WID_D_START_ALL,
+				WID_D_SELL,
+				WID_D_SELL_CHAIN,
+				WID_D_SELL_ALL,
+				WID_D_BUILD,
+				WID_D_CLONE,
+				WID_D_RENAME,
+				WID_D_AUTOREPLACE,
+				WIDGET_LIST_END);
+		} else {
+			/* Setup disabled buttons. */
+			TileIndex tile = this->window_number;
+			this->SetWidgetsDisabledState(!IsTileOwner(tile, _local_company),
+				WID_D_STOP_ALL,
+				WID_D_START_ALL,
+				WID_D_SELL,
+				WID_D_SELL_CHAIN,
+				WID_D_SELL_ALL,
+				WID_D_BUILD,
+				WID_D_CLONE,
+				WID_D_RENAME,
+				WID_D_AUTOREPLACE,
+				WIDGET_LIST_END);
+		}
+
 		if (this->generate_list) {
 			/* Generate the vehicle list
 			 * It's ok to use the wagon pointers for non-trains as they will be ignored */
@@ -737,20 +793,6 @@ struct DepotWindow : Window {
 		} else {
 			this->vscroll->SetCount(CeilDiv((uint)this->vehicle_list.size(), this->num_columns));
 		}
-
-		/* Setup disabled buttons. */
-		TileIndex tile = this->window_number;
-		this->SetWidgetsDisabledState(!IsTileOwner(tile, _local_company),
-			WID_D_STOP_ALL,
-			WID_D_START_ALL,
-			WID_D_SELL,
-			WID_D_SELL_CHAIN,
-			WID_D_SELL_ALL,
-			WID_D_BUILD,
-			WID_D_CLONE,
-			WID_D_RENAME,
-			WID_D_AUTOREPLACE,
-			WIDGET_LIST_END);
 
 		this->DrawWidgets();
 	}
@@ -824,7 +866,10 @@ struct DepotWindow : Window {
 				break;
 
 			case WID_D_VEHICLE_LIST:
-				ShowVehicleListWindow(GetTileOwner(this->window_number), this->type, (TileIndex)this->window_number);
+				if (this->type == VEH_AIRCRAFT)
+					ShowVehicleListWindow(this->owner, this->type, (TileIndex)this->window_number);
+				else
+					ShowVehicleListWindow(GetTileOwner(this->window_number), this->type, (TileIndex)this->window_number);
 				break;
 
 			case WID_D_AUTOREPLACE:

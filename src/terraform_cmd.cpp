@@ -190,6 +190,8 @@ CommandCost CmdTerraformLand(TileIndex tile, DoCommandFlag flags, uint32 p1, uin
 
 	CommandCost total_cost(EXPENSES_CONSTRUCTION);
 	int direction = (p2 != 0 ? 1 : -1);
+	if (_alt_pressed)  // When placing an airport, the correct direction and height is passed.
+		direction = (int32_t)p2;
 	TerraformerState ts;
 
 	/* Compute the costs and the terraforming result in a model of the landscape */

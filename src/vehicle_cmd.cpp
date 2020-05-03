@@ -87,9 +87,13 @@ CommandCost CmdRefitVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 CommandCost CmdBuildVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
 	/* Elementary check for valid location. */
-	if (!IsDepotTile(tile) || !IsTileOwner(tile, _current_company)) return CMD_ERROR;
+	if (!IsDepotTile(tile)) return CMD_ERROR;
 
 	VehicleType type = GetDepotVehicleType(tile);
+
+	// Aircraft can be built in other companies airports.
+	if (type != VEH_AIRCRAFT)
+		if (!IsTileOwner(tile, _current_company)) return CMD_ERROR;
 
 	/* Validate the engine type. */
 	EngineID eid = GB(p1, 0, 16);
@@ -578,7 +582,7 @@ CommandCost CmdStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 		case VEH_AIRCRAFT: {
 			Aircraft *a = Aircraft::From(v);
 			/* cannot stop airplane when in flight, or when taking off / landing */
-			if (a->state >= STARTTAKEOFF && a->state < TERM7) return_cmd_error(STR_ERROR_AIRCRAFT_IS_IN_FLIGHT);
+			if (!(v->vehstatus & VS_CRASHED) && (a->state >= TAKEOFF && a->state <= HELIENDLANDING)) return_cmd_error(STR_ERROR_AIRCRAFT_IS_IN_FLIGHT);
 			if (HasBit(a->flags, VAF_HELI_DIRECT_DESCENT)) return_cmd_error(STR_ERROR_AIRCRAFT_IS_IN_FLIGHT);
 			break;
 		}

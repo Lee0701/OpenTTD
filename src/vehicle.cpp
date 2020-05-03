@@ -825,7 +825,8 @@ void Vehicle::PreDestructor()
 		Station *st = GetTargetAirportIfValid(a);
 		if (st != nullptr) {
 			const AirportFTA *layout = st->airport.GetFTA()->layout;
-			CLRBITS(st->airport.flags, layout[a->previous_pos].block | layout[a->pos].block);
+			CLRBITS(st->airport.flags1, a->airport_flags1);
+			CLRBITS(st->airport.flags2, a->airport_flags2);
 		}
 	}
 
@@ -1635,6 +1636,24 @@ GetNewVehiclePosResult GetNewVehiclePos(const Vehicle *v)
 	return gp;
 }
 
+GetNewVehiclePosResult GetNewVehiclePosBack(const Vehicle * v)
+{
+	static const int8 _delta_coord[16] = {
+	-1,-1,-1, 0, 1, 1, 1, 0, /* x */
+	-1, 0, 1, 1, 1, 0,-1,-1, /* y */
+	};
+	
+	int x = v->x_pos - _delta_coord[v->direction];
+	int y = v->y_pos - _delta_coord[v->direction + 8];
+	
+	GetNewVehiclePosResult gp;
+	gp.x = x;
+	gp.y = y;
+	gp.old_tile = v->tile;
+	gp.new_tile = TileVirtXY(x, y);
+	return gp;
+}
+
 static const Direction _new_direction_table[] = {
 	DIR_N,  DIR_NW, DIR_W,
 	DIR_NE, DIR_SE, DIR_SW,
@@ -2028,11 +2047,11 @@ void Vehicle::DeleteUnreachedImplicitOrders()
 
 /**
  * Prepare everything to begin the loading when arriving at a station.
- * @pre IsTileType(this->tile, MP_STATION) || this->type == VEH_SHIP.
+ * @pre IsTileType(this->tile, MP_STATION) || this->type == VEH_SHIP || (IsTileType(this->tile, MP_INDUSTRY) && this->subtype == AIR_HELICOPTER.
  */
 void Vehicle::BeginLoading()
 {
-	assert(IsTileType(this->tile, MP_STATION) || this->type == VEH_SHIP);
+	assert(IsTileType(this->tile, MP_STATION) || this->type == VEH_SHIP || (IsTileType(this->tile, MP_INDUSTRY) && this->subtype == AIR_HELICOPTER));
 
 	if (this->current_order.IsType(OT_GOTO_STATION) &&
 			this->current_order.GetDestination() == this->last_station_visited) {
@@ -2795,6 +2814,11 @@ bool CanVehicleUseStation(EngineID engine_type, const Station *st)
 			return (st->facilities & FACIL_DOCK) != 0;
 
 		case VEH_AIRCRAFT:
+				// Added to check and see if there are any passenger terminals at the destination airport, if not, then the plane/helicopter cannot go there if their primary cargo is Passengers.
+				// If vehicle is refitted to carry cargo, then they can go there.  (Cargo Airports)
+			if ( e->info.cargo_type == CT_PASSENGERS && ((st->airport.type >= AT_CARGOS && st->airport.type <= AT_CARGOX) || ((st->airport.type - NEW_AIRPORT_OFFSET + 10) >= AT_CARGOS && (st->airport.type - NEW_AIRPORT_OFFSET + 10) <= AT_CARGOX)))
+				return false;
+
 			return (st->facilities & FACIL_AIRPORT) != 0 &&
 					(st->airport.GetFTA()->flags & (e->u.air.subtype & AIR_CTOL ? AirportFTAClass::AIRPLANES : AirportFTAClass::HELICOPTERS)) != 0;
 

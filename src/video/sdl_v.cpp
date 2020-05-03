@@ -725,6 +725,7 @@ void VideoDriver_SDL::MainLoop()
 
 			_ctrl_pressed  = !!(mod & KMOD_CTRL);
 			_shift_pressed = !!(mod & KMOD_SHIFT);
+			_alt_pressed   = !!(mod & KMOD_MENU);
 
 			/* determine which directional keys are down */
 			_dirkeys =

@@ -579,6 +579,11 @@ private:
 			}
 		}
 
+		// Reserve the COLOUR_GREY for OWNER_TOWN
+		if (widget == WID_SCL_PRI_COL_DROPDOWN) {
+			SetBit(used_colours, COLOUR_GREY);
+		}
+
 		c = Company::Get((CompanyID)this->window_number);
 
 		if (this->livery_class < LC_GROUP_RAIL) {

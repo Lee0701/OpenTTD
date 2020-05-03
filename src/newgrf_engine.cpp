@@ -191,27 +191,60 @@ static byte MapAircraftMovementState(const Aircraft *v)
 			/* Still moving towards hangar. */
 			return AMS_TTDP_TO_HANGAR;
 
-		case TERM1:
+		case TERM01:
 			if (amdflag & AMED_EXACTPOS) return AMS_TTDP_TO_PAD1;
 			return AMS_TTDP_TO_JUNCTION;
 
-		case TERM2:
+		case TERM02:
 			if (amdflag & AMED_EXACTPOS) return AMS_TTDP_TO_PAD2;
 			return AMS_TTDP_TO_ENTRY_2_AND_3_AND_H;
 
-		case TERM3:
-		case TERM4:
-		case TERM5:
-		case TERM6:
-		case TERM7:
-		case TERM8:
+		case TERM03:
+		case TERM04:
+		case TERM05:
+		case TERM06:
+		case TERM07:
+		case TERM08:
+		case TERM09:
+		case TERM10:
+		case TERM11:
+		case TERM12:
+		case TERM13:
+		case TERM14:
+		case TERM15:
+		case TERM16:
+		case TERM17:
+		case TERM18:
+		case TERM19:
+		case TERM20:
+		case TERM21:
+		case TERM22:
+		case TERM23:
+		case TERM24:
+		case TERM25:
+		case TERM26:
+		case TERM27:
+		case TERM28:
+		case TERM29:
+		case TERM30:
+		case TERM31:
+		case TERM32:
 			/* TTDPatch only has 3 terminals, so treat these states the same */
 			if (amdflag & AMED_EXACTPOS) return AMS_TTDP_TO_PAD3;
 			return AMS_TTDP_TO_ENTRY_2_AND_3_AND_H;
 
-		case HELIPAD1:
-		case HELIPAD2:
-		case HELIPAD3:
+		case HELI01:
+		case HELI02:
+		case HELI03:
+		case HELI04:
+		case HELI05:
+		case HELI06:
+		case HELI07:
+		case HELI08:
+		case HELI09:
+		case HELI10:
+		case HELI11:
+		case HELI12:
 			/* Will only occur for helicopters.*/
 			if (amdflag & AMED_HELI_LOWER) return AMS_TTDP_HELI_LAND_AIRPORT; // Descending.
 			if (amdflag & AMED_SLOWTURN)   return AMS_TTDP_FLIGHT_TO_TOWER;   // Still hasn't started descent.
@@ -295,21 +328,54 @@ static byte MapAircraftMovementAction(const Aircraft *v)
 		case HANGAR:
 			return (v->cur_speed > 0) ? AMA_TTDP_LANDING_TO_HANGAR : AMA_TTDP_IN_HANGAR;
 
-		case TERM1:
-		case HELIPAD1:
+		case TERM01:
+		case HELI01:
 			return (v->current_order.IsType(OT_LOADING)) ? AMA_TTDP_ON_PAD1 : AMA_TTDP_LANDING_TO_PAD1;
 
-		case TERM2:
-		case HELIPAD2:
+		case TERM02:
+		case HELI02:
 			return (v->current_order.IsType(OT_LOADING)) ? AMA_TTDP_ON_PAD2 : AMA_TTDP_LANDING_TO_PAD2;
 
-		case TERM3:
-		case TERM4:
-		case TERM5:
-		case TERM6:
-		case TERM7:
-		case TERM8:
-		case HELIPAD3:
+		case TERM03:
+		case TERM04:
+		case TERM05:
+		case TERM06:
+		case TERM07:
+		case TERM08:
+		case TERM09:
+		case TERM10:
+		case TERM11:
+		case TERM12:
+		case TERM13:
+		case TERM14:
+		case TERM15:
+		case TERM16:
+		case TERM17:
+		case TERM18:
+		case TERM19:
+		case TERM20:
+		case TERM21:
+		case TERM22:
+		case TERM23:
+		case TERM24:
+		case TERM25:
+		case TERM26:
+		case TERM27:
+		case TERM28:
+		case TERM29:
+		case TERM30:
+		case TERM31:
+		case TERM32:
+		case HELI03:
+		case HELI04:
+		case HELI05:
+		case HELI06:
+		case HELI07:
+		case HELI08:
+		case HELI09:
+		case HELI10:
+		case HELI11:
+		case HELI12:
 			return (v->current_order.IsType(OT_LOADING)) ? AMA_TTDP_ON_PAD3 : AMA_TTDP_LANDING_TO_PAD3;
 
 		case TAKEOFF:      // Moving to takeoff position

@@ -134,14 +134,6 @@ struct ChildScreenSpriteToDraw {
 	int next;                       ///< next child to draw (-1 at the end)
 };
 
-/** Enumeration of multi-part foundations */
-enum FoundationPart {
-	FOUNDATION_PART_NONE     = 0xFF,  ///< Neither foundation nor groundsprite drawn yet.
-	FOUNDATION_PART_NORMAL   = 0,     ///< First part (normal foundation or no foundation)
-	FOUNDATION_PART_HALFTILE = 1,     ///< Second part (halftile foundation)
-	FOUNDATION_PART_END
-};
-
 /**
  * Mode of "sprite combining"
  * @see StartSpriteCombine
@@ -494,7 +486,7 @@ void HandleZoomMessage(Window *w, const ViewPort *vp, byte widget_zoom_in, byte 
  * @param extra_offs_x Pixel X offset for the sprite position.
  * @param extra_offs_y Pixel Y offset for the sprite position.
  */
-static void AddTileSpriteToDraw(SpriteID image, PaletteID pal, int32 x, int32 y, int z, const SubSprite *sub = nullptr, int extra_offs_x = 0, int extra_offs_y = 0)
+void AddTileSpriteToDraw(SpriteID image, PaletteID pal, int32 x, int32 y, int z, const SubSprite * sub, int extra_offs_x, int extra_offs_y)
 {
 	assert((image & SPRITE_MASK) < MAX_SPRITES);
 
@@ -870,7 +862,7 @@ static void AddStringToDraw(int x, int y, StringID string, uint64 params_1, uint
  * @param z_offset Z offset relative to the groundsprite. Only used for the sprite position, not for sprite sorting.
  * @param foundation_part Foundation part the sprite belongs to.
  */
-static void DrawSelectionSprite(SpriteID image, PaletteID pal, const TileInfo *ti, int z_offset, FoundationPart foundation_part)
+void DrawSelectionSprite(SpriteID image, PaletteID pal, const TileInfo *ti, int z_offset, FoundationPart foundation_part)
 {
 	/* FIXME: This is not totally valid for some autorail highlights that extend over the edges of the tile. */
 	if (_vd.foundation[foundation_part] == -1) {
@@ -976,6 +968,41 @@ static void DrawAutorailSelection(const TileInfo *ti, uint autorail_type)
 	}
 
 	DrawSelectionSprite(image, _thd.make_square_red ? PALETTE_SEL_TILE_RED : pal, ti, 7, foundation_part);
+}
+
+// Used to set the airport table that is selected into the TileHighlightData.
+void SetAirportSelected(const AirportTileTable * ahtt)
+{
+	_thd.ahtt = ahtt;
+}
+
+//Testing the idea of drawing the sprite group
+void DrawAirportSpriteGroup(const TileInfo * ti, const AirportTileTable * temp)
+{
+	const DrawTileSprites * adts = GetStationTileLayout(STATION_AIRPORT, temp->gfx);
+	SpriteID pal = adts->ground.pal;
+	
+	// Animated tile mess things up...  So exclude them, draw just the apron instead.
+	if (temp->gfx != 31 && temp->gfx != 39 && temp->gfx != 51 && temp->gfx != 52 && temp->gfx != 82)
+		 DrawCommonTileSeqHighlight(ti, adts, TO_BUILDINGS, 0, 0, COMPANY_SPRITE_COLOUR(_current_company), true);
+	else
+		DrawSelectionSprite(SPR_AIRPORT_APRON, pal, ti, 0, FOUNDATION_PART_NORMAL);
+}
+
+// This looks at a specific tile within the airports tile table and check if it has an APT_EMPTY entry.
+static bool IsAirportHighlightTile(int pos, const TileInfo * ti)
+{
+	const AirportTileTable * temp = &_thd.ahtt[pos];
+	
+	if (temp->gfx != 29)  // 29 = APT_EMPTY
+	{
+		//DrawSelectionSprite( SPR_AIRPORT_APRON , PAL_NONE, ti, 0, FOUNDATION_PART_NORMAL);
+	if (_alt_pressed)
+		DrawAirportSpriteGroup(ti, temp);
+		return true;
+	}
+	
+	return false;
 }
 
 enum TileHighlightType {
@@ -1101,6 +1128,17 @@ static void DrawTileSelection(const TileInfo *ti)
 draw_inner:
 		if (_thd.drawstyle & HT_RECT) {
 			if (!is_redsq) DrawTileSelectionRect(ti, _thd.make_square_red ? PALETTE_SEL_TILE_RED : PAL_NONE);
+		} else if (_thd.drawstyle & HT_AIRPORT) {  // This draws the irregular sized airports.
+			if (!is_redsq) {
+				// Converts pixel coordinates into tile coordinates.  Then passes that to IsAirportHighlightTile to check and see if the tile should be highlighted.
+				if (IsAirportHighlightTile(((ti->x - _thd.pos.x) / TILE_SIZE) + (((ti->y - _thd.pos.y) / TILE_SIZE) * (_thd.size.x / TILE_SIZE)), ti)) {
+					if (!_alt_pressed)
+						 DrawTileSelectionRect(ti, _thd.make_square_red ? PALETTE_SEL_TILE_RED : PAL_NONE);
+				}
+				else if (_settings_client.gui.station_show_coverage)
+					 DrawTileSelectionRect(ti, PALETTE_SEL_TILE_BLUE);  // If it is not an airport tile, then show it as catchment if enabled.
+				
+			}
 		} else if (_thd.drawstyle & HT_POINT) {
 			/* Figure out the Z coordinate for the single dot. */
 			int z = 0;
@@ -1971,6 +2009,13 @@ static void SetSelectionTilesDirty()
 		x_size -= TILE_SIZE;
 		y_size -= TILE_SIZE;
 
+		if (_thd.drawstyle == HT_AIRPORT) {
+			x_start -= TILE_SIZE * 8;
+			y_start -= TILE_SIZE * 8;
+			x_size += TILE_SIZE * 16;
+			y_size += TILE_SIZE * 16;
+		}
+
 		assert(x_size >= 0);
 		assert(y_size >= 0);
 
@@ -2524,6 +2569,9 @@ void UpdateTileSelection()
 				case HT_RECT:
 					new_drawstyle = HT_RECT;
 					break;
+				case HT_AIRPORT:
+					new_drawstyle = HT_AIRPORT;
+					break;
 				case HT_POINT:
 					new_drawstyle = HT_POINT;
 					x1 += TILE_SIZE / 2;
@@ -2625,6 +2673,9 @@ void VpStartPlaceSizing(TileIndex tile, ViewportPlaceMethod method, ViewportDrag
 	if ((_thd.place_mode & HT_DRAG_MASK) == HT_RECT) {
 		_thd.place_mode = HT_SPECIAL | others;
 		_thd.next_drawstyle = HT_RECT | others;
+	} else if ((_thd.place_mode & HT_DRAG_MASK) == HT_AIRPORT) {
+		_thd.place_mode = HT_SPECIAL | others;
+		_thd.next_drawstyle = HT_AIRPORT | others;
 	} else if (_thd.place_mode & (HT_RAIL | HT_LINE)) {
 		_thd.place_mode = HT_SPECIAL | others;
 		_thd.next_drawstyle = _thd.drawstyle | others;
@@ -2729,6 +2780,7 @@ static bool SwapDirection(HighLightStyle style, TileIndex start_tile, TileIndex 
 		case HT_LINE: return (end_x > start_x || (end_x == start_x && end_y > start_y));
 
 		case HT_RECT:
+		case HT_AIRPORT:
 		case HT_POINT: return (end_x != start_x && end_y < start_y);
 		default: NOT_REACHED();
 	}
@@ -2760,7 +2812,8 @@ static int CalcHeightdiff(HighLightStyle style, uint distance, TileIndex start_t
 	if (swap) Swap(start_tile, end_tile);
 
 	switch (style & HT_DRAG_MASK) {
-		case HT_RECT: {
+		case HT_RECT:
+		case HT_AIRPORT: {
 			static const TileIndexDiffC heightdiff_area_by_dir[] = {
 				/* Start */ {1, 0}, /* Dragging east */ {0, 0}, // Dragging south
 				/* End   */ {0, 1}, /* Dragging east */ {1, 1}  // Dragging south
@@ -3216,6 +3269,12 @@ calc_heightdiff_single_direction:;
 						style = HT_LINE | HT_DIR_Y;
 					} else if (dy == 1) {
 						style = HT_LINE | HT_DIR_X;
+					}					
+				} else if (style & HT_AIRPORT) {
+					if (dx == 1) {
+						style = HT_LINE | HT_DIR_Y;
+					} else if (dy == 1) {
+						style = HT_LINE | HT_DIR_X;
 					}
 				}
 
@@ -3265,6 +3324,8 @@ EventState VpHandlePlaceSizingDrag()
 	HighLightStyle others = _thd.place_mode & ~(HT_DRAG_MASK | HT_DIR_MASK);
 	if ((_thd.next_drawstyle & HT_DRAG_MASK) == HT_RECT) {
 		_thd.place_mode = HT_RECT | others;
+	} else if ((_thd.next_drawstyle & HT_DRAG_MASK) == HT_AIRPORT) {
+		_thd.place_mode = HT_AIRPORT | others;
 	} else if (_thd.select_method & VPM_SIGNALDIRS) {
 		_thd.place_mode = HT_RECT | others;
 	} else if (_thd.select_method & VPM_RAILDIRS) {

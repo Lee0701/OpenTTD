@@ -15,6 +15,8 @@
 #include "tile_type.h"
 #include "viewport_type.h"
 
+struct AirportTileTable;
+
 /** Highlighting draw styles */
 enum HighLightStyle {
 	HT_NONE      = 0x000, ///< default
@@ -26,7 +28,8 @@ enum HighLightStyle {
 	HT_RAIL      = 0x080, ///< autorail (one piece), lower bits: direction
 	HT_VEHICLE   = 0x100, ///< vehicle is accepted as target as well (bitmask)
 	HT_DIAGONAL  = 0x200, ///< Also allow 'diagonal rectangles'. Only usable in combination with #HT_RECT or #HT_POINT.
-	HT_DRAG_MASK = 0x0F8, ///< Mask for the tile drag-type modes.
+	HT_AIRPORT   = 0x400, ///< Used for irregular Airports.  
+	HT_DRAG_MASK = 0x4F8, ///< Mask for the tile drag-type modes.
 
 	/* lower bits (used with HT_LINE and HT_RAIL):
 	 * (see ASCII art in table/autorail.h for a visual interpretation) */
@@ -78,6 +81,9 @@ struct TileHighlightData {
 
 	bool IsDraggingDiagonal();
 	Window *GetCallbackWnd();
+
+	const AirportTileTable * ahtt;
+
 };
 
 #endif /* TILEHIGHLIGHT_TYPE_H */

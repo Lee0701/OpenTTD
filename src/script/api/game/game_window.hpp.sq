@@ -136,6 +136,7 @@ void SQGSWindow_Register(Squirrel *engine)
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_SPRITE_ALIGNER,                         "WC_SPRITE_ALIGNER");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_LINKGRAPH_LEGEND,                       "WC_LINKGRAPH_LEGEND");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_SAVE_PRESET,                            "WC_SAVE_PRESET");
+	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_TERMINAL_VIEW,                          "WC_TERMINAL_VIEW");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_FRAMERATE_DISPLAY,                      "WC_FRAMERATE_DISPLAY");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_FRAMETIME_GRAPH,                        "WC_FRAMETIME_GRAPH");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WC_SCREENSHOT,                             "WC_SCREENSHOT");
@@ -1380,6 +1381,10 @@ void SQGSWindow_Register(Squirrel *engine)
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_W_CENTER_VIEW,                         "WID_W_CENTER_VIEW");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_W_RENAME,                              "WID_W_RENAME");
 	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_W_SHOW_VEHICLES,                       "WID_W_SHOW_VEHICLES");
+	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_T_CAPTION,                             "WID_T_CAPTION");
+	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_T_VIEWPORT,                            "WID_T_VIEWPORT");
+	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_T_CENTER_VIEW,                         "WID_T_CENTER_VIEW");
+	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_T_FULLLOAD,                            "WID_T_FULLLOAD");
 
 	SQGSWindow.DefSQStaticMethod(engine, &ScriptWindow::Close,     "Close",     3, ".ii");
 	SQGSWindow.DefSQStaticMethod(engine, &ScriptWindow::IsOpen,    "IsOpen",    3, ".ii");

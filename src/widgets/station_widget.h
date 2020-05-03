@@ -23,7 +23,7 @@ enum StationViewWidgets {
 	WID_SV_LOCATION,           ///< 'Location' button.
 	WID_SV_ACCEPTS_RATINGS,    ///< 'Accepts' / 'Ratings' button.
 	WID_SV_RENAME,             ///< 'Rename' button.
-	WID_SV_CLOSE_AIRPORT,      ///< 'Close airport' button.
+	WID_SV_AIRPORT_CONTROL,    ///< Opens the Airport Control Window.
 	WID_SV_TRAINS,             ///< List of scheduled trains button.
 	WID_SV_ROADVEHS,           ///< List of scheduled road vehs button.
 	WID_SV_SHIPS,              ///< List of scheduled ships button.
@@ -60,6 +60,23 @@ enum JoinStationWidgets {
 	WID_JS_CAPTION,   // Caption of the window.
 	WID_JS_PANEL,     // Main panel.
 	WID_JS_SCROLLBAR, // Scrollbar of the panel.
+};
+
+/** Widgets of the #AirportControlWindow class. */
+enum AirportControlWidgets {
+	WID_AC_CAPTION,           ///< Caption of window.
+	WID_SV_CLOSE_AIRPORT,     ///< 'Close airport' button.
+	WID_AC_CENTER_VIEW,       ///< Center the main view on this terminal.
+	WID_AC_PASSTERM,          ///< Passenger Terminal Caption
+	WID_AC_CARGOTERM,         ///< Cargo Terminal Caption
+	WID_SV_RESET_AIRPORT,     ///< Resets airport flags and any planes flags at this airport.
+		//WID_T_VIEWPORT,      ///< The viewport on this terminal.
+		//WID_T_FULLLOAD,		 ///< Full Load Button
+	
+	WID_AC_TERMINAL_PASS_FIRST, ///< First Passenger Terminal.
+	WID_AC_TERMINAL_PASS_LAST = WID_AC_TERMINAL_PASS_FIRST + 72, ///< Last Passenger Terminal.
+	WID_AC_TERMINAL_CARGO_FIRST, ///< First Cargo Terminal.
+	WID_AC_TERMINAL_CARGO_LAST = WID_AC_TERMINAL_CARGO_FIRST + 24, ///< Last Cargo Terminal.
 };
 
 #endif /* WIDGETS_STATION_WIDGET_H */

@@ -119,6 +119,7 @@ static const CmdStruct _cmd_structs[] = {
 	{"COMPANY",           EmitSingleChar, SCC_COMPANY_NAME,       1, -1, C_NONE | C_GENDER},
 	{"COMPANY_NUM",       EmitSingleChar, SCC_COMPANY_NUM,        1, -1, C_NONE},
 	{"PRESIDENT_NAME",    EmitSingleChar, SCC_PRESIDENT_NAME,     1, -1, C_NONE | C_GENDER},
+	{"TERMINAL",          EmitSingleChar, SCC_TERMINAL_NAME,      2, -1, C_NONE | C_GENDER},
 
 	{"",                  EmitSingleChar, '\n',                   0, -1, C_DONTCOUNT},
 	{"{",                 EmitSingleChar, '{',                    0, -1, C_DONTCOUNT},

@@ -1317,6 +1317,16 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
+			case SCC_TERMINAL_NAME: { // {TERMINAL}
+				VehicleType vt = (VehicleType)args->GetInt32(SCC_DEPOT_NAME);
+								//if (vt == VEH_AIRCRAFT) {
+				uint64 args_array[] = { (uint64)args->GetInt32() };
+				WChar types_array[] = { SCC_STATION_NAME };
+				StringParameters tmp_params(args_array, 1, types_array);
+				buff = GetStringWithArgs(buff, STR_FORMAT_TERMINAL_NAME, &tmp_params, last);
+				break;
+			}
+
 			case SCC_ENGINE_NAME: { // {ENGINE}
 				const Engine *e = Engine::GetIfValid(args->GetInt32(SCC_ENGINE_NAME));
 				if (e == nullptr) break;

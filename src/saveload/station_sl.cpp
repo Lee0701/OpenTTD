@@ -202,9 +202,11 @@ static const SaveLoad _old_station_desc[] = {
 	SLE_CONDNULL(2, SL_MIN_VERSION, SLV_6),  ///< Truck/bus stop status
 	SLE_CONDNULL(1, SL_MIN_VERSION, SLV_5),  ///< Blocked months
 
-	SLE_CONDVAR(Station, airport.flags,              SLE_VAR_U64 | SLE_FILE_U16,  SL_MIN_VERSION,  SLV_3),
-	SLE_CONDVAR(Station, airport.flags,              SLE_VAR_U64 | SLE_FILE_U32,  SLV_3, SLV_46),
-	SLE_CONDVAR(Station, airport.flags,              SLE_UINT64,                 SLV_46, SL_MAX_VERSION),
+	SLE_CONDVAR(Station, airport.flags1,              SLE_VAR_U64 | SLE_FILE_U16,  SL_MIN_VERSION,  SLV_3),
+	SLE_CONDVAR(Station, airport.flags1,              SLE_VAR_U64 | SLE_FILE_U32,  SLV_3, SLV_46),
+	SLE_CONDVAR(Station, airport.flags1,              SLE_UINT64,                 SLV_46, SL_MAX_VERSION),
+	SLE_CONDVAR(Station, airport.flags2,              SLE_UINT64,                 SLV_TERMINUS, SL_MAX_VERSION),
+	SLE_CONDVAR(Station, airport.fullload,            SLE_UINT64,                 SLV_TERMINUS, SL_MAX_VERSION),
 
 	SLE_CONDNULL(2, SL_MIN_VERSION, SLV_26), ///< last-vehicle
 	SLE_CONDVAR(Station, last_vehicle_type,          SLE_UINT8,                  SLV_26, SL_MAX_VERSION),
@@ -438,7 +440,9 @@ static const SaveLoad _station_desc[] = {
 	  SLE_CONDVAR(Station, airport.h,                  SLE_FILE_U8 | SLE_VAR_U16, SLV_140, SL_MAX_VERSION),
 	      SLE_VAR(Station, airport.type,               SLE_UINT8),
 	  SLE_CONDVAR(Station, airport.layout,             SLE_UINT8,                 SLV_145, SL_MAX_VERSION),
-	      SLE_VAR(Station, airport.flags,              SLE_UINT64),
+	      SLE_VAR(Station, airport.flags1,             SLE_UINT64),
+	  SLE_CONDVAR(Station, airport.flags2,             SLE_UINT64,                SLV_TERMINUS, SL_MAX_VERSION),
+	  SLE_CONDVAR(Station, airport.fullload,           SLE_UINT64,                SLV_TERMINUS, SL_MAX_VERSION),
 	  SLE_CONDVAR(Station, airport.rotation,           SLE_UINT8,                 SLV_145, SL_MAX_VERSION),
 	 SLEG_CONDARR(_old_st_persistent_storage.storage,  SLE_UINT32, 16,            SLV_145, SLV_161),
 	  SLE_CONDREF(Station, airport.psa,                REF_STORAGE,               SLV_161, SL_MAX_VERSION),

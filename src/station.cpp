@@ -646,7 +646,7 @@ StationRect& StationRect::operator = (const Rect &src)
 }
 
 /**
- * Calculates the maintenance cost of all airports of a company.
+ * Calculates the maintenance cost of all Terminals of a company.
  * @param owner Company.
  * @return Total cost.
  */
@@ -654,9 +654,16 @@ Money AirportMaintenanceCost(Owner owner)
 {
 	Money total_cost = 0;
 
-	for (const Station *st : Station::Iterate()) {
-		if (st->owner == owner && (st->facilities & FACIL_AIRPORT)) {
-			total_cost += _price[PR_INFRASTRUCTURE_AIRPORT] * st->airport.GetSpec()->maintenance_cost;
+	for (Station *st : Station::Iterate()) {
+		if (st->airport.GetTerminalOwner(owner) && (st->facilities & FACIL_AIRPORT)) {
+			//total_cost += _price[PR_INFRASTRUCTURE_AIRPORT] * st->airport.GetSpec()->maintenance_cost;  // Old way of using the maintenance values from airport_defaults.h
+			int count = 0;
+			const AirportSpec * as = st->airport.GetSpec();
+			for (uint i = 0; i < as->nof_terminals; i++) {
+				if (GetTileOwner(st->airport.GetRotatedTileFromOffset(as->terminal_table[i].ti)) == owner)
+					 count++;
+			}
+			total_cost += _price[PR_INFRASTRUCTURE_AIRPORT] * count;
 		}
 	}
 	/* 3 bits fraction for the maintenance cost factor. */

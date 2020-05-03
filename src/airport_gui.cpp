@@ -97,14 +97,14 @@ struct BuildAirToolbarWindow : Window {
 	{
 		switch (widget) {
 			case WID_AT_AIRPORT:
-				if (HandlePlacePushButton(this, WID_AT_AIRPORT, SPR_CURSOR_AIRPORT, HT_RECT)) {
+				if (HandlePlacePushButton(this, WID_AT_AIRPORT, SPR_CURSOR_AIRPORT, HT_AIRPORT)) {
 					ShowBuildAirportPicker(this);
 					this->last_user_action = widget;
 				}
 				break;
 
 			case WID_AT_DEMOLISH:
-				HandlePlacePushButton(this, WID_AT_DEMOLISH, ANIMCURSOR_DEMOLISH, HT_RECT | HT_DIAGONAL);
+				HandlePlacePushButton(this, WID_AT_DEMOLISH, ANIMCURSOR_DEMOLISH, HT_AIRPORT | HT_DIAGONAL);
 				this->last_user_action = widget;
 				break;
 
@@ -205,6 +205,17 @@ Window *ShowBuildAirToolbar()
 {
 	if (!Company::IsValidID(_local_company)) return nullptr;
 
+	// If an airport has not been selected, it will crash the game when you select the Destroy tool.
+	// In order to make sure it doesn't crash the game, An airport is selected when you open the Toolbar.
+	const AirportSpec * as = AirportClass::Get(APC_BEGIN)->GetSpec(0);
+	int w = as->size_x;
+	int h = as->size_y;
+	Direction rotation = as->rotation[_selected_airport_layout];
+	if (rotation == DIR_E || rotation == DIR_W) Swap(w, h);
+	SetTileSelectSize(w, h);
+	SetAirportSelected(as->table[_selected_airport_layout]);
+	// End set an initial Airport.
+
 	DeleteWindowByClass(WC_BUILD_TOOLBAR);
 	return AllocateWindowDescFront<BuildAirToolbarWindow>(&_air_toolbar_desc, TRANSPORT_AIR);
 }
@@ -232,7 +243,7 @@ public:
 		this->CreateNestedTree();
 
 		this->vscroll = this->GetScrollbar(WID_AP_SCROLLBAR);
-		this->vscroll->SetCapacity(5);
+		this->vscroll->SetCapacity(10);
 		this->vscroll->SetPosition(0);
 
 		this->FinishInitNested(TRANSPORT_AIR);
@@ -318,7 +329,7 @@ public:
 				}
 
 				this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
-				size->height = 5 * this->line_height;
+				size->height = 10 * this->line_height;
 				break;
 			}
 
@@ -453,6 +464,8 @@ public:
 			if (rotation == DIR_E || rotation == DIR_W) Swap(w, h);
 			SetTileSelectSize(w, h);
 
+			SetAirportSelected(as->table[_selected_airport_layout]);
+
 			this->preview_sprite = GetCustomAirportSprite(as, _selected_airport_layout);
 
 			this->SetWidgetDisabledState(WID_AP_LAYOUT_DECREASE, _selected_airport_layout == 0);
@@ -498,6 +511,23 @@ public:
 				this->UpdateSelectSize();
 				this->SetDirty();
 				break;
+		}
+	}
+
+	virtual void OnMouseWheel(int wheel)
+	{
+		if (_alt_pressed) {
+			if (wheel < 0 && _selected_airport_layout > 0) {
+				_selected_airport_layout--;
+				this->UpdateSelectSize();
+				this->SetDirty();
+			}
+			const AirportSpec * as = AirportClass::Get(_selected_airport_class)->GetSpec(_selected_airport_index);
+			if (wheel > 0 && _selected_airport_layout < as->num_table - 1) {
+				_selected_airport_layout++;
+				this->UpdateSelectSize();
+				this->SetDirty();
+			}
 		}
 	}
 
@@ -560,7 +590,7 @@ static const NWidgetPart _nested_build_airport_widgets[] = {
 		NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_AP_CLASS_DROPDOWN), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_STATION_BUILD_AIRPORT_TOOLTIP),
 		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_AP_AIRPORT_SPRITE), SetFill(1, 0),
 		NWidget(NWID_HORIZONTAL),
-			NWidget(WWT_MATRIX, COLOUR_GREY, WID_AP_AIRPORT_LIST), SetFill(1, 0), SetMatrixDataTip(1, 5, STR_STATION_BUILD_AIRPORT_TOOLTIP), SetScrollbar(WID_AP_SCROLLBAR),
+			NWidget(WWT_MATRIX, COLOUR_GREY, WID_AP_AIRPORT_LIST), SetFill(1, 0), SetMatrixDataTip(1, 10, STR_STATION_BUILD_AIRPORT_TOOLTIP), SetScrollbar(WID_AP_SCROLLBAR),
 			NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_AP_SCROLLBAR),
 		EndContainer(),
 		NWidget(NWID_HORIZONTAL),

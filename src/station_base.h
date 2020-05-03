@@ -305,7 +305,9 @@ struct GoodsEntry {
 struct Airport : public TileArea {
 	Airport() : TileArea(INVALID_TILE, 0, 0) {}
 
-	uint64 flags;       ///< stores which blocks on the airport are taken. was 16 bit earlier on, then 32
+	uint64 flags1;       ///< stores which blocks on the airport are taken. was 16 bit earlier on, then 32
+	uint64 flags2;       ///< stores which blocks on the airport are taken. was 16 bit earlier on, then 32
+	uint64 fullload;     ///< duplicate of flags1 that store whether a terminal has full load restrictions or not. If bit is set, then planes with "full load" orders are not allowed at that terminal.
 	byte type;          ///< Type of this airport, @see AirportTypes
 	byte layout;        ///< Airport layout number.
 	Direction rotation; ///< How this airport is rotated.
@@ -363,6 +365,187 @@ struct Airport : public TileArea {
 			default: NOT_REACHED();
 		}
 	}
+
+	/**
+	* This is a check to see if a runway has terminals that the planes owner can use.
+	* @param terminals.  A flag with all terminals from this Hangar
+	* @param owner.  The owner to check and see if any owned terminals.
+	* @param passenger.  Whether it is a passenger plane or not.
+	* @return boolean if own a terminal.
+	*/
+	inline bool GetHangarTerminalOwnerCheck(uint64 terminals, Owner owner, bool passenger) const
+	{
+		const AirportSpec * as = this->GetSpec();
+	
+		// This changes the check depending upon cargo type.
+		// Keeps a passenger plane from checking against cargo terminals and vice versa.
+		if (passenger)
+			terminals = terminals & 35184372088320; // TERM01 through TERM36   Bits 9 through 44
+		else
+			terminals = terminals & 144080003703767040; // CARG01 through CARG12  Bits 45 though 56
+
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (as->terminal_table[i].terminal & terminals) {
+				if (GetTileOwner(this->GetRotatedTileFromOffset(as->terminal_table[i].ti)) == owner) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * This is a check to see if a runway has terminals that the planes owner can use.
+	 * @param flags1 of the airport. Runways 1-6
+	 * @param flags2 of the airport. Runways 7-8
+	 * @param owner.  The owner to check and see if any owned terminals.
+	 * @param landingtype. Helicopter or Airplane.
+	 * @param passenger.  Whether it is a passenger plane or not.
+	 * @return boolean if own a terminal.
+	*/
+	inline bool GetRunwayTerminalOwnerCheck(uint64 flags1, uint64 flags2, Owner owner, byte landingtype, bool passenger) const
+	{
+		// If it is a helicopter landing, it is ok.  They do not use Runways.
+		if (landingtype == HELILANDING)
+			return true;
+		const AirportSpec * as = this->GetSpec();
+		
+		//Helicopter airports do not have runways, so it is allowed...
+		if (as->nof_runways == 0)
+			return true;
+		
+		uint64 terminals = GetRunwayTerminals(flags1, flags2);
+		
+		// This changes the check depending upon cargo type.
+		// Keeps a passenger plane from checking against cargo terminals and vice versa.
+		if (passenger)
+			terminals = terminals & 35184372088320; // TERM01 through TERM36   Bits 9 through 44
+		else
+			terminals = terminals & 144080003703767040; // CARG01 through CARG12  Bits 45 though 56
+		
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (as->terminal_table[i].terminal & terminals) {
+				if (GetTileOwner(this->GetRotatedTileFromOffset(as->terminal_table[i].ti)) == owner) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Get the terminals from a runway.
+	 * @param runway_num The runway to get the terminals of.
+	 * @pre runway_num < GetNumRunways().
+	 * @return flag of all the terminals.
+	*/
+	inline uint64 GetRunwayTerminals(uint64 flags1, uint64 flags2) const
+	{
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_runways; i++) {
+			if (as->runway_table[i].flags1 & flags1 || as->runway_table[i].flags2 & flags2) {
+				return as->runway_table[i].terminals;
+			}
+		}
+		NOT_REACHED();
+	}
+	
+	/** Get the number of Landing runways on this airport.
+	    A group of terminals may have multiple runways assigned.*/
+	inline uint GetNumRunways() const
+	{
+		uint num = 0;
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_runways; i++) {
+			num += CountBits(as->runway_table[i].flags1);
+			num += CountBits(as->runway_table[i].flags2);
+		}
+		return num;
+	}
+	
+	/**
+	 * Get the tile index of a given terminal.
+	 * @param terminal The terminal to get the location of.
+	 * @pre terminal < GetNumTerminals().
+	 * @return A tile with the given terminal.
+	*/
+	inline TileIndex GetTerminalTile(uint64 terminal) const
+	{
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (as->terminal_table[i].terminal & terminal) {
+				return this->GetRotatedTileFromOffset(as->terminal_table[i].ti);
+			}
+		}
+		NOT_REACHED();
+	}
+	
+	/**
+	 * Get the tile index of a given terminal.
+	 * @param terminal The terminal to get the location of.
+	 * @pre terminal < GetNumTerminals().
+	 * @return A tile with the given terminal.
+	*/
+	inline bool IsTerminalTile(TileIndex tile) const
+	{
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (this->GetRotatedTileFromOffset(as->terminal_table[i].ti) == tile)
+				return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Get the terminal number of the terminal at a specific tile.
+	 * @param tile The tile to query.
+	 * @pre IsTerminalTile(tile).
+	 * @return The hangar number of the hangar at the given tile.
+	*/
+	inline uint64 GetTerminalNum(TileIndex tile) const
+	{
+		const TerminalTileTable * htt = GetTerminalDataByTile(tile);
+		return htt->terminal;
+	}
+	
+	/** Get the number of Passenger terminals on this airport. */
+	inline uint GetNumPassengerTerminals() const
+	{
+		uint num = 0;
+		uint64 allterminals = 35184372088320; // TERM01 through TERM36   Bits 9 through 44
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (as->terminal_table[i].terminal & allterminals)
+				num++;
+		}
+		return num;
+	}
+	
+	/** Get the number of Cargo terminals on this airport. */
+	inline uint GetNumCargoTerminals() const
+	{
+		uint num = 0;
+		uint64 allterminals = 144080003703767040; // CARG01 through CARG12  Bits 45 though 56
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (as->terminal_table[i].terminal & allterminals)
+				num++;
+		}
+		return num;
+	}
+	
+	/** Check and see if an owner owns any terminals at an airport */
+	inline bool GetTerminalOwner(Owner owner)
+	{
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (GetTileOwner(this->GetRotatedTileFromOffset(as->terminal_table[i].ti)) == owner) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	/**
 	 * Get the first tile of the given hangar.
@@ -434,6 +617,23 @@ private:
 		for (uint i = 0; i < as->nof_depots; i++) {
 			if (this->GetRotatedTileFromOffset(as->depot_table[i].ti) == tile) {
 				return as->depot_table + i;
+			}
+		}
+		NOT_REACHED();
+	}
+
+	/**
+	 * Retrieve terminal information of a terminal at a given tile.
+	 * @param tile %Tile containing the terminal.
+	 * @return The requested terminal information.
+	 * @pre The \a tile must be at a terminal tile at an airport.
+	*/
+	inline const TerminalTileTable * GetTerminalDataByTile(TileIndex tile) const
+	{
+		const AirportSpec * as = this->GetSpec();
+		for (uint i = 0; i < as->nof_terminals; i++) {
+			if (this->GetRotatedTileFromOffset(as->terminal_table[i].ti) == tile) {
+				return as->terminal_table + i;
 			}
 		}
 		NOT_REACHED();

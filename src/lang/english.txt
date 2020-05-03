@@ -2507,9 +2507,25 @@ STR_AIRPORT_HELIPORT                                            :Heliport
 STR_AIRPORT_HELIDEPOT                                           :Helidepot
 STR_AIRPORT_HELISTATION                                         :Helistation
 
+STR_AIRPORT_TERMINUS1											:Terminus 1
+STR_AIRPORT_TERMINUS2											:Terminus 2
+STR_AIRPORT_TERMINUS3											:Terminus 3
+STR_AIRPORT_TERMINUS4											:Terminus 4
+STR_AIRPORT_SANFRAN												:San Francisco
+STR_AIRPORT_LEIPZIG												:Leipzig
+STR_AIRPORT_WINDY												:Windy City
+STR_AIRPORT_CARGOS												:Cargo Airport Small
+STR_AIRPORT_CARGOL												:Cargo Airport Large
+STR_AIRPORT_CARGOX												:Cargo Airport X-Large
+STR_AIRPORT_COMMUTERL											:Commuter Large
+STR_AIRPORT_INDIANAPOLIS										:Indianapolis
+STR_AIRPORT_SCHIPHOL											:Schiphol
+ 
+STR_AIRPORT_CLASS_CARGO											:Cargo Airports
 STR_AIRPORT_CLASS_SMALL                                         :Small airports
+STR_AIRPORT_CLASS_MEDIUM                                        :Medium airports
 STR_AIRPORT_CLASS_LARGE                                         :Large airports
-STR_AIRPORT_CLASS_HUB                                           :Hub airports
+STR_AIRPORT_CLASS_TERMINUS                                      :Terminus airports
 STR_AIRPORT_CLASS_HELIPORTS                                     :Helicopter airports
 
 STR_STATION_BUILD_NOISE                                         :{BLACK}Noise generated: {GOLD}{COMMA}
@@ -3299,6 +3315,27 @@ STR_BUOY_VIEW_CENTER_TOOLTIP                                    :{BLACK}Centre m
 STR_BUOY_VIEW_CHANGE_BUOY_NAME                                  :{BLACK}Change buoy name
 
 STR_EDIT_WAYPOINT_NAME                                          :{WHITE}Edit waypoint name
+
+# Terminal view window
+STR_TERMINAL_VIEW_CAPTION                                       :{WHITE}{TERMINAL}
+STR_TERMINAL_VIEW_CENTER_TOOLTIP								:{BLACK}Center main view on terminal location.  Ctrl+Click opens a new viewport on terminal location
+STR_TERMINAL_VIEW_FULLLOAD_TOOLTIP								:{BLACK}Restricts planes with full load orders from using this terminal. Button up = no restrictions.
+STR_TERMINAL_FULLLOAD_BUTTON                                    :{BLACK}Full Load Restricted
+STR_FORMAT_TERMINAL_NAME                                        :{STATION} Terminal
+STR_TERMINAL_SELECT_COMPANY_TOOLTIP								:{BLACK}Select the company to own this terminal
+
+# Airport Control Window
+STR_AIRPORT_CONTROL_CAPTION										:{WHITE}Airport Control
+STR_STATION_VIEW_AIRPORT_CONTROL                                :{BLACK}Airport Control
+STR_STATION_VIEW_AIRPORT_CONTROL_TOOLTIP                        :{BLACK}Open Station's Airport Control Window
+STR_AIRPORT_CONTROL_PASS_CAPTION								:{WHITE}Passenger Terminals
+STR_AIRPORT_CONTROL_PASS_CAPTION_TOOLTIP						:{WHITE}Shows the owner of each Passenger Terminal at the airport.
+STR_AIRPORT_CONTROL_CARGO_CAPTION								:{WHITE}Cargo Terminals
+STR_AIRPORT_CONTROL_CARGO_CAPTION_TOOLTIP						:{WHITE}Shows the owner of each Cargo Terminal at the airport.  Click to open Terminal Window.
+STR_AIRPORT_CONTROL_PASSENGER_TOOLTIP							:{BLACK}Click to open the Passenger Terminal Window.
+STR_AIRPORT_CONTROL_CARGO_TOOLTIP								:{BLACK}Click to open the Cargo Terminal Window.
+STR_STATION_VIEW_RESET_AIRPORT									:{BLACK}Reset Airport
+STR_STATION_VIEW_RESET_AIRPORT_TOOLTIP							:{BLACK}This should be used in an emergency only.  Resets Airport flags and airplane flags at this airport.
 
 # Finances window
 STR_FINANCES_CAPTION                                            :{WHITE}{COMPANY} Finances {BLACK}{COMPANY_NUM}

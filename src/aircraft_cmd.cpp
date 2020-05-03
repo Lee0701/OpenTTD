@@ -80,11 +80,13 @@ void Aircraft::UpdateDeltaXY()
 }
 
 static bool AirportMove(Aircraft *v, const AirportFTAClass *apc);
-static bool AirportSetBlocks(Aircraft *v, const AirportFTA *current_pos, const AirportFTAClass *apc);
+static bool AirportSetBlocks(Aircraft * v, const AirportFTA * current_pos, const AirportFTAClass * apc, byte heading);
+static bool AirportSetBlocks2(Aircraft * v, const AirportFTA * current_pos, const AirportFTAClass * apc);
 static bool AirportHasBlock(Aircraft *v, const AirportFTA *current_pos, const AirportFTAClass *apc);
-static bool AirportFindFreeTerminal(Aircraft *v, const AirportFTAClass *apc);
-static bool AirportFindFreeHelipad(Aircraft *v, const AirportFTAClass *apc);
+static bool AirportFindFreeTerminal(Aircraft * v, const AirportFTAClass * apc, bool useotherterminals);
 static void CrashAirplane(Aircraft *v);
+static bool ReleaseTerminalSingle(Aircraft * v, byte i);
+static bool FreeTerminalSingle(Aircraft * v, byte i);
 
 static const SpriteID _aircraft_sprite[] = {
 	0x0EB5, 0x0EBD, 0x0EC5, 0x0ECD,
@@ -140,7 +142,7 @@ static StationID FindNearestHangar(const Aircraft *v)
 	}
 
 	for (const Station *st : Station::Iterate()) {
-		if (st->owner != v->owner || !(st->facilities & FACIL_AIRPORT) || !st->airport.HasHangar()) continue;
+		if ((st->owner ^ v->owner) || (st->owner ^ (v->owner | OWNER_SUB_BEGIN)) || !(st->facilities & FACIL_AIRPORT) || !st->airport.HasHangar()) continue;
 
 		const AirportFTAClass *afc = st->airport.GetFTA();
 
@@ -337,6 +339,9 @@ CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *
 		v->SetNext(u);
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_aircraft);
+
+		v->airport_flags1 = 0;
+		v->airport_flags2 = 0;
 
 		v->date_of_last_service = _date;
 		v->build_year = u->build_year = _cur_year;
@@ -841,7 +846,10 @@ static byte AircraftGetEntryPoint(const Aircraft *v, const AirportFTAClass *apc,
 		dir = delta_y < 0 ? DIAGDIR_NW : DIAGDIR_SE;
 	}
 	dir = ChangeDiagDir(dir, DiagDirDifference(DIAGDIR_NE, DirToDiagDir(rotation)));
-	return apc->entry_points[dir];
+	if (v->subtype == AIR_HELICOPTER)
+		return apc->heli_entry_point[dir];
+	else
+		return apc->entry_points[dir];
 }
 
 
@@ -946,10 +954,11 @@ static bool AircraftController(Aircraft *v)
 		}
 
 		/* Vehicle is now at the airport. */
-		v->tile = tile;
+		//v->tile = tile;
+		v->tile = TileVirtXY(v->x_pos, v->y_pos);
 
 		/* Find altitude of landing position. */
-		int z = GetSlopePixelZ(x, y) + 1 + afc->delta_z;
+		int z = GetSlopePixelZ(x + amd.x, y + amd.y) + 1 + afc->delta_z;
 
 		if (z == v->z_pos) {
 			Vehicle *u = v->Next()->Next();
@@ -973,8 +982,25 @@ static bool AircraftController(Aircraft *v)
 		return false;
 	}
 
+	// Used to calculate the offset needed for moving a plane backwards.
+	int xoffset = 0;
+	int yoffset = 0;
+	
+	if (v->state == BACKUP)
+		switch (v->direction) {
+			case DIR_N:  xoffset = -4; break;
+			case DIR_S:  yoffset = 4;  break;
+			case DIR_W:  xoffset = 4;  break;
+			case DIR_E:  yoffset = 4;  break;
+			case DIR_NW: yoffset = -4; break;
+			case DIR_SW: xoffset = 4;  break;
+			case DIR_NE: xoffset = -4; break;
+			case DIR_SE: yoffset = 4;  break;
+		}
+
+
 	/* Get distance from destination pos to current pos. */
-	uint dist = abs(x + amd.x - v->x_pos) +  abs(y + amd.y - v->y_pos);
+	uint dist = abs(x + amd.x - (v->x_pos + xoffset)) + abs(y + amd.y - (v->y_pos + yoffset));
 
 	/* Need exact position? */
 	if (!(amd.flag & AMED_EXACTPOS) && dist <= (amd.flag & AMED_SLOWTURN ? 8U : 4U)) return true;
@@ -999,6 +1025,18 @@ static bool AircraftController(Aircraft *v)
 		return false;
 	}
 
+	//Temporary to fix Windy Airport bug...   Needs to be removed next update.
+	if (v->state == LANDING && dist >= 1000) {
+			/* Something went wrong during landing.  We past the airport. Reset airplane back to flying. */
+		v->state = FLYING;
+		UpdateAircraftCache(v);
+		AircraftNextAirportPos_and_Order(v);
+				/* get aircraft back on running altitude */
+		SetAircraftPosition(v, 0, 0, GetAircraftFlightLevel(v));
+		return false;
+	}
+
+
 	if (amd.flag & AMED_BRAKE && v->cur_speed > SPEED_LIMIT_TAXI * _settings_game.vehicle.plane_speed) {
 		MaybeCrashAirplane(v);
 		if ((v->vehstatus & VS_CRASHED) != 0) return false;
@@ -1013,6 +1051,17 @@ static bool AircraftController(Aircraft *v)
 	if (amd.flag & AMED_BRAKE)      { speed_limit = SPEED_LIMIT_TAXI;     hard_limit = false; }
 
 	count = UpdateAircraftSpeed(v, speed_limit, hard_limit);
+
+	// Allows for landing/takeoff crabbing for Windy Airport.
+	//bool windy = ((st->airport.type == AT_WINDY) || (st->airport.type - NEW_AIRPORT_OFFSET + 10) == AT_WINDY) && ( (v->state == ENDTAKEOFF) || (v->state == LANDING) );
+	bool windy = ((st->airport.type == AT_WINDY) || (st->airport.type - NEW_AIRPORT_OFFSET + 10) == AT_WINDY) && ((v->pos == 14) || (v->pos == 27) || (v->pos == 28));
+	if (windy) {
+		if (st->airport.rotation + 2 <= DIR_NW)
+			v->direction = (Direction)(st->airport.rotation + 2);
+		else
+			v->direction = DIR_N;
+	}
+
 	if (count == 0) return false;
 
 	if (v->turn_counter != 0) v->turn_counter--;
@@ -1037,7 +1086,15 @@ static bool AircraftController(Aircraft *v)
 
 			/* Turn. Do it slowly if in the air. */
 			Direction newdir = GetDirectionTowards(v, x + amd.x, y + amd.y);
-			if (newdir != v->direction) {
+			// Allows for takeoff crabbing for Windy Airport.
+			if (windy) {
+				if (rotation + 2 <= DIR_NW)
+					newdir = (Direction)(rotation + 2);
+				else
+					newdir = (Direction)(rotation + 1 - DIR_NW);
+			}
+			
+			if (newdir != v->direction && v->state != BACKUP) {
 				if (amd.flag & AMED_SLOWTURN && v->number_consecutive_turns < 8 && v->subtype == AIR_AIRCRAFT) {
 					if (v->turn_counter == 0 || newdir == v->last_direction) {
 						if (newdir == v->last_direction) {
@@ -1051,7 +1108,25 @@ static bool AircraftController(Aircraft *v)
 					}
 
 					/* Move vehicle. */
-					gp = GetNewVehiclePos(v);
+					if (v->state == BACKUP)
+						 gp = GetNewVehiclePosBack(v);
+					else {
+							// Allows for takeoff crabbing for Windy Airport.
+						if (windy) {
+							if (st->airport.rotation + 1 <= DIR_NW)
+								v->direction = (Direction)(st->airport.rotation + 1);
+							else
+								v->direction = DIR_N;
+							gp = GetNewVehiclePos(v);
+							if (st->airport.rotation + 2 <= DIR_NW)
+								v->direction = (Direction)(st->airport.rotation + 2);
+							else
+								v->direction = DIR_N;
+							}
+						else
+							// Move vehicle normally.
+							gp = GetNewVehiclePos(v);
+					}
 				} else {
 					v->cur_speed >>= 1;
 					v->direction = newdir;
@@ -1068,7 +1143,10 @@ static bool AircraftController(Aircraft *v)
 			} else {
 				v->number_consecutive_turns = 0;
 				/* Move vehicle. */
-				gp = GetNewVehiclePos(v);
+				if (v->state == BACKUP)
+					gp = GetNewVehiclePosBack(v);
+				else
+					gp = GetNewVehiclePos(v);
 			}
 		}
 
@@ -1115,7 +1193,7 @@ static bool AircraftController(Aircraft *v)
 
 		/* We've landed. Decrease speed when we're reaching end of runway. */
 		if (amd.flag & AMED_BRAKE) {
-			int curz = GetSlopePixelZ(x, y) + 1;
+			int curz = GetSlopePixelZ(x + amd.x, y + amd.y) + 1;
 
 			if (z > curz) {
 				z--;
@@ -1172,11 +1250,11 @@ static bool HandleCrashedAircraft(Aircraft *v)
 		/* clear runway-in on all airports, set by crashing plane
 		 * small airports use AIRPORT_BUSY, city airports use RUNWAY_IN_OUT_block, etc.
 		 * but they all share the same number */
-		if (st != nullptr) {
-			CLRBITS(st->airport.flags, RUNWAY_IN_block);
-			CLRBITS(st->airport.flags, RUNWAY_IN_OUT_block); // commuter airport
-			CLRBITS(st->airport.flags, RUNWAY_IN2_block);    // intercontinental
-		}
+//		if (st != nullptr) {
+//			CLRBITS(st->airport.flags, RUNWAY_IN_block);
+//			CLRBITS(st->airport.flags, RUNWAY_IN_OUT_block); // commuter airport
+//			CLRBITS(st->airport.flags, RUNWAY_IN2_block);    // intercontinental
+//		}
 
 		delete v;
 
@@ -1444,6 +1522,54 @@ void AircraftLeaveHangar(Aircraft *v, Direction exit_dir)
 	SetWindowClassesDirty(WC_AIRCRAFT_LIST);
 }
 
+static bool AirportTerminaltoHanger(Aircraft * v)
+{
+	switch (v->current_order.GetType()) {
+	case OT_GOTO_STATION: // ready to fly to another airport
+		return false;
+		break;
+	case OT_GOTO_DEPOT:   // visit hangar for servicing, sale, etc.
+		return v->current_order.GetDestination() == v->targetairport;
+		break;
+	case OT_CONDITIONAL:
+				/* In case of a conditional order we just have to wait a tick
+				 * longer, so the conditional order can actually be processed;
+				 * we should not clear the order as that makes us go nowhere. */
+		return false;
+	default:  // orders have been deleted (no orders), goto depot and don't bother us
+		v->current_order.Free();
+		return Station::Get(v->targetairport)->airport.HasHangar();
+	}
+}
+
+/**
+ * Combination of aircraft state for going to a certain terminal and the
+ * airport flag for that terminal block.
+ */
+struct MovementTerminalMapping {
+	AirportMovementStates state; ///< Aircraft movement state when going to this terminal.
+	uint64 airport_flag;         ///< Bitmask in the airport flags that need to be free for this terminal.
+	
+};
+
+/** A list of all valid terminals and their associated blocks. */
+static const MovementTerminalMapping _airport_terminal_mapping[] = {
+		// Airplane Terminals
+{TERM01, TERM01_block},{ TERM02, TERM02_block },{ TERM03, TERM03_block },{ TERM04, TERM04_block },{ TERM05, TERM05_block },{ TERM06, TERM06_block },
+{TERM07, TERM07_block},{ TERM08, TERM08_block },{ TERM09, TERM09_block },{ TERM10, TERM10_block },{ TERM11, TERM11_block },{ TERM12, TERM12_block },
+{TERM13, TERM13_block},{ TERM14, TERM14_block },{ TERM15, TERM15_block },{ TERM16, TERM16_block },{ TERM17, TERM17_block },{ TERM18, TERM18_block },
+{TERM19, TERM19_block},{ TERM20, TERM20_block },{ TERM21, TERM21_block },{ TERM22, TERM22_block },{ TERM23, TERM23_block },{ TERM24, TERM24_block },
+{TERM25, TERM25_block},{ TERM26, TERM26_block },{ TERM27, TERM27_block },{ TERM28, TERM28_block },{ TERM29, TERM29_block },{ TERM30, TERM30_block },
+{TERM31, TERM31_block},{ TERM32, TERM32_block },{ TERM33, TERM33_block },{ TERM34, TERM34_block },{ TERM35, TERM35_block },{ TERM36, TERM36_block },
+		// Helicopter Terminals
+{HELI01, HELI01_block},{ HELI02, HELI02_block },{ HELI03, HELI03_block },{ HELI04, HELI04_block },{ HELI05, HELI05_block },{ HELI06, HELI06_block },
+{HELI07, HELI07_block},{ HELI08, HELI08_block },{ HELI09, HELI09_block },{ HELI10, HELI10_block },{ HELI11, HELI11_block },{ HELI12, HELI12_block },
+		// Cargo Terminals
+{CARG01, CARG01_block},{ CARG02, CARG02_block },{ CARG03, CARG03_block },{ CARG04, CARG04_block },{ CARG05, CARG05_block },{ CARG06, CARG06_block },
+{CARG07, CARG07_block},{ CARG08, CARG08_block },{ CARG09, CARG09_block },{ CARG10, CARG10_block },{ CARG11, CARG11_block },{ CARG12, CARG12_block },
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////   AIRCRAFT MOVEMENT SCHEME  ////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1462,6 +1588,39 @@ static void AircraftEventHandler_EnterHangar(Aircraft *v, const AirportFTAClass 
 {
 	VehicleEnterDepot(v);
 	v->state = apc->layout[v->pos].heading;
+}
+
+/**
+ *AirportHangarTerminals gets a flag of all terminals this hangar can go to.
+ *@param hangarnum is the hangar to check
+ *@param apc Airport description containing the hangar.
+*/
+static uint64 AirportHangarTerminals(uint hangarnum, const AirportFTAClass * apc)
+{
+	const AirportFTA * current = &apc->layout[hangarnum];
+	uint64 terminals = 0;
+	
+	do {
+		if (current->heading != HANGAR && current->heading != TO_ALL && current->heading != HELITAKEOFF && current->heading != TAKEOFF) {
+			terminals = terminals | _airport_terminal_mapping[current->heading - 2].airport_flag;
+		}
+
+		current = current->next;
+		
+	} while (current != NULL);
+		return terminals;
+}
+
+/**
+ * Aircraft is in the Hangar and has approval to Exit.
+ * @param v Aircraft in the hangar.
+ * @param apc Airport description containing the hangar.
+ */
+static void AircraftExitHangar(Aircraft * v, const AirportFTAClass * apc)
+{
+	const Station * st = Station::GetByTile(v->tile);
+	AircraftLeaveHangar(v, st->airport.GetHangarExitDirection(v->tile));
+	AirportMove(v, apc);
 }
 
 /**
@@ -1493,6 +1652,8 @@ static void AircraftEventHandler_InHangar(Aircraft *v, const AirportFTAClass *ap
 		return;
 	}
 
+	byte storestate = v->state;
+
 	/* if the block of the next position is busy, stay put */
 	if (AirportHasBlock(v, &apc->layout[v->pos], apc)) return;
 
@@ -1500,17 +1661,77 @@ static void AircraftEventHandler_InHangar(Aircraft *v, const AirportFTAClass *ap
 	if (v->current_order.GetDestination() == v->targetairport) {
 		/* FindFreeTerminal:
 		 * 1. Find a free terminal, 2. Occupy it, 3. Set the vehicle's state to that terminal */
-		if (v->subtype == AIR_HELICOPTER) {
-			if (!AirportFindFreeHelipad(v, apc)) return; // helicopter
-		} else {
-			if (!AirportFindFreeTerminal(v, apc)) return; // airplane
+		if (!AirportFindFreeTerminal(v, apc, false)) {
+					// Find free terminal failed.
+					// Check to see if there is any owned terminals from this Hangar, if not, takeoff and circle around to a runway that does.
+			const Station * st = Station::GetByTile(v->tile);
+			uint hangarnum = st->airport.GetHangarNum(v->tile);
+			
+			if (!st->airport.GetHangarTerminalOwnerCheck(AirportHangarTerminals(hangarnum, apc), v->owner, (v->cargo_type == CT_PASSENGERS) ? true : false)) {
+				v->state = (v->subtype == AIR_HELICOPTER) ? HELITAKEOFF : TAKEOFF;
+				AircraftExitHangar(v, apc);	
+			}
+			return;
 		}
+		const AirportFTA * current = &apc->layout[v->pos];
+			/* there are more choices to choose from, choose the one that
+			 * matches our heading */
+		do {
+			if (v->state == current->heading) {
+							//DEBUG(misc, 0, "[Ap] MOVING! (pos %d state %d) Heading: %d : block1 : %d : next : %d", v->pos, v->state, current->heading, current->block1, current->next_position);
+				if (AirportSetBlocks2(v, current, apc)) {
+							/* At this point we have secured a terminal and a path to that terminal.  Go ahead and leave Hangar.  */
+					AircraftExitHangar(v, apc);
+					return;
+				} else
+					break;
+			}
+			current = current->next;
+			
+		} while (current != NULL);
+			
+			ReleaseTerminalSingle(v, v->state);  //Since we could not reserve a path, release that terminal if set
+			v->state = storestate; // Reset state back to be in the Hangar
+			return;  //Abort leaving Hangar and wait until next try.
 	} else { // Else prepare for launch.
 		/* airplane goto state takeoff, helicopter to helitakeoff */
 		v->state = (v->subtype == AIR_HELICOPTER) ? HELITAKEOFF : TAKEOFF;
+		AircraftExitHangar(v, apc);
+		return;
 	}
-	const Station *st = Station::GetByTile(v->tile);
-	AircraftLeaveHangar(v, st->airport.GetHangarExitDirection(v->tile));
+	AirportMove(v, apc);
+}
+
+/** Push back from terminal */
+/*  Only Airplanes do the pushback. */
+static void AircraftEventHandler_Backup(Aircraft * v, const AirportFTAClass * apc)
+{
+		/* airport-road is free. We either have to go to another airport, or to the hangar
+		* ---> start moving */
+	
+	bool go_to_hangar = false;
+	switch (v->current_order.GetType()) {
+	case OT_GOTO_STATION: // ready to fly to another airport
+		break;
+	case OT_GOTO_DEPOT:   // visit hangar for servicing, sale, etc.
+		go_to_hangar = v->current_order.GetDestination() == v->targetairport;
+		break;
+	case OT_CONDITIONAL:
+				/* In case of a conditional order we just have to wait a tick
+				* longer, so the conditional order can actually be processed;
+				* we should not clear the order as that makes us go nowhere. */
+		return;
+	default:  // orders have been deleted (no orders), goto depot and don't bother us
+		v->current_order.Free();
+		go_to_hangar = Station::Get(v->targetairport)->airport.HasHangar();
+	}
+
+	if (go_to_hangar) {
+		v->state = HANGAR;
+	} else {
+		/* airplane goto state takeoff, helicopter to helitakeoff */
+		v->state = (v->subtype == AIR_HELICOPTER) ? HELITAKEOFF : TAKEOFF;
+	}
 	AirportMove(v, apc);
 }
 
@@ -1565,7 +1786,15 @@ static void AircraftEventHandler_AtTerminal(Aircraft *v, const AirportFTAClass *
 		/* airplane goto state takeoff, helicopter to helitakeoff */
 		v->state = (v->subtype == AIR_HELICOPTER) ? HELITAKEOFF : TAKEOFF;
 	}
-	AirportMove(v, apc);
+	/* If next state is BACKUP, then move back, otherwise proceed as normal. */
+	const AirportFTA * current = &apc->layout[v->pos];
+	const AirportFTA * next = &apc->layout[current->next_position];
+	if (AirportSetBlocks(v, current, apc, v->state) && next->heading == BACKUP && v->subtype == AIR_AIRCRAFT) {
+		v->state = BACKUP;
+		AirportMove(v, apc);
+		return;
+	}
+	AircraftEventHandler_Backup(v, apc);
 }
 
 static void AircraftEventHandler_General(Aircraft *v, const AirportFTAClass *apc)
@@ -1588,6 +1817,16 @@ static void AircraftEventHandler_StartTakeOff(Aircraft *v, const AirportFTAClass
 static void AircraftEventHandler_EndTakeOff(Aircraft *v, const AirportFTAClass *apc)
 {
 	v->state = FLYING;
+
+	//Check to see if any flags from current airport are still set.
+	if (v->airport_flags1 != 0 || v->airport_flags2 != 0) {
+		Station * st = Station::Get(v->targetairport);
+		DEBUG(misc, 0, "[Ap] ENDTAKEOFF - Aircraft left airport with flags still set. \nThis should not happen.  Airport has a flaw in its movement orders.\nPlane ID: %d :Airport: %d :\nFlags1: %llu :Flags2 : %llu :", v->index, st->airport.type, v->airport_flags1, v->airport_flags2);
+		CLRBITS(st->airport.flags1, v->airport_flags1);
+		v->airport_flags1 = 0;
+		CLRBITS(st->airport.flags2, v->airport_flags2);
+		v->airport_flags2 = 0;
+	}
 	/* get the next position to go to, differs per airport */
 	AircraftNextAirportPos_and_Order(v);
 }
@@ -1596,6 +1835,16 @@ static void AircraftEventHandler_HeliTakeOff(Aircraft *v, const AirportFTAClass 
 {
 	v->state = FLYING;
 	v->UpdateDeltaXY();
+
+	//Check to see if any flags from current airport are still set.
+	if (v->airport_flags1 != 0 || v->airport_flags2 != 0) {
+		Station * st = Station::Get(v->targetairport);
+		DEBUG(misc, 0, "[Ap] HELITAKEOFF - Helicopter left airport with flags still set. \nThis should not happen.  Airport has a flaw in its movement orders.\nHeli ID: %d :Airport: %d :\nFlags1: %llu :Flags2 : %llu :", v->index, st->airport.type, v->airport_flags1, v->airport_flags2);
+		CLRBITS(st->airport.flags1, v->airport_flags1);
+		v->airport_flags1 = 0;
+		CLRBITS(st->airport.flags2, v->airport_flags2);
+		v->airport_flags2 = 0;
+	}
 
 	/* get the next position to go to, differs per airport */
 	AircraftNextAirportPos_and_Order(v);
@@ -1612,43 +1861,57 @@ static void AircraftEventHandler_Flying(Aircraft *v, const AirportFTAClass *apc)
 {
 	Station *st = Station::Get(v->targetairport);
 
-	/* Runway busy, not allowed to use this airstation or closed, circle. */
-	if (CanVehicleUseStation(v, st) && (st->owner == OWNER_NONE || st->owner == v->owner) && !(st->airport.flags & AIRPORT_CLOSED_block)) {
-		/* {32,FLYING,NOTHING_block,37}, {32,LANDING,N,33}, {32,HELILANDING,N,41},
-		 * if it is an airplane, look for LANDING, for helicopter HELILANDING
-		 * it is possible to choose from multiple landing runways, so loop until a free one is found */
-		byte landingtype = (v->subtype == AIR_HELICOPTER) ? HELILANDING : LANDING;
-		const AirportFTA *current = apc->layout[v->pos].next;
-		while (current != nullptr) {
-			if (current->heading == landingtype) {
-				/* save speed before, since if AirportHasBlock is false, it resets them to 0
-				 * we don't want that for plane in air
-				 * hack for speed thingie */
-				uint16 tcur_speed = v->cur_speed;
-				uint16 tsubspeed = v->subspeed;
-				if (!AirportHasBlock(v, current, apc)) {
-					v->state = landingtype; // LANDING / HELILANDING
-					if (v->state == HELILANDING) SetBit(v->flags, VAF_HELI_DIRECT_DESCENT);
-					/* it's a bit dirty, but I need to set position to next position, otherwise
-					 * if there are multiple runways, plane won't know which one it took (because
-					 * they all have heading LANDING). And also occupy that block! */
-					v->pos = current->next_position;
-					SETBITS(st->airport.flags, apc->layout[v->pos].block);
+	// Airport is closed, Fly on to next position.
+	if (st->airport.flags1 & AIRPORT_CLOSED_block) {
+		v->pos = apc->layout[v->pos].next_position;
+		return;
+	}
+
+	uint16 tcur_speed = v->cur_speed;
+	uint16 tsubspeed = v->subspeed;
+	byte pos = v->pos;
+	
+	/* Runway busy, not allowed to use this airstation, or Runway does not go to terminal, circle. */
+	if (CanVehicleUseStation(v, st) && (st->owner == OWNER_NONE || st->airport.GetTerminalOwner(v->owner))) {
+		// {32,FLYING,0,0,37}, {32,LANDING,0,0,33}, {32,HELILANDING,0,0,41}, {32,0,0,0,25},
+		// if it is an airplane, look for LANDING, for helicopter HELILANDING
+		
+		const AirportFTA * current = &apc->layout[v->pos];
+		
+		v->state = (v->subtype == AIR_HELICOPTER) ? HELILANDING : LANDING;
+		
+		do {
+			if (v->state == current->heading) {
+				const AirportFTA * next = &apc->layout[current->next_position];
+				if (st->airport.GetRunwayTerminalOwnerCheck(next->block1, next->block2, v->owner, v->state, (v->cargo_type == CT_PASSENGERS) ? true : false))
+					if (AirportMove(v, apc))
 					return;
-				}
-				v->cur_speed = tcur_speed;
-				v->subspeed = tsubspeed;
 			}
 			current = current->next;
-		}
+
+		} while (current != NULL);
 	}
+	v->cur_speed = tcur_speed;
+	v->subspeed = tsubspeed;
 	v->state = FLYING;
-	v->pos = apc->layout[v->pos].next_position;
+	if (pos == v->pos)
+		v->pos = apc->layout[v->pos].next_position;
 }
 
 static void AircraftEventHandler_Landing(Aircraft *v, const AirportFTAClass *apc)
 {
 	v->state = ENDLANDING;
+	uint16 tcur_speed = v->cur_speed;
+	uint16 tsubspeed = v->subspeed;
+	
+	// If the runway is occupied, then abort landing and go back to circle.
+	if (AirportHasBlock(v, &apc->layout[v->pos], apc)) {
+		v->state = FLYING;
+		v->cur_speed = tcur_speed;
+		v->subspeed = tsubspeed;
+		AirportMove(v, apc);
+		return;
+	}
 	AircraftLandAirplane(v);  // maybe crash airplane
 
 	/* check if the aircraft needs to be replaced or renewed and send it to a hangar if needed */
@@ -1675,7 +1938,7 @@ static void AircraftEventHandler_EndLanding(Aircraft *v, const AirportFTAClass *
 	 * 2. not going for terminal (but depot, no order),
 	 * --> get out of the way to the hangar. */
 	if (v->current_order.IsType(OT_GOTO_STATION)) {
-		if (AirportFindFreeTerminal(v, apc)) return;
+		if (AirportFindFreeTerminal(v, apc, false)) return;
 	}
 	v->state = HANGAR;
 
@@ -1694,7 +1957,7 @@ static void AircraftEventHandler_HeliEndLanding(Aircraft *v, const AirportFTACla
 	 * the reason behind this is that if an airport has a terminal, it also has a hangar. Airplanes
 	 * must go to a hangar. */
 	if (v->current_order.IsType(OT_GOTO_STATION)) {
-		if (AirportFindFreeHelipad(v, apc)) return;
+		if (AirportFindFreeTerminal(v, apc, false)) return;
 	}
 	v->state = Station::Get(v->targetairport)->airport.HasHangar() ? HANGAR : HELITAKEOFF;
 }
@@ -1709,35 +1972,88 @@ typedef void AircraftStateHandler(Aircraft *v, const AirportFTAClass *apc);
 static AircraftStateHandler * const _aircraft_state_handlers[] = {
 	AircraftEventHandler_General,        // TO_ALL         =  0
 	AircraftEventHandler_InHangar,       // HANGAR         =  1
-	AircraftEventHandler_AtTerminal,     // TERM1          =  2
-	AircraftEventHandler_AtTerminal,     // TERM2          =  3
-	AircraftEventHandler_AtTerminal,     // TERM3          =  4
-	AircraftEventHandler_AtTerminal,     // TERM4          =  5
-	AircraftEventHandler_AtTerminal,     // TERM5          =  6
-	AircraftEventHandler_AtTerminal,     // TERM6          =  7
-	AircraftEventHandler_AtTerminal,     // HELIPAD1       =  8
-	AircraftEventHandler_AtTerminal,     // HELIPAD2       =  9
-	AircraftEventHandler_TakeOff,        // TAKEOFF        = 10
-	AircraftEventHandler_StartTakeOff,   // STARTTAKEOFF   = 11
-	AircraftEventHandler_EndTakeOff,     // ENDTAKEOFF     = 12
-	AircraftEventHandler_HeliTakeOff,    // HELITAKEOFF    = 13
-	AircraftEventHandler_Flying,         // FLYING         = 14
-	AircraftEventHandler_Landing,        // LANDING        = 15
-	AircraftEventHandler_EndLanding,     // ENDLANDING     = 16
-	AircraftEventHandler_HeliLanding,    // HELILANDING    = 17
-	AircraftEventHandler_HeliEndLanding, // HELIENDLANDING = 18
-	AircraftEventHandler_AtTerminal,     // TERM7          = 19
-	AircraftEventHandler_AtTerminal,     // TERM8          = 20
-	AircraftEventHandler_AtTerminal,     // HELIPAD3       = 21
+	AircraftEventHandler_AtTerminal,     // TERM01         =  2
+	AircraftEventHandler_AtTerminal,     // TERM02         =  3
+	AircraftEventHandler_AtTerminal,     // TERM03         =  4
+	AircraftEventHandler_AtTerminal,     // TERM04         =  5
+	AircraftEventHandler_AtTerminal,     // TERM05         =  6
+	AircraftEventHandler_AtTerminal,     // TERM06         =  7
+	AircraftEventHandler_AtTerminal,     // TERM07         =  8
+	AircraftEventHandler_AtTerminal,     // TERM08         =  9
+	AircraftEventHandler_AtTerminal,     // TERM09         = 10
+	AircraftEventHandler_AtTerminal,     // TERM10         = 11
+	AircraftEventHandler_AtTerminal,     // TERM11         = 12
+	AircraftEventHandler_AtTerminal,     // TERM12         = 13
+	AircraftEventHandler_AtTerminal,     // TERM13         = 14
+	AircraftEventHandler_AtTerminal,     // TERM14         = 15
+	AircraftEventHandler_AtTerminal,     // TERM15         = 16
+	AircraftEventHandler_AtTerminal,     // TERM16         = 17
+	AircraftEventHandler_AtTerminal,     // TERM17         = 18
+	AircraftEventHandler_AtTerminal,     // TERM18         = 19
+	AircraftEventHandler_AtTerminal,     // TERM19         = 20
+	AircraftEventHandler_AtTerminal,     // TERM20         = 21
+	AircraftEventHandler_AtTerminal,     // TERM21         = 22
+	AircraftEventHandler_AtTerminal,     // TERM22         = 23
+	AircraftEventHandler_AtTerminal,     // TERM23         = 24
+	AircraftEventHandler_AtTerminal,     // TERM24         = 25
+	AircraftEventHandler_AtTerminal,     // TERM25         = 26
+	AircraftEventHandler_AtTerminal,     // TERM26         = 27
+	AircraftEventHandler_AtTerminal,     // TERM27         = 28
+	AircraftEventHandler_AtTerminal,     // TERM28         = 29
+	AircraftEventHandler_AtTerminal,     // TERM29         = 30
+	AircraftEventHandler_AtTerminal,     // TERM30         = 31
+	AircraftEventHandler_AtTerminal,     // TERM31         = 32
+	AircraftEventHandler_AtTerminal,     // TERM32         = 33
+	AircraftEventHandler_AtTerminal,     // TERM33         = 34
+	AircraftEventHandler_AtTerminal,     // TERM34         = 35
+	AircraftEventHandler_AtTerminal,     // TERM35         = 36
+	AircraftEventHandler_AtTerminal,     // TERM36         = 37
+	AircraftEventHandler_AtTerminal,     // HELIPAD01      = 38
+	AircraftEventHandler_AtTerminal,     // HELIPAD02      = 39
+	AircraftEventHandler_AtTerminal,     // HELIPAD03      = 40
+	AircraftEventHandler_AtTerminal,     // HELIPAD04      = 41
+	AircraftEventHandler_AtTerminal,     // HELIPAD05      = 42
+	AircraftEventHandler_AtTerminal,     // HELIPAD06      = 43
+	AircraftEventHandler_AtTerminal,     // HELIPAD07      = 44
+	AircraftEventHandler_AtTerminal,     // HELIPAD08      = 45
+	AircraftEventHandler_AtTerminal,     // HELIPAD09      = 46
+	AircraftEventHandler_AtTerminal,     // HELIPAD10      = 47
+	AircraftEventHandler_AtTerminal,     // HELIPAD11      = 48
+	AircraftEventHandler_AtTerminal,     // HELIPAD12      = 49
+	AircraftEventHandler_AtTerminal,     // CARG01         = 50
+	AircraftEventHandler_AtTerminal,     // CARG02         = 51
+	AircraftEventHandler_AtTerminal,     // CARG03         = 52
+	AircraftEventHandler_AtTerminal,     // CARG04         = 53
+	AircraftEventHandler_AtTerminal,     // CARG05         = 54
+	AircraftEventHandler_AtTerminal,     // CARG06         = 55
+	AircraftEventHandler_AtTerminal,     // CARG07         = 56
+	AircraftEventHandler_AtTerminal,     // CARG08         = 57
+	AircraftEventHandler_AtTerminal,     // CARG09         = 58
+	AircraftEventHandler_AtTerminal,     // CARG10         = 59
+	AircraftEventHandler_AtTerminal,     // CARG11         = 60
+	AircraftEventHandler_AtTerminal,     // CARG12         = 61
+	AircraftEventHandler_TakeOff,        // TAKEOFF        = 62
+	AircraftEventHandler_StartTakeOff,   // STARTTAKEOFF   = 63
+	AircraftEventHandler_EndTakeOff,     // ENDTAKEOFF     = 64
+	AircraftEventHandler_HeliTakeOff,    // HELITAKEOFF    = 65
+	AircraftEventHandler_Flying,         // FLYING         = 66
+	AircraftEventHandler_Landing,        // LANDING        = 67
+	AircraftEventHandler_EndLanding,     // ENDLANDING     = 68
+	AircraftEventHandler_HeliLanding,    // HELILANDING    = 69
+	AircraftEventHandler_HeliEndLanding, // HELIENDLANDING = 70
+	AircraftEventHandler_Backup,         // BACKUP         = 71
 };
 
-static void AirportClearBlock(const Aircraft *v, const AirportFTAClass *apc)
+static void AirportClearBlock(Aircraft *v, const AirportFTAClass *apc)
 {
 	/* we have left the previous block, and entered the new one. Free the previous block */
-	if (apc->layout[v->previous_pos].block != apc->layout[v->pos].block) {
+	if (apc->layout[v->previous_pos].block1 != apc->layout[v->pos].block1 || apc->layout[v->previous_pos].block2 != apc->layout[v->pos].block2) {
 		Station *st = Station::Get(v->targetairport);
 
-		CLRBITS(st->airport.flags, apc->layout[v->previous_pos].block);
+		CLRBITS(st->airport.flags1, apc->layout[v->previous_pos].block1);
+		CLRBITS(v->airport_flags1, apc->layout[v->previous_pos].block1);
+		CLRBITS(st->airport.flags2, apc->layout[v->previous_pos].block2);
+		CLRBITS(v->airport_flags2, apc->layout[v->previous_pos].block2);
 	}
 }
 
@@ -1748,7 +2064,8 @@ static void AirportGoToNextPosition(Aircraft *v)
 
 	const AirportFTAClass *apc = Station::Get(v->targetairport)->airport.GetFTA();
 
-	AirportClearBlock(v, apc);
+	if (v->state != ENDLANDING)
+		AirportClearBlock(v, apc);
 	AirportMove(v, apc); // move aircraft to next position
 }
 
@@ -1776,9 +2093,10 @@ static bool AirportMove(Aircraft *v, const AirportFTAClass *apc)
 
 	/* there is only one choice to move to */
 	if (current->next == nullptr) {
-		if (AirportSetBlocks(v, current, apc)) {
+		if (AirportSetBlocks(v, current, apc, 0)) {
 			v->pos = current->next_position;
 			UpdateAircraftCache(v);
+			return true;
 		} // move to next position
 		return false;
 	}
@@ -1787,9 +2105,12 @@ static bool AirportMove(Aircraft *v, const AirportFTAClass *apc)
 	 * matches our heading */
 	do {
 		if (v->state == current->heading || current->heading == TO_ALL) {
-			if (AirportSetBlocks(v, current, apc)) {
+			//DEBUG(misc, 0, "[Ap] MOVING! (pos %d state %d) Heading: %d : block1 : %d : next : %d", v->pos, v->state, current->heading, current->block1, current->next_position);
+			if (AirportSetBlocks(v, current, apc, 0)) {
 				v->pos = current->next_position;
 				UpdateAircraftCache(v);
+				if (v->state == current->heading)
+					return true;
 			} // move to next position
 			return false;
 		}
@@ -1807,16 +2128,18 @@ static bool AirportHasBlock(Aircraft *v, const AirportFTA *current_pos, const Ai
 	const AirportFTA *next = &apc->layout[current_pos->next_position];
 
 	/* same block, then of course we can move */
-	if (apc->layout[current_pos->position].block != next->block) {
+	if (apc->layout[current_pos->position].block1 != next->block1 || apc->layout[current_pos->position].block2 != next->block2) {
 		const Station *st = Station::Get(v->targetairport);
-		uint64 airport_flags = next->block;
+		uint64 airport_flags1 = next->block1;
+		uint64 airport_flags2 = next->block2;
 
 		/* check additional possible extra blocks */
-		if (current_pos != reference && current_pos->block != NOTHING_block) {
-			airport_flags |= current_pos->block;
+		if (current_pos != reference && current_pos->block1 != NOTHING_block) {
+			airport_flags1 |= current_pos->block1;
+			airport_flags2 |= current_pos->block2;
 		}
 
-		if (st->airport.flags & airport_flags) {
+		if ((st->airport.flags1 ^ v->airport_flags1) & airport_flags1 || (st->airport.flags2 ^ v->airport_flags2) & airport_flags2) {
 			v->cur_speed = 0;
 			v->subspeed = 0;
 			return true;
@@ -1826,92 +2149,153 @@ static bool AirportHasBlock(Aircraft *v, const AirportFTA *current_pos, const Ai
 }
 
 /**
+ *"reserve" a block for the plane  Only used for exiting Hangar.It sets up the initial entry into the movement system.
+ *@param v airplane that requires the operation
+ *@param current_pos of the vehicle in the list of blocks
+ *@param apc airport on which block is requsted to be set
+ *@returns true on success.Eg, next block was free and we have occupied it
+*/
+static bool AirportSetBlocks2(Aircraft * v, const AirportFTA * current_pos, const AirportFTAClass * apc)
+{
+	const AirportFTA * next = &apc->layout[current_pos->next_position];
+	const AirportFTA * reference = &apc->layout[v->pos];
+	
+	uint64 airport_flags1 = current_pos->block1; //In Hangar initial direction  (Normally 0)
+	uint64 airport_flags2 = current_pos->block2; //In Hangar initial direction  (Normally 0)
+	airport_flags1 |= next->block1;  // First position out of Hangar  (Usually adds the Hangxx_block position for flags1)
+	airport_flags2 |= next->block2;  // First position out of hangar  (Usually 0)
+	
+	const AirportFTA * current = next;
+	//if (current == reference) current = current->next;
+	while (current != NULL) {
+		if (current->heading == current_pos->heading) {
+			if ((current->block1 != 0) || (current->block2 != 0)) {
+				airport_flags1 |= current->block1;  //Reservations to next destination.
+				airport_flags2 |= current->block2;  //Reservations to next destination.
+				break;
+			}
+		}
+		current = current->next;
+	}
+
+	// Now that we have combined the 3 sets of orders to start the movement chain,  Check airport to see if the way is clear.
+	Station * st = Station::Get(v->targetairport);
+	if ((st->airport.flags1 ^ v->airport_flags1) & airport_flags1 || (st->airport.flags2 ^ v->airport_flags2) & airport_flags2) {
+		v->cur_speed = 0;
+		v->subspeed = 0;
+		return false;  //Failed to secure path from Hangar, abort block reservations.
+	}
+	// Remove NOTHING_block if it got set
+	airport_flags1 &= ~(NOTHING_block);
+	airport_flags2 &= ~(NOTHING_block);
+	
+	SETBITS(st->airport.flags1, airport_flags1); // reserve next block(s)
+	SETBITS(v->airport_flags1, airport_flags1); // reserve next block(s)
+	SETBITS(st->airport.flags2, airport_flags2); // reserve next block(s)
+	SETBITS(v->airport_flags2, airport_flags2); // reserve next block(s)
+	
+	return true;
+}
+
+/**
  * "reserve" a block for the plane
  * @param v airplane that requires the operation
  * @param current_pos of the vehicle in the list of blocks
  * @param apc airport on which block is requested to be set
  * @returns true on success. Eg, next block was free and we have occupied it
  */
-static bool AirportSetBlocks(Aircraft *v, const AirportFTA *current_pos, const AirportFTAClass *apc)
+static bool AirportSetBlocks(Aircraft * v, const AirportFTA * current_pos, const AirportFTAClass * apc, byte heading)
 {
 	const AirportFTA *next = &apc->layout[current_pos->next_position];
 	const AirportFTA *reference = &apc->layout[v->pos];
+	if (heading == 0) heading = current_pos->heading;
+	
+	//DEBUG(misc, 0, "AirportSetBlocks - CURRENT1: %d :CURRENT2: %d", apc->layout[current_pos->position].block1, apc->layout[current_pos->position].block2);
+	//DEBUG(misc, 0, "AirportSetBlocks - NEXT1: %d :NEXT2: %d", apc->layout[current_pos->next_position].block1, apc->layout[current_pos->next_position].block2);
 
 	/* if the next position is in another block, check it and wait until it is free */
-	if ((apc->layout[current_pos->position].block & next->block) != next->block) {
-		uint64 airport_flags = next->block;
+	if ((apc->layout[current_pos->position].block1 & next->block1) != next->block1 || (apc->layout[current_pos->position].block2 & next->block2) != next->block2) {
+		uint64 airport_flags1 = next->block1;
+		uint64 airport_flags2 = next->block2;
 		/* search for all all elements in the list with the same state, and blocks != N
 		 * this means more blocks should be checked/set */
 		const AirportFTA *current = current_pos;
 		if (current == reference) current = current->next;
 		while (current != nullptr) {
-			if (current->heading == current_pos->heading && current->block != 0) {
-				airport_flags |= current->block;
-				break;
+			if (current->heading == heading) {
+				if ((current->block1 != 0) || (current->block2 != 0)) {
+					airport_flags1 |= current->block1;
+					airport_flags2 |= current->block2;
+					break;
+				}
 			}
 			current = current->next;
 		}
 
-		/* if the block to be checked is in the next position, then exclude that from
-		 * checking, because it has been set by the airplane before */
-		if (current_pos->block == next->block) airport_flags ^= next->block;
-
 		Station *st = Station::Get(v->targetairport);
-		if (st->airport.flags & airport_flags) {
+		if ((st->airport.flags1 ^ v->airport_flags1) & airport_flags1 || (st->airport.flags2 ^ v->airport_flags2) & airport_flags2) {
 			v->cur_speed = 0;
 			v->subspeed = 0;
 			return false;
 		}
 
-		if (next->block != NOTHING_block) {
-			SETBITS(st->airport.flags, airport_flags); // occupy next block
-		}
+		// Remove NOTHING_block if it got set
+		airport_flags1 &= ~(NOTHING_block);
+		airport_flags2 &= ~(NOTHING_block);
+		
+		SETBITS(st->airport.flags1, airport_flags1); // occupy next block
+		SETBITS(v->airport_flags1, airport_flags1); // occupy next block
+		SETBITS(st->airport.flags2, airport_flags2); // occupy next block
+		SETBITS(v->airport_flags2, airport_flags2); // occupy next block
+		
+		//DEBUG(misc, 0, "AirportSetBlocks - st->airport.flags1: %d :st->airport.flags2: %d", st->airport.flags1, st->airport.flags2);
+		//DEBUG(misc, 0, "AirportSetBlocks - v->airport_flags1: %d :v->airport_flags2: %d", v->airport_flags1, v->airport_flags2);
 	}
 	return true;
 }
 
 /**
- * Combination of aircraft state for going to a certain terminal and the
- * airport flag for that terminal block.
- */
-struct MovementTerminalMapping {
-	AirportMovementStates state; ///< Aircraft movement state when going to this terminal.
-	uint64 airport_flag;         ///< Bitmask in the airport flags that need to be free for this terminal.
-};
+ * Release a terminal or helipad. Used if a path to the terminal could not be reserved. (InHangar)
+ * @param v Aircraft needed to free the terminal and set the state back to HANGAR.
+ * @param i terminal to release.
+ * @return Release was successful.
+*/
+static bool ReleaseTerminalSingle(Aircraft * v, byte i)
+{
+	Station * st = Station::Get(v->targetairport);
+	//if ((st->airport.flags1 & _airport_terminal_mapping[i-2].airport_flag) == 1) {
+	// + 7 is to get over the reserved Hangar blocks.  If more hangars are reserved, this will need to change.
+	// Since CARGo is a duplicate of Helipads, need to subtract 12 first.
+	uint8 calc = i + 7;
+	if (i >= CARG01) calc -= 12;
+		if (HasBit(st->airport.flags1, calc)) {
+			/* TERMINAL# HELIPAD# */
+			CLRBITS(st->airport.flags1, _airport_terminal_mapping[i - 2].airport_flag); // Release terminal/helipad
+			CLRBITS(v->airport_flags1, _airport_terminal_mapping[i - 2].airport_flag); // Release terminal/helipad
+			return true;
+		}
 
-/** A list of all valid terminals and their associated blocks. */
-static const MovementTerminalMapping _airport_terminal_mapping[] = {
-	{TERM1, TERM1_block},
-	{TERM2, TERM2_block},
-	{TERM3, TERM3_block},
-	{TERM4, TERM4_block},
-	{TERM5, TERM5_block},
-	{TERM6, TERM6_block},
-	{TERM7, TERM7_block},
-	{TERM8, TERM8_block},
-	{HELIPAD1, HELIPAD1_block},
-	{HELIPAD2, HELIPAD2_block},
-	{HELIPAD3, HELIPAD3_block},
-};
+		return false;
+}
 
 /**
  * Find a free terminal or helipad, and if available, assign it.
  * @param v Aircraft looking for a free terminal or helipad.
  * @param i First terminal to examine.
- * @param last_terminal Terminal number to stop examining.
  * @return A terminal or helipad has been found, and has been assigned to the aircraft.
  */
-static bool FreeTerminal(Aircraft *v, byte i, byte last_terminal)
+static bool FreeTerminalSingle(Aircraft * v, byte i)
 {
-	assert(last_terminal <= lengthof(_airport_terminal_mapping));
 	Station *st = Station::Get(v->targetairport);
-	for (; i < last_terminal; i++) {
-		if ((st->airport.flags & _airport_terminal_mapping[i].airport_flag) == 0) {
-			/* TERMINAL# HELIPAD# */
-			v->state = _airport_terminal_mapping[i].state; // start moving to that terminal/helipad
-			SETBITS(st->airport.flags, _airport_terminal_mapping[i].airport_flag); // occupy terminal/helipad
-			return true;
-		}
+	Owner owner = GetTileOwner(st->airport.GetTerminalTile(_airport_terminal_mapping[i].airport_flag));
+	bool allowed = v->owner == owner || (st->airport.type == 9 && owner == OWNER_NONE);
+	
+	if ((st->airport.flags1 & _airport_terminal_mapping[i].airport_flag) == 0 && allowed) {
+		/* TERMINAL# HELIPAD# */
+		v->state = _airport_terminal_mapping[i].state; // start moving to that terminal/helipad
+		SETBITS(st->airport.flags1, _airport_terminal_mapping[i].airport_flag); // occupy terminal/helipad
+		SETBITS(v->airport_flags1, _airport_terminal_mapping[i].airport_flag); // occupy terminal/helipad
+		return true;
 	}
 	return false;
 }
@@ -1934,69 +2318,60 @@ static uint GetNumTerminals(const AirportFTAClass *apc)
  * Find a free terminal, and assign it if available.
  * @param v Aircraft to handle.
  * @param apc Airport state machine.
+ * @param st Station
  * @return Found a free terminal and assigned it.
  */
-static bool AirportFindFreeTerminal(Aircraft *v, const AirportFTAClass *apc)
+static bool AirportFindFreeTerminalFullLoad(Aircraft * v, const AirportFTA * fta, const Station * st)
 {
-	/* example of more terminalgroups
-	 * {0,HANGAR,NOTHING_block,1}, {0,TERMGROUP,TERM_GROUP1_block,0}, {0,TERMGROUP,TERM_GROUP2_ENTER_block,1}, {0,0,N,1},
-	 * Heading TERMGROUP denotes a group. We see 2 groups here:
-	 * 1. group 0 -- TERM_GROUP1_block (check block)
-	 * 2. group 1 -- TERM_GROUP2_ENTER_block (check block)
-	 * First in line is checked first, group 0. If the block (TERM_GROUP1_block) is free, it
-	 * looks at the corresponding terminals of that group. If no free ones are found, other
-	 * possible groups are checked (in this case group 1, since that is after group 0). If that
-	 * fails, then attempt fails and plane waits
-	 */
-	if (apc->terminals[0] > 1) {
-		const Station *st = Station::Get(v->targetairport);
-		const AirportFTA *temp = apc->layout[v->pos].next;
-
-		while (temp != nullptr) {
-			if (temp->heading == TERMGROUP) {
-				if (!(st->airport.flags & temp->block)) {
-					/* read which group do we want to go to?
-					 * (the first free group) */
-					uint target_group = temp->next_position + 1;
-
-					/* at what terminal does the group start?
-					 * that means, sum up all terminals of
-					 * groups with lower number */
-					uint group_start = 0;
-					for (uint i = 1; i < target_group; i++) {
-						group_start += apc->terminals[i];
-					}
-
-					uint group_end = group_start + apc->terminals[target_group];
-					if (FreeTerminal(v, group_start, group_end)) return true;
-				}
-			} else {
-				/* once the heading isn't 255, we've exhausted the possible blocks.
-				 * So we cannot move */
-				return false;
-			}
-			temp = temp->next;
+	/* Check planes orders and if Full Load or Full Load Any, then skip a terminal with a full load restriction.*/
+	/* This prevents airport lock where all terminals are occupied by planes with Full Load orders."  */
+	/* The subtraction of TERM1 is necessary to find the correct entry in the mapping */
+	if (v->current_order.GetLoadType() & OLFB_FULL_LOAD || v->current_order.GetLoadType() & OLF_FULL_LOAD_ANY) {
+		if (!(_airport_terminal_mapping[fta->heading - TERM01].airport_flag & st->airport.fullload)) {
+			if (FreeTerminalSingle(v, fta->heading - TERM01)) return true;
 		}
+	} else {
+		//If no full orders then choose any open terminal.
+		if (FreeTerminalSingle(v, fta->heading - TERM01)) return true;
 	}
 
-	/* if there is only 1 terminalgroup, all terminals are checked (starting from 0 to max) */
-	return FreeTerminal(v, 0, GetNumTerminals(apc));
+	return false;
 }
 
 /**
- * Find a free helipad, and assign it if available.
+ * Find a free terminal, and assign it if available.
  * @param v Aircraft to handle.
  * @param apc Airport state machine.
- * @return Found a free helipad and assigned it.
+ * @param use other terminals... (Only 3 airports use it...  COUNTRY, CITY, METROPOLITAN)
+ * @return Found a free terminal and assigned it.
  */
-static bool AirportFindFreeHelipad(Aircraft *v, const AirportFTAClass *apc)
+static bool AirportFindFreeTerminal(Aircraft * v, const AirportFTAClass * apc, bool useotherterminals)
 {
 	/* if an airport doesn't have helipads, use terminals */
-	if (apc->num_helipads == 0) return AirportFindFreeTerminal(v, apc);
-
-	/* only 1 helicoptergroup, check all helipads
-	 * The blocks for helipads start after the last terminal (MAX_TERMINALS) */
-	return FreeTerminal(v, MAX_TERMINALS, apc->num_helipads + MAX_TERMINALS);
+	if (v->subtype == AIR_HELICOPTER && apc->num_helipads == 0 && !useotherterminals) return AirportFindFreeTerminal(v, apc, true);
+	
+	/* if an airport doesn't have cargo terminals, use terminals */
+	if (v->subtype == AIR_AIRCRAFT && v->cargo_type != CT_PASSENGERS && apc->num_cargo_term == 0 && !useotherterminals) return AirportFindFreeTerminal(v, apc, true);
+	
+	const Station * st = Station::Get(v->targetairport);
+	const AirportFTA * temp2 = apc->layout[v->pos].next;
+	
+	while (temp2 != NULL) {
+		
+		//DEBUG(misc, 0, "AirportFindFreeTerminal - \nAirport Type: %d : Heading : %d :", st->airport.type, temp2->heading);
+		// Passenger Terminals, If an airport does not have Helipads or cargo terminals, then passenger terminals will be used.  (COUNTRY, CITY, METROPOLITAN)
+		if (temp2->heading >= TERM01 && temp2->heading <= TERM36 && ((v->subtype == AIR_AIRCRAFT && v->cargo_type == CT_PASSENGERS) || useotherterminals))
+			if (AirportFindFreeTerminalFullLoad(v, temp2, st)) return true;
+				// Cargo Terminals
+			if (temp2->heading >= CARG01 && temp2->heading <= CARG12 && v->subtype == AIR_AIRCRAFT && v->cargo_type != CT_PASSENGERS && !useotherterminals)
+				if (AirportFindFreeTerminalFullLoad(v, temp2, st)) return true;
+				// Helicopter Terminals
+			if (temp2->heading >= HELI01 && temp2->heading <= HELI12 && v->subtype == AIR_HELICOPTER && !useotherterminals)
+				if (AirportFindFreeTerminalFullLoad(v, temp2, st)) return true;
+			
+			temp2 = temp2->next;
+	}
+	return false;
 }
 
 /**
@@ -2041,6 +2416,12 @@ static bool AircraftEventHandler(Aircraft *v, int loop)
 	HandleAircraftSmoke(v, loop != 0);
 	ProcessOrders(v);
 	v->HandleLoading(loop != 0);
+
+	Station * st = Station::Get(v->targetairport);
+	if (st->airport.flags1 & AIRPORT_CLOSED_block && v->current_order.IsType(OT_LOADING)) {
+		//v->IncrementImplicitOrderIndex();
+		v->current_order.MakeLoading(false);
+	}
 
 	if (v->current_order.IsType(OT_LOADING) || v->current_order.IsType(OT_LEAVESTATION)) return true;
 

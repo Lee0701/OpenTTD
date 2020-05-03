@@ -81,6 +81,8 @@ struct Aircraft FINAL : public SpecializedVehicle<Aircraft, VEH_AIRCRAFT> {
 	byte number_consecutive_turns; ///< Protection to prevent the aircraft of making a lot of turns in order to reach a specific point.
 	byte turn_counter;             ///< Ticks between each turn to prevent > 45 degree turns.
 	byte flags;                    ///< Aircraft flags. @see AirVehicleFlags
+	uint64 airport_flags1;         ///< Airport flags1.
+	uint64 airport_flags2;         ///< Airport flags2.
 
 	AircraftCache acache;
 

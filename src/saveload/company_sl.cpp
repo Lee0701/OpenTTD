@@ -499,6 +499,7 @@ static void Load_PLYR()
 		SaveLoad_PLYR(c);
 		_company_colours[index] = (Colours)c->colour;
 	}
+	_company_colours[OWNER_TOWN] = COLOUR_GREY;
 }
 
 static void Check_PLYR()

@@ -79,6 +79,7 @@ struct GetNewVehiclePosResult {
 };
 
 GetNewVehiclePosResult GetNewVehiclePos(const Vehicle *v);
+GetNewVehiclePosResult GetNewVehiclePosBack(const Vehicle * v);
 Direction GetDirectionTowards(const Vehicle *v, int x, int y);
 
 /**

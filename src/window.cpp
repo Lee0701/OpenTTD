@@ -2721,7 +2721,21 @@ void HandleKeypress(uint keycode, WChar key)
 		if (w->OnKeyPress(key, keycode) == ES_HANDLED) return;
 	}
 
+	if (keycode == WKC_ALT)
+		_thd.Reset();
+
 	HandleGlobalHotkeys(key, keycode);
+}
+
+/**
+ *Handle keyboard release. (Key Up)
+ *@param keycode Virtual keycode of the key.
+ *@param key Unicode character of the key.
+*/
+void HandleKeyrelease(uint keycode, WChar key)
+{
+	if (keycode == WKC_ALT)
+		_thd.Reset();
 }
 
 /**

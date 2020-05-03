@@ -332,6 +332,9 @@ enum Commands {
 	CMD_SET_TIMETABLE_START,          ///< set the date that a timetable should start
 
 	CMD_OPEN_CLOSE_AIRPORT,           ///< open/close an airport to incoming aircraft
+	CMD_TERMINAL_CHANGE_OWNER,		  ///< Changes the owner of a terminal at an airport.
+	CMD_TERMINAL_CHANGE_FULLLOAD,	  ///< Changes the terminals full load restriction at an airport.
+	CMD_RESET_AIRPORT,                ///< Emergency reset of an airports flags and the flags of any plane at this airport.
 
 	CMD_END,                          ///< Must ALWAYS be on the end of this list!! (period)
 };
