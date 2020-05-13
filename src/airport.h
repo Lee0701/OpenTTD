@@ -139,12 +139,13 @@ enum AirportMovementStates {
 	ENDTAKEOFF     =  64, ///< Airplane has reached end-point of the take-off runway.
 	HELITAKEOFF    =  65, ///< Helicopter wants to leave the airport.
 	FLYING         =  66, ///< %Vehicle is flying in the air.
-	LANDING        =  67, ///< Airplane wants to land.
-	ENDLANDING     =  68, ///< Airplane wants to finish landing.
-	HELILANDING    =  69, ///< Helicopter wants to land.
-	HELIENDLANDING =  70, ///< Helicopter wants to finish landing.
-	BACKUP         =  71, ///< Used to push back from terminal.
-	MAX_HEADINGS   =  71, ///< Last valid target to head for.
+	PRELANDING      = 67, ///< Airplane wants to land but still in holding pattern.
+	LANDING        =  68, ///< Airplane wants to land.
+	ENDLANDING     =  69, ///< Airplane wants to finish landing.
+	HELILANDING    =  70, ///< Helicopter wants to land.
+	HELIENDLANDING =  71, ///< Helicopter wants to finish landing.
+	BACKUP         =  72, ///< Used to push back from terminal.
+	MAX_HEADINGS   =  72, ///< Last valid target to head for.
 };
 
 /** Movement Blocks on Airports blocks (eg_airport_flags1). */

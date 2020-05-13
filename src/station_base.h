@@ -373,16 +373,21 @@ struct Airport : public TileArea {
 	* @param passenger.  Whether it is a passenger plane or not.
 	* @return boolean if own a terminal.
 	*/
-	inline bool GetHangarTerminalOwnerCheck(uint64 terminals, Owner owner, bool passenger) const
+	inline bool GetHangarTerminalOwnerCheck(uint64 terminals, Owner owner, byte subtype, bool passenger) const
 	{
 		const AirportSpec * as = this->GetSpec();
 	
 		// This changes the check depending upon cargo type.
 		// Keeps a passenger plane from checking against cargo terminals and vice versa.
-		if (passenger)
-			terminals = terminals & 35184372088320; // TERM01 through TERM36   Bits 9 through 44
+		// terminals = terminals & 35184372088320; // TERM01 through TERM36   Bits 9 through 44
+		// terminals = terminals & 144080003703767040; // CARG01 through CARG12  Bits 45 though 56
+		// subtype 0 = AIR_HELICOPTER
+		if (subtype == 0 && passenger)
+			terminals = terminals & (HELI01_block | HELI02_block | HELI03_block | HELI04_block | HELI05_block | HELI06_block | HELI07_block | HELI08_block | HELI09_block | HELI10_block | HELI11_block | HELI12_block);
+		else if (passenger)
+			terminals = terminals & (TERM01_block | TERM02_block | TERM03_block | TERM04_block | TERM05_block | TERM06_block | TERM07_block | TERM08_block | TERM09_block | TERM10_block | TERM11_block | TERM12_block | TERM13_block | TERM14_block | TERM15_block | TERM16_block | TERM17_block | TERM18_block | TERM19_block | TERM20_block | TERM21_block | TERM22_block | TERM23_block | TERM24_block | TERM25_block | TERM26_block | TERM27_block | TERM28_block | TERM29_block | TERM30_block | TERM31_block | TERM32_block | TERM33_block | TERM34_block | TERM35_block | TERM36_block);
 		else
-			terminals = terminals & 144080003703767040; // CARG01 through CARG12  Bits 45 though 56
+			terminals = terminals & (CARG01_block | CARG02_block | CARG03_block | CARG04_block | CARG05_block | CARG06_block | CARG07_block | CARG08_block | CARG09_block | CARG10_block | CARG11_block | CARG12_block);
 
 		for (uint i = 0; i < as->nof_terminals; i++) {
 			if (as->terminal_table[i].terminal & terminals) {

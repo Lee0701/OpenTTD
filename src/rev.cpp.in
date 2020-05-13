@@ -35,7 +35,8 @@ bool IsReleasedVersion()
  *
  * <modified> shows a "M", if the binary is made from modified source code.
  */
-const char _openttd_revision[] = "!!VERSION!!";
+//const char _openttd_revision[] = "!!VERSION!!";
+const char _openttd_revision[] = "1.10.1 Terminus Airports 1.4.7";
 
 /**
  * The text version of OpenTTD's build date.
