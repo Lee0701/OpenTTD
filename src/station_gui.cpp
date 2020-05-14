@@ -1335,10 +1335,11 @@ struct StationViewWindow : public Window {
 
 	~StationViewWindow()
 	{
-		DeleteWindowById(WC_TRAINS_LIST,   VehicleListIdentifier(VL_STATION_LIST, VEH_TRAIN,    this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_ROADVEH_LIST,  VehicleListIdentifier(VL_STATION_LIST, VEH_ROAD,     this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_SHIPS_LIST,    VehicleListIdentifier(VL_STATION_LIST, VEH_SHIP,     this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_AIRCRAFT_LIST, VehicleListIdentifier(VL_STATION_LIST, VEH_AIRCRAFT, this->owner, this->window_number).Pack(), false);
+		DeleteWindowById(WC_TRAINS_LIST,     VehicleListIdentifier(VL_STATION_LIST, VEH_TRAIN,    this->owner, this->window_number).Pack(), false);
+		DeleteWindowById(WC_ROADVEH_LIST,    VehicleListIdentifier(VL_STATION_LIST, VEH_ROAD,     this->owner, this->window_number).Pack(), false);
+		DeleteWindowById(WC_SHIPS_LIST,      VehicleListIdentifier(VL_STATION_LIST, VEH_SHIP,     this->owner, this->window_number).Pack(), false);
+		DeleteWindowById(WC_AIRCRAFT_LIST,   VehicleListIdentifier(VL_STATION_LIST, VEH_AIRCRAFT, this->owner, this->window_number).Pack(), false);
+		DeleteWindowById(WC_AIRPORT_CONTROL, this->window_number, false);
 
 		SetViewportCatchmentStation(Station::Get(this->window_number), false);
 	}
@@ -2482,19 +2483,20 @@ void ShowSelectWaypointIfNeeded(const CommandContainer &cmd, TileArea ta)
 	ShowSelectBaseStationIfNeeded<Waypoint>(cmd, ta);
 }
 
-uint numPassTerms;        ///< Number of Passenger terminals at this airport
-uint numPassSpots;        ///< Used in the creation of the window
-uint numCargoTerms;       ///< Number of Cargo terminals at this airport
-uint numCargoSpots;        ///< Used in the creation of the window
+uint64 numPassSpots;         ///< Used in the creation of the window
+uint64 numCargoSpots;        ///< Used in the creation of the window
 
 /** GUI for accessing terminals. */
 struct AirportControlWindow : Window
 {
 	const Station * st;        ///< Selected Station.
-	StationID sID;            ///< Used to set the Caption.
-	uint64 fullload;          ///< Which terminals are restricted against Full Load Orders.
-	uint64 terminal;          ///< Terminal selected.
+	StationID sID;             ///< Used to set the Caption.
+	uint64 fullload;           ///< Which terminals are restricted against Full Load Orders.
+	uint64 terminal;           ///< Terminal selected.
 	CompanyID TerminalCompany; ///< Terminal Owner
+	uint64 numPassTerms;         ///< Number of Passenger terminals at this airport
+	uint64 numCargoTerms;        ///< Number of Cargo terminals at this airport
+	const AirportSpec* as;     ///< Airport spec of selected Station
 	
 	/**
 	 * Construct the window.
@@ -2507,13 +2509,10 @@ struct AirportControlWindow : Window
 		st = Station::Get(station);
 		fullload = st->airport.fullload;
 		numPassTerms = st->airport.GetNumPassengerTerminals();
-		numPassSpots = numPassTerms * 2;
-		if (numPassSpots % 9 != 0)
-			 numPassSpots += 9 - (numPassSpots % 9);
 		numCargoTerms = st->airport.GetNumCargoTerminals();
-		numCargoSpots = numCargoTerms * 2;
-		if (numCargoSpots % 6 != 0)
-			numCargoSpots += 6 - (numCargoSpots % 6);
+		numPassSpots = ((numPassTerms + 8)/9) * 18;
+		numCargoSpots = ((numCargoTerms + 5) / 6) * 12;
+
 		//terminal = st->airport.;
 		//numPassTerms = 48;
 		//numCargoTerms = 12;
@@ -2559,9 +2558,12 @@ struct AirportControlWindow : Window
 		
 		}
 
+		numPassSpots = ((numPassTerms + 8) / 9) * 18;
+		numCargoSpots = ((numCargoTerms + 5) / 6) * 12;
+
 		/* Check which button is clicked */
 		if (IsInsideMM(widget, WID_AC_TERMINAL_PASS_FIRST, WID_AC_TERMINAL_PASS_FIRST + numPassSpots)) {
-			uint64 selected = widget - WID_AC_TERMINAL_PASS_FIRST;
+			uint64 selected = (uint64)widget - WID_AC_TERMINAL_PASS_FIRST;
 			uint64 selectedTerm = (selected - (((selected / 9) / 2) * 9));
 			if (selected < 9 || (selected >= 18 && selected < 27) || (selected >= 36 && selected < 45) || (selected >= 54 && selected < 63)) {
 				if (selectedTerm >= numPassTerms) return;
@@ -2580,7 +2582,7 @@ struct AirportControlWindow : Window
 
 		/* Check which button is clicked */
 		if (IsInsideMM(widget, WID_AC_TERMINAL_CARGO_FIRST, WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots)) {
-			uint64 selected = widget - WID_AC_TERMINAL_CARGO_FIRST;
+			uint64 selected = (uint64)widget - WID_AC_TERMINAL_CARGO_FIRST;
 			uint64 selectedTerm = (selected - (((selected / 6) / 2) * 6));
 			if (selected < 6 || (selected >= 12 && selected < 18)) {
 				if (selectedTerm >= numPassTerms) return;
@@ -2607,7 +2609,9 @@ struct AirportControlWindow : Window
 		if (!gui_scope) return;
 		
 		fullload = st->airport.fullload;
-		
+		numPassSpots = ((numPassTerms + 8) / 9) * 18;
+		numCargoSpots = ((numCargoTerms + 5) / 6) * 12;
+
 		if ((st->facilities & FACIL_AIRPORT) && (st->airport.flags1 & AIRPORT_CLOSED_block) != 0)
 			this->LowerWidget(WID_SV_CLOSE_AIRPORT);
 		else
@@ -2651,15 +2655,15 @@ struct AirportControlWindow : Window
 		}
 	}
 	
-	virtual void OnResize()
-	{
+	//virtual void OnResize()
+	//{
 		/*if (this->viewport != NULL) {
 		  NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_T_VIEWPORT);
 		  nvp->UpdateViewportCoordinates(this);
 		  //this->wp->UpdateVirtCoord();
 		  ScrollWindowToTile(this->window_number, this, true); // Re-center viewport.
 		}*/
-	}
+	//}
 	
 	virtual void OnQueryTextFinished(char* str)
 	{
@@ -2669,8 +2673,11 @@ struct AirportControlWindow : Window
 	
 	virtual void DrawWidget(const Rect & r, int widget) const
 	{
+		numPassSpots = ((numPassTerms + 8) / 9) * 18;
+		numCargoSpots = ((numCargoTerms + 5) / 6) * 12;
+
 		if (IsInsideMM(widget, WID_AC_TERMINAL_PASS_FIRST, WID_AC_TERMINAL_PASS_FIRST + numPassSpots)) {
-			uint64 selected = widget - WID_AC_TERMINAL_PASS_FIRST;
+			uint64 selected = (uint64)widget - WID_AC_TERMINAL_PASS_FIRST;
 			uint64 selectedTerm = (selected - (((selected / 9) / 2) * 9));
 			if (selected < 9 || (selected >= 18 && selected < 27) || (selected >= 36 && selected < 45) || (selected >= 54 && selected < 63)) {
 				if (selectedTerm >= numPassTerms) return;
@@ -2680,7 +2687,10 @@ struct AirportControlWindow : Window
 					Dimension sprite_size = GetSpriteSize(SPR_COMPANY_ICON);
 					DrawCompanyIcon(cid, (r.left + r.right - sprite_size.width) / 2, (r.top + r.bottom - sprite_size.height) / 2);
 					std::string str = std::to_string(selectedTerm + 1);
-					DrawString(r.left, r.right, r.top + 2, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
+					if ( _company_colours[cid] == COLOUR_ORANGE || _company_colours[cid] == COLOUR_WHITE || _company_colours[cid] == COLOUR_GREY || _company_colours[cid] == COLOUR_CREAM || _company_colours[cid] == COLOUR_YELLOW || _company_colours[cid] == COLOUR_PINK )
+						DrawString(r.left, r.right, r.top + 3, str.c_str(), TC_BLACK, SA_CENTER, false, FS_SMALL);
+					else
+						DrawString(r.left, r.right, r.top + 3, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
 				}
 				return;
 			} else {
@@ -2691,7 +2701,7 @@ struct AirportControlWindow : Window
 		}
 
 		if (IsInsideMM(widget, WID_AC_TERMINAL_CARGO_FIRST, WID_AC_TERMINAL_CARGO_FIRST + numCargoSpots)) {
-			uint64 selected = widget - WID_AC_TERMINAL_CARGO_FIRST;
+			uint64 selected = (uint64)widget - WID_AC_TERMINAL_CARGO_FIRST;
 			uint64 selectedTerm = (selected - (((selected / 6) / 2) * 6));
 			if (selected < 6 || (selected >= 12 && selected < 18)) {
 				if (selectedTerm >= numCargoTerms) return;
@@ -2701,12 +2711,15 @@ struct AirportControlWindow : Window
 					Dimension sprite_size = GetSpriteSize(SPR_COMPANY_ICON);
 					DrawCompanyIcon(cid, (r.left + r.right - sprite_size.width) / 2, (r.top + r.bottom - sprite_size.height) / 2);
 					std::string str = std::to_string(selectedTerm + 1);
-					DrawString(r.left, r.right, r.top + 2, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
+					if (_company_colours[cid] == COLOUR_ORANGE || _company_colours[cid] == COLOUR_WHITE || _company_colours[cid] == COLOUR_GREY || _company_colours[cid] == COLOUR_CREAM || _company_colours[cid] == COLOUR_YELLOW || _company_colours[cid] == COLOUR_PINK)
+						DrawString(r.left, r.right, r.top + 3, str.c_str(), TC_BLACK, SA_CENTER, false, FS_SMALL);
+					else
+						DrawString(r.left, r.right, r.top + 3, str.c_str(), TC_WHITE, SA_CENTER, false, FS_SMALL);
 				}
 				return;
 			} else {
 				if (selectedTerm >= numCargoTerms + 6) return;
-				DrawString(r.left, r.right, r.top + 2, "FLL", TC_BLACK, SA_CENTER, false, FS_NORMAL);
+				DrawString(r.left, r.right, r.top + 3, "FLL", TC_BLACK, SA_CENTER, false, FS_NORMAL);
 				return;
 			}
 		}
@@ -2741,10 +2754,10 @@ NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 NWidget(WWT_STICKYBOX, COLOUR_GREY),
 EndContainer(),
 NWidget(NWID_HORIZONTAL),
-NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SV_CLOSE_AIRPORT), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_CLOSE_AIRPORT, STR_STATION_VIEW_CLOSE_AIRPORT_TOOLTIP),
+NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SV_CLOSE_AIRPORT), SetMinimalSize(260, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_CLOSE_AIRPORT, STR_STATION_VIEW_CLOSE_AIRPORT_TOOLTIP),
 EndContainer(),
 NWidget(NWID_HORIZONTAL),
-NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_RESET_AIRPORT), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_RESET_AIRPORT, STR_STATION_VIEW_RESET_AIRPORT_TOOLTIP),
+NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_RESET_AIRPORT), SetMinimalSize(260, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_STATION_VIEW_RESET_AIRPORT, STR_STATION_VIEW_RESET_AIRPORT_TOOLTIP),
 EndContainer(),
 		//NWidget(WWT_PANEL, COLOUR_GREY),
 		//	NWidget(WWT_INSET, COLOUR_GREY), SetPadding(2, 2, 2, 2),
@@ -2764,7 +2777,7 @@ NWidget(WWT_PANEL, COLOUR_GREY),
 NWidgetFunction(MakeCompanyButtonRowsGUIACCargo), SetPadding(0, 1, 1, 2),
 EndContainer(),
 NWidget(NWID_HORIZONTAL),
-NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_AC_CENTER_VIEW), SetMinimalSize(100, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_BUTTON_LOCATION, STR_TERMINAL_VIEW_CENTER_TOOLTIP),
+NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_AC_CENTER_VIEW), SetMinimalSize(260, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_BUTTON_LOCATION, STR_TERMINAL_VIEW_CENTER_TOOLTIP),
 NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 EndContainer(),
 };

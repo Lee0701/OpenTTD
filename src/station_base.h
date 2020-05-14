@@ -467,16 +467,17 @@ struct Airport : public TileArea {
 		}
 		return num;
 	}
-	
+
+
 	/**
-	 * Get the tile index of a given terminal.
-	 * @param terminal The terminal to get the location of.
-	 * @pre terminal < GetNumTerminals().
-	 * @return A tile with the given terminal.
-	*/
+ * Get the tile index of a given terminal.
+ * @param terminal The terminal to get the location of.
+ * @pre terminal < GetNumTerminals().
+ * @return A tile with the given terminal.
+*/
 	inline TileIndex GetTerminalTile(uint64 terminal) const
 	{
-		const AirportSpec * as = this->GetSpec();
+		const AirportSpec* as = this->GetSpec();
 		for (uint i = 0; i < as->nof_terminals; i++) {
 			if (as->terminal_table[i].terminal & terminal) {
 				return this->GetRotatedTileFromOffset(as->terminal_table[i].ti);
@@ -484,7 +485,7 @@ struct Airport : public TileArea {
 		}
 		NOT_REACHED();
 	}
-	
+
 	/**
 	 * Get the tile index of a given terminal.
 	 * @param terminal The terminal to get the location of.
