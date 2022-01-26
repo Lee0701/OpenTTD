@@ -68,6 +68,7 @@
 #include "../company_func.h"
 #include "../infrastructure_func.h"
 #include "../event_logs.h"
+#include "../newgrf_object.h"
 
 
 #include "saveload_internal.h"
@@ -1114,10 +1115,6 @@ bool AfterLoadGame()
 			default: break;
 		}
 	}
-
-	/* In version 2.2 of the savegame, we have new airports, so status of all aircraft is reset.
-	 * This has to be called after the oilrig airport_type update above ^^^ ! */
-	if (IsSavegameVersionBefore(SLV_2, 2)) UpdateOldAircraft();
 
 	/* In version 6.1 we put the town index in the map-array. To do this, we need
 	 *  to use m2 (16bit big), so we need to clean m2, and that is where this is
@@ -3304,6 +3301,10 @@ bool AfterLoadGame()
 		}
 	}
 
+	/* In version 2.2 of the savegame, we have new airports, so status of all aircraft is reset.
+	 * This has to be called after all map array updates */
+	if (IsSavegameVersionBefore(SLV_2, 2)) UpdateOldAircraft();
+
 	if (SlXvIsFeaturePresent(XSLFI_SPRINGPP)) {
 		// re-arrange vehicle_flags
 		for (Vehicle *v : Vehicle::Iterate()) {
@@ -3934,6 +3935,14 @@ bool AfterLoadGame()
 		UpdateAllBlockSignals();
 	}
 
+	if (!SlXvIsFeaturePresent(XSLFI_REALISTIC_TRAIN_BRAKING, 5) && _settings_game.vehicle.train_braking_model == TBM_REALISTIC) {
+		for (Train *t : Train::Iterate()) {
+			if (t->lookahead != nullptr) {
+				t->lookahead->SetNextExtendPosition();
+			}
+		}
+	}
+
 	if (SlXvIsFeatureMissing(XSLFI_INFLATION_FIXED_DATES)) {
 		_settings_game.economy.inflation_fixed_dates = !IsSavegameVersionBefore(SLV_GS_INDUSTRY_CONTROL);
 	}
@@ -3961,6 +3970,29 @@ bool AfterLoadGame()
 				SetNonFloodingWaterTile(t, false);
 			}
 		}
+	}
+
+	if (SlXvIsFeatureMissing(XSLFI_TRACE_RESTRICT_TUNBRIDGE)) {
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (IsTileType(t, MP_TUNNELBRIDGE) && GetTunnelBridgeTransportType(t) == TRANSPORT_RAIL && IsTunnelBridgeWithSignalSimulation(t)) {
+				SetTunnelBridgeRestrictedSignal(t, false);
+			}
+		}
+	}
+
+	if (SlXvIsFeatureMissing(XSLFI_OBJECT_GROUND_TYPES)) {
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (IsTileType(t, MP_OBJECT)) {
+				_m[t].m4 = 0;
+				ObjectType type = GetObjectType(t);
+				extern void SetShouldObjectHaveNoFoundation(TileIndex tile, Slope tileh, ObjectType type, const ObjectSpec *spec);
+				SetShouldObjectHaveNoFoundation(t, SLOPE_ELEVATED, type, ObjectSpec::Get(type));
+			}
+		}
+	}
+
+	if (SlXvIsFeatureMissing(XSLFI_ST_INDUSTRY_CARGO_MODE)) {
+		_settings_game.station.station_delivery_mode = SD_NEAREST_FIRST;
 	}
 
 	InitializeRoadGUI();

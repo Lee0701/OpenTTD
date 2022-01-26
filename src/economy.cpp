@@ -1075,30 +1075,9 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 /** The industries we've currently brought cargo to. */
 static SmallIndustryList _cargo_delivery_destinations;
 
-/**
- * Transfer goods from station to industry.
- * All cargo is delivered to the nearest (Manhattan) industry to the station sign, which is inside the acceptance rectangle and actually accepts the cargo.
- * @param st The station that accepted the cargo
- * @param cargo_type Type of cargo delivered
- * @param num_pieces Amount of cargo delivered
- * @param source The source of the cargo
- * @param company The company delivering the cargo
- * @return actually accepted pieces of cargo
- */
-static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint num_pieces, IndustryID source, CompanyID company)
-{
-	/* Find the nearest industrytile to the station sign inside the catchment area, whose industry accepts the cargo.
-	 * This fails in three cases:
-	 *  1) The station accepts the cargo because there are enough houses around it accepting the cargo.
-	 *  2) The industries in the catchment area temporarily reject the cargo, and the daily station loop has not yet updated station acceptance.
-	 *  3) The results of callbacks CBID_INDUSTRY_REFUSE_CARGO and CBID_INDTILE_CARGO_ACCEPTANCE are inconsistent. (documented behaviour)
-	 */
-
-	uint accepted = 0;
-
+template <class F>
+void ForAcceptingIndustries(const Station *st, CargoID cargo_type, IndustryID source, CompanyID company, F&& f) {
 	for (Industry *ind : st->industries_near) {
-		if (num_pieces == 0) break;
-
 		if (ind->index == source) continue;
 
 		uint cargo_index;
@@ -1113,6 +1092,22 @@ static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint n
 
 		if (ind->exclusive_supplier != INVALID_OWNER && ind->exclusive_supplier != st->owner) continue;
 
+		if (!f(ind, cargo_index)) break;
+	}
+}
+
+uint DeliverGoodsToIndustryNearestFirst(const Station *st, CargoID cargo_type, uint num_pieces, IndustryID source, CompanyID company)
+{
+	/* Find the nearest industrytile to the station sign inside the catchment area, whose industry accepts the cargo.
+	 * This fails in three cases:
+	 *  1) The station accepts the cargo because there are enough houses around it accepting the cargo.
+	 *  2) The industries in the catchment area temporarily reject the cargo, and the daily station loop has not yet updated station acceptance.
+	 *  3) The results of callbacks CBID_INDUSTRY_REFUSE_CARGO and CBID_INDTILE_CARGO_ACCEPTANCE are inconsistent. (documented behaviour)
+	 */
+
+	uint accepted = 0;
+
+	ForAcceptingIndustries(st, cargo_type, source, company, [&](Industry *ind, uint cargo_index) {
 		/* Insert the industry into _cargo_delivery_destinations, if not yet contained */
 		include(_cargo_delivery_destinations, ind);
 
@@ -1124,9 +1119,125 @@ static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint n
 
 		/* Update the cargo monitor. */
 		AddCargoDelivery(cargo_type, company, amount, ST_INDUSTRY, source, st, ind->index);
+
+		return num_pieces != 0;
+	});
+
+	return accepted;
+}
+
+uint DeliverGoodsToIndustryEqually(const Station *st, CargoID cargo_type, uint num_pieces, IndustryID source, CompanyID company)
+{
+	struct AcceptingIndustry {
+		Industry *ind;
+		uint cargo_index;
+		uint capacity;
+		uint delivered;
+	};
+
+	std::vector<AcceptingIndustry> acceptingIndustries;
+
+	ForAcceptingIndustries(st, cargo_type, source, company, [&](Industry *ind, uint cargo_index) {
+		uint capacity = 0xFFFFu - ind->incoming_cargo_waiting[cargo_index];
+		if (capacity > 0) acceptingIndustries.push_back({ ind, cargo_index, capacity, 0 });
+		return true;
+	});
+
+	if (acceptingIndustries.empty()) return 0;
+
+	uint accepted = 0;
+
+	auto distributeCargo = [&](AcceptingIndustry &e, uint amount) {
+		e.capacity -= amount;
+		e.delivered += amount;
+		num_pieces -= amount;
+		accepted += amount;
+	};
+
+	auto finalizeCargo = [&](AcceptingIndustry &e) {
+		if (e.delivered == 0) return;
+		include(_cargo_delivery_destinations, e.ind);
+		e.ind->incoming_cargo_waiting[e.cargo_index] += e.delivered;
+		e.ind->last_cargo_accepted_at[e.cargo_index] = _date;
+		AddCargoDelivery(cargo_type, company, e.delivered, ST_INDUSTRY, source, st, e.ind->index);
+	};
+
+	if (acceptingIndustries.size() == 1) {
+		distributeCargo(acceptingIndustries[0], std::min<uint>(acceptingIndustries[0].capacity, num_pieces));
+		finalizeCargo(acceptingIndustries[0]);
+		return accepted;
+	}
+
+	/* Sort in order of decreasing capacity */
+	std::sort(acceptingIndustries.begin(), acceptingIndustries.end(), [](AcceptingIndustry &a, AcceptingIndustry &b) {
+		return std::tie(a.capacity, a.ind->index) > std::tie(b.capacity, b.ind->index);
+	});
+
+	/* Handle low-capacity industries first */
+	do {
+		uint amount = num_pieces / static_cast<uint>(acceptingIndustries.size());
+		AcceptingIndustry &acc = acceptingIndustries.back();
+		if (amount >= acc.capacity) {
+			distributeCargo(acc, acc.capacity);
+			finalizeCargo(acc);
+			acceptingIndustries.pop_back();
+		} else {
+			break;
+		}
+	} while (!acceptingIndustries.empty());
+
+	/* Remaining industries can accept all remaining cargo when distributed evenly */
+	if (!acceptingIndustries.empty()) {
+		uint amount = num_pieces / static_cast<uint>(acceptingIndustries.size());
+
+		if (amount > 0) {
+			for (auto &e : acceptingIndustries) {
+				distributeCargo(e, amount);
+			}
+		}
+
+		/* If cargo didn't divide evenly into remaining industries, distribute the remainder randomly */
+		if (num_pieces > 0) {
+			assert(num_pieces < acceptingIndustries.size());
+
+			uint idx = RandomRange((uint)acceptingIndustries.size());
+			for (uint i = 0; i < acceptingIndustries.size(); ++i) {
+				if (acceptingIndustries[idx].capacity > 0) {
+					distributeCargo(acceptingIndustries[idx], 1);
+					if (num_pieces == 0) break;
+				}
+				idx++;
+				if (idx == acceptingIndustries.size()) idx = 0;
+			}
+		}
+
+		for (auto &e : acceptingIndustries) {
+			finalizeCargo(e);
+		}
 	}
 
 	return accepted;
+}
+
+/**
+ * Transfer goods from station to industry.
+ * Original distribution mode: All cargo is delivered to the nearest (Manhattan) industry to the station sign, which is inside the acceptance rectangle and actually accepts the cargo.
+ * Balanced distribution: Cargo distributed equally amongst the accepting industries in the acceptance rectangle.
+ * @param st The station that accepted the cargo
+ * @param cargo_type Type of cargo delivered
+ * @param num_pieces Amount of cargo delivered
+ * @param source The source of the cargo
+ * @param company The company delivering the cargo
+ * @return actually accepted pieces of cargo
+ */
+static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint num_pieces, IndustryID source, CompanyID company)
+{
+	switch (_settings_game.station.station_delivery_mode) {
+		case SD_BALANCED:
+			return DeliverGoodsToIndustryEqually(st, cargo_type, num_pieces, source, company);
+		default:
+			return DeliverGoodsToIndustryNearestFirst(st, cargo_type, num_pieces, source, company);
+	}
 }
 
 /**
@@ -2453,16 +2564,16 @@ CommandCost CmdDeclineBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1,
 	return CommandCost();
 }
 
-uint ScaleQuantity(uint amount, int scale_factor)
+uint ScaleQuantity(uint amount, int scale_factor, bool allow_trunc)
 {
 	scale_factor += 200; // ensure factor is positive
 	assert(scale_factor >= 0);
 	int cf = (scale_factor / 10) - 20;
 	int fine = scale_factor % 10;
-	return ScaleQuantity(amount, cf, fine);
+	return ScaleQuantity(amount, cf, fine, allow_trunc);
 }
 
-uint ScaleQuantity(uint amount, int cf, int fine)
+uint ScaleQuantity(uint amount, int cf, int fine, bool allow_trunc)
 {
 	if (fine != 0) {
 		// 2^0.1 << 16 to 2^0.9 << 16
@@ -2474,9 +2585,12 @@ uint ScaleQuantity(uint amount, int cf, int fine)
 	// apply scale factor
 	if (cf < 0) {
 		// approx (amount / 2^cf)
-		// adjust with a constant offset of {(2 ^ cf) - 1} (i.e. add cf * 1-bits) before dividing to ensure that it doesn't become zero
+		// when allow_trunc is false: adjust with a constant offset of {(2 ^ cf) - 1} (i.e. add cf * 1-bits) before dividing to ensure that it doesn't become zero
 		// this skews the curve a little so that isn't entirely exponential, but will still decrease
-		amount = (amount + ((1 << -cf) - 1)) >> -cf;
+		// when allow_trunc is true: adjust with a randomised offset
+		uint offset = ((1 << -cf) - 1);
+		if (allow_trunc) offset &= Random();
+		amount = (amount + offset) >> -cf;
 	} else if (cf > 0) {
 		// approx (amount * 2^cf)
 		amount = amount << cf;

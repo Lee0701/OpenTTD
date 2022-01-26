@@ -21,6 +21,7 @@
 #include "zoom_type.h"
 #include "openttd.h"
 #include "rail_gui_type.h"
+#include "station_type.h"
 
 /* Used to validate sizes of "max" value in settings. */
 const size_t MAX_SLE_UINT8 = UINT8_MAX;
@@ -57,6 +58,8 @@ enum IndustryDensity {
 	ID_NORMAL,    ///< Normal amount of industries at game start.
 	ID_HIGH,      ///< Many industries at game start.
 
+	ID_CUSTOM,    ///< Custom number of industries.
+
 	ID_END,       ///< Number of industry density settings.
 };
 
@@ -78,6 +81,8 @@ struct DifficultySettings {
 	uint32 max_loan;                         ///< the maximum initial loan
 	byte   initial_interest;                 ///< amount of interest (to pay over the loan)
 	byte   vehicle_costs;                    ///< amount of money spent on vehicle running cost
+	uint8  vehicle_costs_in_depot;           ///< amount of money spent on vehicle running cost when in depot
+	uint8  vehicle_costs_when_stopped;       ///< amount of money spent on vehicle running cost when vehicle is stopped
 	byte   competitor_speed;                 ///< the speed at which the AI builds
 	byte   vehicle_breakdowns;               ///< likelihood of vehicles breaking down
 	byte   subsidy_multiplier;               ///< payment multiplier for subsidized deliveries
@@ -143,6 +148,8 @@ struct GUISettings : public TimeSettings {
 	ZoomLevel zoom_max;                      ///< maximum zoom out level
 	ZoomLevel sprite_zoom_min;               ///< maximum zoom level at which higher-resolution alternative sprites will be used (if available) instead of scaling a lower resolution sprite
 	byte   autosave;                         ///< how often should we do autosaves?
+	uint16 autosave_custom_days;             ///< custom autosave interval in days
+	uint16 autosave_custom_minutes;          ///< custom autosave interval in real-time minutes
 	bool   threaded_saves;                   ///< should we do threaded saves?
 	bool   keep_all_autosave;                ///< name the autosave in a different way
 	bool   autosave_on_exit;                 ///< save an autosave when you quit the game, but do not ask "Do you really want to quit?"
@@ -211,6 +218,7 @@ struct GUISettings : public TimeSettings {
 	bool   show_train_weight_ratios_in_details;   ///< show train weight ratios in vehicle details window top widget
 	bool   show_vehicle_group_in_details;    ///< show vehicle group in vehicle details window top widget
 	bool   show_restricted_signal_default;   ///< Show restricted electric signals using the default sprite
+	bool   show_all_signal_default;          ///< Show all signals using the default sprite
 	bool   show_adv_tracerestrict_features;  ///< Show advanced trace restrict features in UI
 	bool   show_progsig_ui;                  ///< Show programmable pre-signals feature in UI
 	bool   show_noentrysig_ui;               ///< Show no-entry signals feature in UI
@@ -256,6 +264,7 @@ struct GUISettings : public TimeSettings {
 	bool   newgrf_show_old_versions;         ///< whether to show old versions in the NewGRF list
 	uint8  newgrf_default_palette;           ///< default palette to use for NewGRFs without action 14 palette information
 	bool   console_show_unlisted;            ///< whether to show unlisted console commands
+	bool   newgrf_disable_big_gui;           ///< whether to disable "big GUI" NewGRFs
 
 	/**
 	 * Returns true when the user has sufficient privileges to edit newgrfs on a running game
@@ -353,6 +362,8 @@ struct NetworkSettings {
 	std::string default_company_pass;                     ///< default password for new companies in encrypted form
 	std::string connect_to_ip;                            ///< default for the "Add server" query
 	std::string network_id;                               ///< network ID for servers
+	std::string company_password_storage_token;           ///< company password storage token
+	std::string company_password_storage_secret;          ///< company password storage secret
 	bool        autoclean_companies;                      ///< automatically remove companies that are not in use
 	uint8       autoclean_unprotected;                    ///< remove passwordless companies after this many months
 	uint8       autoclean_protected;                      ///< remove the password from passworded companies after this many months
@@ -404,6 +415,7 @@ struct GameCreationSettings {
 	uint8  amount_of_rocks;                  ///< the amount of rocks
 	uint8  height_affects_rocks;             ///< the affect that map height has on rocks
 	uint8  build_public_roads;               ///< build public roads connecting towns
+	uint16 custom_industry_number;           ///< manually entered number of industries
 };
 
 /** Settings related to construction in-game */
@@ -612,6 +624,7 @@ struct VehicleSettings {
 	bool   no_train_crash_other_company;     ///< trains cannot crash with trains from other companies
 	bool   flip_direction_all_trains;        ///< enable flipping direction in depot for all train engine types
 	bool   roadveh_articulated_overtaking;   ///< enable articulated road vehicles overtaking other vehicles
+	bool   roadveh_cant_quantum_tunnel;      ///< enable or disable vehicles quantum tunelling through over vehicles when blocked
 	bool   drive_through_train_depot;        ///< enable drive-through train depot emulation
 };
 
@@ -681,6 +694,7 @@ struct LinkGraphSettings {
 	uint8 demand_size;                          ///< influence of supply ("station size") on the demand function
 	uint8 demand_distance;                      ///< influence of distance between stations on the demand function
 	uint8 short_path_saturation;                ///< percentage up to which short paths are saturated before saturating most capacious paths
+	uint16 aircraft_link_scale;                 ///< scale effective distance of aircraft links
 
 	inline DistributionType GetDistributionType(CargoID cargo) const {
 		if (this->distribution_per_cargo[cargo] != DT_PER_CARGO_DEFAULT) return this->distribution_per_cargo[cargo];
@@ -702,6 +716,7 @@ struct StationSettings {
 	byte   catchment_increase;               ///< amount by which station catchment is increased
 	bool   cargo_class_rating_wait_time;     ///< station rating tolerance to time since last cargo pickup depends on cargo class
 	bool   station_size_rating_cargo_amount; ///< station rating tolerance to waiting cargo amount depends on station size
+	StationDelivery station_delivery_mode;   ///< method to use for distributing cargo from stations to accepting industries
 };
 
 /** Default settings for vehicles. */

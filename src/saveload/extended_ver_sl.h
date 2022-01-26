@@ -34,6 +34,7 @@ enum SlXvFeatureIndex {
 	XSLFI_TRACE_RESTRICT_BRKCND,                  ///< Trace restrict: realistic braking related conditionals
 	XSLFI_TRACE_RESTRICT_CTGRYCND,                ///< Trace restrict: category conditionals
 	XSLFI_TRACE_RESTRICT_PENCTRL,                 ///< Trace restrict: PF penalty control
+	XSLFI_TRACE_RESTRICT_TUNBRIDGE,               ///< Trace restrict: restricted signalled tunnel/bridge support
 	XSLFI_PROG_SIGS,                              ///< programmable pre-signals patch
 	XSLFI_ADJACENT_CROSSINGS,                     ///< Adjacent level crossings closure patch
 	XSLFI_SAFER_CROSSINGS,                        ///< Safer level crossings
@@ -112,6 +113,11 @@ enum SlXvFeatureIndex {
 	XSLFI_DEPOT_ORDER_EXTRA_FLAGS,                ///< Depot order extra flags
 	XSLFI_EXTRA_SIGNAL_TYPES,                     ///< Extra signal types
 	XSLFI_BANKRUPTCY_EXTRA,                       ///< Extra company bankruptcy fields
+	XSLFI_OBJECT_GROUND_TYPES,                    ///< Object ground types
+	XSLFI_LINKGRAPH_AIRCRAFT,                     ///< Link graph last aircraft update field and aircraft link scaling setting
+	XSLFI_COMPANY_PW,                             ///< Company passwords
+	XSLFI_ST_INDUSTRY_CARGO_MODE,                 ///< Station industry cargo mode setting
+
 	XSLFI_SCRIPT_INT64,                           ///< See: SLV_SCRIPT_INT64
 
 	XSLFI_RIFF_HEADER_60_BIT,                     ///< Size field in RIFF chunk header is 60 bit

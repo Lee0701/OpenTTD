@@ -80,6 +80,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_TRACE_RESTRICT_BRKCND,  XSCF_NULL,                2,   2, "tracerestrict_braking_cond",nullptr, nullptr, nullptr        },
 	{ XSLFI_TRACE_RESTRICT_CTGRYCND,XSCF_NULL,                1,   1, "tracerestrict_ctgry_cond",  nullptr, nullptr, nullptr        },
 	{ XSLFI_TRACE_RESTRICT_PENCTRL, XSCF_NULL,                1,   1, "tracerestrict_pfpenctrl",   nullptr, nullptr, nullptr        },
+	{ XSLFI_TRACE_RESTRICT_TUNBRIDGE,XSCF_NULL,               1,   1, "tracerestrict_sigtunbridge",nullptr, nullptr, nullptr        },
 	{ XSLFI_PROG_SIGS,              XSCF_NULL,                2,   2, "programmable_signals",      nullptr, nullptr, "SPRG"      },
 	{ XSLFI_ADJACENT_CROSSINGS,     XSCF_NULL,                1,   1, "adjacent_crossings",        nullptr, nullptr, nullptr        },
 	{ XSLFI_SAFER_CROSSINGS,        XSCF_NULL,                1,   1, "safer_crossings",           nullptr, nullptr, nullptr        },
@@ -147,7 +148,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_ANIMATED_TILE_EXTRA,    XSCF_NULL,                1,   1, "animated_tile_extra",       nullptr, nullptr, nullptr        },
 	{ XSLFI_NEWGRF_INFO_EXTRA,      XSCF_NULL,                1,   1, "newgrf_info_extra",         nullptr, nullptr, nullptr        },
 	{ XSLFI_INDUSTRY_CARGO_ADJ,     XSCF_IGNORABLE_UNKNOWN,   1,   1, "industry_cargo_adj",        nullptr, nullptr, nullptr        },
-	{ XSLFI_REALISTIC_TRAIN_BRAKING,XSCF_NULL,                4,   4, "realistic_train_braking",   nullptr, nullptr, "VLKA"         },
+	{ XSLFI_REALISTIC_TRAIN_BRAKING,XSCF_NULL,                5,   5, "realistic_train_braking",   nullptr, nullptr, "VLKA"         },
 	{ XSLFI_INFLATION_FIXED_DATES,  XSCF_IGNORABLE_ALL,       1,   1, "inflation_fixed_dates",     nullptr, nullptr, nullptr        },
 	{ XSLFI_WATER_FLOODING,         XSCF_NULL,                2,   2, "water_flooding",            nullptr, nullptr, nullptr        },
 	{ XSLFI_MORE_HOUSES,            XSCF_NULL,                2,   2, "more_houses",               nullptr, nullptr, nullptr        },
@@ -158,6 +159,10 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_DEPOT_ORDER_EXTRA_FLAGS,XSCF_IGNORABLE_UNKNOWN,   1,   1, "depot_order_extra_flags",   nullptr, nullptr, nullptr        },
 	{ XSLFI_EXTRA_SIGNAL_TYPES,     XSCF_NULL,                1,   1, "extra_signal_types",        nullptr, nullptr, nullptr        },
 	{ XSLFI_BANKRUPTCY_EXTRA,       XSCF_NULL,                1,   1, "bankruptcy_extra",          nullptr, nullptr, nullptr        },
+	{ XSLFI_OBJECT_GROUND_TYPES,    XSCF_NULL,                1,   1, "object_ground_types",       nullptr, nullptr, nullptr        },
+	{ XSLFI_LINKGRAPH_AIRCRAFT,     XSCF_NULL,                1,   1, "linkgraph_aircraft",        nullptr, nullptr, nullptr        },
+	{ XSLFI_COMPANY_PW,             XSCF_IGNORABLE_ALL,       1,   1, "company_password",          nullptr, nullptr, "PLYP"         },
+	{ XSLFI_ST_INDUSTRY_CARGO_MODE, XSCF_IGNORABLE_UNKNOWN,   1,   1, "st_industry_cargo_mode",    nullptr, nullptr, nullptr        },
 	{ XSLFI_SCRIPT_INT64,           XSCF_NULL,                1,   1, "script_int64",              nullptr, nullptr, nullptr        },
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr },// This is the end marker
 };
