@@ -564,6 +564,12 @@ STR_MONTH_OCT                                                   :Октомвр�
 STR_MONTH_NOV                                                   :Ноември
 STR_MONTH_DEC                                                   :Декември
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Влакове
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Камиони/Автобуси
+STR_VEHICLE_TYPE_SHIPS                                          :Кораби
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Самолети
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Легенда
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Покажи легендата на графиката
@@ -1090,10 +1096,10 @@ STR_TERRAIN_TYPE_HILLY                                          :хълмист
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :планински
 STR_TERRAIN_TYPE_ALPINIST                                       :Алпинист
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :разрешаващи
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :толерантни
 STR_CITY_APPROVAL_HOSTILE                                       :враждебни
+STR_CITY_APPROVAL_PERMISSIVE                                    :разрешаващи
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Няма подходящи AI...{}Можете да свалите допълнителни AI чрез системата Online Content (Онлайн Съдържание)
 

@@ -188,6 +188,12 @@ static void LoadSpriteTables()
 	/* Tracerestrict sprites. */
 	LoadGrfFile("tracerestrict.grf", SPR_TRACERESTRICT_BASE, false);
 
+	/* Misc GUI sprites. */
+	LoadGrfFile("misc_gui.grf", SPR_MISC_GUI_BASE, false);
+
+	/* Road waypoints sprites. */
+	LoadGrfFile("road_waypoints.grf", SPR_ROAD_WAYPOINTS_BASE, false);
+
 	/* Fill duplicate original signal graphics sprite block */
 	for (uint i = 0; i < DUP_ORIGINAL_SIGNALS_SPRITE_COUNT; i++) {
 		DupSprite(SPR_ORIGINAL_SIGNALS_BASE + i, SPR_DUP_ORIGINAL_SIGNALS_BASE + i);
@@ -224,6 +230,9 @@ static void LoadSpriteTables()
 
 	extern uint _extra_station_names_used;
 	_extra_station_names_used = 0;
+
+	extern uint8 _extra_station_names_probability;
+	_extra_station_names_probability = 0;
 
 	/*
 	 * Load the base and extra NewGRF with OTTD required graphics as first NewGRF.

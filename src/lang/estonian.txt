@@ -641,6 +641,12 @@ STR_MONTH_OCT                                                   :oktoober
 STR_MONTH_NOV                                                   :november
 STR_MONTH_DEC                                                   :detsember
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Rongid
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Mootorsõidukid
+STR_VEHICLE_TYPE_SHIPS                                          :Laevad
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Õhusõidukid
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Selgitus
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Näita selgitust graafikute juures
@@ -1206,10 +1212,10 @@ STR_TERRAIN_TYPE_ALPINIST                                       :Alpinist
 STR_TERRAIN_TYPE_CUSTOM                                         :Määratud kõrgus
 STR_TERRAIN_TYPE_CUSTOM_VALUE                                   :Määratud kõrgus ({NUM})
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Soodustav
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Salliv
 STR_CITY_APPROVAL_HOSTILE                                       :Vaenulik
+STR_CITY_APPROVAL_PERMISSIVE                                    :Soodustav
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Sobiv AI puudub...{}Mitmesuguseid AI-sid saab alla laadida 'aineste allalaadimise' kaudu
 

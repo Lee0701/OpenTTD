@@ -50,6 +50,7 @@ struct ExtraStationNameInfo {
 
 extern std::array<ExtraStationNameInfo, MAX_EXTRA_STATION_NAMES> _extra_station_names;
 extern uint _extra_station_names_used;
+extern uint8 _extra_station_names_probability;
 
 class FlowStatMap;
 
@@ -784,11 +785,19 @@ private:
 	}
 };
 
-struct IndustryCompare {
-	bool operator() (const Industry *lhs, const Industry *rhs) const;
+struct IndustryListEntry {
+	uint distance;
+	Industry *industry;
+
+	bool operator==(const IndustryListEntry &other) const { return this->distance == other.distance && this->industry == other.industry; }
+	bool operator!=(const IndustryListEntry &other) const { return !(*this == other); }
 };
 
-typedef btree::btree_set<Industry *, IndustryCompare> IndustryList;
+struct IndustryCompare {
+	bool operator() (const IndustryListEntry &lhs, const IndustryListEntry &rhs) const;
+};
+
+typedef btree::btree_set<IndustryListEntry, IndustryCompare> IndustryList;
 
 /** Station data structure */
 struct Station FINAL : SpecializedStation<Station, false> {
@@ -860,7 +869,8 @@ public:
 	}
 
 	bool CatchmentCoversTown(TownID t) const;
-	void AddIndustryToDeliver(Industry *ind);
+	void AddIndustryToDeliver(Industry *ind, TileIndex tile);
+	void RemoveIndustryToDeliver(Industry *ind);
 	void RemoveFromAllNearbyLists();
 
 	inline bool TileIsInCatchment(TileIndex tile) const
@@ -873,6 +883,11 @@ public:
 		return IsRailStationTile(tile) && GetStationIndex(tile) == this->index;
 	}
 
+	inline bool TileBelongsToRoadStop(TileIndex tile) const
+	{
+		return IsAnyRoadStopTile(tile) && GetStationIndex(tile) == this->index;
+	}
+
 	inline bool TileBelongsToAirport(TileIndex tile) const
 	{
 		return IsAirportTile(tile) && GetStationIndex(tile) == this->index;
@@ -880,7 +895,7 @@ public:
 
 	bool IsWithinRangeOfDockingTile(TileIndex tile, uint max_distance) const;
 
-	uint32 GetNewGRFVariable(const ResolverObject &object, byte variable, byte parameter, bool *available) const override;
+	uint32 GetNewGRFVariable(const ResolverObject &object, uint16 variable, byte parameter, bool *available) const override;
 
 	void GetTileArea(TileArea *ta, StationType type) const override;
 };

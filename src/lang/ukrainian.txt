@@ -714,6 +714,12 @@ STR_MONTH_OCT                                                   :Жовтень
 STR_MONTH_NOV                                                   :Листопад
 STR_MONTH_DEC                                                   :Грудень
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Поїзди
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Авто
+STR_VEHICLE_TYPE_SHIPS                                          :Кораблі
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Авіація
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Легенда
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Показати легенду графіка
@@ -1285,10 +1291,10 @@ STR_TERRAIN_TYPE_ALPINIST                                       :скеляст�
 STR_TERRAIN_TYPE_CUSTOM                                         :Власна висота
 STR_TERRAIN_TYPE_CUSTOM_VALUE                                   :Власна висота ({NUM})
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :допустиме
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :терпиме
 STR_CITY_APPROVAL_HOSTILE                                       :вороже
+STR_CITY_APPROVAL_PERMISSIVE                                    :допустиме
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Немає відповідних AI...{}Ви можете завантажити кілька AI через систему 'Вмісту в Інтернеті'
 

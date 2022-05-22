@@ -249,6 +249,16 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 	}
 	buffer += seprintf(buffer, last, "\n");
 
+	if (_grfconfig_static != nullptr) {
+		buffer += seprintf(buffer, last, "Static NewGRFs present:\n");
+		for (GRFConfig *c = _grfconfig_static; c != nullptr; c = c->next) {
+			char md5sum[33];
+			md5sumToString(md5sum, lastof(md5sum), c->ident.md5sum);
+			buffer += seprintf(buffer, last, " GRF ID: %08X, checksum %s, %s, '%s'\n", BSWAP32(c->ident.grfid), md5sum, c->GetDisplayPath(), GetDefaultLangGRFStringFromGRFText(c->name));
+		}
+		buffer += seprintf(buffer, last, "\n");
+	}
+
 	return buffer;
 }
 
@@ -422,7 +432,7 @@ char *CrashLog::LogCommandLog(char *buffer, const char *last) const
  * @param last   The last position in the buffer to write to.
  * @return the position of the \c '\0' character after the buffer.
  */
-char *CrashLog::FillCrashLog(char *buffer, const char *last) const
+char *CrashLog::FillCrashLog(char *buffer, const char *last)
 {
 	buffer += seprintf(buffer, last, "*** OpenTTD Crash Report ***\n\n");
 
@@ -442,10 +452,13 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last) const
 	}
 	buffer += seprintf(buffer, last, "\n");
 
+	this->FlushCrashLogBuffer();
+
 	buffer = this->LogError(buffer, last, CrashLog::message);
 
 #ifdef USE_SCOPE_INFO
 	if (IsMainThread() || IsGameThread()) {
+		this->FlushCrashLogBuffer();
 		buffer += WriteScopeLog(buffer, last);
 	}
 #endif
@@ -457,9 +470,13 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last) const
 	}
 
 	buffer = this->LogOpenTTDVersion(buffer, last);
+	this->FlushCrashLogBuffer();
 	buffer = this->LogStacktrace(buffer, last);
+	this->FlushCrashLogBuffer();
 	buffer = this->LogRegisters(buffer, last);
+	this->FlushCrashLogBuffer();
 	buffer = this->LogOSVersion(buffer, last);
+	this->FlushCrashLogBuffer();
 	buffer = this->LogCompiler(buffer, last);
 	buffer = this->LogOSVersionDetail(buffer, last);
 	buffer = this->LogConfiguration(buffer, last);
@@ -510,6 +527,9 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 		ConvertDateToYMD(_last_sync_date, &ymd);
 		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i)",
 				ymd.year, ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter);
+	}
+	if (info.client_id >= 0) {
+		buffer += seprintf(buffer, last, "Client #%d, \"%s\"\n", info.client_id, info.client_name != nullptr ? info.client_name : "");
 	}
 	buffer += seprintf(buffer, last, "\n");
 
@@ -630,7 +650,7 @@ bool CrashLog::WriteCrashLog(const char *buffer, char *filename, const char *fil
 	if (file == nullptr) return false;
 
 	size_t len = strlen(buffer);
-	size_t written = fwrite(buffer, 1, len, file);
+	size_t written = (len != 0) ? fwrite(buffer, 1, len, file) : 0;
 
 	if (crashlog_file) {
 		*crashlog_file = file;
@@ -638,6 +658,23 @@ bool CrashLog::WriteCrashLog(const char *buffer, char *filename, const char *fil
 		FioFCloseFile(file);
 	}
 	return len == written;
+}
+
+void CrashLog::FlushCrashLogBuffer()
+{
+	if (this->crash_buffer_write == nullptr) return;
+
+	size_t len = strlen(this->crash_buffer_write);
+	if (len == 0) return;
+
+	if (this->crash_file != nullptr) {
+		fwrite(this->crash_buffer_write, 1, len, this->crash_file);
+		fflush(this->crash_file);
+	}
+	fwrite(this->crash_buffer_write, 1, len, stdout);
+	fflush(stdout);
+
+	this->crash_buffer_write += len;
 }
 
 /* virtual */ int CrashLog::WriteCrashDump(char *filename, const char *filename_last) const
@@ -758,18 +795,25 @@ bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 	bool ret = true;
 
 	printf("Crash encountered, generating crash log...\n");
-	this->FillCrashLog(buffer, last);
-	printf("%s\n", buffer);
-	printf("Crash log generated.\n\n");
 
 	printf("Writing crash log to disk...\n");
-	bool bret = this->WriteCrashLog(buffer, filename, lastof(filename), this->name_buffer);
+	bool bret = this->WriteCrashLog("", filename, lastof(filename), this->name_buffer, &(this->crash_file));
 	if (bret) {
 		printf("Crash log written to %s. Please add this file to any bug reports.\n\n", filename);
 	} else {
 		printf("Writing crash log failed. Please attach the output above to any bug reports.\n\n");
 		ret = false;
 	}
+	this->crash_buffer_write = buffer;
+
+	this->FillCrashLog(buffer, last);
+	this->FlushCrashLogBuffer();
+	if (this->crash_file != nullptr) {
+		FioFCloseFile(this->crash_file);
+		this->crash_file = nullptr;
+	}
+	printf("Crash log generated.\n\n");
+
 
 	/* Don't mention writing crash dumps because not all platforms support it. */
 	int dret = this->WriteCrashDump(filename, lastof(filename));

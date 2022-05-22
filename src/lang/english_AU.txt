@@ -557,6 +557,12 @@ STR_MONTH_OCT                                                   :October
 STR_MONTH_NOV                                                   :November
 STR_MONTH_DEC                                                   :December
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Trains
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Road Vehicles
+STR_VEHICLE_TYPE_SHIPS                                          :Ships
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Aircraft
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Key
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Show key to graphs
@@ -1079,10 +1085,10 @@ STR_TERRAIN_TYPE_FLAT                                           :Flat
 STR_TERRAIN_TYPE_HILLY                                          :Hilly
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Mountainous
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Permissive
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Tolerant
 STR_CITY_APPROVAL_HOSTILE                                       :Hostile
+STR_CITY_APPROVAL_PERMISSIVE                                    :Permissive
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}No suitable AIs available...{}You can download several AIs via the 'Online Content' system
 

@@ -720,6 +720,12 @@ STR_MONTH_OCT                                                   :Oktober
 STR_MONTH_NOV                                                   :November
 STR_MONTH_DEC                                                   :December
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Vlaki
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Cestna vozila
+STR_VEHICLE_TYPE_SHIPS                                          :Ladje
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Letala
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Ključ
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Prikaži ključe grafov
@@ -1252,10 +1258,10 @@ STR_TERRAIN_TYPE_HILLY                                          :Hribovit
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Gorat
 STR_TERRAIN_TYPE_ALPINIST                                       :Alpinist
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Dopustno
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Tolerantno
 STR_CITY_APPROVAL_HOSTILE                                       :Sovražno
+STR_CITY_APPROVAL_PERMISSIVE                                    :Dopustno
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Ni na voljo nobene uporabne UI.{}UI so na voljo preko 'Prenosa vsebin'.
 

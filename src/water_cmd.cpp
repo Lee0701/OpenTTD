@@ -503,6 +503,14 @@ CommandCost CmdBuildCanal(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 		if (!water) cost.AddCost(ret);
 
 		if (flags & DC_EXEC) {
+			if (IsTileType(current_tile, MP_WATER) && IsCanal(current_tile)) {
+				Owner owner = GetTileOwner(tile);
+				if (Company::IsValidID(owner)) {
+					Company::Get(owner)->infrastructure.water--;
+					DirtyCompanyInfrastructureWindows(owner);
+				}
+			}
+
 			switch (wc) {
 				case WATER_CLASS_RIVER:
 					MakeRiver(current_tile, Random());
@@ -632,6 +640,15 @@ static CommandCost ClearTile_Water(TileIndex tile, DoCommandFlag flags)
 		default:
 			NOT_REACHED();
 	}
+}
+
+void ForceClearWaterTile(TileIndex tile)
+{
+	bool remove = IsDockingTile(tile);
+	DoClearSquare(tile);
+	MarkCanalsAndRiversAroundDirty(tile);
+	if (remove) RemoveDockingTile(tile);
+	ClearNeighbourNonFloodingStates(tile);
 }
 
 /**
@@ -1309,7 +1326,7 @@ void TileLoop_Water(TileIndex tile)
 
 				/* TREE_GROUND_SHORE is the sign of a previous flood. */
 				if (IsTileType(dest, MP_TREES) && GetTreeGround(dest) == TREE_GROUND_SHORE) continue;
-				if (IsTileType(dest, MP_OBJECT) && (!GetObjectHasNoEffectiveFoundation(dest) || GetObjectGroundType(dest) == OBJECT_GROUND_SHORE)) continue;
+				if (IsTileType(dest, MP_OBJECT) && (GetObjectEffectiveFoundationType(dest) != OEFT_NONE || GetObjectGroundType(dest) == OBJECT_GROUND_SHORE)) continue;
 
 				int z_dest;
 				Slope slope_dest = GetFoundationSlope(dest, &z_dest) & ~SLOPE_HALFTILE_MASK & ~SLOPE_STEEP;

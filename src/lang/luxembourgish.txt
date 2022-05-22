@@ -586,6 +586,12 @@ STR_MONTH_OCT                                                   :Oktober
 STR_MONTH_NOV                                                   :November
 STR_MONTH_DEC                                                   :Dezember
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Zich
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Stroossegefierer
+STR_VEHICLE_TYPE_SHIPS                                          :Schëffer
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Fligeren
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Legend
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Weis d'Legend vun der Grafik
@@ -1157,10 +1163,10 @@ STR_TERRAIN_TYPE_ALPINIST                                       :Alpin
 STR_TERRAIN_TYPE_CUSTOM                                         :Eegen Héicht
 STR_TERRAIN_TYPE_CUSTOM_VALUE                                   :Eegen Héicht ({NUM})
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Fräizügeg
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Tolerant
 STR_CITY_APPROVAL_HOSTILE                                       :Ofleenend
+STR_CITY_APPROVAL_PERMISSIVE                                    :Fräizügeg
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Keng KI fonnt...{}KI kënnen iwwert den 'Online Content' system downgeload ginn
 

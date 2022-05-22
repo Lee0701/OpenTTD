@@ -581,6 +581,12 @@ STR_MONTH_OCT                                                   :אוקטובר
 STR_MONTH_NOV                                                   :נובמבר
 STR_MONTH_DEC                                                   :דצמבר
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :רכבות
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :כלי רכב
+STR_VEHICLE_TYPE_SHIPS                                          :כלי שייט
+STR_VEHICLE_TYPE_AIRCRAFT                                       :כלי טייס
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}הצג מפתחות לגרפים
@@ -1113,10 +1119,10 @@ STR_TERRAIN_TYPE_HILLY                                          :נוף גבעו
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :הררי
 STR_TERRAIN_TYPE_ALPINIST                                       :מטפס הרים
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :מתירני
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :סביר
 STR_CITY_APPROVAL_HOSTILE                                       :עויין
+STR_CITY_APPROVAL_PERMISSIVE                                    :מתירני
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}אין בינות מלאכותיות מתאימות...{}באפשרותך להוריד בינות מלאכותיות בעזרת מערכת ה'תוכן המקוון'
 

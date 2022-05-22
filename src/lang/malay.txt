@@ -548,6 +548,12 @@ STR_MONTH_OCT                                                   :Oktober
 STR_MONTH_NOV                                                   :November
 STR_MONTH_DEC                                                   :Disember
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Keretapi
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Kenderaan Jalanraya
+STR_VEHICLE_TYPE_SHIPS                                          :Kapal
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Pesawat
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Kunci
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Tunjukkan kunci kepada graf
@@ -1069,10 +1075,10 @@ STR_TERRAIN_TYPE_HILLY                                          :Berbukit
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Bergunung
 STR_TERRAIN_TYPE_ALPINIST                                       :Alpinist
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Mengizinkan
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Bertoleransi
 STR_CITY_APPROVAL_HOSTILE                                       :Kurang mengizinkan
+STR_CITY_APPROVAL_PERMISSIVE                                    :Mengizinkan
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Tiada AI yang bersesuaian...{}Anda boleh memuat turun beberapa AI dari sistem 'Kandungan Atas Talian'
 

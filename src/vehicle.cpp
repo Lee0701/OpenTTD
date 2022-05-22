@@ -22,6 +22,7 @@
 #include "newgrf_debug.h"
 #include "newgrf_sound.h"
 #include "newgrf_station.h"
+#include "newgrf_roadstop.h"
 #include "group_gui.h"
 #include "strings_func.h"
 #include "zoom_func.h"
@@ -1137,9 +1138,9 @@ void Vehicle::PreDestructor()
 		}
 	}
 
-	if (this->type == VEH_TRAIN && HasBit(Train::From(this)->flags, VRF_HAVE_SLOT)) {
+	if (HasBit(this->vehicle_flags, VF_HAVE_SLOT)) {
 		TraceRestrictRemoveVehicleFromAllSlots(this->index);
-		ClrBit(Train::From(this)->flags, VRF_HAVE_SLOT);
+		ClrBit(this->vehicle_flags, VF_HAVE_SLOT);
 	}
 	if (this->type == VEH_TRAIN && HasBit(Train::From(this)->flags, VRF_PENDING_SPEED_RESTRICTION)) {
 		pending_speed_restriction_change_map.erase(this->index);
@@ -3218,7 +3219,7 @@ void Vehicle::BeginLoading()
 						break;
 					}
 					target_index++;
-					if (target_index >= this->orders.list->GetNumOrders()) {
+					if (target_index >= this->orders->GetNumOrders()) {
 						if (this->GetNumManualOrders() == 0 &&
 								this->GetNumOrders() < IMPLICIT_ORDER_ONLY_CAP) {
 							break;
@@ -3256,7 +3257,7 @@ void Vehicle::BeginLoading()
 						}
 					}
 				} else if (!suppress_implicit_orders &&
-						((this->orders.list == nullptr ? OrderList::CanAllocateItem() : this->orders.list->GetNumOrders() < MAX_VEH_ORDER_ID)) &&
+						((this->orders == nullptr ? OrderList::CanAllocateItem() : this->orders->GetNumOrders() < MAX_VEH_ORDER_ID)) &&
 						Order::CanAllocateItem()) {
 					/* Insert new implicit order */
 					Order *implicit_order = new Order();
@@ -3333,6 +3334,8 @@ void Vehicle::LeaveStation()
 
 	delete this->cargo_payment;
 	assert(this->cargo_payment == nullptr); // cleared by ~CargoPayment
+
+	ClrBit(this->vehicle_flags, VF_COND_ORDER_WAIT);
 
 	TileIndex station_tile = INVALID_TILE;
 
@@ -3416,6 +3419,13 @@ void Vehicle::LeaveStation()
 
 		SetBit(Train::From(this)->flags, VRF_LEAVING_STATION);
 	}
+	if (this->type == VEH_ROAD && !(this->vehstatus & VS_CRASHED)) {
+		/* Trigger road stop animation */
+		if (IsAnyRoadStopTile(this->tile)) {
+			TriggerRoadStopRandomisation(st, this->tile, RSRT_VEH_DEPARTS);
+			TriggerRoadStopAnimation(st, this->tile, SAT_TRAIN_DEPARTS);
+		}
+	}
 
 	if (this->cur_real_order_index < this->GetNumOrders()) {
 		Order *real_current_order = this->GetOrder(this->cur_real_order_index);
@@ -3497,6 +3507,20 @@ void Vehicle::ResetRefitCaps()
 	for (Vehicle *v = this; v != nullptr; v = v->Next()) v->refit_cap = v->cargo_cap;
 }
 
+static bool ShouldVehicleContinueWaiting(Vehicle *v)
+{
+	if (v->GetNumOrders() < 1) return false;
+
+	/* Rate-limit re-checking of conditional order loop */
+	if (HasBit(v->vehicle_flags, VF_COND_ORDER_WAIT) && v->tick_counter % 32 != 0) return true;
+
+	/* If conditional orders lead back to this order, just keep waiting without leaving the order */
+	bool loop = AdvanceOrderIndexDeferred(v, v->cur_implicit_order_index) == v->cur_implicit_order_index;
+	FlushAdvanceOrderIndexDeferred(v, loop);
+	if (loop) SetBit(v->vehicle_flags, VF_COND_ORDER_WAIT);
+	return loop;
+}
+
 /**
  * Handle the loading of the vehicle; when not it skips through dummy
  * orders and does nothing in all other cases.
@@ -3517,12 +3541,10 @@ void Vehicle::HandleLoading(bool mode)
 			if (!mode && this->type != VEH_TRAIN) PayStationSharingFee(this, Station::Get(this->last_station_visited));
 
 			/* Not the first call for this tick, or still loading */
-			if (mode || !HasBit(this->vehicle_flags, VF_LOADING_FINISHED) || (this->current_order_time < wait_time && this->current_order.GetLeaveType() != OLT_LEAVE_EARLY)) {
+			if (mode || !HasBit(this->vehicle_flags, VF_LOADING_FINISHED) || (this->current_order_time < wait_time && this->current_order.GetLeaveType() != OLT_LEAVE_EARLY) || ShouldVehicleContinueWaiting(this)) {
 				if (!mode && this->type == VEH_TRAIN && HasBit(Train::From(this)->flags, VRF_ADVANCE_IN_PLATFORM)) this->AdvanceLoadingInStation();
 				return;
 			}
-
-			if (this->type != VEH_TRAIN && this->type != VEH_SHIP) this->PlayLeaveStationSound();
 
 			this->LeaveStation();
 
@@ -3559,8 +3581,12 @@ void Vehicle::HandleWaiting(bool stop_waiting, bool process_orders)
 			if (!stop_waiting && this->current_order_time < wait_time && this->current_order.GetLeaveType() != OLT_LEAVE_EARLY) {
 				return;
 			}
+			if (!stop_waiting && process_orders && ShouldVehicleContinueWaiting(this)) {
+				return;
+			}
 
 			/* When wait_time is expired, we move on. */
+			ClrBit(this->vehicle_flags, VF_COND_ORDER_WAIT);
 			UpdateVehicleTimetable(this, false);
 			this->IncrementImplicitOrderIndex();
 			this->current_order.MakeDummy();
@@ -3668,6 +3694,7 @@ CommandCost Vehicle::SendToDepot(DoCommandFlag flags, DepotCommand command, Tile
 
 	if (flags & DC_EXEC) {
 		if (this->current_order.IsAnyLoadingType()) this->LeaveStation();
+		if (this->current_order.IsType(OT_WAITING)) this->HandleWaiting(true);
 
 		if (this->type == VEH_TRAIN) {
 			for (Train *v = Train::From(this); v != nullptr; v = v->Next()) {
@@ -4030,10 +4057,10 @@ void Vehicle::AddToShared(Vehicle *shared_chain)
 {
 	assert(this->previous_shared == nullptr && this->next_shared == nullptr);
 
-	if (shared_chain->orders.list == nullptr) {
+	if (shared_chain->orders == nullptr) {
 		assert(shared_chain->previous_shared == nullptr);
 		assert(shared_chain->next_shared == nullptr);
-		this->orders.list = shared_chain->orders.list = new OrderList(nullptr, shared_chain);
+		this->orders = shared_chain->orders = new OrderList(nullptr, shared_chain);
 	}
 
 	this->next_shared     = shared_chain->next_shared;
@@ -4043,7 +4070,7 @@ void Vehicle::AddToShared(Vehicle *shared_chain)
 
 	if (this->next_shared != nullptr) this->next_shared->previous_shared = this;
 
-	shared_chain->orders.list->AddVehicle(this);
+	shared_chain->orders->AddVehicle(this);
 }
 
 /**
@@ -4056,7 +4083,7 @@ void Vehicle::RemoveFromShared()
 	bool were_first = (this->FirstShared() == this);
 	VehicleListIdentifier vli(VL_SHARED_ORDERS, this->type, this->owner, this->FirstShared()->index);
 
-	this->orders.list->RemoveVehicle(this);
+	this->orders->RemoveVehicle(this);
 
 	if (!were_first) {
 		/* We are not the first shared one, so only relink our previous one. */
@@ -4066,9 +4093,9 @@ void Vehicle::RemoveFromShared()
 	if (this->next_shared != nullptr) this->next_shared->previous_shared = this->previous_shared;
 
 
-	if (this->orders.list->GetNumVehicles() == 1) InvalidateVehicleOrder(this->FirstShared(), VIWD_MODIFY_ORDERS);
+	if (this->orders->GetNumVehicles() == 1) InvalidateVehicleOrder(this->FirstShared(), VIWD_MODIFY_ORDERS);
 
-	if (this->orders.list->GetNumVehicles() == 1 && !_settings_client.gui.enable_single_veh_shared_order_gui) {
+	if (this->orders->GetNumVehicles() == 1 && !_settings_client.gui.enable_single_veh_shared_order_gui) {
 		/* When there is only one vehicle, remove the shared order list window. */
 		DeleteWindowById(GetWindowClassForVehicleType(this->type), vli.Pack());
 	} else if (were_first) {
@@ -4122,6 +4149,8 @@ void DumpVehicleFlagsGeneric(const Vehicle *v, T dump, U dump_header)
 	dump('x', "VF_LAST_LOAD_ST_SEP",        HasBit(v->vehicle_flags, VF_LAST_LOAD_ST_SEP));
 	dump('s', "VF_TIMETABLE_SEPARATION",    HasBit(v->vehicle_flags, VF_TIMETABLE_SEPARATION));
 	dump('a', "VF_AUTOMATE_TIMETABLE",      HasBit(v->vehicle_flags, VF_AUTOMATE_TIMETABLE));
+	dump('Q', "VF_HAVE_SLOT",               HasBit(v->vehicle_flags, VF_HAVE_SLOT));
+	dump('W', "VF_COND_ORDER_WAIT",         HasBit(v->vehicle_flags, VF_COND_ORDER_WAIT));
 	dump_header("vcf:", "cached_veh_flags:");
 	dump('l', "VCF_LAST_VISUAL_EFFECT",     HasBit(v->vcache.cached_veh_flags, VCF_LAST_VISUAL_EFFECT));
 	dump('z', "VCF_GV_ZERO_SLOPE_RESIST",   HasBit(v->vcache.cached_veh_flags, VCF_GV_ZERO_SLOPE_RESIST));
@@ -4144,7 +4173,6 @@ void DumpVehicleFlagsGeneric(const Vehicle *v, T dump, U dump_header)
 		dump_header("tf:", "train flags:");
 		dump('R', "VRF_REVERSING",                     HasBit(t->flags, VRF_REVERSING));
 		dump('W', "VRF_WAITING_RESTRICTION",           HasBit(t->flags, VRF_WAITING_RESTRICTION));
-		dump('S', "VRF_HAVE_SLOT",                     HasBit(t->flags, VRF_HAVE_SLOT));
 		dump('P', "VRF_POWEREDWAGON",                  HasBit(t->flags, VRF_POWEREDWAGON));
 		dump('r', "VRF_REVERSE_DIRECTION",             HasBit(t->flags, VRF_REVERSE_DIRECTION));
 		dump('h', "VRF_HAS_HIT_RV",                    HasBit(t->flags, VRF_HAS_HIT_RV));
@@ -4164,6 +4192,7 @@ void DumpVehicleFlagsGeneric(const Vehicle *v, T dump, U dump_header)
 		dump('K', "VRF_CONSIST_BREAKDOWN",             HasBit(t->flags, VRF_CONSIST_BREAKDOWN));
 		dump('J', "VRF_CONSIST_SPEED_REDUCTION",       HasBit(t->flags, VRF_CONSIST_SPEED_REDUCTION));
 		dump('X', "VRF_PENDING_SPEED_RESTRICTION",     HasBit(t->flags, VRF_PENDING_SPEED_RESTRICTION));
+		dump('c', "VRF_SPEED_ADAPTATION_EXEMPT",       HasBit(t->flags, VRF_SPEED_ADAPTATION_EXEMPT));
 	}
 }
 
@@ -4307,6 +4336,55 @@ bool CanVehicleUseStation(const Vehicle *v, const Station *st)
 	if (v->type == VEH_ROAD) return st->GetPrimaryRoadStop(RoadVehicle::From(v)) != nullptr;
 
 	return CanVehicleUseStation(v->engine_type, st);
+}
+
+/**
+ * Get reason string why this station can't be used by the given vehicle
+ * @param v the vehicle to test
+ * @param st the station to test for
+ * @return true if and only if the vehicle can use this station.
+ */
+StringID GetVehicleCannotUseStationReason(const Vehicle *v, const Station *st)
+{
+	switch (v->type) {
+		case VEH_TRAIN:
+			return STR_ERROR_NO_RAIL_STATION;
+
+		case VEH_ROAD: {
+			const RoadVehicle *rv = RoadVehicle::From(v);
+			RoadStop *rs = st->GetPrimaryRoadStop(rv->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK);
+
+			StringID err = rv->IsBus() ? STR_ERROR_NO_BUS_STATION : STR_ERROR_NO_TRUCK_STATION;
+
+			for (; rs != nullptr; rs = rs->next) {
+				/* The vehicle is articulated and can therefore not go to a standard road stop. */
+				if (IsStandardRoadStopTile(rs->xy) && rv->HasArticulatedPart()) {
+					err = STR_ERROR_NO_STOP_ARTIC_VEH;
+					continue;
+				}
+				/* The vehicle cannot go to this roadstop (different roadtype) */
+				if (!HasTileAnyRoadType(rs->xy, rv->compatible_roadtypes)) return STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE;
+
+				return INVALID_STRING_ID;
+			}
+
+			return err;
+		}
+
+		case VEH_SHIP:
+			return STR_ERROR_NO_DOCK;
+
+		case VEH_AIRCRAFT:
+			if ((st->facilities & FACIL_AIRPORT) == 0) return STR_ERROR_NO_AIRPORT;
+			if (v->GetEngine()->u.air.subtype & AIR_CTOL) {
+				return STR_ERROR_AIRPORT_NO_PLANES;
+			} else {
+				return STR_ERROR_AIRPORT_NO_HELIS;
+			}
+
+		default:
+			return INVALID_STRING_ID;
+	}
 }
 
 /**

@@ -558,6 +558,12 @@ STR_MONTH_OCT                                                   :اکتبر
 STR_MONTH_NOV                                                   :نوامبر
 STR_MONTH_DEC                                                   :دسامبر
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :قطارها
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :ماشین ها
+STR_VEHICLE_TYPE_SHIPS                                          :کشتی ها
+STR_VEHICLE_TYPE_AIRCRAFT                                       :هواپیما
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}کلید
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}نمایش راهنمای نمودار
@@ -1081,10 +1087,10 @@ STR_TERRAIN_TYPE_FLAT                                           :یکدست
 STR_TERRAIN_TYPE_HILLY                                          :تپه مانند
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :کوه مانند
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :آسان گیر
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :سخت گیر
 STR_CITY_APPROVAL_HOSTILE                                       :دشمنانه
+STR_CITY_APPROVAL_PERMISSIVE                                    :آسان گیر
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}هیچ بسته هوش مصنوعی موجود نیست...{}شما می توانید چندین بسته هوش مصنوعی(AI) را از قسمت محتویات برخط بارگیری کنید
 

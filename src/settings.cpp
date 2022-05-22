@@ -461,8 +461,9 @@ size_t BoolSettingDesc::ParseValue(const char *str) const
 	return this->def;
 }
 
-static bool ValidateEnumSetting(const IntSettingDesc *sdb, int32 val)
+static bool ValidateEnumSetting(const IntSettingDesc *sdb, int32 &val)
 {
+	if (sdb->pre_check != nullptr && !sdb->pre_check(val)) return false;
 	for (const SettingDescEnumEntry *enumlist = sdb->enumlist; enumlist != nullptr && enumlist->str != STR_NULL; enumlist++) {
 		if (enumlist->val == val) {
 			return true;
@@ -526,7 +527,11 @@ void IntSettingDesc::MakeValueValid(int32 &val) const
 			uint32 uval = (uint32)val;
 			if (!(this->flags & SF_GUI_0_IS_SPECIAL) || uval != 0) {
 				if (this->flags & SF_ENUM) {
-					if (!ValidateEnumSetting(this, val)) uval = (uint32)(size_t)this->def;
+					if (!ValidateEnumSetting(this, val)) {
+						uval = (uint32)(size_t)this->def;
+					} else {
+						uval = (uint32)val;
+					}
 				} else if (!(this->flags & SF_GUI_DROPDOWN)) {
 					/* Clamp value-type setting to its valid range */
 					uval = ClampU(uval, this->min, this->max);
@@ -832,7 +837,7 @@ static void IniSaveSettingList(IniFile &ini, const char *grpname, StringList &li
  * Load a WindowDesc from config.
  * @param ini IniFile handle to the ini file with the source data
  * @param grpname character string identifying the section-header of the ini file that will be parsed
- * @param desc Destination WindowDesc
+ * @param desc Destination WindowDescPreferences
  */
 void IniLoadWindowSettings(IniFile &ini, const char *grpname, void *desc)
 {
@@ -843,7 +848,7 @@ void IniLoadWindowSettings(IniFile &ini, const char *grpname, void *desc)
  * Save a WindowDesc to config.
  * @param ini IniFile handle to the ini file where the destination data is saved
  * @param grpname character string identifying the section-header of the ini file
- * @param desc Source WindowDesc
+ * @param desc Source WindowDescPreferences
  */
 void IniSaveWindowSettings(IniFile &ini, const char *grpname, void *desc)
 {
@@ -933,6 +938,8 @@ static void StationSpreadChanged(int32 new_value)
 {
 	InvalidateWindowData(WC_SELECT_STATION, 0);
 	InvalidateWindowData(WC_BUILD_STATION, 0);
+	InvalidateWindowData(WC_BUS_STATION, 0);
+	InvalidateWindowData(WC_TRUCK_STATION, 0);
 }
 
 static void UpdateConsists(int32 new_value)
@@ -1394,6 +1401,7 @@ static void ClimateThresholdModeChanged(int32 new_value)
 
 static void VelocityUnitsChanged(int32 new_value) {
 	InvalidateWindowClassesData(WC_PAYMENT_RATES);
+	InvalidateWindowClassesData(WC_TRACE_RESTRICT);
 	MarkWholeScreenDirty();
 }
 
@@ -1427,6 +1435,12 @@ static void ValidateSettings()
 			_settings_newgame.difficulty.quantity_sea_lakes == CUSTOM_SEA_LEVEL_NUMBER_DIFFICULTY) {
 		_settings_newgame.difficulty.quantity_sea_lakes = CUSTOM_SEA_LEVEL_MIN_PERCENTAGE;
 	}
+}
+
+static bool TownCouncilToleranceAdjust(int32 &new_value)
+{
+	if (new_value == 255) new_value = TOWN_COUNCIL_PERMISSIVE;
+	return true;
 }
 
 static void DifficultyNoiseChange(int32 new_value)
@@ -1765,6 +1779,32 @@ static bool LinkGraphDistributionSettingGUI(SettingOnGuiCtrlData &data)
 		case SOGCT_DESCRIPTION_TEXT:
 			SetDParam(0, data.text);
 			data.text = STR_CONFIG_SETTING_DISTRIBUTION_HELPTEXT_EXTRA;
+			return true;
+
+		default:
+			return false;
+	}
+}
+
+static bool SpriteZoomMinSettingGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_DESCRIPTION_TEXT:
+			SetDParam(0, data.text);
+			data.text = STR_CONFIG_SETTING_SPRITE_ZOOM_MIN_HELPTEXT_EXTRA;
+			return true;
+
+		default:
+			return false;
+	}
+}
+
+static bool AllowRoadStopsUnderBridgesSettingGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_DESCRIPTION_TEXT:
+			SetDParam(0, data.text);
+			data.text = STR_CONFIG_SETTING_ALLOW_ROAD_STATIONS_UNDER_BRIDGES_HELPTEXT_EXTRA;
 			return true;
 
 		default:

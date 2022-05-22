@@ -757,6 +757,12 @@ STR_MONTH_OCT                                                   :Octobris
 STR_MONTH_NOV                                                   :Novembris
 STR_MONTH_DEC                                                   :Decembris
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Tramina
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Vehicula Viaria
+STR_VEHICLE_TYPE_SHIPS                                          :Naves
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Aeroplana
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Clavis
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Monstrare formularum clavem
@@ -1296,10 +1302,10 @@ STR_TERRAIN_TYPE_HILLY                                          :Clivosus
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Montanus
 STR_TERRAIN_TYPE_ALPINIST                                       :Alpinus
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Longe
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Breviter
 STR_CITY_APPROVAL_HOSTILE                                       :Brevissime
+STR_CITY_APPROVAL_PERMISSIVE                                    :Longe
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Nullae IA parabiles sunt...{}Potes arcessere nunullas IA in 'Inventario Interretiale'
 

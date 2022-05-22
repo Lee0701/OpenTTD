@@ -1,4 +1,4 @@
-## JGR's Patchpack version 0.45.1
+## JGR's Patchpack version 0.47.2
 
 This is a collection of patches applied to [OpenTTD](http://www.openttd.org/)
 
@@ -31,7 +31,6 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Drive-through train depots.
 * [Template-based train replacement](http://www.tt-forums.net/viewtopic.php?f=33&t=58904).
 * [Routing restrictions](http://www.tt-forums.net/viewtopic.php?f=33&t=73397).  
-  This also includes slots and counters.  
   See the [guide on the wiki](https://github.com/JGRennison/OpenTTD-patches/wiki/Signalling) for more information.
 * [Programmable pre-signals](http://www.tt-forums.net/viewtopic.php?f=33&t=47690).  
   These are not shown in the build signal window by default.  
@@ -56,6 +55,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * No-entry signals.  
   These are not shown in the build signal window by default.
 * Add client setting to show all signals using the default baseset sprites.
+* Remember the last-used signal type between games.
 
 #### Roads and Road Vehicles
 
@@ -68,6 +68,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add setting for default road/tram types.
 * Add a setting to turn off road vehicles slowing in curves.
 * Add a setting to disable road vehicles from passing through each other when blocked for an extended period of time.
+* Allow road vehicle go to station/waypoint orders to have an associated required stop/bay/waypoint direction.
 
 #### Level Crossings
 
@@ -116,7 +117,10 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add setting to disable mass action buttons for top-level vehicle lists.
 * Add feature to create a new auto-named group when dragging and dropping a vehicle onto the new group button (ctrl includes shared order vehicles).
 * Add settings to reduce vehicle running costs when a vehicle is stationary or in a depot.
-* If a train or ship's next order is for the current station when leaving, start loading again without moving, instead of leaving.
+* If a vehicle's next order is for the current station when leaving, start loading again without moving, instead of leaving.
+* Slots and counters.  
+  See the [guide on the wiki](https://github.com/JGRennison/OpenTTD-patches/wiki/Signalling) for more information.
+* Add cargo capacity / running cost sort mode to the build vehicle window.
 
 #### Orders and Timetabling
 
@@ -130,7 +134,8 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Order occupancy.  
   Add column to the orders GUI to show occupancy running average, show the average order occupancy, and add a vehicle sort mode.
 * [Timetabling waiting time in depots](http://www.tt-forums.net/viewtopic.php?f=33&t=70969).
-* [Scheduled dispatch](https://github.com/innocenat/OpenTTD-patches/tree/scheduled-dispatch-sx).
+* Scheduled dispatch.  
+  This allows dispatching vehicles from timing points using one or more repeating schedules. This is useful for clock-face timetabling.
 * [More conditional orders](http://www.tt-forums.net/viewtopic.php?f=33&t=38317).  
   Next station: is cargo waiting, is cargo accepted, number of free platforms, amount of cargo waiting.  
   Percent of times, per-cargo load percentage, current time/date, timetable lateness.  
@@ -151,6 +156,8 @@ See [installation.md](/installation.md) for instructions on how to install.
 #### Stations
 
 * [Departure boards](https://www.tt-forums.net/viewtopic.php?f=33&t=49956).
+* Add road waypoints.
+* Add NewGRF road stops.
 * Add a setting to increase the station catchment radius.
 * Station rating: track "last visited vehicle type" separately per cargo.
 * Add setting to scale station cargo capacity and rating tolerance by size.
@@ -161,9 +168,11 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add setting to show a company-coloured mark next to vehicles in vehicle list windows, if their owner does not match the list owner.
 * Add a waiting cargo history graph for stations.
 * Add a tooltip to show station rating details (controlled by a setting).
-* [Allow NewGRFs to supply additional station name strings](https://github.com/JGRennison/OpenTTD-patches/wiki/GRF-features#extra-station-names).
 * Add sort by number of vehicles calling to the station list window.
 * Add setting to distribute cargo received at a station to all accepting industries equally, instead of just one of them.
+* Add setting to allow hiding viewport labels of individual waypoints.
+* Increase the distance a station can be from the town centre and still be assigned have the same name as the town (no suffix/prefix), for large towns.
+* [Allow NewGRFs to supply additional station name strings](https://github.com/JGRennison/OpenTTD-patches/wiki/GRF-features#extra-station-names).
 
 #### Towns
 
@@ -186,7 +195,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * [Adjusted arctic tree placement](http://www.tt-forums.net/viewtopic.php?f=33&t=72502).
 * Add a new tree placement mode (perfect).
 * [Minimum town distance](https://www.tt-forums.net/viewtopic.php?f=33&t=33625).
-* Add map generation settings to control river/lake and rocky patch generation.
+* Add map generation settings to control river/lake, rocky patch, and tropic zone generation.
 * Add generation of wide rivers.
 * Add settings to customise the size of town zones, and city zones.
 
@@ -224,6 +233,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Topography and industry screenshots.
 * Make smallmap refresh period variable with map mode/zoom and pause state.
 * Add display setting for income/cost text effects.
+* Make the company infrastructure window scrollable.
 
 #### Limits
 
@@ -252,7 +262,8 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Various changes to reduce the probability of desyncs and improve desync reporting/diagnostics.
 * Add support for zstd savegame compression for autosaves and network joins.
 * Increase the number of settings which can be changed in multiplayer.
-* Store company passwords in network server saves in an encrypted form such that they are automaticaly restored when loaded into the same network server.
+* Store company passwords in network server saves in an encrypted form such that they are automatically restored when loaded into the same network server.
+* Add client setting for whether to sync localisation settings (such as measurement units) with the server.
 
 #### Money
 
@@ -300,9 +311,9 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Various extensions to the NewGRF developer debug tools.
 * Various performance improvements.
 * Various minor fixes, see changelog.
-* [NewGRF specification additions](docs/newgrf-additions.html) ([online copy](https://htmlpreview.github.io/?https://github.com/JGRennison/OpenTTD-patches/blob/jgrpp/docs/newgrf-additions.html)).
-* [NML specification additions](docs/newgrf-additions-nml.html) ([online copy](https://htmlpreview.github.io/?https://github.com/JGRennison/OpenTTD-patches/blob/jgrpp/docs/newgrf-additions-nml.html)).
-* [AI/GS script additions](docs/script-additions.html) ([online copy](https://htmlpreview.github.io/?https://github.com/JGRennison/OpenTTD-patches/blob/jgrpp/docs/script-additions.html)).
+* [NewGRF specification additions](docs/newgrf-additions.html) ([online copy](https://jgrennison.github.io/OpenTTD-patches/newgrf-additions.html)).
+* [NML specification additions](docs/newgrf-additions-nml.html) ([online copy](https://jgrennison.github.io/OpenTTD-patches/newgrf-additions-nml.html)).
+* [AI/GS script additions](docs/script-additions.html) ([online copy](https://jgrennison.github.io/OpenTTD-patches/script-additions.html)).
 * [Low-level code/performance changes](docs/jgrpp-low-level-changes.md).
 
 #### Translations

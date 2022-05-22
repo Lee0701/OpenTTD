@@ -545,6 +545,12 @@ STR_MONTH_OCT                                                   :Oktobur
 STR_MONTH_NOV                                                   :Novembur
 STR_MONTH_DEC                                                   :Desembur
 
+###length VEHICLE_TYPES
+STR_VEHICLE_TYPE_TRAINS                                         :Tok
+STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Akfør
+STR_VEHICLE_TYPE_SHIPS                                          :Skip
+STR_VEHICLE_TYPE_AIRCRAFT                                       :Flogfør
+
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Lykil
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Vís lykil til graf
@@ -1059,10 +1065,10 @@ STR_TERRAIN_TYPE_FLAT                                           :Flatt
 STR_TERRAIN_TYPE_HILLY                                          :Bakkaríkt
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Fjallaríkt
 
-###length 3
-STR_CITY_APPROVAL_PERMISSIVE                                    :Eftirgevandi
+###length 4
 STR_CITY_APPROVAL_TOLERANT                                      :Tolsamir
 STR_CITY_APPROVAL_HOSTILE                                       :Fíggjindaligir
+STR_CITY_APPROVAL_PERMISSIVE                                    :Eftirgevandi
 
 STR_WARNING_NO_SUITABLE_AI                                      :{WHITE}Einki hóskandi AI til taks...{}Tú kann heinta niður fleiri ymisk AI gjøgnum 'Online tilfar' kervi
 
