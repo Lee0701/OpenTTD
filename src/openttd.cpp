@@ -253,6 +253,8 @@ static void ShowHelp()
 		"  -x                  = Never save configuration changes to disk\n"
 		"  -X                  = Don't use global folders to search for files\n"
 		"  -q savegame         = Write some information about the savegame and exit\n"
+		"  -Q                  = Don't scan for/load NewGRF files on startup\n"
+		"  -QQ                 = Disable NewGRF scanning/loading entirely\n"
 		"  -Z                  = Write detailed version information and exit\n"
 		"\n",
 		lastof(buf)
@@ -438,11 +440,15 @@ static void ShutdownGame()
 	LinkGraphSchedule::Clear();
 	ClearTraceRestrictMapping();
 	ClearBridgeSimulatedSignalMapping();
+	ClearBridgeSignalStyleMapping();
 	ClearCargoPacketDeferredPayments();
 	PoolBase::Clean(PT_ALL);
 
 	FreeSignalPrograms();
 	FreeSignalDependencies();
+
+	extern void ClearNewSignalStyleMapping();
+	ClearNewSignalStyleMapping();
 
 	extern void ClearAllSignalSpeedRestrictions();
 	ClearAllSignalSpeedRestrictions();
@@ -473,6 +479,7 @@ static void ShutdownGame()
 	_extra_station_names_used = 0;
 	_extra_station_names_probability = 0;
 	_extra_aspects = 0;
+	_aspect_cfg_hash = 0;
 	_loadgame_DBGL_data.clear();
 	_loadgame_DBGC_data.clear();
 }
@@ -666,6 +673,7 @@ static const OptionData _options[] = {
 	 GETOPT_SHORT_VALUE('q'),
 	 GETOPT_SHORT_VALUE('K'),
 	 GETOPT_SHORT_NOVAL('h'),
+	 GETOPT_SHORT_NOVAL('Q'),
 	 GETOPT_SHORT_VALUE('J'),
 	 GETOPT_SHORT_NOVAL('Z'),
 	GETOPT_END()
@@ -805,6 +813,11 @@ int openttd_main(int argc, char *argv[])
 				WriteSavegameDebugData(title);
 			}
 			return ret;
+		}
+		case 'Q': {
+			extern int _skip_all_newgrf_scanning;
+			_skip_all_newgrf_scanning += 1;
+			break;
 		}
 		case 'G': scanner->generation_seed = strtoul(mgo.opt, nullptr, 10); break;
 		case 'c': _config_file = mgo.opt; break;
@@ -997,6 +1010,20 @@ void HandleExitGameRequest()
 		_exit_game = true;
 	} else {
 		AskExitGame();
+	}
+}
+
+/**
+ * Triggers everything required to set up a saved scenario for a new game.
+ */
+static void OnStartScenario()
+{
+	/* Reset engine pool to simplify changing engine NewGRFs in scenario editor. */
+	EngineOverrideManager::ResetToCurrentNewGRFConfig();
+
+	/* Make sure all industries were built "this year", to avoid too early closures. (#9918) */
+	for (Industry *i : Industry::Iterate()) {
+		i->last_prod_year = _cur_year;
 	}
 }
 
@@ -1245,8 +1272,7 @@ void SwitchToMode(SwitchMode new_mode)
 				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_ERROR);
 			} else {
 				if (_file_to_saveload.abstract_ftype == FT_SCENARIO) {
-					/* Reset engine pool to simplify changing engine NewGRFs in scenario editor. */
-					EngineOverrideManager::ResetToCurrentNewGRFConfig();
+					OnStartScenario();
 				}
 				OnStartGame(_network_dedicated);
 				/* Decrease pause counter (was increased from opening load dialog) */
@@ -1682,12 +1708,13 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 							print_gv_cache_diff("train", gro_cache[length], Train::From(u)->gcache);
 						}
 						if (memcmp(&tra_cache[length], &Train::From(u)->tcache, sizeof(TrainCache)) != 0) {
-							CCLOGV("train cache mismatch: %c%c%c%c%c%c%c%c%c%c",
+							CCLOGV("train cache mismatch: %c%c%c%c%c%c%c%c%c%c%c",
 									tra_cache[length].cached_override != Train::From(u)->tcache.cached_override ? 'o' : '-',
 									tra_cache[length].cached_curve_speed_mod != Train::From(u)->tcache.cached_curve_speed_mod ? 'C' : '-',
 									tra_cache[length].cached_tflags != Train::From(u)->tcache.cached_tflags ? 'f' : '-',
 									tra_cache[length].cached_num_engines != Train::From(u)->tcache.cached_num_engines ? 'e' : '-',
 									tra_cache[length].cached_centre_mass != Train::From(u)->tcache.cached_centre_mass ? 'm' : '-',
+									tra_cache[length].cached_braking_length != Train::From(u)->tcache.cached_braking_length ? 'b' : '-',
 									tra_cache[length].cached_veh_weight != Train::From(u)->tcache.cached_veh_weight ? 'w' : '-',
 									tra_cache[length].cached_uncapped_decel != Train::From(u)->tcache.cached_uncapped_decel ? 'D' : '-',
 									tra_cache[length].cached_deceleration != Train::From(u)->tcache.cached_deceleration ? 'd' : '-',
