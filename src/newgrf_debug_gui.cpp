@@ -216,6 +216,7 @@ public:
 	virtual void ExtraInfo(uint index, NIExtraInfoOutput &output) const {}
 	virtual void SpriteDump(uint index, DumpSpriteGroupPrinter print) const {}
 	virtual bool ShowExtraInfoOnly(uint index) const { return false; };
+	virtual bool ShowExtraInfoIncludingGRFIDOnly(uint index) const { return false; };
 	virtual bool ShowSpriteDumpButton(uint index) const { return false; };
 
 protected:
@@ -326,7 +327,7 @@ struct NewGRFInspectWindow : Window {
 	btree::btree_map<int, uint16> nfo_line_lines;
 	const SpriteGroup *selected_sprite_group = nullptr;
 	btree::btree_map<int, uint32> highlight_tag_lines;
-	uint32 selected_highlight_tag = 0;
+	uint32 selected_highlight_tags[6] = {};
 	btree::btree_set<const SpriteGroup *> collapsed_groups;
 
 	/**
@@ -569,7 +570,7 @@ struct NewGRFInspectWindow : Window {
 					collapse_lines = 0;
 				}
 				if (operation == DSGPO_END && collapsed && collapse_group == group) {
-					seprintf(tmp_buf, lastof(tmp_buf), "%*sCOLLAPSED: %u lines omitted", highlight_tag + 2, "", collapse_lines);
+					seprintf(tmp_buf, lastof(tmp_buf), "%sCOLLAPSED: %u lines omitted", buf, collapse_lines);
 					buf = tmp_buf;
 					collapsed = false;
 					highlight_tag = 0;
@@ -590,7 +591,16 @@ struct NewGRFInspectWindow : Window {
 				if (highlight_tag != 0) const_cast<NewGRFInspectWindow *>(this)->highlight_tag_lines[offset] = highlight_tag;
 
 				TextColour colour = (this->selected_sprite_group == group && group != nullptr) ? TC_LIGHT_BLUE : TC_BLACK;
-				if (highlight_tag != 0 && this->selected_highlight_tag == highlight_tag) colour = TC_YELLOW;
+				if (highlight_tag != 0) {
+					for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
+						if (this->selected_highlight_tags[i] == highlight_tag) {
+							static const TextColour text_colours[] = { TC_YELLOW, TC_GREEN, TC_ORANGE, TC_CREAM, TC_BROWN, TC_RED };
+							static_assert(lengthof(this->selected_highlight_tags) == lengthof(text_colours));
+							colour = text_colours[i];
+							break;
+						}
+					}
+				}
 				::DrawString(r.left + LEFT_OFFSET, r.right - RIGHT_OFFSET, r.top + TOP_OFFSET + (scroll_offset * this->resize.step_height), buf, colour);
 			});
 			SpriteGroupDumper::use_shadows = false;
@@ -617,6 +627,8 @@ struct NewGRFInspectWindow : Window {
 				this->DrawString(r, i++, "  File: %s", grfconfig->filename);
 			}
 		}
+
+		if (nih->ShowExtraInfoIncludingGRFIDOnly(index)) return;
 
 		const_cast<NewGRFInspectWindow*>(this)->first_variable_line_index = i;
 
@@ -767,6 +779,23 @@ struct NewGRFInspectWindow : Window {
 		return true;
 	}
 
+	void SelectHighlightTag(uint32 tag)
+	{
+		for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
+			if (this->selected_highlight_tags[i] == tag) {
+				this->selected_highlight_tags[i] = 0;
+				return;
+			}
+		}
+		for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
+			if (this->selected_highlight_tags[i] == 0) {
+				this->selected_highlight_tags[i] = tag;
+				return;
+			}
+		}
+		this->selected_highlight_tags[lengthof(this->selected_highlight_tags) - 1] = tag;
+	}
+
 	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
@@ -805,8 +834,8 @@ struct NewGRFInspectWindow : Window {
 						uint32 highlight_tag = 0;
 						auto iter = this->highlight_tag_lines.find(line);
 						if (iter != this->highlight_tag_lines.end()) highlight_tag = iter->second;
-						if (highlight_tag != 0 || this->selected_highlight_tag != 0) {
-							this->selected_highlight_tag = (highlight_tag == this->selected_highlight_tag) ? 0 : highlight_tag;
+						if (highlight_tag != 0) {
+							this->SelectHighlightTag(highlight_tag);
 							this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
 						}
 					} else if (_shift_pressed) {
@@ -1495,4 +1524,91 @@ static WindowDesc _sprite_aligner_desc(
 void ShowSpriteAlignerWindow()
 {
 	AllocateWindowDescFront<SpriteAlignerWindow>(&_sprite_aligner_desc, 0);
+}
+
+const char *GetNewGRFCallbackName(CallbackID cbid)
+{
+	#define CBID(c) case c: return #c;
+	switch (cbid) {
+		CBID(CBID_RANDOM_TRIGGER)
+		CBID(CBID_VEHICLE_VISUAL_EFFECT)
+		CBID(CBID_VEHICLE_LENGTH)
+		CBID(CBID_VEHICLE_LOAD_AMOUNT)
+		CBID(CBID_STATION_AVAILABILITY)
+		CBID(CBID_STATION_SPRITE_LAYOUT)
+		CBID(CBID_VEHICLE_REFIT_CAPACITY)
+		CBID(CBID_VEHICLE_ARTIC_ENGINE)
+		CBID(CBID_HOUSE_ALLOW_CONSTRUCTION)
+		CBID(CBID_GENERIC_AI_PURCHASE_SELECTION)
+		CBID(CBID_VEHICLE_CARGO_SUFFIX)
+		CBID(CBID_HOUSE_ANIMATION_NEXT_FRAME)
+		CBID(CBID_HOUSE_ANIMATION_START_STOP)
+		CBID(CBID_HOUSE_CONSTRUCTION_STATE_CHANGE)
+		CBID(CBID_TRAIN_ALLOW_WAGON_ATTACH)
+		CBID(CBID_HOUSE_COLOUR)
+		CBID(CBID_HOUSE_CARGO_ACCEPTANCE)
+		CBID(CBID_HOUSE_ANIMATION_SPEED)
+		CBID(CBID_HOUSE_DESTRUCTION)
+		CBID(CBID_INDUSTRY_PROBABILITY)
+		CBID(CBID_VEHICLE_ADDITIONAL_TEXT)
+		CBID(CBID_STATION_TILE_LAYOUT)
+		CBID(CBID_INDTILE_ANIM_START_STOP)
+		CBID(CBID_INDTILE_ANIM_NEXT_FRAME)
+		CBID(CBID_INDTILE_ANIMATION_SPEED)
+		CBID(CBID_INDUSTRY_LOCATION)
+		CBID(CBID_INDUSTRY_PRODUCTION_CHANGE)
+		CBID(CBID_HOUSE_ACCEPT_CARGO)
+		CBID(CBID_INDTILE_CARGO_ACCEPTANCE)
+		CBID(CBID_INDTILE_ACCEPT_CARGO)
+		CBID(CBID_VEHICLE_COLOUR_MAPPING)
+		CBID(CBID_HOUSE_PRODUCE_CARGO)
+		CBID(CBID_INDTILE_SHAPE_CHECK)
+		CBID(CBID_INDTILE_DRAW_FOUNDATIONS)
+		CBID(CBID_VEHICLE_START_STOP_CHECK)
+		CBID(CBID_VEHICLE_32DAY_CALLBACK)
+		CBID(CBID_VEHICLE_SOUND_EFFECT)
+		CBID(CBID_VEHICLE_AUTOREPLACE_SELECTION)
+		CBID(CBID_INDUSTRY_MONTHLYPROD_CHANGE)
+		CBID(CBID_VEHICLE_MODIFY_PROPERTY)
+		CBID(CBID_INDUSTRY_CARGO_SUFFIX)
+		CBID(CBID_INDUSTRY_FUND_MORE_TEXT)
+		CBID(CBID_CARGO_PROFIT_CALC)
+		CBID(CBID_INDUSTRY_WINDOW_MORE_TEXT)
+		CBID(CBID_INDUSTRY_SPECIAL_EFFECT)
+		CBID(CBID_INDTILE_AUTOSLOPE)
+		CBID(CBID_INDUSTRY_REFUSE_CARGO)
+		CBID(CBID_STATION_ANIM_START_STOP)
+		CBID(CBID_STATION_ANIM_NEXT_FRAME)
+		CBID(CBID_STATION_ANIMATION_SPEED)
+		CBID(CBID_HOUSE_DENY_DESTRUCTION)
+		CBID(CBID_SOUNDS_AMBIENT_EFFECT)
+		CBID(CBID_CARGO_STATION_RATING_CALC)
+		CBID(CBID_NEW_SIGNALS_SPRITE_DRAW)
+		CBID(CBID_CANALS_SPRITE_OFFSET)
+		CBID(CBID_HOUSE_WATCHED_CARGO_ACCEPTED)
+		CBID(CBID_STATION_LAND_SLOPE_CHECK)
+		CBID(CBID_INDUSTRY_DECIDE_COLOUR)
+		CBID(CBID_INDUSTRY_INPUT_CARGO_TYPES)
+		CBID(CBID_INDUSTRY_OUTPUT_CARGO_TYPES)
+		CBID(CBID_HOUSE_CUSTOM_NAME)
+		CBID(CBID_HOUSE_DRAW_FOUNDATIONS)
+		CBID(CBID_HOUSE_AUTOSLOPE)
+		CBID(CBID_AIRPTILE_DRAW_FOUNDATIONS)
+		CBID(CBID_AIRPTILE_ANIM_START_STOP)
+		CBID(CBID_AIRPTILE_ANIM_NEXT_FRAME)
+		CBID(CBID_AIRPTILE_ANIMATION_SPEED)
+		CBID(CBID_AIRPORT_ADDITIONAL_TEXT)
+		CBID(CBID_AIRPORT_LAYOUT_NAME)
+		CBID(CBID_OBJECT_LAND_SLOPE_CHECK)
+		CBID(CBID_OBJECT_ANIMATION_NEXT_FRAME)
+		CBID(CBID_OBJECT_ANIMATION_START_STOP)
+		CBID(CBID_OBJECT_ANIMATION_SPEED)
+		CBID(CBID_OBJECT_COLOUR)
+		CBID(CBID_OBJECT_FUND_MORE_TEXT)
+		CBID(CBID_OBJECT_AUTOSLOPE)
+		CBID(CBID_VEHICLE_REFIT_COST)
+		CBID(CBID_INDUSTRY_PROD_CHANGE_BUILD)
+		CBID(CBID_VEHICLE_SPAWN_VISUAL_EFFECT)
+		default: return nullptr;
+	}
 }

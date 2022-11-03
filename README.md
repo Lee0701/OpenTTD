@@ -1,4 +1,4 @@
-## JGR's Patchpack version 0.48.0
+## JGR's Patchpack version 0.49.0
 
 This is a collection of patches applied to [OpenTTD](http://www.openttd.org/)
 
@@ -56,6 +56,7 @@ See [installation.md](/installation.md) for instructions on how to install.
   These are not shown in the build signal window by default.
 * Add client setting to show all signals using the default baseset sprites.
 * Remember the last-used signal type between games.
+* Add client setting to show the introduction year for train wagons.
 
 #### Roads and Road Vehicles
 
@@ -69,6 +70,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add a setting to turn off road vehicles slowing in curves.
 * Add a setting to disable road vehicles from passing through each other when blocked for an extended period of time.
 * Allow road vehicle go to station/waypoint orders to have an associated required stop/bay/waypoint direction.
+* Allow changing road vehicle driving side when all road vehicles are in depots.
 
 #### Level Crossings
 
@@ -121,6 +123,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Slots and counters.  
   See the [guide on the wiki](https://github.com/JGRennison/OpenTTD-patches/wiki/Signalling) for more information.
 * Add cargo capacity / running cost sort mode to the build vehicle window.
+* Add client settings to show the full group hierarchy in group and vehicle names.
 
 #### Orders and Timetabling
 
@@ -140,7 +143,7 @@ See [installation.md](/installation.md) for instructions on how to install.
   Next station: is cargo waiting, is cargo accepted, number of free platforms, amount of cargo waiting.  
   Percent of times, per-cargo load percentage, current time/date, timetable lateness.  
   Slots/counters: train in slot, slot occupancy, counter value.  
-  Scheduled dispatc departure slots.
+  Scheduled dispatch departure slots.
 * Reverse at waypoint orders.
 * Add a menu item to the vehicle list to change order target, e.g. for moving depot orders to a different depot.
 * Add game setting to allow only non-stop orders for trains and road vehicles.
@@ -150,7 +153,8 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Timetabled wait times at waypoints.
 * Add warning/info messages to the timetable window.
 * Add features to reverse the order of an order list, and to append the reverse of an order list.  
-  (Use the ctrl key when the end of orders marker is selected).
+  (Use the ctrl key when the end of orders marker is selected, or enable the order management button).
+* Add features to duplicate an individual order and to change the jump target of conditional orders.
 * Add company setting for whether to advance the current order when cloning/copying/sharing (if current depot is in order list).
 * Add vehicle list menu item to mass cancel go to or service at depot orders.
 
@@ -185,6 +189,9 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add "indifferent" mode to the town council attitude to area restructuring setting.
 * Disallow converting town-owned roads to types with the no houses flag.
 * Add public roads (road network automatically built between towns) at map generation and in the scenario editor.
+* Add setting for if/when towns can build road tunnels.
+* Add setting to limit length of continuous inclined roads built by towns.
+* Allow overriding town road construction settings on a per-town basis, add setting to enable this for multiplayer clients.
 
 #### Industries
 
@@ -490,35 +497,6 @@ Most types of add-on content can be downloaded within OpenTTD via the 'Check Onl
 
 Add-on content can also be installed manually, but that's more complicated; the [OpenTTD wiki](https://wiki.openttd.org/) may offer help with that, or the [OpenTTD directory structure guide](./docs/directory_structure.md).
 
-### 1.5.1) AI opponents
-
-OpenTTD comes without AI opponents, so if you want to play with AIs you have to download them.
-
-The easiest way is via the 'Check Online Content' button in the main menu.
-
-You can select some AIs that you think are compatible with your playing style.
-
-AI help and discussions may also be found in the [AI section of the forum](https://www.tt-forums.net/viewforum.php?f=65).
-
-### 1.5.2) Scenarios and height maps
-
-Scenarios and heightmaps can be added via the 'Check Online Content' button in the main menu.
-
-### 1.5.3) NewGRFs
-
-A wide range of add-content is available as NewGRFs, including vehicles, industries, stations, landscape objects, town names and more.
-
-NewGRFs can be added via the 'Check Online Content' button in the main menu.
-
-See also the wiki [guide to NewGRFs](https://wiki.openttd.org/en/Manual/NewGRF) and [the forum graphics development section](https://www.tt-forums.net/viewforum.php?f=66).
-
-### 1.5.4) Game scripts
-
-Game scripts can provide additional challenges or changes to the standard OpenTTD gameplay, for example setting transport goals, or changing town growth behaviour.
-
-Game scripts can be added via the 'Check Online Content' button in the main menu.
-
-See also the wiki [guide to game scripts](https://wiki.openttd.org/en/Manual/Game%20script) and [the forum graphics game script section](https://www.tt-forums.net/viewforum.php?f=65).
 
 ### 1.6) OpenTTD directories
 
@@ -536,6 +514,7 @@ If you want to compile OpenTTD from source, instructions can be found in [COMPIL
 'Official' channels
 
 - [OpenTTD website](https://www.openttd.org)
+- [OpenTTD official Discord](https://discord.gg/openttd)
 - IRC chat using #openttd on irc.oftc.net [more info about our irc channel](https://wiki.openttd.org/en/Development/IRC%20channel)
 - [OpenTTD on Github](https://github.com/OpenTTD/) for code repositories and for reporting issues
 - [forum.openttd.org](https://forum.openttd.org/) - the primary community forum site for discussing OpenTTD and related games

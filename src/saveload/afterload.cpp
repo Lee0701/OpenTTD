@@ -3186,6 +3186,7 @@ bool AfterLoadGame()
 
 	/* Set some breakdown-related variables to the correct values. */
 	if (SlXvIsFeatureMissing(XSLFI_IMPROVED_BREAKDOWNS)) {
+		_settings_game.vehicle.improved_breakdowns = false;
 		for (Train *v : Train::Iterate()) {
 			if (v->IsFrontEngine()) {
 				if (v->breakdown_ctr == 1) SetBit(v->flags, VRF_BREAKDOWN_STOPPED);
@@ -4097,6 +4098,14 @@ bool AfterLoadGame()
 		}
 	}
 
+	if (SlXvIsFeatureMissing(XSLFI_NO_TREE_COUNTER)) {
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (IsTileType(t, MP_TREES)) {
+				ClearOldTreeCounter(t);
+			}
+		}
+	}
+
 	InitializeRoadGUI();
 
 	/* This needs to be done after conversion. */
@@ -4108,6 +4117,8 @@ bool AfterLoadGame()
 	AfterLoadLabelMaps();
 	AfterLoadCompanyStats();
 	AfterLoadStoryBook();
+
+	AfterLoadVehiclesRemoveAnyFoundInvalid();
 
 	GamelogPrintDebug(1);
 
@@ -4181,8 +4192,8 @@ void ReloadNewGRFData()
 
 	/* reload grf data */
 	GfxLoadSprites();
-	LoadStringWidthTable();
 	RecomputePrices();
+	LoadStringWidthTable();
 	/* reload vehicles */
 	ResetVehicleHash();
 	AfterLoadEngines();

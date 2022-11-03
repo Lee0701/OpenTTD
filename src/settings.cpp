@@ -1252,6 +1252,7 @@ static void ZoomMinMaxChanged(int32 new_value)
 		/* Restrict GUI zoom if it is no longer available. */
 		_gui_zoom = _settings_client.gui.zoom_min;
 		UpdateCursorSize();
+		UpdateRouteStepSpriteSize();
 		UpdateFontHeightCache();
 		LoadStringWidthTable();
 	}
@@ -1464,6 +1465,11 @@ static void DifficultyRenameTownsMultiplayerChange(int32 new_value)
 	SetWindowClassesDirty(WC_TOWN_VIEW);
 }
 
+static void DifficultyOverrideTownSettingsMultiplayerChange(int32 new_value)
+{
+	SetWindowClassesDirty(WC_TOWN_AUTHORITY);
+}
+
 static void MaxNoAIsChange(int32 new_value)
 {
 	if (GetGameSettings().difficulty.max_no_competitors != 0 &&
@@ -1482,8 +1488,8 @@ static void MaxNoAIsChange(int32 new_value)
  */
 static bool CheckRoadSide(int32 &new_value)
 {
-	extern bool RoadVehiclesAreBuilt();
-	return (_game_mode == GM_MENU || !RoadVehiclesAreBuilt());
+	extern bool RoadVehiclesExistOutsideDepots();
+	return (_game_mode == GM_MENU || !RoadVehiclesExistOutsideDepots());
 }
 
 static void RoadSideChanged(int32 new_value)
@@ -1617,7 +1623,7 @@ static void StationCatchmentChanged(int32 new_value)
 
 static bool CheckSharingRail(int32 &new_value)
 {
-	return CheckSharingChangePossible(VEH_TRAIN);
+	return CheckSharingChangePossible(VEH_TRAIN, new_value);
 }
 
 static void SharingRailChanged(int32 new_value)
@@ -1627,17 +1633,17 @@ static void SharingRailChanged(int32 new_value)
 
 static bool CheckSharingRoad(int32 &new_value)
 {
-	return CheckSharingChangePossible(VEH_ROAD);
+	return CheckSharingChangePossible(VEH_ROAD, new_value);
 }
 
 static bool CheckSharingWater(int32 &new_value)
 {
-	return CheckSharingChangePossible(VEH_SHIP);
+	return CheckSharingChangePossible(VEH_SHIP, new_value);
 }
 
 static bool CheckSharingAir(int32 &new_value)
 {
-	return CheckSharingChangePossible(VEH_AIRCRAFT);
+	return CheckSharingChangePossible(VEH_AIRCRAFT, new_value);
 }
 
 static void MaxVehiclesChanged(int32 new_value)
@@ -1780,19 +1786,6 @@ static bool LinkGraphDistributionSettingGUI(SettingOnGuiCtrlData &data)
 		case SOGCT_DESCRIPTION_TEXT:
 			SetDParam(0, data.text);
 			data.text = STR_CONFIG_SETTING_DISTRIBUTION_HELPTEXT_EXTRA;
-			return true;
-
-		default:
-			return false;
-	}
-}
-
-static bool SpriteZoomMinSettingGUI(SettingOnGuiCtrlData &data)
-{
-	switch (data.type) {
-		case SOGCT_DESCRIPTION_TEXT:
-			SetDParam(0, data.text);
-			data.text = STR_CONFIG_SETTING_SPRITE_ZOOM_MIN_HELPTEXT_EXTRA;
 			return true;
 
 		default:
@@ -2627,6 +2620,7 @@ void SyncCompanySettings()
 	const void *new_object = &_settings_client.company;
 	for (auto &sd : _company_settings) {
 		if (!sd->IsIntSetting()) continue;
+		if (!SlIsObjectCurrentlyValid(sd->save.version_from, sd->save.version_to, sd->save.ext_feature_test)) continue;
 		uint32 old_value = (uint32)sd->AsIntSetting()->Read(new_object);
 		uint32 new_value = (uint32)sd->AsIntSetting()->Read(old_object);
 		if (old_value != new_value) NetworkSendCommand(0, 0, new_value, 0, CMD_CHANGE_COMPANY_SETTING, nullptr, sd->name, _local_company, 0);
