@@ -2336,7 +2336,7 @@ static void OptimiseVarAction2DeterministicSpriteGroupInsertJumps(DeterministicS
 						i--;
 					}
 				}
-				group->adjusts.insert(group->adjusts.begin() + j + 1, current);
+				group->adjusts.insert(group->adjusts.begin() + (j + 1), current);
 				group->dsg_flags |= DSGF_CHECK_INSERT_JUMP;
 				i++;
 			}
@@ -2453,10 +2453,11 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 	bool seen_req_var1C = false;
 	if (!group->calculated_result) {
 		bool is_cb_switch = false;
-		if (possible_callback_handler && group->adjusts.size() == 1 && !group->calculated_result &&
+		if (possible_callback_handler && group->adjusts.size() > 0 && !group->calculated_result &&
 				IsFeatureUsableForCBQuickExit(group->feature) && !HasGrfOptimiserFlag(NGOF_NO_OPT_VARACT2_CB_QUICK_EXIT)) {
-			const auto &adjust = group->adjusts[0];
-			if (adjust.variable == 0xC && (adjust.operation == DSGA_OP_ADD || adjust.operation == DSGA_OP_RST) &&
+			size_t idx = group->adjusts.size() - 1;
+			const auto &adjust = group->adjusts[idx];
+			if (adjust.variable == 0xC && ((adjust.operation == DSGA_OP_ADD && idx == 0) || adjust.operation == DSGA_OP_RST) &&
 					adjust.shift_num == 0 && (adjust.and_mask & 0xFF) == 0xFF && adjust.type == DSGA_TYPE_NONE) {
 				is_cb_switch = true;
 			}
@@ -2479,6 +2480,10 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 				if (dsg->dsg_flags & DSGF_REQUIRES_VAR1C) seen_req_var1C = true;
 				if ((dsg->dsg_flags & DSGF_CB_HANDLER) && !state.ignore_cb_handler) {
 					group->dsg_flags |= DSGF_CB_HANDLER;
+					state.have_cb_handler = true;
+				}
+				if ((dsg->dsg_flags & DSGF_CB_RESULT) && !state.ignore_cb_handler) {
+					group->dsg_flags |= DSGF_CB_RESULT;
 					state.have_cb_handler = true;
 				}
 			}
@@ -2531,6 +2536,12 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 					bits.set(ipsg->again, true);
 				}
 			}
+			if (sg != nullptr && sg->type == SGT_CALLBACK) {
+				if (!state.ignore_cb_handler) {
+					group->dsg_flags |= DSGF_CB_RESULT;
+					state.have_cb_handler = true;
+				}
+			}
 		});
 
 		HandleGroupState default_group_state;
@@ -2545,9 +2556,11 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 		if (!default_group_state.have_cb_handler && is_cb_switch) {
 			bool found_zero_value = false;
 			bool found_non_zero_value = false;
+			bool found_random_cb_value = false;
 			for (const auto &range : group->ranges) {
 				if (range.low == 0) found_zero_value = true;
 				if (range.high > 0) found_non_zero_value = true;
+				if (range.low <= 1 && range.high >= 1) found_random_cb_value = true;
 			}
 			if (!found_non_zero_value) {
 				/* Group looks at var C but has no branches for non-zero cases, so don't consider it a callback handler.
@@ -2555,8 +2568,8 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 				 */
 				possible_callback_handler = false;
 			}
-			if (!found_zero_value) {
-				group->ranges.insert(group->ranges.begin(), { group->default_group, 0, 0 });
+			if (!found_zero_value && !found_random_cb_value) {
+				group->ranges.insert(group->ranges.begin(), { group->default_group, 0, 1 });
 				extern const CallbackResultSpriteGroup *NewCallbackResultSpriteGroupNoTransform(uint16 result);
 				group->default_group = NewCallbackResultSpriteGroupNoTransform(CALLBACK_FAILED);
 			}
@@ -2570,6 +2583,8 @@ void OptimiseVarAction2DeterministicSpriteGroup(VarAction2OptimiseState &state, 
 			}
 			state.GetVarTracking(group)->in |= in_bits;
 		}
+	} else {
+		group->dsg_flags |= DSGF_CB_RESULT;
 	}
 	if (possible_callback_handler) group->dsg_flags |= DSGF_CB_HANDLER;
 

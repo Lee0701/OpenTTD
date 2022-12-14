@@ -952,6 +952,8 @@ bool AfterLoadGame()
 
 	AfterLoadEngines();
 	AnalyseIndustryTileSpriteGroups();
+	extern void AnalyseHouseSpriteGroups();
+	AnalyseHouseSpriteGroups();
 
 	/* Update all vehicles */
 	AfterLoadVehicles(true);
@@ -3812,6 +3814,23 @@ bool AfterLoadGame()
 		}
 	}
 
+	/* Use current order time to approximate last loading time */
+	if (IsSavegameVersionBefore(SLV_LAST_LOADING_TICK) && SlXvIsFeatureMissing(XSLFI_LAST_LOADING_TICK)) {
+		for (Vehicle *v : Vehicle::Iterate()) {
+			v->last_loading_tick = std::max(_scaled_tick_counter, static_cast<uint64>(v->current_order_time)) - v->current_order_time;
+		}
+	} else if (SlXvIsFeaturePresent(XSLFI_LAST_LOADING_TICK, 1, 1)) {
+		for (Vehicle *v : Vehicle::Iterate()) {
+			v->last_loading_tick *= _settings_game.economy.day_length_factor;
+		}
+	}
+
+	if (!IsSavegameVersionBefore(SLV_MULTITRACK_LEVEL_CROSSINGS)) {
+		_settings_game.vehicle.adjacent_crossings = true;
+	} else if (SlXvIsFeatureMissing(XSLFI_ADJACENT_CROSSINGS)) {
+		_settings_game.vehicle.adjacent_crossings = false;
+	}
+
 	/* Compute station catchment areas. This is needed here in case UpdateStationAcceptance is called below. */
 	Station::RecomputeCatchmentForAll();
 
@@ -4198,6 +4217,8 @@ void ReloadNewGRFData()
 	ResetVehicleHash();
 	AfterLoadEngines();
 	AnalyseIndustryTileSpriteGroups();
+	extern void AnalyseHouseSpriteGroups();
+	AnalyseHouseSpriteGroups();
 	AfterLoadVehicles(false);
 	StartupEngines();
 	GroupStatistics::UpdateAfterLoad();

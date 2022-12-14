@@ -206,6 +206,7 @@ STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
 STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}cv
 STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
 
+
 STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}T
 STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
 STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
@@ -398,10 +399,9 @@ STR_SCENEDIT_FILE_MENU_SEPARATOR                                :
 STR_SCENEDIT_FILE_MENU_QUIT                                     :Sair
 
 # Settings menu
-###length 14
+###length 15
 STR_SETTINGS_MENU_GAME_OPTIONS                                  :Opções do jogo
 STR_SETTINGS_MENU_CONFIG_SETTINGS_TREE                          :Configurações
-STR_SETTINGS_MENU_SCRIPT_SETTINGS                               :Configurações de IA /Script do jogo
 STR_SETTINGS_MENU_NEWGRF_SETTINGS                               :Definições do NewGRF
 STR_SETTINGS_MENU_TRANSPARENCY_OPTIONS                          :Opções de Transparência
 STR_SETTINGS_MENU_TOWN_NAMES_DISPLAYED                          :Nomes de cidades exibidos
@@ -978,36 +978,6 @@ STR_GAME_OPTIONS_CURRENCY_INR                                   :Rúpia Indiana 
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Rupia Indonésia (IDR)
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Ringgit Malaio (MYR)
 
-###length 2
-STR_GAME_OPTIONS_ROAD_VEHICLES_DROPDOWN_LEFT                    :Dirigem na esquerda
-STR_GAME_OPTIONS_ROAD_VEHICLES_DROPDOWN_RIGHT                   :Dirigem na direita
-
-STR_GAME_OPTIONS_TOWN_NAMES_FRAME                               :{BLACK}Nome das cidades:
-STR_GAME_OPTIONS_TOWN_NAMES_DROPDOWN_TOOLTIP                    :{BLACK}Selecionar o estilo dos nomes das cidades
-
-###length 21
-STR_GAME_OPTIONS_TOWN_NAME_ORIGINAL_ENGLISH                     :Inglês (Original)
-STR_GAME_OPTIONS_TOWN_NAME_FRENCH                               :Francês
-STR_GAME_OPTIONS_TOWN_NAME_GERMAN                               :Alemão
-STR_GAME_OPTIONS_TOWN_NAME_ADDITIONAL_ENGLISH                   :Inglês (Adicional)
-STR_GAME_OPTIONS_TOWN_NAME_LATIN_AMERICAN                       :Latino-Americano
-STR_GAME_OPTIONS_TOWN_NAME_SILLY                                :Idiota
-STR_GAME_OPTIONS_TOWN_NAME_SWEDISH                              :Sueco
-STR_GAME_OPTIONS_TOWN_NAME_DUTCH                                :Holandês
-STR_GAME_OPTIONS_TOWN_NAME_FINNISH                              :Finlandês
-STR_GAME_OPTIONS_TOWN_NAME_POLISH                               :Polonês
-STR_GAME_OPTIONS_TOWN_NAME_SLOVAK                               :Eslovaco
-STR_GAME_OPTIONS_TOWN_NAME_NORWEGIAN                            :Norueguês
-STR_GAME_OPTIONS_TOWN_NAME_HUNGARIAN                            :Húngaro
-STR_GAME_OPTIONS_TOWN_NAME_AUSTRIAN                             :Austríaco
-STR_GAME_OPTIONS_TOWN_NAME_ROMANIAN                             :Romeno
-STR_GAME_OPTIONS_TOWN_NAME_CZECH                                :Checo
-STR_GAME_OPTIONS_TOWN_NAME_SWISS                                :Suiço
-STR_GAME_OPTIONS_TOWN_NAME_DANISH                               :Dinamarquês
-STR_GAME_OPTIONS_TOWN_NAME_TURKISH                              :Turco
-STR_GAME_OPTIONS_TOWN_NAME_ITALIAN                              :Italiano
-STR_GAME_OPTIONS_TOWN_NAME_CATALAN                              :Catalão
-
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Salvar automaticamente
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Selecionar o intervalo entre jogos salvos automaticos
 
@@ -1040,21 +1010,8 @@ STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP                            :{BLACK}Marque e
 
 STR_GAME_OPTIONS_VIDEO_DRIVER_INFO                              :{BLACK}Motorista atual: {STRING}
 
-STR_GAME_OPTIONS_GUI_ZOOM_FRAME                                 :{BLACK}Tamanho da interface
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_TOOLTIP                      :{BLACK}Selecione o tamanho de elemento de interface a ser usado
 
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_AUTO                         :(detecção automática)
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_NORMAL                       :Normal
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_2X_ZOOM                      :Dobro
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_4X_ZOOM                      :Quádruplo
 
-STR_GAME_OPTIONS_FONT_ZOOM                                      :{BLACK}Tamanho da fonte
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_TOOLTIP                     :{BLACK}Selecione o tamanho da fonte da interface a ser usado
-
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_AUTO                        :(detecção automática)
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_NORMAL                      :Normal
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_2X_ZOOM                     :Tamanho duplo
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_4X_ZOOM                     :Tamanho quádruplo
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Gráficos
 
@@ -1106,8 +1063,6 @@ STR_CURRENCY_PREVIEW                                            :{LTBLUE}Previs�
 STR_CURRENCY_CUSTOM_CURRENCY_PREVIEW_TOOLTIP                    :{BLACK}10000 Libras (£) na sua moeda
 STR_CURRENCY_CHANGE_PARAMETER                                   :{BLACK}Alterar o parâmetro de moeda personalizada
 
-STR_DIFFICULTY_LEVEL_SETTING_MAXIMUM_NO_COMPETITORS             :{LTBLUE}Número máximo de concorrentes: {ORANGE}{COMMA}
-
 STR_NONE                                                        :Nenhum
 STR_FUNDING_ONLY                                                :Apenas financiamento
 STR_MINIMAL                                                     :Mínimo
@@ -1156,6 +1111,12 @@ STR_SUBSIDY_X1_5                                                :x1.5
 STR_SUBSIDY_X2                                                  :x2
 STR_SUBSIDY_X3                                                  :x3
 STR_SUBSIDY_X4                                                  :x4
+
+###length 4
+STR_CLIMATE_TEMPERATE_LANDSCAPE                                 :terreno temperado
+STR_CLIMATE_SUB_ARCTIC_LANDSCAPE                                :terreno subártico
+STR_CLIMATE_SUB_TROPICAL_LANDSCAPE                              :terreno subtropical
+STR_CLIMATE_TOYLAND_LANDSCAPE                                   :terreno 'toyland'
 
 ###length 7
 STR_TERRAIN_TYPE_VERY_FLAT                                      :Muito Plano
@@ -1515,6 +1476,10 @@ STR_CONFIG_SETTING_TREE_PLACER_IMPROVED                         :Melhorado
 
 STR_CONFIG_SETTING_ROAD_SIDE                                    :Automóveis: {STRING}
 STR_CONFIG_SETTING_ROAD_SIDE_HELPTEXT                           :Escolha a mão de direção
+
+###length 2
+STR_CONFIG_SETTING_ROAD_SIDE_LEFT                               :Dirigem na esquerda
+STR_CONFIG_SETTING_ROAD_SIDE_RIGHT                              :Dirigem na direita
 
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION                           :Rotação do mapa topográfico: {STRING}
 ###length 2
@@ -2050,7 +2015,7 @@ STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Reversão autom
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Permite trens reverterem sentido num sinal, se estiverem aguardando por muito tempo
 ###length 2
 STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF_RECOMMENDED                  :YAPF {BLUE}(Recomendado)
+STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Recomendado)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Alterar valor
 
@@ -2093,7 +2058,6 @@ STR_INTRO_HIGHSCORE                                             :{BLACK}Pontuaç
 STR_INTRO_CONFIG_SETTINGS_TREE                                  :{BLACK}Configurações
 STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}Configurar NewGRF
 STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Checar conteúdo on-line
-STR_INTRO_SCRIPT_SETTINGS                                       :{BLACK}Configurações de IA / Script do jogo
 STR_INTRO_QUIT                                                  :{BLACK}Sair
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Iniciar um novo jogo. Ctrl+Clique para pular a configuração do mapa
@@ -2113,7 +2077,6 @@ STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Exibe as
 STR_INTRO_TOOLTIP_CONFIG_SETTINGS_TREE                          :{BLACK}Config. de exibição
 STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Exibir configs. dos NewGRF
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Checar por conteúdo novo e atualizado para baixar
-STR_INTRO_TOOLTIP_SCRIPT_SETTINGS                               :{BLACK}Exibe configurações de IA e script do jogo
 STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Sair do 'OpenTTD'
 
 STR_INTRO_BASESET                                               :{BLACK}Faltam {NUM} "sprite{P "" s}" no conjunto de gráficos base selecionado. Por favor verifique se há atualizações para ele.
@@ -2144,12 +2107,6 @@ STR_CHEAT_EDIT_MAX_HL_QUERY_CAPT                                :{WHITE}Editar a
 STR_CHEAT_CHANGE_DATE                                           :{LTBLUE}Alterar data: {ORANGE}{DATE_SHORT}
 STR_CHEAT_CHANGE_DATE_QUERY_CAPT                                :{WHITE}Mudar ano atual
 STR_CHEAT_SETUP_PROD                                            :{LTBLUE}Ativar modificação de valores de produção: {ORANGE}{STRING}
-
-###length 4
-STR_CHEAT_SWITCH_CLIMATE_TEMPERATE_LANDSCAPE                    :terreno temperado
-STR_CHEAT_SWITCH_CLIMATE_SUB_ARCTIC_LANDSCAPE                   :terreno subártico
-STR_CHEAT_SWITCH_CLIMATE_SUB_TROPICAL_LANDSCAPE                 :terreno subtropical
-STR_CHEAT_SWITCH_CLIMATE_TOYLAND_LANDSCAPE                      :terreno 'toyland'
 
 # Livery window
 STR_LIVERY_CAPTION                                              :{WHITE}{COMPANY} - Esquema de cores
@@ -3153,6 +3110,8 @@ STR_MAPGEN_MAPSIZE                                              :{BLACK}Dimensõ
 STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Seleciona o tamanho do mapa em quadrados. O número de quadrados disponíveis será um pouco menor
 STR_MAPGEN_BY                                                   :{BLACK}*
 STR_MAPGEN_NUMBER_OF_TOWNS                                      :{BLACK}No. de cidades:
+STR_MAPGEN_TOWN_NAME_LABEL                                      :{BLACK}Nome das cidades:
+STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP                           :{BLACK}Selecionar o estilo dos nomes das cidades
 STR_MAPGEN_DATE                                                 :{BLACK}Data:
 STR_MAPGEN_NUMBER_OF_INDUSTRIES                                 :{BLACK}No. de indústrias:
 STR_MAPGEN_HEIGHTMAP_HEIGHT                                     :{BLACK}Pico mais alto:
@@ -3171,11 +3130,34 @@ STR_MAPGEN_SNOW_LINE_UP                                         :{BLACK}Aumentar
 STR_MAPGEN_SNOW_LINE_DOWN                                       :{BLACK}Diminuir a linha da neve em um ponto
 STR_MAPGEN_LAND_GENERATOR                                       :{BLACK}Gerador de terra
 STR_MAPGEN_TERRAIN_TYPE                                         :{BLACK}Tipo de terreno
-STR_MAPGEN_QUANTITY_OF_SEA_LAKES                                :{BLACK}Nível do mar:
+STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Nível do mar:
 STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Rios:
 STR_MAPGEN_SMOOTHNESS                                           :{BLACK}Regularidade
 STR_MAPGEN_VARIETY                                              :{BLACK}Distribuição da variedade
 STR_MAPGEN_GENERATE                                             :{WHITE}Gerar
+
+###length 21
+STR_MAPGEN_TOWN_NAME_ORIGINAL_ENGLISH                           :Inglês (Original)
+STR_MAPGEN_TOWN_NAME_FRENCH                                     :Francês
+STR_MAPGEN_TOWN_NAME_GERMAN                                     :Alemão
+STR_MAPGEN_TOWN_NAME_ADDITIONAL_ENGLISH                         :Inglês (Adicional)
+STR_MAPGEN_TOWN_NAME_LATIN_AMERICAN                             :Latino-Americano
+STR_MAPGEN_TOWN_NAME_SILLY                                      :Idiota
+STR_MAPGEN_TOWN_NAME_SWEDISH                                    :Sueco
+STR_MAPGEN_TOWN_NAME_DUTCH                                      :Holandês
+STR_MAPGEN_TOWN_NAME_FINNISH                                    :Finlandês
+STR_MAPGEN_TOWN_NAME_POLISH                                     :Polonês
+STR_MAPGEN_TOWN_NAME_SLOVAK                                     :Eslovaco
+STR_MAPGEN_TOWN_NAME_NORWEGIAN                                  :Norueguês
+STR_MAPGEN_TOWN_NAME_HUNGARIAN                                  :Húngaro
+STR_MAPGEN_TOWN_NAME_AUSTRIAN                                   :Austríaco
+STR_MAPGEN_TOWN_NAME_ROMANIAN                                   :Romeno
+STR_MAPGEN_TOWN_NAME_CZECH                                      :Checo
+STR_MAPGEN_TOWN_NAME_SWISS                                      :Suiço
+STR_MAPGEN_TOWN_NAME_DANISH                                     :Dinamarquês
+STR_MAPGEN_TOWN_NAME_TURKISH                                    :Turco
+STR_MAPGEN_TOWN_NAME_ITALIAN                                    :Italiano
+STR_MAPGEN_TOWN_NAME_CATALAN                                    :Catalão
 
 # Strings for map borders at game generation
 STR_MAPGEN_BORDER_TYPE                                          :{BLACK}Bordas do mapa:
@@ -3661,7 +3643,6 @@ STR_FINANCES_SECTION_OTHER                                      :{GOLD}Outros
 
 STR_FINANCES_NEGATIVE_INCOME                                    :-{CURRENCY_LONG}
 STR_FINANCES_POSITIVE_INCOME                                    :+{CURRENCY_LONG}
-STR_FINANCES_NET_PROFIT                                         :{WHITE}Lucro Líquido
 STR_FINANCES_BANK_BALANCE_TITLE                                 :{WHITE}Balanço Bancário
 STR_FINANCES_OWN_FUNDS_TITLE                                    :{WHITE}Fundos Próprios
 STR_FINANCES_LOAN_TITLE                                         :{WHITE}Empréstimo
@@ -3889,6 +3870,8 @@ STR_PURCHASE_INFO_ALL_BUT                                       :Todas menos {CA
 STR_PURCHASE_INFO_MAX_TE                                        :{BLACK}Tração máx : {GOLD}{FORCE}
 STR_PURCHASE_INFO_AIRCRAFT_RANGE                                :{BLACK}Alcance: {GOLD}{COMMA} quadrados
 STR_PURCHASE_INFO_AIRCRAFT_TYPE                                 :{BLACK}Tipo de aeronave: {GOLD}{STRING}
+
+###length 3
 
 ###length VEHICLE_TYPES
 STR_BUY_VEHICLE_TRAIN_LIST_TOOLTIP                              :{BLACK}Lista de trens - clique num trem para informações. Cltr+Clique para alterar a visibilidade do tipo de trem
@@ -4550,12 +4533,12 @@ STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}Um dos s
 STR_ERROR_AI_DEBUG_SERVER_ONLY                                  :{YELLOW}Depuração de I.A./Script do jogo só é acessível pelo servidor
 
 # AI configuration window
-STR_AI_CONFIG_CAPTION                                           :{WHITE}Configuração da I.A./Script do jogo
 STR_AI_CONFIG_GAMELIST_TOOLTIP                                  :{BLACK}O script do jogo que será carregado no próximo jogo
 STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}IAs que serão carregadas no próximo jogo
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Jogador humano
 STR_AI_CONFIG_RANDOM_AI                                         :IA aleatória
 STR_AI_CONFIG_NONE                                              :{G=m}(nenhum)
+STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Número máximo de concorrentes: {ORANGE}{COMMA}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Subir
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Mover a IA selecionada para cima na lista
@@ -4565,8 +4548,6 @@ STR_AI_CONFIG_MOVE_DOWN_TOOLTIP                                 :{BLACK}Mover a 
 STR_AI_CONFIG_GAMESCRIPT                                        :{SILVER}Script do jogo
 STR_AI_CONFIG_AI                                                :{G=f}{SILVER}IAs
 
-STR_AI_CONFIG_CHANGE                                            :{BLACK}Selecionar {STRING}
-STR_AI_CONFIG_CHANGE_NONE                                       :
 STR_AI_CONFIG_CHANGE_AI                                         :{G=f}IA
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :Script do jogo
 STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Carregar outro script
@@ -4597,9 +4578,7 @@ STR_SCREENSHOT_HEIGHTMAP_SCREENSHOT                             :{BLACK}Captura 
 STR_SCREENSHOT_MINIMAP_SCREENSHOT                               :{BLACK}Captura de tela do minimapa
 
 # AI Parameters
-STR_AI_SETTINGS_CAPTION                                         :{WHITE}{STRING} Parâmetros
 STR_AI_SETTINGS_CAPTION_AI                                      :{G=f}IA
-STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Script do jogo
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Fechar
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetar
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
@@ -5015,6 +4994,7 @@ STR_ERROR_TOO_MANY_VEHICLES_IN_GAME                             :{WHITE}Existem 
 STR_ERROR_CAN_T_CHANGE_SERVICING                                :{WHITE}Impossível alterar o intervalo de manutenção...
 
 STR_ERROR_VEHICLE_IS_DESTROYED                                  :{WHITE}... veículo está destruído
+
 
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL                          :{WHITE}Não haverá nenhum veículo disponível
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Altere sua configuração de NewGRF

@@ -13,6 +13,7 @@
 #include "sound/sound_driver.hpp"
 #include "music/music_driver.hpp"
 #include "video/video_driver.hpp"
+#include "mixer.h"
 
 #include "fontcache.h"
 #include "error.h"
@@ -83,6 +84,7 @@
 #include "debug_desync.h"
 #include "event_logs.h"
 #include "tunnelbridge.h"
+#include "worker_thread.h"
 
 #include "linkgraph/linkgraphschedule.h"
 #include "tracerestrict.h"
@@ -229,7 +231,7 @@ static void ShowHelp()
 		"\n"
 		"Command line options:\n"
 		"  -v drv              = Set video driver (see below)\n"
-		"  -s drv              = Set sound driver (see below) (param bufsize,hz)\n"
+		"  -s drv              = Set sound driver (see below)\n"
 		"  -m drv              = Set music driver (see below)\n"
 		"  -b drv              = Set the blitter to use (see below)\n"
 		"  -r res              = Set resolution (for instance 800x600)\n"
@@ -473,6 +475,9 @@ static void ShutdownGame()
 	ClearSpecialEventsLog();
 	ClearDesyncMsgLog();
 
+	extern void UninitializeCompanies();
+	UninitializeCompanies();
+
 	_loaded_local_company = COMPANY_SPECTATOR;
 	_game_events_since_load = (GameEventFlags) 0;
 	_game_events_overall = (GameEventFlags) 0;
@@ -613,8 +618,9 @@ struct AfterNewGRFScan : NewGRFScanCallback {
 		/* We have loaded the config, so we may possibly save it. */
 		_save_config = save_config;
 
-		/* restore saved music volume */
+		/* restore saved music and effects volumes */
 		MusicDriver::GetInstance()->SetVolume(_settings_client.music.music_vol);
+		SetEffectVolume(_settings_client.music.effect_vol);
 
 		if (startyear != INVALID_YEAR) IConsoleSetSetting("game_creation.starting_year", startyear);
 		if (generation_seed != GENERATE_NEW_SEED) _settings_newgame.game_creation.generation_seed = generation_seed;
@@ -933,7 +939,9 @@ int openttd_main(int argc, char *argv[])
 
 	/* Initialize the zoom level of the screen to normal */
 	_screen.zoom = ZOOM_LVL_NORMAL;
-	UpdateGUIZoom();
+
+	/* The video driver is now selected, now initialise GUI zoom */
+	AdjustGUIZoom(AGZM_STARTUP);
 
 	NetworkStartUp(); // initialize network-core
 
@@ -989,7 +997,11 @@ int openttd_main(int argc, char *argv[])
 	/* ScanNewGRFFiles now has control over the scanner. */
 	RequestNewGRFScan(scanner.release());
 
+	_general_worker_pool.Start("ottd:worker", 8);
+
 	VideoDriver::GetInstance()->MainLoop();
+
+	_general_worker_pool.Stop();
 
 	WaitTillSaved();
 
@@ -1978,9 +1990,28 @@ void StateGameLoop()
 		CallWindowGameTickEvent();
 		NewsLoop();
 
-		for (Company *c : Company::Iterate()) {
-			DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64)c->money);
-			UpdateStateChecksum(c->money);
+		if (_networking) {
+			for (Company *c : Company::Iterate()) {
+				DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64)c->money);
+				UpdateStateChecksum(c->money);
+
+				for (uint i = 0; i < ROADTYPE_END; i++) {
+					DEBUG_UPDATESTATECHECKSUM("Company: %u, road[%u]: %u", c->index, i, c->infrastructure.road[i]);
+					UpdateStateChecksum(c->infrastructure.road[i]);
+				}
+
+				for (uint i = 0; i < RAILTYPE_END; i++) {
+					DEBUG_UPDATESTATECHECKSUM("Company: %u, rail[%u]: %u", c->index, i, c->infrastructure.rail[i]);
+					UpdateStateChecksum(c->infrastructure.rail[i]);
+				}
+
+				DEBUG_UPDATESTATECHECKSUM("Company: %u, signal: %u, water: %u, station: %u, airport: %u",
+						c->index, c->infrastructure.signal, c->infrastructure.water, c->infrastructure.station, c->infrastructure.airport);
+				UpdateStateChecksum(c->infrastructure.signal);
+				UpdateStateChecksum(c->infrastructure.water);
+				UpdateStateChecksum(c->infrastructure.station);
+				UpdateStateChecksum(c->infrastructure.airport);
+			}
 		}
 		cur_company.Restore();
 	}

@@ -205,6 +205,7 @@ STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hv
 STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}hv
 STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
 
+
 STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
 STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
 STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
@@ -397,10 +398,9 @@ STR_SCENEDIT_FILE_MENU_SEPARATOR                                :
 STR_SCENEDIT_FILE_MENU_QUIT                                     :Lopeta
 
 # Settings menu
-###length 14
+###length 15
 STR_SETTINGS_MENU_GAME_OPTIONS                                  :Pelin valinnat
 STR_SETTINGS_MENU_CONFIG_SETTINGS_TREE                          :Asetukset
-STR_SETTINGS_MENU_SCRIPT_SETTINGS                               :Tekoälyn/peliskriptin asetukset
 STR_SETTINGS_MENU_NEWGRF_SETTINGS                               :NewGRF-asetukset
 STR_SETTINGS_MENU_TRANSPARENCY_OPTIONS                          :Läpinäkyvyysasetukset
 STR_SETTINGS_MENU_TOWN_NAMES_DISPLAYED                          :Kuntien nimet näkyvissä
@@ -977,36 +977,6 @@ STR_GAME_OPTIONS_CURRENCY_INR                                   :Intian rupia (I
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Indonesian rupia (IDR)
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Malesian ringgit (MYR)
 
-###length 2
-STR_GAME_OPTIONS_ROAD_VEHICLES_DROPDOWN_LEFT                    :Vasemmanpuolinen liikenne
-STR_GAME_OPTIONS_ROAD_VEHICLES_DROPDOWN_RIGHT                   :Oikeanpuolinen liikenne
-
-STR_GAME_OPTIONS_TOWN_NAMES_FRAME                               :{BLACK}Kuntien nimet:
-STR_GAME_OPTIONS_TOWN_NAMES_DROPDOWN_TOOLTIP                    :{BLACK}Valitse kuntien nimien tyyli
-
-###length 21
-STR_GAME_OPTIONS_TOWN_NAME_ORIGINAL_ENGLISH                     :Englantilainen
-STR_GAME_OPTIONS_TOWN_NAME_FRENCH                               :Ranskalainen
-STR_GAME_OPTIONS_TOWN_NAME_GERMAN                               :Saksalainen
-STR_GAME_OPTIONS_TOWN_NAME_ADDITIONAL_ENGLISH                   :Englantilainen 2
-STR_GAME_OPTIONS_TOWN_NAME_LATIN_AMERICAN                       :Latinalaisamerikkalainen
-STR_GAME_OPTIONS_TOWN_NAME_SILLY                                :Hassu
-STR_GAME_OPTIONS_TOWN_NAME_SWEDISH                              :Ruotsalainen
-STR_GAME_OPTIONS_TOWN_NAME_DUTCH                                :Hollantilainen
-STR_GAME_OPTIONS_TOWN_NAME_FINNISH                              :Suomalainen
-STR_GAME_OPTIONS_TOWN_NAME_POLISH                               :Puolalainen
-STR_GAME_OPTIONS_TOWN_NAME_SLOVAK                               :Slovakialainen
-STR_GAME_OPTIONS_TOWN_NAME_NORWEGIAN                            :Norjalainen
-STR_GAME_OPTIONS_TOWN_NAME_HUNGARIAN                            :Unkarilainen
-STR_GAME_OPTIONS_TOWN_NAME_AUSTRIAN                             :Itävaltalainen
-STR_GAME_OPTIONS_TOWN_NAME_ROMANIAN                             :Romanialainen
-STR_GAME_OPTIONS_TOWN_NAME_CZECH                                :Tšekkiläinen
-STR_GAME_OPTIONS_TOWN_NAME_SWISS                                :Sveitsiläinen
-STR_GAME_OPTIONS_TOWN_NAME_DANISH                               :Tanskalainen
-STR_GAME_OPTIONS_TOWN_NAME_TURKISH                              :Turkkilainen
-STR_GAME_OPTIONS_TOWN_NAME_ITALIAN                              :Italialainen
-STR_GAME_OPTIONS_TOWN_NAME_CATALAN                              :Katalonialainen
-
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Automaattitallennus
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Valitse aikaväli automaattisille pelitallennuksille
 
@@ -1039,21 +1009,8 @@ STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP                            :{BLACK}Valitse 
 
 STR_GAME_OPTIONS_VIDEO_DRIVER_INFO                              :{BLACK}Nykyinen ajuri: {STRING}
 
-STR_GAME_OPTIONS_GUI_ZOOM_FRAME                                 :{BLACK}Käyttöliittymän koko
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_TOOLTIP                      :{BLACK}Valitse käyttöliittymäelementtien koko
 
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_AUTO                         :(tunnista automaattisesti)
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_NORMAL                       :Tavallinen
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_2X_ZOOM                      :Kaksinkertainen
-STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_4X_ZOOM                      :Nelinkertainen
 
-STR_GAME_OPTIONS_FONT_ZOOM                                      :{BLACK}Kirjasinkoko
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_TOOLTIP                     :{BLACK}Valitse käyttöliittymän kirjasinkoko
-
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_AUTO                        :(tunnista automaattisesti)
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_NORMAL                      :Normaali
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_2X_ZOOM                     :Kaksinkertainen koko
-STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_4X_ZOOM                     :Nelinkertainen koko
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafiikka
 
@@ -1105,8 +1062,6 @@ STR_CURRENCY_PREVIEW                                            :{LTBLUE}Esikats
 STR_CURRENCY_CUSTOM_CURRENCY_PREVIEW_TOOLTIP                    :{BLACK}10 000 puntaa (£) valuutassasi
 STR_CURRENCY_CHANGE_PARAMETER                                   :{BLACK}Vaihda oman valuutan parametria.
 
-STR_DIFFICULTY_LEVEL_SETTING_MAXIMUM_NO_COMPETITORS             :{LTBLUE}Vastustajien enimmäismäärä: {ORANGE}{COMMA}
-
 STR_NONE                                                        :Ei mitään
 STR_FUNDING_ONLY                                                :Vain rahoitetut
 STR_MINIMAL                                                     :Minimi
@@ -1155,6 +1110,12 @@ STR_SUBSIDY_X1_5                                                :x1.5
 STR_SUBSIDY_X2                                                  :x2
 STR_SUBSIDY_X3                                                  :x3
 STR_SUBSIDY_X4                                                  :x4
+
+###length 4
+STR_CLIMATE_TEMPERATE_LANDSCAPE                                 :lauhkea maasto
+STR_CLIMATE_SUB_ARCTIC_LANDSCAPE                                :pohjoinen maasto
+STR_CLIMATE_SUB_TROPICAL_LANDSCAPE                              :subtrooppinen maasto
+STR_CLIMATE_TOYLAND_LANDSCAPE                                   :Lelumaan maasto
 
 ###length 7
 STR_TERRAIN_TYPE_VERY_FLAT                                      :Hyvin tasainen
@@ -1514,6 +1475,10 @@ STR_CONFIG_SETTING_TREE_PLACER_IMPROVED                         :Parannettu
 
 STR_CONFIG_SETTING_ROAD_SIDE                                    :Ajoneuvot: {STRING}
 STR_CONFIG_SETTING_ROAD_SIDE_HELPTEXT                           :Valitse ajokaista
+
+###length 2
+STR_CONFIG_SETTING_ROAD_SIDE_LEFT                               :Vasemmanpuolinen liikenne
+STR_CONFIG_SETTING_ROAD_SIDE_RIGHT                              :Oikeanpuolinen liikenne
 
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION                           :Korkeuskartan pyöritys:{STRING}
 ###length 2
@@ -2049,7 +2014,7 @@ STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automaattinen k
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Sallii junien kääntymisen opastimen edessä pitkän odotusajan jälkeen
 ###length 2
 STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF_RECOMMENDED                  :YAPF {BLUE}(Suositeltu)
+STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Suositeltu)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Muuta asetusarvo
 
@@ -2092,7 +2057,6 @@ STR_INTRO_HIGHSCORE                                             :{BLACK}Pistetau
 STR_INTRO_CONFIG_SETTINGS_TREE                                  :{BLACK}Asetukset
 STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}NewGRF-asetukset
 STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Tarkista online-sisältö
-STR_INTRO_SCRIPT_SETTINGS                                       :{BLACK}Tekoälyn/peliskriptin asetukset
 STR_INTRO_QUIT                                                  :{BLACK}Sulje
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Aloita uusi peli. Ctrl+napsautus ohittaa kartan asetusten valinnan.
@@ -2112,7 +2076,6 @@ STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Näytä 
 STR_INTRO_TOOLTIP_CONFIG_SETTINGS_TREE                          :{BLACK}Näytä asetukset
 STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Näytä NewGRF-asetukset
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Tarkista uutta ja päivitettyä sisältöä ladattavaksi
-STR_INTRO_TOOLTIP_SCRIPT_SETTINGS                               :{BLACK}Näytä tekoäly/peliskriptiasetukset
 STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Lopeta OpenTTD
 
 STR_INTRO_BASESET                                               :{BLACK}Valitusta perusgrafiikkapaketista puuttuu {NUM} sprite{P "" ä}. Tarkista, onko sille päivityksiä.
@@ -2143,12 +2106,6 @@ STR_CHEAT_EDIT_MAX_HL_QUERY_CAPT                                :{WHITE}Muuta su
 STR_CHEAT_CHANGE_DATE                                           :{LTBLUE}Muuta päiväystä: {ORANGE}{DATE_SHORT}
 STR_CHEAT_CHANGE_DATE_QUERY_CAPT                                :{WHITE}Muuta nykyistä vuotta
 STR_CHEAT_SETUP_PROD                                            :{LTBLUE}Salli tuotantomäärien muuttaminen: {ORANGE}{STRING}
-
-###length 4
-STR_CHEAT_SWITCH_CLIMATE_TEMPERATE_LANDSCAPE                    :lauhkea maasto
-STR_CHEAT_SWITCH_CLIMATE_SUB_ARCTIC_LANDSCAPE                   :pohjoinen maasto
-STR_CHEAT_SWITCH_CLIMATE_SUB_TROPICAL_LANDSCAPE                 :subtrooppinen maasto
-STR_CHEAT_SWITCH_CLIMATE_TOYLAND_LANDSCAPE                      :Lelumaan maasto
 
 # Livery window
 STR_LIVERY_CAPTION                                              :{WHITE}{COMPANY}: Väriteema
@@ -3152,6 +3109,8 @@ STR_MAPGEN_MAPSIZE                                              :{BLACK}Kartan k
 STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Valitse kartan koko ruutuina. Saatavilla olevien ruutujen määrä on hieman alhaisempi
 STR_MAPGEN_BY                                                   :{BLACK}×
 STR_MAPGEN_NUMBER_OF_TOWNS                                      :{BLACK}Kuntien määrä:
+STR_MAPGEN_TOWN_NAME_LABEL                                      :{BLACK}Kuntien nimet:
+STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP                           :{BLACK}Valitse kuntien nimien tyyli
 STR_MAPGEN_DATE                                                 :{BLACK}Päivämäärä:
 STR_MAPGEN_NUMBER_OF_INDUSTRIES                                 :{BLACK}Teollisuuden määrä:
 STR_MAPGEN_HEIGHTMAP_HEIGHT                                     :{BLACK}Korkein huippu:
@@ -3170,11 +3129,34 @@ STR_MAPGEN_SNOW_LINE_UP                                         :{BLACK}Siirrä 
 STR_MAPGEN_SNOW_LINE_DOWN                                       :{BLACK}Siirrä lumirajaa yksi taso alaspäin
 STR_MAPGEN_LAND_GENERATOR                                       :{BLACK}Maastogeneraattori:
 STR_MAPGEN_TERRAIN_TYPE                                         :{BLACK}Maaston tyyppi:
-STR_MAPGEN_QUANTITY_OF_SEA_LAKES                                :{BLACK}Merenpinta:
+STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Merenpinta:
 STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Joet:
 STR_MAPGEN_SMOOTHNESS                                           :{BLACK}Tasaisuus:
 STR_MAPGEN_VARIETY                                              :{BLACK}Vaihtelu:
 STR_MAPGEN_GENERATE                                             :{WHITE}Generoi
+
+###length 21
+STR_MAPGEN_TOWN_NAME_ORIGINAL_ENGLISH                           :Englantilainen
+STR_MAPGEN_TOWN_NAME_FRENCH                                     :Ranskalainen
+STR_MAPGEN_TOWN_NAME_GERMAN                                     :Saksalainen
+STR_MAPGEN_TOWN_NAME_ADDITIONAL_ENGLISH                         :Englantilainen 2
+STR_MAPGEN_TOWN_NAME_LATIN_AMERICAN                             :Latinalaisamerikkalainen
+STR_MAPGEN_TOWN_NAME_SILLY                                      :Hassu
+STR_MAPGEN_TOWN_NAME_SWEDISH                                    :Ruotsalainen
+STR_MAPGEN_TOWN_NAME_DUTCH                                      :Hollantilainen
+STR_MAPGEN_TOWN_NAME_FINNISH                                    :Suomalainen
+STR_MAPGEN_TOWN_NAME_POLISH                                     :Puolalainen
+STR_MAPGEN_TOWN_NAME_SLOVAK                                     :Slovakialainen
+STR_MAPGEN_TOWN_NAME_NORWEGIAN                                  :Norjalainen
+STR_MAPGEN_TOWN_NAME_HUNGARIAN                                  :Unkarilainen
+STR_MAPGEN_TOWN_NAME_AUSTRIAN                                   :Itävaltalainen
+STR_MAPGEN_TOWN_NAME_ROMANIAN                                   :Romanialainen
+STR_MAPGEN_TOWN_NAME_CZECH                                      :Tšekkiläinen
+STR_MAPGEN_TOWN_NAME_SWISS                                      :Sveitsiläinen
+STR_MAPGEN_TOWN_NAME_DANISH                                     :Tanskalainen
+STR_MAPGEN_TOWN_NAME_TURKISH                                    :Turkkilainen
+STR_MAPGEN_TOWN_NAME_ITALIAN                                    :Italialainen
+STR_MAPGEN_TOWN_NAME_CATALAN                                    :Katalonialainen
 
 # Strings for map borders at game generation
 STR_MAPGEN_BORDER_TYPE                                          :{BLACK}Kartan reunat:
@@ -3660,7 +3642,6 @@ STR_FINANCES_SECTION_OTHER                                      :{GOLD}Muut
 
 STR_FINANCES_NEGATIVE_INCOME                                    :-{CURRENCY_LONG}
 STR_FINANCES_POSITIVE_INCOME                                    :+{CURRENCY_LONG}
-STR_FINANCES_NET_PROFIT                                         :{WHITE}Puhdas voitto
 STR_FINANCES_BANK_BALANCE_TITLE                                 :{WHITE}Tilin saldo
 STR_FINANCES_OWN_FUNDS_TITLE                                    :{WHITE}Omat varat
 STR_FINANCES_LOAN_TITLE                                         :{WHITE}Laina
@@ -3888,6 +3869,8 @@ STR_PURCHASE_INFO_ALL_BUT                                       :Kaikki paitsi {
 STR_PURCHASE_INFO_MAX_TE                                        :{BLACK}Suurin vetovoima: {GOLD}{FORCE}
 STR_PURCHASE_INFO_AIRCRAFT_RANGE                                :{BLACK}Toimintasäde: {GOLD}{COMMA} ruutua
 STR_PURCHASE_INFO_AIRCRAFT_TYPE                                 :{BLACK}Ilma-alustyyppi: {GOLD}{STRING}
+
+###length 3
 
 ###length VEHICLE_TYPES
 STR_BUY_VEHICLE_TRAIN_LIST_TOOLTIP                              :{BLACK}Raideliikennevälineiden valintaluettelo. Napsauta kulkuneuvoa saadaksesi lisää tietoa. Ctrl+napsautus näyttää tai piilottaa kulkuneuvon tyypin.
@@ -4549,12 +4532,12 @@ STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}Yksi kä
 STR_ERROR_AI_DEBUG_SERVER_ONLY                                  :{YELLOW}Tekoälyn/peliskriptin virheenjäljitysikkuna on vain palvelimen käytettävissä
 
 # AI configuration window
-STR_AI_CONFIG_CAPTION                                           :{WHITE}Tekoälyn/peliskriptin määritteet
 STR_AI_CONFIG_GAMELIST_TOOLTIP                                  :{BLACK}Seuraavassa pelissä ladattava peliskripti
 STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}Seuraavassa pelissä ladattavat tekoälyt
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Ihmispelaaja
 STR_AI_CONFIG_RANDOM_AI                                         :Sattumanvarainen tekoäly
 STR_AI_CONFIG_NONE                                              :(ei mitään)
+STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Vastustajien enimmäismäärä: {ORANGE}{COMMA}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Siirrä ylöspäin
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Siirrä valittua tekoälyä ylöspäin listalla
@@ -4564,8 +4547,6 @@ STR_AI_CONFIG_MOVE_DOWN_TOOLTIP                                 :{BLACK}Siirrä 
 STR_AI_CONFIG_GAMESCRIPT                                        :{SILVER}Peliskripti
 STR_AI_CONFIG_AI                                                :{SILVER}Tekoälyt
 
-STR_AI_CONFIG_CHANGE                                            :{BLACK}Valitse {STRING}
-STR_AI_CONFIG_CHANGE_NONE                                       :
 STR_AI_CONFIG_CHANGE_AI                                         :Tekoäly
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :Peliskripti
 STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Lataa toinen skripti
@@ -4596,9 +4577,7 @@ STR_SCREENSHOT_HEIGHTMAP_SCREENSHOT                             :{BLACK}Korkeusk
 STR_SCREENSHOT_MINIMAP_SCREENSHOT                               :{BLACK}Pienoiskartan kuvakaappaus
 
 # AI Parameters
-STR_AI_SETTINGS_CAPTION                                         :{WHITE}{STRING} Parametrit
 STR_AI_SETTINGS_CAPTION_AI                                      :Tekoäly
-STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Peliskripti
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Sulje
 STR_AI_SETTINGS_RESET                                           :{BLACK}Palauta
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
@@ -5014,6 +4993,7 @@ STR_ERROR_TOO_MANY_VEHICLES_IN_GAME                             :{WHITE}Liian mo
 STR_ERROR_CAN_T_CHANGE_SERVICING                                :{WHITE}Huoltoväliä ei voi muuttaa.
 
 STR_ERROR_VEHICLE_IS_DESTROYED                                  :{WHITE}... kulkuneuvo on tuhoutunut
+
 
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL                          :{WHITE}Yhtään kulkuneuvoa ei ole saatavilla
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Muuta NewGRF-asetuksiasi

@@ -450,6 +450,7 @@ Vehicle::Vehicle(VehicleType type)
 	this->cargo_age_counter  = 1;
 	this->last_station_visited = INVALID_STATION;
 	this->last_loading_station = INVALID_STATION;
+	this->last_loading_tick = 0;
 	this->cur_image_valid_dir  = INVALID_DIR;
 	this->vcache.cached_veh_flags = 0;
 }
@@ -1473,7 +1474,7 @@ void CallVehicleTicks()
 
 		Vehicle *v = nullptr;
 		SCOPE_INFO_FMT([&v], "CallVehicleTicks -> OnPeriodic: %s", scope_dumper().VehicleInfo(v));
-		for (size_t i = _scaled_tick_counter & 0x1FF; i < Vehicle::GetPoolSize(); i += 0x200) {
+		for (size_t i = (size_t)(_scaled_tick_counter & 0x1FF); i < Vehicle::GetPoolSize(); i += 0x200) {
 			v = Vehicle::Get(i);
 			if (v == nullptr) continue;
 
@@ -3142,6 +3143,7 @@ static void VehicleIncreaseStats(const Vehicle *front)
 {
 	for (const Vehicle *v = front; v != nullptr; v = v->Next()) {
 		StationID last_loading_station = HasBit(front->vehicle_flags, VF_LAST_LOAD_ST_SEP) ? v->last_loading_station : front->last_loading_station;
+		uint64 loading_tick = HasBit(front->vehicle_flags, VF_LAST_LOAD_ST_SEP) ? v->last_loading_tick : front->last_loading_tick;
 		if (v->refit_cap > 0 &&
 				last_loading_station != INVALID_STATION &&
 				last_loading_station != front->last_station_visited &&
@@ -3156,7 +3158,7 @@ static void VehicleIncreaseStats(const Vehicle *front)
 			EdgeUpdateMode restricted_mode = EUM_INCREASE;
 			if (v->type == VEH_AIRCRAFT) restricted_mode |= EUM_AIRCRAFT;
 			IncreaseStats(Station::Get(last_loading_station), v->cargo_type, front->last_station_visited, v->refit_cap,
-				std::min<uint>(v->refit_cap, v->cargo.StoredCount()), restricted_mode);
+				std::min<uint>(v->refit_cap, v->cargo.StoredCount()), _scaled_tick_counter - loading_tick, restricted_mode);
 		}
 	}
 }
@@ -3377,6 +3379,7 @@ void Vehicle::LeaveStation()
 
 			/* if the vehicle could load here or could stop with cargo loaded set the last loading station */
 			this->last_loading_station = this->last_station_visited;
+			this->last_loading_tick = _scaled_tick_counter;
 			ClrBit(this->vehicle_flags, VF_LAST_LOAD_ST_SEP);
 		} else if (cargoes_can_leave_with_cargo == 0) {
 			/* can leave with no cargoes */
@@ -3390,16 +3393,20 @@ void Vehicle::LeaveStation()
 
 			/* NB: this is saved here as we overwrite it on the first iteration of the loop below */
 			StationID head_last_loading_station = this->last_loading_station;
+			uint64 head_last_loading_tick = this->last_loading_tick;
 			for (Vehicle *u = this; u != nullptr; u = u->Next()) {
 				StationID last_loading_station = HasBit(this->vehicle_flags, VF_LAST_LOAD_ST_SEP) ? u->last_loading_station : head_last_loading_station;
+				uint64 last_loading_tick = HasBit(this->vehicle_flags, VF_LAST_LOAD_ST_SEP) ? u->last_loading_tick : head_last_loading_tick;
 				if (u->cargo_type < NUM_CARGO && HasBit(cargoes_can_load_unload, u->cargo_type)) {
 					if (HasBit(cargoes_can_leave_with_cargo, u->cargo_type)) {
 						u->last_loading_station = this->last_station_visited;
+						u->last_loading_tick = _scaled_tick_counter;
 					} else {
 						u->last_loading_station = INVALID_STATION;
 					}
 				} else {
 					u->last_loading_station = last_loading_station;
+					u->last_loading_tick = last_loading_tick;
 				}
 			}
 			SetBit(this->vehicle_flags, VF_LAST_LOAD_ST_SEP);
@@ -4556,6 +4563,13 @@ void DumpVehicleStats(char *buffer, const char *last)
 	buffer += seprintf(buffer, last, "  %10s: %5u\n", "total", (uint)Vehicle::GetNumItems());
 }
 
+void AdjustVehicleScaledTickBase(int64 delta)
+{
+	for (Vehicle *v : Vehicle::Iterate()) {
+		v->last_loading_tick += delta;
+	}
+}
+
 void ShiftVehicleDates(int interval)
 {
 	for (Vehicle *v : Vehicle::Iterate()) {
@@ -4564,4 +4578,68 @@ void ShiftVehicleDates(int interval)
 
 	extern void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaled delta);
 	AdjustAllSignalSpeedRestrictionTickValues(interval * DAY_TICKS * _settings_game.economy.day_length_factor);
+
+	AdjustVehicleScaledTickBase(interval * DAY_TICKS * _settings_game.economy.day_length_factor);
+}
+
+/**
+ * Calculates the maximum weight of the ground vehicle when loaded.
+ * @return Weight in tonnes
+ */
+uint32 Vehicle::GetDisplayMaxWeight() const
+{
+	uint32 max_weight = 0;
+
+	for (const Vehicle* u = this; u != nullptr; u = u->Next()) {
+		max_weight += u->GetMaxWeight();
+	}
+
+	return max_weight;
+}
+
+/**
+ * Calculates the minimum power-to-weight ratio using the maximum weight of the ground vehicle
+ * @return power-to-weight ratio in 10ths of hp(I) per tonne
+ */
+uint32 Vehicle::GetDisplayMinPowerToWeight() const
+{
+	uint32 max_weight = GetDisplayMaxWeight();
+	if (max_weight == 0) return 0;
+	return GetGroundVehicleCache()->cached_power * 10u / max_weight;
+}
+
+/**
+ * Checks if two vehicle chains have the same list of engines.
+ * @param v1 First vehicle chain.
+ * @param v1 Second vehicle chain.
+ * @return True if same, false if different.
+ */
+bool VehiclesHaveSameEngineList(const Vehicle *v1, const Vehicle *v2)
+{
+	while (true) {
+		if (v1 == nullptr && v2 == nullptr) return true;
+		if (v1 == nullptr || v2 == nullptr) return false;
+		if (v1->GetEngine() != v2->GetEngine()) return false;
+		v1 = v1->GetNextVehicle();
+		v2 = v2->GetNextVehicle();
+	}
+}
+
+/**
+ * Checks if two vehicles have the same list of orders.
+ * @param v1 First vehicles.
+ * @param v1 Second vehicles.
+ * @return True if same, false if different.
+ */
+bool VehiclesHaveSameOrderList(const Vehicle *v1, const Vehicle *v2)
+{
+	const Order *o1 = v1->GetFirstOrder();
+	const Order *o2 = v2->GetFirstOrder();
+	while (true) {
+		if (o1 == nullptr && o2 == nullptr) return true;
+		if (o1 == nullptr || o2 == nullptr) return false;
+		if (!o1->Equals(*o2)) return false;
+		o1 = o1->next;
+		o2 = o2->next;
+	}
 }

@@ -760,11 +760,24 @@ static const Units _units_velocity[] = {
 	{ {37888, 16}, STR_UNITS_VELOCITY_GAMEUNITS,    1 },
 };
 
-/** Unit conversions for velocity. */
+/** Unit conversions for power. */
 static const Units _units_power[] = {
 	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL, 0 },
 	{ {4153, 12}, STR_UNITS_POWER_METRIC,   0 },
 	{ {6109, 13}, STR_UNITS_POWER_SI,       0 },
+};
+
+/** Unit conversions for power to weight. */
+static const Units _units_power_to_weight[] = {
+	{ {  29,  5}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL, 1},
+	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC, 1},
+	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_SI, 1},
+	{ {  59,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_IMPERIAL, 1},
+	{ {  65,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_METRIC, 1},
+	{ {  65,  6}, STR_UNITS_POWER_METRIC_TO_WEIGHT_SI, 1},
+	{ { 173,  8}, STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL, 1},
+	{ {   3,  2}, STR_UNITS_POWER_SI_TO_WEIGHT_METRIC, 1},
+	{ {   3,  2}, STR_UNITS_POWER_SI_TO_WEIGHT_SI, 1},
 };
 
 /** Unit conversions for weight. */
@@ -1582,6 +1595,19 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
+			case SCC_POWER_TO_WEIGHT: { // {POWER_TO_WEIGHT}
+				auto setting = _settings_game.locale.units_power * 3u + _settings_game.locale.units_weight;
+				assert(setting < lengthof(_units_power_to_weight));
+
+				auto const &x = _units_power_to_weight[setting];
+
+				int64 args_array[] = {x.c.ToDisplay(args->GetInt64()), x.decimal_places};
+
+				StringParameters tmp_params(args_array);
+				buff = FormatString(buff, GetStringPtr(x.s), &tmp_params, last);
+				break;
+			}
+
 			case SCC_VELOCITY: { // {VELOCITY}
 				assert(_settings_game.locale.units_velocity < lengthof(_units_velocity));
 				unsigned int decimal_places = _units_velocity[_settings_game.locale.units_velocity].decimal_places;
@@ -2213,6 +2239,7 @@ bool ReadLanguagePack(const LanguageMetadata *lang)
 	BuildIndustriesLegend();
 	BuildContentTypeStringList();
 	InvalidateWindowClassesData(WC_BUILD_VEHICLE);      // Build vehicle window.
+	InvalidateWindowClassesData(WC_BUILD_VIRTUAL_TRAIN);// Build template trains window.
 	InvalidateWindowClassesData(WC_TRAINS_LIST);        // Train group window.
 	InvalidateWindowClassesData(WC_TRACE_RESTRICT_SLOTS);// Trace restrict slots window.
 	InvalidateWindowClassesData(WC_ROADVEH_LIST);       // Road vehicle group window.

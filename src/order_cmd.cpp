@@ -871,7 +871,7 @@ void OrderList::DebugCheckSanity() const
 static inline bool OrderGoesToStation(const Vehicle *v, const Order *o)
 {
 	return o->IsType(OT_GOTO_STATION) ||
-			(v->type == VEH_AIRCRAFT && o->IsType(OT_GOTO_DEPOT) && !(o->GetDepotActionType() & ODATFB_NEAREST_DEPOT));
+			(v->type == VEH_AIRCRAFT && o->IsType(OT_GOTO_DEPOT) && !(o->GetDepotActionType() & ODATFB_NEAREST_DEPOT) && o->GetDestination() != INVALID_STATION);
 }
 
 /**
@@ -917,7 +917,8 @@ TileIndex Order::GetLocation(const Vehicle *v, bool airport) const
 			return BaseStation::Get(this->GetDestination())->xy;
 
 		case OT_GOTO_DEPOT:
-			if ((this->GetDepotActionType() & ODATFB_NEAREST_DEPOT) != 0) return INVALID_TILE;
+			if (this->GetDepotActionType() & ODATFB_NEAREST_DEPOT) return INVALID_TILE;
+			if (this->GetDestination() == INVALID_DEPOT) return INVALID_TILE;
 			return (v->type == VEH_AIRCRAFT) ? Station::Get(this->GetDestination())->xy : Depot::Get(this->GetDestination())->xy;
 
 		default:
@@ -965,7 +966,7 @@ uint GetOrderDistance(const Order *prev, const Order *cur, const Vehicle *v, int
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, uint32 binary_length)
+CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, const CommandAuxiliaryBase *aux_data)
 {
 	VehicleID veh          = GB(p1,  0, 20);
 	VehicleOrderID sel_ord = GB(p2,  0, 16);
@@ -1757,7 +1758,7 @@ CommandCost CmdReverseOrderList(TileIndex tile, DoCommandFlag flags, uint32 p1, 
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, uint32 binary_length)
+CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, const CommandAuxiliaryBase *aux_data)
 {
 	VehicleOrderID sel_ord = GB(p3,  0, 16);
 	VehicleID veh          = GB(p1,  0, 20);
@@ -2122,7 +2123,10 @@ CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 						break;
 
 					case OCV_TIMETABLE:
-						if (!old_var_was_tt) order->GetXDataRef() = 0;
+						if (!old_var_was_tt) {
+							order->SetConditionValue(0);
+							order->GetXDataRef() = 0;
+						}
 						if (occ == OCC_IS_TRUE || occ == OCC_IS_FALSE || occ == OCC_EQUALS || occ == OCC_NOT_EQUALS) order->SetConditionComparator(OCC_LESS_THAN);
 						break;
 
@@ -2716,7 +2720,12 @@ void CheckOrders(const Vehicle *v)
 		if (v->orders != nullptr) v->orders->DebugCheckSanity();
 #endif
 
-		if (message == INVALID_STRING_ID && !has_depot_order && v->type != VEH_AIRCRAFT && _settings_client.gui.no_depot_order_warn) message = STR_NEWS_VEHICLE_NO_DEPOT_ORDER;
+		if (message == INVALID_STRING_ID && !has_depot_order && v->type != VEH_AIRCRAFT) {
+			if (_settings_client.gui.no_depot_order_warn == 1 ||
+					(_settings_client.gui.no_depot_order_warn == 2 && _settings_game.difficulty.vehicle_breakdowns != 0)) {
+				message = STR_NEWS_VEHICLE_NO_DEPOT_ORDER;
+			}
+		}
 
 		/* We don't have a problem */
 		if (message == INVALID_STRING_ID) return;
@@ -3226,7 +3235,7 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 					if (pbs_look_ahead && reverse) return false;
 
 					v->SetDestTile(location);
-					v->current_order.MakeGoToDepot(destination, v->current_order.GetDepotOrderType(), v->current_order.GetNonStopType(), (OrderDepotActionFlags)(v->current_order.GetDepotActionType() & ~ODATFB_NEAREST_DEPOT), v->current_order.GetRefitCargo());
+					v->current_order.SetDestination(destination);
 
 					/* If there is no depot in front, reverse automatically (trains only) */
 					if (v->type == VEH_TRAIN && reverse) DoCommand(v->tile, v->index, 0, DC_EXEC, CMD_REVERSE_TRAIN_DIRECTION);
@@ -3500,6 +3509,7 @@ bool Order::CanLeaveWithCargo(bool has_cargo, CargoID cargo) const
  * - p1 = (bit  0 - 15) - The destination ID to change from
  * - p1 = (bit 16 - 18) - The vehicle type
  * - p1 = (bit 20 - 23) - The order type
+ * - p1 = (bit 24 - 31) - Cargo filter
  * @param p2 various bitstuffed elements
   * - p2 = (bit  0 - 15) - The destination ID to change to
  * @param text unused
@@ -3510,11 +3520,12 @@ CommandCost CmdMassChangeOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 	DestinationID from_dest = GB(p1, 0, 16);
 	VehicleType vehtype = Extract<VehicleType, 16, 3>(p1);
 	OrderType order_type = (OrderType) GB(p1, 20, 4);
+	CargoID cargo_filter = GB(p1, 24, 8);
 	DestinationID to_dest = GB(p2, 0, 16);
 
 	if (flags & DC_EXEC) {
 		for (Vehicle *v : Vehicle::Iterate()) {
-			if (v->type == vehtype && v->IsPrimaryVehicle() && CheckOwnership(v->owner).Succeeded()) {
+			if (v->type == vehtype && v->IsPrimaryVehicle() && CheckOwnership(v->owner).Succeeded() && VehicleCargoFilter(v, cargo_filter)) {
 				int index = 0;
 				bool changed = false;
 
@@ -3566,4 +3577,26 @@ void ShiftOrderDates(int interval)
 	SetWindowClassesDirty(WC_VEHICLE_TIMETABLE);
 	SetWindowClassesDirty(WC_SCHDISPATCH_SLOTS);
 	InvalidateWindowClassesData(WC_DEPARTURES_BOARD, 0);
+}
+
+const char *GetOrderTypeName(OrderType order_type)
+{
+	static const char *names[] = {
+		"OT_NOTHING",
+		"OT_GOTO_STATION",
+		"OT_GOTO_DEPOT",
+		"OT_LOADING",
+		"OT_LEAVESTATION",
+		"OT_DUMMY",
+		"OT_GOTO_WAYPOINT",
+		"OT_CONDITIONAL",
+		"OT_IMPLICIT",
+		"OT_WAITING",
+		"OT_LOADING_ADVANCE",
+		"OT_RELEASE_SLOT",
+		"OT_COUNTER",
+	};
+	static_assert(lengthof(names) == OT_END);
+	if (order_type < OT_END) return names[order_type];
+	return "???";
 }

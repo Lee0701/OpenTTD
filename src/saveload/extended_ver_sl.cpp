@@ -164,7 +164,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_BANKRUPTCY_EXTRA,       XSCF_NULL,                2,   2, "bankruptcy_extra",          nullptr, nullptr, nullptr        },
 	{ XSLFI_OBJECT_GROUND_TYPES,    XSCF_NULL,                3,   3, "object_ground_types",       nullptr, nullptr, nullptr        },
 	{ XSLFI_LINKGRAPH_AIRCRAFT,     XSCF_NULL,                1,   1, "linkgraph_aircraft",        nullptr, nullptr, nullptr        },
-	{ XSLFI_COMPANY_PW,             XSCF_IGNORABLE_ALL,       1,   1, "company_password",          nullptr, nullptr, "PLYP"         },
+	{ XSLFI_COMPANY_PW,             XSCF_IGNORABLE_ALL,       2,   2, "company_password",          nullptr, nullptr, "PLYP"         },
 	{ XSLFI_ST_INDUSTRY_CARGO_MODE, XSCF_IGNORABLE_UNKNOWN,   1,   1, "st_industry_cargo_mode",    nullptr, nullptr, nullptr        },
 	{ XSLFI_TL_SPEED_LIMIT,         XSCF_IGNORABLE_UNKNOWN,   1,   1, "tl_speed_limit",            nullptr, nullptr, nullptr        },
 	{ XSLFI_WAYPOINT_FLAGS,         XSCF_NULL,                1,   1, "waypoint_flags",            nullptr, nullptr, nullptr        },
@@ -176,8 +176,12 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_NEW_SIGNAL_STYLES,      XSCF_NULL,                2,   2, "new_signal_styles",         nullptr, nullptr, "XBST,NSID"    },
 	{ XSLFI_NO_TREE_COUNTER,        XSCF_IGNORABLE_ALL,       1,   1, "no_tree_counter",           nullptr, nullptr, nullptr        },
 	{ XSLFI_TOWN_SETTING_OVERRIDE,  XSCF_NULL,                1,   1, "town_setting_override",     nullptr, nullptr, nullptr        },
+	{ XSLFI_LINKGRAPH_SPARSE_EDGES, XSCF_NULL,                1,   1, "linkgraph_sparse_edges",    nullptr, nullptr, nullptr        },
 	{ XSLFI_SCRIPT_INT64,           XSCF_NULL,                1,   1, "script_int64",              nullptr, nullptr, nullptr        },
 	{ XSLFI_U64_TICK_COUNTER,       XSCF_NULL,                1,   1, "u64_tick_counter",          nullptr, nullptr, nullptr        },
+	{ XSLFI_LINKGRAPH_TRAVEL_TIME,  XSCF_NULL,                1,   1, "linkgraph_travel_time",     nullptr, nullptr, nullptr        },
+	{ XSLFI_LAST_LOADING_TICK,      XSCF_NULL,                2,   2, "last_loading_tick",         nullptr, nullptr, nullptr        },
+	{ XSLFI_SCRIPT_LEAGUE_TABLES,   XSCF_NULL,                1,   1, "script_league_tables",      nullptr, nullptr, "LEAE,LEAT"    },
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr },// This is the end marker
 };
 

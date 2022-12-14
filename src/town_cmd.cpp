@@ -2081,6 +2081,13 @@ void UpdateTownRadius(Town *t)
 	}
 }
 
+void UpdateTownRadii()
+{
+	for (Town *town : Town::Iterate()) {
+		UpdateTownRadius(town);
+	}
+}
+
 void UpdateTownMaxPass(Town *t)
 {
 	t->supplied[CT_PASSENGERS].old_max = t->cache.population >> 3;
@@ -2624,7 +2631,7 @@ static inline void ClearMakeHouseTile(TileIndex tile, Town *t, byte counter, byt
 
 	IncreaseBuildingCount(t, type);
 	MakeHouseTile(tile, t->index, counter, stage, type, random_bits);
-	if (HouseSpec::Get(type)->building_flags & BUILDING_IS_ANIMATED) AddAnimatedTile(tile);
+	if (HouseSpec::Get(type)->building_flags & BUILDING_IS_ANIMATED) AddAnimatedTile(tile, false);
 
 	MarkTileDirtyByTile(tile);
 }
@@ -3809,8 +3816,6 @@ CommandCost CmdDoTownAction(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
  */
 CommandCost CmdOverrideTownSetting(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	if (_networking && !_settings_game.difficulty.override_town_settings_in_multiplayer) return CMD_ERROR;
-
 	Town *t = Town::GetIfValid(p1);
 	if (t == nullptr) return CMD_ERROR;
 
@@ -3854,6 +3859,25 @@ CommandCost CmdOverrideTownSetting(TileIndex tile, DoCommandFlag flags, uint32 p
 	}
 
 	return CommandCost();
+}
+
+/**
+ * Override a town setting (non-admin use)
+ * @param tile unused
+ * @param flags type of operation
+ * @param p1 town to do the action at
+ * @param p2 various bitstuffed elements
+ *  - p2 = (bit 0  -  7) - what setting to change
+ *  - p2 = (bit 8  - 15) - the data to modify
+ *  - p2 = (bit 16)      - whether to override the value, or use the default
+ * @param text unused
+ * @return the cost of this operation or an error
+ */
+CommandCost CmdOverrideTownSettingNonAdmin(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+{
+	if (_networking && !_settings_game.difficulty.override_town_settings_in_multiplayer) return CMD_ERROR;
+
+	return CmdOverrideTownSetting(tile, flags, p1, p2, text);
 }
 
 template <typename Func>
