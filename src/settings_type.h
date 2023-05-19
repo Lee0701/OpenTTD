@@ -316,7 +316,8 @@ struct MusicSettings {
 /** Settings related to currency/unit systems. */
 struct LocaleSettings {
 	byte        currency;                         ///< currency we currently use
-	byte        units_velocity;                   ///< unit system for velocity
+	byte        units_velocity;                   ///< unit system for velocity of trains and road vehicles
+	byte        units_velocity_nautical;          ///< unit system for velocity of ships and aircraft
 	byte        units_power;                      ///< unit system for power
 	byte        units_weight;                     ///< unit system for weight
 	byte        units_volume;                     ///< unit system for volume
@@ -416,6 +417,7 @@ struct GameCreationSettings {
 	byte   landscape;                        ///< the landscape we're currently in
 	byte   water_borders;                    ///< bitset of the borders that are water
 	uint16 custom_town_number;               ///< manually entered number of towns
+	uint16 custom_industry_number;           ///< manually entered number of industries
 	byte   variety;                          ///< variety level applied to TGP
 	byte   custom_terrain_type;              ///< manually entered height for TGP to aim for
 	byte   custom_sea_level;                 ///< manually entered percentage of water in the map
@@ -431,7 +433,6 @@ struct GameCreationSettings {
 	uint8  amount_of_rocks;                  ///< the amount of rocks
 	uint8  height_affects_rocks;             ///< the affect that map height has on rocks
 	uint8  build_public_roads;               ///< build public roads connecting towns
-	uint16 custom_industry_number;           ///< manually entered number of industries
 };
 
 /** Settings related to construction in-game */
@@ -642,11 +643,11 @@ struct VehicleSettings {
 	uint8  repair_cost;                      ///< cost of repairing vehicle
 	bool   ship_collision_avoidance;         ///< ships try to avoid colliding with each other
 	bool   no_train_crash_other_company;     ///< trains cannot crash with trains from other companies
-	bool   flip_direction_all_trains;        ///< enable flipping direction in depot for all train engine types
 	bool   roadveh_articulated_overtaking;   ///< enable articulated road vehicles overtaking other vehicles
 	bool   roadveh_cant_quantum_tunnel;      ///< enable or disable vehicles quantum tunelling through over vehicles when blocked
 	bool   drive_through_train_depot;        ///< enable drive-through train depot emulation
 	uint16 through_load_speed_limit;         ///< maximum speed for through load
+	uint16 rail_depot_speed_limit;           ///< maximum speed entering/existing rail depots
 };
 
 /** Settings related to the economy. */
@@ -696,12 +697,15 @@ struct EconomySettings {
 	bool   allow_town_level_crossings;       ///< towns are allowed to build level crossings
 	TownTunnelMode town_build_tunnels;       ///< if/when towns are allowed to build road tunnels
 	uint8  town_max_road_slope;              ///< maximum number of consecutive sloped road tiles which towns are allowed to build
+	bool   allow_town_bridges;               ///< towns are allowed to build bridges
 	int8   old_town_cargo_factor;            ///< old power-of-two multiplier for town (passenger, mail) generation. May be negative.
 	int16  town_cargo_scale_factor;          ///< scaled power-of-two multiplier for town (passenger, mail) generation. May be negative.
 	int16  industry_cargo_scale_factor;      ///< scaled power-of-two multiplier for primary industry generation. May be negative.
 	bool   infrastructure_maintenance;       ///< enable monthly maintenance fee for owner infrastructure
 	uint8  day_length_factor;                ///< factor which the length of day is multiplied
 	uint16 random_road_reconstruction;       ///< chance out of 1000 per tile loop for towns to start random road re-construction
+	bool disable_inflation_newgrf_flag;      ///< Disable NewGRF inflation flag
+	CargoPaymentAlgorithm payment_algorithm; ///< Cargo payment algorithm
 };
 
 struct LinkGraphSettings {
@@ -766,6 +770,7 @@ struct CompanySettings {
 	uint16 timetable_autofill_rounding;      ///< round up timetable times to be a multiple of this number of ticks
 	bool advance_order_on_clone;             ///< when cloning a vehicle or copying/sharing an order list, advance the current order to a suitable point
 	bool copy_clone_add_to_group;            ///< whether to add cloned vehicles to the source vehicle's group, when cloning a vehicle without sharing orders
+	bool remain_if_next_order_same_station;  ///< if the next order is for the same station, start loading/unloading again instead of leaving.
 
 	byte old_simulated_wormhole_signals;     ///< no longer needs a setting: tunnel/bridge signal simulation spacing
 };

@@ -24,6 +24,7 @@
 #include "window_gui.h"
 #include "window_func.h"
 #include "zoom_func.h"
+#include "core/backup_type.hpp"
 
 #include "widgets/object_widget.h"
 
@@ -116,6 +117,7 @@ public:
 
 		NWidgetMatrix *matrix = this->GetWidget<NWidgetMatrix>(WID_BO_SELECT_MATRIX);
 		matrix->SetScrollbar(this->GetScrollbar(WID_BO_SELECT_SCROLL));
+		matrix->SetCount(ObjectClass::Get(_selected_object_class)->GetUISpecCount());
 
 		this->GetWidget<NWidgetMatrix>(WID_BO_OBJECT_MATRIX)->SetCount(4);
 
@@ -153,7 +155,7 @@ public:
 
 		this->object_classes.clear();
 
-		for (uint i = 0; i < ObjectClass::GetClassCount(); i++) {
+		for (uint i = 0; ObjectClass::IsClassIDValid((ObjectClassID)i); i++) {
 			ObjectClass *objclass = ObjectClass::Get((ObjectClassID)i);
 			if (objclass->GetUISpecCount() == 0) continue; // Is this needed here?
 			object_classes.push_back((ObjectClassID)i);
@@ -181,7 +183,7 @@ public:
 			/* Check if the previously selected object class is not available anymore as a
 			 * result of starting a new game without the corresponding NewGRF. */
 			bool available = false;
-			for (uint i = 0; ObjectClass::GetClassCount(); ++i) {
+			for (uint i = 0; ObjectClass::IsClassIDValid((ObjectClassID)i); ++i) {
 				if ((ObjectClassID)i == _selected_object_class) {
 					available = true;
 					break;
@@ -238,9 +240,8 @@ public:
 				for (auto object_class_id : this->object_classes) {
 					ObjectClass *objclass = ObjectClass::Get(object_class_id);
 					if (objclass->GetUISpecCount() == 0) continue;
-					size->width = std::max(size->width, GetStringBoundingBox(objclass->name).width);
+					size->width = std::max(size->width, GetStringBoundingBox(objclass->name).width + padding.width);
 				}
-				size->width += padding.width;
 				this->line_height = FONT_HEIGHT_NORMAL + padding.height;
 				resize->height = this->line_height;
 				size->height = 5 * this->line_height;
@@ -271,11 +272,10 @@ public:
 				uint height[2] = {0, 0}; // The height for the different views; in this case views 1/2 and 4.
 
 				/* Get the height and view information. */
-				for (int i = 0; i < NUM_OBJECTS; i++) {
-					const ObjectSpec *spec = ObjectSpec::Get(i);
-					if (!spec->IsEverAvailable()) continue;
-					two_wide |= spec->views >= 2;
-					height[spec->views / 4] = std::max<int>(ObjectSpec::Get(i)->height, height[spec->views / 4]);
+				for (const auto &spec : ObjectSpec::Specs()) {
+					if (!spec.IsEverAvailable()) continue;
+					two_wide |= spec.views >= 2;
+					height[spec.views / 4] = std::max<int>(spec.height, height[spec.views / 4]);
 				}
 
 				/* Determine the pixel heights. */
@@ -359,8 +359,7 @@ public:
 				DrawPixelInfo tmp_dpi;
 				/* Set up a clipping area for the preview. */
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					if (spec->grf_prop.grffile == nullptr) {
 						extern const DrawTileSprites _objects[];
 						const DrawTileSprites *dts = &_objects[spec->grf_prop.local_id];
@@ -368,7 +367,6 @@ public:
 					} else {
 						DrawNewObjectTileInGUI(r.Width() / 2 - 1, (r.Height() + matrix_height / 2) / 2 - this->object_margin - ScaleSpriteTrad(TILE_PIXELS), spec, GB(widget, 16, 16));
 					}
-					_cur_dpi = old_dpi;
 				}
 				break;
 			}
@@ -386,8 +384,7 @@ public:
 				DrawPixelInfo tmp_dpi;
 				/* Set up a clipping area for the preview. */
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					if (spec->grf_prop.grffile == nullptr) {
 						extern const DrawTileSprites _objects[];
 						const DrawTileSprites *dts = &_objects[spec->grf_prop.local_id];
@@ -396,7 +393,6 @@ public:
 						DrawNewObjectTileInGUI(r.Width() / 2 - 1, r.Height() - this->object_margin - ScaleSpriteTrad(TILE_PIXELS), spec,
 								std::min<int>(_selected_object_view, spec->views - 1));
 					}
-					_cur_dpi = old_dpi;
 				}
 				break;
 			}
@@ -755,7 +751,7 @@ static WindowDesc _build_object_desc(
 Window *ShowBuildObjectPicker()
 {
 	/* Don't show the place object button when there are no objects to place. */
-	if (ObjectClass::GetUIClassCount() > 0) {
+	if (ObjectClass::HasUIClass()) {
 		return AllocateWindowDescFront<BuildObjectWindow>(&_build_object_desc, 0);
 	}
 	return nullptr;

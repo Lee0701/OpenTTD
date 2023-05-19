@@ -176,10 +176,8 @@ void ErrorMessageData::SetDParamStr(uint n, const std::string &str)
 	this->SetDParamStr(n, str.c_str());
 }
 
-/** Define a queue with errors. */
-typedef std::list<ErrorMessageData> ErrorList;
 /** The actual queue with errors. */
-ErrorList _error_list;
+static ErrorList _error_list;
 /** Whether the window system is initialized or not. */
 bool _window_system_initialized = false;
 
@@ -239,7 +237,7 @@ public:
 		int scr_bot = GetMainViewBottom() - 20;
 
 		Point pt = RemapCoords(this->position.x, this->position.y, GetSlopePixelZOutsideMap(this->position.x, this->position.y));
-		const Viewport *vp = FindWindowById(WC_MAIN_WINDOW, 0)->viewport;
+		const Viewport *vp = GetMainWindow()->viewport;
 		if (this->face == INVALID_COMPANY) {
 			/* move x pos to opposite corner */
 			pt.x = UnScaleByZoom(pt.x - vp->virtual_left, vp->zoom) + vp->left;

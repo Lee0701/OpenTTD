@@ -574,11 +574,7 @@ STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mp
 STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
 STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}p{P ole ola ól}/dzień
-
-STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
-STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
-STR_UNIT_NAME_VELOCITY_SI                                       :m/s
-STR_UNIT_NAME_VELOCITY_GAMEUNITS                                :pola/dzień
+STR_UNITS_VELOCITY_KNOTS                                        :{COMMA}{NBSP}w.
 
 STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
 STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}KM
@@ -628,7 +624,6 @@ STR_TOOLTIP_SORT_ORDER                                          :{BLACK}Wybierz 
 STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}Wybierz kryterium sortowania
 STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK}Wybierz kryteria filtrowania
 STR_BUTTON_SORT_BY                                              :{BLACK}Sortuj wg
-STR_BUTTON_RENAME                                               :{BLACK}Zmień nazwę
 STR_BUTTON_CATCHMENT                                            :{BLACK}Zasięg
 STR_TOOLTIP_CATCHMENT                                           :{BLACK}Przełącz wyświetlanie zasięgu
 
@@ -728,9 +723,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}Otwórz 
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Pauza
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Przyspieszenie czasu w grze
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Opcje
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Zapis gry, opuszczenie gry, wyjście
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Wyświetl mapę, dodatkowy podgląd lub listę napisów
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Opcje i ustawienia
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Zapis, wczytanie lub opuszczenie rozgrywki, zamknięcie programu
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Wyświetl mapę, dodatkowy podgląd, przepływ ładunków lub listę napisów
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Wyświetl listę miast
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Wyświetl dotacje
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Wyświetl listę stacji firmy
@@ -738,9 +733,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Wyświet
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Wyświetl informacje ogólne firmy
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Wyświetl przewodnik
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK}Wyświetl listę celów
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Wyświetl wykresy
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Wyświetlanie wykresów firmy i stawek płatności za ładunek
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}Wyświetl ranking firm
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Ufunduj budowę nowego przedsiębiorstwa
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Analiza przedsiębiorstw lub fundowanie budowy nowego przedsiębiorstwa
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Wyświetl listę pociągów firmy. Ctrl+klik przełącza otwieranie listy grup/pojazdów
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Wyświetl listę pojazdów drogowych firmy. Ctrl+klik przełącza otwieranie listy grup/pojazdów
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Wyświetl listę statków firmy. Ctrl+klik przełącza otwieranie listy grup/pojazdów
@@ -754,8 +749,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Budowa p
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Budowa lotnisk
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Zmiana terenu, podwyższanie/obniżanie lądu, sadzenie drzew, itp.
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Wyświetl okno dźwięk/muzyka
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Wyświetl ostatnią wiadomość/ogłoszenie, wyświetl ustawienia wiadomości
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Informacje o terenie, konsola, debugowanie skryptów, zrzut ekranu, o grze OpenTTD
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Wyświetlenie ostatniej wiadomości/ogłoszenia, historii wiadomości lub usunięcie wszystkich wiadomości
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Informacje o terenie, zrzut ekranu, o grze OpenTTD oraz narzędzia dla deweloperów
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Przełącz paski narzędzi
 
 # Extra tooltips for the scenario editor toolbar
@@ -771,7 +766,7 @@ STR_SCENEDIT_TOOLBAR_TOWN_GENERATION                            :{BLACK}Tworzeni
 STR_SCENEDIT_TOOLBAR_INDUSTRY_GENERATION                        :{BLACK}Tworzenie przedsiębiorstw
 STR_SCENEDIT_TOOLBAR_ROAD_CONSTRUCTION                          :{BLACK}Konstrukcja dróg
 STR_SCENEDIT_TOOLBAR_TRAM_CONSTRUCTION                          :{BLACK}Konstrukcja torów tramwajowych
-STR_SCENEDIT_TOOLBAR_PLANT_TREES                                :{BLACK}Posadź drzewa. Shift przełącza pomiędzy trybem sadzenia a szacowaniem jego kosztów
+STR_SCENEDIT_TOOLBAR_PLANT_TREES                                :{BLACK}Posadź drzewa. Ctrl zaznacza teren po przekątnej. Shift przełącza pomiędzy trybem sadzenia a szacowaniem jego kosztów
 STR_SCENEDIT_TOOLBAR_PLACE_SIGN                                 :{BLACK}Umieść napis
 STR_SCENEDIT_TOOLBAR_PLACE_OBJECT                               :{BLACK}Umieść obiekt. Ctrl zaznacza obszar po przekątnej. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 
@@ -834,7 +829,7 @@ STR_GRAPH_MENU_INCOME_GRAPH                                     :Wykres przychod
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Wykres dostarczonego ładunku
 STR_GRAPH_MENU_PERFORMANCE_HISTORY_GRAPH                        :Wykres oceny wydajności
 STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Wykres wartości firmy
-STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Stawki za ładunek
+STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Stawki płatności za ładunek
 
 # Company league menu
 ###length 3
@@ -976,12 +971,6 @@ STR_MONTH_OCT                                                   :Październik
 STR_MONTH_NOV                                                   :Listopad
 STR_MONTH_DEC                                                   :Grudzień
 
-###length VEHICLE_TYPES
-STR_VEHICLE_TYPE_TRAINS                                         :Pociągi
-STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Samochody i tramwaje
-STR_VEHICLE_TYPE_SHIPS                                          :Statki
-STR_VEHICLE_TYPE_AIRCRAFT                                       :Samoloty
-
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Legenda
 STR_GRAPH_KEY_TOOLTIP                                           :{BLACK}Pokaż legendę do wykresów
@@ -996,7 +985,7 @@ STR_GRAPH_CARGO_DELIVERED_CAPTION                               :{WHITE}Dostarcz
 STR_GRAPH_COMPANY_PERFORMANCE_RATINGS_CAPTION                   :{WHITE}Ocena wydajności firmy (maks. ocena=1000)
 STR_GRAPH_COMPANY_VALUES_CAPTION                                :{WHITE}Wartości firm
 
-STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION                           :{WHITE}Stawki za ładunek
+STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION                           :{WHITE}Stawki płatności za ładunek
 STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL                           :{TINY_FONT}{BLACK}Dni w transporcie
 STR_GRAPH_CARGO_PAYMENT_RATES_TITLE                             :{TINY_FONT}{BLACK}Dochód z przewozu 10 jednostek (lub 10,000 litrów) ładunku na odległość 20 pól
 STR_GRAPH_CARGO_ENABLE_ALL                                      :{TINY_FONT}{BLACK}Włącz wszystko
@@ -1598,6 +1587,9 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :z prawej strony
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maksymalna wysokość początkowej pożyczki: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksymalna wysokość pożyczki, jaką firma może zaciągnąć (bez uwzględnienia inflacji)
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
+###setting-zero-is-special
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :Brak pożyczki {RED}Wymagany Game Script, aby zapewnić początkowe fundusze
 
 STR_CONFIG_SETTING_INTEREST_RATE                                :Oprocentowanie: {STRING}
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :Oprocentowanie pożyczki; kontroluje też inflację, jeśli jest włączona
@@ -2197,6 +2189,9 @@ STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Kiedy włączon
 
 STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimalny wiek firmy pozwalający na handel udziałami: {STRING}
 STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Ustaw minimalny wiek firmy pozwalający innym kupować i sprzedawać jej akcje.
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_VALUE                   :{COMMA} {P "rok" "lata" "lat"}
+###setting-zero-is-special
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_NO_MIN                  :Brak minimum
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Podział przychodów w przypadku przeładunków: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Manipulowanie zrównoważeniem podziałów w łańcuchu dowozowym: przy 0% przychód zostanie zaksięgowany na konto wyłącznie ostatniego pojazdu w łańcuchu, wyższa wartość zwiększa zrównoważenie podziału
@@ -2304,7 +2299,7 @@ STR_CONFIG_SETTING_TOWN_GROWTH_FAST                             :duża
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_FAST                        :bardzo duża
 
 STR_CONFIG_SETTING_LARGER_TOWNS                                 :Proporcje miast, które będą metropoliami: {STRING}
-STR_CONFIG_SETTING_LARGER_TOWNS_HELPTEXT                        :Liczba miast, które staną się metropoliami - czyli miastami, które na początku są większe i szybciej się rozwijają
+STR_CONFIG_SETTING_LARGER_TOWNS_HELPTEXT                        :Liczba miast, które staną się metropoliami - czyli miastami, które od początku są większe i szybciej się rozwijają
 STR_CONFIG_SETTING_LARGER_TOWNS_VALUE                           :1 z {COMMA}
 ###setting-zero-is-special
 STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Żadne
@@ -2317,13 +2312,13 @@ STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Przeznacz {STRI
 STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Czas potrzebny na każde przeliczenie komponentu grafu połączeń. Po rozpoczęciu przeliczania tworzony jest wątek, który może działać przez podaną liczbę dni. Im mniejszą wartość ustawisz, tym większe prawdopodobieństwo, że wątek nie zostanie ukończony w wyznaczonym czasie. Wtedy gra zatrzymuje się do czasu jego zakończenia („lag”). Im większą wartość ustawisz, tym dłużej będzie trwała aktualizacja dystrybucji, gdy zmienią się trasy.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Tryb dystrybucji dla pasażerów: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :Tryb „symetryczny” oznacza, że mniej więcej tyle samo pasażerów będzie podróżować ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach może podróżować dowolna liczba pasażerów. Tryb „ręczny” oznacza, że dla pasażerów nie będzie przeprowadzana dystrybucja automatyczna.
+STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :Tryb „symetryczny” oznacza, że mniej więcej tyle samo pasażerów będzie podróżować ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach może podróżować różna liczba pasażerów. Tryb „ręczny” oznacza, że dla pasażerów nie będzie przeprowadzana dystrybucja automatyczna.
 STR_CONFIG_SETTING_DISTRIBUTION_MAIL                            :Tryb dystrybucji dla poczty: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_MAIL_HELPTEXT                   :Tryb „symetryczny” oznacza, że mniej więcej taka sama ilość poczty zostanie wysłana ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach może być wysłana dowolna ilość poczty. Tryb „ręczny” oznacza, że dla poczty nie będzie przeprowadzana dystrybucja automatyczna.
+STR_CONFIG_SETTING_DISTRIBUTION_MAIL_HELPTEXT                   :Tryb „symetryczny” oznacza, że mniej więcej taka sama ilość poczty zostanie wysłana ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach może być wysyłana różna ilość poczty. Tryb „ręczny” oznacza, że dla poczty nie będzie przeprowadzana dystrybucja automatyczna.
 STR_CONFIG_SETTING_DISTRIBUTION_ARMOURED                        :Tryb dystrybucji dla klasy ładunków CHRONIONYCH: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_ARMOURED_HELPTEXT               :Klasa ładunków CHRONIONYCH zawiera kosztowności w klimacie umiarkowanym, diamenty w tropikalnym lub złoto w klimacie arktycznym. NewGRF-y mogą to zmienić. Tryb „symetryczny” oznacza, że mniej więcej taka sama ilość danego ładunku zostanie wysłana ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że dowolne ilości danego ładunku mogą być wysyłane w obu kierunkach. Tryb „ręczny” oznacza, że dla danego ładunku nie będzie przeprowadzana dystrybucja automatyczna. Zaleca się ustawienie tej opcji na asymetryczną lub ręczną, grając w klimacie tropikalnym, ponieważ banki nie będą odsyłać złota do kopalni złota. Dla klimatu umiarkowanego i arktycznego możesz wybrać symetryczny, ponieważ banki będą odsyłać kosztowności z powrotem do banku, z którego pochodzi pierwotny ładunek.
+STR_CONFIG_SETTING_DISTRIBUTION_ARMOURED_HELPTEXT               :Klasa ładunków CHRONIONYCH zawiera kosztowności w klimacie umiarkowanym, diamenty w tropikalnym lub złoto w klimacie arktycznym. NewGRF-y mogą to zmienić. Tryb „symetryczny” oznacza, że mniej więcej taka sama ilość danego ładunku zostanie wysłana ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach mogą być wysyłane różne ilości danego ładunku. Tryb „ręczny” oznacza, że dla danego ładunku nie będzie przeprowadzana dystrybucja automatyczna. Zaleca się ustawienie tej opcji na asymetryczną lub ręczną w klimacie arktycznym lub tropikalnym, ponieważ tam banki jedynie odbierają ładunek. Dla klimatu umiarkowanego możesz wybrać symetryczny, aby banki odsyłały kosztowności do pierwotnego banku.
 STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT                         :Tryb dystrybucji dla pozostałych klas ładunków: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT_HELPTEXT                :Tryb „asymetryczny” oznacza, że dowolne ilości ładunków mogą być wysyłane w obu kierunkach. Tryb „ręczny” oznacza, że dla takich ładunków nie będzie przeprowadzana dystrybucja automatyczna.
+STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT_HELPTEXT                :Tryb „asymetryczny” oznacza, że w obu kierunkach mogą być wysyłane różne ilości ładunków. Tryb „ręczny” oznacza, że dla takich ładunków nie będzie przeprowadzana dystrybucja automatyczna.
 ###length 3
 STR_CONFIG_SETTING_DISTRIBUTION_MANUAL                          :ręczny
 STR_CONFIG_SETTING_DISTRIBUTION_ASYMMETRIC                      :asymetryczny
@@ -2340,13 +2335,15 @@ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :Ustawienie tego
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :Nasycenie krótkich tras przed wybraniem tras o dużej przepustowości: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Często istnieje wiele możliwych tras pomiędzy dwiema danymi stacjami. Mechanizm dystrybucji ładunków najpierw nasyci najkrótszą trasę, następnie użyje drugiej najkrótszej trasy, aż do jej nasycenia itd. Nasycenie jest ustalane na podstawie szacunkowej oceny przepustowości i planowanego wykorzystania. Po nasyceniu wszystkich tras, jeśli nadal istnieje zapotrzebowanie, algorytm przeciąży wszystkie trasy, preferując te o dużej przepustowości. W większości przypadków algorytm nie oszacuje jednak dokładnie przepustowości. To ustawienie pozwala określić, do jakiej wartości procentowej krótsza trasa musi zostać nasycona w pierwszym kroku, zanim zostanie wybrana kolejna, dłuższa trasa. Ustaw wartość mniejszą niż 100%, aby uniknąć przepełnionych stacji w przypadku przeszacowania przepustowości.
 
-STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Jednostki prędkości: {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Jednostki prędkości (lądowe): {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Jednostki prędkości (morskie): {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Kiedy prędkość jest pokazywana w interfejsie użytkownika, wyświetl ją w wybranych jednostkach
-###length 4
+###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Imperialne (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metryczne (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Jednostki gry (pola/dzień)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Węzły
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Jednostka mocy pojazdów: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Kiedy moc pojazdu jest pokazywana w interfejsie użytkownika, wyświetl ją w wybranych jednostkach
@@ -2467,7 +2464,7 @@ STR_INTRO_QUIT                                                  :{BLACK}Wyjście
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Rozpocznij nową grę. Ctrl+klik pomija konfigurowanie mapy
 STR_INTRO_TOOLTIP_LOAD_GAME                                     :{BLACK}Wczytaj zapisaną grę
-STR_INTRO_TOOLTIP_PLAY_HEIGHTMAP                                :{BLACK}Rozpocznij nowa grę używając mapy wysokości jako krajobrazu
+STR_INTRO_TOOLTIP_PLAY_HEIGHTMAP                                :{BLACK}Rozpocznij nowa grę, używając mapy wysokości jako krajobrazu
 STR_INTRO_TOOLTIP_PLAY_SCENARIO                                 :{BLACK}Rozpocznij nową grę, używając przygotowanego scenariusza
 STR_INTRO_TOOLTIP_SCENARIO_EDITOR                               :{BLACK}Stwórz własny świat/scenariusz
 STR_INTRO_TOOLTIP_MULTIPLAYER                                   :{BLACK}Rozpocznij grę wieloosobową
@@ -2487,7 +2484,7 @@ STR_INTRO_TOOLTIP_GAMESCRIPT_SETTINGS                           :{BLACK}Wyświet
 STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Wyjdź z „OpenTTD”
 
 STR_INTRO_BASESET                                               :{BLACK}Aktualnie używany podstawowy zestaw graficzny nie posiada {NUM} wymagan{P ego ych ych} sprite{P 'u 'ów 'ów}. Proszę poszukać aktualizacji dla zestawu podstawowego.
-STR_INTRO_TRANSLATION                                           :{BLACK}Tej wersji językowej brakuje jeszcze {NUM} wpis{P "" y ów}. Możesz pomóc ulepszyć nam OpenTTD rejestrując się jako tłumacz. Szczegóły znajdziesz w pliku readme.txt.
+STR_INTRO_TRANSLATION                                           :{BLACK}Tej wersji językowej brakuje jeszcze {NUM} wpis{P "" y ów}. Możesz pomóc ulepszyć nam OpenTTD, rejestrując się jako tłumacz. Szczegóły znajdziesz w pliku „readme”.
 
 # Quit window
 STR_QUIT_CAPTION                                                :{WHITE}Wyjście
@@ -2688,7 +2685,7 @@ STR_NETWORK_START_SERVER_NUMBER_OF_CLIENTS                      :{BLACK}Dopuszcz
 STR_NETWORK_START_SERVER_NUMBER_OF_CLIENTS_TOOLTIP              :{BLACK}Ustaw maksymalną liczbę klientów. Nie wszystkie miejsca muszą być zapełnione.
 STR_NETWORK_START_SERVER_COMPANIES_SELECT                       :{BLACK}{NUM} firm{P a y ""}
 STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES                    :{BLACK}Maksymalna liczba firm:
-STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES_TOOLTIP            :{BLACK}Ogranicz serwer do określonej ilości firm
+STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES_TOOLTIP            :{BLACK}Ogranicz serwer do określonej liczby firm
 
 STR_NETWORK_START_SERVER_NEW_GAME_NAME_OSKTITLE                 :{BLACK}Wpisz nazwę dla gry sieciowej
 
@@ -2747,7 +2744,8 @@ STR_NETWORK_CLIENT_LIST_NEW_COMPANY                             :(Nowa firma)
 STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP                     :{BLACK}Utwórz nową firmę i dołącz do niej
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_SELF_TOOLTIP                :{BLACK}To jesteś ty
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_HOST_TOOLTIP                :{BLACK}To jest gospodarz gry
-STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} klient{P "" ów ów} / {NUM} firm{P a y ""}
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} klient{P "" ów ów} - {NUM}/{NUM} firm{P ę y ""}
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT_TOOLTIP            :{BLACK}Liczba aktualnie podłączonych klientów, liczba firm oraz maksymalna liczba firm dozwolona przez administratora serwera
 
 # Matches ConnectionType
 ###length 5
@@ -2998,8 +2996,6 @@ STR_LINKGRAPH_LEGEND_OVERLOADED                                 :{TINY_FONT}{BLA
 STR_LINKGRAPH_STATS_TOOLTIP                                     :{BLACK}{CARGO_LONG} miesięcznie do przetransportowania z {STATION} do {STATION} ({COMMA}% przepustowości){STRING}
 STR_LINKGRAPH_STATS_TOOLTIP_RETURN_EXTENSION                    :{}{CARGO_LONG} do przetransportowania z powrotem ({COMMA}% przepustowości)
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION                      :{}Średni czas podróży: {NUM}{NBSP}d{P zień ni ni}
-STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}Średni czas podróży: {STRING}
-STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY                            :{}Ładowność: {CARGO_LONG}
 
 # Base for station construction window(s)
 STR_STATION_BUILD_COVERAGE_AREA_TITLE                           :{BLACK}Podświetlaj zasięg
@@ -3092,8 +3088,10 @@ STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP          :{BLACK}Zwiększ
 STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}Wybierz rodzaj mostu kolejowego
 STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}Wybierz most drogowy
 STR_SELECT_BRIDGE_SELECTION_TOOLTIP                             :{BLACK}Wybór mostu - kliknij na wybranym moście, aby go zbudować
-STR_SELECT_BRIDGE_INFO                                          :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
-STR_SELECT_BRIDGE_SCENEDIT_INFO                                 :{GOLD}{STRING},{} {VELOCITY}
+STR_SELECT_BRIDGE_INFO_NAME                                     :{GOLD}{STRING}
+STR_SELECT_BRIDGE_INFO_NAME_MAX_SPEED                           :{GOLD}{STRING},{} {VELOCITY}
+STR_SELECT_BRIDGE_INFO_NAME_COST                                :{GOLD}{0:STRING},{} {WHITE}{2:CURRENCY_LONG}
+STR_SELECT_BRIDGE_INFO_NAME_MAX_SPEED_COST                      :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
 STR_BRIDGE_NAME_SUSPENSION_STEEL                                :Podwieszany, stalowy
 STR_BRIDGE_NAME_GIRDER_STEEL                                    :Dźwigarowy, stalowy
 STR_BRIDGE_NAME_CANTILEVER_STEEL                                :Wspornikowy, stalowy
@@ -3213,7 +3211,7 @@ STR_OBJECT_CLASS_TRNS                                           :Nadajniki
 STR_PLANT_TREE_CAPTION                                          :{WHITE}Drzewa
 STR_PLANT_TREE_TOOLTIP                                          :{BLACK}Wybierz typ drzew do sadzenia. Jeśli na wybranym miejscu są już drzewa, to dodasz więcej drzew różnego typu, bez względu na wybraną opcję.
 STR_TREES_RANDOM_TYPE                                           :{BLACK}Drzewa różnych rodzajów
-STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Sadzenie drzew różnych rodzajów. Shift przełącza pomiędzy trybem sadzenia a szacowaniem jego kosztów
+STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Sadzenie drzew różnych rodzajów. Ctrl zaznacza teren po przekątnej. Shift przełącza pomiędzy trybem sadzenia a szacowaniem jego kosztów
 STR_TREES_RANDOM_TREES_BUTTON                                   :{BLACK}Losowe drzewa
 STR_TREES_RANDOM_TREES_TOOLTIP                                  :{BLACK}Pokryj losowo krajobraz drzewami
 STR_TREES_MODE_NORMAL_BUTTON                                    :{BLACK}Normalny
@@ -3245,6 +3243,8 @@ STR_FOUND_TOWN_RANDOM_TOWN_BUTTON                               :{BLACK}Losowe m
 STR_FOUND_TOWN_RANDOM_TOWN_TOOLTIP                              :{BLACK}Budowa miasta w losowym miejscu
 STR_FOUND_TOWN_MANY_RANDOM_TOWNS                                :{BLACK}Wiele losowych miast
 STR_FOUND_TOWN_RANDOM_TOWNS_TOOLTIP                             :{BLACK}Pokryj mapę losowo położonymi miastami
+STR_FOUND_TOWN_EXPAND_ALL_TOWNS                                 :{BLACK}Rozszerz wszystkie miasta
+STR_FOUND_TOWN_EXPAND_ALL_TOWNS_TOOLTIP                         :{BLACK}Zwiększ trochę rozmiar wszystkich miast
 
 STR_FOUND_TOWN_NAME_TITLE                                       :{YELLOW}Nazwa miasta:
 STR_FOUND_TOWN_NAME_EDITOR_TITLE                                :{BLACK}Wprowadź nazwę miasta
@@ -3538,10 +3538,6 @@ STR_MAPGEN_DESERT_COVERAGE                                      :{BLACK}Pokrycie
 STR_MAPGEN_DESERT_COVERAGE_UP                                   :{BLACK}Zwiększ pokrycie pustynią o 10%
 STR_MAPGEN_DESERT_COVERAGE_DOWN                                 :{BLACK}Zmniejsz pokrycie pustynią o 10%
 STR_MAPGEN_DESERT_COVERAGE_TEXT                                 :{BLACK}{NUM}%
-STR_MAPGEN_SNOW_LINE_HEIGHT                                     :{BLACK}Śnieg od wysokości:
-STR_MAPGEN_SNOW_LINE_UP                                         :{BLACK}Podnieś wysokość śniegu o jeden w górę
-STR_MAPGEN_SNOW_LINE_DOWN                                       :{BLACK}Obniż wysokość śniegu o jeden w dół
-STR_MAPGEN_LAND_GENERATOR                                       :{BLACK}Generator terenu:
 STR_MAPGEN_TERRAIN_TYPE                                         :{BLACK}Typ terenu:
 STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Poziom wody:
 STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Liczba rzek:
@@ -3599,7 +3595,6 @@ STR_MAPGEN_TERRAIN_TYPE_QUERY_CAPT                              :{WHITE}Żądana
 STR_MAPGEN_HEIGHTMAP_HEIGHT_QUERY_CAPT                          :{WHITE}Najwyższy szczyt
 STR_MAPGEN_SNOW_COVERAGE_QUERY_CAPT                             :{WHITE}Pokrycie śniegiem (w %)
 STR_MAPGEN_DESERT_COVERAGE_QUERY_CAPT                           :{WHITE}Pokrycie pustynią (w %)
-STR_MAPGEN_SNOW_LINE_QUERY_CAPT                                 :{WHITE}Zmień wysokość linii śniegowej
 STR_MAPGEN_START_DATE_QUERY_CAPT                                :{WHITE}Zmień datę rozpoczęcia
 
 # SE Map generation
@@ -3714,31 +3709,38 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_RAIL_TYPE                  :Typ szyn
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}NewGFR zmienna 60+parametr x (heksadecymalnie)
 
 # Sprite aligner window
-STR_SPRITE_ALIGNER_CAPTION                                      :{WHITE}Dostosowanie obrazka {COMMA} ({STRING})
-STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Następny obrazek
-STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Idź do następnego normalnego obrazka, pomijając jakiekolwiek pseudo/kolorowe/znakowe obrazki i zawijaj je od ostatniego do pierwszego
-STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Idź do obrazka
-STR_SPRITE_ALIGNER_GOTO_TOOLTIP                                 :{BLACK}Idź do danego obrazka. Jeśli dany obrazek nie jest normalnym obrazkiem, idź do następnego normalnego obrazka
-STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}Poprzedni obrazek
-STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}Idź do poprzedniego normalnego obrazka, pomijając jakiekolwiek pseudo/kolorowe/znakowe obrazki i zawijaj je od pierwszego do ostatniego
-STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}Przedstawienie wybranego orbazka. Dostosowanie jest ignorowane podczas rysowania tego obrazka
-STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}Poruszaj obrazkiem, zmieniając przesunięcia X i Y. Ctrl+klik aby przesunąć o 8 jednostek  na raz.
-STR_SPRITE_ALIGNER_RESET_BUTTON                                 :{BLACK}Resetuj zależność
-STR_SPRITE_ALIGNER_RESET_TOOLTIP                                :{BLACK}Resetuj aktualne offsety zależne
-STR_SPRITE_ALIGNER_OFFSETS_ABS                                  :{BLACK}X offset: {NUM}, Y offset: {NUM} (Całkowity)
-STR_SPRITE_ALIGNER_OFFSETS_REL                                  :{BLACK}X offset: {NUM}, Y offset: {NUM} (Zależny)
-STR_SPRITE_ALIGNER_PICKER_BUTTON                                :{BLACK}Wybierz obrazek
-STR_SPRITE_ALIGNER_PICKER_TOOLTIP                               :{BLACK}Wybierz obrazek z dowolnego miejsca na ekranie
+STR_SPRITE_ALIGNER_CAPTION                                      :{WHITE}Wyrównywanie sprite'a {COMMA} ({STRING})
+STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Następny sprite
+STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Idź do następnego normalnego sprite'a, pomijając jakiekolwiek pseudo / przebarwione / czcionkowe sprite'y, a po ostatnim przejdź do pierwszego
+STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Idź do sprite'a
+STR_SPRITE_ALIGNER_GOTO_TOOLTIP                                 :{BLACK}Idź do danego sprite'a. Jeśli dany sprite nie jest normalnym spritem, przejdź do następnego normalnego sprite'a
+STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}Poprzedni sprite
+STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}Idź do poprzedniego normalnego sprite'a, pomijając jakiekolwiek pseudo / przebarwione / czcionkowe sprite'y, a po pierwszym przejdź do ostatniego
+STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}Prezentacja wybranego sprite'a. Wyrównanie jest ignorowane podczas rysowania tego sprite'a
+STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}Poruszaj spritem, zmieniając przesunięcia X i Y. Ctrl+klik aby przesunąć o 8 jednostek  na raz
 
-STR_SPRITE_ALIGNER_GOTO_CAPTION                                 :{WHITE}Idź do obrazka
+###length 2
+STR_SPRITE_ALIGNER_CENTRE_OFFSET                                :{BLACK}Wyśrodkowanie przesunięcia
+STR_SPRITE_ALIGNER_CENTRE_SPRITE                                :{BLACK}Wyśrodkowanie sprite'a
+
+STR_SPRITE_ALIGNER_CROSSHAIR                                    :{BLACK}Prowadnice
+
+STR_SPRITE_ALIGNER_RESET_BUTTON                                 :{BLACK}Wyzeruj względność
+STR_SPRITE_ALIGNER_RESET_TOOLTIP                                :{BLACK}Wyzeruj aktualne względne przesunięcia
+STR_SPRITE_ALIGNER_OFFSETS_ABS                                  :{BLACK}Przesunięcie X: {NUM}, przesunięcie Y: {NUM} (bezwzględne)
+STR_SPRITE_ALIGNER_OFFSETS_REL                                  :{BLACK}Przesunięcie X: {NUM}, przesunięcie Y: {NUM} (względne)
+STR_SPRITE_ALIGNER_PICKER_BUTTON                                :{BLACK}Wybierz sprite'a
+STR_SPRITE_ALIGNER_PICKER_TOOLTIP                               :{BLACK}Wybierz sprite'a z dowolnego miejsca na ekranie
+
+STR_SPRITE_ALIGNER_GOTO_CAPTION                                 :{WHITE}Idź do sprite'a
 
 # NewGRF (self) generated warnings/errors
 STR_NEWGRF_ERROR_MSG_INFO                                       :{SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_WARNING                                    :{RED}Ostrzeżenie: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_ERROR                                      :{RED}Błąd: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_FATAL                                      :{RED}Błąd krytyczny: {SILVER}{STRING}
-STR_NEWGRF_ERROR_FATAL_POPUP                                    :{WHITE}Wystąpił błąd krytyczny NewGRF:{}{STRING}
-STR_NEWGRF_ERROR_POPUP                                          :{WHITE}Wystąpił błąd NewGRF:{}{STRING}
+STR_NEWGRF_ERROR_FATAL_POPUP                                    :{WHITE}NewGRF „{STRING}” zwrócił błąd krytyczny:{}{STRING}
+STR_NEWGRF_ERROR_POPUP                                          :{WHITE}NewGRF „{STRING}” zwrócił błąd:{}{STRING}
 STR_NEWGRF_ERROR_VERSION_NUMBER                                 :{1:STRING} nie zadziała z wersją TTDPatcha zgłoszoną przez OpenTTD
 STR_NEWGRF_ERROR_DOS_OR_WINDOWS                                 :{1:STRING} jest przeznaczony dla TTD w wersji {2:STRING}
 STR_NEWGRF_ERROR_UNSET_SWITCH                                   :{1:STRING} jest zaprojektowany do użycia z {2:STRING}
@@ -4278,7 +4280,6 @@ STR_PURCHASE_INFO_RUNNINGCOST                                   :{BLACK}Koszt ut
 STR_PURCHASE_INFO_CAPACITY                                      :{BLACK}Ładowność: {GOLD}{CARGO_LONG} {STRING}
 STR_PURCHASE_INFO_REFITTABLE                                    :(przebudowywalny)
 STR_PURCHASE_INFO_DESIGNED_LIFE                                 :{BLACK}Zaprojektowany: {GOLD}{NUM}{BLACK} Żywotność: {GOLD}{COMMA} lat
-STR_PURCHASE_INFO_DESIGNED                                      :{BLACK}Zaprojektowany: {GOLD}{NUM}
 STR_PURCHASE_INFO_RELIABILITY                                   :{BLACK}Maksymalna niezawodność: {GOLD}{COMMA}%
 STR_PURCHASE_INFO_COST                                          :{BLACK}Koszt: {GOLD}{CURRENCY_LONG}
 STR_PURCHASE_INFO_COST_REFIT                                    :{BLACK}Koszt: {GOLD}{CURRENCY_LONG}{BLACK} (Koszt przebudowy: {GOLD}{CURRENCY_LONG}{BLACK})
@@ -4792,14 +4793,14 @@ STR_ORDERS_DELETE_BUTTON                                        :{BLACK}Usuń
 STR_ORDERS_DELETE_TOOLTIP                                       :{BLACK}Usuń podświetlone polecenie
 STR_ORDERS_DELETE_ALL_TOOLTIP                                   :{BLACK}Usuń wszystkie polecenia
 STR_ORDERS_STOP_SHARING_BUTTON                                  :{BLACK}Przestań dzielić
-STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Przestań dzielić listę poleceń. Ctrl+Klik dodatkowo usuwa wszystkie polecenia tego pojazdu
+STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Przestań współdzielić listę poleceń. Ctrl+klik dodatkowo usuwa wszystkie polecenia tego pojazdu
 
 STR_ORDERS_GO_TO_BUTTON                                         :{BLACK}Idź do
 STR_ORDER_GO_TO_NEAREST_DEPOT                                   :Idź do najbliższego serwisu
 STR_ORDER_GO_TO_NEAREST_HANGAR                                  :Leć do najbliższego hangaru
 STR_ORDER_CONDITIONAL                                           :Warunkowy skok poleceń
 STR_ORDER_SHARE                                                 :Współdzielenie poleceń
-STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Wstaw nowe polecenie na końcu listy lub przed zaznaczonym poleceniem. Ctrl ustawi polecenie stacji na 'pełny załadunek dowolnego towaru', pkt. orientacyjnego na 'bez zatrzymywania się', a zajezdni na 'serwisuj'. Kliknięcie innego pojazdu kopiuje jego polecenia, ctrl+klik (lub 'Współdzielenie poleceń') pozwala na dzielenie z nim poleceń. Polecenie zajezdni wyłącza automatyczne serwisowanie pojazdu
+STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Dodaj nowe polecenie na końcu listy lub przed zaznaczonym poleceniem. Ctrl ustawi polecenie stacji na „pełny załadunek któregoś z towarów”, posterunku na „bez zatrzymywania się”, a zajezdni na „serwisuj”. Kliknięcie innego pojazdu kopiuje jego polecenia. „Współdzielenie poleceń” lub Ctrl+klik pozwala na współdzielenie z nim poleceń. Polecenie zajezdni wyłącza automatyczne serwisowanie tego pojazdu
 
 STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP                  :{BLACK}Pokaż wszystkie pojazdy współdzielące te polecenia
 
@@ -4909,22 +4910,22 @@ STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Data poc
 STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Wybierz początkową datę rozkładu jazdy. Ctrl+klik rozłoży równomierne wszystkie pojazdy współdzielące ten rozkład, począwszy od podanej daty, zgodnie z ich kolejnością, o ile rozkład ten jest kompletny
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Zmień czas
-STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Zmień ilość czasu którą zaznaczone zadanie powinno zająć
+STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Zmień ilość czasu, jaką powinno zająć zaznaczone polecenie. Ctrl+klik ustala czas dla wszystkich poleceń
 
 STR_TIMETABLE_CLEAR_TIME                                        :{BLACK}Usuń czas
-STR_TIMETABLE_CLEAR_TIME_TOOLTIP                                :{BLACK}Usuń ilość czasu przeznaczoną na zaznaczone zadanie
+STR_TIMETABLE_CLEAR_TIME_TOOLTIP                                :{BLACK}Wyczyść ilość czasu w zaznaczonym poleceniu. Ctrl+klik wyczyści czas we wszystkich poleceniach
 
 STR_TIMETABLE_CHANGE_SPEED                                      :{BLACK}Zmień limit prędkości
-STR_TIMETABLE_CHANGE_SPEED_TOOLTIP                              :{BLACK}Zmień maksymalną prędkość podróży w zaznaczonym poleceniu
+STR_TIMETABLE_CHANGE_SPEED_TOOLTIP                              :{BLACK}Zmień maksymalną prędkość przejazdu w zaznaczonym poleceniu. Ctrl+klik zmieni prędkość we wszystkich poleceniach
 
 STR_TIMETABLE_CLEAR_SPEED                                       :{BLACK}Wyczyść limit prędkości
-STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Wyczyść maksymalną prędkość podróży w zaznaczonym poleceniu
+STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Wyczyść maksymalną prędkość przejazdu w zaznaczonym poleceniu. Ctrl+klik wyczyści prędkość we wszystkich poleceniach
 
 STR_TIMETABLE_RESET_LATENESS                                    :{BLACK}Wyzeruj spóźnienia
-STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Wyzeruj licznik spóźnienia, aby pojazd podróżował zgodnie z rozkładem jazdy
+STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Wyzeruj licznik spóźnienia, aby pojazd podróżował zgodnie z rozkładem jazdy. Ctrl+klik spowoduje wyzerowanie całej grupy, więc ostatni pojazd będzie punktualny, a wszystkie pozostałe będą przed czasem
 
 STR_TIMETABLE_AUTOFILL                                          :{BLACK}Automat. wypełnienie
-STR_TIMETABLE_AUTOFILL_TOOLTIP                                  :{BLACK}Wypełnij automatycznie rozkład jazdy wartościami z następnego przejazdu (Ctrl+klik, aby spróbować utrzymać czasy oczekiwania)
+STR_TIMETABLE_AUTOFILL_TOOLTIP                                  :{BLACK}Wypełnij automatycznie rozkład jazdy wartościami z następnego przejazdu. Ctrl+klik, aby spróbować utrzymać czasy oczekiwania
 
 STR_TIMETABLE_EXPECTED                                          :{BLACK}Wymagany
 STR_TIMETABLE_SCHEDULED                                         :{BLACK}Zaplanowany
@@ -4975,6 +4976,7 @@ STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}SI, któ
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Ludzki gracz
 STR_AI_CONFIG_RANDOM_AI                                         :Losowe SI
 STR_AI_CONFIG_NONE                                              :(brak)
+STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Maksymalna liczba przeciwników: {ORANGE}{COMMA}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Przesuń w górę
@@ -4988,7 +4990,7 @@ STR_AI_CONFIG_AI                                                :{SILVER}SI
 
 STR_AI_CONFIG_CHANGE_AI                                         :{BLACK}Wybierz SI
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :{BLACK}Wybierz Game Script
-STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Wczytaj kolejny skrypt
+STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Wczytaj inny skrypt. Ctrl+klik, aby wyświetlić wszystkie dostępne wersje
 STR_AI_CONFIG_CONFIGURE                                         :{BLACK}Konfiguruj
 STR_AI_CONFIG_CONFIGURE_TOOLTIP                                 :{BLACK}Konfiguruj parametry skryptu
 
@@ -5015,8 +5017,10 @@ STR_SCREENSHOT_WORLD_SCREENSHOT                                 :{BLACK}Zrzut ek
 STR_SCREENSHOT_HEIGHTMAP_SCREENSHOT                             :{BLACK}Zrzut ekranu mapy wysokościowej
 STR_SCREENSHOT_MINIMAP_SCREENSHOT                               :{BLACK}Zrzut ekranu minimapy
 
-# AI Parameters
-STR_AI_SETTINGS_CAPTION_AI                                      :{WHITE}Parametry SI
+# Script Parameters
+STR_AI_SETTINGS_CAPTION                                         :{WHITE}{STRING} Parametry
+STR_AI_SETTINGS_CAPTION_AI                                      :SI
+STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Game Script
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Zamknij
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetuj
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
@@ -5030,7 +5034,7 @@ STR_TEXTFILE_VIEW_README                                        :{BLACK}Odczytaj
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Lista zmian
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licencja
 ###length 3
-STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} - plik readme.txt
+STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} - plik „readme”
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} {STRING} - lista zmian
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} {STRING} - licencja
 
@@ -5180,6 +5184,7 @@ STR_ERROR_TOO_MANY_INDUSTRIES                                   :{WHITE}... zbyt
 STR_ERROR_CAN_T_GENERATE_INDUSTRIES                             :{WHITE}Nie można stworzyć przedsiębiorstw...
 STR_ERROR_CAN_T_BUILD_HERE                                      :{WHITE}Nie można tutaj wybudować: {STRING}...
 STR_ERROR_CAN_T_CONSTRUCT_THIS_INDUSTRY                         :{WHITE}Nie można tutaj wybudować tego przedsiębiorstwa...
+STR_ERROR_CAN_T_PROSPECT_INDUSTRY                               :{WHITE}Nie można znaleźć przedsiębiorstwa...
 STR_ERROR_INDUSTRY_TOO_CLOSE                                    :{WHITE}... zbyt blisko innego przedsiębiorstwa
 STR_ERROR_MUST_FOUND_TOWN_FIRST                                 :{WHITE}... należy najpierw wybudować miasto
 STR_ERROR_ONLY_ONE_ALLOWED_PER_TOWN                             :{WHITE}... dozwolone jedno na miasto
@@ -5194,7 +5199,9 @@ STR_ERROR_FOREST_CAN_ONLY_BE_PLANTED                            :{WHITE}... las 
 STR_ERROR_CAN_ONLY_BE_BUILT_ABOVE_SNOW_LINE                     :{WHITE}... można zbudować tylko powyżej linii śniegu
 STR_ERROR_CAN_ONLY_BE_BUILT_BELOW_SNOW_LINE                     :{WHITE}... można zbudować tylko poniżej linii śniegu
 
-STR_ERROR_NO_SUITABLE_PLACES_FOR_INDUSTRIES                     :{WHITE}Nie ma odpowiednich miejsc dla przedsiębiorstw '{STRING}'
+STR_ERROR_PROSPECTING_WAS_UNLUCKY                               :{WHITE}Ufundowanie pechowo nie powiodło się; spróbuj ponownie
+STR_ERROR_NO_SUITABLE_PLACES_FOR_PROSPECTING                    :{WHITE}Nie ma odpowiednich miejsc do poszukiwań takiego przedsiębiorstwa
+STR_ERROR_NO_SUITABLE_PLACES_FOR_INDUSTRIES                     :{WHITE}Nie ma odpowiednich miejsc dla przedsiębiorstw „{STRING}”
 STR_ERROR_NO_SUITABLE_PLACES_FOR_INDUSTRIES_EXPLANATION         :{WHITE}Zmień parametry tworzenia map, żeby uzyskać lepsze mapy
 
 # Station construction related errors
@@ -5453,7 +5460,7 @@ STR_ERROR_AIRCRAFT_IS_IN_FLIGHT                                 :{WHITE}Samolot 
 # Order related errors
 STR_ERROR_NO_MORE_SPACE_FOR_ORDERS                              :{WHITE}Brak miejsca na polecenia
 STR_ERROR_TOO_MANY_ORDERS                                       :{WHITE}Zbyt wiele poleceń
-STR_ERROR_CAN_T_INSERT_NEW_ORDER                                :{WHITE}Nie można wstawić nowego polecenia...
+STR_ERROR_CAN_T_INSERT_NEW_ORDER                                :{WHITE}Nie można dodać nowego polecenia...
 STR_ERROR_CAN_T_DELETE_THIS_ORDER                               :{WHITE}Nie można usunąć tego polecenia...
 STR_ERROR_CAN_T_MODIFY_THIS_ORDER                               :{WHITE}Nie można zmodyfikować tego polecenia...
 STR_ERROR_CAN_T_MOVE_THIS_ORDER                                 :{WHITE}Nie można przenieść tego polecenia...
@@ -5470,6 +5477,20 @@ STR_ERROR_CAN_T_STOP_SHARING_ORDER_LIST                         :{WHITE}Nie moż
 STR_ERROR_CAN_T_COPY_ORDER_LIST                                 :{WHITE}Nie można skopiować listy poleceń...
 STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION                     :{WHITE}... zbyt daleko od poprzedniego celu
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... samolot nie ma wystarczającego zasięgu
+
+# Extra messages which go on the third line of errors, explaining why orders failed
+STR_ERROR_NO_RAIL_STATION                                       :{WHITE}Brak stacji kolejowej
+STR_ERROR_NO_BUS_STATION                                        :{WHITE}Brak przystanku autobusowego
+STR_ERROR_NO_TRUCK_STATION                                      :{WHITE}Brak stacji dla ciężarówek
+STR_ERROR_NO_DOCK                                               :{WHITE}Brak doku
+STR_ERROR_NO_AIRPORT                                            :{WHITE}Brak lotniska/lądowiska
+STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE                          :{WHITE}Brak przystanków na odpowiednim typie drogi
+STR_ERROR_NO_STOP_COMPATIBLE_TRAM_TYPE                          :{WHITE}Brak odpowiednich przystanków dla tego typu tramwajów
+STR_ERROR_NO_STOP_ARTICULATED_VEHICLE                           :{WHITE}Brak przystanków przeznaczonych dla pojazdów przegubowych.{}Pojazdy przegubowe wymagają przystanku przelotowego, a nie zatokowego
+STR_ERROR_AIRPORT_NO_PLANES                                     :{WHITE}Ten samolot nie może wylądować na tym lądowisku
+STR_ERROR_AIRPORT_NO_HELICOPTERS                                :{WHITE}Ten helikopter nie może wylądować na tym lotnisku
+STR_ERROR_NO_RAIL_WAYPOINT                                      :{WHITE}Brak posterunku kolejowego
+STR_ERROR_NO_BUOY                                               :{WHITE}Brak boi
 
 # Timetable related errors
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Nie można wyznaczyć rozkładu jazdy pojazdu...
@@ -5498,11 +5519,6 @@ STR_BASEMUSIC_WIN_DESCRIPTION                                   :Oryginalna edyc
 STR_BASEMUSIC_DOS_DESCRIPTION                                   :Oryginalna edycja utworów muzycznych dla Transport Tycoon Deluxe DOS.
 STR_BASEMUSIC_TTO_DESCRIPTION                                   :Oryginalna edycja utworów muzycznych dla Transport Tycoon DOS.
 STR_BASEMUSIC_NONE_DESCRIPTION                                  :Zestaw utworów muzycznych nie zawierający żadnej muzyki.
-
-STR_TRADITIONAL_TRAIN_NAME                                      :Pociąg {COMMA}
-STR_TRADITIONAL_ROAD_VEHICLE_NAME                               :Pojazd {COMMA}
-STR_TRADITIONAL_SHIP_NAME                                       :Statek {COMMA}
-STR_TRADITIONAL_AIRCRAFT_NAME                                   :Samolot {COMMA}
 
 ##id 0x2000
 # Town building names

@@ -241,7 +241,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 	/* The maximum possible date for departures to be scheduled to occur. */
 	DateTicksScaled max_date = _settings_client.gui.max_departure_time * DAY_TICKS * _settings_game.economy.day_length_factor;
 
-	DateTicksScaled date_only_scaled = ((DateTicksScaled)_date * DAY_TICKS * _settings_game.economy.day_length_factor);
+	DateTicksScaled date_only_scaled = DateToScaledDateTicks(_date);
 	DateTicksScaled date_fract_scaled = ((DateTicksScaled)_date_fract * _settings_game.economy.day_length_factor) + _tick_skip_counter;
 
 	/* The scheduled order in next_orders with the earliest expected_date field. */
@@ -299,10 +299,12 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 				status = D_CANCELLED;
 			}
 
+			bool require_travel_time = true;
 			if (v->current_order.IsAnyLoadingType() || v->current_order.IsType(OT_WAITING)) {
 				/* Account for the vehicle having reached the current order and being in the loading phase. */
 				status = D_ARRIVED;
 				start_date -= order->GetTravelTime() + ((v->lateness_counter < 0) ? v->lateness_counter : 0);
+				require_travel_time = false;
 			}
 
 			/* Loop through the vehicle's orders until we've found a suitable order or we've determined that no such order exists. */
@@ -330,7 +332,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 								}
 
 								start_date -= order->GetTravelTime();
-
+								require_travel_time = false;
 								continue;
 							}
 							case 2: {
@@ -340,6 +342,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 								}
 								start_date -= order->GetWaitTime(); /* Added previously in VehicleSetNextDepartureTime */
 								order = (order->next == nullptr) ? v->GetFirstOrder() : order->next;
+								require_travel_time = true;
 								continue;
 							}
 					}
@@ -352,7 +355,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 				}
 
 				/* If an order has a 0 travel time, and it's not explictly set, then stop. */
-				if (order->GetTravelTime() == 0 && !order->IsTravelTimetabled() && !order->IsType(OT_IMPLICIT)) {
+				if (require_travel_time && order->GetTravelTime() == 0 && !order->IsTravelTimetabled() && !order->IsType(OT_IMPLICIT)) {
 					break;
 				}
 
@@ -403,6 +406,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 						status = D_TRAVELLING;
 					}
 					order = (order->next == nullptr) ? v->GetFirstOrder() : order->next;
+					require_travel_time = true;
 				}
 			}
 		}
@@ -458,6 +462,8 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 
 			/* We keep track of potential via stations along the way. If we call at a station immediately after going via it, then it is the via station. */
 			StationID candidate_via = INVALID_STATION;
+			StationID pending_via = INVALID_STATION;
+			StationID pending_via2 = INVALID_STATION;
 
 			/* Go through the order list, looping if necessary, to find a terminus. */
 			/* Get the next order, which may be the vehicle's first order. */
@@ -508,8 +514,12 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 						(StationID)order->GetDestination() == station &&
 						(order->GetUnloadType() != OUFB_NO_UNLOAD ||
 						_settings_client.gui.departure_show_all_stops) &&
-						order->GetNonStopType() != ONSF_NO_STOP_AT_ANY_STATION &&
-						order->GetNonStopType() != ONSF_NO_STOP_AT_DESTINATION_STATION) {
+						(((order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION) == 0) || ((least_order->order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION) != 0))) {
+					/* If we're not calling anywhere, then skip this departure. */
+					found_terminus = (d->calling_at.size() > 0);
+					break;
+				} else if (order->GetType() == OT_GOTO_WAYPOINT &&
+					(StationID)order->GetDestination() == station) {
 					/* If we're not calling anywhere, then skip this departure. */
 					found_terminus = (d->calling_at.size() > 0);
 					break;
@@ -521,6 +531,18 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 						order->GetType() == OT_GOTO_STATION &&
 						d->via == INVALID_STATION) {
 					candidate_via = (StationID)order->GetDestination();
+				}
+
+				if (order->GetType() == OT_LABEL && order->GetLabelSubType() == OLST_DEPARTURES_VIA && d->via == INVALID_STATION && pending_via == INVALID_STATION) {
+					pending_via = (StationID)order->GetDestination();
+					const Order *next = (order->next == nullptr) ? least_order->v->GetFirstOrder() : order->next;
+					if (next->GetType() == OT_LABEL && next->GetLabelSubType() == OLST_DEPARTURES_VIA && (StationID)next->GetDestination() != pending_via) {
+						pending_via2 = (StationID)next->GetDestination();
+					}
+				}
+
+				if (order->GetType() == OT_LABEL && order->GetLabelSubType() == OLST_DEPARTURES_REMOVE_VIA && !d->calling_at.empty()) {
+					d->remove_vias.push_back({ (StationID)order->GetDestination(), (uint)(d->calling_at.size() - 1) });
 				}
 
 				if (c.scheduled_date != 0 && (order->GetTravelTime() != 0 || order->IsTravelTimetabled())) {
@@ -554,6 +576,10 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 						order->GetType() == OT_IMPLICIT) &&
 						order->GetNonStopType() != ONSF_NO_STOP_AT_ANY_STATION &&
 						order->GetNonStopType() != ONSF_NO_STOP_AT_DESTINATION_STATION) {
+					if (d->via == INVALID_STATION && pending_via != INVALID_STATION) {
+						d->via = pending_via;
+						d->via2 = pending_via2;
+					}
 					if (d->via == INVALID_STATION && candidate_via == (StationID)order->GetDestination()) {
 						d->via = (StationID)order->GetDestination();
 					}
@@ -596,15 +622,32 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 						for (uint i = 0; i < result->size() - 1; ++i) {
 							Departure *d_first = (*result)[i];
 							uint k = (uint)d_first->calling_at.size() - 2;
-							for (uint j = (uint)d->calling_at.size(); j > 0; --j) {
+							uint j = (uint)d->calling_at.size();
+							while (j > 0) {
 								CallAt c = CallAt(d->calling_at[j - 1]);
 
 								if (d_first->terminus >= c && d_first->calling_at.size() >= 2) {
 									d_first->terminus = CallAt(d_first->calling_at[k]);
+									auto remove_via = [&](StationID st) {
+										if (d_first->via2 == st) d_first->via2 = INVALID_STATION;
+										if (d_first->via == st) {
+											d_first->via = d_first->via2;
+											d_first->via2 = INVALID_STATION;
+										}
+									};
+									remove_via(d_first->terminus.station);
+									for (const RemoveVia &rv : d_first->remove_vias) {
+										if (rv.calling_at_offset == k) {
+											remove_via(rv.via);
+										}
+									}
 
 									if (k == 0) break;
 
 									k--;
+									j = (uint)d->calling_at.size();
+								} else {
+									j--;
 								}
 							}
 						}
@@ -717,6 +760,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 		/* Go through the order list to find the next candidate departure. */
 		/* We only need to consider each order at most once. */
 		bool found_next_order = false;
+		bool require_travel_time = true;
 		for (int i = least_order->v->GetNumOrders(); i > 0; --i) {
 			/* If the order is a conditional branch, handle it. */
 			if (order->IsType(OT_CONDITIONAL)) {
@@ -736,7 +780,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 							if (VehicleSetNextDepartureTime(&least_order->expected_date, &least_order->scheduled_waiting_time, date_only_scaled, least_order->v, order, false, schdispatch_last_planned_dispatch)) {
 								least_order->lateness = 0;
 							}
-
+							require_travel_time = false;
 							continue;
 						}
 						case 2: {
@@ -746,6 +790,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 							if (VehicleSetNextDepartureTime(&least_order->expected_date, &least_order->scheduled_waiting_time, date_only_scaled, least_order->v, order, false, schdispatch_last_planned_dispatch)) {
 								least_order->lateness = 0;
 							}
+							require_travel_time = true;
 							continue;
 						}
 				}
@@ -753,7 +798,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 			}
 
 			/* If an order has a 0 travel time, and it's not explictly set, then stop. */
-			if (order->GetTravelTime() == 0 && !order->IsTravelTimetabled() && !order->IsType(OT_IMPLICIT)) {
+			if (require_travel_time && order->GetTravelTime() == 0 && !order->IsTravelTimetabled() && !order->IsType(OT_IMPLICIT)) {
 				break;
 			}
 
@@ -775,6 +820,7 @@ DepartureList* MakeDepartureList(StationID station, const std::vector<const Vehi
 			if (VehicleSetNextDepartureTime(&least_order->expected_date, &least_order->scheduled_waiting_time, date_only_scaled, least_order->v, order, false, schdispatch_last_planned_dispatch)) {
 				least_order->lateness = 0;
 			}
+			require_travel_time = true;
 		}
 
 		/* If we didn't find a suitable order for being a departure, then we can ignore this vehicle from now on. */

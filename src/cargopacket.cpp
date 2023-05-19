@@ -143,7 +143,7 @@ CargoPacket::CargoPacket(StationID source, TileIndex source_xy, uint16 count, So
  * @note We have to zero memory ourselves here because we are using a 'new'
  * that, in contrary to all other pools, does not memset to 0.
  */
-CargoPacket::CargoPacket(uint16 count, byte days_in_transit, StationID source, TileIndex source_xy, TileIndex loaded_at_xy, Money feeder_share, SourceType source_type, SourceID source_id) :
+CargoPacket::CargoPacket(uint16 count, uint16 days_in_transit, StationID source, TileIndex source_xy, TileIndex loaded_at_xy, Money feeder_share, SourceType source_type, SourceID source_id) :
 		feeder_share(feeder_share),
 		count(count),
 		days_in_transit(days_in_transit),
@@ -569,7 +569,7 @@ void VehicleCargoList::AgeCargo()
 	for (ConstIterator it(this->packets.begin()); it != this->packets.end(); it++) {
 		CargoPacket *cp = *it;
 		/* If we're at the maximum, then we can't increase no more. */
-		if (cp->days_in_transit == 0xFF) continue;
+		if (cp->days_in_transit == UINT16_MAX) continue;
 
 		cp->days_in_transit++;
 		this->cargo_days_in_transit += cp->count;

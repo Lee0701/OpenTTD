@@ -132,7 +132,13 @@ void ViewportAddVehicles(DrawPixelInfo *dpi, bool update_vehicles);
 void ViewportMapDrawVehicles(DrawPixelInfo *dpi, Viewport *vp);
 
 void ShowNewGrfVehicleError(EngineID engine, StringID part1, StringID part2, GRFBugs bug_type, bool critical);
-CommandCost TunnelBridgeIsFree(TileIndex tile, TileIndex endtile, const Vehicle *ignore = nullptr, bool across_only = false);
+
+enum TunnelBridgeIsFreeMode {
+	TBIFM_ALL,
+	TBIFM_ACROSS_ONLY,
+	TBIFM_PRIMARY_ONLY,
+};
+CommandCost TunnelBridgeIsFree(TileIndex tile, TileIndex endtile, const Vehicle *ignore = nullptr, TunnelBridgeIsFreeMode mode = TBIFM_ALL);
 Train *GetTrainClosestToTunnelBridgeEnd(TileIndex tile, TileIndex other_tile);
 int GetAvailableFreeTilesInSignalledTunnelBridge(TileIndex entrance, TileIndex exit, TileIndex tile);
 int GetAvailableFreeTilesInSignalledTunnelBridgeWithStartOffset(TileIndex entrance, TileIndex exit, int offset);
@@ -240,7 +246,7 @@ static inline uint32 GetCmdSendToDepot(const BaseVehicle *v)
 }
 
 CommandCost EnsureNoVehicleOnGround(TileIndex tile);
-CommandCost EnsureNoRoadVehicleOnGround(TileIndex tile);
+bool IsTrainCollidableRoadVehicleOnGround(TileIndex tile);
 CommandCost EnsureNoTrainOnTrackBits(TileIndex tile, TrackBits track_bits);
 
 extern VehicleID _new_vehicle_id;

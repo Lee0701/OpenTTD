@@ -24,6 +24,7 @@
 #include "settings_func.h"
 #include "fios.h"
 #include "fileio_func.h"
+#include "fontcache.h"
 #include "screenshot.h"
 #include "genworld.h"
 #include "strings_func.h"
@@ -313,7 +314,11 @@ DEF_CONSOLE_CMD(ConZoomToLevel)
 		case 2: {
 			uint32 level;
 			if (GetArgumentInteger(&level, argv[1])) {
-				if (level < ZOOM_LVL_MIN) {
+				/* In case ZOOM_LVL_MIN is more than 0, the next if statement needs to be amended.
+				 * A simple check for less than ZOOM_LVL_MIN does not work here because we are
+				 * reading an unsigned integer from the console, so just check for a '-' char. */
+				static_assert(ZOOM_LVL_MIN == 0);
+				if (argv[1][0] == '-') {
 					IConsolePrintF(CC_ERROR, "Zoom-in levels below %u are not supported.", ZOOM_LVL_MIN);
 				} else if (level < _settings_client.gui.zoom_min) {
 					IConsolePrintF(CC_ERROR, "Current client settings do not allow zooming in below level %u.", _settings_client.gui.zoom_min);
@@ -322,7 +327,7 @@ DEF_CONSOLE_CMD(ConZoomToLevel)
 				} else if (level > _settings_client.gui.zoom_max) {
 					IConsolePrintF(CC_ERROR, "Current client settings do not allow zooming out beyond level %u.", _settings_client.gui.zoom_max);
 				} else {
-					Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
+					Window *w = GetMainWindow();
 					Viewport *vp = w->viewport;
 					while (vp->zoom > level) DoZoomInOutWindow(ZOOM_IN, w);
 					while (vp->zoom < level) DoZoomInOutWindow(ZOOM_OUT, w);
@@ -529,7 +534,7 @@ DEF_CONSOLE_CMD(ConRemove)
 	_console_file_list.ValidateFileList();
 	const FiosItem *item = _console_file_list.FindItem(file);
 	if (item != nullptr) {
-		if (!FiosDelete(item->name)) {
+		if (unlink(item->name) != 0) {
 			IConsolePrintF(CC_ERROR, "%s: Failed to delete file", file);
 		}
 	} else {
@@ -1031,6 +1036,7 @@ DEF_CONSOLE_CMD(ConResetCompany)
 		return false;
 	}
 	const NetworkClientInfo *ci = NetworkClientInfo::GetByClientID(CLIENT_ID_SERVER);
+	assert(ci != nullptr);
 	if (ci->client_playas == index) {
 		IConsoleError("Cannot remove company: the server is connected to that company.");
 		return true;
@@ -1194,6 +1200,9 @@ DEF_CONSOLE_CMD(ConReturn)
  *  default console commands
  ******************************/
 extern bool CloseConsoleLogIfActive();
+extern const std::vector<GRFFile *> &GetAllGRFFiles();
+extern void ConPrintFramerate(); // framerate_gui.cpp
+extern void ShowFramerateWindow();
 
 DEF_CONSOLE_CMD(ConScript)
 {
@@ -1266,7 +1275,7 @@ DEF_CONSOLE_CMD(ConRestart)
 
 	/* Don't copy the _newgame pointers to the real pointers, so call SwitchToMode directly */
 	_settings_game.game_creation.map_x = MapLogX();
-	_settings_game.game_creation.map_y = FindFirstBit(MapSizeY());
+	_settings_game.game_creation.map_y = MapLogY();
 	_switch_mode = SM_RESTARTGAME;
 	return true;
 }
@@ -1283,7 +1292,7 @@ DEF_CONSOLE_CMD(ConReload)
 
 	/* Don't copy the _newgame pointers to the real pointers, so call SwitchToMode directly */
 	_settings_game.game_creation.map_x = MapLogX();
-	_settings_game.game_creation.map_y = FindFirstBit(MapSizeY());
+	_settings_game.game_creation.map_y = MapLogY();
 	_switch_mode = SM_RELOADGAME;
 	return true;
 }
@@ -2212,6 +2221,79 @@ DEF_CONSOLE_CMD(ConContent)
 }
 #endif /* defined(WITH_ZLIB) */
 
+DEF_CONSOLE_CMD(ConFont)
+{
+	if (argc == 0) {
+		IConsoleHelp("Manage the fonts configuration.");
+		IConsoleHelp("Usage 'font'.");
+		IConsoleHelp("  Print out the fonts configuration.");
+		IConsoleHelp("Usage 'font [medium|small|large|mono] [<name>] [<size>] [aa|noaa]'.");
+		IConsoleHelp("  Change the configuration for a font.");
+		IConsoleHelp("  Omitting an argument will keep the current value.");
+		IConsoleHelp("  Set <name> to \"\" for the sprite font (size and aa have no effect on sprite font).");
+		return true;
+	}
+
+	FontSize argfs;
+	for (argfs = FS_BEGIN; argfs < FS_END; argfs++) {
+		if (argc > 1 && strcasecmp(argv[1], FontSizeToName(argfs)) == 0) break;
+	}
+
+	/* First argument must be a FontSize. */
+	if (argc > 1 && argfs == FS_END) return false;
+
+	if (argc > 2) {
+		FontCacheSubSetting *setting = GetFontCacheSubSetting(argfs);
+		std::string font = setting->font;
+		uint size = setting->size;
+		bool aa = setting->aa;
+
+		byte arg_index = 2;
+		/* We may encounter "aa" or "noaa" but it must be the last argument. */
+		if (strcasecmp(argv[arg_index], "aa") == 0 || strcasecmp(argv[arg_index], "noaa") == 0) {
+			aa = strncasecmp(argv[arg_index++], "no", 2) != 0;
+			if (argc > arg_index) return false;
+		} else {
+			/* For <name> we want a string. */
+			uint v;
+			if (!GetArgumentInteger(&v, argv[arg_index])) {
+				font = argv[arg_index++];
+			}
+		}
+
+		if (argc > arg_index) {
+			/* For <size> we want a number. */
+			uint v;
+			if (GetArgumentInteger(&v, argv[arg_index])) {
+				size = v;
+				arg_index++;
+			}
+		}
+
+		if (argc > arg_index) {
+			/* Last argument must be "aa" or "noaa". */
+			if (strcasecmp(argv[arg_index], "aa") != 0 && strcasecmp(argv[arg_index], "noaa") != 0) return false;
+			aa = strncasecmp(argv[arg_index++], "no", 2) != 0;
+			if (argc > arg_index) return false;
+		}
+
+		SetFont(argfs, font, size, aa);
+	}
+
+	for (FontSize fs = FS_BEGIN; fs < FS_END; fs++) {
+		FontCache *fc = FontCache::Get(fs);
+		FontCacheSubSetting *setting = GetFontCacheSubSetting(fs);
+		/* Make sure all non sprite fonts are loaded. */
+		if (!setting->font.empty() && !fc->HasParent()) {
+			InitFontCache(fs == FS_MONO);
+			fc = FontCache::Get(fs);
+		}
+		IConsolePrintF(CC_DEFAULT, "%s: \"%s\" %d %s [\"%s\" %d %s]", FontSizeToName(fs), fc->GetFontName(), fc->GetFontSize(), GetFontAAState(fs) ? "aa" : "noaa", setting->font.c_str(), setting->size, setting->aa ? "aa" : "noaa");
+	}
+
+	return true;
+}
+
 DEF_CONSOLE_CMD(ConSetting)
 {
 	if (argc == 0) {
@@ -2259,7 +2341,20 @@ DEF_CONSOLE_CMD(ConListSettings)
 
 	if (argc > 2) return false;
 
-	IConsoleListSettings((argc == 2) ? argv[1] : nullptr);
+	IConsoleListSettings((argc == 2) ? argv[1] : nullptr, false);
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConListSettingsDefaults)
+{
+	if (argc == 0) {
+		IConsoleHelp("List settings and also show default value. Usage: 'list_settings_def [<pre-filter>]'");
+		return true;
+	}
+
+	if (argc > 2) return false;
+
+	IConsoleListSettings((argc == 2) ? argv[1] : nullptr, true);
 	return true;
 }
 
@@ -2941,7 +3036,10 @@ DEF_CONSOLE_CMD(ConCheckCaches)
 	if (broadcast) {
 		DoCommandP(0, 0, 0, CMD_DESYNC_CHECK);
 	} else {
-		CheckCaches(true, nullptr, CHECK_CACHE_ALL | CHECK_CACHE_EMIT_LOG);
+		auto logger = [&](const char *str) {
+			IConsolePrint(CC_WARNING, str);
+		};
+		CheckCaches(true, logger, CHECK_CACHE_ALL | CHECK_CACHE_EMIT_LOG);
 	}
 
 	return true;
@@ -3266,7 +3364,6 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 		return true;
 	}
 
-	extern const std::vector<GRFFile *> &GetAllGRFFiles();
 	const std::vector<GRFFile *> &files = GetAllGRFFiles();
 
 	/* "list" sub-command */
@@ -3623,8 +3720,6 @@ static void IConsoleDebugLibRegister()
 
 DEF_CONSOLE_CMD(ConFramerate)
 {
-	extern void ConPrintFramerate(); // framerate_gui.cpp
-
 	if (argc == 0) {
 		IConsoleHelp("Show frame rate and game speed information");
 		return true;
@@ -3636,8 +3731,6 @@ DEF_CONSOLE_CMD(ConFramerate)
 
 DEF_CONSOLE_CMD(ConFramerateWindow)
 {
-	extern void ShowFramerateWindow();
-
 	if (argc == 0) {
 		IConsoleHelp("Open the frame rate window");
 		return true;
@@ -3750,9 +3843,11 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("cd",                      ConChangeDirectory);
 	IConsole::CmdRegister("pwd",                     ConPrintWorkingDirectory);
 	IConsole::CmdRegister("clear",                   ConClearBuffer);
+	IConsole::CmdRegister("font",                    ConFont);
 	IConsole::CmdRegister("setting",                 ConSetting);
 	IConsole::CmdRegister("setting_newgame",         ConSettingNewgame);
 	IConsole::CmdRegister("list_settings",           ConListSettings);
+	IConsole::CmdRegister("list_settings_def",       ConListSettingsDefaults);
 	IConsole::CmdRegister("gamelog",                 ConGamelogPrint);
 	IConsole::CmdRegister("rescan_newgrf",           ConRescanNewGRF);
 	IConsole::CmdRegister("list_dirs",               ConListDirs);

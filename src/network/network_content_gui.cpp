@@ -21,6 +21,7 @@
 #include "../querystring_gui.h"
 #include "../core/geometry_func.hpp"
 #include "../textfile_gui.h"
+#include "../fios.h"
 #include "network_content_gui.h"
 
 
@@ -99,7 +100,7 @@ static WindowDesc _network_content_download_status_window_desc(
 );
 
 BaseNetworkContentDownloadStatusWindow::BaseNetworkContentDownloadStatusWindow(WindowDesc *desc) :
-		Window(desc), cur_id(UINT32_MAX)
+		Window(desc), downloaded_bytes(0), downloaded_files(0), cur_id(UINT32_MAX)
 {
 	_network_content_client.AddCallback(this);
 	_network_content_client.DownloadSelectedContent(this->total_files, this->total_bytes);
@@ -172,7 +173,13 @@ void BaseNetworkContentDownloadStatusWindow::OnDownloadProgress(const ContentInf
 		this->downloaded_files++;
 	}
 
-	this->downloaded_bytes += bytes;
+	/* A negative value means we are resetting; for example, when retrying or using a fallback. */
+	if (bytes < 0) {
+		this->downloaded_bytes = 0;
+	} else {
+		this->downloaded_bytes += bytes;
+	}
+
 	this->SetDirty();
 }
 
@@ -263,7 +270,6 @@ public:
 
 				case CONTENT_TYPE_SCENARIO:
 				case CONTENT_TYPE_HEIGHTMAP:
-					extern void ScanScenarios();
 					ScanScenarios();
 					InvalidateWindowData(WC_SAVELOAD, 0, 0);
 					break;
@@ -342,8 +348,6 @@ class NetworkContentListWindow : public Window, ContentCallback {
 	/** Search external websites for content */
 	void OpenExternalSearch()
 	{
-		extern void OpenBrowser(const char *url);
-
 		char url[1024];
 		const char *last = lastof(url);
 
@@ -852,7 +856,6 @@ public:
 
 			case WID_NCL_OPEN_URL:
 				if (this->selected != nullptr) {
-					extern void OpenBrowser(const char *url);
 					OpenBrowser(this->selected->url.c_str());
 				}
 				break;

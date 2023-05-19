@@ -108,7 +108,7 @@ void NetworkReInitChatBoxSize()
 {
 	_chatmsg_box.y       = 3 * FONT_HEIGHT_NORMAL;
 	_chatmsg_box.height  = MAX_CHAT_MESSAGES * (FONT_HEIGHT_NORMAL + ScaleGUITrad(NETWORK_CHAT_LINE_SPACING)) + ScaleGUITrad(4);
-	_chatmessage_backup  = ReallocT(_chatmessage_backup, _chatmsg_box.width * _chatmsg_box.height * BlitterFactory::GetCurrentBlitter()->GetBytesPerPixel());
+	_chatmessage_backup  = ReallocT(_chatmessage_backup, static_cast<size_t>(_chatmsg_box.width) * _chatmsg_box.height * BlitterFactory::GetCurrentBlitter()->GetBytesPerPixel());
 }
 
 /** Initialize all buffers of the chat visualisation. */
@@ -214,7 +214,7 @@ void NetworkDrawChatMessage()
 	}
 	if (width <= 0 || height <= 0) return;
 
-	assert(blitter->BufferSize(width, height) <= (int)(_chatmsg_box.width * _chatmsg_box.height * blitter->GetBytesPerPixel()));
+	assert(blitter->BufferSize(width, height) <= static_cast<size_t>(_chatmsg_box.width) * _chatmsg_box.height * blitter->GetBytesPerPixel());
 
 	/* Make a copy of the screen as it is before painting (for undraw) */
 	blitter->CopyToBuffer(blitter->MoveTo(_screen.dst_ptr, x, y), _chatmessage_backup, width, height);
@@ -510,7 +510,7 @@ static const NWidgetPart _nested_chat_window_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY, WID_NC_CLOSE),
 		NWidget(WWT_PANEL, COLOUR_GREY, WID_NC_BACKGROUND),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_TEXT, COLOUR_GREY, WID_NC_DESTINATION), SetMinimalSize(62, 12), SetPadding(1, 0, 1, 0), SetAlignment(SA_TOP | SA_RIGHT), SetDataTip(STR_NULL, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_GREY, WID_NC_DESTINATION), SetMinimalSize(62, 12), SetPadding(1, 0, 1, 0), SetAlignment(SA_VERT_CENTER | SA_RIGHT), SetDataTip(STR_NULL, STR_NULL),
 				NWidget(WWT_EDITBOX, COLOUR_GREY, WID_NC_TEXTBOX), SetMinimalSize(100, 12), SetPadding(1, 0, 1, 0), SetResize(1, 0),
 																	SetDataTip(STR_NETWORK_CHAT_OSKTITLE, STR_NULL),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NC_SENDBUTTON), SetMinimalSize(62, 12), SetPadding(1, 0, 1, 0), SetDataTip(STR_NETWORK_CHAT_SEND, STR_NULL),

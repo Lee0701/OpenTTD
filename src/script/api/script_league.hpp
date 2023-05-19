@@ -68,9 +68,11 @@ public:
 	/**
 	 * Create a new league table.
 	 * @param title League table title (can be either a raw string, or ScriptText object).
+	 * @param header The optional header text for the table (null is allowed).
+	 * @param footer The optional footer text for the table (null is allowed).
 	 * @return The new LeagueTableID, or LEAGUE_TABLE_INVALID if it failed.
-	 * @pre No ScriptCompanyMode may be in scope.
-	 * @pre title != nullptr && len(title) != 0.
+	 * @pre ScriptCompanyMode::IsDeity.
+	 * @pre title != null && len(title) != 0.
 	 */
 	static LeagueTableID New(Text *title, Text *header, Text *footer);
 
@@ -84,13 +86,13 @@ public:
 	 * @param link_type Type of the referenced object.
 	 * @param link_target Id of the referenced object.
 	 * @return The new LeagueTableElementID, or LEAGUE_TABLE_ELEMENT_INVALID if it failed.
-	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre ScriptCompanyMode::IsDeity.
 	 * @pre IsValidLeagueTable(table).
-	 * @pre text != nullptr && len(text) != 0.
-	 * @pre score != nullptr && len(score) != 0.
+	 * @pre text != null && len(text) != 0.
+	 * @pre score != null && len(score) != 0.
 	 * @pre IsValidLink(Link(link_type, link_target)).
 	 */
-	static LeagueTableElementID NewElement(LeagueTableID table, int64 rating, ScriptCompany::CompanyID company, Text *text, Text *score, LinkType link_type, LinkTargetID link_target);
+	static LeagueTableElementID NewElement(LeagueTableID table, SQInteger rating, ScriptCompany::CompanyID company, Text *text, Text *score, LinkType link_type, LinkTargetID link_target);
 
 	/**
 	 * Update the attributes of a league table element.
@@ -100,9 +102,9 @@ public:
 	 * @param link_type Type of the referenced object.
 	 * @param link_target Id of the referenced object.
 	 * @return True if the action succeeded.
-	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre ScriptCompanyMode::IsDeity.
 	 * @pre IsValidLeagueTableElement(element).
-	 * @pre text != nullptr && len(text) != 0.
+	 * @pre text != null && len(text) != 0.
 	 * @pre IsValidLink(Link(link_type, link_target)).
 	 */
 	static bool UpdateElementData(LeagueTableElementID element, ScriptCompany::CompanyID company, Text *text, LinkType link_type, LinkTargetID link_target);
@@ -113,18 +115,18 @@ public:
 	 * @param rating Value that elements are ordered by.
 	 * @param score String representation of the score associated with the element (can be either a raw string, or ScriptText object).
 	 * @return True if the action succeeded.
-	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre ScriptCompanyMode::IsDeity.
 	 * @pre IsValidLeagueTableElement(element).
-	 * @pre score != nullptr && len(score) != 0.
+	 * @pre score != null && len(score) != 0.
 	 */
-	static bool UpdateElementScore(LeagueTableElementID element, int64 rating, Text *score);
+	static bool UpdateElementScore(LeagueTableElementID element, SQInteger rating, Text *score);
 
 
 	/**
 	 * Remove a league table element.
 	 * @param element Id of the element to update
 	 * @return True if the action succeeded.
-	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre ScriptCompanyMode::IsDeity.
 	 * @pre IsValidLeagueTableElement(element).
 	 */
 	static bool RemoveElement(LeagueTableElementID element);

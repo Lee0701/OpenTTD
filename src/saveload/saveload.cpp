@@ -101,6 +101,7 @@ namespace upstream_sl {
 	void SlFixPointers();
 	void SlFixPointerChunkByID(uint32 id);
 	void SlSaveChunkChunkByID(uint32 id);
+	void SlResetLoadState();
 }
 
 /** What are we currently doing? */
@@ -242,7 +243,6 @@ struct SaveLoadParams {
 	StringID error_str;                  ///< the translatable error message to show
 	char *extra_msg;                     ///< the error message
 
-	uint16 game_speed;                   ///< The game speed when saving started.
 	bool saveinprogress;                 ///< Whether there is currently a save in progress.
 	SaveModeFlags save_flags;            ///< Save mode flags
 };
@@ -768,7 +768,7 @@ int SlIterateArray()
 	 * we must have read in all the data, so we must be at end of current block. */
 	if (_next_offs != 0 && _sl.reader->GetSize() != _next_offs) {
 		DEBUG(sl, 1, "Invalid chunk size: " PRINTF_SIZE " != " PRINTF_SIZE, _sl.reader->GetSize(), _next_offs);
-		SlErrorCorrupt("Invalid chunk size");
+		SlErrorCorruptFmt("Invalid chunk size iterating array - expected to be at position " PRINTF_SIZE ", actually at " PRINTF_SIZE, _next_offs, _sl.reader->GetSize());
 	}
 
 	for (;;) {
@@ -2139,7 +2139,7 @@ inline void SlRIFFSpringPPCheck(size_t len)
 static void SlLoadChunk(const ChunkHandler &ch)
 {
 	if (ch.special_proc != nullptr) {
-		if (ch.special_proc(ch.id, CSLSO_PRE_LOAD)) return;
+		if (ch.special_proc(ch.id, CSLSO_PRE_LOAD) == CSLSOR_LOAD_CHUNK_CONSUMED) return;
 	}
 
 	byte m = SlReadByte();
@@ -2189,7 +2189,8 @@ static void SlLoadChunk(const ChunkHandler &ch)
 				ch.load_proc();
 				if (_sl.reader->GetSize() != endoffs) {
 					DEBUG(sl, 1, "Invalid chunk size: " PRINTF_SIZE " != " PRINTF_SIZE ", (" PRINTF_SIZE ")", _sl.reader->GetSize(), endoffs, len);
-					SlErrorCorrupt("Invalid chunk size");
+					SlErrorCorruptFmt("Invalid chunk size - expected to be at position " PRINTF_SIZE ", actually at " PRINTF_SIZE ", length: " PRINTF_SIZE,
+							endoffs, _sl.reader->GetSize(), len);
 				}
 			} else {
 				SlErrorCorrupt("Invalid chunk type");
@@ -2206,7 +2207,7 @@ static void SlLoadChunk(const ChunkHandler &ch)
 static void SlLoadCheckChunk(const ChunkHandler *ch)
 {
 	if (ch && ch->special_proc != nullptr) {
-		if (ch->special_proc(ch->id, CSLSO_PRE_LOADCHECK)) return;
+		if (ch->special_proc(ch->id, CSLSO_PRE_LOADCHECK) == CSLSOR_LOAD_CHUNK_CONSUMED) return;
 	}
 
 	byte m = SlReadByte();
@@ -2279,7 +2280,8 @@ static void SlLoadCheckChunk(const ChunkHandler *ch)
 				}
 				if (_sl.reader->GetSize() != endoffs) {
 					DEBUG(sl, 1, "Invalid chunk size: " PRINTF_SIZE " != " PRINTF_SIZE ", (" PRINTF_SIZE ")", _sl.reader->GetSize(), endoffs, len);
-					SlErrorCorrupt("Invalid chunk size");
+					SlErrorCorruptFmt("Invalid chunk size - expected to be at position " PRINTF_SIZE ", actually at " PRINTF_SIZE ", length: " PRINTF_SIZE,
+							endoffs, _sl.reader->GetSize(), len);
 				}
 			} else {
 				SlErrorCorrupt("Invalid chunk type");
@@ -2298,8 +2300,10 @@ static void SlSaveChunk(const ChunkHandler &ch)
 	if (ch.type == CH_UPSTREAM_SAVE) {
 		SaveLoadVersion old_ver = _sl_version;
 		_sl_version = MAX_LOAD_SAVEGAME_VERSION;
+		auto guard = scope_guard([&]() {
+			_sl_version = old_ver;
+		});
 		upstream_sl::SlSaveChunkChunkByID(ch.id);
-		_sl_version = old_ver;
 		return;
 	}
 
@@ -2307,6 +2311,10 @@ static void SlSaveChunk(const ChunkHandler &ch)
 
 	/* Don't save any chunk information if there is no save handler. */
 	if (proc == nullptr) return;
+
+	if (ch.special_proc != nullptr) {
+		if (ch.special_proc(ch.id, CSLSO_SHOULD_SAVE_CHUNK) == CSLSOR_DONT_SAVE_CHUNK) return;
+	}
 
 	SlWriteUint32(ch.id);
 	DEBUG(sl, 2, "Saving chunk %c%c%c%c", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
@@ -2697,6 +2705,7 @@ struct ZlibLoadFilter : LoadFilter {
 /** Filter using Zlib compression. */
 struct ZlibSaveFilter : SaveFilter {
 	z_stream z; ///< Stream state we are writing to.
+	byte buf[MEMORY_CHUNK_SIZE]; ///< output buffer
 
 	/**
 	 * Initialise this filter.
@@ -2723,13 +2732,12 @@ struct ZlibSaveFilter : SaveFilter {
 	 */
 	void WriteLoop(byte *p, size_t len, int mode)
 	{
-		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
 		uint n;
 		this->z.next_in = p;
 		this->z.avail_in = (uInt)len;
 		do {
-			this->z.next_out = buf;
-			this->z.avail_out = sizeof(buf);
+			this->z.next_out = this->buf;
+			this->z.avail_out = sizeof(this->buf);
 
 			/**
 			 * For the poor next soul who sees many valgrind warnings of the
@@ -2741,8 +2749,8 @@ struct ZlibSaveFilter : SaveFilter {
 			int r = deflate(&this->z, mode);
 
 			/* bytes were emitted? */
-			if ((n = sizeof(buf) - this->z.avail_out) != 0) {
-				this->chain->Write(buf, n);
+			if ((n = sizeof(this->buf) - this->z.avail_out) != 0) {
+				this->chain->Write(this->buf, n);
 			}
 			if (r == Z_STREAM_END) break;
 
@@ -2825,6 +2833,7 @@ struct LZMALoadFilter : LoadFilter {
 /** Filter using LZMA compression. */
 struct LZMASaveFilter : SaveFilter {
 	lzma_stream lzma; ///< Stream state that we are writing to.
+	byte buf[MEMORY_CHUNK_SIZE]; ///< output buffer
 
 	/**
 	 * Initialise this filter.
@@ -2850,19 +2859,18 @@ struct LZMASaveFilter : SaveFilter {
 	 */
 	void WriteLoop(byte *p, size_t len, lzma_action action)
 	{
-		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
 		size_t n;
 		this->lzma.next_in = p;
 		this->lzma.avail_in = len;
 		do {
-			this->lzma.next_out = buf;
-			this->lzma.avail_out = sizeof(buf);
+			this->lzma.next_out = this->buf;
+			this->lzma.avail_out = sizeof(this->buf);
 
 			lzma_ret r = lzma_code(&this->lzma, action);
 
 			/* bytes were emitted? */
-			if ((n = sizeof(buf) - this->lzma.avail_out) != 0) {
-				this->chain->Write(buf, n);
+			if ((n = sizeof(this->buf) - this->lzma.avail_out) != 0) {
+				this->chain->Write(this->buf, n);
 			}
 			if (r == LZMA_STREAM_END) break;
 			if (r != LZMA_OK) SlErrorFmt(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "liblzma returned error code: %u", r);
@@ -2938,6 +2946,7 @@ struct ZSTDLoadFilter : LoadFilter {
 /** Filter using ZSTD compression. */
 struct ZSTDSaveFilter : SaveFilter {
 	ZSTD_CCtx *zstd;  ///< ZSTD compression context
+	byte buf[MEMORY_CHUNK_SIZE]; ///< output buffer
 
 	/**
 	 * Initialise this filter.
@@ -2968,16 +2977,15 @@ struct ZSTDSaveFilter : SaveFilter {
 	 */
 	void WriteLoop(byte *p, size_t len, ZSTD_EndDirective mode)
 	{
-		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
 		ZSTD_inBuffer input{p, len, 0};
 
 		bool finished;
 		do {
-			ZSTD_outBuffer output{buf, sizeof(buf), 0};
+			ZSTD_outBuffer output{this->buf, sizeof(this->buf), 0};
 			size_t remaining = ZSTD_compressStream2(this->zstd, &output, &input, mode);
 			if (ZSTD_isError(remaining)) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "libzstd returned error code");
 
-			if (output.pos != 0) this->chain->Write(buf, output.pos);
+			if (output.pos != 0) this->chain->Write(this->buf, output.pos);
 
 			finished = (mode == ZSTD_e_end ? (remaining == 0) : (input.pos == input.size));
 		} while (!finished);
@@ -3148,15 +3156,9 @@ static inline void ClearSaveLoadState()
 	GamelogStopAnyAction();
 }
 
-/**
- * Update the gui accordingly when starting saving
- * and set locks on saveload. Also turn off fast-forward cause with that
- * saving takes Aaaaages
- */
+/** Update the gui accordingly when starting saving and set locks on saveload. */
 static void SaveFileStart()
 {
-	_sl.game_speed = _game_speed;
-	_game_speed = 100;
 	SetMouseCursorBusy(true);
 
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_SAVELOAD_START);
@@ -3166,7 +3168,6 @@ static void SaveFileStart()
 /** Update the gui accordingly when saving is done and release locks on saveload. */
 static void SaveFileDone()
 {
-	if (_game_mode != GM_MENU) _game_speed = _sl.game_speed;
 	SetMouseCursorBusy(false);
 
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_SAVELOAD_FINISH);
@@ -3317,6 +3318,11 @@ bool IsNetworkServerSave()
 	return _sl.save_flags & SMF_NET_SERVER;
 }
 
+bool IsScenarioSave()
+{
+	return _sl.save_flags & SMF_SCENARIO;
+}
+
 struct ThreadedLoadFilter : LoadFilter {
 	static const size_t BUFFER_COUNT = 4;
 
@@ -3442,8 +3448,10 @@ static SaveOrLoadResult DoLoad(LoadFilter *reader, bool load_check)
 
 	SlXvResetState();
 	SlResetVENC();
+	SlResetTNNC();
 	auto guard = scope_guard([&]() {
 		SlResetVENC();
+		SlResetTNNC();
 	});
 
 	uint32 hdr[2];
@@ -3523,6 +3531,8 @@ static SaveOrLoadResult DoLoad(LoadFilter *reader, bool load_check)
 	}
 	_sl.reader = new ReadBuffer(_sl.lf);
 	_next_offs = 0;
+
+	upstream_sl::SlResetLoadState();
 
 	if (!load_check) {
 		ResetSaveloadData();

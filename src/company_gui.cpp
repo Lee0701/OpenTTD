@@ -37,6 +37,7 @@
 #include "station_func.h"
 #include "zoom_func.h"
 #include "sortlist_type.h"
+#include "core/backup_type.hpp"
 
 #include "widgets/company_widget.h"
 
@@ -226,7 +227,7 @@ static void DrawPrice(Money amount, int left, int right, int top, TextColour col
  * Draw a category of expenses/revenues in the year column.
  * @return The income sum of the category.
  */
-static Money DrawYearCategory (const Rect &r, int start_y, ExpensesList list, const Money(*tbl)[EXPENSES_END])
+static Money DrawYearCategory (const Rect &r, int start_y, ExpensesList list, const Money(&tbl)[EXPENSES_END])
 {
 	int y = start_y;
 	ExpensesType et;
@@ -234,7 +235,7 @@ static Money DrawYearCategory (const Rect &r, int start_y, ExpensesList list, co
 
 	for (uint i = 0; i < list.length; i++) {
 		et = list.et[i];
-		Money cost = (*tbl)[et];
+		Money cost = tbl[et];
 		sum += cost;
 		if (cost != 0) DrawPrice(cost, r.left, r.right, y, TC_BLACK);
 		y += FONT_HEIGHT_NORMAL;
@@ -254,10 +255,10 @@ static Money DrawYearCategory (const Rect &r, int start_y, ExpensesList list, co
  * Draw a column with prices.
  * @param r    Available space for drawing.
  * @param year Year being drawn.
- * @param tbl  Pointer to table of amounts for \a year.
+ * @param tbl  Reference to table of amounts for \a year.
  * @note The environment must provide padding at the left and right of \a r.
  */
-static void DrawYearColumn(const Rect &r, int year, const Money (*tbl)[EXPENSES_END])
+static void DrawYearColumn(const Rect &r, int year, const Money (&tbl)[EXPENSES_END])
 {
 	int y = r.top;
 	Money sum;
@@ -437,7 +438,7 @@ struct CompanyFinancesWindow : Window {
 				int age = std::min(_cur_year - c->inaugurated_year, 2);
 				int wid_offset = widget - WID_CF_EXPS_PRICE1;
 				if (wid_offset <= age) {
-					DrawYearColumn(r, _cur_year - (age - wid_offset), c->yearly_expenses + (age - wid_offset));
+					DrawYearColumn(r, _cur_year - (age - wid_offset), c->yearly_expenses[age - wid_offset]);
 				}
 				break;
 			}
@@ -641,9 +642,14 @@ public:
 		return this->result >= COLOUR_END ? STR_COLOUR_DEFAULT : _colour_dropdown[this->result];
 	}
 
+	uint Width() const override
+	{
+		return ScaleGUITrad(28) + WidgetDimensions::scaled.hsep_normal + GetStringBoundingBox(this->String()).width + WidgetDimensions::scaled.dropdowntext.Horizontal();
+	}
+
 	uint Height(uint width) const override
 	{
-		return std::max(FONT_HEIGHT_NORMAL, ScaleGUITrad(12) + 2);
+		return std::max(FONT_HEIGHT_NORMAL, ScaleGUITrad(12) + WidgetDimensions::scaled.vsep_normal);
 	}
 
 	bool Selectable() const override
@@ -685,10 +691,9 @@ private:
 	void ShowColourDropDownMenu(uint32 widget)
 	{
 		uint32 used_colours = 0;
-		const Company *c;
 		const Livery *livery, *default_livery = nullptr;
 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
-		byte default_col;
+		byte default_col = 0;
 
 		/* Disallow other company colours for the primary colour */
 		if (this->livery_class < LC_GROUP_RAIL && HasBit(this->sel, LS_DEFAULT) && primary) {
@@ -697,7 +702,7 @@ private:
 			}
 		}
 
-		c = Company::Get((CompanyID)this->window_number);
+		const Company *c = Company::Get((CompanyID)this->window_number);
 
 		if (this->livery_class < LC_GROUP_RAIL) {
 			/* Get the first selected livery to use as the default dropdown item */
@@ -853,7 +858,7 @@ public:
 		/* Position scrollbar to selected group */
 		for (uint i = 0; i < this->rows; i++) {
 			if (this->groups[i]->index == sel) {
-				this->vscroll->SetPosition(Clamp(i - this->vscroll->GetCapacity() / 2, 0, std::max(this->vscroll->GetCount() - this->vscroll->GetCapacity(), 0)));
+				this->vscroll->SetPosition(i - this->vscroll->GetCapacity() / 2);
 				break;
 			}
 		}
@@ -1751,7 +1756,7 @@ public:
 
 			/* Randomize face button */
 			case WID_SCMF_RANDOM_NEW_FACE:
-				RandomCompanyManagerFaceBits(this->face, this->ge, this->advanced);
+				RandomCompanyManagerFaceBits(this->face, this->ge, this->advanced, _interactive_random);
 				this->UpdateData();
 				this->SetDirty();
 				break;
@@ -2088,8 +2093,7 @@ struct CompanyInfrastructureWindow : Window
 		DrawPixelInfo tmp_dpi;
 		if (!FillDrawPixelInfo(&tmp_dpi, r.left, r.top, width + 1, r.bottom - r.top + 1)) return;
 
-		DrawPixelInfo *old_dpi = _cur_dpi;
-		_cur_dpi = &tmp_dpi;
+		AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
 		int y = -this->vscroll->GetPosition();
 
@@ -2199,9 +2203,6 @@ struct CompanyInfrastructureWindow : Window
 				break;
 			}
 		}
-
-		/* Restore clipping region. */
-		_cur_dpi = old_dpi;
 	}
 
 	virtual void OnResize() override
@@ -2548,6 +2549,70 @@ struct CompanyWindow : Window
 		}
 	}
 
+	void DrawVehicleCountsWidget(const Rect &r, const Company *c) const
+	{
+		static_assert(VEH_COMPANY_END == lengthof(_company_view_vehicle_count_strings));
+
+		int y = r.top;
+		for (VehicleType type = VEH_BEGIN; type < VEH_COMPANY_END; type++) {
+			uint amount = c->group_all[type].num_vehicle;
+			if (amount != 0) {
+				SetDParam(0, amount);
+				DrawString(r.left, r.right, y, _company_view_vehicle_count_strings[type]);
+				y += FONT_HEIGHT_NORMAL;
+			}
+		}
+
+		if (y == r.top) {
+			/* No String was emited before, so there must be no vehicles at all. */
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_VEHICLES_NONE);
+		}
+	}
+
+	void DrawInfrastructureCountsWidget(const Rect &r, const Company *c) const
+	{
+		int y = r.top;
+
+		uint rail_pieces = c->infrastructure.signal;
+		for (uint i = 0; i < lengthof(c->infrastructure.rail); i++) rail_pieces += c->infrastructure.rail[i];
+		if (rail_pieces != 0) {
+			SetDParam(0, rail_pieces);
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL);
+			y += FONT_HEIGHT_NORMAL;
+		}
+
+		uint road_pieces = 0;
+		for (uint i = 0; i < lengthof(c->infrastructure.road); i++) road_pieces += c->infrastructure.road[i];
+		if (road_pieces != 0) {
+			SetDParam(0, road_pieces);
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD);
+			y += FONT_HEIGHT_NORMAL;
+		}
+
+		if (c->infrastructure.water != 0) {
+			SetDParam(0, c->infrastructure.water);
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_WATER);
+			y += FONT_HEIGHT_NORMAL;
+		}
+
+		if (c->infrastructure.station != 0) {
+			SetDParam(0, c->infrastructure.station);
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_STATION);
+			y += FONT_HEIGHT_NORMAL;
+		}
+
+		if (c->infrastructure.airport != 0) {
+			SetDParam(0, c->infrastructure.airport);
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT);
+			y += FONT_HEIGHT_NORMAL;
+		}
+
+		if (y == r.top) {
+			/* No String was emited before, so there must be no infrastructure at all. */
+			DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_NONE);
+		}
+	}
+
 	void DrawWidget(const Rect &r, int widget) const override
 	{
 		const Company *c = Company::Get((CompanyID)this->window_number);
@@ -2569,70 +2634,13 @@ struct CompanyWindow : Window
 				break;
 			}
 
-			case WID_C_DESC_VEHICLE_COUNTS: {
-				uint amounts[4];
-				amounts[0] = c->group_all[VEH_TRAIN].num_vehicle;
-				amounts[1] = c->group_all[VEH_ROAD].num_vehicle;
-				amounts[2] = c->group_all[VEH_SHIP].num_vehicle;
-				amounts[3] = c->group_all[VEH_AIRCRAFT].num_vehicle;
-
-				int y = r.top;
-				if (amounts[0] + amounts[1] + amounts[2] + amounts[3] == 0) {
-					DrawString(r.left, r.right, y, STR_COMPANY_VIEW_VEHICLES_NONE);
-				} else {
-					static_assert(lengthof(amounts) == lengthof(_company_view_vehicle_count_strings));
-
-					for (uint i = 0; i < lengthof(amounts); i++) {
-						if (amounts[i] != 0) {
-							SetDParam(0, amounts[i]);
-							DrawString(r.left, r.right, y, _company_view_vehicle_count_strings[i]);
-							y += FONT_HEIGHT_NORMAL;
-						}
-					}
-				}
+			case WID_C_DESC_VEHICLE_COUNTS:
+				DrawVehicleCountsWidget(r, c);
 				break;
-			}
 
-			case WID_C_DESC_INFRASTRUCTURE_COUNTS: {
-				uint y = r.top;
-
-				/* Collect rail and road counts. */
-				uint rail_pieces = c->infrastructure.signal;
-				uint road_pieces = 0;
-				for (uint i = 0; i < lengthof(c->infrastructure.rail); i++) rail_pieces += c->infrastructure.rail[i];
-				for (uint i = 0; i < lengthof(c->infrastructure.road); i++) road_pieces += c->infrastructure.road[i];
-
-				if (rail_pieces == 0 && road_pieces == 0 && c->infrastructure.water == 0 && c->infrastructure.station == 0 && c->infrastructure.airport == 0) {
-					DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_NONE);
-				} else {
-					if (rail_pieces != 0) {
-						SetDParam(0, rail_pieces);
-						DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (road_pieces != 0) {
-						SetDParam(0, road_pieces);
-						DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (c->infrastructure.water != 0) {
-						SetDParam(0, c->infrastructure.water);
-						DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_WATER);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (c->infrastructure.station != 0) {
-						SetDParam(0, c->infrastructure.station);
-						DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_STATION);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (c->infrastructure.airport != 0) {
-						SetDParam(0, c->infrastructure.airport);
-						DrawString(r.left, r.right, y, STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT);
-					}
-				}
-
+			case WID_C_DESC_INFRASTRUCTURE_COUNTS:
+				DrawInfrastructureCountsWidget(r, c);
 				break;
-			}
 
 			case WID_C_DESC_OWNERS: {
 				uint y = r.top;

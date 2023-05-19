@@ -37,6 +37,7 @@
 #include "industry.h"
 #include "industry_map.h"
 #include "core/checksum_func.hpp"
+#include "articulated_vehicles.h"
 
 #include "table/strings.h"
 
@@ -81,7 +82,7 @@ bool IsValidImageIndex<VEH_SHIP>(uint8 image_index)
 
 static inline TrackBits GetTileShipTrackStatus(TileIndex tile)
 {
-	return TrackStatusToTrackBits(GetTileTrackStatus(tile, TRANSPORT_WATER, 0));
+	return TrackdirBitsToTrackBits(GetTileTrackdirBits(tile, TRANSPORT_WATER, 0));
 }
 
 static void GetShipIcon(EngineID engine, EngineImageType image_type, VehicleSpriteSeq *result)
@@ -106,7 +107,7 @@ void DrawShipEngine(int left, int right, int preferred_x, int y, EngineID engine
 	GetShipIcon(engine, image_type, &seq);
 
 	Rect16 rect = seq.GetBounds();
-	preferred_x = Clamp(preferred_x,
+	preferred_x = SoftClamp(preferred_x,
 			left - UnScaleGUI(rect.left),
 			right - UnScaleGUI(rect.right));
 
@@ -220,9 +221,13 @@ void Ship::UpdateCache()
 	this->vcache.cached_max_speed = svi->ApplyWaterClassSpeedFrac(raw_speed, is_ocean);
 
 	/* Update cargo aging period. */
-	this->vcache.cached_cargo_age_period = GetVehicleProperty(this, PROP_SHIP_CARGO_AGE_PERIOD, EngInfo(this->engine_type)->cargo_age_period);
+	for (Ship *u = this; u != nullptr; u = u->Next()) {
+		u->vcache.cached_cargo_age_period = GetVehicleProperty(u, PROP_SHIP_CARGO_AGE_PERIOD, EngInfo(u->engine_type)->cargo_age_period);
+	}
 
 	this->UpdateVisualEffect();
+
+	SetBit(this->vcache.cached_veh_flags, VCF_LAST_VISUAL_EFFECT);
 }
 
 Money Ship::GetRunningCost() const
@@ -245,6 +250,8 @@ Money Ship::GetRunningCost() const
 
 void Ship::OnNewDay()
 {
+	if (!this->IsPrimaryVehicle()) return;
+
 	if ((++this->day_counter & 7) == 0) {
 		DecreaseVehicleValue(this);
 	}
@@ -253,6 +260,8 @@ void Ship::OnNewDay()
 
 void Ship::OnPeriodic()
 {
+	if (!this->IsPrimaryVehicle()) return;
+
 	CheckVehicleBreakdown(this);
 	CheckIfShipNeedsService(this);
 
@@ -916,7 +925,8 @@ static void ShipController(Ship *v)
 
 					bool may_reverse = ProcessOrders(v);
 
-					if (v->current_order.IsType(OT_GOTO_STATION) && v->current_order.GetDestination() == station_id && IsDockingTile(gp.new_tile)) {
+					if (v->current_order.IsType(OT_GOTO_STATION) && v->current_order.GetDestination() == station_id &&
+							IsDockingTile(gp.new_tile) && Company::Get(v->owner)->settings.remain_if_next_order_same_station) {
 						Station *st = Station::Get(station_id);
 						if (st->facilities & FACIL_DOCK && st->docking_station.Contains(gp.new_tile) && IsShipDestinationTile(gp.new_tile, station_id)) {
 							v->last_station_visited = station_id;
@@ -933,7 +943,7 @@ static void ShipController(Ship *v)
 					/* Test if continuing forward would lead to a dead-end, moving into the dock. */
 					DiagDirection exitdir = VehicleExitDir(v->direction, v->state);
 					TileIndex tile = TileAddByDiagDir(v->tile, exitdir);
-					if (TrackStatusToTrackBits(GetTileTrackStatus(tile, TRANSPORT_WATER, 0, exitdir)) == TRACK_BIT_NONE) goto reverse_direction;
+					if (TrackdirBitsToTrackBits(GetTileTrackdirBits(tile, TRANSPORT_WATER, 0, exitdir)) == TRACK_BIT_NONE) goto reverse_direction;
 				} else if (v->dest_tile != 0) {
 					/* We have a target, let's see if we reached it... */
 					if (v->current_order.IsType(OT_GOTO_WAYPOINT) &&
@@ -1155,6 +1165,7 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 
 		v->cargo_cap = e->DetermineCapacity(v);
 
+		AddArticulatedParts(v);
 		v->InvalidateNewGRFCacheOfChain();
 
 		v->UpdatePosition();
@@ -1164,14 +1175,10 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 	return CommandCost();
 }
 
-bool Ship::FindClosestDepot(TileIndex *location, DestinationID *destination, bool *reverse)
+ClosestDepot Ship::FindClosestDepot()
 {
 	const Depot *depot = FindClosestShipDepot(this, 0);
+	if (depot == nullptr) return ClosestDepot();
 
-	if (depot == nullptr) return false;
-
-	if (location    != nullptr) *location    = depot->xy;
-	if (destination != nullptr) *destination = depot->index;
-
-	return true;
+	return ClosestDepot(depot->xy, depot->index);
 }

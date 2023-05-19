@@ -615,6 +615,9 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	RegisterGameEvents(new_owner != INVALID_OWNER ? GEF_COMPANY_MERGE : GEF_COMPANY_DELETE);
 
 	MarkWholeScreenDirty();
+
+	extern void MarkAllViewportMapLandscapesDirty();
+	MarkAllViewportMapLandscapesDirty();
 }
 
 /**
@@ -820,8 +823,8 @@ bool AddInflation(bool check_year)
  */
 void RecomputePrices()
 {
-	/* Setup maximum loan */
-	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / 50000 * 50000;
+	/* Setup maximum loan as a rounded down multiple of LOAN_INTERVAL. */
+	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / LOAN_INTERVAL * LOAN_INTERVAL;
 
 	/* Setup price bases */
 	for (Price i = PR_BEGIN; i < PR_END; i++) {
@@ -1038,7 +1041,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 	return cost;
 }
 
-Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
+Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_days, CargoID cargo_type)
 {
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
@@ -1048,7 +1051,7 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 
 	/* Use callback to calculate cargo profit, if available */
 	if (HasBit(cs->callback_mask, CBM_CARGO_PROFIT_CALC)) {
-		uint32 var18 = std::min(dist, 0xFFFFu) | (std::min(num_pieces, 0xFFu) << 16) | (transit_days << 24);
+		uint32 var18 = std::min(dist, 0xFFFFu) | (std::min(num_pieces, 0xFFu) << 16) | (std::min<uint16>(transit_days, 0xFFu) << 24);
 		uint16 callback = GetCargoCallback(CBID_CARGO_PROFIT_CALC, 0, var18, cs);
 		if (callback != CALLBACK_FAILED) {
 			int result = GB(callback, 0, 14);
@@ -1065,25 +1068,40 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 
 	static const int MIN_TIME_FACTOR = 31;
 	static const int MAX_TIME_FACTOR = 255;
+	static const int TIME_FACTOR_FRAC_BITS = 4;
+	static const int TIME_FACTOR_FRAC = 1 << TIME_FACTOR_FRAC_BITS;
+
+	if (_settings_game.economy.payment_algorithm == CPA_TRADITIONAL) transit_days = std::min<uint16>(transit_days, 0xFFu);
 
 	const int days1 = cs->transit_days[0];
 	const int days2 = cs->transit_days[1];
 	const int days_over_days1 = std::max(   transit_days - days1, 0);
 	const int days_over_days2 = std::max(days_over_days1 - days2, 0);
+	int days_over_max = 0;
+	if (_settings_game.economy.payment_algorithm == CPA_MODERN) {
+		days_over_max = MIN_TIME_FACTOR - MAX_TIME_FACTOR;
+		if (days2 > -days_over_max) days_over_max += transit_days - days1;
+		else days_over_max += 2 * (transit_days - days1) - days2;
+	}
 
 	/*
 	 * The time factor is calculated based on the time it took
 	 * (transit_days) compared two cargo-depending values. The
-	 * range is divided into three parts:
+	 * range is divided into four parts:
 	 *
 	 *  - constant for fast transits
 	 *  - linear decreasing with time with a slope of -1 for medium transports
 	 *  - linear decreasing with time with a slope of -2 for slow transports
+	 *  - after hitting MIN_TIME_FACTOR, the time factor will be asymptotically decreased to a limit of 1 with a scaled 1/(x+1) function.
 	 *
 	 */
-	const int time_factor = std::max(MAX_TIME_FACTOR - days_over_days1 - days_over_days2, MIN_TIME_FACTOR);
-
-	return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21);
+	if (days_over_max > 0) {
+		const int time_factor = std::max(2 * MIN_TIME_FACTOR * TIME_FACTOR_FRAC * TIME_FACTOR_FRAC / (days_over_max + 2 * TIME_FACTOR_FRAC), 1); // MIN_TIME_FACTOR / (x/(2 * TIME_FACTOR_FRAC) + 1) + 1, expressed as fixed point with TIME_FACTOR_FRAC_BITS.
+		return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21 + TIME_FACTOR_FRAC_BITS);
+	} else {
+		const int time_factor = std::max(MAX_TIME_FACTOR - days_over_days1 - days_over_days2, MIN_TIME_FACTOR);
+		return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21);
+	}
 }
 
 /** The industries we've currently brought cargo to. */
@@ -1268,7 +1286,7 @@ static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint n
  * @return Revenue for delivering cargo
  * @note The cargo is just added to the stockpile of the industry. It is due to the caller to trigger the industry's production machinery
  */
-static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, TileIndex source_tile, byte days_in_transit, Company *company, SourceType src_type, SourceID src)
+static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, TileIndex source_tile, uint16 days_in_transit, Company *company, SourceType src_type, SourceID src)
 {
 	assert(num_pieces > 0);
 
@@ -2163,7 +2181,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 						TriggerStationRandomisation(st, st->xy, SRT_CARGO_TAKEN, v->cargo_type);
 						TriggerStationAnimation(st, st->xy, SAT_CARGO_TAKEN, v->cargo_type);
 						AirportAnimationTrigger(st, AAT_STATION_CARGO_TAKEN, v->cargo_type);
-						TriggerRoadStopAnimation(st, st->xy, SAT_NEW_CARGO, v->cargo_type);
+						TriggerRoadStopAnimation(st, st->xy, SAT_CARGO_TAKEN, v->cargo_type);
 						TriggerRoadStopRandomisation(st, st->xy, RSRT_CARGO_TAKEN, v->cargo_type);
 					}
 

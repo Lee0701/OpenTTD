@@ -50,9 +50,10 @@ CommandProc CmdLandscapeClear;
 
 CommandProc CmdBuildBridge;
 
-CommandProc CmdBuildRailStation;
+CommandProcEx CmdBuildRailStation;
 CommandProc CmdRemoveFromRailStation;
 CommandProc CmdConvertRail;
+CommandProc CmdConvertRailTrack;
 
 CommandProc CmdBuildSingleSignal;
 CommandProc CmdRemoveSingleSignal;
@@ -116,7 +117,9 @@ CommandProc CmdMassChangeOrder;
 CommandProc CmdChangeServiceInt;
 
 CommandProc CmdBuildIndustry;
-CommandProc CmdIndustryCtrl;
+CommandProc CmdIndustrySetFlags;
+CommandProc CmdIndustrySetExclusivity;
+CommandProc CmdIndustrySetText;
 
 CommandProc CmdSetCompanyManagerFace;
 CommandProc CmdSetCompanyColour;
@@ -138,6 +141,7 @@ CommandProc CmdRenamePresident;
 CommandProc CmdRenameStation;
 CommandProc CmdRenameDepot;
 
+CommandProc CmdExchangeStationNames;
 CommandProc CmdSetStationCargoAllowedSupply;
 
 CommandProc CmdPlaceSign;
@@ -189,7 +193,7 @@ CommandProc CmdRemoveGoal;
 CommandProc CmdSetGoalText;
 CommandProc CmdSetGoalProgress;
 CommandProc CmdSetGoalCompleted;
-CommandProc CmdGoalQuestion;
+CommandProcEx CmdGoalQuestion;
 CommandProc CmdGoalQuestionAnswer;
 CommandProc CmdCreateStoryPage;
 CommandProc CmdCreateStoryPageElement;
@@ -213,6 +217,7 @@ CommandProc CmdToggleReuseDepotVehicles;
 CommandProc CmdToggleKeepRemainingVehicles;
 CommandProc CmdToggleRefitAsTemplate;
 CommandProc CmdToggleTemplateReplaceOldOnly;
+CommandProc CmdRenameTemplateReplace;
 
 CommandProc CmdVirtualTrainFromTemplateVehicle;
 CommandProc CmdVirtualTrainFromTrain;
@@ -290,6 +295,10 @@ CommandProc CmdScheduledDispatchResetLastDispatch;
 CommandProc CmdScheduledDispatchClear;
 CommandProcEx CmdScheduledDispatchAddNewSchedule;
 CommandProc CmdScheduledDispatchRemoveSchedule;
+CommandProc CmdScheduledDispatchRenameSchedule;
+CommandProc CmdScheduledDispatchDuplicateSchedule;
+CommandProc CmdScheduledDispatchAppendVehicleSchedules;
+CommandProc CmdScheduledDispatchAdjust;
 
 CommandProc CmdAddPlan;
 CommandProcEx CmdAddPlanLine;
@@ -329,6 +338,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdBuildTunnel,                 CMD_DEITY | CMD_AUTO, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_BUILD_TUNNEL
 	DEF_CMD(CmdRemoveFromRailStation,                          0, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_REMOVE_FROM_RAIL_STATION
 	DEF_CMD(CmdConvertRail,                                    0, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_CONVERT_RAIL
+	DEF_CMD(CmdConvertRailTrack,                               0, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_CONVERT_RAIL_TRACK
 	DEF_CMD(CmdBuildRailWaypoint,                              0, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_BUILD_RAIL_WAYPOINT
 	DEF_CMD(CmdBuildRoadWaypoint,                              0, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_BUILD_ROAD_WAYPOINT
 	DEF_CMD(CmdRenameWaypoint,                                 0, CMDT_OTHER_MANAGEMENT      ), // CMD_RENAME_WAYPOINT
@@ -370,7 +380,9 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdChangeServiceInt,                               0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_CHANGE_SERVICE_INT
 
 	DEF_CMD(CmdBuildIndustry,                          CMD_DEITY, CMDT_LANDSCAPE_CONSTRUCTION), // CMD_BUILD_INDUSTRY
-	DEF_CMD(CmdIndustryCtrl,            CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_CTRL
+	DEF_CMD(CmdIndustrySetFlags,        CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_FLAGS
+	DEF_CMD(CmdIndustrySetExclusivity,  CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_EXCLUSIVITY
+	DEF_CMD(CmdIndustrySetText,         CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_TEXT
 
 	DEF_CMD(CmdSetCompanyManagerFace,                          0, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_COMPANY_MANAGER_FACE
 	DEF_CMD(CmdSetCompanyColour,                               0, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_COMPANY_COLOUR
@@ -392,6 +404,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdRenameStation,                                  0, CMDT_OTHER_MANAGEMENT      ), // CMD_RENAME_STATION
 	DEF_CMD(CmdRenameDepot,                                    0, CMDT_OTHER_MANAGEMENT      ), // CMD_RENAME_DEPOT
 
+	DEF_CMD(CmdExchangeStationNames,                           0, CMDT_OTHER_MANAGEMENT      ), // CMD_EXCHANGE_STATION_NAMES
 	DEF_CMD(CmdSetStationCargoAllowedSupply,                   0, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_STATION_CARGO_ALLOWED_SUPPLY
 
 	DEF_CMD(CmdPlaceSign,                CMD_LOG_AUX | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_PLACE_SIGN
@@ -466,6 +479,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdToggleKeepRemainingVehicles,        CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_KEEP_REMAINING_VEHICLES
 	DEF_CMD(CmdToggleRefitAsTemplate,              CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_REFIT_AS_TEMPLATE
 	DEF_CMD(CmdToggleTemplateReplaceOldOnly,       CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_TMPL_REPLACE_OLD_ONLY
+	DEF_CMD(CmdRenameTemplateReplace,              CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_RENAME_TMPL_REPLACE
 
 	DEF_CMD(CmdVirtualTrainFromTemplateVehicle,   CMD_CLIENT_ID | CMD_NO_TEST | CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT), // CMD_VIRTUAL_TRAIN_FROM_TEMPLATE_VEHICLE
 	DEF_CMD(CmdVirtualTrainFromTrain,             CMD_CLIENT_ID | CMD_NO_TEST | CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT), // CMD_VIRTUAL_TRAIN_FROM_TRAIN
@@ -486,7 +500,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdStartStopVehicle,                               0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_START_STOP_VEHICLE
 	DEF_CMD(CmdMassStartStopVehicle,                           0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_MASS_START_STOP
 	DEF_CMD(CmdAutoreplaceVehicle,                             0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_AUTOREPLACE_VEHICLE
-	DEF_CMD(CmdTemplateReplaceVehicle,                         0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TEMPLATE_REPLACE_VEHICLE
+	DEF_CMD(CmdTemplateReplaceVehicle,               CMD_NO_TEST, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TEMPLATE_REPLACE_VEHICLE
 	DEF_CMD(CmdDepotSellAllVehicles,                           0, CMDT_VEHICLE_CONSTRUCTION  ), // CMD_DEPOT_SELL_ALL_VEHICLES
 	DEF_CMD(CmdDepotMassAutoReplace,                           0, CMDT_VEHICLE_CONSTRUCTION  ), // CMD_DEPOT_MASS_AUTOREPLACE
 	DEF_CMD(CmdCreateGroup,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_CREATE_GROUP
@@ -541,6 +555,10 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdScheduledDispatchClear,                         0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_CLEAR
 	DEF_CMD(CmdScheduledDispatchAddNewSchedule,                0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_ADD_NEW_SCHEDULE
 	DEF_CMD(CmdScheduledDispatchRemoveSchedule,                0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_REMOVE_SCHEDULE
+	DEF_CMD(CmdScheduledDispatchRenameSchedule,                0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_RENAME_SCHEDULE
+	DEF_CMD(CmdScheduledDispatchDuplicateSchedule,             0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_DUPLICATE_SCHEDULE
+	DEF_CMD(CmdScheduledDispatchAppendVehicleSchedules,        0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_APPEND_VEHICLE_SCHEDULE
+	DEF_CMD(CmdScheduledDispatchAdjust,                        0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SCHEDULED_DISPATCH_ADJUST
 
 	DEF_CMD(CmdAddPlan,                              CMD_NO_TEST, CMDT_OTHER_MANAGEMENT      ), // CMD_ADD_PLAN
 	DEF_CMD(CmdAddPlanLine,                          CMD_NO_TEST, CMDT_OTHER_MANAGEMENT      ), // CMD_ADD_PLAN_LINE

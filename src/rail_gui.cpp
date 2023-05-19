@@ -39,6 +39,7 @@
 #include "tracerestrict.h"
 #include "programmable_signals.h"
 #include "newgrf_newsignals.h"
+#include "core/backup_type.hpp"
 
 #include "station_map.h"
 #include "tunnelbridge_map.h"
@@ -71,8 +72,8 @@ struct RailStationGUISettings {
 
 	bool newstations;                 ///< Are custom station definitions available?
 	StationClassID station_class;     ///< Currently selected custom station class (if newstations is \c true )
-	byte station_type;                ///< %Station type within the currently selected custom station class (if newstations is \c true )
-	byte station_count;               ///< Number of custom stations (if newstations is \c true )
+	uint16 station_type;                ///< %Station type within the currently selected custom station class (if newstations is \c true )
+	uint16 station_count;               ///< Number of custom stations (if newstations is \c true )
 };
 static RailStationGUISettings _railstation; ///< Settings of the station builder GUI
 
@@ -211,13 +212,15 @@ static void PlaceRail_Station(TileIndex tile)
 		VpSetPlaceSizingLimit(_settings_game.station.station_spread);
 	} else {
 		uint32 p1 = _cur_railtype | _railstation.orientation << 6 | _settings_client.gui.station_numtracks << 8 | _settings_client.gui.station_platlength << 16 | _ctrl_pressed << 24;
-		uint32 p2 = _railstation.station_class | _railstation.station_type << 8 | INVALID_STATION << 16;
+		uint32 p2 = _railstation.station_class | INVALID_STATION << 16;
+		uint64 p3 = _railstation.station_type;
 
 		int w = _settings_client.gui.station_numtracks;
 		int h = _settings_client.gui.station_platlength;
 		if (!_railstation.orientation) Swap(w, h);
 
 		CommandContainer cmdcont = NewCommandContainerBasic(tile, p1, p2, CMD_BUILD_RAIL_STATION | CMD_MSG(STR_ERROR_CAN_T_BUILD_RAILROAD_STATION), CcStation);
+		cmdcont.p3 = p3;
 		ShowSelectStationIfNeeded(cmdcont, TileArea(tile, w, h));
 	}
 }
@@ -236,7 +239,7 @@ static SignalType GetDefaultSignalType()
  */
 static void GenericPlaceSignals(TileIndex tile)
 {
-	TrackBits trackbits = TrackStatusToTrackBits(GetTileTrackStatus(tile, TRANSPORT_RAIL, 0));
+	TrackBits trackbits = TrackdirBitsToTrackBits(GetTileTrackdirBits(tile, TRANSPORT_RAIL, 0));
 
 	if (trackbits & TRACK_BIT_VERT) { // N-S direction
 		trackbits = (_tile_fract_coords.x <= _tile_fract_coords.y) ? TRACK_BIT_RIGHT : TRACK_BIT_LEFT;
@@ -588,7 +591,7 @@ struct BuildRailToolbarWindow : Window {
 			if (rti->max_speed > 0) {
 				SetDParam(0, STR_TOOLBAR_RAILTYPE_VELOCITY);
 				SetDParam(1, rti->strings.toolbar_caption);
-				SetDParam(2, rti->max_speed);
+				SetDParam(2, PackVelocity(rti->max_speed, VEH_TRAIN));
 			} else {
 				SetDParam(0, rti->strings.toolbar_caption);
 			}
@@ -723,15 +726,27 @@ struct BuildRailToolbarWindow : Window {
 				BuildRailClick_Remove(this);
 				break;
 
-			case WID_RAT_CONVERT_RAIL:
-				HandlePlacePushButton(this, WID_RAT_CONVERT_RAIL, GetRailTypeInfo(_cur_railtype)->cursor.convert, HT_RECT | HT_DIAGONAL);
+			case WID_RAT_CONVERT_RAIL: {
+				bool active = HandlePlacePushButton(this, WID_RAT_CONVERT_RAIL, GetRailTypeInfo(_cur_railtype)->cursor.convert, _ctrl_pressed ? HT_RAIL : HT_RECT | HT_DIAGONAL);
+				if (active && _ctrl_pressed) _thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_GREEN;
 				this->last_user_action = widget;
 				break;
+			}
 
 			default: NOT_REACHED();
 		}
 		this->UpdateRemoveWidgetStatus(widget);
 		if (_ctrl_pressed) RailToolbar_CtrlChanged(this);
+	}
+
+	virtual bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	{
+		if (widget == WID_RAT_CONVERT_RAIL) {
+			uint64 args[] = { STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL };
+			GuiShowTooltips(this, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_EXTRA, lengthof(args), args, close_cond);
+			return true;
+		}
+		return false;
 	}
 
 	EventState OnHotkey(int hotkey) override
@@ -803,7 +818,11 @@ struct BuildRailToolbarWindow : Window {
 				break;
 
 			case WID_RAT_CONVERT_RAIL:
-				VpStartPlaceSizing(tile, VPM_X_AND_Y, DDSP_CONVERT_RAIL);
+				if (_thd.place_mode & HT_RAIL) {
+					VpStartPlaceSizing(tile, VPM_RAILDIRS, DDSP_CONVERT_RAIL_TRACK);
+				} else {
+					VpStartPlaceSizing(tile, VPM_X_AND_Y, DDSP_CONVERT_RAIL);
+				}
 				break;
 
 			default: NOT_REACHED();
@@ -843,6 +862,14 @@ struct BuildRailToolbarWindow : Window {
 				case DDSP_CONVERT_RAIL:
 					DoCommandP(end_tile, start_tile, _cur_railtype | (_ctrl_pressed ? (1 << 6) : 0), CMD_CONVERT_RAIL | CMD_MSG(STR_ERROR_CAN_T_CONVERT_RAIL), CcPlaySound_CONSTRUCTION_RAIL);
 					break;
+
+				case DDSP_CONVERT_RAIL_TRACK: {
+					Track track = (Track)(_thd.drawstyle & HT_DIR_MASK); // 0..5
+					TileIndex start_tile = TileVirtXY(_thd.selstart.x, _thd.selstart.y);
+					TileIndex end_tile = TileVirtXY(_thd.selend.x, _thd.selend.y);
+					DoCommandP((_thd.drawstyle & HT_RAIL) ? end_tile : start_tile, end_tile, _cur_railtype | (track << 6), CMD_CONVERT_RAIL_TRACK | CMD_MSG(STR_ERROR_CAN_T_CONVERT_RAIL), CcPlaySound_CONSTRUCTION_RAIL);
+					break;
+				}
 
 				case DDSP_REMOVE_STATION:
 				case DDSP_BUILD_STATION:
@@ -983,7 +1010,7 @@ static const NWidgetPart _nested_build_rail_widgets[] = {
 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_REMOVE),
 						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_REMOVE, STR_RAIL_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR),
 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_CONVERT_RAIL),
-						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_CONVERT_RAIL, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL),
+						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_CONVERT_RAIL, 0),
 	EndContainer(),
 };
 
@@ -1027,9 +1054,11 @@ static void HandleStationPlacement(TileIndex start, TileIndex end)
 	if (_railstation.orientation == AXIS_X) Swap(numtracks, platlength);
 
 	uint32 p1 = _cur_railtype | _railstation.orientation << 6 | numtracks << 8 | platlength << 16 | _ctrl_pressed << 24;
-	uint32 p2 = _railstation.station_class | _railstation.station_type << 8 | INVALID_STATION << 16;
+	uint32 p2 = _railstation.station_class | INVALID_STATION << 16;
+	uint64 p3 = _railstation.station_type;
 
 	CommandContainer cmdcont = NewCommandContainerBasic(ta.tile, p1, p2, CMD_BUILD_RAIL_STATION | CMD_MSG(STR_ERROR_CAN_T_BUILD_RAILROAD_STATION), CcStation);
+	cmdcont.p3 = p3;
 	ShowSelectStationIfNeeded(cmdcont, ta);
 }
 
@@ -1202,7 +1231,7 @@ public:
 
 		this->station_classes.clear();
 
-		for (uint i = 0; i < StationClass::GetClassCount(); i++) {
+		for (uint i = 0; StationClass::IsClassIDValid((StationClassID)i); i++) {
 			StationClassID station_class_id = (StationClassID)i;
 			if (station_class_id == StationClassID::STAT_CLASS_WAYP) {
 				// Skip waypoints.
@@ -1236,7 +1265,7 @@ public:
 			/* Check if the previously selected station class is not available anymore as a
 			 * result of starting a new game without the corresponding NewGRF. */
 			bool available = false;
-			for (uint i = 0; i < StationClass::GetClassCount(); ++i) {
+			for (uint i = 0; StationClass::IsClassIDValid((StationClassID)i); ++i) {
 				if ((StationClassID)i == _railstation.station_class) {
 					available = true;
 					break;
@@ -1399,28 +1428,24 @@ public:
 			case WID_BRAS_PLATFORM_DIR_X:
 				/* Set up a clipping area for the '/' station preview */
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
 					int y = (r.Height() + ScaleSpriteTrad(58)) / 2 - ScaleSpriteTrad(31);
 					if (!DrawStationTile(x, y, _cur_railtype, AXIS_X, _railstation.station_class, _railstation.station_type)) {
 						StationPickerDrawSprite(x, y, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2);
 					}
-					_cur_dpi = old_dpi;
 				}
 				break;
 
 			case WID_BRAS_PLATFORM_DIR_Y:
 				/* Set up a clipping area for the '\' station preview */
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
 					int y = (r.Height() + ScaleSpriteTrad(58)) / 2 - ScaleSpriteTrad(31);
 					if (!DrawStationTile(x, y, _cur_railtype, AXIS_Y, _railstation.station_class, _railstation.station_type)) {
 						StationPickerDrawSprite(x, y, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 3);
 					}
-					_cur_dpi = old_dpi;
 				}
 				break;
 
@@ -1450,14 +1475,12 @@ public:
 
 				/* Set up a clipping area for the station preview. */
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
 					int y = (r.Height() + ScaleSpriteTrad(58)) / 2 - ScaleSpriteTrad(31);
 					if (!DrawStationTile(x, y, _cur_railtype, _railstation.orientation, _railstation.station_class, type)) {
 						StationPickerDrawSprite(x, y, STATION_RAIL, _cur_railtype, INVALID_ROADTYPE, 2 + _railstation.orientation);
 					}
-					_cur_dpi = old_dpi;
 				}
 				break;
 			}
@@ -2302,12 +2325,10 @@ struct BuildRailDepotWindow : public PickerWindowBase {
 
 		DrawPixelInfo tmp_dpi;
 		if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-			DrawPixelInfo *old_dpi = _cur_dpi;
-			_cur_dpi = &tmp_dpi;
+			AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 			int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
 			int y = (r.Height() + ScaleSpriteTrad(48)) / 2 - ScaleSpriteTrad(31);
 			DrawTrainDepotSprite(x, y, widget - WID_BRAD_DEPOT_NE + DIAGDIR_NE, _cur_railtype);
-			_cur_dpi = old_dpi;
 		}
 	}
 
@@ -2414,12 +2435,10 @@ struct BuildRailWaypointWindow : PickerWindowBase {
 
 				DrawPixelInfo tmp_dpi;
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
-					DrawPixelInfo *old_dpi = _cur_dpi;
-					_cur_dpi = &tmp_dpi;
+					AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 					int x = (r.Width()  - ScaleSpriteTrad(64)) / 2 + ScaleSpriteTrad(31);
 					int y = (r.Height() + ScaleSpriteTrad(58)) / 2 - ScaleSpriteTrad(31);
 					DrawWaypointSprite(x, y, type, _cur_railtype);
-					_cur_dpi = old_dpi;
 				}
 
 				if (!IsStationAvailable(statspec)) {

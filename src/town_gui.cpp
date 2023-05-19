@@ -84,6 +84,9 @@ private:
 	Scrollbar *vscroll;
 	uint displayed_actions_on_previous_painting; ///< Actions that were available on the previous call to OnPaint()
 
+	Dimension icon_size;      ///< Dimensions of company icon
+	Dimension exclusive_size; ///< Dimensions of exlusive icon
+
 	/**
 	 * Get the position of the Nth set bit.
 	 *
@@ -110,7 +113,7 @@ private:
 				!(_local_company != COMPANY_SPECTATOR && _settings_game.difficulty.override_town_settings_in_multiplayer);
 	}
 
-	static const uint SETTING_OVERRIDE_COUNT = 4;
+	static const uint SETTING_OVERRIDE_COUNT = 6;
 
 public:
 	TownAuthorityWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc), sel_index(-1), displayed_actions_on_previous_painting(0)
@@ -119,6 +122,12 @@ public:
 		this->InitNested(window_number);
 		this->vscroll = this->GetScrollbar(WID_TA_SCROLLBAR);
 		this->vscroll->SetCapacity((this->GetWidget<NWidgetBase>(WID_TA_COMMAND_LIST)->current_y - WidgetDimensions::scaled.framerect.Vertical()) / FONT_HEIGHT_NORMAL);
+	}
+
+	void OnInit() override
+	{
+		this->icon_size      = GetSpriteSize(SPR_COMPANY_ICON);
+		this->exclusive_size = GetSpriteSize(SPR_EXCLUSIVE_TRANSPORT);
 	}
 
 	void OnPaint() override
@@ -149,26 +158,22 @@ public:
 	{
 		Rect r = this->GetWidget<NWidgetBase>(WID_TA_RATING_INFO)->GetCurrentRect().Shrink(WidgetDimensions::scaled.framerect);
 
-		DrawString(r, STR_LOCAL_AUTHORITY_COMPANY_RATINGS);
-		r.top += FONT_HEIGHT_NORMAL;
+		int text_y_offset      = (this->resize.step_height - FONT_HEIGHT_NORMAL) / 2;
+		int icon_y_offset      = (this->resize.step_height - this->icon_size.height) / 2;
+		int exclusive_y_offset = (this->resize.step_height - this->exclusive_size.height) / 2;
 
-		Dimension icon_size = GetSpriteSize(SPR_COMPANY_ICON);
-		int icon_width      = icon_size.width;
-		int icon_y_offset   = (FONT_HEIGHT_NORMAL - icon_size.height) / 2;
-
-		Dimension exclusive_size = GetSpriteSize(SPR_EXCLUSIVE_TRANSPORT);
-		int exclusive_width      = exclusive_size.width;
-		int exclusive_y_offset   = (FONT_HEIGHT_NORMAL - exclusive_size.height) / 2;
+		DrawString(r.left, r.right, r.top + text_y_offset, STR_LOCAL_AUTHORITY_COMPANY_RATINGS);
+		r.top += this->resize.step_height;
 
 		bool rtl = _current_text_dir == TD_RTL;
-		Rect text = r.Indent(icon_width + WidgetDimensions::scaled.hsep_normal + exclusive_width + WidgetDimensions::scaled.hsep_normal, rtl);
-		uint icon_left = r.WithWidth(icon_width, rtl).left;
-		uint exclusive_left = r.Indent(icon_width + WidgetDimensions::scaled.hsep_normal, rtl).WithWidth(exclusive_width, rtl).left;
+		Rect icon      = r.WithWidth(this->icon_size.width, rtl);
+		Rect exclusive = r.Indent(this->icon_size.width + WidgetDimensions::scaled.hsep_normal, rtl).WithWidth(this->exclusive_size.width, rtl);
+		Rect text      = r.Indent(this->icon_size.width + WidgetDimensions::scaled.hsep_normal + this->exclusive_size.width + WidgetDimensions::scaled.hsep_normal, rtl);
 
 		/* Draw list of companies */
 		for (const Company *c : Company::Iterate()) {
 			if ((HasBit(this->town->have_ratings, c->index) || this->town->exclusivity == c->index)) {
-				DrawCompanyIcon(c->index, icon_left, text.top + icon_y_offset);
+				DrawCompanyIcon(c->index, icon.left, text.top + icon_y_offset);
 
 				SetDParam(0, c->index);
 				SetDParam(1, c->index);
@@ -185,11 +190,11 @@ public:
 
 				SetDParam(2, str);
 				if (this->town->exclusivity == c->index) {
-					DrawSprite(SPR_EXCLUSIVE_TRANSPORT, COMPANY_SPRITE_COLOUR(c->index), exclusive_left, r.top + exclusive_y_offset);
+					DrawSprite(SPR_EXCLUSIVE_TRANSPORT, COMPANY_SPRITE_COLOUR(c->index), exclusive.left, text.top + exclusive_y_offset);
 				}
 
-				DrawString(text, STR_LOCAL_AUTHORITY_COMPANY_RATING);
-				text.top += FONT_HEIGHT_NORMAL;
+				DrawString(text.left, text.right, text.top + text_y_offset, STR_LOCAL_AUTHORITY_COMPANY_RATING);
+				text.top += this->resize.step_height;
 			}
 		}
 
@@ -214,6 +219,7 @@ public:
 					switch (idx) {
 						case TSOF_OVERRIDE_BUILD_ROADS:
 						case TSOF_OVERRIDE_BUILD_LEVEL_CROSSINGS:
+						case TSOF_OVERRIDE_BUILD_BRIDGES:
 							SetDParam(0, HasBit(this->town->override_values, idx) ? STR_CONFIG_SETTING_ON : STR_CONFIG_SETTING_OFF);
 							break;
 						case TSOF_OVERRIDE_BUILD_TUNNELS:
@@ -222,6 +228,9 @@ public:
 						case TSOF_OVERRIDE_BUILD_INCLINED_ROADS:
 							SetDParam(0, STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_VALUE + ((this->town->max_road_slope == 0) ? 1 : 0));
 							SetDParam(1, this->town->max_road_slope);
+							break;
+						case TSOF_OVERRIDE_GROWTH:
+							SetDParam(0, STR_CONFIG_SETTING_TOWN_GROWTH_NONE);
 							break;
 					}
 				}
@@ -234,6 +243,7 @@ public:
 		switch (widget) {
 			case WID_TA_ACTION_INFO:
 				if (this->sel_index != -1) {
+					TextColour colour = TC_FROMSTRING;
 					StringID text = STR_NULL;
 					if (this->sel_index >= 0x100) {
 						SetDParam(1, STR_EMPTY);
@@ -250,14 +260,21 @@ public:
 							case TSOF_OVERRIDE_BUILD_INCLINED_ROADS:
 								SetDParam(1, STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_HELPTEXT);
 								break;
+							case TSOF_OVERRIDE_GROWTH:
+								SetDParam(1, STR_CONFIG_SETTING_TOWN_GROWTH_HELPTEXT);
+								break;
+							case TSOF_OVERRIDE_BUILD_BRIDGES:
+								SetDParam(1, STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT);
+								break;
 						}
 						text = STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_TEXT;
 						SetDParam(0, STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_ALLOW_ROADS + this->sel_index - 0x100);
 					} else {
+						colour = TC_YELLOW;
 						text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_SMALL_ADVERTISING + this->sel_index;
 						SetDParam(0, _price[PR_TOWN_ACTION] * _town_action_costs[this->sel_index] >> 8);
 					}
-					DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect), text);
+					DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect), text, colour);
 				}
 				break;
 			case WID_TA_COMMAND_LIST: {
@@ -309,6 +326,14 @@ public:
 								SetDParam(3, max_slope);
 								break;
 							}
+
+							case TSOF_OVERRIDE_GROWTH:
+								SetDParam(1, overriden ? STR_CONFIG_SETTING_TOWN_GROWTH_NONE : STR_COLOUR_DEFAULT);
+								break;
+
+							case TSOF_OVERRIDE_BUILD_BRIDGES:
+								SetDParam(2, this->town->GetAllowBuildBridges() ? STR_CONFIG_SETTING_ON : STR_CONFIG_SETTING_OFF);
+								break;
 						}
 						DrawString(ir.left, ir.right, y,
 								STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_STR, tc);
@@ -346,8 +371,8 @@ public:
 				break;
 
 			case WID_TA_RATING_INFO:
-				resize->height = FONT_HEIGHT_NORMAL;
-				size->height = 9 * FONT_HEIGHT_NORMAL + padding.height;
+				resize->height = std::max({this->icon_size.height + WidgetDimensions::scaled.vsep_normal, this->exclusive_size.height + WidgetDimensions::scaled.vsep_normal, (uint)FONT_HEIGHT_NORMAL});
+				size->height = 9 * resize->height + padding.height;
 				break;
 		}
 	}
@@ -396,7 +421,8 @@ public:
 				uint8 idx = this->sel_index - 0x100;
 				switch (idx) {
 					case TSOF_OVERRIDE_BUILD_ROADS:
-					case TSOF_OVERRIDE_BUILD_LEVEL_CROSSINGS: {
+					case TSOF_OVERRIDE_BUILD_LEVEL_CROSSINGS:
+					case TSOF_OVERRIDE_BUILD_BRIDGES: {
 						int value = HasBit(this->town->override_flags, idx) ? (HasBit(this->town->override_values, idx) ? 2 : 1) : 0;
 						const StringID names[] = {
 							STR_COLOUR_DEFAULT,
@@ -418,7 +444,7 @@ public:
 						ShowDropDownMenu(this, names, HasBit(this->town->override_flags, idx) ? this->town->build_tunnels + 1 : 0, WID_TA_SETTING, 0, 0);
 						break;
 					}
-					case TSOF_OVERRIDE_BUILD_INCLINED_ROADS:
+					case TSOF_OVERRIDE_BUILD_INCLINED_ROADS: {
 						DropDownList dlist;
 						dlist.emplace_back(new DropDownListStringItem(STR_COLOUR_DEFAULT, 0, false));
 						dlist.emplace_back(new DropDownListStringItem(STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO, 1, false));
@@ -429,6 +455,17 @@ public:
 						}
 						ShowDropDownList(this, std::move(dlist), HasBit(this->town->override_flags, idx) ? this->town->max_road_slope + 1 : 0, WID_TA_SETTING);
 						break;
+					}
+					case TSOF_OVERRIDE_GROWTH: {
+						int value = HasBit(this->town->override_flags, idx) ? 1 : 0;
+						const StringID names[] = {
+							STR_COLOUR_DEFAULT,
+							STR_CONFIG_SETTING_TOWN_GROWTH_NONE,
+							INVALID_STRING_ID
+						};
+						ShowDropDownMenu(this, names, value, WID_TA_SETTING, 0, 0);
+						break;
+					}
 				}
 				break;
 			}
@@ -920,7 +957,7 @@ private:
 
 		/* Sort unrated towns always on ascending town name. */
 		if (before) return TownDirectoryWindow::TownNameSorter(a, b);
-		return !TownDirectoryWindow::TownNameSorter(a, b);
+		return TownDirectoryWindow::TownNameSorter(b, a);
 	}
 
 public:
@@ -1217,7 +1254,9 @@ static const NWidgetPart _nested_found_town_widgets[] = {
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_TF_RANDOM_TOWN), SetMinimalSize(156, 12), SetFill(1, 0),
 										SetDataTip(STR_FOUND_TOWN_RANDOM_TOWN_BUTTON, STR_FOUND_TOWN_RANDOM_TOWN_TOOLTIP), SetPadding(0, 2, 1, 2),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_TF_MANY_RANDOM_TOWNS), SetMinimalSize(156, 12), SetFill(1, 0),
-										SetDataTip(STR_FOUND_TOWN_MANY_RANDOM_TOWNS, STR_FOUND_TOWN_RANDOM_TOWNS_TOOLTIP), SetPadding(0, 2, 0, 2),
+										SetDataTip(STR_FOUND_TOWN_MANY_RANDOM_TOWNS, STR_FOUND_TOWN_RANDOM_TOWNS_TOOLTIP), SetPadding(0, 2, 1, 2),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_TF_EXPAND_ALL_TOWNS), SetMinimalSize(156, 12), SetFill(1, 0),
+										SetDataTip(STR_FOUND_TOWN_EXPAND_ALL_TOWNS, STR_FOUND_TOWN_EXPAND_ALL_TOWNS_TOOLTIP), SetPadding(0, 2, 0, 2),
 		/* Town name selection. */
 		NWidget(WWT_LABEL, COLOUR_DARK_GREEN), SetMinimalSize(156, 14), SetPadding(0, 2, 0, 2), SetDataTip(STR_FOUND_TOWN_NAME_TITLE, STR_NULL),
 		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_TF_TOWN_NAME_EDITBOX), SetMinimalSize(156, 12), SetPadding(0, 2, 3, 2),
@@ -1295,7 +1334,7 @@ public:
 
 	void RandomTownName()
 	{
-		this->townnamevalid = GenerateTownName(&this->townnameparts);
+		this->townnamevalid = GenerateTownName(_interactive_random, &this->townnameparts);
 
 		if (!this->townnamevalid) {
 			this->townname_editbox.text.DeleteAll();
@@ -1311,7 +1350,7 @@ public:
 	void UpdateButtons(bool check_availability)
 	{
 		if (check_availability && _game_mode != GM_EDITOR) {
-			this->SetWidgetsDisabledState(true, WID_TF_RANDOM_TOWN, WID_TF_MANY_RANDOM_TOWNS, WID_TF_SIZE_LARGE, WIDGET_LIST_END);
+			this->SetWidgetsDisabledState(true, WID_TF_RANDOM_TOWN, WID_TF_MANY_RANDOM_TOWNS, WID_TF_EXPAND_ALL_TOWNS, WID_TF_SIZE_LARGE, WIDGET_LIST_END);
 			this->SetWidgetsDisabledState(_settings_game.economy.found_town != TF_CUSTOM_LAYOUT,
 					WID_TF_LAYOUT_ORIGINAL, WID_TF_LAYOUT_BETTER, WID_TF_LAYOUT_GRID2, WID_TF_LAYOUT_GRID3, WID_TF_LAYOUT_RANDOM, WIDGET_LIST_END);
 			if (_settings_game.economy.found_town != TF_CUSTOM_LAYOUT) town_layout = _settings_game.economy.town_layout;
@@ -1376,6 +1415,12 @@ public:
 				old_generating_world.Restore();
 				break;
 			}
+
+			case WID_TF_EXPAND_ALL_TOWNS:
+				for (Town *t : Town::Iterate()) {
+					DoCommand(0, t->index, 0, DC_EXEC, CMD_EXPAND_TOWN);
+				}
+				break;
 
 			case WID_TF_SIZE_SMALL: case WID_TF_SIZE_MEDIUM: case WID_TF_SIZE_LARGE: case WID_TF_SIZE_RANDOM:
 				this->town_size = (TownSize)(widget - WID_TF_SIZE_SMALL);

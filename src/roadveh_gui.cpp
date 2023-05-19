@@ -8,6 +8,7 @@
 /** @file roadveh_gui.cpp GUI for road vehicles. */
 
 #include "stdafx.h"
+#include "core/backup_type.hpp"
 #include "roadveh.h"
 #include "window_gui.h"
 #include "strings_func.h"
@@ -31,7 +32,7 @@ void DrawRoadVehDetails(const Vehicle *v, const Rect &r)
 	StringID str;
 	Money feeder_share = 0;
 
-	SetDParam(0, v->engine_type);
+	SetDParam(0, PackEngineNameDParam(v->engine_type, EngineNameContext::VehicleDetails));
 	SetDParam(1, v->build_year);
 	SetDParam(2, v->value);
 	DrawString(r.left, r.right, y, STR_VEHICLE_INFO_BUILT_VALUE);
@@ -136,13 +137,12 @@ void DrawRoadVehImage(const Vehicle *v, const Rect &r, VehicleID selection, Engi
 	Direction dir = rtl ? DIR_E : DIR_W;
 	const RoadVehicle *u = RoadVehicle::From(v);
 
-	DrawPixelInfo tmp_dpi, *old_dpi;
+	DrawPixelInfo tmp_dpi;
 	int max_width = r.Width();
 
 	if (!FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) return;
 
-	old_dpi = _cur_dpi;
-	_cur_dpi = &tmp_dpi;
+	AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
 	int px = rtl ? max_width + skip : -skip;
 	int y = r.Height() / 2;
@@ -160,8 +160,6 @@ void DrawRoadVehImage(const Vehicle *v, const Rect &r, VehicleID selection, Engi
 
 		px += rtl ? -width : width;
 	}
-
-	_cur_dpi = old_dpi;
 
 	if (v->index == selection) {
 		int height = ScaleSpriteTrad(12);

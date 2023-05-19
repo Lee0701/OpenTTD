@@ -28,7 +28,6 @@
 #include "saveload/saveload_common.h"
 #include <list>
 #include <map>
-#include <unordered_map>
 
 CommandCost CmdRefitVehicle(TileIndex, DoCommandFlag, uint32, uint32, const char*);
 
@@ -64,6 +63,7 @@ enum VehicleFlags {
 	VF_AUTOMATE_TIMETABLE       = 15, ///< Whether the vehicle should manage the timetable automatically.
 	VF_HAVE_SLOT                = 16, ///< Vehicle has 1 or more slots
 	VF_COND_ORDER_WAIT          = 17, ///< Vehicle is waiting due to conditional order loop
+	VF_REPLACEMENT_PENDING      = 18, ///< Autoreplace or template replacement is pending, vehicle should visit the depot
 };
 
 /** Bit numbers used to indicate which of the #NewGRFCache values are valid. */
@@ -224,7 +224,6 @@ struct PendingSpeedRestrictionChange {
 	uint16 prev_speed;
 	uint16 flags;
 };
-extern std::unordered_multimap<VehicleID, PendingSpeedRestrictionChange> pending_speed_restriction_change_map;
 
 /** A vehicle pool for a little over 1 million vehicles. */
 typedef Pool<Vehicle, VehicleID, 512, 0xFF000> VehiclePool;
@@ -243,6 +242,23 @@ namespace upstream_sl {
 	class SlVehicleCommon;
 	class SlVehicleDisaster;
 }
+
+/**
+ * Structure to return information about the closest depot location,
+ * and whether it could be found.
+ */
+struct ClosestDepot {
+	TileIndex location;
+	DestinationID destination; ///< The DestinationID as used for orders.
+	bool reverse;
+	bool found;
+
+	ClosestDepot() :
+		location(INVALID_TILE), destination(0), reverse(false), found(false) {}
+
+	ClosestDepot(TileIndex location, DestinationID destination, bool reverse = false) :
+		location(location), destination(destination), reverse(reverse), found(true) {}
+};
 
 /** %Vehicle data structure. */
 struct Vehicle : VehiclePool::PoolItem<&_vehicle_pool>, BaseVehicle, BaseConsist {
@@ -556,9 +572,18 @@ public:
 	 * Check if the vehicle is a ground vehicle.
 	 * @return True iff the vehicle is a train or a road vehicle.
 	 */
-	inline bool IsGroundVehicle() const
+	debug_inline bool IsGroundVehicle() const
 	{
 		return this->type == VEH_TRAIN || this->type == VEH_ROAD;
+	}
+
+	/**
+	 * Check if the vehicle type supports articulation.
+	 * @return True iff the vehicle is a train, road vehicle or ship.
+	 */
+	debug_inline bool IsArticulatedCallbackVehicleType() const
+	{
+		return this->type == VEH_TRAIN || this->type == VEH_ROAD || this->type == VEH_SHIP;
 	}
 
 	/**
@@ -883,12 +908,9 @@ public:
 	/**
 	 * Find the closest depot for this vehicle and tell us the location,
 	 * DestinationID and whether we should reverse.
-	 * @param location    where do we go to?
-	 * @param destination what hangar do we go to?
-	 * @param reverse     should the vehicle be reversed?
-	 * @return true if a depot could be found.
+	 * @return A structure with information about the closest depot, if found.
 	 */
-	virtual bool FindClosestDepot(TileIndex *location, DestinationID *destination, bool *reverse) { return false; }
+	virtual ClosestDepot FindClosestDepot() { return {}; }
 
 	virtual void SetDestTile(TileIndex tile) { this->dest_tile = tile; }
 
@@ -1045,7 +1067,7 @@ public:
 	 * Check if the vehicle is a front engine.
 	 * @return Returns true if the vehicle is a front engine.
 	 */
-	inline bool IsFrontEngine() const
+	debug_inline bool IsFrontEngine() const
 	{
 		return this->IsGroundVehicle() && HasBit(this->subtype, GVSF_FRONT);
 	}

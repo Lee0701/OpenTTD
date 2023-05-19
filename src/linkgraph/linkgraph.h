@@ -12,7 +12,6 @@
 
 #include "../core/pool_type.hpp"
 #include "../core/smallmap_type.hpp"
-#include "../core/smallmatrix_type.hpp"
 #include "../core/bitmath_func.hpp"
 #include "../station_base.h"
 #include "../cargotype.h"
@@ -376,7 +375,7 @@ public:
 	void RemoveEdge(NodeID from, NodeID to);
 
 	inline uint64 CalculateCostEstimate() const {
-		uint64 size_squared = this->Size() * this->Size();
+		uint64 size_squared = (uint32)this->Size() * (uint32)this->Size();
 		return size_squared * FindLastBit(size_squared * size_squared); // N^2 * 4log_2(N)
 	}
 

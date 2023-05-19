@@ -8,6 +8,7 @@
 /** @file widget.cpp Handling of the default/simple widgets. */
 
 #include "stdafx.h"
+#include "core/backup_type.hpp"
 #include "company_func.h"
 #include "window_gui.h"
 #include "viewport_func.h"
@@ -2058,8 +2059,7 @@ void NWidgetMatrix::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
 	bool rtl = _current_text_dir == TD_RTL;
 	DrawPixelInfo tmp_dpi;
 	if (!FillDrawPixelInfo(&tmp_dpi, this->pos_x + (rtl ? this->pip_post : this->pip_pre), this->pos_y + this->pip_pre, this->current_x - this->pip_pre - this->pip_post, this->current_y - this->pip_pre - this->pip_post)) return;
-	DrawPixelInfo *old_dpi = _cur_dpi;
-	_cur_dpi = &tmp_dpi;
+	AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
 	/* Get the appropriate offsets so we can draw the right widgets. */
 	NWidgetCore *child = dynamic_cast<NWidgetCore *>(this->head);
@@ -2092,9 +2092,6 @@ void NWidgetMatrix::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
 			child->Draw(w);
 		}
 	}
-
-	/* Restore the clipping area. */
-	_cur_dpi = old_dpi;
 }
 
 /**
@@ -2874,7 +2871,7 @@ void NWidgetLeaf::SetupSmallestSize(Window *w, bool init_array)
 				NWidgetLeaf::dropdown_dimension.width += WidgetDimensions::scaled.vscrollbar.Horizontal();
 				NWidgetLeaf::dropdown_dimension.height += WidgetDimensions::scaled.vscrollbar.Vertical();
 			}
-			padding = {WidgetDimensions::scaled.dropdowntext.Horizontal() + NWidgetLeaf::dropdown_dimension.width, WidgetDimensions::scaled.dropdowntext.Vertical()};
+			padding = {WidgetDimensions::scaled.dropdowntext.Horizontal() + NWidgetLeaf::dropdown_dimension.width + WidgetDimensions::scaled.fullbevel.Horizontal(), WidgetDimensions::scaled.dropdowntext.Vertical()};
 			if (this->index >= 0) w->SetStringParameters(this->index);
 			Dimension d2 = GetStringBoundingBox(this->widget_data);
 			d2.width += padding.width;
@@ -2903,15 +2900,15 @@ void NWidgetLeaf::Draw(const Window *w)
 
 	if (this->current_x == 0 || this->current_y == 0) return;
 
-	/* Setup a clipping rectangle... */
+	/* Setup a clipping rectangle... for WWT_EMPTY or WWT_TEXT, an extra scaled pixel is allowed vertically in case text shadow encroaches. */
+	int extra_y = (this->type == WWT_EMPTY || this->type == WWT_TEXT) ? ScaleGUITrad(1) : 0;
 	DrawPixelInfo new_dpi;
-	if (!FillDrawPixelInfo(&new_dpi, this->pos_x, this->pos_y, this->current_x, this->current_y)) return;
+	if (!FillDrawPixelInfo(&new_dpi, this->pos_x, this->pos_y, this->current_x, this->current_y + extra_y)) return;
 	/* ...but keep coordinates relative to the window. */
 	new_dpi.left += this->pos_x;
 	new_dpi.top += this->pos_y;
 
-	DrawPixelInfo *old_dpi = _cur_dpi;
-	_cur_dpi = &new_dpi;
+	AutoRestoreBackup dpi_backup(_cur_dpi, &new_dpi);
 
 	Rect r = this->GetCurrentRect();
 
@@ -3025,8 +3022,6 @@ void NWidgetLeaf::Draw(const Window *w)
 	if (this->IsDisabled()) {
 		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[this->colour & 0xF][2], FILLRECT_CHECKER);
 	}
-
-	_cur_dpi = old_dpi;
 }
 
 /**

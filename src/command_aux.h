@@ -55,7 +55,7 @@ struct CommandSerialisationBuffer : public BufferSerialisationHelper<CommandSeri
 struct CommandAuxiliarySerialised : public CommandAuxiliaryBase {
 	std::vector<byte> serialised_data;
 
-	CommandAuxiliaryBase *Clone() const
+	CommandAuxiliaryBase *Clone() const override
 	{
 		return new CommandAuxiliarySerialised(*this);
 	}
@@ -69,7 +69,7 @@ template <typename T>
 struct CommandAuxiliarySerialisable : public CommandAuxiliaryBase {
 	virtual opt::optional<span<const uint8>> GetDeserialisationSrc() const override { return {}; }
 
-	CommandAuxiliaryBase *Clone() const
+	CommandAuxiliaryBase *Clone() const override
 	{
 		return new T(*static_cast<const T *>(this));
 	}
@@ -77,11 +77,11 @@ struct CommandAuxiliarySerialisable : public CommandAuxiliaryBase {
 
 template <typename T>
 struct CommandAuxData {
-	private:
+private:
 	opt::optional<T> store;
 	const T *data = nullptr;
 
-	public:
+public:
 	inline CommandCost Load(const CommandAuxiliaryBase *base)
 	{
 		if (base == nullptr) return CMD_ERROR;

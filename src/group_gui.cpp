@@ -25,6 +25,7 @@
 #include "company_base.h"
 #include "company_gui.h"
 #include "gui.h"
+#include "gfx_func.h"
 #include "tbtr_template_gui_main.h"
 #include "newgrf_debug.h"
 
@@ -77,17 +78,23 @@ static const NWidgetPart _nested_group_widgets[] = {
 		/* right part */
 		NWidget(NWID_VERTICAL),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GL_GROUP_BY_ORDER), SetMinimalSize(81, 12), SetDataTip(STR_STATION_VIEW_GROUP, STR_TOOLTIP_GROUP_ORDER),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_GROUP_BY_DROPDOWN), SetMinimalSize(167, 12), SetDataTip(0x0, STR_TOOLTIP_GROUP_ORDER),
-				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(12, 12), SetResize(1, 0), EndContainer(),
-			EndContainer(),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetMinimalSize(81, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_SORT_BY_DROPDOWN), SetMinimalSize(167, 12), SetDataTip(0x0, STR_TOOLTIP_SORT_CRITERIA),
-				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_GL_FILTER_BY_CARGO_SEL),
-					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_FILTER_BY_CARGO), SetMinimalSize(167, 12), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+				NWidget(NWID_VERTICAL),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GL_GROUP_BY_ORDER), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(STR_STATION_VIEW_GROUP, STR_TOOLTIP_GROUP_ORDER),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
 				EndContainer(),
-				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(12, 12), SetResize(1, 0), EndContainer(),
+				NWidget(NWID_VERTICAL),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_GROUP_BY_DROPDOWN), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(0x0, STR_TOOLTIP_GROUP_ORDER),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_SORT_BY_DROPDOWN), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(0x0, STR_TOOLTIP_SORT_CRITERIA),
+				EndContainer(),
+				NWidget(NWID_VERTICAL),
+					NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), EndContainer(),
+					NWidget(NWID_HORIZONTAL),
+						NWidget(NWID_SELECTION, INVALID_COLOUR, WID_GL_FILTER_BY_CARGO_SEL),
+							NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_FILTER_BY_CARGO), SetMinimalSize(167, 12), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+						EndContainer(),
+						NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), EndContainer(),
+					EndContainer(),
+				EndContainer(),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_MATRIX, COLOUR_GREY, WID_GL_LIST_VEHICLE), SetMinimalSize(248, 0), SetMatrixDataTip(1, 0, STR_NULL), SetResize(1, 1), SetFill(1, 0), SetScrollbar(WID_GL_LIST_VEHICLE_SCROLLBAR),
@@ -329,13 +336,13 @@ private:
 		/* draw the profit icon */
 		x = rtl ? x - WidgetDimensions::scaled.hsep_normal - this->column_size[VGC_PROFIT].width : x + WidgetDimensions::scaled.hsep_normal + this->column_size[VGC_AUTOREPLACE].width;
 		SpriteID spr;
-		uint num_profit_vehicle = GetGroupNumProfitVehicle(this->vli.company, g_id, this->vli.vtype);
-		Money profit_last_year = GetGroupProfitLastYear(this->vli.company, g_id, this->vli.vtype);
-		if (num_profit_vehicle == 0) {
+		uint num_vehicle_min_age = GetGroupNumVehicleMinAge(this->vli.company, g_id, this->vli.vtype);
+		Money profit_last_year_min_age = GetGroupProfitLastYearMinAge(this->vli.company, g_id, this->vli.vtype);
+		if (num_vehicle_min_age == 0) {
 			spr = SPR_PROFIT_NA;
-		} else if (profit_last_year < 0) {
+		} else if (profit_last_year_min_age < 0) {
 			spr = SPR_PROFIT_NEGATIVE;
-		} else if (profit_last_year < VEHICLE_PROFIT_THRESHOLD * num_profit_vehicle) {
+		} else if (profit_last_year_min_age < VEHICLE_PROFIT_THRESHOLD * num_vehicle_min_age) {
 			spr = SPR_PROFIT_SOME;
 		} else {
 			spr = SPR_PROFIT_LOT;
@@ -480,6 +487,20 @@ public:
 				this->ComputeGroupInfoSize();
 				resize->height = GetVehicleListHeight(this->vli.vtype, this->tiny_step_height);
 				size->height = 4 * resize->height;
+				break;
+
+			case WID_GL_GROUP_BY_DROPDOWN:
+				size->width = GetStringListWidth(this->vehicle_group_by_names) + padding.width;
+				break;
+
+			case WID_GL_SORT_BY_DROPDOWN:
+				size->width = GetStringListWidth(this->vehicle_group_none_sorter_names);
+				size->width = std::max(size->width, GetStringListWidth(this->vehicle_group_shared_orders_sorter_names));
+				size->width += padding.width;
+				break;
+
+			case WID_GL_FILTER_BY_CARGO:
+				size->width = GetStringListWidth(this->cargo_filter_texts) + padding.width;
 				break;
 
 			case WID_GL_MANAGE_VEHICLES_DROPDOWN: {

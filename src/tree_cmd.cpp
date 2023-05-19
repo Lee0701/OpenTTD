@@ -457,6 +457,7 @@ void RemoveAllTrees()
  */
 uint PlaceTreeGroupAroundTile(TileIndex tile, TreeType treetype, uint radius, uint count, bool set_zone)
 {
+	dbg_assert(_game_mode == GM_EDITOR); // Due to InteractiveRandom being used in this function
 	dbg_assert(treetype < TREE_TOYLAND + TREE_COUNT_TOYLAND);
 	const bool allow_desert = treetype == TREE_CACTUS;
 	uint planted = 0;
@@ -536,14 +537,16 @@ void GenerateTrees()
 
 /**
  * Plant a tree.
- * @param tile end tile of area-drag
+ * @param end_tile end tile of area-drag
  * @param flags type of operation
- * @param p1 tree type, TREE_INVALID means random.
+ * @param p1 various bitstuffed data.
+ * - p1 = (bit 0 -  7) - tree type, TREE_INVALID means random.
+ * - p1 = (bit      8) - whether to use the Orthogonal (0) or Diagonal (1) iterator.
  * @param p2 start tile of area-drag of tree plantation
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdPlantTree(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdPlantTree(TileIndex end_tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
 	StringID msg = INVALID_STRING_ID;
 	CommandCost cost(EXPENSES_OTHER);
@@ -556,27 +559,15 @@ CommandCost CmdPlantTree(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 	Company *c = (_game_mode != GM_EDITOR) ? Company::GetIfValid(_current_company) : nullptr;
 	int limit = (c == nullptr ? INT32_MAX : GB(c->tree_limit, 16, 16));
 
-	TileArea ta(tile, p2);
-	for (TileIndex tile : ta) {
+	OrthogonalOrDiagonalTileIterator iter(end_tile, p2, HasBit(p1, 8));
+	for (; *iter != INVALID_TILE; ++iter) {
+		TileIndex tile = *iter;
 		switch (GetTileType(tile)) {
 			case MP_TREES: {
-				bool grow_existing_tree_instead = false;
-
 				/* no more space for trees? */
-				if (_settings_game.game_creation.tree_placer == TP_PERFECT) {
-					if (GetTreeCount(tile) >= 4 || ((GetTreeType(tile) != TREE_CACTUS) && ((int)GetTreeCount(tile) >= MaxTreeCount(tile)))) {
-						if (GetTreeGrowth(tile) < 3) {
-							grow_existing_tree_instead = true;
-						} else {
-							msg = STR_ERROR_TREE_ALREADY_HERE;
-							continue;
-						}
-					}
-				} else {
-					if (GetTreeCount(tile) == 4) {
-						msg = STR_ERROR_TREE_ALREADY_HERE;
-						continue;
-					}
+				if (GetTreeCount(tile) == 4) {
+					msg = STR_ERROR_TREE_ALREADY_HERE;
+					continue;
 				}
 
 				/* Test tree limit. */
@@ -586,11 +577,7 @@ CommandCost CmdPlantTree(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 				}
 
 				if (flags & DC_EXEC) {
-					if (grow_existing_tree_instead) {
-						SetTreeGrowth(tile, 3);
-					} else {
-						AddTreeCount(tile, 1);
-					}
+					AddTreeCount(tile, 1);
 					MarkTileDirtyByTile(tile, VMDF_NOT_MAP_MODE_NON_VEG);
 					if (c != nullptr) c->tree_limit -= 1 << 16;
 				}
@@ -784,7 +771,7 @@ static void DrawTile_Trees(TileInfo *ti, DrawTileProcParams params)
 }
 
 
-static int GetSlopePixelZ_Trees(TileIndex tile, uint x, uint y)
+static int GetSlopePixelZ_Trees(TileIndex tile, uint x, uint y, bool ground_vehicle)
 {
 	int z;
 	Slope tileh = GetTilePixelSlope(tile, &z);

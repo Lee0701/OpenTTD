@@ -46,6 +46,7 @@
 #include "core/geometry_func.hpp"
 #include "infrastructure_func.h"
 #include "zoom_func.h"
+#include "core/span_type.hpp"
 
 #include "safeguards.h"
 
@@ -92,6 +93,7 @@ enum TraceRestrictWindowWidgets {
 	TR_WIDGET_RESET,
 	TR_WIDGET_COPY,
 	TR_WIDGET_COPY_APPEND,
+	TR_WIDGET_DUPLICATE,
 	TR_WIDGET_SHARE,
 	TR_WIDGET_UNSHARE,
 };
@@ -132,6 +134,7 @@ enum PanelWidgets {
 	// Copy
 	DPC_COPY = 0,
 	DPC_APPEND,
+	DPC_DUPLICATE,
 };
 
 /**
@@ -305,6 +308,7 @@ static const StringID _train_status_value_str[] = {
 	STR_TRACE_RESTRICT_TRAIN_STATUS_WAITING,
 	STR_TRACE_RESTRICT_TRAIN_STATUS_LOST,
 	STR_TRACE_RESTRICT_TRAIN_STATUS_REQUIRES_SERVICE,
+	STR_TRACE_RESTRICT_TRAIN_STATUS_STOPPING_AT_STATION_WAYPOINT,
 	INVALID_STRING_ID
 };
 static const uint _train_status_value_val[] = {
@@ -319,6 +323,7 @@ static const uint _train_status_value_val[] = {
 	TRTSVF_WAITING,
 	TRTSVF_LOST,
 	TRTSVF_REQUIRES_SERVICE,
+	TRTSVF_STOPPING_AT_STATION_WAYPOINT,
 };
 
 /** value drop down list for train status type strings and values */
@@ -521,126 +526,90 @@ static TraceRestrictItemType ItemTypeFromGuiType(TraceRestrictGuiItemType type)
 	return static_cast<TraceRestrictItemType>(type & 0xFFFF);
 }
 
+enum TraceRestrictDropDownListItemFlags : uint8 {
+	TRDDLIF_NONE                      =      0,
+	TRDDLIF_ADVANCED                  = 1 << 0,  ///< requires _settings_client.gui.show_adv_tracerestrict_features
+	TRDDLIF_REALISTIC_BRAKING         = 1 << 1,  ///< requires realistic braking
+	TRDDLIF_SPEED_ADAPTATION          = 1 << 2,  ///< requires speed adaptation
+	TRDDLIF_NORMAL_SHUNT_SIGNAL_STYLE = 1 << 3,  ///< requires normal/shunt signal styles
+	TRDDLIF_HIDDEN                    = 1 << 4,  ///< always hidden
+};
+DECLARE_ENUM_AS_BIT_SET(TraceRestrictDropDownListItemFlags)
+
+struct TraceRestrictDropDownListItem {
+	TraceRestrictGuiItemType type;
+	StringID str;
+	TraceRestrictDropDownListItemFlags flags;
+};
+
 /**
- * Return the appropriate type dropdown TraceRestrictDropDownListSet for the given item type @p type
+ * Return the appropriate type dropdown TraceRestrictDropDownListItem span for the given item type @p type
  */
-static const TraceRestrictDropDownListSet *GetTypeDropDownListSet(TraceRestrictGuiItemType type, uint32 *hide_mask = nullptr)
+static span<const TraceRestrictDropDownListItem> GetTypeDropDownListItems(TraceRestrictGuiItemType type)
 {
-	static const StringID str_action[] = {
-		STR_TRACE_RESTRICT_PF_DENY,
-		STR_TRACE_RESTRICT_PF_PENALTY,
-		STR_TRACE_RESTRICT_RESERVE_THROUGH,
-		STR_TRACE_RESTRICT_LONG_RESERVE,
-		STR_TRACE_RESTRICT_WAIT_AT_PBS,             // 0x10
-		STR_TRACE_RESTRICT_SLOT_OP,
-		STR_TRACE_RESTRICT_REVERSE,
-		STR_TRACE_RESTRICT_SPEED_RESTRICTION,
-		STR_TRACE_RESTRICT_NEWS_CONTROL,            // 0x100
-		STR_TRACE_RESTRICT_COUNTER_OP,
-		STR_TRACE_RESTRICT_PF_PENALTY_CONTROL,
-		STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL,
-		STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL,     // 0x1000
-		INVALID_STRING_ID,
-	};
-	static const uint val_action[] = {
-		TRIT_PF_DENY,
-		TRIT_PF_PENALTY,
-		TRIT_RESERVE_THROUGH,
-		TRIT_LONG_RESERVE,
-		TRIT_WAIT_AT_PBS,
-		TRIT_SLOT,
-		TRIT_REVERSE,
-		TRIT_SPEED_RESTRICTION,
-		TRIT_NEWS_CONTROL,
-		TRIT_COUNTER,
-		TRIT_PF_PENALTY_CONTROL,
-		TRIT_SPEED_ADAPTATION_CONTROL,
-		TRIT_SIGNAL_MODE_CONTROL,
-	};
-	static const TraceRestrictDropDownListSet set_action = {
-		str_action, val_action,
+	static const TraceRestrictDropDownListItem actions[] = {
+		{ TRIT_PF_DENY,                  STR_TRACE_RESTRICT_PF_DENY,                  TRDDLIF_NONE },
+		{ TRIT_PF_PENALTY,               STR_TRACE_RESTRICT_PF_PENALTY,               TRDDLIF_NONE },
+		{ TRIT_RESERVE_THROUGH,          STR_TRACE_RESTRICT_RESERVE_THROUGH,          TRDDLIF_NONE },
+		{ TRIT_LONG_RESERVE,             STR_TRACE_RESTRICT_LONG_RESERVE,             TRDDLIF_NONE },
+		{ TRIT_NEWS_CONTROL,             STR_TRACE_RESTRICT_NEWS_CONTROL,             TRDDLIF_NONE },
+		{ TRIT_WAIT_AT_PBS,              STR_TRACE_RESTRICT_WAIT_AT_PBS,              TRDDLIF_ADVANCED },
+		{ TRIT_SLOT,                     STR_TRACE_RESTRICT_SLOT_OP,                  TRDDLIF_ADVANCED },
+		{ TRIT_REVERSE,                  STR_TRACE_RESTRICT_REVERSE,                  TRDDLIF_ADVANCED },
+		{ TRIT_SPEED_RESTRICTION,        STR_TRACE_RESTRICT_SPEED_RESTRICTION,        TRDDLIF_ADVANCED },
+		{ TRIT_COUNTER,                  STR_TRACE_RESTRICT_COUNTER_OP,               TRDDLIF_ADVANCED },
+		{ TRIT_PF_PENALTY_CONTROL,       STR_TRACE_RESTRICT_PF_PENALTY_CONTROL,       TRDDLIF_ADVANCED },
+		{ TRIT_SPEED_ADAPTATION_CONTROL, STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL, TRDDLIF_ADVANCED | TRDDLIF_SPEED_ADAPTATION },
+		{ TRIT_SIGNAL_MODE_CONTROL,      STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL,      TRDDLIF_ADVANCED | TRDDLIF_NORMAL_SHUNT_SIGNAL_STYLE },
 	};
 
-	static const StringID str_cond[] = {
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_LENGTH,
-		STR_TRACE_RESTRICT_VARIABLE_MAX_SPEED,
-		STR_TRACE_RESTRICT_VARIABLE_CURRENT_ORDER,
-		STR_TRACE_RESTRICT_VARIABLE_NEXT_ORDER,
-		STR_TRACE_RESTRICT_VARIABLE_LAST_VISITED_STATION,
-		STR_TRACE_RESTRICT_VARIABLE_CARGO,
-		STR_TRACE_RESTRICT_VARIABLE_LOAD_PERCENT,
-		STR_TRACE_RESTRICT_VARIABLE_ENTRY_DIRECTION,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_GROUP,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_OWNER,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_STATUS,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_WEIGHT,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_POWER,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_MAX_TE,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_POWER_WEIGHT_RATIO,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_MAX_TE_WEIGHT_RATIO,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_ENGINE_CLASS,
-		STR_TRACE_RESTRICT_VARIABLE_PBS_ENTRY_SIGNAL,
-		STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_SIGNAL,
-		STR_TRACE_RESTRICT_VARIABLE_TRAIN_SLOT,
-		STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY,
-		STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY_REMAINING,
-		STR_TRACE_RESTRICT_VARIABLE_COUNTER_VALUE,
-		STR_TRACE_RESTRICT_VARIABLE_TIME_DATE_VALUE,
-		STR_TRACE_RESTRICT_VARIABLE_RESERVED_TILES_AHEAD,
-		STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_TILE,
-		STR_TRACE_RESTRICT_VARIABLE_ORDER_TARGET_DIRECTION,
-		STR_TRACE_RESTRICT_VARIABLE_UNDEFINED,
-		INVALID_STRING_ID,
-	};
-	static const uint val_cond[] = {
-		TRIT_COND_TRAIN_LENGTH,
-		TRIT_COND_MAX_SPEED,
-		TRIT_COND_CURRENT_ORDER,
-		TRIT_COND_NEXT_ORDER,
-		TRIT_COND_LAST_STATION,                                       // 0x10
-		TRIT_COND_CARGO,
-		TRIT_COND_LOAD_PERCENT,
-		TRIT_COND_ENTRY_DIRECTION,
-		TRIT_COND_TRAIN_GROUP,                                        // 0x100
-		TRIT_COND_TRAIN_OWNER,
-		TRIT_COND_TRAIN_STATUS,
-		TRIT_COND_PHYS_PROP | (TRPPCAF_WEIGHT << 16),
-		TRIT_COND_PHYS_PROP | (TRPPCAF_POWER << 16),                  // 0x1000
-		TRIT_COND_PHYS_PROP | (TRPPCAF_MAX_TE << 16),
-		TRIT_COND_PHYS_RATIO | (TRPPRCAF_POWER_WEIGHT << 16),
-		TRIT_COND_PHYS_RATIO | (TRPPRCAF_MAX_TE_WEIGHT << 16),
-		TRIT_COND_CATEGORY | (TRCCAF_ENGINE_CLASS << 16),             // 0x10000
-		TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_VEH_POS << 16),
-		TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_RES_END << 16),
-		TRIT_COND_TRAIN_IN_SLOT,
-		TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_OCCUPANTS << 16),         // 0x100000
-		TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_REMAINING << 16),
-		TRIT_COND_COUNTER_VALUE,
-		TRIT_COND_TIME_DATE_VALUE,
-		TRIT_COND_RESERVED_TILES,                                     // 0x1000000
-		TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_RES_END_TILE << 16),
-		TRIT_COND_TARGET_DIRECTION,
-		TRIT_COND_UNDEFINED,
-	};
-	static const TraceRestrictDropDownListSet set_cond = {
-		str_cond, val_cond,
+	static const TraceRestrictDropDownListItem conditions[] = {
+		{ TRIT_COND_UNDEFINED,                                        STR_TRACE_RESTRICT_VARIABLE_UNDEFINED,                 TRDDLIF_HIDDEN },
+		{ TRIT_COND_TRAIN_LENGTH,                                     STR_TRACE_RESTRICT_VARIABLE_TRAIN_LENGTH,              TRDDLIF_NONE },
+		{ TRIT_COND_MAX_SPEED,                                        STR_TRACE_RESTRICT_VARIABLE_MAX_SPEED,                 TRDDLIF_NONE },
+		{ TRIT_COND_CURRENT_ORDER,                                    STR_TRACE_RESTRICT_VARIABLE_CURRENT_ORDER,             TRDDLIF_NONE },
+		{ TRIT_COND_NEXT_ORDER,                                       STR_TRACE_RESTRICT_VARIABLE_NEXT_ORDER,                TRDDLIF_NONE },
+		{ TRIT_COND_LAST_STATION,                                     STR_TRACE_RESTRICT_VARIABLE_LAST_VISITED_STATION,      TRDDLIF_NONE },
+		{ TRIT_COND_CARGO,                                            STR_TRACE_RESTRICT_VARIABLE_CARGO,                     TRDDLIF_NONE },
+		{ TRIT_COND_LOAD_PERCENT,                                     STR_TRACE_RESTRICT_VARIABLE_LOAD_PERCENT,              TRDDLIF_NONE },
+		{ TRIT_COND_ENTRY_DIRECTION,                                  STR_TRACE_RESTRICT_VARIABLE_ENTRY_DIRECTION,           TRDDLIF_NONE },
+		{ TRIT_COND_TRAIN_GROUP,                                      STR_TRACE_RESTRICT_VARIABLE_TRAIN_GROUP,               TRDDLIF_NONE },
+		{ TRIT_COND_TRAIN_OWNER,                                      STR_TRACE_RESTRICT_VARIABLE_TRAIN_OWNER,               TRDDLIF_NONE },
+		{ TRIT_COND_TRAIN_STATUS,                                     STR_TRACE_RESTRICT_VARIABLE_TRAIN_STATUS,              TRDDLIF_NONE },
+		{ TRIT_COND_PHYS_PROP | (TRPPCAF_WEIGHT << 16),               STR_TRACE_RESTRICT_VARIABLE_TRAIN_WEIGHT,              TRDDLIF_NONE },
+		{ TRIT_COND_PHYS_PROP | (TRPPCAF_POWER << 16),                STR_TRACE_RESTRICT_VARIABLE_TRAIN_POWER,               TRDDLIF_NONE },
+		{ TRIT_COND_PHYS_PROP | (TRPPCAF_MAX_TE << 16),               STR_TRACE_RESTRICT_VARIABLE_TRAIN_MAX_TE,              TRDDLIF_NONE },
+		{ TRIT_COND_PHYS_RATIO | (TRPPRCAF_POWER_WEIGHT << 16),       STR_TRACE_RESTRICT_VARIABLE_TRAIN_POWER_WEIGHT_RATIO,  TRDDLIF_NONE },
+		{ TRIT_COND_PHYS_RATIO | (TRPPRCAF_MAX_TE_WEIGHT << 16),      STR_TRACE_RESTRICT_VARIABLE_TRAIN_MAX_TE_WEIGHT_RATIO, TRDDLIF_NONE },
+		{ TRIT_COND_CATEGORY | (TRCCAF_ENGINE_CLASS << 16),           STR_TRACE_RESTRICT_VARIABLE_TRAIN_ENGINE_CLASS,        TRDDLIF_NONE },
+		{ TRIT_COND_TARGET_DIRECTION,                                 STR_TRACE_RESTRICT_VARIABLE_ORDER_TARGET_DIRECTION,    TRDDLIF_NONE },
+		{ TRIT_COND_TRAIN_IN_SLOT,                                    STR_TRACE_RESTRICT_VARIABLE_TRAIN_SLOT,                TRDDLIF_ADVANCED },
+		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_OCCUPANTS << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY,            TRDDLIF_ADVANCED },
+		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_REMAINING << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY_REMAINING,  TRDDLIF_ADVANCED },
+		{ TRIT_COND_COUNTER_VALUE,                                    STR_TRACE_RESTRICT_VARIABLE_COUNTER_VALUE,             TRDDLIF_ADVANCED },
+		{ TRIT_COND_TIME_DATE_VALUE,                                  STR_TRACE_RESTRICT_VARIABLE_TIME_DATE_VALUE,           TRDDLIF_ADVANCED },
+		{ TRIT_COND_RESERVED_TILES,                                   STR_TRACE_RESTRICT_VARIABLE_RESERVED_TILES_AHEAD,      TRDDLIF_ADVANCED | TRDDLIF_REALISTIC_BRAKING },
+		{ TRIT_COND_RESERVATION_THROUGH,                              STR_TRACE_RESTRICT_VARIABLE_RESERVATION_THROUGH,       TRDDLIF_ADVANCED },
+		{ TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_VEH_POS << 16),       STR_TRACE_RESTRICT_VARIABLE_PBS_ENTRY_SIGNAL,          TRDDLIF_ADVANCED },
+		{ TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_RES_END << 16),       STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_SIGNAL,        TRDDLIF_ADVANCED | TRDDLIF_REALISTIC_BRAKING },
+		{ TRIT_COND_PBS_ENTRY_SIGNAL | (TRPESAF_RES_END_TILE << 16),  STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_TILE,          TRDDLIF_ADVANCED | TRDDLIF_NORMAL_SHUNT_SIGNAL_STYLE },
 	};
 
-	bool is_conditional = IsTraceRestrictTypeConditional(ItemTypeFromGuiType(type));
-	if (hide_mask) {
-		if (_settings_client.gui.show_adv_tracerestrict_features) {
-			*hide_mask = 0;
-		} else {
-			*hide_mask = is_conditional ? 0x1FE0000 : 0xEF0;
-		}
-		if (is_conditional && _settings_game.vehicle.train_braking_model != TBM_REALISTIC) *hide_mask |= 0x1040000;
-		if (!is_conditional && !_settings_game.vehicle.train_speed_adaptation) *hide_mask |= 0x800;
-
-		if (!(_settings_client.gui.show_adv_tracerestrict_features && _settings_game.vehicle.train_braking_model == TBM_REALISTIC && _signal_style_masks.combined_normal_shunt != 0)) {
-			*hide_mask |= is_conditional ? 0x2000000 : 0x1000;
-		}
+	if (IsTraceRestrictTypeConditional(ItemTypeFromGuiType(type))) {
+		return span<const TraceRestrictDropDownListItem>(conditions);
+	} else {
+		return span<const TraceRestrictDropDownListItem>(actions);
 	}
-	return is_conditional ? &set_cond : &set_action;
+}
+
+static bool ShouldHideTypeDropDownListItem(TraceRestrictDropDownListItemFlags flags)
+{
+	if ((flags & TRDDLIF_ADVANCED) && !_settings_client.gui.show_adv_tracerestrict_features) return true;
+	if ((flags & TRDDLIF_REALISTIC_BRAKING) && _settings_game.vehicle.train_braking_model != TBM_REALISTIC) return true;
+	if ((flags & TRDDLIF_SPEED_ADAPTATION) && !_settings_game.vehicle.train_speed_adaptation) return true;
+	if ((flags & TRDDLIF_NORMAL_SHUNT_SIGNAL_STYLE) && (_settings_game.vehicle.train_braking_model != TBM_REALISTIC || _signal_style_masks.combined_normal_shunt == 0)) return true;
+	if (flags & TRDDLIF_HIDDEN) return true;
+	return false;
 }
 
 /**
@@ -828,6 +797,20 @@ static const TraceRestrictDropDownListSet _train_status_cond_ops = {
 	_train_status_cond_ops_str, _train_status_cond_ops_val,
 };
 
+static const StringID _passes_through_cond_ops_str[] = {
+	STR_TRACE_RESTRICT_CONDITIONAL_COMPARATOR_PASS,
+	STR_TRACE_RESTRICT_CONDITIONAL_COMPARATOR_DOESNT_PASS,
+	INVALID_STRING_ID,
+};
+static const uint _passes_through_cond_ops_val[] = {
+	TRCO_IS,
+	TRCO_ISNOT,
+};
+/** passes through conditional operators dropdown list set */
+static const TraceRestrictDropDownListSet _passes_through_cond_ops = {
+	_passes_through_cond_ops_str, _passes_through_cond_ops_val,
+};
+
 static const StringID _slot_op_cond_ops_str[] = {
 	STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT,
 	STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE,
@@ -885,7 +868,11 @@ static StringID GetCargoStringByID(CargoID cargo)
 static StringID GetTypeString(TraceRestrictItem item)
 {
 	TraceRestrictGuiItemType type = GetItemGuiType(item);
-	return GetDropDownStringByValue(GetTypeDropDownListSet(type), type);
+	for (const TraceRestrictDropDownListItem &item : GetTypeDropDownListItems(type)) {
+		if (item.type == type) return item.str;
+	}
+
+	NOT_REACHED();
 }
 
 /**
@@ -930,6 +917,7 @@ static const TraceRestrictDropDownListSet *GetCondOpDropDownListSet(TraceRestric
 	if (properties.value_type == TRVT_CARGO_ID) return &_cargo_cond_ops;
 	if (properties.value_type == TRVT_TRAIN_STATUS) return &_train_status_cond_ops;
 	if (properties.value_type == TRVT_ENGINE_CLASS) return &_train_status_cond_ops;
+	if (properties.value_type == TRVT_TILE_INDEX_THROUGH) return &_passes_through_cond_ops;
 
 	switch (properties.cond_type) {
 		case TRCOT_NONE:
@@ -995,8 +983,8 @@ static uint ConvertIntegerValue(TraceRestrictValueType type, uint in, bool to_di
 
 		case TRVT_SPEED:
 			return to_display
-					? ConvertKmhishSpeedToDisplaySpeed(in)
-					: ConvertDisplaySpeedToKmhishSpeed(in);
+					? ConvertKmhishSpeedToDisplaySpeed(in, VEH_TRAIN)
+					: ConvertDisplaySpeedToKmhishSpeed(in, VEH_TRAIN);
 
 		case TRVT_WEIGHT:
 			return to_display
@@ -1045,7 +1033,7 @@ static void ConvertValueToDecimal(TraceRestrictValueType type, uint in, int64 &v
 
 		case TRVT_SPEED:
 			decimal = _settings_game.locale.units_velocity == 3 ? 1 : 0;
-			value = ConvertKmhishSpeedToDisplaySpeed(in);
+			value = ConvertKmhishSpeedToDisplaySpeed(in, VEH_TRAIN);
 			break;
 
 		default:
@@ -1066,7 +1054,7 @@ static uint ConvertDecimalToValue(TraceRestrictValueType type, double in)
 			return ConvertDisplayToForceWeightRatio(in);
 
 		case TRVT_SPEED:
-			return ConvertDisplaySpeedToKmhishSpeed(in * (_settings_game.locale.units_velocity == 3 ? 10 : 1));
+			return ConvertDisplaySpeedToKmhishSpeed(in * (_settings_game.locale.units_velocity == 3 ? 10 : 1), VEH_TRAIN);
 
 		default:
 			NOT_REACHED();
@@ -1217,11 +1205,23 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 			SetDParam(0, _program_cond_type[GetTraceRestrictCondFlags(item)]);
 			SetDParam(1, selected ? STR_TRACE_RESTRICT_WHITE : STR_EMPTY);
 		} else {
+			auto insert_warning = [&](uint dparam_index, StringID warning) {
+				char buf[256];
+				int64 args_array[] = { (int64)GetDParam(dparam_index) };
+				StringParameters tmp_params(args_array);
+				char *end = GetStringWithArgs(buf, warning, &tmp_params, lastof(buf));
+				_temp_special_strings[0].assign(buf, end);
+				SetDParam(dparam_index, SPECSTR_TEMP_START);
+			};
+
 			switch (properties.value_type) {
 				case TRVT_INT:
 				case TRVT_PERCENT:
 					instruction_string = STR_TRACE_RESTRICT_CONDITIONAL_COMPARE_INTEGER;
 					DrawInstructionStringConditionalIntegerCommon(item, properties);
+					if (GetTraceRestrictType(item) == TRIT_COND_RESERVED_TILES && _settings_game.vehicle.train_braking_model != TBM_REALISTIC) {
+						insert_warning(1, STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING);
+					}
 					break;
 
 				case TRVT_SPEED:
@@ -1294,20 +1294,12 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 						SetDParam(3, TileX(tile));
 						SetDParam(4, TileY(tile));
 					}
-					auto insert_warning = [&](StringID warning) {
-						char buf[256];
-						int64 args_array[] = { (int64)GetDParam(1) };
-						StringParameters tmp_params(args_array);
-						char *end = GetStringWithArgs(buf, warning, &tmp_params, lastof(buf));
-						_temp_special_strings[0].assign(buf, end);
-						SetDParam(1, SPECSTR_TEMP_START);
-					};
 					auto check_signal_mode_control = [&](bool allowed) {
 						bool warn = false;
 						IterateActionsInsideConditional(prog, index, [&](const TraceRestrictItem &item) {
 							if ((GetTraceRestrictType(item) == TRIT_SIGNAL_MODE_CONTROL) != allowed) warn = true;
 						});
-						if (warn) insert_warning(allowed ? STR_TRACE_RESTRICT_WARNING_SIGNAL_MODE_CONTROL_ONLY : STR_TRACE_RESTRICT_WARNING_NO_SIGNAL_MODE_CONTROL);
+						if (warn) insert_warning(1, allowed ? STR_TRACE_RESTRICT_WARNING_SIGNAL_MODE_CONTROL_ONLY : STR_TRACE_RESTRICT_WARNING_NO_SIGNAL_MODE_CONTROL);
 					};
 					switch (static_cast<TraceRestrictPBSEntrySignalAuxField>(GetTraceRestrictAuxField(item))) {
 						case TRPESAF_VEH_POS:
@@ -1318,19 +1310,36 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 						case TRPESAF_RES_END:
 							SetDParam(1, STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_SIGNAL_LONG);
 							check_signal_mode_control(false);
-							if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) insert_warning(STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING);
+							if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) insert_warning(1, STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING);
 							break;
 
 						case TRPESAF_RES_END_TILE:
 							SetDParam(1, STR_TRACE_RESTRICT_VARIABLE_PBS_RES_END_TILE_LONG);
 							check_signal_mode_control(true);
-							if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) insert_warning(STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING);
+							if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) insert_warning(1, STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING);
 							break;
 
 						default:
 							NOT_REACHED();
 					}
 
+					break;
+				}
+
+				case TRVT_TILE_INDEX_THROUGH: {
+					assert(prog != nullptr);
+					assert(GetTraceRestrictType(item) == TRIT_COND_RESERVATION_THROUGH);
+					TileIndex tile = *(TraceRestrictProgram::InstructionAt(prog->items, index - 1) + 1);
+					if (tile == INVALID_TILE) {
+						DrawInstructionStringConditionalInvalidValue(item, properties, instruction_string, selected);
+					} else {
+						instruction_string = STR_TRACE_RESTRICT_CONDITIONAL_PASSES_TILE_INDEX;
+						SetDParam(0, _program_cond_type[GetTraceRestrictCondFlags(item)]);
+						SetDParam(2, GetDropDownStringByValue(GetCondOpDropDownListSet(properties), GetTraceRestrictCondOp(item)));
+						SetDParam(3, TileX(tile));
+						SetDParam(4, TileY(tile));
+					}
+					SetDParam(1, STR_TRACE_RESTRICT_VARIABLE_RESERVATION_THROUGH_SHORT);
 					break;
 				}
 
@@ -1521,9 +1530,9 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 
 					case TRPPAF_PRESET: {
 						instruction_string = STR_TRACE_RESTRICT_PF_PENALTY_ITEM_PRESET;
-						uint16 index = GetTraceRestrictValue(item);
-						assert(index < TRPPPI_END);
-						SetDParam(0, _pf_penalty_dropdown_str[index]);
+						uint16 idx = GetTraceRestrictValue(item);
+						assert(idx < TRPPPI_END);
+						SetDParam(0, _pf_penalty_dropdown_str[idx]);
 						break;
 					}
 
@@ -1792,7 +1801,8 @@ public:
 					if (sel == -1) return;
 
 					TraceRestrictItem item = this->GetItem(this->GetProgram(), sel);
-					if (GetTraceRestrictTypeProperties(item).value_type == TRVT_ORDER) {
+					TraceRestrictValueType val_type = GetTraceRestrictTypeProperties(item).value_type;
+					if (val_type == TRVT_ORDER) {
 						switch (static_cast<TraceRestrictOrderCondAuxField>(GetTraceRestrictAuxField(item))) {
 							case TROCAF_STATION:
 							case TROCAF_WAYPOINT: {
@@ -1811,7 +1821,7 @@ public:
 								break;
 							}
 						}
-					} else if (GetTraceRestrictTypeProperties(item).value_type == TRVT_TILE_INDEX) {
+					} else if (val_type == TRVT_TILE_INDEX || val_type == TRVT_TILE_INDEX_THROUGH) {
 						TileIndex tile = *(TraceRestrictProgram::InstructionAt(this->GetProgram()->items, sel - 1) + 1);
 						if (tile != INVALID_TILE) {
 							ScrollMainWindowToTile(tile);
@@ -1874,7 +1884,7 @@ public:
 					hidden |= _program_signal_mode_hide_mask;
 				}
 
-				this->ShowDropDownListWithValue(&_program_insert, 0, true, TR_WIDGET_INSERT, disabled, hidden, 0);
+				this->ShowDropDownListWithValue(&_program_insert, 0, true, TR_WIDGET_INSERT, disabled, hidden);
 				break;
 			}
 
@@ -1909,6 +1919,19 @@ public:
 				break;
 			}
 
+			case TR_WIDGET_DUPLICATE: {
+				TraceRestrictItem item = this->GetSelected();
+				if (this->GetOwner() != _local_company || item == 0) {
+					return;
+				}
+
+				uint32 offset = this->selected_instruction - 1;
+				this->expecting_inserted_item = item;
+				TraceRestrictDoCommandP(tile, track, TRDCT_DUPLICATE_ITEM,
+						offset, 0, STR_TRACE_RESTRICT_ERROR_CAN_T_MOVE_ITEM);
+				break;
+			}
+
 			case TR_WIDGET_CONDFLAGS: {
 				TraceRestrictItem item = this->GetSelected();
 				if (this->GetOwner() != _local_company || item == 0) {
@@ -1929,7 +1952,7 @@ public:
 				if (!ElseInsertionDryRun(true)) disabled |= _condflags_dropdown_else_hide_mask;
 				if (!ElseIfInsertionDryRun(true)) disabled |= _condflags_dropdown_else_if_hide_mask;
 
-				this->ShowDropDownListWithValue(&_condflags_dropdown, type, false, TR_WIDGET_CONDFLAGS, disabled, 0, 0);
+				this->ShowDropDownListWithValue(&_condflags_dropdown, type, false, TR_WIDGET_CONDFLAGS, disabled, 0);
 				break;
 			}
 
@@ -1939,9 +1962,13 @@ public:
 				TraceRestrictGuiItemType type = GetItemGuiType(item);
 
 				if (type != TRIT_NULL) {
-					uint32 hide_mask = 0;
-					const TraceRestrictDropDownListSet *set = GetTypeDropDownListSet(type, &hide_mask);
-					this->ShowDropDownListWithValue(set, type, false, widget, 0, hide_mask, UINT_MAX);
+					DropDownList dlist;
+					for (const TraceRestrictDropDownListItem &item : GetTypeDropDownListItems(type)) {
+						if (!ShouldHideTypeDropDownListItem(item.flags)) {
+							dlist.emplace_back(new DropDownListStringItem(item.str, item.type, false));
+						}
+					}
+					ShowDropDownList(this, std::move(dlist), type, widget, 0);
 				}
 				break;
 			}
@@ -1950,20 +1977,20 @@ public:
 				TraceRestrictItem item = this->GetSelected();
 				const TraceRestrictDropDownListSet *list_set = GetCondOpDropDownListSet(GetTraceRestrictTypeProperties(item));
 				if (list_set) {
-					this->ShowDropDownListWithValue(list_set, GetTraceRestrictCondOp(item), false, TR_WIDGET_COMPARATOR, 0, 0, 0);
+					this->ShowDropDownListWithValue(list_set, GetTraceRestrictCondOp(item), false, TR_WIDGET_COMPARATOR, 0, 0);
 				}
 				break;
 			}
 
 			case TR_WIDGET_SLOT_OP: {
 				TraceRestrictItem item = this->GetSelected();
-				this->ShowDropDownListWithValue(&_slot_op_cond_ops, GetTraceRestrictCondOp(item), false, TR_WIDGET_SLOT_OP, 0, 0, 0);
+				this->ShowDropDownListWithValue(&_slot_op_cond_ops, GetTraceRestrictCondOp(item), false, TR_WIDGET_SLOT_OP, 0, 0);
 				break;
 			}
 
 			case TR_WIDGET_COUNTER_OP: {
 				TraceRestrictItem item = this->GetSelected();
-				this->ShowDropDownListWithValue(&_counter_op_cond_ops, GetTraceRestrictCondOp(item), false, TR_WIDGET_COUNTER_OP, 0, 0, 0);
+				this->ShowDropDownListWithValue(&_counter_op_cond_ops, GetTraceRestrictCondOp(item), false, TR_WIDGET_COUNTER_OP, 0, 0);
 				break;
 			}
 
@@ -2000,37 +2027,37 @@ public:
 				TraceRestrictItem item = this->GetSelected();
 				switch (GetTraceRestrictTypeProperties(item).value_type) {
 					case TRVT_DENY:
-						this->ShowDropDownListWithValue(&_deny_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_deny_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_CARGO_ID:
-						this->ShowDropDownListWithValue(GetSortedCargoTypeDropDownListSet(), GetTraceRestrictValue(item), true, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0); // current cargo is permitted to not be in list
+						this->ShowDropDownListWithValue(GetSortedCargoTypeDropDownListSet(), GetTraceRestrictValue(item), true, TR_WIDGET_VALUE_DROPDOWN, 0, 0); // current cargo is permitted to not be in list
 						break;
 
 					case TRVT_DIRECTION:
-						this->ShowDropDownListWithValue(&_direction_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_direction_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_PF_PENALTY:
-						this->ShowDropDownListWithValue(&_pf_penalty_dropdown, GetPathfinderPenaltyDropdownIndex(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_pf_penalty_dropdown, GetPathfinderPenaltyDropdownIndex(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_RESERVE_THROUGH:
-						this->ShowDropDownListWithValue(&_reserve_through_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_reserve_through_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_LONG_RESERVE:
-						this->ShowDropDownListWithValue(&_long_reserve_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_long_reserve_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_WAIT_AT_PBS:
-						this->ShowDropDownListWithValue(&_wait_at_pbs_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_wait_at_pbs_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_GROUP_INDEX: {
 						int selected;
 						DropDownList dlist = GetGroupDropDownList(this->GetOwner(), GetTraceRestrictValue(item), selected);
-						ShowDropDownList(this, std::move(dlist), selected, TR_WIDGET_VALUE_DROPDOWN, 0, true);
+						ShowDropDownList(this, std::move(dlist), selected, TR_WIDGET_VALUE_DROPDOWN, 0);
 						break;
 					}
 
@@ -2046,35 +2073,35 @@ public:
 					}
 
 					case TRVT_TRAIN_STATUS:
-						this->ShowDropDownListWithValue(&_train_status_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_train_status_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_REVERSE:
-						this->ShowDropDownListWithValue(&_reverse_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_reverse_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_NEWS_CONTROL:
-						this->ShowDropDownListWithValue(&_news_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_news_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_ENGINE_CLASS:
-						this->ShowDropDownListWithValue(&_engine_class_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_engine_class_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_PF_PENALTY_CONTROL:
-						this->ShowDropDownListWithValue(&_pf_penalty_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_pf_penalty_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);;
 						break;
 
 					case TRVT_SPEED_ADAPTATION_CONTROL:
-						this->ShowDropDownListWithValue(&_speed_adaptation_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_speed_adaptation_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_SIGNAL_MODE_CONTROL:
-						this->ShowDropDownListWithValue(&_signal_mode_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_signal_mode_control_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					case TRVT_ORDER_TARGET_DIAGDIR:
-						this->ShowDropDownListWithValue(&_diagdir_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_diagdir_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
 					default:
@@ -2101,12 +2128,12 @@ public:
 					}
 
 					case TRVT_TIME_DATE_INT: {
-						this->ShowDropDownListWithValue(&_time_date_value, GetTraceRestrictValue(item), false, TR_WIDGET_LEFT_AUX_DROPDOWN, _settings_game.game_time.time_in_minutes ? 0 : 7, 0, UINT_MAX);
+						this->ShowDropDownListWithValue(&_time_date_value, GetTraceRestrictValue(item), false, TR_WIDGET_LEFT_AUX_DROPDOWN, _settings_game.game_time.time_in_minutes ? 0 : 7, 0);
 						break;
 					}
 
 					case TRVT_ORDER_TARGET_DIAGDIR: {
-						this->ShowDropDownListWithValue(&_target_direction_aux_value, GetTraceRestrictAuxField(item), false, TR_WIDGET_LEFT_AUX_DROPDOWN, 0, 0, 0);
+						this->ShowDropDownListWithValue(&_target_direction_aux_value, GetTraceRestrictAuxField(item), false, TR_WIDGET_LEFT_AUX_DROPDOWN, 0, 0);
 						break;
 					}
 
@@ -2233,6 +2260,12 @@ public:
 			}
 		}
 
+		if (widget == TR_WIDGET_TYPE_COND || widget == TR_WIDGET_TYPE_NONCOND) {
+			SetTraceRestrictTypeAndNormalise(item, static_cast<TraceRestrictItemType>(index & 0xFFFF), index >> 16);
+
+			TraceRestrictDoCommandP(this->tile, this->track, TRDCT_MODIFY_ITEM, this->selected_instruction - 1, item, STR_TRACE_RESTRICT_ERROR_CAN_T_MODIFY_ITEM);
+		}
+
 		const TraceRestrictDropDownListSet *list_set = this->drop_down_list_mapping[widget];
 		if (!list_set) {
 			return;
@@ -2267,14 +2300,6 @@ public:
 
 					SetTraceRestrictCondFlags(item, static_cast<TraceRestrictCondFlags>(cond_type));
 				}
-
-				TraceRestrictDoCommandP(this->tile, this->track, TRDCT_MODIFY_ITEM, this->selected_instruction - 1, item, STR_TRACE_RESTRICT_ERROR_CAN_T_MODIFY_ITEM);
-				break;
-			}
-
-			case TR_WIDGET_TYPE_COND:
-			case TR_WIDGET_TYPE_NONCOND: {
-				SetTraceRestrictTypeAndNormalise(item, static_cast<TraceRestrictItemType>(value & 0xFFFF), value >> 16);
 
 				TraceRestrictDoCommandP(this->tile, this->track, TRDCT_MODIFY_ITEM, this->selected_instruction - 1, item, STR_TRACE_RESTRICT_ERROR_CAN_T_MODIFY_ITEM);
 				break;
@@ -2366,7 +2391,7 @@ public:
 			return;
 		}
 
-		TrackBits trackbits = TrackStatusToTrackBits(GetTileTrackStatus(source_tile, TRANSPORT_RAIL, 0));
+		TrackBits trackbits = TrackdirBitsToTrackBits(GetTileTrackdirBits(source_tile, TRANSPORT_RAIL, 0));
 		if (trackbits & TRACK_BIT_VERT) { // N-S direction
 			trackbits = (_tile_fract_coords.x <= _tile_fract_coords.y) ? TRACK_BIT_RIGHT : TRACK_BIT_LEFT;
 		}
@@ -2469,7 +2494,8 @@ public:
 	void OnPlaceObjectSignalTileValue(Point pt, TileIndex tile, int widget, int error_message)
 	{
 		TraceRestrictItem item = GetSelected();
-		if (GetTraceRestrictTypeProperties(item).value_type != TRVT_TILE_INDEX) return;
+		TraceRestrictValueType val_type = GetTraceRestrictTypeProperties(item).value_type;
+		if (val_type != TRVT_TILE_INDEX && val_type != TRVT_TILE_INDEX_THROUGH) return;
 
 		if (!IsInfraTileUsageAllowed(VEH_TRAIN, _local_company, tile)) {
 			ShowErrorMessage(error_message, STR_ERROR_AREA_IS_OWNED_BY_ANOTHER, WL_INFO);
@@ -2501,7 +2527,8 @@ public:
 	void OnPlaceObjectTileValue(Point pt, TileIndex tile, int widget, int error_message)
 	{
 		TraceRestrictItem item = GetSelected();
-		if (GetTraceRestrictTypeProperties(item).value_type != TRVT_TILE_INDEX) return;
+		TraceRestrictValueType val_type = GetTraceRestrictTypeProperties(item).value_type;
+		if (val_type != TRVT_TILE_INDEX && val_type != TRVT_TILE_INDEX_THROUGH) return;
 
 		TraceRestrictDoCommandP(this->tile, this->track, TRDCT_MODIFY_DUAL_ITEM, this->selected_instruction - 1, tile, STR_TRACE_RESTRICT_ERROR_CAN_T_MODIFY_ITEM);
 	}
@@ -2797,6 +2824,21 @@ private:
 		return false;
 	}
 
+	bool IsDuplicateBtnUsable() const {
+		const TraceRestrictProgram *prog = this->GetProgram();
+		if (!prog) return false;
+
+		TraceRestrictItem item = this->GetSelected();
+		if (GetTraceRestrictType(item) == TRIT_NULL) return false;
+
+		uint32 offset = this->selected_instruction - 1;
+		if (TraceRestrictProgramDuplicateItemAtDryRun(prog->items, offset)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	/**
 	 * Update button states, text values, etc.
 	 */
@@ -2854,6 +2896,7 @@ private:
 
 		this->DisableWidget(TR_WIDGET_UP_BTN);
 		this->DisableWidget(TR_WIDGET_DOWN_BTN);
+		this->DisableWidget(TR_WIDGET_DUPLICATE);
 
 		this->EnableWidget(TR_WIDGET_COPY_APPEND);
 
@@ -2863,7 +2906,6 @@ private:
 		middle_sel->SetDisplayedPlane(DPM_BLANK);
 		right_sel->SetDisplayedPlane(DPR_BLANK);
 		share_sel->SetDisplayedPlane(DPS_SHARE);
-		copy_sel->SetDisplayedPlane(_ctrl_pressed ? DPC_APPEND : DPC_COPY);
 
 		const TraceRestrictProgram *prog = this->GetProgram();
 
@@ -2887,6 +2929,8 @@ private:
 			return;
 		}
 
+		int copy_panel = DPC_DUPLICATE;
+
 		if (prog && prog->refcount > 1) {
 			// program is shared, show and enable unshare button, and reset button
 			share_sel->SetDisplayedPlane(DPS_UNSHARE);
@@ -2899,7 +2943,11 @@ private:
 			// program is empty and not shared, show copy and share buttons
 			this->EnableWidget(TR_WIDGET_COPY);
 			this->EnableWidget(TR_WIDGET_SHARE);
+			copy_panel = DPC_COPY;
 		}
+
+		this->GetWidget<NWidgetCore>(TR_WIDGET_COPY_APPEND)->tool_tip = (copy_panel == DPC_DUPLICATE) ? STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP : STR_TRACE_RESTRICT_COPY_TOOLTIP;
+		copy_sel->SetDisplayedPlane(_ctrl_pressed ? DPC_APPEND : copy_panel);
 
 		// haven't selected instruction
 		if (this->selected_instruction < 1) {
@@ -3028,6 +3076,11 @@ private:
 								right_sel->SetDisplayedPlane(DPR_VALUE_SIGNAL);
 								this->EnableWidget(TR_WIDGET_VALUE_SIGNAL);
 							}
+							break;
+
+						case TRVT_TILE_INDEX_THROUGH:
+							right_sel->SetDisplayedPlane(DPR_VALUE_TILE);
+							this->EnableWidget(TR_WIDGET_VALUE_TILE);
 							break;
 
 						case TRVT_PF_PENALTY:
@@ -3249,6 +3302,7 @@ private:
 			}
 			if (this->IsUpDownBtnUsable(true)) this->EnableWidget(TR_WIDGET_UP_BTN);
 			if (this->IsUpDownBtnUsable(false)) this->EnableWidget(TR_WIDGET_DOWN_BTN);
+			if (this->IsDuplicateBtnUsable()) this->EnableWidget(TR_WIDGET_DUPLICATE);
 		}
 
 		this->SetDirty();
@@ -3259,12 +3313,12 @@ private:
 	 * This asserts if @p value is not in @p list_set, and @p missing_ok is false
 	 */
 	void ShowDropDownListWithValue(const TraceRestrictDropDownListSet *list_set, uint value, bool missing_ok,
-			int button, uint32 disabled_mask, uint32 hidden_mask, uint width)
+			int button, uint32 disabled_mask, uint32 hidden_mask)
 	{
 		this->drop_down_list_mapping[button] = list_set;
 		int selected = GetDropDownListIndexByValue(list_set, value, missing_ok);
 		if (button == TR_WIDGET_VALUE_DROPDOWN) this->value_drop_down_is_company = false;
-		ShowDropDownMenu(this, list_set->string_array, selected, button, disabled_mask, hidden_mask, width);
+		ShowDropDownMenu(this, list_set->string_array, selected, button, disabled_mask, hidden_mask);
 	}
 
 	/**
@@ -3286,7 +3340,7 @@ private:
 		assert(button == TR_WIDGET_VALUE_DROPDOWN);
 		this->value_drop_down_is_company = true;
 
-		ShowDropDownList(this, std::move(list), value, button, 0, true, false);
+		ShowDropDownList(this, std::move(list), value, button, 0);
 	}
 
 	/**
@@ -3443,6 +3497,8 @@ static const NWidgetPart _nested_program_widgets[] = {
 														SetDataTip(STR_TRACE_RESTRICT_COPY, STR_TRACE_RESTRICT_COPY_TOOLTIP), SetResize(1, 0),
 					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_COPY_APPEND), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_TRACE_RESTRICT_APPEND, STR_TRACE_RESTRICT_COPY_TOOLTIP), SetResize(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_DUPLICATE), SetMinimalSize(124, 12), SetFill(1, 0),
+														SetDataTip(STR_TRACE_RESTRICT_DUPLICATE, STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP), SetResize(1, 0),
 				EndContainer(),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, TR_WIDGET_SEL_SHARE),
 					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_SHARE), SetMinimalSize(124, 12), SetFill(1, 0),

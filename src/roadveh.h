@@ -143,7 +143,7 @@ struct RoadVehicle FINAL : public GroundVehicle<RoadVehicle, VEH_ROAD> {
 	uint Crash(bool flooded = false) override;
 	Trackdir GetVehicleTrackdir() const override;
 	TileIndex GetOrderStationLocation(StationID station) override;
-	bool FindClosestDepot(TileIndex *location, DestinationID *destination, bool *reverse) override;
+	ClosestDepot FindClosestDepot() override;
 
 	bool IsBus() const;
 
@@ -155,6 +155,7 @@ struct RoadVehicle FINAL : public GroundVehicle<RoadVehicle, VEH_ROAD> {
 
 	inline bool IsRoadVehicleOnLevelCrossing() const
 	{
+		if (HasBit(_roadtypes_non_train_colliding, this->roadtype)) return false;
 		for (const RoadVehicle *u = this; u != nullptr; u = u->Next()) {
 			if (IsLevelCrossingTile(u->tile)) return true;
 		}
@@ -338,8 +339,7 @@ protected: // These functions should not be called outside acceleration code.
 	 */
 	inline bool TileMayHaveSlopedTrack() const
 	{
-		TrackStatus ts = GetTileTrackStatus(this->tile, TRANSPORT_ROAD, GetRoadTramType(this->roadtype));
-		TrackBits trackbits = TrackStatusToTrackBits(ts);
+		TrackBits trackbits = TrackdirBitsToTrackBits(GetTileTrackdirBits(this->tile, TRANSPORT_ROAD, GetRoadTramType(this->roadtype)));
 
 		return trackbits == TRACK_BIT_X || trackbits == TRACK_BIT_Y;
 	}

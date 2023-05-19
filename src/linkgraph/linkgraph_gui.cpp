@@ -506,12 +506,16 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 		/* Check the distance from the cursor to the line defined by the two stations. */
 		auto check_distance = [&]() -> bool {
 			int64 a = ((ptb.x - pta.x) * (pta.y - pt.y) - (pta.x - pt.x) * (ptb.y - pta.y));
-			return ((a * a) / ((ptb.x - pta.x) * (ptb.x - pta.x) + (ptb.y - pta.y) * (ptb.y - pta.y))) <= 16;
+			int64 b = ((ptb.x - pta.x) * (ptb.x - pta.x) + (ptb.y - pta.y) * (ptb.y - pta.y));
+			if (b == 0) return false;
+			return ((a * a) / b) <= 16;
 		};
 		const auto &link = i->prop;
 		if ((link.Usage() > 0 || (_ctrl_pressed && link.capacity > 0)) &&
 				pt.x + 2 >= std::min(pta.x, ptb.x) &&
 				pt.x - 2 <= std::max(pta.x, ptb.x) &&
+				pt.y + 2 >= std::min(pta.y, ptb.y) &&
+				pt.y - 2 <= std::max(pta.y, ptb.y) &&
 				check_distance()) {
 
 			static char buf[1024];
@@ -608,7 +612,7 @@ void LinkGraphOverlay::SetCargoMask(CargoTypes cargo_mask)
  * Set a new company mask and rebuild the cache.
  * @param company_mask New company mask.
  */
-void LinkGraphOverlay::SetCompanyMask(uint32 company_mask)
+void LinkGraphOverlay::SetCompanyMask(CompanyMask company_mask)
 {
 	this->company_mask = company_mask;
 	this->RebuildCache();
@@ -719,7 +723,7 @@ LinkGraphLegendWindow::LinkGraphLegendWindow(WindowDesc *desc, int window_number
 {
 	this->InitNested(window_number);
 	this->InvalidateData(0);
-	this->SetOverlay(FindWindowById(WC_MAIN_WINDOW, 0)->viewport->overlay);
+	this->SetOverlay(GetMainWindow()->viewport->overlay);
 }
 
 /**
@@ -728,7 +732,7 @@ LinkGraphLegendWindow::LinkGraphLegendWindow(WindowDesc *desc, int window_number
  */
 void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay) {
 	this->overlay = overlay;
-	uint32 companies = this->overlay->GetCompanyMask();
+	CompanyMask companies = this->overlay->GetCompanyMask();
 	for (uint c = 0; c < MAX_COMPANIES; c++) {
 		if (!this->IsWidgetDisabled(WID_LGL_COMPANY_FIRST + c)) {
 			this->SetWidgetLoweredState(WID_LGL_COMPANY_FIRST + c, HasBit(companies, c));

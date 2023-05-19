@@ -146,10 +146,6 @@ STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} mph
 STR_UNITS_VELOCITY_METRIC                                       :{COMMA} km/h
 STR_UNITS_VELOCITY_SI                                           :{COMMA} m/s
 
-STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
-STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
-STR_UNIT_NAME_VELOCITY_SI                                       :m/s
-
 STR_UNITS_POWER_IMPERIAL                                        :{COMMA}hp
 STR_UNITS_POWER_METRIC                                          :{COMMA}hp
 STR_UNITS_POWER_SI                                              :{COMMA}kW
@@ -180,7 +176,6 @@ STR_TOOLTIP_SORT_ORDER                                          :{BLACK}Għazel 
 STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}Għazel il-kriterju biex tissortja
 STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK}Għazel il-kriterju biex tiffilterja
 STR_BUTTON_SORT_BY                                              :{BLACK}Issortja b'dan
-STR_BUTTON_RENAME                                               :{BLACK}Semmi mil-ġdid
 
 STR_TOOLTIP_CLOSE_WINDOW                                        :{BLACK}Għalaq it-tieqa
 STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS                              :{BLACK}Titlu tat-Tieqa - iddregja din biex tmexxi it-tieqa
@@ -471,6 +466,7 @@ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oħrajn
 
 ###length 3
 
+###setting-zero-is-special
 
 
 STR_CONFIG_SETTING_RUNNING_COSTS_HELPTEXT                       :Stabbilixxi l-kosti għal manutenzjoni u servizzi fuq vetturi u infrastruttura
@@ -678,6 +674,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uz
 ###length 3
 
 
+###setting-zero-is-special
 
 
 
@@ -713,7 +710,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uz
 
 
 
-###length 4
+###length 5
 
 ###length 3
 
@@ -860,7 +857,6 @@ STR_NETWORK_SERVER_MESSAGE                                      :*** {1:STRING}
 # Signal window
 
 # Bridge selection window
-STR_SELECT_BRIDGE_SCENEDIT_INFO                                 :{GOLD}{STRING},{} {VELOCITY}
 
 
 # Road construction toolbar
@@ -969,6 +965,10 @@ STR_NEWGRF_SETTINGS_INCOMPATIBLE                                :{RED}Ma jaqblux
 
 
 # Sprite aligner window
+
+###length 2
+
+
 
 
 # NewGRF (self) generated warnings/errors
@@ -1324,7 +1324,7 @@ STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Исчи
 
 
 
-# AI Parameters
+# Script Parameters
 
 
 # Textfile window
@@ -1459,6 +1459,8 @@ STR_ERROR_CAN_T_MOVE_THIS_ORDER                                 :{WHITE}Ma tista
 STR_ERROR_CAN_T_SKIP_ORDER                                      :{WHITE}Ma tistax taqbeż din l-ordni...
 
 
+# Extra messages which go on the third line of errors, explaining why orders failed
+
 # Timetable related errors
 
 # Sign related errors
@@ -1469,11 +1471,6 @@ STR_DESKTOP_SHORTCUT_COMMENT                                    :Logħba simulaz
 
 # Translatable descriptions in media/baseset/*.ob* files
 ###external 10
-
-STR_TRADITIONAL_TRAIN_NAME                                      :Ferrovija {COMMA}
-STR_TRADITIONAL_ROAD_VEHICLE_NAME                               :Vettura tat-triq {COMMA}
-STR_TRADITIONAL_SHIP_NAME                                       :Vapur {COMMA}
-STR_TRADITIONAL_AIRCRAFT_NAME                                   :Ajruplan {COMMA}
 
 ##id 0x2000
 # Town building names

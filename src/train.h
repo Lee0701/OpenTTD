@@ -89,6 +89,8 @@ void DeleteVisibleTrain(Train *v);
 void CheckBreakdownFlags(Train *v);
 void GetTrainSpriteSize(EngineID engine, uint &width, uint &height, int &xoffs, int &yoffs, EngineImageType image_type);
 
+bool TrainOnCrossing(TileIndex tile);
+
 inline int GetTrainRealisticBrakingTargetDecelerationLimit(int acceleration_type)
 {
 	return 120 + (acceleration_type * 48);
@@ -169,6 +171,7 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 	int GetDisplaySpeed() const override { return this->gcache.last_speed; }
 	int GetDisplayMaxSpeed() const override { return this->vcache.cached_max_speed; }
 	Money GetRunningCost() const override;
+	int GetCursorImageOffset() const;
 	int GetDisplayImageWidth(Point *offset = nullptr) const;
 	bool IsInDepot() const override { return this->track == TRACK_BIT_DEPOT; }
 	bool Tick() override;
@@ -178,7 +181,7 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 	Money CalculateCurrentOverallValue() const;
 	Trackdir GetVehicleTrackdir() const override;
 	TileIndex GetOrderStationLocation(StationID station) override;
-	bool FindClosestDepot(TileIndex *location, DestinationID *destination, bool *reverse) override;
+	ClosestDepot FindClosestDepot() override;
 
 	void ReserveTrackUnderConsist() const;
 

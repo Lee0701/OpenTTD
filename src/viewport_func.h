@@ -41,15 +41,18 @@ void MarkAllViewportMapsDirty(int left, int top, int right, int bottom);
 void MarkAllViewportMapLandscapesDirty();
 void MarkWholeNonMapViewportsDirty();
 void MarkAllViewportOverlayStationLinksDirty(const Station *st);
-void MarkAllRouteStepsDirty(const Vehicle *veh);
 void MarkViewportLineDirty(Viewport * const vp, const Point from_pt, const Point to_pt, const int block_radius, ViewportMarkDirtyFlags flags);
 void MarkTileLineDirty(const TileIndex from_tile, const TileIndex to_tile, ViewportMarkDirtyFlags flags);
-void MarkAllRoutePathsDirty(const Vehicle *veh);
-void CheckMarkDirtyFocusedRoutePaths(const Vehicle *veh);
-void CheckMarkDirtyFocusedRoutePaths();
+void MarkDirtyFocusedRoutePaths(const Vehicle *veh);
+void CheckMarkDirtyViewportRoutePaths(const Vehicle *veh);
+void CheckMarkDirtyViewportRoutePaths();
+void AddFixedViewportRoutePath(VehicleID veh);
+void RemoveFixedViewportRoutePath(VehicleID veh);
+void ChangeFixedViewportRoutePath(VehicleID from, VehicleID to);
 
 bool DoZoomInOutWindow(ZoomStateChange how, Window *w);
 void ZoomInOrOutToCursorWindow(bool in, Window * w);
+void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
 void FixTitleGameZoom(int zoom_adjust = 0);
 void HandleZoomMessage(Window *w, const Viewport *vp, byte widget_zoom_in, byte widget_zoom_out);
@@ -70,7 +73,7 @@ void OffsetGroundSprite(int x, int y);
 void DrawGroundSprite(SpriteID image, PaletteID pal, const SubSprite *sub = nullptr, int extra_offs_x = 0, int extra_offs_y = 0);
 void DrawGroundSpriteAt(SpriteID image, PaletteID pal, int32 x, int32 y, int z, const SubSprite *sub = nullptr, int extra_offs_x = 0, int extra_offs_y = 0);
 void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w, int h, int dz, int z, bool transparent = false, int bb_offset_x = 0, int bb_offset_y = 0, int bb_offset_z = 0, const SubSprite *sub = nullptr);
-void AddChildSpriteScreen(SpriteID image, PaletteID pal, int x, int y, bool transparent = false, const SubSprite *sub = nullptr, bool scale = true, bool relative = true);
+void AddChildSpriteScreen(SpriteID image, PaletteID pal, int x, int y, bool transparent = false, const SubSprite *sub = nullptr, bool scale = true, ChildScreenSpritePositionMode position_mode = ChildScreenSpritePositionMode::Relative);
 void ViewportAddString(ViewportDrawerDynamic *vdd, const DrawPixelInfo *dpi, ZoomLevel small_from, const ViewportSign *sign, StringID string_normal, StringID string_small, StringID string_small_shadow, uint64 params_1, uint64 params_2 = 0, Colours colour = INVALID_COLOUR);
 
 
@@ -136,7 +139,7 @@ void ViewportMapInvalidateTunnelCacheByTile(const TileIndex tile, const Axis axi
 void ViewportMapBuildTunnelCache();
 
 void DrawTileSelectionRect(const TileInfo *ti, PaletteID pal);
-void DrawSelectionSprite(SpriteID image, PaletteID pal, const TileInfo *ti, int z_offset, FoundationPart foundation_part, const SubSprite *sub = nullptr);
+void DrawSelectionSprite(SpriteID image, PaletteID pal, const TileInfo *ti, int z_offset, FoundationPart foundation_part, int extra_offs_x = 0, int extra_offs_y = 0, const SubSprite *sub = nullptr);
 
 struct Town;
 struct TraceRestrictProgram;

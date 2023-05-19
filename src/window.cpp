@@ -18,6 +18,7 @@
 #include "blitter/factory.hpp"
 #include "zoom_func.h"
 #include "vehicle_base.h"
+#include "depot_func.h"
 #include "window_func.h"
 #include "tilehighlight_func.h"
 #include "network/network.h"
@@ -38,6 +39,7 @@
 #include "network/network_func.h"
 #include "guitimer_func.h"
 #include "news_func.h"
+#include "core/backup_type.hpp"
 
 #include "safeguards.h"
 
@@ -255,9 +257,9 @@ void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour
 		/* If we disable a highlight, check all widgets if anyone still has a highlight */
 		bool valid = false;
 		for (uint i = 0; i < this->nested_array_size; i++) {
-			NWidgetBase *nwid = this->GetWidget<NWidgetBase>(i);
-			if (nwid == nullptr) continue;
-			if (!nwid->IsHighlighted()) continue;
+			NWidgetBase *child_nwid = this->GetWidget<NWidgetBase>(i);
+			if (child_nwid == nullptr) continue;
+			if (!child_nwid->IsHighlighted()) continue;
 
 			valid = true;
 		}
@@ -350,6 +352,17 @@ QueryString *Window::GetQueryString(uint widnum)
 {
 	SmallMap<int, QueryString*>::Pair *query = this->querystrings.Find(widnum);
 	return query != this->querystrings.End() ? query->second : nullptr;
+}
+
+/**
+ * Update size of all QueryStrings of this window.
+ */
+void Window::UpdateQueryStringSize()
+{
+	for (auto &qs : this->querystrings)
+	{
+		qs.second->text.UpdateSize();
+	}
 }
 
 /**
@@ -968,9 +981,8 @@ void DrawOverlappedWindow(Window *w, int left, int top, int right, int bottom, D
  */
 void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
 {
-	DrawPixelInfo *old_dpi = _cur_dpi;
 	DrawPixelInfo bk;
-	_cur_dpi = &bk;
+	AutoRestoreBackup dpi_backup(_cur_dpi, &bk);
 
 	for (Window *w : Window::IterateFromBack()) {
 		if (MayBeShown(w) &&
@@ -982,7 +994,6 @@ void DrawOverlappedWindowForAll(int left, int top, int right, int bottom)
 			DrawOverlappedWindow(w, std::max(left, w->left), std::max(top, w->top), std::min(right, w->left + w->width), std::min(bottom, w->top + w->height), DOWF_NONE);
 		}
 	}
-	_cur_dpi = old_dpi;
 }
 
 static void SetWindowDirtyPending(Window *w)
@@ -1181,6 +1192,18 @@ Window *FindWindowByClass(WindowClass cls)
 }
 
 /**
+ * Get the main window, i.e. FindWindowById(WC_MAIN_WINDOW, 0).
+ * If the main window is not available, this function will trigger an assert.
+ * @return Pointer to the main window.
+ */
+Window *GetMainWindow()
+{
+	Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
+	assert(w != nullptr);
+	return w;
+}
+
+/**
  * Delete a window by its class and window number (if it is open).
  * @param cls Window class
  * @param number Number of the window within the window class
@@ -1375,8 +1398,8 @@ static uint GetWindowZPriority(WindowClass wc)
 		case WC_CUSTOM_CURRENCY:
 		case WC_NETWORK_WINDOW:
 		case WC_GRF_PARAMETERS:
-		case WC_AI_LIST:
-		case WC_AI_SETTINGS:
+		case WC_SCRIPT_LIST:
+		case WC_SCRIPT_SETTINGS:
 		case WC_TEXTFILE:
 			++z_priority;
 			FALLTHROUGH;
@@ -2539,7 +2562,7 @@ static EventState HandleViewportScroll()
 		return ES_NOT_HANDLED;
 	}
 
-	if (_last_scroll_window == FindWindowById(WC_MAIN_WINDOW, 0) && _last_scroll_window->viewport->follow_vehicle != INVALID_VEHICLE) {
+	if (_last_scroll_window == GetMainWindow() && _last_scroll_window->viewport->follow_vehicle != INVALID_VEHICLE) {
 		/* If the main window is following a vehicle, then first let go of it! */
 		const Vehicle *veh = Vehicle::Get(_last_scroll_window->viewport->follow_vehicle);
 		ScrollMainWindowTo(veh->x_pos, veh->y_pos, veh->z_pos, true); // This also resets follow_vehicle
@@ -2911,7 +2934,7 @@ const std::chrono::milliseconds TIME_BETWEEN_DOUBLE_CLICK(500); ///< Time betwee
 static void ScrollMainViewport(int x, int y)
 {
 	if (_game_mode != GM_MENU && _game_mode != GM_BOOTSTRAP) {
-		Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
+		Window *w = GetMainWindow();
 		assert(w);
 
 		w->viewport->dest_scrollpos_x += ScaleByZoom(x, w->viewport->zoom);
@@ -3242,7 +3265,6 @@ void UpdateWindows()
 	PerformanceMeasurer framerate(PFE_DRAWING);
 	PerformanceAccumulator::Reset(PFE_DRAWWORLD);
 
-	extern void ProcessPendingPerformanceMeasurements();
 	ProcessPendingPerformanceMeasurements();
 
 	CallWindowRealtimeTickEvent(delta_ms);
@@ -3542,7 +3564,10 @@ void HideVitalWindows()
 void ReInitWindow(Window *w, bool zoom_changed)
 {
 	if (w == nullptr) return;
-	if (zoom_changed) w->nested_root->AdjustPaddingForZoom();
+	if (zoom_changed) {
+		w->nested_root->AdjustPaddingForZoom();
+		w->UpdateQueryStringSize();
+	}
 	w->ReInit();
 }
 
@@ -3553,7 +3578,6 @@ void ReInitAllWindows(bool zoom_changed)
 	NWidgetLeaf::InvalidateDimensionCache(); // Reset cached sizes of several widgets.
 	NWidgetScrollbar::InvalidateDimensionCache();
 
-	extern void InitDepotWindowBlockSizes();
 	InitDepotWindowBlockSizes();
 
 	/* When _gui_zoom has changed, we need to resize toolbar and statusbar first,
@@ -3565,7 +3589,6 @@ void ReInitAllWindows(bool zoom_changed)
 		ReInitWindow(w, zoom_changed);
 	}
 
-	void NetworkReInitChatBoxSize();
 	NetworkReInitChatBoxSize();
 
 	/* Make sure essential parts of all windows are visible */

@@ -8,6 +8,7 @@
 /** @file textfile_gui.cpp Implementation of textfile window. */
 
 #include "stdafx.h"
+#include "core/backup_type.hpp"
 #include "fileio_func.h"
 #include "fontcache.h"
 #include "gfx_type.h"
@@ -152,8 +153,7 @@ void TextfileWindow::SetupScrollbars(bool force_reflow)
 
 	DrawPixelInfo new_dpi;
 	if (!FillDrawPixelInfo(&new_dpi, fr.left, fr.top, fr.Width(), fr.Height())) return;
-	DrawPixelInfo *old_dpi = _cur_dpi;
-	_cur_dpi = &new_dpi;
+	AutoRestoreBackup dpi_backup(_cur_dpi, &new_dpi);
 
 	/* Draw content (now coordinates given to DrawString* are local to the new clipping region). */
 	fr = fr.Translate(-fr.left, -fr.top);
@@ -167,13 +167,11 @@ void TextfileWindow::SetupScrollbars(bool force_reflow)
 
 		int y_offset = (line.top - pos) * line_height;
 		if (IsWidgetLowered(WID_TF_WRAPTEXT)) {
-			DrawStringMultiLine(0, fr.right, y_offset, fr.bottom, line.text, TC_WHITE, SA_TOP | SA_LEFT, false, FS_MONO);
+			DrawStringMultiLine(0, fr.right, y_offset, fr.bottom, line.text, TC_BLACK, SA_TOP | SA_LEFT, false, FS_MONO);
 		} else {
-			DrawString(-this->hscroll->GetPosition(), fr.right, y_offset, line.text, TC_WHITE, SA_TOP | SA_LEFT, false, FS_MONO);
+			DrawString(-this->hscroll->GetPosition(), fr.right, y_offset, line.text, TC_BLACK, SA_TOP | SA_LEFT, false, FS_MONO);
 		}
 	}
-
-	_cur_dpi = old_dpi;
 }
 
 /* virtual */ void TextfileWindow::OnResize()

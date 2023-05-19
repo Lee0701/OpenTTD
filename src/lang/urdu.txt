@@ -194,10 +194,6 @@ STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} میل 
 STR_UNITS_VELOCITY_METRIC                                       :{COMMA} کلو میٹر فی گھنٹھ
 STR_UNITS_VELOCITY_SI                                           :{COMMA} میٹر فی سیکنڈ
 
-STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :میل فی گھنٹھ
-STR_UNIT_NAME_VELOCITY_METRIC                                   :کلو میٹر فی گھنٹھ
-STR_UNIT_NAME_VELOCITY_SI                                       :میٹر فی سیکنڈ
-
 STR_UNITS_POWER_IMPERIAL                                        :{COMMA} ھارس پآور
 STR_UNITS_POWER_METRIC                                          :{COMMA} ھارس پآور
 STR_UNITS_POWER_SI                                              :{COMMA} کلو واٹ
@@ -228,7 +224,6 @@ STR_TOOLTIP_SORT_ORDER                                          :{BLACK} (ترت
 STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}ترتیب کا طریقہ منتخب کریں
 STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK} چھاننے کے اصول چنیئے
 STR_BUTTON_SORT_BY                                              :{BLACK}سے ترتیب دو
-STR_BUTTON_RENAME                                               :{BLACK} تبادلھء نام
 
 STR_TOOLTIP_CLOSE_WINDOW                                        :{BLACK}کھڑکی بند کرو
 STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS                              :{BLACK}کھڑکی کا نام - کھڑکی کو ہلانے کیلیے اسے پکڑ کر ہلاو
@@ -547,12 +542,6 @@ STR_MONTH_SEP                                                   :ستمبر
 STR_MONTH_OCT                                                   :اکتوبر
 STR_MONTH_NOV                                                   :نومبر
 STR_MONTH_DEC                                                   :دسمبر
-
-###length VEHICLE_TYPES
-STR_VEHICLE_TYPE_TRAINS                                         :ریل گاڑیاں
-STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :سڑک کی گاڑیاں
-STR_VEHICLE_TYPE_SHIPS                                          :کشتیاں
-STR_VEHICLE_TYPE_AIRCRAFT                                       :ہوایی جہاز
 
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK} کلید
@@ -1068,6 +1057,7 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :بائیں
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :درمیان
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :دائیں
 
+###setting-zero-is-special
 
 
 
@@ -1411,6 +1401,7 @@ STR_CONFIG_SETTING_STARTING_YEAR                                :شروعاتی 
 
 STR_CONFIG_SETTING_ALLOW_SHARES                                 :دوسری کمپنیوں کے حصص خریدنے کی اجازت: {STRING}
 
+###setting-zero-is-special
 
 
 
@@ -1481,7 +1472,7 @@ STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :شہر کا ش�
 
 
 
-###length 4
+###length 5
 
 ###length 3
 
@@ -1769,7 +1760,6 @@ STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}کمپن
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :{WHITE}کلائینٹس کی فہرست
-STR_NETWORK_COMPANY_LIST_SPECTATE                               :{WHITE}نظارہ کریں
 
 # Network client list
 
@@ -2046,8 +2036,6 @@ STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP          :{BLACK}کھین
 STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}ریل کا پل منتخب کریں
 STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}سڑک کا پل منتخب کریں
 STR_SELECT_BRIDGE_SELECTION_TOOLTIP                             :{BLACK}پل کا انتخاب - تعمیر کرنے کے لئے اپنی مرضی کے پل پر کلک کریں
-STR_SELECT_BRIDGE_INFO                                          :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
-STR_SELECT_BRIDGE_SCENEDIT_INFO                                 :{GOLD}{STRING},{} {VELOCITY}
 STR_BRIDGE_NAME_SUSPENSION_STEEL                                :لٹکا ہوا، سٹیل کا
 STR_BRIDGE_NAME_GIRDER_STEEL                                    :گارڈر، سٹیل کا
 STR_BRIDGE_NAME_CANTILEVER_STEEL                                :Cantilever، سٹیل
@@ -2309,6 +2297,10 @@ STR_SPRITE_ALIGNER_GOTO_TOOLTIP                                 :{BLACK} جای�
 STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK} پچھلا sprite
 STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK} منتخب sprite کا اظھار۔ اس sprite کے نقش میں سف بندی نظر اندازکی جائے گی۔
 STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK} ارد گرد sprite ھلایئے، X اور Y offset تبدیل کیجئے
+
+###length 2
+
+
 STR_SPRITE_ALIGNER_PICKER_BUTTON                                :{BLACK} منتخب sprite کیجئے
 STR_SPRITE_ALIGNER_PICKER_TOOLTIP                               :{BLACK} اسکرین سے کسی sprite کو منتخب کیجئے
 
@@ -2428,8 +2420,6 @@ STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT                         :{COMMA}{WHITE} 
 STR_COMPANY_VIEW_INFRASTRUCTURE_NONE                            :{WHITE}کوئی نہیں
 
 STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON                          :{BLACK}تفصیلات
-STR_COMPANY_VIEW_GIVE_MONEY_BUTTON                              :{BLACK}پیسے دئیں
-STR_COMPANY_VIEW_GIVE_MONEY_QUERY_CAPTION                       :بتائیں آپ کتنے پیسے بھیجنا چاہتے ہیں
 
 
 
@@ -2738,7 +2728,7 @@ STR_AI_CONFIG_GAMESCRIPT                                        :{SILVER}کھی�
 
 
 
-# AI Parameters
+# Script Parameters
 
 
 # Textfile window
@@ -2921,6 +2911,8 @@ STR_ERROR_CAN_T_CHANGE_SERVICING                                :{WHITE}مرمت
 # Order related errors
 
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE} ۔ ۔ ۔ ہوائی جہاز کی اتنی پہنچ نہیں ہے
+
+# Extra messages which go on the third line of errors, explaining why orders failed
 
 # Timetable related errors
 

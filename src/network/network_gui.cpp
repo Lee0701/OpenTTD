@@ -412,9 +412,8 @@ protected:
 
 		/* show highlighted item with a different colour */
 		if (highlight) {
-			Rect r = {name.left, y, info.right, y + (int)this->resize.step_height - 1};
-			Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
-			GfxFillRect(ir.left, ir.top, ir.right, ir.bottom, PC_GREY);
+			Rect r = {std::min(name.left, info.left), y, std::max(name.right, info.right), y + (int)this->resize.step_height - 1};
+			GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), PC_GREY);
 		}
 
 		/* offsets to vertically centre text and icons */
@@ -1366,7 +1365,7 @@ static const NWidgetPart _nested_client_list_widgets[] = {
 		NWidget(NWID_VERTICAL),
 			NWidget(WWT_MATRIX, COLOUR_GREY, WID_CL_MATRIX), SetMinimalSize(180, 0), SetResize(1, 1), SetFill(1, 1), SetMatrixDataTip(1, 0, STR_NULL), SetScrollbar(WID_CL_SCROLLBAR),
 			NWidget(WWT_PANEL, COLOUR_GREY),
-				NWidget(WWT_TEXT, COLOUR_GREY, WID_CL_CLIENT_COMPANY_COUNT), SetFill(1, 0), SetMinimalTextLines(1, 0), SetResize(1, 0), SetPadding(2, 1, 2, 1), SetAlignment(SA_CENTER), SetDataTip(STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_GREY, WID_CL_CLIENT_COMPANY_COUNT), SetFill(1, 0), SetMinimalTextLines(1, 0), SetResize(1, 0), SetPadding(2, 1, 2, 1), SetAlignment(SA_CENTER), SetDataTip(STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT, STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT_TOOLTIP),
 			EndContainer(),
 		EndContainer(),
 		NWidget(NWID_VERTICAL),
@@ -1586,7 +1585,7 @@ private:
 		wi_rect.bottom = pt.y;
 
 		w->dd_client_id = client_id;
-		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true, true);
+		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true);
 	}
 
 	/**
@@ -1608,7 +1607,7 @@ private:
 		wi_rect.bottom = pt.y;
 
 		w->dd_company_id = company_id;
-		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true, true);
+		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true);
 	}
 	/**
 	 * Chat button on a Client is clicked.
@@ -1811,6 +1810,7 @@ public:
 			case WID_CL_CLIENT_COMPANY_COUNT:
 				SetDParam(0, NetworkClientInfo::GetNumItems());
 				SetDParam(1, Company::GetNumItems());
+				SetDParam(2, NetworkMaxCompaniesAllowed());
 				break;
 		}
 	}
@@ -2531,6 +2531,6 @@ void ShowNetworkAskRelay(const std::string &server_connection_string, const std:
 {
 	DeleteWindowByClass(WC_NETWORK_ASK_RELAY);
 
-	Window *parent = FindWindowById(WC_MAIN_WINDOW, 0);
+	Window *parent = GetMainWindow();
 	new NetworkAskRelayWindow(&_network_ask_relay_desc, parent, server_connection_string, relay_connection_string, token);
 }

@@ -22,14 +22,24 @@
 static const int ASCII_LETTERSTART = 32; ///< First printable ASCII letter.
 
 /**
+ * Scale traditional pixel dimensions to font zoom level, for drawing sprite fonts.
+ * @param value Pixel amount at #ZOOM_LVL_BASE (traditional "normal" interface size).
+ * @return Pixel amount at _font_zoom (current interface size).
+ */
+static int ScaleFontTrad(int value)
+{
+	return UnScaleByZoom(value * ZOOM_LVL_BASE, _font_zoom);
+}
+
+/**
  * Create a new sprite font cache.
  * @param fs The font size to create the cache for.
  */
 SpriteFontCache::SpriteFontCache(FontSize fs) : FontCache(fs), glyph_to_spriteid_map(nullptr)
 {
 	this->InitializeUnicodeGlyphMap();
-	this->height = ScaleGUITrad(this->GetDefaultFontHeight(this->fs));
-	this->ascender = (this->height - ScaleSpriteTrad(this->GetDefaultFontHeight(this->fs))) / 2;
+	this->height = ScaleGUITrad(FontCache::GetDefaultFontHeight(this->fs));
+	this->ascender = (this->height - ScaleFontTrad(FontCache::GetDefaultFontHeight(this->fs))) / 2;
 }
 
 /**
@@ -106,8 +116,8 @@ void SpriteFontCache::ClearGlyphToSpriteMap()
 void SpriteFontCache::ClearFontCache()
 {
 	Layouter::ResetFontCache(this->fs);
-	this->height = ScaleGUITrad(this->GetDefaultFontHeight(this->fs));
-	this->ascender = (this->height - ScaleSpriteTrad(this->GetDefaultFontHeight(this->fs))) / 2;
+	this->height = ScaleGUITrad(FontCache::GetDefaultFontHeight(this->fs));
+	this->ascender = (this->height - ScaleFontTrad(FontCache::GetDefaultFontHeight(this->fs))) / 2;
 }
 
 const Sprite *SpriteFontCache::GetGlyph(GlyphID key)
@@ -121,7 +131,7 @@ uint SpriteFontCache::GetGlyphWidth(GlyphID key)
 {
 	SpriteID sprite = this->GetUnicodeGlyph(key);
 	if (sprite == 0) sprite = this->GetUnicodeGlyph('?');
-	return SpriteExists(sprite) ? GetSprite(sprite, ST_FONT)->width + ScaleSpriteTrad(this->fs != FS_NORMAL ? 1 : 0) : 0;
+	return SpriteExists(sprite) ? GetSprite(sprite, ST_FONT)->width + ScaleFontTrad(this->fs != FS_NORMAL ? 1 : 0) : 0;
 }
 
 bool SpriteFontCache::GetDrawGlyphShadow()

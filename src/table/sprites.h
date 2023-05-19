@@ -290,8 +290,10 @@ static const SpriteID SPR_TRAMWAY_DEPOT_NO_TRACK       = SPR_TRAMWAY_BASE + 113;
 static const uint16 TRAMWAY_SPRITE_COUNT = 119;
 
 /** One way road sprites */
-static const SpriteID SPR_ONEWAY_BASE = SPR_TRAMWAY_BASE + TRAMWAY_SPRITE_COUNT;
-static const uint16 ONEWAY_SPRITE_COUNT = 6;
+static const SpriteID SPR_ONEWAY_BASE           = SPR_TRAMWAY_BASE + TRAMWAY_SPRITE_COUNT;
+static const SpriteID SPR_ONEWAY_SLOPE_N_OFFSET = 6;
+static const SpriteID SPR_ONEWAY_SLOPE_S_OFFSET = 12;
+static const uint16 ONEWAY_SPRITE_COUNT = 18;
 
 /** Tunnel sprites with grass only for custom railtype tunnel. */
 static const SpriteID SPR_RAILTYPE_TUNNEL_BASE = SPR_ONEWAY_BASE + ONEWAY_SPRITE_COUNT;
@@ -1176,6 +1178,10 @@ static const SpriteID SPR_OTTD_D                = SPR_OPENTTD_BASE + 13;
 static const SpriteID SPR_OTTD_N                = 4839;
 static const SpriteID SPR_OTTD_T                = 4836;
 /* Letters not used: R,A,S,Y,C (4837, 4838, 4840, 4843, 4844) */
+
+/* Range of "special" sprites that are used by the old map generation algorithm. */
+static const SpriteID SPR_MAPGEN_BEGIN = 4845;
+static const SpriteID SPR_MAPGEN_END   = 4882;
 
 static const SpriteID SPR_HIGHSCORE_CHART_BEGIN = 4804;
 static const SpriteID SPR_TYCOON_IMG1_BEGIN     = 4814;

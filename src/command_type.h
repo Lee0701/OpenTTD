@@ -296,6 +296,7 @@ enum Commands {
 
 	CMD_REMOVE_FROM_RAIL_STATION,     ///< remove a (rectangle of) tiles from a rail station
 	CMD_CONVERT_RAIL,                 ///< convert a rail type
+	CMD_CONVERT_RAIL_TRACK,           ///< convert a rail type (track)
 
 	CMD_BUILD_RAIL_WAYPOINT,          ///< build a waypoint
 	CMD_BUILD_ROAD_WAYPOINT,          ///< build a road waypoint
@@ -341,7 +342,9 @@ enum Commands {
 	CMD_CHANGE_SERVICE_INT,           ///< change the server interval of a vehicle
 
 	CMD_BUILD_INDUSTRY,               ///< build a new industry
-	CMD_INDUSTRY_CTRL,                ///< change industry properties
+	CMD_INDUSTRY_SET_FLAGS,           ///< change industry control flags
+	CMD_INDUSTRY_SET_EXCLUSIVITY,     ///< change industry exclusive consumer/supplier
+	CMD_INDUSTRY_SET_TEXT,            ///< change additional text for the industry
 
 	CMD_SET_COMPANY_MANAGER_FACE,     ///< set the manager's face of the company
 	CMD_SET_COMPANY_COLOUR,           ///< set the colour of the company
@@ -360,6 +363,7 @@ enum Commands {
 	CMD_RENAME_PRESIDENT,             ///< change the president name
 	CMD_RENAME_STATION,               ///< rename a station
 	CMD_RENAME_DEPOT,                 ///< rename a depot
+	CMD_EXCHANGE_STATION_NAMES,       ///< exchange station names
 	CMD_SET_STATION_CARGO_ALLOWED_SUPPLY, ///< set station cargo allowed supply
 
 	CMD_PLACE_SIGN,                   ///< place a sign
@@ -435,6 +439,7 @@ enum Commands {
 	CMD_TOGGLE_KEEP_REMAINING_VEHICLES, ///< toggle 'keep remaining vehicles' on template
 	CMD_TOGGLE_REFIT_AS_TEMPLATE,     ///< toggle 'refit as template' on template
 	CMD_TOGGLE_TMPL_REPLACE_OLD_ONLY, ///< toggle 'replace old vehicles only' on template
+	CMD_RENAME_TMPL_REPLACE,          ///< rename a template
 
 	CMD_VIRTUAL_TRAIN_FROM_TEMPLATE_VEHICLE, ///< Creates a virtual train from a template
 	CMD_VIRTUAL_TRAIN_FROM_TRAIN,     ///< Creates a virtual train from a regular train
@@ -512,6 +517,10 @@ enum Commands {
 	CMD_SCHEDULED_DISPATCH_CLEAR,               ///< scheduled dispatch clear schedule
 	CMD_SCHEDULED_DISPATCH_ADD_NEW_SCHEDULE,    ///< scheduled dispatch add new schedule
 	CMD_SCHEDULED_DISPATCH_REMOVE_SCHEDULE,     ///< scheduled dispatch remove schedule
+	CMD_SCHEDULED_DISPATCH_RENAME_SCHEDULE,     ///< scheduled dispatch rename schedule
+	CMD_SCHEDULED_DISPATCH_DUPLICATE_SCHEDULE,  ///< scheduled dispatch duplicate schedule
+	CMD_SCHEDULED_DISPATCH_APPEND_VEHICLE_SCHEDULE, ///< scheduled dispatch append schedules from another vehicle
+	CMD_SCHEDULED_DISPATCH_ADJUST,              ///< scheduled dispatch adjust time offsets in schedule
 
 	CMD_ADD_PLAN,
 	CMD_ADD_PLAN_LINE,

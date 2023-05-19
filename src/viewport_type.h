@@ -79,6 +79,11 @@ struct Viewport {
 		this->update_vehicles = false;
 	}
 
+	size_t ScreenArea() const
+	{
+		return ((size_t)this->width) * ((size_t)this->height);
+	}
+
 private:
 	uint GetDirtyBlockShift() const
 	{
@@ -181,6 +186,7 @@ enum ViewportDragDropSelectionProcess {
 	DDSP_BUILD_STATION,        ///< Station placement
 	DDSP_REMOVE_STATION,       ///< Station removal
 	DDSP_CONVERT_RAIL,         ///< Rail conversion
+	DDSP_CONVERT_RAIL_TRACK,   ///< Rail conversion (track)
 
 	/* Road specific actions */
 	DDSP_PLACE_ROAD_X_DIR,     ///< Road placement (X axis)
@@ -220,5 +226,11 @@ enum ViewportMarkDirtyFlags : byte {
 	VMDF_NOT_LANDSCAPE         = 0x4,
 };
 DECLARE_ENUM_AS_BIT_SET(ViewportMarkDirtyFlags)
+
+enum class ChildScreenSpritePositionMode : uint8 {
+	Relative,
+	NonRelative,
+	Absolute,
+};
 
 #endif /* VIEWPORT_TYPE_H */

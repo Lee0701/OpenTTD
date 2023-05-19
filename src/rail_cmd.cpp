@@ -205,9 +205,9 @@ static bool CompareRailTypes(const RailType &first, const RailType &second)
 			}
 		}
 
-		return sort_value[0] < sort_value[1];
+		return std::tie(sort_value[0], first) < std::tie(sort_value[1], second);
 	} else {
-		return GetRailTypeInfo(first)->sorting_order < GetRailTypeInfo(second)->sorting_order;
+		return std::tie(GetRailTypeInfo(first)->sorting_order, first) < std::tie(GetRailTypeInfo(second)->sorting_order, second);
 	}
 }
 
@@ -831,7 +831,7 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 					/* Disallow breaking end-of-line of someone else
 					 * so trams can still reverse on this tile. */
 					if (Company::IsValidID(tram_owner) && HasExactlyOneBit(tram)) {
-						CommandCost ret = CheckOwnership(tram_owner);
+						ret = CheckOwnership(tram_owner);
 						if (ret.Failed()) return ret;
 					}
 
@@ -1051,6 +1051,10 @@ CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 				} else {
 					SetTrackBits(tile, present);
 					SetTrackReservation(tile, GetRailReservationTrackBits(tile) & present);
+
+					if (present == TRACK_BIT_HORZ || present == TRACK_BIT_VERT) {
+						SetSecondaryRailType(tile, GetRailType(tile));
+					}
 				}
 			}
 			break;
@@ -1492,7 +1496,7 @@ CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1,
 		if (!ValParamTrackOrientation(track) || !IsTrackAcrossTunnelBridge(tile, track)) {
 			return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
 		}
-		CommandCost ret = TunnelBridgeIsFree(tile, GetOtherTunnelBridgeEnd(tile), nullptr, true);
+		CommandCost ret = TunnelBridgeIsFree(tile, GetOtherTunnelBridgeEnd(tile), nullptr, TBIFM_ACROSS_ONLY);
 		if (ret.Failed()) return ret;
 	} else if (!ValParamTrackOrientation(track) || !IsPlainRailTile(tile) || !HasTrack(tile, track)) {
 		return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
@@ -1872,7 +1876,7 @@ static bool CheckSignalAutoFill(TileIndex &tile, Trackdir &trackdir, int &signal
 	if (tile == INVALID_TILE) return false;
 
 	/* Check for track bits on the new tile */
-	TrackdirBits trackdirbits = TrackStatusToTrackdirBits(GetTileTrackStatus(tile, TRANSPORT_RAIL, 0));
+	TrackdirBits trackdirbits = GetTileTrackdirBits(tile, TRANSPORT_RAIL, 0);
 
 	if (TracksOverlap(TrackdirBitsToTrackBits(trackdirbits))) return false;
 	trackdirbits &= TrackdirReachesTrackdirs(trackdir);
@@ -1916,7 +1920,7 @@ static bool CheckSignalAutoFill(TileIndex &tile, Trackdir &trackdir, int &signal
 				signal_ctr += GetTunnelBridgeLength(orig_tile, tile) * 2;
 
 				/* Check for track bits on the new tile */
-				trackdirbits = TrackStatusToTrackdirBits(GetTileTrackStatus(tile, TRANSPORT_RAIL, 0));
+				trackdirbits = GetTileTrackdirBits(tile, TRANSPORT_RAIL, 0);
 
 				if (TracksOverlap(TrackdirBitsToTrackBits(trackdirbits))) return false;
 				trackdirbits &= TrackdirReachesTrackdirs(trackdir);
@@ -2181,7 +2185,7 @@ CommandCost CmdRemoveSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1
 		}
 		if (!IsTunnelBridgeWithSignalSimulation(tile)) return_cmd_error(STR_ERROR_THERE_ARE_NO_SIGNALS);
 		TileIndex end = GetOtherTunnelBridgeEnd(tile);
-		CommandCost ret = TunnelBridgeIsFree(tile, end, nullptr, true);
+		CommandCost ret = TunnelBridgeIsFree(tile, end, nullptr, TBIFM_ACROSS_ONLY);
 		if (ret.Failed()) return ret;
 
 		cost *= GetTunnelBridgeSignalSimulationSignalCount(tile, end);
@@ -2319,6 +2323,36 @@ static Vehicle *UpdateTrainPowerProc(Vehicle *v, void *data)
 	return nullptr;
 }
 
+struct UpdateTrainPowerProcData {
+	TrainList *train_list;
+	TrackBits track_bits;
+};
+
+/** Update power of train under which is the railtype being converted */
+static Vehicle *UpdateTrainPowerProcAcrossTunnelBridge(Vehicle *v, void *data)
+{
+	UpdateTrainPowerProcData *utpp_data = static_cast<UpdateTrainPowerProcData*>(data);
+
+	TrackBits vehicle_track = Train::From(v)->track;
+	if (!(vehicle_track & TRACK_BIT_WORMHOLE) && !(utpp_data->track_bits & vehicle_track)) return nullptr;
+
+	include(*(utpp_data->train_list), Train::From(v)->First());
+
+	return nullptr;
+}
+
+/** Update power of train under which is the railtype being converted */
+static Vehicle *UpdateTrainPowerProcOnTrackBits(Vehicle *v, void *data)
+{
+	UpdateTrainPowerProcData *utpp_data = static_cast<UpdateTrainPowerProcData*>(data);
+
+	if (!(utpp_data->track_bits & Train::From(v)->track)) return nullptr;
+
+	include(*(utpp_data->train_list), Train::From(v)->First());
+
+	return nullptr;
+}
+
 struct EnsureNoIncompatibleRailtypeTrainOnGroundData {
 	int z;
 	RailType type;
@@ -2411,8 +2445,8 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 	CommandCost error = CommandCost(STR_ERROR_NO_SUITABLE_RAILROAD_TRACK); // by default, there is no track to convert.
 	bool found_convertible_track = false; // whether we actually did convert some track (see bug #7633)
 
-	std::unique_ptr<TileIterator> iter(diagonal ? (TileIterator *)new DiagonalTileIterator(area_start, area_end) : new OrthogonalTileIterator(area_start, area_end));
-	for (; (tile = *iter) != INVALID_TILE; ++(*iter)) {
+	OrthogonalOrDiagonalTileIterator iter(area_start, area_end, diagonal);
+	for (; (tile = *iter) != INVALID_TILE; ++iter) {
 		TileType tt = GetTileType(tile);
 
 		/* Check if there is any track on tile */
@@ -2525,7 +2559,7 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				SetRailType(tile, totype);
 				if (IsPlainRailTile(tile)) SetSecondaryRailType(tile, totype);
 
-				MarkTileDirtyByTile(tile, VMDF_NOT_MAP_MODE);
+				MarkTileDirtyByTile(tile);
 				/* update power of train on this tile */
 				FindVehicleOnPos(tile, VEH_TRAIN, &affected_trains, &UpdateTrainPowerProc);
 			}
@@ -2578,7 +2612,10 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 
 				/* When not converting rail <-> el. rail, any vehicle cannot be in tunnel/bridge */
 				if (!IsCompatibleRail(type, totype) || !IsCompatibleRail(secondary_type, totype)) {
-					CommandCost ret = TunnelBridgeIsFree(tile, endtile);
+					CommandCost ret = EnsureNoIncompatibleRailtypeTrainOnTrackBits(tile, TRACK_BIT_MASK | TRACK_BIT_WORMHOLE, totype);
+					if (ret.Succeeded()) {
+						ret = EnsureNoIncompatibleRailtypeTrainOnTrackBits(endtile, TRACK_BIT_MASK | TRACK_BIT_WORMHOLE, totype);
+					}
 					if (ret.Failed()) {
 						error = ret;
 						continue;
@@ -2617,10 +2654,10 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 					yapf_notify_track_change(endtile, GetTunnelBridgeTrackBits(endtile));
 
 					if (IsBridge(tile)) {
-						MarkBridgeDirty(tile, VMDF_NOT_MAP_MODE);
+						MarkBridgeDirty(tile);
 					} else {
-						MarkTileDirtyByTile(tile, VMDF_NOT_MAP_MODE);
-						MarkTileDirtyByTile(endtile, VMDF_NOT_MAP_MODE);
+						MarkTileDirtyByTile(tile);
+						MarkTileDirtyByTile(endtile);
 					}
 
 					AddRailTunnelBridgeInfrastructure(tile, endtile);
@@ -2644,6 +2681,323 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			TryPathReserve(vehicles_affected[i], true);
 		}
 	}
+
+	if (flags & DC_EXEC) {
+		/* Railtype changed, update trains as when entering different track */
+		for (Train *v : affected_trains) {
+			v->ConsistChanged(CCF_TRACK);
+		}
+	}
+
+	return found_convertible_track ? cost : error;
+}
+
+/**
+ * Convert rail on a stretch of track.
+ * @param tile start tile of drag
+ * @param flags operation to perform
+ * @param p1 end tile of drag
+ * @param p2 various bitstuffed elements
+ * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev)
+ * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
+ * @param text unused
+ * @return the cost of this operation or an error
+ */
+CommandCost CmdConvertRailTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+{
+	const RailType totype = Extract<RailType, 0, 6>(p2);
+	const TileIndex end_tile = p1;
+
+	if (!ValParamRailtype(totype)) return CMD_ERROR;
+	if (end_tile >= MapSize()) return CMD_ERROR;
+
+	const Track start_track = Extract<Track, 6, 3>(p2);
+	Trackdir trackdir = TrackToTrackdir(start_track);
+
+	CommandCost ret = ValidateAutoDrag(&trackdir, tile, end_tile);
+	if (ret.Failed()) return ret;
+
+	TrainList affected_trains;
+
+	CommandCost cost(EXPENSES_CONSTRUCTION);
+	CommandCost error = CommandCost(STR_ERROR_NO_SUITABLE_RAILROAD_TRACK); // by default, there is no track to convert.
+	bool found_convertible_track = false; // whether we actually did convert some track (see bug #7633)
+
+	std::vector<TileIndex> exclude_tiles;
+
+	auto advance_tile = [&]() -> bool {
+		if (tile == end_tile) return false;
+
+		tile += ToTileIndexDiff(_trackdelta[trackdir]);
+
+		/* toggle railbit for the non-diagonal tracks */
+		if (!IsDiagonalTrackdir(trackdir)) ToggleBit(trackdir, 0);
+		return true;
+	};
+	do {
+		if (std::find(exclude_tiles.begin(), exclude_tiles.end(), tile) != exclude_tiles.end()) continue;
+
+		const Track track = TrackdirToTrack(trackdir);
+		const TileType tt = GetTileType(tile);
+
+		TrackBits all_track_bits = TRACK_BIT_NONE;
+
+		/* Check if our track piece matches any track on tile */
+		switch (tt) {
+			case MP_RAILWAY:
+				if (IsPlainRail(tile)) {
+					if (!HasTrack(tile, track)) continue;
+					all_track_bits = GetTrackBits(tile);
+				} else if (IsRailDepot(tile)) {
+					if (GetRailDepotTrack(tile) != track) continue;
+					all_track_bits = TrackToTrackBits(track);
+				} else {
+					continue;
+				}
+				break;
+			case MP_STATION:
+				if (!HasStationRail(tile) || GetRailStationTrack(tile) != track) continue;
+				all_track_bits = GetRailStationTrackBits(tile);
+				break;
+			case MP_ROAD:
+				if (!IsLevelCrossing(tile) || GetCrossingRailTrack(tile) != track) continue;
+				if (RailNoLevelCrossings(totype)) {
+					error.MakeError(STR_ERROR_CROSSING_DISALLOWED_RAIL);
+					continue;
+				}
+				all_track_bits = GetCrossingRailBits(tile);
+				break;
+			case MP_TUNNELBRIDGE:
+				if (GetTunnelBridgeTransportType(tile) != TRANSPORT_RAIL || !HasBit(GetTunnelBridgeTrackBits(tile), track)) continue;
+				all_track_bits = GetTunnelBridgeTrackBits(tile);
+				break;
+			default: continue;
+		}
+
+		/* Original railtype we are converting from */
+		const RailType type = GetRailTypeByTrack(tile, track);
+
+		/* Converting to the same type or converting 'hidden' elrail -> rail */
+		if (type == totype || (_settings_game.vehicle.disable_elrails && totype == RAILTYPE_RAIL && type == RAILTYPE_ELECTRIC)) continue;
+
+		/* Trying to convert other's rail */
+		CommandCost ret = CheckTileOwnership(tile);
+		if (ret.Failed()) {
+			error = ret;
+			continue;
+		}
+
+		/* Track bits on the tile to convert */
+		const TrackBits track_bits = (all_track_bits == TRACK_BIT_HORZ || all_track_bits == TRACK_BIT_VERT) ? TrackToTrackBits(track) : all_track_bits;
+
+		std::vector<Train *> vehicles_affected;
+
+		auto find_train_reservations = [&vehicles_affected, &totype, &flags](TileIndex tile, TrackBits reserved) -> CommandCost {
+			if (!(flags & DC_EXEC) && _settings_game.vehicle.train_braking_model != TBM_REALISTIC) {
+				/* Nothing to do */
+				return CommandCost();
+			}
+			Track track;
+			while ((track = RemoveFirstTrack(&reserved)) != INVALID_TRACK) {
+				Train *v = GetTrainForReservation(tile, track);
+				bool check_train = false;
+				if (v != nullptr && !HasPowerOnRail(v->railtype, totype)) {
+					check_train = true;
+				} else if (v != nullptr && _settings_game.vehicle.train_braking_model == TBM_REALISTIC) {
+					RailType original = GetRailTypeByTrack(tile, track);
+					if ((uint)(GetRailTypeInfo(original)->max_speed - 1) > (uint)(GetRailTypeInfo(totype)->max_speed - 1)) {
+						check_train = true;
+					}
+				}
+				if (check_train) {
+					CommandCost ret = CheckTrainReservationPreventsTrackModification(v);
+					if (ret.Failed()) return ret;
+
+					/* No power on new rail type, reroute. */
+					if (flags & DC_EXEC) {
+						FreeTrainTrackReservation(v);
+						vehicles_affected.push_back(v);
+					}
+				}
+			}
+			return CommandCost();
+		};
+
+		auto yapf_notify_track_change = [](TileIndex tile, TrackBits tracks) {
+			while (tracks != TRACK_BIT_NONE) {
+				YapfNotifyTrackLayoutChange(tile, RemoveFirstTrack(&tracks));
+			}
+		};
+
+		/* Vehicle on the tile when not converting Rail <-> ElRail
+		 * Tunnels and bridges have special check later */
+		if (tt != MP_TUNNELBRIDGE) {
+			if (!IsCompatibleRail(type, totype)) {
+				CommandCost ret = IsPlainRailTile(tile) ? EnsureNoIncompatibleRailtypeTrainOnTrackBits(tile, track_bits, totype) : EnsureNoIncompatibleRailtypeTrainOnGround(tile, totype);
+				if (ret.Failed()) {
+					error = ret;
+					continue;
+				}
+			}
+			CommandCost ret = find_train_reservations(tile, GetReservedTrackbits(tile) & track_bits);
+			if (ret.Failed()) return ret;
+			if (flags & DC_EXEC) { // we can safely convert, too
+				/* Update the company infrastructure counters. */
+				if (!IsRailStationTile(tile) || !IsStationTileBlocked(tile)) {
+					Company *c = Company::Get(GetTileOwner(tile));
+					uint num_pieces = IsLevelCrossingTile(tile) ? LEVELCROSSING_TRACKBIT_FACTOR : 1;
+					if (IsPlainRailTile(tile)) {
+						num_pieces = CountBits(track_bits);
+						if (TracksOverlap(track_bits)) num_pieces *= num_pieces;
+					}
+					c->infrastructure.rail[type] -= num_pieces;
+					c->infrastructure.rail[totype] += num_pieces;
+					DirtyCompanyInfrastructureWindows(c->index);
+				}
+
+				if (track_bits != all_track_bits) {
+					/* only partially converting the tile */
+					if (track_bits & TRACK_BIT_RT_1) {
+						SetRailType(tile, totype);
+					} else {
+						SetSecondaryRailType(tile, totype);
+					}
+				} else {
+					SetRailType(tile, totype);
+					if (IsPlainRailTile(tile)) SetSecondaryRailType(tile, totype);
+				}
+
+				MarkTileDirtyByTile(tile);
+				/* update power of train on this tile */
+				UpdateTrainPowerProcData data;
+				data.train_list = &affected_trains;
+				data.track_bits = track_bits;
+				FindVehicleOnPos(tile, VEH_TRAIN, &data, &UpdateTrainPowerProcOnTrackBits);
+			}
+		}
+
+		switch (tt) {
+			case MP_RAILWAY:
+				switch (GetRailTileType(tile)) {
+					case RAIL_TILE_DEPOT:
+						if (flags & DC_EXEC) {
+							/* notify YAPF about the track layout change */
+							YapfNotifyTrackLayoutChange(tile, GetRailDepotTrack(tile));
+
+							/* Update build vehicle window related to this depot */
+							InvalidateWindowData(WC_VEHICLE_DEPOT, tile);
+							InvalidateWindowData(WC_BUILD_VEHICLE, tile);
+						}
+						found_convertible_track = true;
+						cost.AddCost(RailConvertCost(type, totype));
+						break;
+
+					default: // RAIL_TILE_NORMAL, RAIL_TILE_SIGNALS
+						if (flags & DC_EXEC) {
+							/* notify YAPF about the track layout change */
+							yapf_notify_track_change(tile, track_bits);
+						}
+						found_convertible_track = true;
+						cost.AddCost(RailConvertCost(type, totype) * CountBits(track_bits));
+						break;
+				}
+				break;
+
+			case MP_TUNNELBRIDGE: {
+				TileIndex endtile = GetOtherTunnelBridgeEnd(tile);
+
+				const bool across = (GetAcrossTunnelBridgeTrackBits(tile) & track_bits) != TRACK_BIT_NONE;
+				if (across) exclude_tiles.push_back(endtile);
+
+				/* When not converting rail <-> el. rail, any vehicle cannot be in tunnel/bridge */
+				if (!IsCompatibleRail(type, totype)) {
+					CommandCost ret;
+					if (across) {
+						ret = EnsureNoIncompatibleRailtypeTrainOnTrackBits(tile, track_bits | TRACK_BIT_WORMHOLE, totype);
+						if (ret.Succeeded()) {
+							ret = EnsureNoIncompatibleRailtypeTrainOnTrackBits(endtile, GetPrimaryTunnelBridgeTrackBits(endtile) | TRACK_BIT_WORMHOLE, totype);
+						}
+					} else {
+						ret = EnsureNoIncompatibleRailtypeTrainOnTrackBits(tile, track_bits, totype);
+					}
+					if (ret.Failed()) {
+						error = ret;
+						continue;
+					}
+				}
+
+				found_convertible_track = true;
+
+				if (across) {
+					uint num_primary_pieces = GetTunnelBridgeLength(tile, endtile) + CountBits(GetPrimaryTunnelBridgeTrackBits(tile)) + CountBits(GetPrimaryTunnelBridgeTrackBits(endtile));
+					cost.AddCost(num_primary_pieces * RailConvertCost(type, totype));
+				} else {
+					cost.AddCost(RailConvertCost(type, totype));
+				}
+
+				CommandCost ret = find_train_reservations(tile, GetTunnelBridgeReservationTrackBits(tile) & track_bits);
+				if (ret.Failed()) return ret;
+				if (across) {
+					ret = find_train_reservations(endtile, GetTunnelBridgeReservationTrackBits(endtile) & GetPrimaryTunnelBridgeTrackBits(endtile));
+					if (ret.Failed()) return ret;
+				}
+				if (across && (uint)(GetRailTypeInfo(type)->max_speed - 1) > (uint)(GetRailTypeInfo(totype)->max_speed - 1)) {
+					ret = CheckTrainInTunnelBridgePreventsTrackModification(tile, endtile);
+					if (ret.Failed()) return ret;
+				}
+
+				if (flags & DC_EXEC) {
+					SubtractRailTunnelBridgeInfrastructure(tile, endtile);
+
+					if (across) {
+						SetRailType(tile, totype);
+						SetRailType(endtile, totype);
+					} else {
+						SetSecondaryRailType(tile, totype);
+					}
+
+					UpdateTrainPowerProcData data;
+					data.train_list = &affected_trains;
+					data.track_bits = track_bits;
+					if (across) {
+						FindVehicleOnPos(tile, VEH_TRAIN, &data, &UpdateTrainPowerProcAcrossTunnelBridge);
+						data.track_bits = GetPrimaryTunnelBridgeTrackBits(endtile);
+						FindVehicleOnPos(endtile, VEH_TRAIN, &data, &UpdateTrainPowerProcAcrossTunnelBridge);
+					} else {
+						FindVehicleOnPos(tile, VEH_TRAIN, &data, &UpdateTrainPowerProcOnTrackBits);
+					}
+
+					/* notify YAPF about the track layout change */
+					yapf_notify_track_change(tile, track_bits);
+					if (across) yapf_notify_track_change(endtile, GetPrimaryTunnelBridgeTrackBits(endtile));
+
+					if (IsBridge(tile)) {
+						MarkBridgeDirty(tile);
+					} else {
+						MarkTileDirtyByTile(tile);
+						MarkTileDirtyByTile(endtile);
+					}
+
+					AddRailTunnelBridgeInfrastructure(tile, endtile);
+					DirtyCompanyInfrastructureWindows(Company::Get(GetTileOwner(tile))->index);
+				}
+				break;
+			}
+
+			default: // MP_STATION, MP_ROAD
+				if (flags & DC_EXEC) {
+					YapfNotifyTrackLayoutChange(tile, track);
+				}
+
+				found_convertible_track = true;
+				cost.AddCost(RailConvertCost(type, totype));
+				break;
+		}
+
+		for (uint i = 0; i < vehicles_affected.size(); ++i) {
+			TryPathReserve(vehicles_affected[i], true);
+		}
+	} while (advance_tile());
 
 	if (flags & DC_EXEC) {
 		/* Railtype changed, update trains as when entering different track */
@@ -2854,7 +3208,9 @@ void DrawSingleSignal(TileIndex tile, const RailtypeInfo *rti, Track track, Sign
 		aspect = 0;
 	}
 
-	const CustomSignalSpriteResult result = GetCustomSignalSprite(rti, tile, type, variant, aspect, context, style, prog);
+	const uint z = GetSaveSlopeZ(x, y, track);
+
+	const CustomSignalSpriteResult result = GetCustomSignalSprite(rti, tile, type, variant, aspect, context, style, prog, z);
 	SpriteID sprite = result.sprite.sprite;
 	PaletteID pal = PAL_NONE;
 	bool is_custom_sprite = (sprite != 0);
@@ -2915,13 +3271,13 @@ void DrawSingleSignal(TileIndex tile, const RailtypeInfo *rti, Track track, Sign
 			static const SubSprite lower_part = { -50, -10, 50, 50 };
 			static const SubSprite upper_part = { -50, -50, 50, -11 };
 
-			AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, GetSaveSlopeZ(x, y, track), false, 0, 0, 0, &lower_part);
-			AddSortableSpriteToDraw(sprite,               PAL_NONE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, GetSaveSlopeZ(x, y, track), false, 0, 0, 0, &upper_part);
+			AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, z, false, 0, 0, 0, &lower_part);
+			AddSortableSpriteToDraw(sprite,               PAL_NONE, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, z, false, 0, 0, 0, &upper_part);
 		} else {
-			AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE + (type == SIGTYPE_NO_ENTRY ? 0 : 1), x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, GetSaveSlopeZ(x, y, track));
+			AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE + (type == SIGTYPE_NO_ENTRY ? 0 : 1), x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, z);
 		}
 	} else {
-		AddSortableSpriteToDraw(sprite, pal, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, GetSaveSlopeZ(x, y, track));
+		AddSortableSpriteToDraw(sprite, pal, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, z);
 	}
 	const Sprite *sp = GetSprite(sprite, ST_NORMAL);
 	if (sp->x_offs < -SIGNAL_DIRTY_LEFT || sp->x_offs + sp->width > SIGNAL_DIRTY_RIGHT || sp->y_offs < -SIGNAL_DIRTY_TOP || sp->y_offs + sp->height > SIGNAL_DIRTY_BOTTOM) {
@@ -2938,8 +3294,7 @@ static void DrawSingleSignal(TileIndex tile, const RailtypeInfo *rti, Track trac
 	DrawSingleSignal(tile, rti, track, condition, image, pos, type, variant, prog, CSSC_TRACK);
 }
 
-template <typename F>
-void MarkSingleSignalDirtyIntl(TileIndex tile, Trackdir td, bool opposite, F get_z)
+static void GetSignalXYByTrackdir(TileIndex tile, Trackdir td, bool opposite, uint &x, uint &y)
 {
 	static const uint8 trackdir_to_pos[TRACKDIR_END] = {
 		8,  // TRACKDIR_X_NE
@@ -2960,8 +3315,20 @@ void MarkSingleSignalDirtyIntl(TileIndex tile, Trackdir td, bool opposite, F get
 		0,  // TRACKDIR_RVREV_NW
 	};
 
-	uint x, y;
 	GetSignalXY(tile, trackdir_to_pos[td], opposite, x, y);
+}
+
+void GetSignalXYZByTrackdir(TileIndex tile, Trackdir td, bool opposite_side, uint &x, uint &y, uint &z)
+{
+	GetSignalXYByTrackdir(tile, td, opposite_side, x, y);
+	z = GetSaveSlopeZ(x, y, TrackdirToTrack(td));
+}
+
+template <typename F>
+void MarkSingleSignalDirtyIntl(TileIndex tile, Trackdir td, bool opposite, F get_z)
+{
+	uint x, y;
+	GetSignalXYByTrackdir(tile, td, opposite, x, y);
 	Point pt = RemapCoords(x, y, get_z(x, y));
 	MarkAllViewportsDirty(
 			pt.x - SIGNAL_DIRTY_LEFT,
@@ -3735,7 +4102,7 @@ void DrawTrainDepotSprite(int x, int y, int dir, RailType railtype)
 	DrawRailTileSeqInGUI(x, y, dts, offset, 0, palette);
 }
 
-static int GetSlopePixelZ_Track(TileIndex tile, uint x, uint y)
+static int GetSlopePixelZ_Track(TileIndex tile, uint x, uint y, bool ground_vehicle)
 {
 	if (IsPlainRail(tile)) {
 		int z;
@@ -3912,6 +4279,7 @@ static TrackStatus GetTileTrackStatus_Track(TileIndex tile, TransportType mode, 
 
 		case RAIL_TILE_SIGNALS: {
 			trackbits = GetTrackBits(tile);
+			if (sub_mode & TTSSM_NO_RED_SIGNALS) break;
 			byte a = GetPresentSignals(tile);
 			uint b = GetSignalStates(tile);
 
@@ -3949,7 +4317,7 @@ static TrackStatus GetTileTrackStatus_Track(TileIndex tile, TransportType mode, 
 static bool ClickTile_Track(TileIndex tile)
 {
 	if (_ctrl_pressed && IsPlainRailTile(tile)) {
-		TrackBits trackbits = TrackStatusToTrackBits(GetTileTrackStatus(tile, TRANSPORT_RAIL, 0));
+		TrackBits trackbits = TrackdirBitsToTrackBits(GetTileTrackdirBits(tile, TRANSPORT_RAIL, 0));
 
 		if (trackbits & TRACK_BIT_VERT) { // N-S direction
 			trackbits = (_tile_fract_coords.x <= _tile_fract_coords.y) ? TRACK_BIT_RIGHT : TRACK_BIT_LEFT;
@@ -4126,9 +4494,9 @@ static void GetTileDesc_Track(TileIndex tile, TileDesc *td)
 			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
 			if (_settings_game.vehicle.train_acceleration_model != AM_ORIGINAL) {
 				if (td->rail_speed > 0) {
-					td->rail_speed = std::min<uint16>(td->rail_speed, 61);
+					td->rail_speed = std::min<uint16>(td->rail_speed, _settings_game.vehicle.rail_depot_speed_limit);
 				} else {
-					td->rail_speed = 61;
+					td->rail_speed = _settings_game.vehicle.rail_depot_speed_limit;
 				}
 			}
 			td->build_date = Depot::GetByTile(tile)->build_date;

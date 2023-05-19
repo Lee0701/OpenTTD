@@ -193,10 +193,6 @@ STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mp
 STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/o
 STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
 
-STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mpo
-STR_UNIT_NAME_VELOCITY_METRIC                                   :km/o
-STR_UNIT_NAME_VELOCITY_SI                                       :m/s
-
 STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
 STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}hp
 STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
@@ -236,7 +232,6 @@ STR_TOOLTIP_SORT_ORDER                                          :{BLACK}Selektea
 STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}Selektear skiftnoarm
 STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK}Selekear filternoarm
 STR_BUTTON_SORT_BY                                              :{BLACK}Skifte op
-STR_BUTTON_RENAME                                               :{BLACK}op 'e nij neamme
 
 STR_TOOLTIP_CLOSE_WINDOW                                        :{BLACK}Slút finster
 STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS                              :{BLACK}Finstertitel - hjirmei kinst it finster ferslepe
@@ -567,12 +562,6 @@ STR_MONTH_SEP                                                   :Septimber
 STR_MONTH_OCT                                                   :Oktober
 STR_MONTH_NOV                                                   :Novimber
 STR_MONTH_DEC                                                   :Desimber
-
-###length VEHICLE_TYPES
-STR_VEHICLE_TYPE_TRAINS                                         :Treinen
-STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Auto's
-STR_VEHICLE_TYPE_SHIPS                                          :Skippen
-STR_VEHICLE_TYPE_AIRCRAFT                                       :Fleantugen
 
 # Graph window
 STR_GRAPH_KEY_BUTTON                                            :{BLACK}Kaai
@@ -1156,6 +1145,7 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Rjochts
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maksimale startersliening: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksimale bedrach hokker troch in bedriuw lient wurde kin (sûnder acht te slaan op de ynflaasje)
+###setting-zero-is-special
 
 STR_CONFIG_SETTING_INTEREST_RATE                                :Rinte: {STRING}
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :Rinte op liening; behearsket ek ynflaasje at dizze oan stiet
@@ -1689,6 +1679,7 @@ STR_CONFIG_SETTING_ENDING_YEAR_VALUE                            :{NUM}
 STR_CONFIG_SETTING_ALLOW_SHARES                                 :Stea it keapjen fan oandielen ta: {STRING}
 
 STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimale leeftiid fan it bedriuw om oandielen te hanneljen: {STRING}
+###setting-zero-is-special
 
 
 STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY                         :By slepe, pleats seinen eltse: {STRING}
@@ -1788,7 +1779,7 @@ STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Gauris binne de
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Faasje-ienheid: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Wannear't in faasje sichtber is yn de interface de selektearre ienheid brûke
-###length 4
+###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Ymperiaal (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metrysk (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
@@ -2106,7 +2097,6 @@ STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Bedriuw 
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Online spilers
-STR_NETWORK_COMPANY_LIST_SPECTATE                               :{WHITE}Taskôgje
 
 # Network client list
 STR_NETWORK_CLIENT_LIST_SERVER_NAME                             :{BLACK}Namme
@@ -2114,7 +2104,6 @@ STR_NETWORK_CLIENT_LIST_SERVER_NAME_TOOLTIP                     :{BLACK}Namme fa
 STR_NETWORK_CLIENT_LIST_SERVER_VISIBILITY                       :{BLACK}Sichtberheid
 STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :Dyn namme
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_SELF_TOOLTIP                :{BLACK}Dit bisto sels
-STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} klïïnt{P "" en} / {NUM} bedriuw{P "" en}
 
 # Matches ConnectionType
 ###length 5
@@ -2352,8 +2341,6 @@ STR_BUILD_SIGNAL_SEMAPHORE_NORM_TOOLTIP                         :{BLACK}Bloksein
 STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}Selektear Spoarbrêge
 STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}Selektear brêge
 STR_SELECT_BRIDGE_SELECTION_TOOLTIP                             :{BLACK}Brêge seleksje - klik op de brêge dyst boue wolst
-STR_SELECT_BRIDGE_INFO                                          :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
-STR_SELECT_BRIDGE_SCENEDIT_INFO                                 :{GOLD}{STRING},{} {VELOCITY}
 STR_BRIDGE_NAME_SUSPENSION_STEEL                                :Hingbrêge, Stiel
 STR_BRIDGE_NAME_GIRDER_STEEL                                    :Brêge mei balken, Stiel
 STR_BRIDGE_NAME_CANTILEVER_STEEL                                :Fakwurkbrêge, Stiel
@@ -2702,10 +2689,6 @@ STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP                           :{BLACK}Selektea
 STR_MAPGEN_DATE                                                 :{BLACK}Datum:
 STR_MAPGEN_NUMBER_OF_INDUSTRIES                                 :{BLACK}Oantal yndustrien:
 STR_MAPGEN_SNOW_COVERAGE                                        :{BLACK}Snie-oerflak:
-STR_MAPGEN_SNOW_LINE_HEIGHT                                     :{BLACK}Hichte sniegrins:
-STR_MAPGEN_SNOW_LINE_UP                                         :{BLACK}Sniegrins ien omheech ferpleatsje:
-STR_MAPGEN_SNOW_LINE_DOWN                                       :{BLACK}Sniegrins ien nei beneden ferpleatsje:
-STR_MAPGEN_LAND_GENERATOR                                       :{BLACK}Lângenerator:
 STR_MAPGEN_TERRAIN_TYPE                                         :{BLACK}Terreintype:
 STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Seenivo:
 STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Rivieren:
@@ -2753,7 +2736,6 @@ STR_MAPGEN_HEIGHTMAP_NAME                                       :{BLACK}Namme hi
 STR_MAPGEN_HEIGHTMAP_SIZE_LABEL                                 :{BLACK}Grutte:
 STR_MAPGEN_HEIGHTMAP_SIZE                                       :{ORANGE}{NUM} x {NUM}
 
-STR_MAPGEN_SNOW_LINE_QUERY_CAPT                                 :{BLACK}Sniehichte oanpasse
 STR_MAPGEN_SNOW_COVERAGE_QUERY_CAPT                             :{WHITE}Snie-oerflak (yn %)
 STR_MAPGEN_START_DATE_QUERY_CAPT                                :{BLACK}Startjier oanpasse
 
@@ -2873,6 +2855,10 @@ STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}Foarig f
 STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}Gean tebek nei de foarige ôfbylding, sla pseudo/werkleure/lettertype ôfbyldings oer en begjin wer oernei at it begjin berikke is
 STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}Represintaasje fan de no selektearre ôfbylding. Dizze wurdt net rjochte by it tekenjen
 STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}Ferweech de ôfbylding, feroarje de X en Y útslach
+
+###length 2
+
+
 STR_SPRITE_ALIGNER_OFFSETS_ABS                                  :{BLACK}X útslach: {NUM}, Y útslach: {NUM} (Absolút)
 STR_SPRITE_ALIGNER_OFFSETS_REL                                  :{BLACK}X útslach: {NUM}, Y útslach: {NUM} (Relatyf)
 STR_SPRITE_ALIGNER_PICKER_BUTTON                                :{BLACK}Kies ôfbylding
@@ -2885,7 +2871,6 @@ STR_NEWGRF_ERROR_MSG_INFO                                       :{SILVER}{STRING
 STR_NEWGRF_ERROR_MSG_WARNING                                    :{RED}Warskôging: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_ERROR                                      :{RED}Flater: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_FATAL                                      :{RED}Fatale flater: {SILVER}{STRING}
-STR_NEWGRF_ERROR_FATAL_POPUP                                    :{WHITE}Der hat in fatale NewGRF-flater plakfûn:{}{STRING}
 STR_NEWGRF_ERROR_VERSION_NUMBER                                 :{1:STRING} sil net wurkje kinne mei de TTDPatch-ferzje dy't troch OpenTTD meldt wurdt
 STR_NEWGRF_ERROR_DOS_OR_WINDOWS                                 :{1:STRING} is makke foar de {STRING}-ferzje fan TTD
 STR_NEWGRF_ERROR_UNSET_SWITCH                                   :{1:STRING} makke om te brûken tegeare my{STRING}
@@ -3339,7 +3324,6 @@ STR_PURCHASE_INFO_RUNNINGCOST                                   :{BLACK}Underhâ
 STR_PURCHASE_INFO_CAPACITY                                      :{BLACK}Kapasiteit: {GOLD}{CARGO_LONG} {STRING}
 STR_PURCHASE_INFO_REFITTABLE                                    :(kin omboud wurde)
 STR_PURCHASE_INFO_DESIGNED_LIFE                                 :{BLACK}Ûntwurpen: {GOLD}{NUM}{BLACK} Libbensdoer: {GOLD}{COMMA} jier
-STR_PURCHASE_INFO_DESIGNED                                      :{BLACK}Ûntwurpen: {GOLD}{NUM}
 STR_PURCHASE_INFO_RELIABILITY                                   :{BLACK}Maks. Betrouberens: {GOLD}{COMMA}%
 STR_PURCHASE_INFO_COST                                          :{BLACK}Kosten: {GOLD}{CURRENCY_LONG}
 STR_PURCHASE_INFO_WEIGHT_CWEIGHT                                :{BLACK}Gewicht: {GOLD}{WEIGHT_SHORT} ({WEIGHT_SHORT})
@@ -3897,7 +3881,7 @@ STR_AI_LIST_CANCEL                                              :{BLACK}Annulear
 STR_AI_LIST_CANCEL_TOOLTIP                                      :{BLACK}Skript net feroare
 
 
-# AI Parameters
+# Script Parameters
 STR_AI_SETTINGS_CAPTION_AI                                      :AI
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Slúte
 STR_AI_SETTINGS_RESET                                           :{BLACK}Weromsette
@@ -4316,6 +4300,8 @@ STR_ERROR_CAN_T_COPY_ORDER_LIST                                 :{WHITE}Kin best
 STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION                     :{WHITE}... te fier fan lêste bestimming
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... fleantúch hat in te lege aksjeradius
 
+# Extra messages which go on the third line of errors, explaining why orders failed
+
 # Timetable related errors
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Kin gjin tsjinst meitsje
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Auto's kinne allinech op stations wachtsje
@@ -4341,11 +4327,6 @@ STR_BASESOUNDS_WIN_DESCRIPTION                                  :Orizjinele lûd
 STR_BASESOUNDS_NONE_DESCRIPTION                                 :In lûdspakket sûnder lûden.
 STR_BASEMUSIC_WIN_DESCRIPTION                                   :Orizjinele musyk fan de Transport Tycoon Deluxe Windows-edysje.
 STR_BASEMUSIC_NONE_DESCRIPTION                                  :In musykpakket sûnder wiere musyk.
-
-STR_TRADITIONAL_TRAIN_NAME                                      :Trein {COMMA}
-STR_TRADITIONAL_ROAD_VEHICLE_NAME                               :Lânfartúg {COMMA}
-STR_TRADITIONAL_SHIP_NAME                                       :Skip {COMMA}
-STR_TRADITIONAL_AIRCRAFT_NAME                                   :Fleantúg {COMMA}
 
 ##id 0x2000
 # Town building names

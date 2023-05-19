@@ -106,7 +106,6 @@ std::string _config_file_text;
 std::string _private_file; ///< Private configuration file of OpenTTD.
 std::string _secrets_file; ///< Secrets configuration file of OpenTTD.
 
-typedef std::list<ErrorMessageData> ErrorList;
 static ErrorList _settings_error_list; ///< Errors while loading minimal settings.
 
 static bool _fallback_gui_zoom_max = false;
@@ -380,15 +379,14 @@ char *OneOfManySettingDesc::FormatSingleValue(char *buf, const char *last, uint 
 	return strecpy(buf, this->many[id].c_str(), last);
 }
 
-void OneOfManySettingDesc::FormatValue(char *buf, const char *last, const void *object) const
+void OneOfManySettingDesc::FormatIntValue(char *buf, const char *last, uint32 value) const
 {
-	uint id = (uint)this->Read(object);
-	this->FormatSingleValue(buf, last, id);
+	this->FormatSingleValue(buf, last, value);
 }
 
-void ManyOfManySettingDesc::FormatValue(char *buf, const char *last, const void *object) const
+void ManyOfManySettingDesc::FormatIntValue(char *buf, const char *last, uint32 value) const
 {
-	uint bitmask = (uint)this->Read(object);
+	uint bitmask = (uint)value;
 	if (bitmask == 0) {
 		buf[0] = '\0';
 		return;
@@ -767,13 +765,17 @@ static void IniSaveSettings(IniFile &ini, const SettingTable &settings_table, co
 void IntSettingDesc::FormatValue(char *buf, const char *last, const void *object) const
 {
 	uint32 i = (uint32)this->Read(object);
-	seprintf(buf, last, IsSignedVarMemType(this->save.conv) ? "%d" : "%u", i);
+	this->FormatIntValue(buf, last, i);
 }
 
-void BoolSettingDesc::FormatValue(char *buf, const char *last, const void *object) const
+void IntSettingDesc::FormatIntValue(char *buf, const char *last, uint32 value) const
 {
-	bool val = this->Read(object) != 0;
-	strecpy(buf, val ? "true" : "false", last);
+	seprintf(buf, last, IsSignedVarMemType(this->save.conv) ? "%d" : "%u", value);
+}
+
+void BoolSettingDesc::FormatIntValue(char *buf, const char *last, uint32 value) const
+{
+	strecpy(buf, (value != 0) ? "true" : "false", last);
 }
 
 bool IntSettingDesc::IsSameValue(const IniItem *item, void *object) const
@@ -988,7 +990,10 @@ static void UpdateConsists(int32 new_value)
 	SetWindowClassesDirty(WC_CREATE_TEMPLATE);
 }
 
-/* Check service intervals of vehicles, newvalue is value of % or day based servicing */
+/**
+ * Check and update if needed all vehicle service intervals.
+ * @param new_value Contains 0 if service intervals are in days, otherwise intervals use percents.
+ */
 static void UpdateAllServiceInterval(int32 new_value)
 {
 	bool update_vehicles;
@@ -1002,15 +1007,17 @@ static void UpdateAllServiceInterval(int32 new_value)
 	}
 
 	if (new_value != 0) {
-		vds->servint_trains   = 50;
-		vds->servint_roadveh  = 50;
-		vds->servint_aircraft = 50;
-		vds->servint_ships    = 50;
+		/* Service intervals are in percents. */
+		vds->servint_trains   = DEF_SERVINT_PERCENT;
+		vds->servint_roadveh  = DEF_SERVINT_PERCENT;
+		vds->servint_aircraft = DEF_SERVINT_PERCENT;
+		vds->servint_ships    = DEF_SERVINT_PERCENT;
 	} else {
-		vds->servint_trains   = 150;
-		vds->servint_roadveh  = 150;
-		vds->servint_aircraft = 100;
-		vds->servint_ships    = 360;
+		/* Service intervals are in days. */
+		vds->servint_trains   = DEF_SERVINT_DAYS_TRAINS;
+		vds->servint_roadveh  = DEF_SERVINT_DAYS_ROADVEH;
+		vds->servint_aircraft = DEF_SERVINT_DAYS_AIRCRAFT;
+		vds->servint_ships    = DEF_SERVINT_DAYS_SHIPS;
 	}
 
 	if (update_vehicles) {
@@ -1285,6 +1292,7 @@ static void ZoomMinMaxChanged(int32 new_value)
 		UpdateRouteStepSpriteSize();
 		UpdateFontHeightCache();
 		LoadStringWidthTable();
+		ReInitAllWindows(false);
 	}
 }
 
@@ -1709,16 +1717,25 @@ static void ImprovedBreakdownsSettingChanged(int32 new_value)
 	}
 }
 
+static uint8 _pre_change_day_length_factor;
+
+static bool DayLengthPreChange(int32 &new_value)
+{
+	_pre_change_day_length_factor = _settings_game.economy.day_length_factor;
+
+	return true;
+}
+
 static void DayLengthChanged(int32 new_value)
 {
-	const DateTicksScaled old_scaled_date_ticks = _scaled_date_ticks;
-	SetScaledTickVariables();
+	DateTicksScaled old_scaled_date_ticks = _scaled_date_ticks;
+	DateTicksScaled old_scaled_date_ticks_offset = _scaled_date_ticks_offset;
 
-	extern void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaled delta);
-	AdjustAllSignalSpeedRestrictionTickValues(_scaled_date_ticks - old_scaled_date_ticks);
+	extern void RebaseScaledDateTicksBase();
+	RebaseScaledDateTicksBase();
 
-	extern void AdjustVehicleScaledTickBase(int64 delta);
-	AdjustVehicleScaledTickBase(_scaled_date_ticks - old_scaled_date_ticks);
+	extern void VehicleDayLengthChanged(DateTicksScaled old_scaled_date_ticks, DateTicksScaled old_scaled_date_ticks_offset, uint8 old_day_length_factor);
+	VehicleDayLengthChanged(old_scaled_date_ticks, old_scaled_date_ticks_offset, _pre_change_day_length_factor);
 
 	MarkWholeScreenDirty();
 }
@@ -1792,7 +1809,10 @@ static void ParseCompanyPasswordStorageSecret(const std::string &value)
 static void UpdateClientConfigValues()
 {
 	NetworkServerUpdateGameInfo();
-	if (_network_server) NetworkServerSendConfigUpdate();
+	if (_network_server) {
+		NetworkServerSendConfigUpdate();
+		SetWindowClassesDirty(WC_CLIENT_LIST);
+	}
 }
 
 /* End - Callback Functions */
@@ -2317,7 +2337,6 @@ void LoadFromConfig(bool startup)
 		PostZoningModeChange();
 
 		/* Display scheduled errors */
-		extern void ScheduleErrorMessage(ErrorList &datas);
 		ScheduleErrorMessage(_settings_error_list);
 		if (FindWindowById(WC_ERRMSG, 0) == nullptr) ShowFirstError();
 	} else {
@@ -2846,7 +2865,7 @@ void IConsoleGetSetting(const char *name, bool force_newgame)
 	}
 }
 
-static void IConsoleListSettingsTable(const SettingTable &table, const char *prefilter)
+static void IConsoleListSettingsTable(const SettingTable &table, const char *prefilter, bool show_defaults)
 {
 	for (auto &sd : table) {
 		if (!SlIsObjectCurrentlyValid(sd->save.version_from, sd->save.version_to, sd->save.ext_feature_test)) continue;
@@ -2854,7 +2873,15 @@ static void IConsoleListSettingsTable(const SettingTable &table, const char *pre
 		if ((sd->flags & SF_NO_NEWGAME) && _game_mode == GM_MENU) continue;
 		char value[80];
 		sd->FormatValue(value, lastof(value), &GetGameSettings());
-		IConsolePrintF(CC_DEFAULT, "%s = %s", sd->name, value);
+		if (show_defaults && sd->IsIntSetting()) {
+			const IntSettingDesc *int_setting = sd->AsIntSetting();
+			char defvalue[80];
+			int_setting->FormatIntValue(defvalue, lastof(defvalue), int_setting->def);
+			TextColour colour = (int_setting->Read(&GetGameSettings()) != int_setting->def) ? CC_WARNING : CC_DEFAULT;
+			IConsolePrintF(colour, "%s = %s (default: %s)", sd->name, value, defvalue);
+		} else {
+			IConsolePrintF(CC_DEFAULT, "%s = %s", sd->name, value);
+		}
 	}
 }
 
@@ -2863,18 +2890,18 @@ static void IConsoleListSettingsTable(const SettingTable &table, const char *pre
  *
  * @param prefilter  If not \c nullptr, only list settings with names that begin with \a prefilter prefix
  */
-void IConsoleListSettings(const char *prefilter)
+void IConsoleListSettings(const char *prefilter, bool show_defaults)
 {
-	IConsolePrintF(CC_WARNING, "All settings with their current value:");
+	IConsolePrintF(CC_WARNING, "All settings with their current %s:", show_defaults ? "and default values" : "value");
 
 	for (auto &table : _generic_setting_tables) {
-		IConsoleListSettingsTable(table, prefilter);
+		IConsoleListSettingsTable(table, prefilter, show_defaults);
 	}
 	for (auto &table : _private_setting_tables) {
-		IConsoleListSettingsTable(table, prefilter);
+		IConsoleListSettingsTable(table, prefilter, show_defaults);
 	}
 	for (auto &table : _secrets_setting_tables) {
-		IConsoleListSettingsTable(table, prefilter);
+		IConsoleListSettingsTable(table, prefilter, show_defaults);
 	}
 
 	IConsolePrintF(CC_WARNING, "Use 'setting' command to change a value");

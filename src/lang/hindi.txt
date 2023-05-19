@@ -340,6 +340,7 @@ STR_CONFIG_SETTING_COMPANIES_OFF                                :बन्द
 
 ###length 3
 
+###setting-zero-is-special
 
 
 
@@ -545,6 +546,7 @@ STR_CONFIG_SETTING_ENDING_YEAR_VALUE                            :{NUM}
 ###length 3
 
 
+###setting-zero-is-special
 
 
 
@@ -584,7 +586,7 @@ STR_CONFIG_SETTING_SPRITE_ZOOM_LVL_IN_2X                        :२x
 
 
 
-###length 4
+###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :अंतर्राष्ट्रीय मानक (m/s)
 
 ###length 3
@@ -874,6 +876,10 @@ STR_NEWGRF_SETTINGS_PALETTE_DEFAULT                             :मूल (D)
 
 
 # Sprite aligner window
+
+###length 2
+
+
 
 
 # NewGRF (self) generated warnings/errors
@@ -1254,7 +1260,7 @@ STR_AI_DEBUG_NAME_AND_VERSION                                   :{BLACK}{STRING}
 
 
 
-# AI Parameters
+# Script Parameters
 
 
 # Textfile window
@@ -1378,6 +1384,8 @@ STR_ERROR_CAN_T_SELL_TRAIN                                      :{WHITE}रे�
 # Order related errors
 STR_ERROR_CAN_T_COPY_SHARE_ORDER                                :{WHITE}... वाहन सभी स्टेशनों तक नहीं जा सकता
 
+
+# Extra messages which go on the third line of errors, explaining why orders failed
 
 # Timetable related errors
 

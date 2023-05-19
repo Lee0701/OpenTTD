@@ -173,7 +173,7 @@ void CoreTextFontCache::SetFontSize(int pixels)
 {
 	if (pixels == 0) {
 		/* Try to determine a good height based on the height recommended by the font. */
-		int scaled_height = ScaleGUITrad(this->GetDefaultFontHeight(this->fs));
+		int scaled_height = ScaleGUITrad(FontCache::GetDefaultFontHeight(this->fs));
 		pixels = scaled_height;
 
 		CFAutoRelease<CTFontRef> font(CTFontCreateWithFontDescriptor(this->font_desc.get(), 0.0f, nullptr));
@@ -197,7 +197,7 @@ void CoreTextFontCache::SetFontSize(int pixels)
 
 			/* Font height is minimum height plus the difference between the default
 			 * height for this font size and the small size. */
-			int diff = scaled_height - ScaleGUITrad(this->GetDefaultFontHeight(FS_SMALL));
+			int diff = scaled_height - ScaleGUITrad(FontCache::GetDefaultFontHeight(FS_SMALL));
 			/* Clamp() is not used as scaled_height could be greater than MAX_FONT_SIZE, which is not permitted in Clamp(). */
 			pixels = std::min(std::max(std::min<int>(min_size, MAX_FONT_MIN_REC_SIZE) + diff, scaled_height), MAX_FONT_SIZE);
 		}
@@ -352,16 +352,7 @@ const Sprite *CoreTextFontCache::InternalGetGlyph(GlyphID key, bool use_aa)
  */
 void LoadCoreTextFont(FontSize fs)
 {
-	static const char *SIZE_TO_NAME[] = { "medium", "small", "large", "mono" };
-
-	FontCacheSubSetting *settings = nullptr;
-	switch (fs) {
-		default: NOT_REACHED();
-		case FS_SMALL:  settings = &_fcsettings.small;  break;
-		case FS_NORMAL: settings = &_fcsettings.medium; break;
-		case FS_LARGE:  settings = &_fcsettings.large;  break;
-		case FS_MONO:   settings = &_fcsettings.mono;   break;
-	}
+	FontCacheSubSetting *settings = GetFontCacheSubSetting(fs);
 
 	if (settings->font.empty()) return;
 
@@ -397,7 +388,7 @@ void LoadCoreTextFont(FontSize fs)
 				font_ref.reset((CTFontDescriptorRef)CFArrayGetValueAtIndex(descs.get(), 0));
 				CFRetain(font_ref.get());
 			} else {
-				ShowInfoF("Unable to load file '%s' for %s font, using default OS font selection instead", settings->font.c_str(), SIZE_TO_NAME[fs]);
+				ShowInfoF("Unable to load file '%s' for %s font, using default OS font selection instead", settings->font.c_str(), FontSizeToName(fs));
 			}
 		}
 	}
@@ -421,7 +412,7 @@ void LoadCoreTextFont(FontSize fs)
 	}
 
 	if (!font_ref) {
-		ShowInfoF("Unable to use '%s' for %s font, using sprite font instead", settings->font.c_str(), SIZE_TO_NAME[fs]);
+		ShowInfoF("Unable to use '%s' for %s font, using sprite font instead", settings->font.c_str(), FontSizeToName(fs));
 		return;
 	}
 

@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include <stdarg.h>
 #include <functional>
+#include "core/backup_type.hpp"
 #include "window_gui.h"
 #include "window_func.h"
 #include "random_access_file_type.h"
@@ -351,7 +352,7 @@ struct NewGRFInspectWindow : Window {
 	bool HasChainIndex() const
 	{
 		GrfSpecFeature f = GetFeatureNum(this->window_number);
-		return f == GSF_TRAINS || f == GSF_ROADVEHICLES;
+		return f == GSF_TRAINS || f == GSF_ROADVEHICLES || f == GSF_SHIPS;
 	}
 
 	/**
@@ -415,6 +416,10 @@ struct NewGRFInspectWindow : Window {
 			case WID_NGRFI_VEH_CHAIN: {
 				assert(this->HasChainIndex());
 				GrfSpecFeature f = GetFeatureNum(this->window_number);
+				if (f == GSF_SHIPS) {
+					size->height = FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.framerect.Vertical();
+					break;
+				}
 				size->height = std::max(size->height, GetVehicleImageCellSize((VehicleType)(VEH_TRAIN + (f - GSF_TRAINS)), EIT_IN_DEPOT).height + 2 + WidgetDimensions::scaled.bevel.Vertical());
 				break;
 			}
@@ -456,6 +461,15 @@ struct NewGRFInspectWindow : Window {
 		switch (widget) {
 			case WID_NGRFI_VEH_CHAIN: {
 				const Vehicle *v = Vehicle::Get(this->GetFeatureIndex());
+				if (GetFeatureNum(this->window_number) == GSF_SHIPS) {
+					Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+					char buffer[64];
+					uint count = 0;
+					for (const Vehicle *u = v->First(); u != nullptr; u = u->Next()) count++;
+					seprintf(buffer, lastof(buffer), "Part %u of %u", this->chain_index + 1, count);
+					::DrawString(ir.left, ir.right, ir.top, buffer, TC_BLACK);
+					break;
+				}
 				int total_width = 0;
 				int sel_start = 0;
 				int sel_end = 0;
@@ -667,11 +681,12 @@ struct NewGRFInspectWindow : Window {
 								int offset = i - this->vscroll->GetPosition();
 								i++;
 								if (offset >= 0 && offset < this->vscroll->GetCapacity()) {
+									Rect sr = r.Shrink(WidgetDimensions::scaled.frametext).Shrink(0, offset * this->resize.step_height, 0, 0);
 									char buf[512];
 									seprintf(buf, lastof(buf), "  %s: ", info->name);
-									::DrawString(ir.left, ir.right, ir.top + (offset * this->resize.step_height), buf, TC_BLACK);
+									::DrawString(sr.left, sr.right, sr.top, buf, TC_BLACK);
 									seprintf(buf, lastof(buf), "%08x (%s)", value, niv->name);
-									::DrawString(ir.left, ir.right, ir.top + (offset * this->resize.step_height), buf, TC_BLACK);
+									::DrawString(sr.left + prefix_width, sr.right, sr.top, buf, TC_BLACK);
 								}
 							}
 							break;
@@ -1101,7 +1116,7 @@ void ShowNewGRFInspectWindow(GrfSpecFeature feature, uint index, const uint32 gr
 	if (!IsNewGRFInspectable(feature, index)) return;
 
 	WindowNumber wno = GetInspectWindowNumber(feature, index);
-	WindowDesc *desc = (feature == GSF_TRAINS || feature == GSF_ROADVEHICLES) ? &_newgrf_inspect_chain_desc : &_newgrf_inspect_desc;
+	WindowDesc *desc = (feature == GSF_TRAINS || feature == GSF_ROADVEHICLES || feature == GSF_SHIPS) ? &_newgrf_inspect_chain_desc : &_newgrf_inspect_desc;
 	NewGRFInspectWindow *w = AllocateWindowDescFront<NewGRFInspectWindow>(desc, wno, true);
 	w->SetCallerGRFID(grfid);
 }
@@ -1171,6 +1186,9 @@ GrfSpecFeature GetGrfSpecFeature(TileIndex tile)
 {
 	switch (GetTileType(tile)) {
 		default:              return GSF_INVALID;
+		case MP_CLEAR:
+			if (GetRawClearGround(tile) == CLEAR_ROCKS) return GSF_NEWLANDSCAPE;
+			return GSF_INVALID;
 		case MP_RAILWAY: {
 			extern std::vector<const GRFFile *> _new_signals_grfs;
 			if (HasSignals(tile) && !_new_signals_grfs.empty()) {
@@ -1233,11 +1251,17 @@ struct SpriteAlignerWindow : Window {
 	Scrollbar *vscroll;
 	SmallMap<SpriteID, XyOffs> offs_start_map; ///< Mapping of starting offsets for the sprites which have been aligned in the sprite aligner window.
 
+	static bool centre;
+	static bool crosshair;
+
 	SpriteAlignerWindow(WindowDesc *desc, WindowNumber wno) : Window(desc)
 	{
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_SA_SCROLLBAR);
 		this->FinishInitNested(wno);
+
+		this->SetWidgetLoweredState(WID_SA_CENTRE, SpriteAlignerWindow::centre);
+		this->SetWidgetLoweredState(WID_SA_CROSSHAIR, SpriteAlignerWindow::crosshair);
 
 		/* Oh yes, we assume there is at least one normal sprite! */
 		while (GetSpriteType(this->current_sprite) != ST_NORMAL) this->current_sprite++;
@@ -1284,6 +1308,8 @@ struct SpriteAlignerWindow : Window {
 				size->height = ScaleGUITrad(200);
 				break;
 			case WID_SA_LIST:
+				SetDParamMaxDigits(0, 6);
+				size->width = GetStringBoundingBox(STR_BLACK_COMMA).width + padding.width;
 				resize->height = FONT_HEIGHT_NORMAL + padding.height;
 				resize->width  = 1;
 				fill->height = resize->height;
@@ -1300,18 +1326,25 @@ struct SpriteAlignerWindow : Window {
 				/* Center the sprite ourselves */
 				const Sprite *spr = GetSprite(this->current_sprite, ST_NORMAL);
 				Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
-				int x = -UnScaleGUI(spr->x_offs) + (ir.Width()  - UnScaleGUI(spr->width) ) / 2;
-				int y = -UnScaleGUI(spr->y_offs) + (ir.Height() - UnScaleGUI(spr->height)) / 2;
+				int x;
+				int y;
+				if (SpriteAlignerWindow::centre) {
+					x = -UnScaleGUI(spr->x_offs) + (ir.Width() - UnScaleGUI(spr->width)) / 2;
+					y = -UnScaleGUI(spr->y_offs) + (ir.Height() - UnScaleGUI(spr->height)) / 2;
+				} else {
+					x = ir.Width() / 2;
+					y = ir.Height() / 2;
+				}
 
 				DrawPixelInfo new_dpi;
 				if (!FillDrawPixelInfo(&new_dpi, ir.left, ir.top, ir.Width(), ir.Height())) break;
-				DrawPixelInfo *old_dpi = _cur_dpi;
-				_cur_dpi = &new_dpi;
+				AutoRestoreBackup dpi_backup(_cur_dpi, &new_dpi);
 
 				DrawSprite(this->current_sprite, PAL_NONE, x, y, nullptr, ZOOM_LVL_GUI);
-
-				_cur_dpi = old_dpi;
-
+				if (this->crosshair) {
+					GfxDrawLine(x, 0, x, ir.Height() - 1, PC_WHITE, 1, 1);
+					GfxDrawLine(0, y, ir.Width() - 1, y, PC_WHITE, 1, 1);
+				}
 				break;
 			}
 
@@ -1322,7 +1355,7 @@ struct SpriteAlignerWindow : Window {
 				std::vector<SpriteID> &list = _newgrf_debug_sprite_picker.sprites;
 				int max = std::min<int>(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), (uint)list.size());
 
-				Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+				Rect ir = r.Shrink(WidgetDimensions::scaled.matrix);
 				for (int i = this->vscroll->GetPosition(); i < max; i++) {
 					SetDParam(0, list[i]);
 					DrawString(ir, STR_BLACK_COMMA, TC_FROMSTRING, SA_RIGHT | SA_FORCE);
@@ -1414,6 +1447,18 @@ struct SpriteAlignerWindow : Window {
 				this->offs_start_map.Erase(this->current_sprite);
 				this->SetDirty();
 				break;
+
+			case WID_SA_CENTRE:
+				SpriteAlignerWindow::centre = !SpriteAlignerWindow::centre;
+				this->SetWidgetLoweredState(widget, SpriteAlignerWindow::centre);
+				this->SetDirty();
+				break;
+
+			case WID_SA_CROSSHAIR:
+				SpriteAlignerWindow::crosshair = !SpriteAlignerWindow::crosshair;
+				this->SetWidgetLoweredState(widget, SpriteAlignerWindow::crosshair);
+				this->SetDirty();
+				break;
 		}
 	}
 
@@ -1450,6 +1495,9 @@ struct SpriteAlignerWindow : Window {
 	}
 };
 
+bool SpriteAlignerWindow::centre = true;
+bool SpriteAlignerWindow::crosshair = true;
+
 static const NWidgetPart _nested_sprite_aligner_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
@@ -1467,34 +1515,34 @@ static const NWidgetPart _nested_sprite_aligner_widgets[] = {
 				EndContainer(),
 				NWidget(NWID_HORIZONTAL), SetPIP(10, 5, 10),
 					NWidget(NWID_SPACER), SetFill(1, 1),
-					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_UP), SetDataTip(SPR_ARROW_UP, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0),
+					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_UP), SetDataTip(SPR_ARROW_UP, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
 					NWidget(NWID_SPACER), SetFill(1, 1),
 				EndContainer(),
 				NWidget(NWID_HORIZONTAL_LTR), SetPIP(10, 5, 10),
 					NWidget(NWID_VERTICAL),
 						NWidget(NWID_SPACER), SetFill(1, 1),
-						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_LEFT), SetDataTip(SPR_ARROW_LEFT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0),
+						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_LEFT), SetDataTip(SPR_ARROW_LEFT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
 						NWidget(NWID_SPACER), SetFill(1, 1),
 					EndContainer(),
 					NWidget(WWT_PANEL, COLOUR_DARK_BLUE, WID_SA_SPRITE), SetDataTip(STR_NULL, STR_SPRITE_ALIGNER_SPRITE_TOOLTIP),
 					EndContainer(),
 					NWidget(NWID_VERTICAL),
 						NWidget(NWID_SPACER), SetFill(1, 1),
-						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_RIGHT), SetDataTip(SPR_ARROW_RIGHT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0),
+						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_RIGHT), SetDataTip(SPR_ARROW_RIGHT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
 						NWidget(NWID_SPACER), SetFill(1, 1),
 					EndContainer(),
 				EndContainer(),
 				NWidget(NWID_HORIZONTAL), SetPIP(10, 5, 10),
 					NWidget(NWID_SPACER), SetFill(1, 1),
-					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_DOWN), SetDataTip(SPR_ARROW_DOWN, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0),
+					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_DOWN), SetDataTip(SPR_ARROW_DOWN, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
 					NWidget(NWID_SPACER), SetFill(1, 1),
 				EndContainer(),
 				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_ABS), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_ABS, STR_NULL), SetFill(1, 0), SetPadding(0, 10, 0, 10),
 				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_REL), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_REL, STR_NULL), SetFill(1, 0), SetPadding(0, 10, 0, 10),
-				NWidget(NWID_HORIZONTAL), SetPIP(10, 5, 10),
-					NWidget(NWID_SPACER), SetFill(1, 1),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_RESET_REL), SetDataTip(STR_SPRITE_ALIGNER_RESET_BUTTON, STR_SPRITE_ALIGNER_RESET_TOOLTIP), SetFill(0, 0),
-					NWidget(NWID_SPACER), SetFill(1, 1),
+				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(10, 5, 10),
+					NWidget(WWT_TEXTBTN_2, COLOUR_GREY, WID_SA_CENTRE), SetDataTip(STR_SPRITE_ALIGNER_CENTRE_OFFSET, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_RESET_REL), SetDataTip(STR_SPRITE_ALIGNER_RESET_BUTTON, STR_SPRITE_ALIGNER_RESET_TOOLTIP), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_CROSSHAIR), SetDataTip(STR_SPRITE_ALIGNER_CROSSHAIR, STR_NULL), SetFill(1, 0),
 				EndContainer(),
 			EndContainer(),
 			NWidget(NWID_VERTICAL), SetPIP(10, 5, 10),
@@ -1606,6 +1654,9 @@ const char *GetNewGRFCallbackName(CallbackID cbid)
 		CBID(CBID_VEHICLE_REFIT_COST)
 		CBID(CBID_INDUSTRY_PROD_CHANGE_BUILD)
 		CBID(CBID_VEHICLE_SPAWN_VISUAL_EFFECT)
+		CBID(CBID_VEHICLE_NAME)
+		CBID(XCBID_TOWN_ZONES)
+		CBID(XCBID_SHIP_REFIT_PART_NAME)
 		default: return nullptr;
 	}
 }

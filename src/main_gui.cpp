@@ -182,7 +182,7 @@ void FixTitleGameZoom(int zoom_adjust)
 {
 	if (_game_mode != GM_MENU) return;
 
-	Viewport *vp = FindWindowByClass(WC_MAIN_WINDOW)->viewport;
+	Viewport *vp = GetMainWindow()->viewport;
 
 	/* Adjust the zoom in/out.
 	 * Can't simply add, since operator+ is not defined on the ZoomLevel type. */
@@ -254,7 +254,7 @@ struct MainWindow : Window
 		nvp->InitializeViewport(this, TileXY(32, 32), ScaleZoomGUI(ZOOM_LVL_VIEWPORT));
 
 		this->viewport->map_type = (ViewportMapType) _settings_client.gui.default_viewport_map_mode;
-		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, 0, 3);
+		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, 0, 2);
 		this->refresh.SetInterval(LINKGRAPH_DELAY);
 	}
 
@@ -462,7 +462,7 @@ struct MainWindow : Window
 			case GHK_SWITCH_VIEWPORT_ROUTE_OVERLAY_MODE:
 				if (_settings_client.gui.show_vehicle_route_mode != 0) {
 					_settings_client.gui.show_vehicle_route_mode ^= 3;
-					CheckMarkDirtyFocusedRoutePaths();
+					CheckMarkDirtyViewportRoutePaths();
 					SetWindowDirty(WC_GAME_OPTIONS, WN_GAME_OPTIONS_GAME_SETTINGS);
 				}
 				break;

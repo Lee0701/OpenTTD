@@ -39,6 +39,8 @@
 #include "widgets/industry_widget.h"
 #include "clear_map.h"
 #include "zoom_func.h"
+#include "querystring_gui.h"
+#include "stringfilter_type.h"
 
 #include "table/strings.h"
 
@@ -91,6 +93,7 @@ struct CargoSuffix {
 	char text[512];             ///< Cargo suffix text.
 };
 
+extern void GenerateIndustries();
 static void ShowIndustryCargoesWindow(IndustryType id);
 
 /**
@@ -620,7 +623,6 @@ public:
 		if (Town::GetNumItems() == 0) {
 			ShowErrorMessage(STR_ERROR_CAN_T_GENERATE_INDUSTRIES, STR_ERROR_MUST_FOUND_TOWN_FIRST, WL_INFO);
 		} else {
-			extern void GenerateIndustries();
 			Backup<bool> old_generating_world(_generating_world, true, FILE_LINE);
 			BasePersistentStorageArray::SwitchMode(PSM_ENTER_GAMELOOP);
 			GenerateIndustries();
@@ -1248,12 +1250,17 @@ static const NWidgetPart _nested_industry_directory_widgets[] = {
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(NWID_VERTICAL),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_TEXTBTN, COLOUR_BROWN, WID_ID_DROPDOWN_ORDER), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
-				NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_DROPDOWN_CRITERIA), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
-				NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_FILTER_BY_ACC_CARGO), SetMinimalSize(225, 12), SetFill(0, 1), SetDataTip(STR_INDUSTRY_DIRECTORY_ACCEPTED_CARGO_FILTER, STR_TOOLTIP_FILTER_CRITERIA),
-				NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_FILTER_BY_PROD_CARGO), SetMinimalSize(225, 12), SetFill(0, 1), SetDataTip(STR_INDUSTRY_DIRECTORY_PRODUCED_CARGO_FILTER, STR_TOOLTIP_FILTER_CRITERIA),
-				NWidget(WWT_PANEL, COLOUR_BROWN), SetResize(1, 0), EndContainer(),
+			NWidget(NWID_VERTICAL),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_TEXTBTN, COLOUR_BROWN, WID_ID_DROPDOWN_ORDER), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
+					NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_DROPDOWN_CRITERIA), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
+					NWidget(WWT_EDITBOX, COLOUR_BROWN, WID_ID_FILTER), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
+				EndContainer(),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_FILTER_BY_ACC_CARGO), SetMinimalSize(225, 12), SetFill(0, 1), SetDataTip(STR_INDUSTRY_DIRECTORY_ACCEPTED_CARGO_FILTER, STR_TOOLTIP_FILTER_CRITERIA),
+					NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_ID_FILTER_BY_PROD_CARGO), SetMinimalSize(225, 12), SetFill(0, 1), SetDataTip(STR_INDUSTRY_DIRECTORY_PRODUCED_CARGO_FILTER, STR_TOOLTIP_FILTER_CRITERIA),
+					NWidget(WWT_PANEL, COLOUR_BROWN), SetResize(1, 0), EndContainer(),
+				EndContainer(),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_BROWN, WID_ID_INDUSTRY_LIST), SetDataTip(0x0, STR_INDUSTRY_DIRECTORY_LIST_CAPTION), SetResize(1, 1), SetScrollbar(WID_ID_SCROLLBAR), EndContainer(),
 		EndContainer(),
@@ -1349,6 +1356,10 @@ protected:
 	byte accepted_cargo_filter_criteria;        ///< Selected accepted cargo filter index
 	static CargoID produced_cargo_filter;
 
+	const int MAX_FILTER_LENGTH = 16;           ///< The max length of the filter, in chars
+	StringFilter string_filter;                 ///< Filter for industries
+	QueryString industry_editbox;               ///< Filter editbox
+
 	enum class SorterType : uint8 {
 		ByName,        ///< Sorter type to sort by name
 		ByType,        ///< Sorter type to sort by type
@@ -1433,7 +1444,13 @@ protected:
 			this->industries.clear();
 
 			for (const Industry *i : Industry::Iterate()) {
-				this->industries.push_back(i);
+				if (this->string_filter.IsEmpty()) {
+					this->industries.push_back(i);
+					continue;
+				}
+				this->string_filter.ResetState();
+				this->string_filter.AddLine(i->GetCachedName());
+				if (this->string_filter.GetState()) this->industries.push_back(i);
 			}
 
 			this->industries.shrink_to_fit();
@@ -1633,7 +1650,7 @@ protected:
 	}
 
 public:
-	IndustryDirectoryWindow(WindowDesc *desc, WindowNumber number) : Window(desc)
+	IndustryDirectoryWindow(WindowDesc *desc, WindowNumber number) : Window(desc), industry_editbox(MAX_FILTER_LENGTH * MAX_CHAR_LENGTH, MAX_FILTER_LENGTH)
 	{
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_ID_SCROLLBAR);
@@ -1644,6 +1661,9 @@ public:
 		this->BuildSortIndustriesList();
 
 		this->FinishInitNested(0);
+
+		this->querystrings[WID_ID_FILTER] = &this->industry_editbox;
+		this->industry_editbox.cancel_button = QueryString::ACTION_CLEAR;
 	}
 
 	~IndustryDirectoryWindow()
@@ -1807,6 +1827,14 @@ public:
 	void OnResize() override
 	{
 		this->vscroll->SetCapacityFromWidget(this, WID_ID_INDUSTRY_LIST);
+	}
+
+	void OnEditboxChanged(int wid) override
+	{
+		if (wid == WID_ID_FILTER) {
+			this->string_filter.SetFilterTerm(this->industry_editbox.text.buf);
+			this->InvalidateData(IDIWD_FORCE_REBUILD);
+		}
 	}
 
 	void OnPaint() override
@@ -2790,12 +2818,12 @@ struct IndustryCargoesWindow : public Window {
 		_displayed_industries_out.set(displayed_it);
 
 		this->fields.clear();
-		CargoesRow &row = this->fields.emplace_back();
-		row.columns[0].MakeHeader(STR_INDUSTRY_CARGOES_PRODUCERS);
-		row.columns[1].MakeEmpty(CFT_SMALL_EMPTY);
-		row.columns[2].MakeEmpty(CFT_SMALL_EMPTY);
-		row.columns[3].MakeEmpty(CFT_SMALL_EMPTY);
-		row.columns[4].MakeHeader(STR_INDUSTRY_CARGOES_CUSTOMERS);
+		CargoesRow &first_row = this->fields.emplace_back();
+		first_row.columns[0].MakeHeader(STR_INDUSTRY_CARGOES_PRODUCERS);
+		first_row.columns[1].MakeEmpty(CFT_SMALL_EMPTY);
+		first_row.columns[2].MakeEmpty(CFT_SMALL_EMPTY);
+		first_row.columns[3].MakeEmpty(CFT_SMALL_EMPTY);
+		first_row.columns[4].MakeHeader(STR_INDUSTRY_CARGOES_CUSTOMERS);
 
 		const IndustrySpec *central_sp = GetIndustrySpec(displayed_it);
 		bool houses_supply = HousesCanSupply(central_sp->accepts_cargo, lengthof(central_sp->accepts_cargo));
@@ -2871,12 +2899,12 @@ struct IndustryCargoesWindow : public Window {
 		_displayed_industries_out.reset();
 
 		this->fields.clear();
-		CargoesRow &row = this->fields.emplace_back();
-		row.columns[0].MakeHeader(STR_INDUSTRY_CARGOES_PRODUCERS);
-		row.columns[1].MakeEmpty(CFT_SMALL_EMPTY);
-		row.columns[2].MakeHeader(STR_INDUSTRY_CARGOES_CUSTOMERS);
-		row.columns[3].MakeEmpty(CFT_SMALL_EMPTY);
-		row.columns[4].MakeEmpty(CFT_SMALL_EMPTY);
+		CargoesRow &first_row = this->fields.emplace_back();
+		first_row.columns[0].MakeHeader(STR_INDUSTRY_CARGOES_PRODUCERS);
+		first_row.columns[1].MakeEmpty(CFT_SMALL_EMPTY);
+		first_row.columns[2].MakeHeader(STR_INDUSTRY_CARGOES_CUSTOMERS);
+		first_row.columns[3].MakeEmpty(CFT_SMALL_EMPTY);
+		first_row.columns[4].MakeEmpty(CFT_SMALL_EMPTY);
 
 		bool houses_supply = HousesCanSupply(&cid, 1);
 		bool houses_accept = HousesCanAccept(&cid, 1);
@@ -2956,10 +2984,9 @@ struct IndustryCargoesWindow : public Window {
 		if (widget != WID_IC_PANEL) return;
 
 		Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
-		DrawPixelInfo tmp_dpi, *old_dpi;
+		DrawPixelInfo tmp_dpi;
 		if (!FillDrawPixelInfo(&tmp_dpi, ir.left, ir.top, ir.Width(), ir.Height())) return;
-		old_dpi = _cur_dpi;
-		_cur_dpi = &tmp_dpi;
+		AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
 		int left_pos = ir.left;
 		if (this->ind_cargo >= NUM_INDUSTRYTYPES) left_pos += (CargoesField::industry_width + CargoesField::cargo_field_width) / 2;
@@ -2988,8 +3015,6 @@ struct IndustryCargoesWindow : public Window {
 			vpos += row_height;
 			if (vpos >= height) break;
 		}
-
-		_cur_dpi = old_dpi;
 	}
 
 	/**
@@ -3093,7 +3118,7 @@ struct IndustryCargoesWindow : public Window {
 					add_item(STR_INDUSTRY_CARGOES_PRODUCERS, ILM_IN);
 					add_item(STR_INDUSTRY_CARGOES_CUSTOMERS, ILM_OUT);
 					int selected = (this->IsWidgetLowered(WID_IC_NOTIFY)) ? (int)_link_mode : -1;
-					ShowDropDownList(this, std::move(list), selected, WID_IC_NOTIFY, 0, true);
+					ShowDropDownList(this, std::move(list), selected, WID_IC_NOTIFY);
 				}
 				break;
 
@@ -3104,7 +3129,7 @@ struct IndustryCargoesWindow : public Window {
 				}
 				if (!lst.empty()) {
 					int selected = (this->ind_cargo >= NUM_INDUSTRYTYPES) ? (int)(this->ind_cargo - NUM_INDUSTRYTYPES) : -1;
-					ShowDropDownList(this, std::move(lst), selected, WID_IC_CARGO_DROPDOWN, 0, true);
+					ShowDropDownList(this, std::move(lst), selected, WID_IC_CARGO_DROPDOWN);
 				}
 				break;
 			}
@@ -3118,7 +3143,7 @@ struct IndustryCargoesWindow : public Window {
 				}
 				if (!lst.empty()) {
 					int selected = (this->ind_cargo < NUM_INDUSTRYTYPES) ? (int)this->ind_cargo : -1;
-					ShowDropDownList(this, std::move(lst), selected, WID_IC_IND_DROPDOWN, 0, true);
+					ShowDropDownList(this, std::move(lst), selected, WID_IC_IND_DROPDOWN);
 				}
 				break;
 			}

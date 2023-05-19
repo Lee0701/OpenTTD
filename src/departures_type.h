@@ -63,19 +63,26 @@ struct CallAt {
 	}
 };
 
+struct RemoveVia {
+	StationID via;
+	uint calling_at_offset;
+};
+
 /** A scheduled departure. */
 struct Departure {
 	DateTicksScaled scheduled_date;        ///< The date this departure is scheduled to finish on (i.e. when the vehicle leaves the station)
 	Ticks lateness;                        ///< How delayed the departure is expected to be
 	CallAt terminus;                       ///< The station at which the vehicle will terminate following this departure
 	StationID via;                         ///< The station the departure should list as going via
+	StationID via2;                        ///< Secondary station the departure should list as going via
 	std::vector<CallAt> calling_at;        ///< The stations both called at and unloaded at by the vehicle after this departure before it terminates
+	std::vector<RemoveVia> remove_vias;    ///< Vias to remove when using smart terminus.
 	DepartureStatus status;                ///< Whether the vehicle has arrived yet for this departure
 	DepartureType type;                    ///< The type of the departure (departure or arrival)
 	const Vehicle *vehicle;                ///< The vehicle performing this departure
 	const Order *order;                    ///< The order corresponding to this departure
 	uint scheduled_waiting_time;           ///< Scheduled waiting time if scheduled dispatch is used
-	Departure() : terminus(INVALID_STATION), via(INVALID_STATION), vehicle(nullptr), order(nullptr) { }
+	Departure() : terminus(INVALID_STATION), via(INVALID_STATION), via2(INVALID_STATION), vehicle(nullptr), order(nullptr) { }
 
 	inline bool operator==(const Departure& d) const {
 		if (this->calling_at.size() != d.calling_at.size()) return false;
@@ -88,6 +95,7 @@ struct Departure {
 			(this->scheduled_date / DATE_UNIT_SIZE) == (d.scheduled_date / DATE_UNIT_SIZE) &&
 			this->vehicle->type == d.vehicle->type &&
 			this->via == d.via &&
+			this->via2 == d.via2 &&
 			this->type == d.type
 			;
 	}
