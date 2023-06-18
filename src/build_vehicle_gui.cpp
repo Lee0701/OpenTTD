@@ -33,6 +33,9 @@
 #include "train.h"
 #include "error.h"
 #include "zoom_func.h"
+#include "querystring_gui.h"
+#include "stringfilter_type.h"
+#include "hotkeys.h"
 
 #include "widgets/build_vehicle_widget.h"
 
@@ -54,21 +57,22 @@ uint GetEngineListHeight(VehicleType type)
 static const NWidgetPart _nested_build_vehicle_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_WHITE_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_GREY),
-		NWidget(NWID_VERTICAL),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
-			EndContainer(),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_ENGINES),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
-			EndContainer(),
+	NWidget(NWID_VERTICAL),
+		NWidget(NWID_HORIZONTAL),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
+			NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
+		EndContainer(),
+		NWidget(NWID_HORIZONTAL),
+			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_ENGINES),
+			NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+		EndContainer(),
+		NWidget(WWT_PANEL, COLOUR_GREY),
+			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_BV_FILTER), SetResize(1, 0), SetFill(1, 0), SetPadding(2), SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
 		EndContainer(),
 	EndContainer(),
 	/* Vehicle list. */
@@ -93,7 +97,7 @@ static const NWidgetPart _nested_build_vehicle_widgets[] = {
 static const NWidgetPart _nested_build_vehicle_widgets_train_advanced[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_WHITE_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
@@ -104,19 +108,20 @@ static const NWidgetPart _nested_build_vehicle_widgets_train_advanced[] = {
 		NWidget(NWID_VERTICAL),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 0),
-					NWidget(WWT_LABEL, COLOUR_GREY, WID_BV_CAPTION_LOCO), SetDataTip(STR_WHITE_STRING, STR_NULL), SetResize(1, 0), SetFill(1, 0),
+					NWidget(WWT_LABEL, COLOUR_GREY, WID_BV_CAPTION_LOCO), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_WHITE), SetResize(1, 0), SetFill(1, 0),
 				EndContainer(),
 			EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY),
-				NWidget(NWID_VERTICAL),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING_LOCO), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN_LOCO), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
-					EndContainer(),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_LOCOS),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN_LOCO), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
-					EndContainer(),
+			NWidget(NWID_VERTICAL),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING_LOCO), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN_LOCO), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
+				EndContainer(),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_LOCOS),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN_LOCO), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+				EndContainer(),
+				NWidget(WWT_PANEL, COLOUR_GREY),
+					NWidget(WWT_EDITBOX, COLOUR_GREY, WID_BV_FILTER_LOCO), SetResize(1, 0), SetFill(1, 0), SetPadding(2), SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
 				EndContainer(),
 			EndContainer(),
 			/* Vehicle list for locomotives. */
@@ -142,19 +147,20 @@ static const NWidgetPart _nested_build_vehicle_widgets_train_advanced[] = {
 		NWidget(NWID_VERTICAL),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 0),
-					NWidget(WWT_LABEL, COLOUR_GREY, WID_BV_CAPTION_WAGON), SetDataTip(STR_WHITE_STRING, STR_NULL), SetResize(1, 0), SetFill(1, 0),
+					NWidget(WWT_LABEL, COLOUR_GREY, WID_BV_CAPTION_WAGON), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_WHITE), SetResize(1, 0), SetFill(1, 0),
 				EndContainer(),
 			EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY),
-				NWidget(NWID_VERTICAL),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING_WAGON), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN_WAGON), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
-					EndContainer(),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_WAGONS),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN_WAGON), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
-					EndContainer(),
+			NWidget(NWID_VERTICAL),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BV_SORT_ASCENDING_DESCENDING_WAGON), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_SORT_DROPDOWN_WAGON), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_SORT_CRITERIA),
+				EndContainer(),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_BV_SHOW_HIDDEN_WAGONS),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_BV_CARGO_FILTER_DROPDOWN_WAGON), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
+				EndContainer(),
+				NWidget(WWT_PANEL, COLOUR_GREY),
+					NWidget(WWT_EDITBOX, COLOUR_GREY, WID_BV_FILTER_WAGON), SetResize(1, 0), SetFill(1, 0), SetPadding(2), SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
 				EndContainer(),
 			EndContainer(),
 			/* Vehicle list for wagons. */
@@ -282,7 +288,7 @@ static bool EngineNameSorter(const GUIEngineListItem &a, const GUIEngineListItem
 		GetString(last_name[1], STR_ENGINE_NAME, lastof(last_name[1]));
 	}
 
-	int r = strnatcmp(last_name[0], last_name[1]); // Sort by name (natural sorting).
+	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
 
 	/* Use EngineID to sort instead since we want consistent sorting */
 	if (r == 0) return EngineNumberSorter(a, b);
@@ -316,7 +322,7 @@ static bool EngineCostSorter(const GUIEngineListItem &a, const GUIEngineListItem
 {
 	Money va = Engine::Get(a.engine_id)->GetCost();
 	Money vb = Engine::Get(b.engine_id)->GetCost();
-	int r = ClampToI32(va - vb);
+	int r = ClampTo<int32_t>(va - vb);
 
 	/* Use EngineID to sort instead since we want consistent sorting */
 	if (r == 0) return EngineNumberSorter(a, b);
@@ -384,7 +390,7 @@ static bool EngineRunningCostSorter(const GUIEngineListItem &a, const GUIEngineL
 {
 	Money va = Engine::Get(a.engine_id)->GetRunningCost();
 	Money vb = Engine::Get(b.engine_id)->GetRunningCost();
-	int r = ClampToI32(va - vb);
+	int r = ClampTo<int32_t>(va - vb);
 
 	/* Use EngineID to sort instead since we want consistent sorting */
 	if (r == 0) return EngineNumberSorter(a, b);
@@ -1056,6 +1062,29 @@ static int DrawAircraftPurchaseInfo(int left, int right, int y, EngineID engine_
 	return y;
 }
 
+
+/**
+ * Try to get the NewGRF engine additional text callback as an optional std::string.
+ * @param engine The engine whose additional text to get.
+ * @return The std::string if present, otherwise std::nullopt.
+ */
+static std::optional<std::string> GetNewGRFAdditionalText(EngineID engine)
+{
+	uint16 callback = GetVehicleCallback(CBID_VEHICLE_ADDITIONAL_TEXT, 0, 0, engine, nullptr);
+	if (callback == CALLBACK_FAILED || callback == 0x400) return std::nullopt;
+	const GRFFile *grffile = Engine::Get(engine)->GetGRF();
+	assert(grffile != nullptr);
+	if (callback > 0x400) {
+		ErrorUnknownCallbackResult(grffile->grfid, CBID_VEHICLE_ADDITIONAL_TEXT, callback);
+		return std::nullopt;
+	}
+
+	StartTextRefStackUsage(grffile, 6);
+	std::string result = GetString(GetGRFStringID(grffile->grfid, 0xD000 + callback));
+	StopTextRefStackUsage();
+	return result;
+}
+
 /**
  * Display additional text from NewGRF in the purchase information window
  * @param left   Left border of text bounding box
@@ -1066,19 +1095,9 @@ static int DrawAircraftPurchaseInfo(int left, int right, int y, EngineID engine_
  */
 static uint ShowAdditionalText(int left, int right, int y, EngineID engine)
 {
-	uint16 callback = GetVehicleCallback(CBID_VEHICLE_ADDITIONAL_TEXT, 0, 0, engine, nullptr);
-	if (callback == CALLBACK_FAILED || callback == 0x400) return y;
-	const GRFFile *grffile = Engine::Get(engine)->GetGRF();
-	assert(grffile != nullptr);
-	if (callback > 0x400) {
-		ErrorUnknownCallbackResult(grffile->grfid, CBID_VEHICLE_ADDITIONAL_TEXT, callback);
-		return y;
-	}
-
-	StartTextRefStackUsage(grffile, 6);
-	uint result = DrawStringMultiLine(left, right, y, INT32_MAX, GetGRFStringID(grffile->grfid, 0xD000 + callback), TC_BLACK);
-	StopTextRefStackUsage();
-	return result;
+	auto text = GetNewGRFAdditionalText(engine);
+	if (!text) return y;
+	return DrawStringMultiLine(left, right, y, INT32_MAX, *text, TC_BLACK);
 }
 
 void TestedEngineDetails::FillDefaultCapacities(const Engine *e)
@@ -1217,7 +1236,7 @@ void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_li
 	if (show_count) {
 		replace_icon = GetSpriteSize(SPR_GROUP_REPLACE_ACTIVE);
 		SetDParamMaxDigits(0, 3, FS_SMALL);
-		count_width = GetStringBoundingBox(STR_TINY_BLACK_COMA).width;
+		count_width = GetStringBoundingBox(STR_JUST_COMMA, FS_SMALL).width;
 	}
 
 	Rect tr = ir.Indent(circle_width + WidgetDimensions::scaled.hsep_normal + sprite_width + WidgetDimensions::scaled.hsep_wide, rtl); // Name position
@@ -1242,7 +1261,7 @@ void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_li
 		const Engine *e = Engine::Get(item.engine_id);
 		bool hidden = HasBit(e->company_hidden, _local_company);
 		StringID str = hidden ? STR_HIDDEN_ENGINE_NAME : STR_ENGINE_NAME;
-		TextColour tc = (item.engine_id == selected_id) ? TC_WHITE : (TC_NO_SHADE | ((hidden | shaded) ? TC_GREY : TC_BLACK));
+		TextColour tc = (item.engine_id == selected_id) ? TC_WHITE : ((hidden | shaded) ? (TC_GREY | TC_FORCED | TC_NO_SHADE) : TC_BLACK);
 
 		if (show_count) {
 			/* relies on show_count to find 'Vehicle in use' panel of autoreplace window */
@@ -1256,7 +1275,7 @@ void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_li
 		DrawVehicleEngine(r.left, r.right, sprite_x, y + sprite_y_offset, item.engine_id, (show_count && num_engines == 0) ? PALETTE_CRASH : GetEnginePalette(item.engine_id, _local_company), EIT_PURCHASE);
 		if (show_count) {
 			SetDParam(0, num_engines);
-			DrawString(cr.left, cr.right, y + small_text_y_offset, STR_TINY_BLACK_COMA, TC_FROMSTRING, SA_RIGHT | SA_FORCE);
+			DrawString(cr.left, cr.right, y + small_text_y_offset, STR_JUST_COMMA, TC_BLACK, SA_RIGHT | SA_FORCE, false, FS_SMALL);
 			if (EngineHasReplacementForCompany(Company::Get(_local_company), item.engine_id, selected_group)) DrawSprite(SPR_GROUP_REPLACE_ACTIVE, num_engines == 0 ? PALETTE_CRASH : PAL_NONE, rr.left, y + replace_icon_y_offset);
 		}
 		if (has_variants) {
@@ -1296,6 +1315,11 @@ void DisplayVehicleSortDropDown(Window *w, const VehicleType vehicle_type, const
 	}
 	ShowDropDownMenu(w, _engine_sort_listing[vehicle_type], selected, button, 0, hidden_mask);
 }
+
+/** Enum referring to the Hotkeys in the build vehicle window */
+enum BuildVehicleHotkeys {
+	BVHK_FOCUS_FILTER_BOX, ///< Focus the edit box for editing the filter string
+};
 
 struct BuildVehicleWindowBase : Window {
 	VehicleType vehicle_type;                   ///< Type of vehicles shown in the window.
@@ -1368,6 +1392,9 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 	Scrollbar *vscroll;
 	TestedEngineDetails te;                     ///< Tested cost and capacity after refit.
 
+	StringFilter string_filter;                 ///< Filter for vehicle name
+	QueryString vehicle_editbox;                ///< Filter editbox
+
 	void SetBuyVehicleText()
 	{
 		NWidgetCore *widget = this->GetWidget<NWidgetCore>(WID_BV_BUILD);
@@ -1394,7 +1421,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		}
 	}
 
-	BuildVehicleWindow(WindowDesc *desc, TileIndex tile, VehicleType type, Train **virtual_train_out) : BuildVehicleWindowBase(desc, tile, type, virtual_train_out)
+	BuildVehicleWindow(WindowDesc *desc, TileIndex tile, VehicleType type, Train **virtual_train_out) : BuildVehicleWindowBase(desc, tile, type, virtual_train_out), vehicle_editbox(MAX_LENGTH_VEHICLE_NAME_CHARS * MAX_CHAR_LENGTH, MAX_LENGTH_VEHICLE_NAME_CHARS)
 	{
 		this->sel_engine = INVALID_ENGINE;
 
@@ -1432,6 +1459,9 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		this->details_height = ((this->vehicle_type == VEH_TRAIN) ? 10 : 9);
 
 		this->FinishInitNested(this->window_number);
+
+		this->querystrings[WID_BV_FILTER] = &this->vehicle_editbox;
+		this->vehicle_editbox.cancel_button = QueryString::ACTION_CLEAR;
 
 		this->owner = (tile != INVALID_TILE) ? GetTileOwner(tile) : _local_company;
 
@@ -1604,6 +1634,23 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		return CargoAndEngineFilter(&item, filter_type);
 	}
 
+	/** Filter by name and NewGRF extra text */
+	bool FilterByText(const Engine *e)
+	{
+		/* Do not filter if the filter text box is empty */
+		if (this->string_filter.IsEmpty()) return true;
+
+		/* Filter engine name */
+		this->string_filter.ResetState();
+		this->string_filter.AddLine(GetString(e->info.string_id));
+
+		/* Filter NewGRF extra text */
+		auto text = GetNewGRFAdditionalText(e->index);
+		if (text) this->string_filter.AddLine(*text);
+
+		return this->string_filter.GetState();
+	}
+
 	/* Figure out what train EngineIDs to put in the list */
 	void GenerateBuildTrainList(GUIEngineList &list)
 	{
@@ -1618,7 +1665,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		 * and if not, reset selection to INVALID_ENGINE. This could be the case
 		 * when engines become obsolete and are removed */
 		for (const Engine *e : Engine::IterateType(VEH_TRAIN)) {
-			if (!this->show_hidden_engines && e->IsHidden(_local_company)) continue;
+			if (!this->show_hidden_engines && e->IsVariantHidden(_local_company)) continue;
 			EngineID eid = e->index;
 			const RailVehicleInfo *rvi = &e->u.rail;
 
@@ -1627,6 +1674,9 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 			/* Filter now! So num_engines and num_wagons is valid */
 			if (!FilterSingleEngine(eid)) continue;
+
+			/* Filter by name or NewGRF extra text */
+			if (!FilterByText(e)) continue;
 
 			list.emplace_back(eid, e->info.variant_id, e->display_flags, 0);
 
@@ -1669,10 +1719,13 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		this->eng_list.clear();
 
 		for (const Engine *e : Engine::IterateType(VEH_ROAD)) {
-			if (!this->show_hidden_engines && e->IsHidden(_local_company)) continue;
+			if (!this->show_hidden_engines && e->IsVariantHidden(_local_company)) continue;
 			EngineID eid = e->index;
 			if (!IsEngineBuildable(eid, VEH_ROAD, _local_company)) continue;
 			if (this->filter.roadtype != INVALID_ROADTYPE && !HasPowerOnRoad(e->u.road.roadtype, this->filter.roadtype)) continue;
+
+			/* Filter by name or NewGRF extra text */
+			if (!FilterByText(e)) continue;
 
 			this->eng_list.emplace_back(eid, e->info.variant_id, e->display_flags, 0);
 
@@ -1688,9 +1741,13 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		this->eng_list.clear();
 
 		for (const Engine *e : Engine::IterateType(VEH_SHIP)) {
-			if (!this->show_hidden_engines && e->IsHidden(_local_company)) continue;
+			if (!this->show_hidden_engines && e->IsVariantHidden(_local_company)) continue;
 			EngineID eid = e->index;
 			if (!IsEngineBuildable(eid, VEH_SHIP, _local_company)) continue;
+
+			/* Filter by name or NewGRF extra text */
+			if (!FilterByText(e)) continue;
+
 			this->eng_list.emplace_back(eid, e->info.variant_id, e->display_flags, 0);
 
 			if (eid == this->sel_engine) sel_id = eid;
@@ -1712,13 +1769,17 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		 * and if not, reset selection to INVALID_ENGINE. This could be the case
 		 * when planes become obsolete and are removed */
 		for (const Engine *e : Engine::IterateType(VEH_AIRCRAFT)) {
-			if (!this->show_hidden_engines && e->IsHidden(_local_company)) continue;
+			if (!this->show_hidden_engines && e->IsVariantHidden(_local_company)) continue;
 			EngineID eid = e->index;
 			if (!IsEngineBuildable(eid, VEH_AIRCRAFT, _local_company)) continue;
 			/* First VEH_END window_numbers are fake to allow a window open for all different types at once */
 			if (!this->listview_mode && !CanVehicleUseStation(eid, st)) continue;
 
+			/* Filter by name or NewGRF extra text */
+			if (!FilterByText(e)) continue;
+
 			this->eng_list.emplace_back(eid, e->info.variant_id, e->display_flags, 0);
+
 			if (eid == this->sel_engine) sel_id = eid;
 		}
 
@@ -2005,7 +2066,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 	void OnPaint() override
 	{
 		this->GenerateBuildList();
-		this->vscroll->SetCount((uint)this->eng_list.size());
+		this->vscroll->SetCount(this->eng_list.size());
 
 		this->SetWidgetsDisabledState(this->sel_engine == INVALID_ENGINE, WID_BV_SHOW_HIDE, WID_BV_BUILD, WIDGET_LIST_END);
 
@@ -2070,7 +2131,38 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 	{
 		this->vscroll->SetCapacityFromWidget(this, WID_BV_LIST);
 	}
+
+	void OnEditboxChanged(int wid) override
+	{
+		if (wid == WID_BV_FILTER) {
+			this->string_filter.SetFilterTerm(this->vehicle_editbox.text.buf);
+			this->InvalidateData();
+		}
+	}
+
+	EventState OnHotkey(int hotkey) override
+	{
+		switch (hotkey) {
+			case BVHK_FOCUS_FILTER_BOX:
+				this->SetFocusedWidget(WID_BV_FILTER);
+				SetFocusedWindow(this); // The user has asked to give focus to the text box, so make sure this window is focused.
+				return ES_HANDLED;
+
+			default:
+				return ES_NOT_HANDLED;
+		}
+
+		return ES_HANDLED;
+	}
+
+	static HotkeyList hotkeys;
 };
+
+static Hotkey buildvehicle_hotkeys[] = {
+	Hotkey('F', "focus_filter_box", BVHK_FOCUS_FILTER_BOX),
+	HOTKEY_LIST_END
+};
+HotkeyList BuildVehicleWindow::hotkeys("buildvehicle", buildvehicle_hotkeys);
 
 static EngList_SortTypeFunction * const  _sorter_loco[11] = {
 	/* Locomotives */
@@ -2176,6 +2268,8 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		CargoID cargo_filter[NUM_CARGO + 2] {};        ///< Available cargo filters; CargoID or CF_ANY or CF_NONE
 		StringID cargo_filter_texts[NUM_CARGO + 3] {}; ///< Texts for filter_cargo, terminated by INVALID_STRING_ID
 		TestedEngineDetails te;                        ///< Tested cost and capacity after refit.
+		StringFilter string_filter;                    ///< Filter for vehicle name
+		QueryString vehicle_editbox { MAX_LENGTH_VEHICLE_NAME_CHARS * MAX_CHAR_LENGTH, MAX_LENGTH_VEHICLE_NAME_CHARS }; ///< Filter editbox
 	};
 
 	PanelState loco {};
@@ -2302,6 +2396,11 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		this->loco.details_height = this->wagon.details_height = 10 * FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.framerect.Vertical();
 
 		this->FinishInitNested(this->window_number);
+
+		this->querystrings[WID_BV_FILTER_LOCO] = &this->loco.vehicle_editbox;
+		this->querystrings[WID_BV_FILTER_WAGON] = &this->wagon.vehicle_editbox;
+		this->loco.vehicle_editbox.cancel_button = QueryString::ACTION_CLEAR;
+		this->wagon.vehicle_editbox.cancel_button = QueryString::ACTION_CLEAR;
 
 		this->owner = (tile != INVALID_TILE) ? GetTileOwner(tile) : _local_company;
 
@@ -2468,6 +2567,23 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		return (filter_type == CF_ANY || CargoAndEngineFilter(&item, filter_type));
 	}
 
+	/** Filter by name and NewGRF extra text */
+	bool FilterByText(PanelState &state, const Engine *e)
+	{
+		/* Do not filter if the filter text box is empty */
+		if (state.string_filter.IsEmpty()) return true;
+
+		/* Filter engine name */
+		state.string_filter.ResetState();
+		state.string_filter.AddLine(GetString(e->info.string_id));
+
+		/* Filter NewGRF extra text */
+		auto text = GetNewGRFAdditionalText(e->index);
+		if (text) state.string_filter.AddLine(*text);
+
+		return state.string_filter.GetState();
+	}
+
 	/* Figure out what train EngineIDs to put in the list */
 	void GenerateBuildTrainList(GUIEngineList &list, PanelState &state, const bool wagon, EngList_SortTypeFunction * const sorters[])
 	{
@@ -2481,7 +2597,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		 * and if not, reset selection to INVALID_ENGINE. This could be the case
 		 * when engines become obsolete and are removed */
 		for (const Engine *engine : Engine::IterateType(VEH_TRAIN)) {
-			if (!state.show_hidden && engine->IsHidden(_local_company)) continue;
+			if (!state.show_hidden && engine->IsVariantHidden(_local_company)) continue;
 			EngineID eid = engine->index;
 			const RailVehicleInfo *rvi = &engine->u.rail;
 
@@ -2491,6 +2607,9 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 			if (!FilterSingleEngine(state, eid)) continue;
 
 			if ((rvi->railveh_type == RAILVEH_WAGON) != wagon) continue;
+
+			/* Filter by name or NewGRF extra text */
+			if (!FilterByText(state, engine)) continue;
 
 			list.emplace_back(eid, engine->info.variant_id, engine->display_flags, 0);
 			if (engine->info.variant_id != eid && engine->info.variant_id != INVALID_ENGINE) variants.push_back(engine->info.variant_id);
@@ -3044,6 +3163,35 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		this->loco.vscroll->SetCapacityFromWidget(this, WID_BV_LIST_LOCO);
 		this->wagon.vscroll->SetCapacityFromWidget(this, WID_BV_LIST_WAGON);
 	}
+
+	void OnEditboxChanged(int wid) override
+	{
+		if (wid == WID_BV_FILTER_LOCO) {
+			this->loco.string_filter.SetFilterTerm(this->loco.vehicle_editbox.text.buf);
+			this->loco.eng_list.ForceRebuild();
+			this->SetDirty();
+		}
+		if (wid == WID_BV_FILTER_WAGON) {
+			this->wagon.string_filter.SetFilterTerm(this->wagon.vehicle_editbox.text.buf);
+			this->wagon.eng_list.ForceRebuild();
+			this->SetDirty();
+		}
+	}
+
+	EventState OnHotkey(int hotkey) override
+	{
+		switch (hotkey) {
+			case BVHK_FOCUS_FILTER_BOX:
+				this->SetFocusedWidget(this->wagon_selected ? WID_BV_FILTER_WAGON : WID_BV_FILTER_LOCO);
+				SetFocusedWindow(this); // The user has asked to give focus to the text box, so make sure this window is focused.
+				return ES_HANDLED;
+
+			default:
+				return ES_NOT_HANDLED;
+		}
+
+		return ES_HANDLED;
+	}
 };
 
 void CcAddVirtualEngine(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
@@ -3080,7 +3228,8 @@ static WindowDesc _build_vehicle_desc(
 	WDP_AUTO, "build_vehicle", 240, 268,
 	WC_BUILD_VEHICLE, WC_NONE,
 	WDF_CONSTRUCTION,
-	_nested_build_vehicle_widgets, lengthof(_nested_build_vehicle_widgets)
+	_nested_build_vehicle_widgets, lengthof(_nested_build_vehicle_widgets),
+	&BuildVehicleWindow::hotkeys
 );
 
 static WindowDesc _build_template_vehicle_desc(
@@ -3088,14 +3237,15 @@ static WindowDesc _build_template_vehicle_desc(
 	WC_BUILD_VIRTUAL_TRAIN, WC_CREATE_TEMPLATE,
 	WDF_CONSTRUCTION,
 	_nested_build_vehicle_widgets, lengthof(_nested_build_vehicle_widgets),
-	nullptr, &_build_vehicle_desc
+	&BuildVehicleWindow::hotkeys, &_build_vehicle_desc
 );
 
 static WindowDesc _build_vehicle_desc_train_advanced(
 	WDP_AUTO, "build_vehicle_dual", 480, 268,
 	WC_BUILD_VEHICLE, WC_NONE,
 	WDF_CONSTRUCTION,
-	_nested_build_vehicle_widgets_train_advanced, lengthof(_nested_build_vehicle_widgets_train_advanced)
+	_nested_build_vehicle_widgets_train_advanced, lengthof(_nested_build_vehicle_widgets_train_advanced),
+	&BuildVehicleWindow::hotkeys
 );
 
 static WindowDesc _build_template_vehicle_desc_advanced(
@@ -3103,7 +3253,7 @@ static WindowDesc _build_template_vehicle_desc_advanced(
 	WC_BUILD_VIRTUAL_TRAIN, WC_CREATE_TEMPLATE,
 	WDF_CONSTRUCTION,
 	_nested_build_vehicle_widgets_train_advanced, lengthof(_nested_build_vehicle_widgets_train_advanced),
-	nullptr, &_build_vehicle_desc_train_advanced
+	&BuildVehicleWindow::hotkeys, &_build_vehicle_desc_train_advanced
 );
 
 

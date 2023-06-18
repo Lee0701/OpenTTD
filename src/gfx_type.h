@@ -281,6 +281,9 @@ enum TextColour {
 	TC_IS_PALETTE_COLOUR = 0x100, ///< Colour value is already a real palette colour index, not an index of a StringColour.
 	TC_NO_SHADE          = 0x200, ///< Do not add shading to this text colour.
 	TC_FORCED            = 0x400, ///< Ignore colour changes from strings.
+
+	TC_COLOUR_MASK = 0xFF, ///< Mask to test if TextColour (without flags) is within limits.
+	TC_FLAGS_MASK = 0x700, ///< Mask to test if TextColour (with flags) is within limits.
 };
 DECLARE_ENUM_AS_BIT_SET(TextColour)
 
@@ -309,16 +312,20 @@ enum PaletteType {
 };
 
 /** Types of sprites that might be loaded */
-enum SpriteType : byte {
-	ST_NORMAL   = 0,      ///< The most basic (normal) sprite
-	ST_MAPGEN   = 1,      ///< Special sprite for the map generator
-	ST_FONT     = 2,      ///< A sprite used for fonts
-	ST_RECOLOUR = 3,      ///< Recolour sprite
-	ST_INVALID  = 4,      ///< Pseudosprite or other unusable sprite, used only internally
+enum class SpriteType : byte {
+	Normal   = 0,      ///< The most basic (normal) sprite
+	MapGen   = 1,      ///< Special sprite for the map generator
+	Font     = 2,      ///< A sprite used for fonts
+	Recolour = 3,      ///< Recolour sprite
+	Invalid  = 4,      ///< Pseudosprite or other unusable sprite, used only internally
 };
 
-/** The number of milliseconds per game tick. */
-static const uint MILLISECONDS_PER_TICK = 30;
+/**
+ * The number of milliseconds per game tick.
+ * The value 27 together with a day length of 74 ticks makes one day 1998 milliseconds, almost exactly 2 seconds.
+ * With a 2 second day, one standard month is 1 minute, and one standard year is slightly over 12 minutes.
+ */
+#define MILLISECONDS_PER_TICK ((uint)_milliseconds_per_tick)
 
 /** Information about the currently used palette. */
 struct Palette {

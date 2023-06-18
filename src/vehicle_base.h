@@ -25,7 +25,7 @@
 #include "newgrf_cache_check.h"
 #include "landscape.h"
 #include "network/network.h"
-#include "saveload/saveload_common.h"
+#include "sl/saveload_common.h"
 #include <list>
 #include <map>
 
@@ -263,8 +263,6 @@ struct ClosestDepot {
 /** %Vehicle data structure. */
 struct Vehicle : VehiclePool::PoolItem<&_vehicle_pool>, BaseVehicle, BaseConsist {
 private:
-	typedef std::map<CargoID, uint> CapacitiesMap;
-
 	Vehicle *next;                      ///< pointer to the next vehicle in the chain
 	Vehicle *previous;                  ///< NOSAVE: pointer to the previous vehicle in the chain
 	Vehicle *first;                     ///< NOSAVE: pointer to the first vehicle in the chain
@@ -360,7 +358,7 @@ public:
 	uint32 motion_counter;              ///< counter to occasionally play a vehicle sound. (Also used as virtual train client ID).
 	byte progress;                      ///< The percentage (if divided by 256) this vehicle already crossed the tile unit.
 
-	byte random_bits;                   ///< Bits used for determining which randomized variational spritegroups to use when drawing.
+	uint16 random_bits;                 ///< Bits used for randomized variational spritegroups.
 	byte waiting_triggers;              ///< Triggers to be yet matched before rerandomizing the random bits.
 
 	StationID last_station_visited;     ///< The last station we stopped at.

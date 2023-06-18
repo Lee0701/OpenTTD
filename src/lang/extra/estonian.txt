@@ -1,3 +1,8 @@
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :1 kuu
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :3 kuud
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :6 kuud
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :12 kuud
+
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :miili tunnis
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -43,3 +48,20 @@ STR_TRADITIONAL_AIRCRAFT_NAME                                   :Õhusõiduk {CO
 # Scheduled Dispatch
 
 # Modifier key toggle window
+
+STR_CONFIG_SETTING_ALLOW_SHARES                                 :Aktsiatehingud teiste ettevõtetega: {STRING}
+STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Kui on aktiveeritud siis on ettevõtte aktsiate ostmine ja müümine lubatud. Aktsiad on saadaval ainult ettevõtetel mille vanus on üle teatud piiri
+
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Ettevõtte vanuse alampiir aktsiakauplemiseks: {STRING}
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Määra alampiir ettevõtte vanusele, enne kui teised saavad selle aktsiaid osta ja müüa.
+
+STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% on ettevõtte {COMPANY} käes)
+
+STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Osta 25% ettevõtte aktsiatest
+STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Müü 25% ettevõtte aktsiatest
+STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Osta 25% ettevõtte aktsiatest. Shift+klõpsuga kuvatakse aktsiate hind tehingut tegemata
+STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Müü 25% ettevõtte aktsiatest. Shift+klõpsuga kuvatakse aktsiate hind tehingut tegemata
+
+STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Selle ettevõtte aktsiatest ei saa 25% osta...
+STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Selle ettevõtte aktsiatest ei saa 25% müüa...
+STR_ERROR_PROTECTED                                             :{WHITE}See ettevõtte pole veel piisavalt vana, et aktsiaid vahetada...

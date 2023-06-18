@@ -185,39 +185,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PS
-STR_ABBREV_COAL                                                 :{TINY_FONT}CL
-STR_ABBREV_MAIL                                                 :{TINY_FONT}ML
-STR_ABBREV_OIL                                                  :{TINY_FONT}OL
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}LV
-STR_ABBREV_GOODS                                                :{TINY_FONT}GD
-STR_ABBREV_GRAIN                                                :{TINY_FONT}GR
-STR_ABBREV_WOOD                                                 :{TINY_FONT}WD
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}OR
-STR_ABBREV_STEEL                                                :{TINY_FONT}ST
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}VL
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}CO
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MZ
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FT
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}FD
-STR_ABBREV_PAPER                                                :{TINY_FONT}PR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}GD
-STR_ABBREV_WATER                                                :{TINY_FONT}WR
-STR_ABBREV_WHEAT                                                :{TINY_FONT}WH
-STR_ABBREV_RUBBER                                               :{TINY_FONT}RB
-STR_ABBREV_SUGAR                                                :{TINY_FONT}SG
-STR_ABBREV_TOYS                                                 :{TINY_FONT}TY
-STR_ABBREV_SWEETS                                               :{TINY_FONT}SW
-STR_ABBREV_COLA                                                 :{TINY_FONT}CL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}CF
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}TF
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}FZ
-STR_ABBREV_NONE                                                 :{TINY_FONT}EI
-STR_ABBREV_ALL                                                  :{TINY_FONT}KÕIK
+STR_ABBREV_PASSENGERS                                           :PS
+STR_ABBREV_COAL                                                 :CL
+STR_ABBREV_MAIL                                                 :ML
+STR_ABBREV_OIL                                                  :OL
+STR_ABBREV_LIVESTOCK                                            :LV
+STR_ABBREV_GOODS                                                :GD
+STR_ABBREV_GRAIN                                                :GR
+STR_ABBREV_WOOD                                                 :WD
+STR_ABBREV_IRON_ORE                                             :OR
+STR_ABBREV_STEEL                                                :ST
+STR_ABBREV_VALUABLES                                            :VL
+STR_ABBREV_COPPER_ORE                                           :CO
+STR_ABBREV_MAIZE                                                :MZ
+STR_ABBREV_FRUIT                                                :FT
+STR_ABBREV_DIAMONDS                                             :DM
+STR_ABBREV_FOOD                                                 :FD
+STR_ABBREV_PAPER                                                :PR
+STR_ABBREV_GOLD                                                 :GD
+STR_ABBREV_WATER                                                :WR
+STR_ABBREV_WHEAT                                                :WH
+STR_ABBREV_RUBBER                                               :RB
+STR_ABBREV_SUGAR                                                :SG
+STR_ABBREV_TOYS                                                 :TY
+STR_ABBREV_SWEETS                                               :SW
+STR_ABBREV_COLA                                                 :CL
+STR_ABBREV_CANDYFLOSS                                           :CF
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :TF
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :FZ
+STR_ABBREV_NONE                                                 :EI
+STR_ABBREV_ALL                                                  :KÕIK
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA} reisija{P "" d}
@@ -248,14 +248,14 @@ STR_COLOUR_WHITE                                                :Valge
 STR_COLOUR_RANDOM                                               :Suvaline
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} miili tunnis
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA} m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} miili tunnis
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}ruutu/päev
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}hj
-STR_UNITS_POWER_METRIC                                          :{COMMA}hj
-STR_UNITS_POWER_SI                                              :{COMMA}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}hj
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}hj
+STR_UNITS_POWER_SI                                              :{DECIMAL}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hj/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hj/t
@@ -267,29 +267,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA} tonn{P "" i}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} tonn{P "" i}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL} tonn{P "" i}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} tonn{P "" i}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA} gallon{P "" it}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA} liit{P er rit}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA} m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL} gallon{P "" it}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL} liit{P er rit}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL} m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA} lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA} kgf
-STR_UNITS_FORCE_SI                                              :{COMMA} kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL} lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL} kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL} kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA} meeter
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA} m
-STR_UNITS_HEIGHT_SI                                             :{COMMA} m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} meeter
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Märksõna:
@@ -986,6 +986,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Vaateala
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Liidese seadistus
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valuuta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Valuuta valimine
 
@@ -1039,10 +1043,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Vali sal
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Väljas
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :1 kuu
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :3 kuud
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :6 kuud
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :12 kuud
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Keel
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Valib kasutajaliideses kasutatava keele
@@ -1077,6 +1077,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Graafika
 
@@ -1859,13 +1860,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Algupärane
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Sujuv
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Külm
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Aktsiatehingud teiste ettevõtetega: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Kui on aktiveeritud siis on ettevõtte aktsiate ostmine ja müümine lubatud. Aktsiad on saadaval ainult ettevõtetel mille vanus on üle teatud piiri
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Ettevõtte vanuse alampiir aktsiakauplemiseks: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Määra alampiir ettevõtte vanusele, enne kui teised saavad selle aktsiaid osta ja müüa.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Protsent tuludest mis läheb 'kanna edasi' süsteemis alumistesse lülidesse: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Protsent tuludest mis antakse edasi 'kanna edasi' süsteemidele. Lubab täpsemalt jaotada kasumit erinevate harude vahel.
 
@@ -1979,10 +1973,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Mitte ühtegi
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Algne linnade suuruskordaja: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Keskmine linna suurus võrreldes tavalise asulaga mängu alguses
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Jaotusgraafikuid uuendatakse igal {STRING}. päeval
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Aega ahelgraafikute koostamise vahel. Koostamine uuendab plaane ainult ühes graafiku osas. Seega X väärtusega ei uuendata graafikut iga X päeva tagant. Uuendatakse vaid ühte osa. Väiksema arvuga kasutatakse protsessorit rohkem. Suurema arvuga läheb kauem aega, kuni uuel teel alustatakse kaubavedu.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Jaotusgraafikud koostatakse {STRING} päeva jooksul
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Aega ahelgraafiku osa koostamiseks. Koostamise algul käivitatakse protsess, mis võib töötada määratud arv päevi. Väiksema väärtusega on suurem võimalus, et protsess lõppe. Kui protsess ei ole lõppenud, siis mäng seisatakse protsessi lõppemiseni (tekib viivitusi). Suurema arvuga läheb kauem, kuni muudetud teel uuendatakse kaubajaotust.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Reisijate jaotuse viis: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :Kui jaamast A läheb jaama B umbes sama hulk reisijaid, kui jaamast B jaama A, siis jaotus on «Sümeetriline». Kui mõlemas suunas võib liikuda ükskõik, kui palju resijaid, siis jaotus on «Asümeetriline». Kui reisijate liikumist ei jaotata, siis jaotus on «Väljas».
@@ -2441,6 +2431,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Ühendu
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Ei
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Jah, ainult seekord
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}jah, ära küsi uuesti
+
 
 STR_NETWORK_SPECTATORS                                          :Vaatlejad
 
@@ -3763,7 +3754,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} laev{P "" a}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Mitte ühtegi
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Firmaväärtus: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% on ettevõtte {COMPANY} käes)
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Taristu:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} rööpajupp{P "" i}
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} teejupp{P "" i}
@@ -3791,11 +3781,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Ettevõt
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Muuda ettevõtte nime
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Presidendi nimi
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Muuda presidendi nägu
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Osta 25% ettevõtte aktsiatest
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Müü 25% ettevõtte aktsiatest
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Osta 25% ettevõtte aktsiatest. Shift+klõpsuga kuvatakse aktsiate hind tehingut tegemata
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Müü 25% ettevõtte aktsiatest. Shift+klõpsuga kuvatakse aktsiate hind tehingut tegemata
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Ettevõtte nimi
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Presidendi nimi
@@ -3874,8 +3859,6 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Saada ju
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Asenda veovahendeid
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Saada hooldusesse
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Selle aasta kasum: {CURRENCY_LONG} (eelneval: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Saada depoose
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Saada depoose
@@ -4688,7 +4671,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :GameScript
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Sulge
 STR_AI_SETTINGS_RESET                                           :{BLACK}Nulli
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Päevade arv pärast eelmise AI lõpetamist, millal see AI käivitub (umbkaudselt): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4697,7 +4679,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Murrab t
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Vaata abi
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Muudatuste logi
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Litsents
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} abi.
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} muudatuste logi {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} litsents {STRING}
@@ -4825,9 +4807,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Ei saa a
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Ei saa sellele ettevõttele raha saata...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Ettevõtet ei saa osta...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Ettevõtte peakorterit ei saa ehitada...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Selle ettevõtte aktsiatest ei saa 25% osta...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Selle ettevõtte aktsiatest ei saa 25% müüa...
-STR_ERROR_PROTECTED                                             :{WHITE}See ettevõtte pole veel piisavalt vana, et aktsiaid vahetada...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Ei saa ühtegi asulat ehitada...
@@ -5559,10 +5538,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut helik
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{1:NUM}. {0:STRING}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Ettevõte {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Jagu {COMMA}
@@ -5643,33 +5622,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

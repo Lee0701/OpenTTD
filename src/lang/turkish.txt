@@ -129,39 +129,39 @@ STR_QUANTITY_N_A                                                :yok
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}YL
-STR_ABBREV_COAL                                                 :{TINY_FONT}KÖ
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PO
-STR_ABBREV_OIL                                                  :{TINY_FONT}PE
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}HV
-STR_ABBREV_GOODS                                                :{TINY_FONT}EŞ
-STR_ABBREV_GRAIN                                                :{TINY_FONT}TH
-STR_ABBREV_WOOD                                                 :{TINY_FONT}OD
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}DM
-STR_ABBREV_STEEL                                                :{TINY_FONT}ÇE
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}DE
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}BK
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MS
-STR_ABBREV_FRUIT                                                :{TINY_FONT}MV
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}EL
-STR_ABBREV_FOOD                                                 :{TINY_FONT}GI
-STR_ABBREV_PAPER                                                :{TINY_FONT}KĞ
-STR_ABBREV_GOLD                                                 :{TINY_FONT}AL
-STR_ABBREV_WATER                                                :{TINY_FONT}SU
-STR_ABBREV_WHEAT                                                :{TINY_FONT}BĞ
-STR_ABBREV_RUBBER                                               :{TINY_FONT}KA
-STR_ABBREV_SUGAR                                                :{TINY_FONT}ŞK
-STR_ABBREV_TOYS                                                 :{TINY_FONT}OY
-STR_ABBREV_SWEETS                                               :{TINY_FONT}TA
-STR_ABBREV_COLA                                                 :{TINY_FONT}KO
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}PŞ
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BA
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}ŞL
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}Pİ
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}İÇ
-STR_ABBREV_NONE                                                 :{TINY_FONT}YO
-STR_ABBREV_ALL                                                  :{TINY_FONT}TÜMÜ
+STR_ABBREV_PASSENGERS                                           :YL
+STR_ABBREV_COAL                                                 :KÖ
+STR_ABBREV_MAIL                                                 :PO
+STR_ABBREV_OIL                                                  :PE
+STR_ABBREV_LIVESTOCK                                            :HV
+STR_ABBREV_GOODS                                                :EŞ
+STR_ABBREV_GRAIN                                                :TH
+STR_ABBREV_WOOD                                                 :OD
+STR_ABBREV_IRON_ORE                                             :DM
+STR_ABBREV_STEEL                                                :ÇE
+STR_ABBREV_VALUABLES                                            :DE
+STR_ABBREV_COPPER_ORE                                           :BK
+STR_ABBREV_MAIZE                                                :MS
+STR_ABBREV_FRUIT                                                :MV
+STR_ABBREV_DIAMONDS                                             :EL
+STR_ABBREV_FOOD                                                 :GI
+STR_ABBREV_PAPER                                                :KĞ
+STR_ABBREV_GOLD                                                 :AL
+STR_ABBREV_WATER                                                :SU
+STR_ABBREV_WHEAT                                                :BĞ
+STR_ABBREV_RUBBER                                               :KA
+STR_ABBREV_SUGAR                                                :ŞK
+STR_ABBREV_TOYS                                                 :OY
+STR_ABBREV_SWEETS                                               :TA
+STR_ABBREV_COLA                                                 :KO
+STR_ABBREV_CANDYFLOSS                                           :PŞ
+STR_ABBREV_BUBBLES                                              :BA
+STR_ABBREV_TOFFEE                                               :ŞL
+STR_ABBREV_BATTERIES                                            :PL
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :İÇ
+STR_ABBREV_NONE                                                 :YO
+STR_ABBREV_ALL                                                  :TÜMÜ
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}yolcu
@@ -192,14 +192,15 @@ STR_COLOUR_WHITE                                                :Beyaz
 STR_COLOUR_RANDOM                                               :Rastgele
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mil/s
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/s
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mil/s
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/s
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}karo/gün
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}hava hızı
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}bg
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}bg
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}bg
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}bg
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}bg/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}bg/t
@@ -211,29 +212,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}ton
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}ton
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}ton
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}ton
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}galon
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}litre
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}galon
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}litre
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}ft
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtre:
@@ -344,9 +345,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}Emir gö
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Oyunu durdur
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Oyunu hızlandır
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Seçenekler
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Kaydet, oyunu terk et, çık
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Haritayı göster
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Seçenekler ve ayarlar
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Kaydet, oyunu yükle veya terk et, program'dan çık
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Haritayı, ekstra vitrini, kargo akşını veya işaret listesini görüntüleyin
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Şehir listesini göster
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Teşvikleri göster
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Şirkete ait istasyonları listele
@@ -354,9 +355,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Şirketi
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Şirketin genel durumunu göster
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Hikaye kitabını görüntüle
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK}Amaç listesini görüntüle
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Grafikleri göster
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Şirket grafiğini ve kargo ödeme oranlarını görüntüleyin
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}Şirketler ligini göster
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Yeni fabrika kur veya tüm fabrikaları listele
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Endüstrileri inceleyin veya yeni endüstri inşasını fonlayın
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Şirkete ait trenleri listele. Ctrl+Sol tıklama ile grup/araç listesini açar veya kapatır
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Şirkete ait karayolu taşıtlarını listele. Ctrl+Sol tıklama ile grup/araç listesini açıp kapatır
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Şirkete ait gemileri listele. Ctrl+Sol tık ile grup/araç listesini açar veya kapatır
@@ -370,8 +371,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Rıhtım
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Havalimanı yapımı
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Arazi düzenleme araç çubuğunu aç (ağaç dikme, alçaltma/yükseltme vb. için).
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Ses/müzik penceresini göster
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Son mesajı/haberi göster, mesaj ayarlarını göster
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Arazi bilgisi, konsol, betik hata ayıklama, ekran görüntüleri, OpenTTD hakkında
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Son mesajı/haberi göster, mesaj geçmişini göster veya tüm mesajları sil
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Arazi bilgisi, ekran görüntüsü, OpenTTD ve geliştirici araçları hakkında
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Araç çubuklarını değiştir
 
 # Extra tooltips for the scenario editor toolbar
@@ -930,6 +931,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Bu gör�
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Seçenekler
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Genel
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Genel ayarları seçin
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Grafikler
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Grafik ayarlarını seçin
+STR_GAME_OPTIONS_TAB_SOUND                                      :Ses
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Ses ve müzik ayarlarını seçin
+
+STR_GAME_OPTIONS_VOLUME                                         :Ses seviyesi
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Ses efektleri
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Müzik
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0%
+STR_GAME_OPTIONS_VOLUME_25                                      :25%
+STR_GAME_OPTIONS_VOLUME_50                                      :50%
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+STR_GAME_OPTIONS_VOLUME_100                                     :100%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Para birimleri
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Para birimi seçimi
 
@@ -983,10 +1002,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Otomatik
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Kapalı
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Her ay
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Her üç ayda bir
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Her altı ayda bir
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Her oniki ayda bir
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :Her 10 dakikada
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :Her 30 dakikada
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :Her 60 dakikada
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :Her 120 dakikada
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Dil
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Görünen dili seçin
@@ -1022,6 +1041,14 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Otomatik anket
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Otomatik ankete katılın
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Etkinleştirildiğinde, OpenTTD bir oyundan çıkarken bir anket gönderir
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}Anket ve gizlilik hakkında
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Bu, otomatik anket hakkında daha fazla bilgi içeren bir tarayıcı açar
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Anket sonucunu önizleyin
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Mevcut çalışan oyunun anket sonucunu göster
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafikler
 
@@ -1152,6 +1179,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Tümün�
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Tümünü kısalt
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Tüm değerleri sıfırla
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(açıklama bulunmamaktadır)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Varsayılan değer: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Ayar türü: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Kullanıcı ayarları (kayıtlı dosyada saklanmaz; tüm oyunları etkilemektedir)
@@ -1531,7 +1559,7 @@ STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREY_TO_RED                :Griden kırmız
 STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREYSCALE                  :Gri tonlamalı
 
 STR_CONFIG_SETTING_SCROLLMODE                                   :Bakış noktası kaydırma davranışı: {STRING}
-STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Haritada gezinirkenki davranış
+STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Haritada gezinirkenki davranış. "fare konumu kilitli" seçeneği web tabanlı sürümler, dokunmatik ekranlar, Linux ile birlikte Wayland ve bunun gibi diğer sistemlerde çalışmaz.
 ###length 4
 STR_CONFIG_SETTING_SCROLLMODE_DEFAULT                           :Sağ Fare Tuşu ile görüş alanını hareket ettir, fare konumu kilitli
 STR_CONFIG_SETTING_SCROLLMODE_RMB_LOCKED                        :Sağ Fare Tuşu ile haritayı hareket ettir, fare konumu kilitli
@@ -1712,7 +1740,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Tek bir betiği
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Servis gecikmeleri yüzde ile: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Araçlara bakım yapılmasına bir önceki bakımın üzerinden geçen zamana göre mi, yoksa aracın güvenilirlik değerinin azami güvenilirliğe kıyasla belli bir yüzde oranında düşmesine bağlı olarak mı karar verileceğini seçin
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Etkinleştirildiğinde, araçların güvenilirlik değerinin azami güvenilirliğe kıyasla belli bir yüzde oranında düşmesine bağlı olarak bakım yapar.{}{}Örneğin, eğer aracın azami güvenirliği %90 ve bakım aralığı %20 ise araç %72 güvenilirliğe ulaştığında bakım yapmayı dener.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Trenler için varsayılan bakım aralığı: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Yeni tren yolu araçları için varsayılan bakım aralığını ayarlar, eğer araç için özel bir bakım aralığı belirtilmemişse geçerlidir
@@ -1803,13 +1831,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :Sorunsuz ekonom
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Orijinal
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Pürüzsüz
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Donuk
-
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Diğer şirketlerin hisseleri alınabilsin: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Etkinleştirildiğinde, şirketlerin hisse senetlerinin alınıp satılması mümkün olur. Hisse senetleri sadece belli bir yaşa ulaşan şirketler için geçerlidir
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Hisse satmak için gerekli minimum şirket yaşı: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Bir şirketin hisselerinin satılabileceği ve diğer şirketlerin alabileceği minimum şirket yaşını belirleyin.
-###setting-zero-is-special
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Besleme sistemlerinde, bölümlerden elde edilen kardan ödenecek yüzde: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Besleme sistemlerinde, sistemi oluşturan ara bölümlere verilen kar yüzdesi. Böylece kar miktarı üzerinde daha fazla kontrol elde edilmiş olur
@@ -1924,10 +1945,10 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Hiçbiri
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Birincil şehir büyüklüğü çarpanı: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Oyun başlangıcında şehirlerin normal kasabalara kıyasla ortalama büyüklüğü
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Dağıtım grafiğini her {STRING}{NBSP}günde bir güncelle
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Bağlantı grafiğinin tekrar hesaplamaları arasında geçen süre. Her tekrar hesaplama grafiğin öğelerinden biri için planları hesaplar. Yani bu ayar için girdiğiniz X değeri tüm grafiğin her X günde bir güncelleneceği manasına gelmez; sadece grafiğin öğelerinden biri güncellenir. Daha kısa sürelere ayarladıkça hesaplamalar için daha fazla işlemci süresi gerekir. Daha uzun süreler seçtikçe yeni güzergahlardaki kargo dağıtımının başlaması da daha uzun sürer.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Dağıtım grafiğini {STRING}{NBSP}güne göre tekrar hesapla
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Bağlantı grafiğini oluşturan parçaların her tekrar hesaplaması için kullanılan zaman. Tekrar hesaplama başlatıldığında bu kadar gün sürecek bir işlem başlatılmış olur. Buraya daha kısa süreler girdikçe işlemin bitmesi gerekirken bitmemiş olma ihtimali artar. Ardından oyun ("lag") olana dek durur. Daha uzun süreler girdiğinizde güzergahlar değiştikçe dağıtımın güncellenmesi daha uzun sürer.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Dağıtım grafiğini her {STRING}{NBSP}saniyede{P 0:2 ""} güncelle
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Bağlantı grafiğinin sonraki yeniden hesaplamaları arasındaki süre. Her yeniden hesaplama, grafiğin bir bileşeni için planları hesaplar. Bu, bu ayar için bir X değerinin tüm grafiğin her X saniyede bir güncelleneceği anlamına gelmediği anlamına gelir. Sadece bazı bileşenler olacaktır. Ne kadar kısa ayarlarsanız, hesaplamak için o kadar fazla CPU süresi gerekir. Ne kadar uzun ayarlarsanız, kargo dağıtımının yeni rotalarda başlaması o kadar uzun sürer.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Dağıtım grafiğinin yeniden hesaplanması için {STRING}{NBSP}saniye{P 0:2 ""} bekleyin
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME_HELPTEXT               :Bir bağlantı grafiği bileşeninin her yeniden hesaplanması için geçen süre. Bir yeniden hesaplama başlatıldığında, bu sayıda saniye boyunca çalışmasına izin verilen bir iş parçacığı oluşturulur. Bunu ne kadar kısa ayarlarsanız, iş parçacığının olması gerektiği zamanda bitmemiş olma olasılığı o kadar artar. Ardından oyun ("gecikme") olana kadar durur. Ne kadar uzun ayarlarsanız, rotalar değiştiğinde dağıtımın güncellenmesi o kadar uzun sürer.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Yolcular için dağıtım kipi: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Simetrik" seçildiğinde A durağından B durağına taşınan ile B'den A'ya taşınan yolcu miktarı kabaca eşit olur. "Asimetrik" seçildiğinde iki yönde de rastgele miktarda yolcu gönderilebilir. "el ile" seçildiğinde yolcular için otomatik dağıtım yapılmaz.
@@ -1953,13 +1974,15 @@ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :Buraya %100'den
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :Yüksek kapasiteli güzergahları kullanmadan önce daha kısa güzergah doygunluğu: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Sıklıkla iki durak arasında birden fazla güzergah bulunur. Kargo dağıtımı önce en kısa güzergahı doygunluğa ulaştırır, ardından ikinci en kısa güzergahı doygunluğa ulaşana kadar kullanır ve böyle devam eder. Doygunluk, kapasite tahmini ve planlanan kullanım miktarına göre hesaplanır. Tüm güzergahlar doygunluğa ulaştığında eğer hala talep varsa, yüksek kapasiteli olan güzergahları tercih ederek tüm güzergahları aşırı yükler. Fakat çoğu zaman algoritma kapasiteyi isabetli olarak hesaplayamaz. Bu değer, daha kısa bir güzergahın yüzde kaç oranında doygunluğa ulaştığı zaman bir sonraki güzergahın seçileceğini ayarlamanızı sağlar. Yanlış (büyük) kapasite tahmini ihtimaline karşı aşırı dolu durakları önlemek için %100'den daha düşük bir değer seçin.
 
-STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Hız birimi: {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Hız birimi (kara): {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Hız birimleri (denizcilik): {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Kullanıcı arayüzünde hız görüntülendiğinde, bunu seçili birimde göster.
 ###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Imperial (İngiliz ölçü birimleri) (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metrik (km/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (Uluslararası Ölçüm Sistemi) (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Oyun birimleri (karo/gün)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Hava hızı
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Araç gücü ölçü birimi: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Kullanıcı arayüzünde bir aracın gücü görüntülendiğinde, bunu seçili ölçü biriminde göster.
@@ -2058,6 +2081,7 @@ STR_CONFIG_ERROR_SPRITECACHE_TOO_BIG                            :{WHITE}{BYTES} 
 # Video initalization errors
 STR_VIDEO_DRIVER_ERROR                                          :{WHITE}Video ayarlarında hata...
 STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :{WHITE}... uyumlu GPU bulunamadı. Donanım hızlandırma devre dışı bırakıldı
+STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :{WHITE}... GPU sürücüsü oyunu çökertti. Donanım hızlandırma devre dışı bırakıldı
 
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD {REV}
@@ -2388,6 +2412,13 @@ STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Hayır
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Evet, bu seferliğine
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Evet, bir daha sorma
 
+STR_NETWORK_ASK_SURVEY_CAPTION                                  :Otomatik ankete katılıyor musunuz?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Otomatik ankete katılmak ister misiniz?{}OpenTTD, bir oyundan çıkarken bir anket gönderir.{}Bunu, "Oyun Seçenekleri" altında istediğiniz zaman değiştirebilirsiniz.
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Anket sonucunu önizleyin
+STR_NETWORK_ASK_SURVEY_LINK                                     :Anket ve gizlilik hakkında
+STR_NETWORK_ASK_SURVEY_NO                                       :Hayır
+STR_NETWORK_ASK_SURVEY_YES                                      :Evet
+
 STR_NETWORK_SPECTATORS                                          :İzleyiciler
 
 # Network set password
@@ -2677,8 +2708,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Sürükl
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Görüntülenecek istasyon türünü seçin
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Yapılacak istasyon türünü seçin
 
-STR_STATION_CLASS_DFLT                                          :Varsayılan istasyon
+STR_STATION_CLASS_DFLT                                          :Varsayılan
+STR_STATION_CLASS_DFLT_STATION                                  :Varsayılan istasyon
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Varsayılan yol durağı
 STR_STATION_CLASS_WAYP                                          :Yerimleri
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Varsayılan yol noktası
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Sinyal Seçimi
@@ -3709,7 +3743,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} gemi
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Yok
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Şirket değeri: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}(%{COMMA} ortağı {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Altyapı:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} ray parçası
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} yol parçası
@@ -3737,11 +3770,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Şirket 
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Şirket ismini değiştir
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Müdür ismi
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Müdürün ismini değiştir
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}%25'ini satın al
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}%25'ini geri ver
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Şirketin %25 hissesini al. Shift+tıklama hisse satın almadan tahmini maliyeti gösterir
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Şirketin %25 hissesini sat. Shift+tıklama hisse satmadan tahmini maliyeti gösterir
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Şirketin ismi
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Yöneticinin ismi
@@ -3820,8 +3848,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Listedek
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Araçları Değiştir
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Bakıma Gönder
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Bu seneki kar: {CURRENCY_LONG} (geçen sene: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Garaja Gönder
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Garaja Gönder
@@ -4586,7 +4614,9 @@ STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}Bir sonr
 STR_AI_CONFIG_HUMAN_PLAYER                                      :İnsan oyuncu
 STR_AI_CONFIG_RANDOM_AI                                         :Rastgele YZ
 STR_AI_CONFIG_NONE                                              :(hiçbiri)
+STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}En fazla yarışmacı sayısı: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Yarışmacıların başlama arasındaki aralık: {ORANGE}{COMMA} dakika {P ""}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Yukarı taşı
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Seçilen YZ'yi listede yukarı taşı
@@ -4599,7 +4629,7 @@ STR_AI_CONFIG_AI                                                :{SILVER}YZ'ler
 
 STR_AI_CONFIG_CHANGE_AI                                         :{BLACK}YZ Seç
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :{BLACK}Oyun Betiği Seç
-STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Başka bir betik yükle
+STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Başka bir betik yükle. Kullanılabilir tüm sürümleri göstermek için Ctrl+Tıkla
 STR_AI_CONFIG_CONFIGURE                                         :{BLACK}Yapılandır
 STR_AI_CONFIG_CONFIGURE_TOOLTIP                                 :{BLACK}Betik parametrelerini yapılandır
 
@@ -4633,7 +4663,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Oyun Betiği
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Kapat
 STR_AI_SETTINGS_RESET                                           :{BLACK}Yeniden başlat
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Bu YZ bir öncekinden kaç gün sonra başlayacak (yaklaşık): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4642,10 +4671,11 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Metni, o
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Benioku dosyasını göster
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Değişiklik kayıtları
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Lisans
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} adlı {STRING}'nin benioku dosyası
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} adlı {STRING}'nin değişiklik kaydı
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} adlı {STRING}'nin lisansı
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Anket sonucunun önizlemesi
 
 
 # Vehicle loading indicators
@@ -4770,9 +4800,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Bankadan
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Bu şirkete para veremezsin...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Şirket satın alınamaz...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Şirket binasi yapılamaz...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Şirketin %25'i alınamıyor...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Şirketin %25'i satılamıyor...
-STR_ERROR_PROTECTED                                             :{WHITE}Bu şirket hisselerini satacak kadar eski değil...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Şehir kurulamaz
@@ -5088,11 +5115,24 @@ STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION                     :{WHITE}... önc
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... uçağın menzili yeterli değil
 
 # Extra messages which go on the third line of errors, explaining why orders failed
+STR_ERROR_NO_RAIL_STATION                                       :{WHITE} Tren istasyonu yok
+STR_ERROR_NO_BUS_STATION                                        :{WHITE}Otobüs istasyonu yok
+STR_ERROR_NO_TRUCK_STATION                                      :{WHITE} Kamyon istasyonu yok
+STR_ERROR_NO_DOCK                                               :{WHITE}Liman yok
+STR_ERROR_NO_AIRPORT                                            :{WHITE}Havalimanı/Helikopter pisti yok
+STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE                          :{WHITE}Uyumlu bir yol tipine sahip durak yok
+STR_ERROR_NO_STOP_COMPATIBLE_TRAM_TYPE                          :{WHITE}Uyumlu bir tramvay tipine sahip durak yok
+STR_ERROR_NO_STOP_ARTICULATED_VEHICLE                           :{WHITE} Körüklü karayolu taşıtları için uygun durak yoktur.{}Körüklü karayolu taşıtları üzerinden geçme durağı gerektirir, körfez durağı değil
+STR_ERROR_AIRPORT_NO_PLANES                                     :{WHITE}Bu uçak bu helikopter pistine inemez
+STR_ERROR_AIRPORT_NO_HELICOPTERS                                :{WHITE}Helikopter bu havalimanı'na inemez
+STR_ERROR_NO_RAIL_WAYPOINT                                      :{WHITE} Demiryolu ara noktası yok
+STR_ERROR_NO_BUOY                                               :{WHITE}Şamandıra yok
 
 # Timetable related errors
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Aracın zaman çizelgesi oluşturulamıyor...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Araçlar sadece istasyonlarda bekleyebilir
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Araç bu istasyonda durmuyor
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... zaman çizelgesi eksik
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... çok fazla tabela var
@@ -5514,10 +5554,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut Helik
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Company {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grup {COMMA}
@@ -5582,11 +5622,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -5598,33 +5640,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

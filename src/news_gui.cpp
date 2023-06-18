@@ -86,7 +86,7 @@ static const NWidgetPart _nested_normal_news_widgets[] = {
 			NWidget(WWT_CLOSEBOX, COLOUR_WHITE, WID_N_CLOSEBOX), SetPadding(0, 0, 0, 1),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 			NWidget(NWID_VERTICAL),
-				NWidget(WWT_LABEL, COLOUR_WHITE, WID_N_DATE), SetDataTip(STR_DATE_LONG_SMALL, STR_NULL),
+				NWidget(WWT_LABEL, COLOUR_WHITE, WID_N_DATE), SetDataTip(STR_JUST_DATE_LONG, STR_NULL), SetTextStyle(TC_BLACK, FS_SMALL),
 				NWidget(NWID_SPACER), SetFill(0, 1),
 			EndContainer(),
 		EndContainer(),
@@ -163,7 +163,7 @@ static const NWidgetPart _nested_thin_news_widgets[] = {
 			NWidget(WWT_CLOSEBOX, COLOUR_WHITE, WID_N_CLOSEBOX), SetPadding(0, 0, 0, 1),
 			NWidget(NWID_SPACER), SetFill(1, 0),
 			NWidget(NWID_VERTICAL),
-				NWidget(WWT_LABEL, COLOUR_WHITE, WID_N_DATE), SetDataTip(STR_DATE_LONG_SMALL, STR_NULL),
+				NWidget(WWT_LABEL, COLOUR_WHITE, WID_N_DATE), SetDataTip(STR_JUST_DATE_LONG, STR_NULL), SetTextStyle(TC_BLACK, FS_SMALL),
 				NWidget(NWID_SPACER), SetFill(0, 1),
 			EndContainer(),
 		EndContainer(),
@@ -358,7 +358,7 @@ struct NewsWindow : Window {
 			}
 
 			case WID_N_MGR_FACE:
-				*size = maxdim(*size, GetSpriteSize(SPR_GRADIENT));
+				*size = maxdim(*size, GetScaledSpriteSize(SPR_GRADIENT));
 				break;
 
 			case WID_N_MGR_NAME:
@@ -427,7 +427,7 @@ struct NewsWindow : Window {
 	{
 		switch (widget) {
 			case WID_N_CAPTION:
-				DrawCaption(r, COLOUR_LIGHT_BLUE, this->owner, TC_FROMSTRING, STR_NEWS_MESSAGE_CAPTION, SA_CENTER);
+				DrawCaption(r, COLOUR_LIGHT_BLUE, this->owner, TC_FROMSTRING, STR_NEWS_MESSAGE_CAPTION, SA_CENTER, FS_NORMAL);
 				break;
 
 			case WID_N_PANEL:
@@ -441,7 +441,7 @@ struct NewsWindow : Window {
 
 			case WID_N_MGR_FACE: {
 				const CompanyNewsInformation *cni = static_cast<const CompanyNewsInformation*>(this->ni->data.get());
-				DrawCompanyManagerFace(cni->face, cni->colour, r.left, r.top);
+				DrawCompanyManagerFace(cni->face, cni->colour, r);
 				GfxFillRect(r.left, r.top, r.right, r.bottom, PALETTE_NEWSPAPER, FILLRECT_RECOLOUR);
 				break;
 			}
@@ -1167,7 +1167,7 @@ struct MessageHistoryWindow : Window {
 			/* Months are off-by-one, so it's actually 8. Not using
 			 * month 12 because the 1 is usually less wide. */
 			SetDParam(0, ConvertYMDToDate(ORIGINAL_MAX_YEAR, 7, 30));
-			this->date_width = GetStringBoundingBox(STR_SHORT_DATE).width + WidgetDimensions::scaled.hsep_wide;
+			this->date_width = GetStringBoundingBox(STR_JUST_DATE_TINY).width + WidgetDimensions::scaled.hsep_wide;
 
 			size->height = 4 * resize->height + WidgetDimensions::scaled.framerect.Vertical(); // At least 4 lines are visible.
 			size->width = std::max(200u, size->width); // At least 200 pixels wide.
@@ -1198,7 +1198,7 @@ struct MessageHistoryWindow : Window {
 		int y = news.top;
 		for (int n = this->vscroll->GetCapacity(); n > 0; n--) {
 			SetDParam(0, ni->date);
-			DrawString(date.left, date.right, y, STR_SHORT_DATE);
+			DrawString(date.left, date.right, y, STR_JUST_DATE_TINY, TC_WHITE);
 
 			DrawNewsString(news.left, news.right, y, TC_WHITE, ni);
 			y += this->line_height;

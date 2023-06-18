@@ -20,7 +20,7 @@
 #include "gui.h"
 
 #include "base_media_base.h"
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 #include "company_func.h"
 #include "command_func.h"
 #include "news_func.h"
@@ -86,9 +86,13 @@
 #include "tunnelbridge.h"
 #include "worker_thread.h"
 #include "scope_info.h"
+#include "timer/timer.h"
+#include "timer/timer_game_tick.h"
 
 #include "linkgraph/linkgraphschedule.h"
 #include "tracerestrict.h"
+
+#include "3rdparty/cpp-btree/btree_set.h"
 
 #include <mutex>
 #if defined(__MINGW32__)
@@ -119,6 +123,7 @@ extern Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMP
 extern void OSOpenBrowser(const char *url);
 extern void RebuildTownCaches(bool cargo_update_required, bool old_map_position);
 extern void ShowOSErrorBox(const char *buf, bool system);
+extern void NORETURN DoOSAbort();
 extern std::string _config_file;
 
 bool _save_config = false;
@@ -176,7 +181,7 @@ void CDECL error(const char *s, ...)
 
 	/* Set the error message for the crash log and then invoke it. */
 	CrashLog::SetErrorMessage(buf);
-	abort();
+	DoOSAbort();
 }
 
 void CDECL assert_msg_error(int line, const char *file, const char *expr, const char *extra, const char *str, ...)
@@ -199,7 +204,7 @@ void CDECL assert_msg_error(int line, const char *file, const char *expr, const 
 
 	/* Set the error message for the crash log and then invoke it. */
 	CrashLog::SetErrorMessage(buf);
-	abort();
+	DoOSAbort();
 }
 
 const char *assert_tile_info(uint32 tile) {
@@ -353,7 +358,7 @@ static void WriteSavegameInfo(const char *name)
 		for (GRFConfig *c = _load_check_data.grfconfig; c != nullptr; c = c->next) {
 			char md5sum[33];
 			md5sumToString(md5sum, lastof(md5sum), HasBit(c->flags, GCF_COMPATIBLE) ? c->original_md5sum : c->ident.md5sum);
-			p += seprintf(p, lastof(buf), "%08X %s %s\n", c->ident.grfid, md5sum, c->filename);
+			p += seprintf(p, lastof(buf), "%08X %s %s\n", c->ident.grfid, md5sum, c->filename.c_str());
 		}
 	}
 
@@ -425,8 +430,8 @@ static void ParseResolution(Dimension *res, const char *s)
 		return;
 	}
 
-	res->width  = std::max(strtoul(s, nullptr, 0), 64UL);
-	res->height = std::max(strtoul(t + 1, nullptr, 0), 64UL);
+	res->width  = std::max(std::strtoul(s, nullptr, 0), 64UL);
+	res->height = std::max(std::strtoul(t + 1, nullptr, 0), 64UL);
 }
 
 
@@ -568,6 +573,8 @@ void MakeNewgameSettingsLive()
 	if (_settings_newgame.game_config != nullptr) {
 		_settings_game.game_config = new GameConfig(_settings_newgame.game_config);
 	}
+
+	SetupTickRate();
 }
 
 void OpenBrowser(const char *url)
@@ -776,7 +783,7 @@ int openttd_main(int argc, char *argv[])
 		case 'e': _switch_mode = (_switch_mode == SM_LOAD_GAME || _switch_mode == SM_LOAD_SCENARIO ? SM_LOAD_SCENARIO : SM_EDITOR); break;
 		case 'g':
 			if (mgo.opt != nullptr) {
-				_file_to_saveload.SetName(mgo.opt);
+				_file_to_saveload.name = mgo.opt;
 				bool is_scenario = _switch_mode == SM_EDITOR || _switch_mode == SM_LOAD_SCENARIO;
 				_switch_mode = is_scenario ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
 				_file_to_saveload.SetMode(SLO_LOAD, is_scenario ? FT_SCENARIO : FT_SAVEGAME, DFT_GAME_FILE);
@@ -818,7 +825,7 @@ int openttd_main(int argc, char *argv[])
 				if (_load_check_data.HasErrors()) {
 					InitializeLanguagePacks(); // A language pack is needed for GetString()
 					char buf[256];
-					SetDParamStr(0, _load_check_data.error_data);
+					SetDParamStr(0, _load_check_data.error_msg);
 					GetString(buf, _load_check_data.error, lastof(buf));
 					fprintf(stderr, "%s\n", buf);
 				}
@@ -837,7 +844,7 @@ int openttd_main(int argc, char *argv[])
 			_skip_all_newgrf_scanning += 1;
 			break;
 		}
-		case 'G': scanner->generation_seed = strtoul(mgo.opt, nullptr, 10); break;
+		case 'G': scanner->generation_seed = std::strtoul(mgo.opt, nullptr, 10); break;
 		case 'c': _config_file = mgo.opt; break;
 		case 'x': scanner->save_config = false; break;
 		case 'J': _quit_after_days = Clamp(atoi(mgo.opt), 0, INT_MAX); break;
@@ -1311,7 +1318,7 @@ void SwitchToMode(SwitchMode new_mode)
 
 			if (!SafeLoad(_file_to_saveload.name, _file_to_saveload.file_op, _file_to_saveload.detail_ftype, GM_NORMAL, NO_DIRECTORY)) {
 				SetDParamStr(0, GetSaveLoadErrorString());
-				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_ERROR);
+				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_CRITICAL);
 			} else {
 				if (_file_to_saveload.abstract_ftype == FT_SCENARIO) {
 					OnStartScenario();
@@ -1344,7 +1351,7 @@ void SwitchToMode(SwitchMode new_mode)
 				DoCommandP(0, PM_PAUSED_SAVELOAD, 0, CMD_PAUSE);
 			} else {
 				SetDParamStr(0, GetSaveLoadErrorString());
-				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_ERROR);
+				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_CRITICAL);
 			}
 			break;
 		}
@@ -1405,7 +1412,7 @@ void WriteVehicleInfo(char *&p, const char *last, const Vehicle *u, const Vehicl
 		p += seprintf(p, last, ", GRF: %08X", BSWAP32(grfid));
 		GRFConfig *grfconfig = GetGRFConfig(grfid);
 		if (grfconfig) {
-			p += seprintf(p, last, ", %s, %s", grfconfig->GetName(), grfconfig->filename);
+			p += seprintf(p, last, ", %s, %s", grfconfig->GetName(), grfconfig->filename.c_str());
 		}
 	}
 }
@@ -1870,10 +1877,10 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 
 			/* Check docking tiles */
 			TileArea ta;
-			std::map<TileIndex, bool> docking_tiles;
+			btree::btree_set<TileIndex> docking_tiles;
 			for (TileIndex tile : st->docking_station) {
 				ta.Add(tile);
-				docking_tiles[tile] = IsDockingTile(tile);
+				if (IsDockingTile(tile)) docking_tiles.insert(tile);
 			}
 			UpdateStationDockingTiles(st);
 			if (ta.tile != st->docking_station.tile || ta.w != st->docking_station.w || ta.h != st->docking_station.h) {
@@ -1881,7 +1888,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 						st->index, (int)st->owner, ta.tile, ta.w, ta.h, st->docking_station.tile, st->docking_station.w, st->docking_station.h);
 			}
 			for (TileIndex tile : ta) {
-				if (docking_tiles[tile] != IsDockingTile(tile)) {
+				if ((docking_tiles.find(tile) != docking_tiles.end()) != IsDockingTile(tile)) {
 					CCLOG("docking tile mismatch: tile %i", (int)tile);
 				}
 			}
@@ -2002,6 +2009,7 @@ void StateGameLoop()
 		RunTileLoop();
 		CallVehicleTicks();
 		CallLandscapeTick();
+		TimerManager<TimerGameTick>::Elapsed(1);
 		BasePersistentStorageArray::SwitchMode(PSM_LEAVE_GAMELOOP);
 		UpdateLandscapingLimits();
 
@@ -2027,7 +2035,7 @@ void StateGameLoop()
 		_scaled_date_ticks++;   // This must update in lock-step with _tick_skip_counter, such that it always matches what SetScaledTickVariables would return.
 
 		if (_settings_client.gui.autosave == 6 && !(_game_mode == GM_MENU || _game_mode == GM_BOOTSTRAP) &&
-				(_scaled_date_ticks % (_settings_client.gui.autosave_custom_minutes * (60000 / MILLISECONDS_PER_TICK))) == 0) {
+				(_scaled_date_ticks % (_settings_client.gui.autosave_custom_minutes * (_settings_game.economy.tick_rate == TRM_MODERN ? (60000 / 27) : (60000 / 30)))) == 0) {
 			_do_autosave = true;
 			_check_special_modes = true;
 			SetWindowDirty(WC_STATUS_BAR, 0);
@@ -2047,6 +2055,7 @@ void StateGameLoop()
 			CallLandscapeTick();
 			OnTick_Companies(true);
 		}
+		TimerManager<TimerGameTick>::Elapsed(1);
 		BasePersistentStorageArray::SwitchMode(PSM_LEAVE_GAMELOOP);
 
 #ifndef DEBUG_DUMP_COMMANDS

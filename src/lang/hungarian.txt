@@ -191,39 +191,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}UT
-STR_ABBREV_COAL                                                 :{TINY_FONT}SZ
-STR_ABBREV_MAIL                                                 :{TINY_FONT}LV
-STR_ABBREV_OIL                                                  :{TINY_FONT}OL
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}ÁL
-STR_ABBREV_GOODS                                                :{TINY_FONT}ÁR
-STR_ABBREV_GRAIN                                                :{TINY_FONT}BZ
-STR_ABBREV_WOOD                                                 :{TINY_FONT}FA
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}VÉ
-STR_ABBREV_STEEL                                                :{TINY_FONT}AC
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}ÉP
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}RÉ
-STR_ABBREV_MAIZE                                                :{TINY_FONT}KU
-STR_ABBREV_FRUIT                                                :{TINY_FONT}GÜ
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}GM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}ÉT
-STR_ABBREV_PAPER                                                :{TINY_FONT}PR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}AR
-STR_ABBREV_WATER                                                :{TINY_FONT}VZ
-STR_ABBREV_WHEAT                                                :{TINY_FONT}BZ
-STR_ABBREV_RUBBER                                               :{TINY_FONT}GM
-STR_ABBREV_SUGAR                                                :{TINY_FONT}CU
-STR_ABBREV_TOYS                                                 :{TINY_FONT}JT
-STR_ABBREV_SWEETS                                               :{TINY_FONT}CK
-STR_ABBREV_COLA                                                 :{TINY_FONT}KL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}VC
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BB
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}TK
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}EL
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}MA
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}SS
-STR_ABBREV_NONE                                                 :{TINY_FONT}SÁ
-STR_ABBREV_ALL                                                  :{TINY_FONT}ÖS
+STR_ABBREV_PASSENGERS                                           :UT
+STR_ABBREV_COAL                                                 :SZ
+STR_ABBREV_MAIL                                                 :LV
+STR_ABBREV_OIL                                                  :OL
+STR_ABBREV_LIVESTOCK                                            :ÁL
+STR_ABBREV_GOODS                                                :ÁR
+STR_ABBREV_GRAIN                                                :BZ
+STR_ABBREV_WOOD                                                 :FA
+STR_ABBREV_IRON_ORE                                             :VÉ
+STR_ABBREV_STEEL                                                :AC
+STR_ABBREV_VALUABLES                                            :ÉP
+STR_ABBREV_COPPER_ORE                                           :RÉ
+STR_ABBREV_MAIZE                                                :KU
+STR_ABBREV_FRUIT                                                :GÜ
+STR_ABBREV_DIAMONDS                                             :GM
+STR_ABBREV_FOOD                                                 :ÉT
+STR_ABBREV_PAPER                                                :PR
+STR_ABBREV_GOLD                                                 :AR
+STR_ABBREV_WATER                                                :VZ
+STR_ABBREV_WHEAT                                                :BZ
+STR_ABBREV_RUBBER                                               :GM
+STR_ABBREV_SUGAR                                                :CU
+STR_ABBREV_TOYS                                                 :JT
+STR_ABBREV_SWEETS                                               :CK
+STR_ABBREV_COLA                                                 :KL
+STR_ABBREV_CANDYFLOSS                                           :VC
+STR_ABBREV_BUBBLES                                              :BB
+STR_ABBREV_TOFFEE                                               :TK
+STR_ABBREV_BATTERIES                                            :EL
+STR_ABBREV_PLASTIC                                              :MA
+STR_ABBREV_FIZZY_DRINKS                                         :SS
+STR_ABBREV_NONE                                                 :SÁ
+STR_ABBREV_ALL                                                  :ÖS
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}utas
@@ -254,14 +254,15 @@ STR_COLOUR_WHITE                                                :Fehér
 STR_COLOUR_RANDOM                                               :Véletlenszerű
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mi/h
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mi/h
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}mező/nap
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}csomó
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}LE
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}LE
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}LE
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}LE
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}LE/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}LE/t
@@ -273,29 +274,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}tonna
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}tonna
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}tonna
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}tonna
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}gallon
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}liter
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}köbméter
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}gallon
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}liter
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}köbméter
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kp
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kp
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}láb
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}láb
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Szűrő kifejezés:
@@ -406,9 +407,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}A járm�
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Játék szüneteltetése
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Játék gyorsítása
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Beállítások
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Játék mentése, játék elhagyása, kilépés
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Térkép, extra látkép és feliratok listája
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Alapbeállítások és beállítások
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Játék mentése vagy játék elhagyása, kilépés
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Térkép, extra látkép, rakományáramlás és feliratok listája
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Településlista mutatása
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Támogatások megjelenítése
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Állomások listája
@@ -416,9 +417,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Pénzüg
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Általános adatok
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Napló
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK}Célok listája
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Grafikonok
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Vállalati grafikonok és rakományok szállítási díja
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}A vállalatok helyezése
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Gazdasági épület építése, meglévők listázása
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Gazdasági épületek szemügyre vétele vagy egy új gazdasági épület építése
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Vonatok listája. Ctrl+kattintással válszthatsz a csoport- vagy járműlista között
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Közúti járművek listája. Ctrl+kattintással válszthatsz a csoport- vagy járműlista között
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Hajók listája. Ctrl+kattintással válszthatsz a csoport- vagy járműlista között
@@ -432,8 +433,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Vízi ú
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Repülőtér építése
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Nyisd meg a tájrendező ablakot a talaj emeléséhez vagy süllyesztéséhez, faültetéshez stb.
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Hang/zene beállításai
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Legutóbbi üzenet/újsághír, üzenetek beállításai
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Terület-információ, konzol, MI/Játékszkript nyomkövetés, képmentések, az OpenTTD-ről
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Legutóbbi üzenet/újsághír megmutatása, üzenetelőzmények vagy minden üzenet törlése
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Terület-információ, konzol, képmentések, az OpenTTD-ről és fejlesztői eszközök
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Eszköztár váltás
 
 # Extra tooltips for the scenario editor toolbar
@@ -449,7 +450,7 @@ STR_SCENEDIT_TOOLBAR_TOWN_GENERATION                            :{BLACK}Települ
 STR_SCENEDIT_TOOLBAR_INDUSTRY_GENERATION                        :{BLACK}Gazdasági épület-generálás
 STR_SCENEDIT_TOOLBAR_ROAD_CONSTRUCTION                          :{BLACK}Út építése
 STR_SCENEDIT_TOOLBAR_TRAM_CONSTRUCTION                          :{BLACK}Villamospálya építése
-STR_SCENEDIT_TOOLBAR_PLANT_TREES                                :{BLACK}Faültetés. Shift lenyomásával megmutatja a becsült építési költséget
+STR_SCENEDIT_TOOLBAR_PLANT_TREES                                :{BLACK}Faültetés. Ctrl lenyomásával átlós terület jelölhető ki. Shift lenyomásával megmutatja a becsült építési költséget.
 STR_SCENEDIT_TOOLBAR_PLACE_SIGN                                 :{BLACK}Felirat lerakása
 STR_SCENEDIT_TOOLBAR_PLACE_OBJECT                               :{BLACK}Objektum építése. Ctrl lenyomásával átlós terület jelölhető ki. Shift lenyomásával megmutatja a becsült építési költséget.
 
@@ -993,6 +994,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}A látk�
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Alapbeállítások
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Általános
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Állítsd be az általános beállításokat
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Grafika
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Állítsd be a grafikával kapcsolatos beállításokat
+STR_GAME_OPTIONS_TAB_SOUND                                      :Hang effektek
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Állítsd be a hanggal és zenével kapcsolatos beállításokat
+
+STR_GAME_OPTIONS_VOLUME                                         :Hangerő
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Hang effektek
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Zene
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0%
+STR_GAME_OPTIONS_VOLUME_25                                      :25%
+STR_GAME_OPTIONS_VOLUME_50                                      :50%
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+STR_GAME_OPTIONS_VOLUME_100                                     :100%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Pénznem
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}A használt pénznem kiválasztása
 
@@ -1046,10 +1065,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Az autom
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Nincs
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Minden hónapban
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :3 havonta
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :6 havonta
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :12 havonta
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :10 percenként
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :30 percenként
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :60 percenként
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :120 percenként
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Nyelv
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Válassz nyelvet
@@ -1085,6 +1104,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafika
 
@@ -1215,6 +1235,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Összes 
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Összes összecsukása
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Visszaállítja az összes értéket
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(leírás nem elérhető)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Alapértelmezett érték: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Beállítás típusa: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Kliens beállítás (mentésben nem tárolva; minden játékot befolyásol)
@@ -1270,7 +1291,9 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Jobbra
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maximális kezdeti hitelkeret: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maximálisan kölcsönözhető összeg (az inflációtól eltekintve)
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
 ###setting-zero-is-special
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :Nincs kölcsön {RED}Kezdőtőkéhez játékszkript szükséges
 
 STR_CONFIG_SETTING_INTEREST_RATE                                :Kamatláb: {STRING}
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :Banki hitel kamat; inflációt is szabályozza, ha be van kapcsolva
@@ -1865,13 +1888,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Eredeti
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Egyenletes
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Stagnáló
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Más vállalatokból lehet részvényt vásárolni: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Bekapcsolva engedélyezi más vállalatok részvényeinek megvásárlását. A részvények csak akkor elérhetőek, ha a vállalat elért egy bizonyos kort
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Vállalatok minimális életkora részvénykibocsátáshoz: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Egy vállalatnak legalább ennyi évesnek kell lennie ahhoz, hogy más vállalatok kereskedhessenek a részvényeivel.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Ráhordó rendszereknek kifizetett profitszázalék: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :A bevételek százaléka, mely a közbenső szállítóknak, ráhordó járatoknak kerül kifizetésre, nagyobb ellenőrzést adva a bevétel felett
 
@@ -1985,19 +2001,17 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :nincs
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Kezdeti városméret-szorzó: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Átlagos városméret a normál településekhez képest a játék kezdetén
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :A szétosztási gráf frissítése {STRING}{NBSP}naponként
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :A kapcsolati gráf egyes újraszámításai között eltelő idő. Minden számítás a gráf egy adott komponensére vonatkozik. Egy adott X beállítás esetén nem fog a teljes gráf X naponként frissülni, csak egy komponense. Minél rövidebb ez az idő, annál több CPU időre lesz szükség a számítás elvégzéséhez. Minél hosszabb ez az idő, annál több ideig fog tartani, mire a szétosztás megindul az új útvonalakon.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :A szétosztási gráf újraszámolására szánt idő: {STRING}{NBSP}nap
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :A kapcsolati gráf egy komponensének újraszámítására szánt idő. Az újraszámítás egy külön szálon indul el, és a megadott számú napig fut. Minél rövidebb ez az időtartam, annál valószínűbb, hogy a számítás nincs kész az idő lejártakor, ekkor a játék megáll a számítás befejeződéséig (ettől a játék akadhat). Minél hosszabb ez az időtartam, annál több idő kell a szétosztás frissüléséhez, amikor megváltoznak az útvonalak.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Kapcsolatgrafikon frissítése minden {STRING}{NBSP}másodpercben{P 0:2 "" s}
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :A kapcsolatgrafikon következő újrakalkulálása között eltelt idő. Minden újrakalkulálás során egy komponens tervei kerülnek kiszámításra. Ez azt jelenti, hogy az X érték beállítása nem jelenti azt, hogy az egész grafikon X másodpercenként frissül. Csak néhány komponens lesz frissítve. Minél rövidebbre van állítva, annál több CPU időre van szükség a kiszámításhoz. Ha hosszabbra van állítva, akkor hosszabb időbe telik, amíg az áruelosztás elkezdődik az új útvonalakon.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Utasok szétosztása: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :A "szimmetrikus" azt jelenti, hogy megközelítóleg ugyanannyi utas megy majd A-ból B-be, mint B-ből A-ba. Az "aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű utas mehet. "Kézi" esetben az utasok nem lesznek automatikusan szétosztva.
+STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :A "Szimmetrikus" azt jelenti, hogy megközelítóleg ugyanannyi utas megy majd A-ból B-be, mint B-ből A-ba. Az "Aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű utas mehet. "Kézi" esetben az utasok nem lesznek automatikusan szétosztva.
 STR_CONFIG_SETTING_DISTRIBUTION_MAIL                            :Levelek szétosztása: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_MAIL_HELPTEXT                   :A "szimmetrikus" azt jelenti, hogy megközelítóleg ugyanannyi levél megy majd A-ból B-be, mint B-ből A-ba. Az "aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű levél mehet. "Kézi" esetben a levelek nem lesznek automatikusan szétosztva.
+STR_CONFIG_SETTING_DISTRIBUTION_MAIL_HELPTEXT                   :A "Szimmetrikus" azt jelenti, hogy megközelítóleg ugyanannyi levél megy majd A-ból B-be, mint B-ből A-ba. Az "Aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű levél mehet. "Kézi" esetben a levelek nem lesznek automatikusan szétosztva.
 STR_CONFIG_SETTING_DISTRIBUTION_ARMOURED                        :A PÁNCÉLOZOTT rakománytípus szétosztása: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_ARMOURED_HELPTEXT               :A PÁNCÉLOZOTT rakománytípus a mérsékelt égövi tájon az értéktárgyakat, szubtrópusi tájon a gyémántot, szubarktikus tájon pedig az aranyat jelenti, ezeken a NewGRF-ek változtathatnak. A "szimmetrikus" azt jelenti, hogy megközelítóleg ugyanannyi rakomány megy majd A-ból B-be, mint B-ből A-ba. Az "aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű rakomány mehet. "Kézi" esetben a rakományok nem lesznek automatikusan szétosztva. Szubarktikus esetben az "aszimmetrikus" vagy "kézi" beállítás javasolt, mivel a bankok nem fognak aranyat, ill. gyémántot visszaküldeni a bányáknak. Mérsékelt és szubtropikus égövi esetben a "szimmetrikus" is jó választás, ebben az esetben a bankok a fogadott mennyiségnek megfelelően fognak értéktárgyakat visszaküldeni a küldő banknak.
 STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT                         :Egyéb rakománytípusok szétosztása: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT_HELPTEXT                :Az "aszimmetrikus" beállítás esetén a különbözö irányokba tetszőleges mennyiségű rakomány mehet. "Kézi" esetben a rakományok nem lesznek automatikusan szétosztva.
+STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT_HELPTEXT                :Az "Aszimmetrikus" beállítás esetén a különböző irányokba tetszőleges mennyiségű rakomány mehet. "Kézi" esetben a rakományok nem lesznek automatikusan szétosztva.
 ###length 3
 STR_CONFIG_SETTING_DISTRIBUTION_MANUAL                          :kézi
 STR_CONFIG_SETTING_DISTRIBUTION_ASYMMETRIC                      :aszimmetrikus
@@ -2014,13 +2028,15 @@ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :100%-nál kiseb
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :A rövidebb utak telítettsége a szabad utak felhasználása előtt: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Gyakran több útvonal is van két adott állomás között. A Cargodist először a legrövidebb útvonalat telíti be, majd a második legrövidebb útvonalat, miután az első útvonal már telített, és így tovább. A telítettséget a kapacitás becslése és a tervezett kihasználtság határozza meg. Amennyiben az összes útvonal telített, és még mindig van igény, az összes útvonalat terhelni fogja, elsősorban a legnagyobb kapacitásúakat. Viszont a legtöbb esetben az algoritmus nem fogja pontosan megbecsülni a kapacitást. Ezen opció segítségével beállíthatjuk, hogy milyen telítettségi szintig legyen kihasználva a rövidebb útvonal a hosszabb útvonal használatba vétele előtt. Állítsd 100%-nál kisebbre, hogy elkerüld a túlterhelődő állomásokat abban az esetben, ha a kapacitás túl lenne becsülve!
 
-STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Sebesség mértékegysége: {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Sebesség mértékegysége (szárazföldi): {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Sebesség mértékegységei (tengeri): {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :A sebességértékek a kiválasztott mértékegységben fognak megjelenni a felhasználói felületen
 ###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Angolszász (mi/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metrikus (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Játékbeli egység (mező/nap)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Csomó
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Teljesítmény mértékegysége: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :A teljesítményértékek a kiválasztott mértékegységben fognak megjelenni a felhasználói felületen
@@ -2421,6 +2437,8 @@ STR_NETWORK_CLIENT_LIST_NEW_COMPANY                             :(Új vállalat)
 STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP                     :{BLACK}Hozz létre egy új vállalatot és csatlakozz
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_SELF_TOOLTIP                :{BLACK}Ez vagy te
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_HOST_TOOLTIP                :{BLACK}Ez a játék elindítója
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} kliens / {NUM}/{NUM} vállalat
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT_TOOLTIP            :{BLACK}A jelenleg csatlakozott kliensek száma, vállalatok számra és a maximálisan létrehozható vállalatok száma a szerver adminisztrátora által engedélyezve lettek
 
 # Matches ConnectionType
 ###length 5
@@ -2446,6 +2464,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Nem sik
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Nem
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Igen, most az egyszer
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Igen, ne kérdezd újra
+
 
 STR_NETWORK_SPECTATORS                                          :Megfigyelők
 
@@ -2736,8 +2755,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Állomá
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Válassz egy megjelenítendő állomásfajtát
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Megépítendő állomástípus kiválasztása
 
-STR_STATION_CLASS_DFLT                                          :Alapértelmezett állomás
+STR_STATION_CLASS_DFLT                                          :Alapértelmezett
+STR_STATION_CLASS_DFLT_STATION                                  :Alapértelmezett állomás
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Alapértelmezett úttorlasz
 STR_STATION_CLASS_WAYP                                          :Ellenőrző pontok
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Alapértelmezett vasúti ellenőrző pont
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Jelzőválasztó
@@ -2763,6 +2785,10 @@ STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP          :{BLACK}Automata
 STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}Válassz egy vasúti hidat
 STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}Közúti híd építése
 STR_SELECT_BRIDGE_SELECTION_TOOLTIP                             :{BLACK}Híd kiválasztása - kattints arra a hídra, amit meg akarsz építeni
+STR_SELECT_BRIDGE_INFO_NAME                                     :{GOLD}{STRING}
+STR_SELECT_BRIDGE_INFO_NAME_MAX_SPEED                           :{GOLD}{STRING},{} {VELOCITY}
+STR_SELECT_BRIDGE_INFO_NAME_COST                                :{GOLD}{0:STRING},{} {WHITE}{2:CURRENCY_LONG}
+STR_SELECT_BRIDGE_INFO_NAME_MAX_SPEED_COST                      :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
 STR_BRIDGE_NAME_SUSPENSION_STEEL                                :Függő, acél
 STR_BRIDGE_NAME_GIRDER_STEEL                                    :Gerendás, acél
 STR_BRIDGE_NAME_CANTILEVER_STEEL                                :Rácsos, acél
@@ -2882,7 +2908,7 @@ STR_OBJECT_CLASS_TRNS                                           :Adótornyok
 STR_PLANT_TREE_CAPTION                                          :{WHITE}Fák
 STR_PLANT_TREE_TOOLTIP                                          :{BLACK}Ültetendő fa kiválasztása. Ha már van fa a mezőn, akkor újabb fák ültetése a kiválasztott fatípustól függetlenül
 STR_TREES_RANDOM_TYPE                                           :{BLACK}Véletlenszerű fafélék
-STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Véletlenszerűen kiválasztott fákat helyez el. Shift lenyomásával megmutatja a várható telepítési költséget
+STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Véletlenszerűen kiválasztott fákat helyez el. Ctrl lenyomásával átlós terület jelölhető ki. Shift lenyomásával megmutatja a becsült építési költséget.
 STR_TREES_RANDOM_TREES_BUTTON                                   :{BLACK}Véletlenszerű fák
 STR_TREES_RANDOM_TREES_TOOLTIP                                  :{BLACK}Véletlenszerűen fákat ültet a térképre
 STR_TREES_MODE_NORMAL_BUTTON                                    :{BLACK}Normál
@@ -3410,6 +3436,8 @@ STR_NEWGRF_ERROR_MSG_INFO                                       :{SILVER}{STRING
 STR_NEWGRF_ERROR_MSG_WARNING                                    :{RED}Figyelmeztetés: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_ERROR                                      :{RED}Hiba: {SILVER}{STRING}
 STR_NEWGRF_ERROR_MSG_FATAL                                      :{RED}Végzetes hiba: {SILVER}{STRING}
+STR_NEWGRF_ERROR_FATAL_POPUP                                    :{WHITE}A "{STRING}" nevű NewGRF végzetes hibába torkollott:{}{STRING}
+STR_NEWGRF_ERROR_POPUP                                          :{WHITE}A "{STRING}" nevű NewGRF hibába torkollott:{}{STRING}
 STR_NEWGRF_ERROR_VERSION_NUMBER                                 :{1:STRING} nem fog működni az OpenTTD által jelentett TTDPatch verzióval
 STR_NEWGRF_ERROR_DOS_OR_WINDOWS                                 :{1:STRING} a TTD {2:STRING} verziójához van
 STR_NEWGRF_ERROR_UNSET_SWITCH                                   :{1:STRING} úgy lett tervezve, hogy együtt lesz használva ezzel: {2:STRING}
@@ -3762,7 +3790,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} hajó
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Nincs
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Vállalat értéke: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% {COMPANY} tulajdona)
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktúra:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} vasúti elem
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} közúti elem
@@ -3790,11 +3817,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Vállala
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}A vállalat nevének megváltoztatása
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Elnök neve
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Az elnök nevének megváltoztatása
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}25% megvétele a vállalatból
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}25% eladása a vállalatból
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}25%-nyi vállalati részvény megvétele. Shift+kattintással megmutatja a becsült költséget vásárlás nélkül
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}25%-nyi vállalati részvény eladása. Shift+kattintással megmutatja a becsült költséget eladás nélkül
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :A vállalat neve
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Elnök neve
@@ -3873,8 +3895,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}A listá
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Járművek lecserélése
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Javításra küld
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Idei nyereség: {CURRENCY_LONG} (Tavalyi: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Elküldi járműtelepre
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Elküldi garázsba
@@ -4585,7 +4607,7 @@ STR_TIMETABLE_CLEAR_SPEED                                       :{BLACK}Sebessé
 STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Sebességkorlátozás törlése a kijelölt utasításból. Ctrl+kattintással kitörlöd a sebességet az összes utasításból.
 
 STR_TIMETABLE_RESET_LATENESS                                    :{BLACK}Késés nullázása
-STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Késés-számláló nullázása, azaz a jármű pontos lesz
+STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Késés-számláló nullázása, azaz a jármű pontos lesz. Ctrl+kattintással az egész csoportot nullázhatod, vagyis a legutolsó pont időben lesz a többi pedig korán
 
 STR_TIMETABLE_AUTOFILL                                          :{BLACK}Automatikus kitöltés
 STR_TIMETABLE_AUTOFILL_TOOLTIP                                  :{BLACK}Menetrend automatikus kitöltése a következő út értékeivel Ctrl+kattintással megtartja a várakozási időket
@@ -4639,7 +4661,9 @@ STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}A követ
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Játékos
 STR_AI_CONFIG_RANDOM_AI                                         :Véletlenszerűen választott MI
 STR_AI_CONFIG_NONE                                              :(nincs)
+STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Ellenfelek száma legfeljebb: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Ellenfelek indítása közötti időtartam: {ORANGE}{COMMA} perc{P "" s}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Mozgatás Fel
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Kiválasztott MI mozgatása felfelé a listában
@@ -4652,7 +4676,7 @@ STR_AI_CONFIG_AI                                                :{SILVER}MI-k
 
 STR_AI_CONFIG_CHANGE_AI                                         :{BLACK}MI kiválasztása
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :{BLACK}Játékszkript kiválasztása
-STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Másik szkript betöltése
+STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Másik szkript betöltése. Ctrl+kattintás megmutat minden elérhető verziót
 STR_AI_CONFIG_CONFIGURE                                         :{BLACK}Beállítások
 STR_AI_CONFIG_CONFIGURE_TOOLTIP                                 :{BLACK}A szkript paramétereinek beállítása
 
@@ -4680,11 +4704,12 @@ STR_SCREENSHOT_HEIGHTMAP_SCREENSHOT                             :{BLACK}Magassá
 STR_SCREENSHOT_MINIMAP_SCREENSHOT                               :{BLACK}Minitérkép mentése
 
 # Script Parameters
+STR_AI_SETTINGS_CAPTION                                         :{WHITE}{STRING} Paraméterek
 STR_AI_SETTINGS_CAPTION_AI                                      :{WHITE}MI paraméterei
+STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Játékszkript
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Bezárás
 STR_AI_SETTINGS_RESET                                           :{BLACK}Visszaállítás
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Az előző MI indításától eltelt napok száma ezen MI indításáig (megközelítőleg): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4693,7 +4718,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Szöveg 
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Readme megtekintése
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Változások listája
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licenc
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} readme-je
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}A(z) {STRING} {STRING} változásainak listája
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}A(z) {STRING} {STRING} licence
@@ -4821,9 +4846,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Nem tudo
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Nem tudsz pénzt adományozni a vállalatnak...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Nem veheted meg a vállalatot...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Nem építheted ide a székházadat...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nem vehetsz 25%-nyi részvényt ebből a vállalatból...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Nem adhatsz el 25%-nyi részvényt ebből a vállalatból...
-STR_ERROR_PROTECTED                                             :{WHITE}Ez a vállalat egyelőre még nem rendelkezik részvényekkel...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Nem lehet több települést építeni
@@ -5139,11 +5161,24 @@ STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION                     :{WHITE}... túl
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... a repülőgépnek kicsi a hatótávolsága
 
 # Extra messages which go on the third line of errors, explaining why orders failed
+STR_ERROR_NO_RAIL_STATION                                       :{WHITE}Nem található vasútállomás
+STR_ERROR_NO_BUS_STATION                                        :{WHITE}Nem található buszmegálló
+STR_ERROR_NO_TRUCK_STATION                                      :{WHITE}Nem található teherautó-rakodóhely
+STR_ERROR_NO_DOCK                                               :{WHITE}Kikötő nem található
+STR_ERROR_NO_AIRPORT                                            :{WHITE}Nem található repülőtér/Helikopter-leszálló
+STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE                          :{WHITE}Nem található megálló kompatibilis úttípussal
+STR_ERROR_NO_STOP_COMPATIBLE_TRAM_TYPE                          :{WHITE}Nem található megálló kompatibilis villamos-típussal
+STR_ERROR_NO_STOP_ARTICULATED_VEHICLE                           :{WHITE}Nincsenek csuklós járművek számára kialakított megállóhelyek.{}Csuklós járművek számára áthaladó megállók szükségesek
+STR_ERROR_AIRPORT_NO_PLANES                                     :{WHITE}Ez a gép nem tud leszállni ezen a helikopter-leszállón
+STR_ERROR_AIRPORT_NO_HELICOPTERS                                :{WHITE}Ez a helikopter nem tud leszállni ezen a repülőtéren
+STR_ERROR_NO_RAIL_WAYPOINT                                      :{WHITE}Nem található vasúti ellenőrző pont
+STR_ERROR_NO_BUOY                                               :{WHITE}Nem található bója
 
 # Timetable related errors
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}A jármű nem időzíthető
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}A járművek csak az állomáson várakozhatnak
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Ez a jármű nem áll meg ezen az állomáson
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... menetrend befejezetlen
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... túl sok a felirat
@@ -5592,10 +5627,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :SemmiErő Helik
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :({COMMA}. vállalat)
 STR_FORMAT_GROUP_NAME                                           :{COMMA} csoport
@@ -5664,11 +5699,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -5680,33 +5717,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

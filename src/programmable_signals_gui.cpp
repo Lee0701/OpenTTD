@@ -139,7 +139,7 @@ static const StringID _program_sigstate[] = {
 };
 
 /** Get the string for a condition */
-static char *GetConditionString(SignalCondition *cond, char *buf, char *buflast, bool selected)
+static char *GetConditionString(SignalCondition *cond, char *buf, char *buflast)
 {
 	StringID string = INVALID_STRING_ID;
 	if (cond->ConditionCode() == PSC_SLOT_OCC || cond->ConditionCode() == PSC_SLOT_OCC_REM) {
@@ -180,7 +180,6 @@ static char *GetConditionString(SignalCondition *cond, char *buf, char *buflast,
 				SetDParam(1, TileY(sig_cond->sig_tile));
 			} else {
 				string = STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED;
-				SetDParam(0, selected ? STR_WHITE : STR_BLACK);
 			}
 		}
 	}
@@ -213,7 +212,7 @@ static void DrawInstructionString(SignalInstruction *instruction, int y, bool se
 
 		case PSO_IF: {
 			SignalIf *if_ins = static_cast<SignalIf*>(instruction);
-			GetConditionString(if_ins->condition, condstr, lastof(condstr), selected);
+			GetConditionString(if_ins->condition, condstr, lastof(condstr));
 			SetDParamStr(0, condstr);
 			instruction_string = STR_PROGSIG_IF;
 			break;
@@ -938,7 +937,7 @@ static const NWidgetPart _nested_program_widgets[] = {
 			EndContainer(),
 			NWidget(NWID_SELECTION, INVALID_COLOUR, PROGRAM_WIDGET_SEL_TOP_RIGHT),
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, PROGRAM_WIDGET_COND_VALUE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_COMMA, STR_PROGSIG_COND_VALUE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_COMMA, STR_PROGSIG_COND_VALUE_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, PROGRAM_WIDGET_COND_SET_SIGNAL), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_PROGSIG_COND_SET_SIGNAL, STR_PROGSIG_COND_SET_SIGNAL_TOOLTIP), SetResize(1, 0),
 			EndContainer(),

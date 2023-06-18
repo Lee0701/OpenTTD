@@ -67,7 +67,7 @@ Ticks ParseTimetableDuration(const char *str)
 	if (StrEmpty(str)) return 0;
 
 	if (_settings_client.gui.timetable_in_ticks) {
-		return strtoul(str, nullptr, 10);
+		return std::strtoul(str, nullptr, 10);
 	}
 
 	char tmp_buffer[64];
@@ -641,6 +641,14 @@ struct TimetableWindow : GeneralVehicleWindow {
 				GuiShowTooltips(this, STR_TIMETABLE_CLEAR_SPEED_TOOLTIP, 0, nullptr, close_cond);
 				return true;
 			}
+			case WID_VT_SHARED_ORDER_LIST: {
+				if (this->vehicle->owner == _local_company) {
+					uint64 args[] = { STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP };
+					GuiShowTooltips(this, STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP_EXTRA, lengthof(args), args, close_cond);
+					return true;
+				}
+				return false;
+			}
 			default:
 				return false;
 		}
@@ -911,7 +919,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 					SetDParam(0, time);
 					ShowQueryString(str, STR_TIMETABLE_STARTING_DATE, 31, this, CS_NUMERAL, QSF_ACCEPT_UNCHANGED);
 				} else {
-					ShowSetDateWindow(this, v->index | (v->orders->IsCompleteTimetable() && _ctrl_pressed ? 1U << 20 : 0),
+					ShowSetDateWindow(this, v->index | (_ctrl_pressed ? 1U << 20 : 0),
 							_scaled_date_ticks, _cur_year, _cur_year + 15, ChangeTimetableStartCallback);
 				}
 				break;
@@ -1104,7 +1112,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 			case WID_VT_CHANGE_TIME: {
 				uint32 p2;
 				if (this->query_is_speed_query) {
-					uint64 display_speed = StrEmpty(str) ? 0 : strtoul(str, nullptr, 10);
+					uint64 display_speed = StrEmpty(str) ? 0 : std::strtoul(str, nullptr, 10);
 					uint64 val = ConvertDisplaySpeedToKmhishSpeed(display_speed, v->type);
 					p2 = std::min<uint>(val, UINT16_MAX);
 				} else {
@@ -1118,7 +1126,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 			case WID_VT_START_DATE: {
 				if (StrEmpty(str)) break;
 				char *end;
-				int32 val = strtol(str, &end, 10);
+				int32 val = std::strtol(str, &end, 10);
 				if (val >= 0 && end && *end == 0) {
 					uint minutes = (val % 100) % 60;
 					uint hours = (val / 100) % 24;
@@ -1216,7 +1224,7 @@ static const NWidgetPart _nested_timetable_widgets[] = {
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_SCHEDULED_DISPATCH), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_TIMETABLE_SCHEDULED_DISPATCH, STR_TIMETABLE_SCHEDULED_DISPATCH_TOOLTIP),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_RESET_LATENESS), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_TIMETABLE_RESET_LATENESS, STR_TIMETABLE_RESET_LATENESS_TOOLTIP),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_VT_EXPECTED_SELECTION),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_EXPECTED), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_BLACK_STRING, STR_TIMETABLE_EXPECTED_TOOLTIP),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_EXPECTED), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_JUST_STRING, STR_TIMETABLE_EXPECTED_TOOLTIP),
 					NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), SetFill(1, 1), EndContainer(),
 				EndContainer(),
 			EndContainer(),
@@ -1250,11 +1258,13 @@ void ShowTimetableWindow(const Vehicle *v)
 	AllocateWindowDescFront<TimetableWindow>(&_timetable_desc, v->index);
 }
 
-void SetTimetableWindowsDirty(const Vehicle *v, bool include_scheduled_dispatch)
+void SetTimetableWindowsDirty(const Vehicle *v, SetTimetableWindowsDirtyFlags flags)
 {
 	v = v->FirstShared();
 	for (Window *w : Window::IterateFromBack()) {
-		if (w->window_class == WC_VEHICLE_TIMETABLE || (include_scheduled_dispatch && w->window_class == WC_SCHDISPATCH_SLOTS)) {
+		if (w->window_class == WC_VEHICLE_TIMETABLE ||
+				((flags & STWDF_SCHEDULED_DISPATCH) && w->window_class == WC_SCHDISPATCH_SLOTS) ||
+				((flags & STWDF_ORDERS) && w->window_class == WC_VEHICLE_ORDERS)) {
 			if (static_cast<GeneralVehicleWindow *>(w)->vehicle->FirstShared() == v) w->SetDirty();
 		}
 	}

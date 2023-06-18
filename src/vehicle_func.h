@@ -122,7 +122,6 @@ uint8 CalcPercentVehicleFilledOfCargo(const Vehicle *v, CargoID cargo);
 
 void VehicleLengthChanged(const Vehicle *u);
 
-byte VehicleRandomBits();
 void ResetVehicleHash();
 void ResetVehicleColourMap();
 
@@ -267,5 +266,7 @@ void CheckCargoCapacity(Vehicle *v);
 
 bool VehiclesHaveSameEngineList(const Vehicle *v1, const Vehicle *v2);
 bool VehiclesHaveSameOrderList(const Vehicle *v1, const Vehicle *v2);
+
+bool IsUniqueVehicleName(const char *name);
 
 #endif /* VEHICLE_FUNC_H */

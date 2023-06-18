@@ -20,7 +20,7 @@
 #include "news_gui.h"
 #include "company_gui.h"
 #include "window_gui.h"
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 #include "window_func.h"
 #include "statusbar_gui.h"
 #include "toolbar_gui.h"
@@ -115,14 +115,14 @@ struct StatusBarWindow : Window {
 		switch (widget) {
 			case WID_S_LEFT:
 				SetDParam(0, DateToScaledDateTicks(MAX_YEAR * DAYS_IN_YEAR));
-				d = GetStringBoundingBox(STR_WHITE_DATE_WALLCLOCK_LONG);
+				d = GetStringBoundingBox(STR_JUST_DATE_WALLCLOCK_LONG);
 				break;
 
 			case WID_S_RIGHT: {
 				int64 max_money = UINT32_MAX;
 				for (const Company *c : Company::Iterate()) max_money = std::max<int64>(c->money, max_money);
 				SetDParam(0, 100LL * max_money);
-				d = GetStringBoundingBox(STR_COMPANY_MONEY);
+				d = GetStringBoundingBox(STR_JUST_CURRENCY_LONG);
 				break;
 			}
 
@@ -143,7 +143,7 @@ struct StatusBarWindow : Window {
 			case WID_S_LEFT:
 				/* Draw the date */
 				SetDParam(0, _scaled_date_ticks);
-				DrawString(tr, STR_WHITE_DATE_WALLCLOCK_LONG, TC_FROMSTRING, SA_HOR_CENTER);
+				DrawString(tr, STR_JUST_DATE_WALLCLOCK_LONG, TC_WHITE, SA_HOR_CENTER);
 				break;
 
 			case WID_S_RIGHT: {
@@ -154,7 +154,7 @@ struct StatusBarWindow : Window {
 					const Company *c = Company::GetIfValid(_local_company);
 					if (c != nullptr) {
 						SetDParam(0, c->money);
-						DrawString(tr, STR_COMPANY_MONEY, TC_FROMSTRING, SA_HOR_CENTER);
+						DrawString(tr, STR_JUST_CURRENCY_LONG, TC_WHITE, SA_HOR_CENTER);
 					}
 				}
 				break;

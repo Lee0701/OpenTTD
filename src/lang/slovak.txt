@@ -192,39 +192,39 @@ STR_QUANTITY_N_A                                                :Nie je
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}CE
-STR_ABBREV_COAL                                                 :{TINY_FONT}UH
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PO
-STR_ABBREV_OIL                                                  :{TINY_FONT}RO
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}DO
-STR_ABBREV_GOODS                                                :{TINY_FONT}TO
-STR_ABBREV_GRAIN                                                :{TINY_FONT}OB
-STR_ABBREV_WOOD                                                 :{TINY_FONT}DR
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}ZR
-STR_ABBREV_STEEL                                                :{TINY_FONT}OC
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}CE
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}MR
-STR_ABBREV_MAIZE                                                :{TINY_FONT}KU
-STR_ABBREV_FRUIT                                                :{TINY_FONT}OV
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DI
-STR_ABBREV_FOOD                                                 :{TINY_FONT}JE
-STR_ABBREV_PAPER                                                :{TINY_FONT}PA
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ZL
-STR_ABBREV_WATER                                                :{TINY_FONT}VO
-STR_ABBREV_WHEAT                                                :{TINY_FONT}PS
-STR_ABBREV_RUBBER                                               :{TINY_FONT}KA
-STR_ABBREV_SUGAR                                                :{TINY_FONT}CU
-STR_ABBREV_TOYS                                                 :{TINY_FONT}HR
-STR_ABBREV_SWEETS                                               :{TINY_FONT}CK
-STR_ABBREV_COLA                                                 :{TINY_FONT}KO
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}CV
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}KR
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BT
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}UM
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}MA
-STR_ABBREV_NONE                                                 :{TINY_FONT}NIC
-STR_ABBREV_ALL                                                  :{TINY_FONT}VS.
+STR_ABBREV_PASSENGERS                                           :CE
+STR_ABBREV_COAL                                                 :UH
+STR_ABBREV_MAIL                                                 :PO
+STR_ABBREV_OIL                                                  :RO
+STR_ABBREV_LIVESTOCK                                            :DO
+STR_ABBREV_GOODS                                                :TO
+STR_ABBREV_GRAIN                                                :OB
+STR_ABBREV_WOOD                                                 :DR
+STR_ABBREV_IRON_ORE                                             :ZR
+STR_ABBREV_STEEL                                                :OC
+STR_ABBREV_VALUABLES                                            :CE
+STR_ABBREV_COPPER_ORE                                           :MR
+STR_ABBREV_MAIZE                                                :KU
+STR_ABBREV_FRUIT                                                :OV
+STR_ABBREV_DIAMONDS                                             :DI
+STR_ABBREV_FOOD                                                 :JE
+STR_ABBREV_PAPER                                                :PA
+STR_ABBREV_GOLD                                                 :ZL
+STR_ABBREV_WATER                                                :VO
+STR_ABBREV_WHEAT                                                :PS
+STR_ABBREV_RUBBER                                               :KA
+STR_ABBREV_SUGAR                                                :CU
+STR_ABBREV_TOYS                                                 :HR
+STR_ABBREV_SWEETS                                               :CK
+STR_ABBREV_COLA                                                 :KO
+STR_ABBREV_CANDYFLOSS                                           :CV
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :KR
+STR_ABBREV_BATTERIES                                            :BT
+STR_ABBREV_PLASTIC                                              :UM
+STR_ABBREV_FIZZY_DRINKS                                         :MA
+STR_ABBREV_NONE                                                 :NIC
+STR_ABBREV_ALL                                                  :VS.
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA} cestujúci{P "" "" ch}
@@ -255,14 +255,15 @@ STR_COLOUR_WHITE                                                :Biela
 STR_COLOUR_RANDOM                                               :Náhodná
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA} m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}políč{P ko ka ok}/deň
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}uzlov
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}hp
-STR_UNITS_POWER_METRIC                                          :{COMMA}hp
-STR_UNITS_POWER_SI                                              :{COMMA}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}hp
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}hp
+STR_UNITS_POWER_SI                                              :{DECIMAL}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hp/t
@@ -274,29 +275,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA} ton{P "a" "y" ""}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} ton{P a y ""}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL} ton{P "a" "y" ""}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} ton{P a y ""}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA} galón{P "" "y" "ov"}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA} lit{P er re rov}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA} m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL} galón{P "" "y" "ov"}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL} lit{P er re rov}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL} m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA} lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA} kgf
-STR_UNITS_FORCE_SI                                              :{COMMA} kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL} lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL} kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL} kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA} st{P opa opy ôp}
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA} m
-STR_UNITS_HEIGHT_SI                                             :{COMMA} m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} st{P opa opy ôp}
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filter:
@@ -407,9 +408,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}Otvoriť
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Pozastaviť hru
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Zrýchliť priebeh hry
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Nastavenia
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Uložiť hru, opustiť hru, ukončiť
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Zobraziť mapu
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Možnosti a nastavenia
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Uložiť, načítať alebo opustiť hru, ukončiť program
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Zobraziť mapu, extra výrez, tok nákladu alebo zoznam značiek
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Zobraziť zoznam miest
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Zobraziť dotácie
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Zoznam staníc spoločnosti
@@ -417,9 +418,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Finančn
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Informácie o spoločnosti
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Zobraziť knihu príbehov
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK}Zobraziť zoznam cieľov
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Grafy
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Zobrazte firemné grafy a sadzby platieb za náklad
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}Hodnotenie spoločností
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Financovať výstavbu nového priemyslu
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Preskúmať odvetvia alebo zafinancovať výstavbu nového odvetvia
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Zoznam vlakov spoločnosti. Ctrl+klik prepína zoznam skupín/vozidiel
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Zoznam cestných vozidiel spoločnosti. Ctrl+klik prepína zoznam skupín/vozidiel
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Zoznam lodí spoločnosti. Ctrl+klik prepína zoznam skupín/vozidiel
@@ -433,8 +434,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Výstavb
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Výstavba letísk
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Otvoriť panel nástrojov pre úpravy terénu, výsadbu stromov, a pod.
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Zobraziť okno zvuku a hudby
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Zobraziť poslednú správu/novinku, nastavenia správ
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Informácie o pozemku, konzola, ladenie skriptu, snímky obrazovky, o OpenTTD
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Zobraziť poslednú správu/novinku, históriu správ alebo vymazať všetky správy
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Informácie o pozemku, snímka obrazovky, o OpenTTD a nástrojoch pre vývojárov
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Prepnúť panely nástrojov
 
 # Extra tooltips for the scenario editor toolbar
@@ -997,6 +998,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Nastavi�
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Možnosti hry
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Mena
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Výber menovej jednotky
 
@@ -1050,10 +1055,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Výber i
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Vypnuté
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Každý mesiac
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Každé 3 mesiace
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Každých 6 mesiacov
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Každých 12 mesiacov
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Jazyk
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Výber jazyka rozhrania
@@ -1089,6 +1090,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafika
 
@@ -1871,13 +1873,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Originálna
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Plynulá
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Zamrznutá
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Povoliť kupovanie podielov v ostatných spoločnostiach: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Ak je zapnuté, povolí sa nákup a predaj podielov spoločností. Podiely budú prístupné len pre spoločnosti od urcitého veku.
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimálny vek spoločnosti na obchodovanie s podielmi: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Určuje minimálny vek spoločnosti na to, aby od nej mohli ostatné spoločnosti kupovať a predavať podiely.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Percentáž zisku na zaplatenie podávacieho systému: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Percento príjmov dať na strednú ´nohu´ vo feeder systémoch, získate väčšiu kontrolu nad príjmami
 
@@ -1991,10 +1986,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :žiadne
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Násobok počiatočnej veľkosti mesta: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Priemerná veľkosť veľkomiest v porovnaní k mestám na začiatku hry.
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Aktualizovať distribučný graf každ{P 0:2 "ý" "é" "ých"} {STRING} {P 0:2 "deň" "dni" "dní"}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Čas medzi nasledujúcimi prepočtami grafu spojení. Každý prepočet počíta plány pre jednu súčasť grafu. To znamená, že hodnota X pre toto nastavenie neznamená sa celý graf aktualizuje každých X dní, ale iba jedna súčasť. Čím menej nastavíte, tým viac procesorového času bude potrebného na výpočet. Čím viac nastavíte, tým dlhšie bude trvať, kým sa začne distribuovať na nové trasy.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Použiť {STRING} {P 0:2 "deň" "dni" "dní"} na prepočítanie distribučného grafu
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Čas potrebný pre každé prepočítanie grafu spojov. Pri štarte prepočtu je vytvorené vlákno, ktoré môže bežať uvedený počet dní. Čím menej nastavíte, tým je pravdepodobnejšie, že vlákno nestihne skončiť, kým je to možné. Potom sa hra na nejaký čas zasekne. Čím viac nastavíte, tým dlhšie trvá aktualizácia rozdelenia po zmene trasy.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Druh distribúcie pre cestujúcich: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Symetricky" znamená, že približne rovnaké množstvo pasažierov bude cestovať zo stanice A do stanice B ako z B do A. "Asymetricky" znamená, že v oboch smeroch môže cestovať ľubovoľné množstvo pasažierov. "Manuálne" znamená, že sa pre pasažierov nevykoná automatická distribúcia.
@@ -2020,13 +2011,15 @@ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :Nastavením na 
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :Vyťaženie krátkych ciest pred použitím vysokokapacitných ciest: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Často je viac ciest medzi dvoma stanicami. Cargodist vyťaží najprv najkratšiu cestu, potom využije druhú najkratšiu cestu až kým nebude vyťažená atď. Vyťaženie je určené podľa odhadu kapacity a plánovaného využitia. Ak sú vyťažené všetky trasy a nepostačuje to, preťaží všetky trasy, s preferenciou najkapacitnejšej. Väčšinou algoritmus neodhadne kapacitu presne. Toto nastavenie umožňuje určiť na koľko percent musí byť vyťažená prvá pred výberom nasledujúcej dlhšej. Nastavte na menej ako 100%, aby sa zabránilo preplneniu staníc v prípade nadhodnotenia kapacity.
 
-STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Jednotky rýchlosti: {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Jednotky rýchlosti (pozemné): {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Jednotky rýchlosti (námorné): {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Vždy, keď sa zobrazí rýchlosť v užívateľskom rozhraní, zobrazí sa vo vybraných jednotkách
 ###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Imperiálne (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metrické (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Jednotky v hre (políčka/deň)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Uzle
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Jednotky výkonu vozidiel: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Vždy, keď sa zobrazí výkon vozidla v užívateľskom rozhraní, zobrazí sa vo vybraných jednotkách
@@ -2454,6 +2447,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Nepodar
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Nie
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Áno, tentokrát
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Áno, znova sa nepýtať
+
 
 STR_NETWORK_SPECTATORS                                          :Pozorovatelia
 
@@ -3776,7 +3770,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} lo{P ď de dí}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Žiadne
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Hodnota spoločnosti: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% vlastní {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infraštruktúra:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} políč{P ko ka ok} železnice
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} políč{P ko ka ok} cesty
@@ -3804,11 +3797,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Názov s
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Zmeniť názov spoločnosti
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Meno prezidenta
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Zmeniť meno prezidenta
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Kúpiť 25% podiel v spoločnosti
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Predať 25% podiel v spoločnosti
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Kúpiť 25% podiel v tejto spoločnosti. Shift+klik zobrazí odhadovanú cenu bez zakúpenia podielu.
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Predať 25% podiel v tejto spoločnosti. Shift+klik zobrazí odhadovanú cenu bez predaja podielu.
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Názov spoločnosti
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Meno prezidenta
@@ -3887,8 +3875,6 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Zadať p
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Vymeniť vozidlá
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Vykonať servis
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Zisk tento rok: {CURRENCY_LONG} (minulý rok: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Poslať do depa
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Poslať do garáže
@@ -4653,6 +4639,7 @@ STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}AI, ktor
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Človek
 STR_AI_CONFIG_RANDOM_AI                                         :Náhodná AI
 STR_AI_CONFIG_NONE                                              :(žiadne)
+STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Maximálny počet konkurentov: {ORANGE}{COMMA}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Posunúť vyššie
@@ -4666,7 +4653,7 @@ STR_AI_CONFIG_AI                                                :{SILVER}AI (ume
 
 STR_AI_CONFIG_CHANGE_AI                                         :{BLACK}Vyber AI
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :{BLACK}Vyber skript
-STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Spusti ďalší skript
+STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Spusti ďalší skript. Ctrl+klik zobrazí všetky dostupné verzie
 STR_AI_CONFIG_CONFIGURE                                         :{BLACK}Nastaviť
 STR_AI_CONFIG_CONFIGURE_TOOLTIP                                 :{BLACK}Nastaviť parametre skriptu
 
@@ -4700,7 +4687,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Herný skript
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Zavrieť
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetovať
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Koľko dní prejde od spustenia predchádzajúcej umelej inteligencie k naštartovaniu novej: {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4709,7 +4695,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Zalamova
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Zobraziť readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Log zmien
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licencia
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} "čítajma" {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} log zmien {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} licencia {STRING}
@@ -4837,9 +4823,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Nie je m
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Nie je možné presunúť peniaze tejto spoločnosti...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Spoločnosť nie je možné kúpiť ...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Nemôžete tu postaviť sídlo spoločnosti...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nemôžete kúpiť 25% podiel v tejto spoločnosti...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}25% podiel v tejto spoločnosti sa nedá predať ...
-STR_ERROR_PROTECTED                                             :{WHITE}S akciami tejto spoločnosti nie je zatiaľ možné obchodovať...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Nie je možné postaviť viac miest
@@ -5583,10 +5566,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut Helic
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Spoločnosť {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Skupina {COMMA}
@@ -5668,33 +5651,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

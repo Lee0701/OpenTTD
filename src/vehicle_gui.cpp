@@ -272,7 +272,7 @@ void BaseVehicleListWindow::BuildVehicleList()
 	this->CountOwnVehicles();
 
 	this->vehgroups.RebuildDone();
-	this->vscroll->SetCount(static_cast<int>(this->vehgroups.size()));
+	this->vscroll->SetCount(this->vehgroups.size());
 }
 
 static bool GroupCargoFilter(const GUIVehicleGroup* group, const CargoID cid)
@@ -391,7 +391,7 @@ Dimension BaseVehicleListWindow::GetActionDropdownSize(bool show_autoreplace, bo
 
 void BaseVehicleListWindow::OnInit()
 {
-	this->order_arrow_width = GetStringBoundingBox(STR_TINY_RIGHT_ARROW).width;
+	this->order_arrow_width = GetStringBoundingBox(STR_JUST_RIGHT_ARROW, FS_SMALL).width;
 	this->SetCargoFilterArray();
 }
 
@@ -810,6 +810,7 @@ struct RefitWindow : public Window {
 	{
 		uint scroll_row = 0;
 		uint row = 0;
+		uint old_row = this->vscroll->GetCount();
 
 		for (uint i = 0; i < NUM_CARGO; i++) {
 			for (uint j = 0; j < this->list[i].size(); j++) {
@@ -825,7 +826,7 @@ struct RefitWindow : public Window {
 		}
 
 		this->vscroll->SetCount(row);
-		if (scroll_row < row) this->vscroll->ScrollTowards(scroll_row);
+		if (scroll_row < row && row != old_row) this->vscroll->ScrollTowards(scroll_row);
 	}
 
 	/**
@@ -1558,7 +1559,7 @@ static bool VehicleNameSorter(const Vehicle * const &a, const Vehicle * const &b
 		GetString(last_name[1], STR_VEHICLE_NAME, lastof(last_name[1]));
 	}
 
-	int r = strnatcmp(last_name[0], last_name[1]); // Sort by name (natural sorting).
+	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
 	return (r != 0) ? r < 0: VehicleNumberSorter(a, b);
 }
 
@@ -1572,21 +1573,21 @@ static bool VehicleAgeSorter(const Vehicle * const &a, const Vehicle * const &b)
 /** Sort vehicles by this year profit */
 static bool VehicleProfitThisYearSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32(a->GetDisplayProfitThisYear() - b->GetDisplayProfitThisYear());
+	int r = ClampTo<int32_t>(a->GetDisplayProfitThisYear() - b->GetDisplayProfitThisYear());
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
 /** Sort vehicles by last year profit */
 static bool VehicleProfitLastYearSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32(a->GetDisplayProfitLastYear() - b->GetDisplayProfitLastYear());
+	int r = ClampTo<int32>(a->GetDisplayProfitLastYear() - b->GetDisplayProfitLastYear());
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
 /** Sort vehicles by lifetime profit */
 static bool VehicleProfitLifetimeSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32(a->GetDisplayProfitLifetime() - b->GetDisplayProfitLifetime());
+	int r = ClampTo<int32>(a->GetDisplayProfitLifetime() - b->GetDisplayProfitLifetime());
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
@@ -1639,7 +1640,7 @@ static bool VehicleValueSorter(const Vehicle * const &a, const Vehicle * const &
 	for (u = a; u != nullptr; u = u->Next()) diff += u->value;
 	for (u = b; u != nullptr; u = u->Next()) diff -= u->value;
 
-	int r = ClampToI32(diff);
+	int r = ClampTo<int32_t>(diff);
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
@@ -1653,7 +1654,7 @@ static bool VehicleLengthSorter(const Vehicle * const &a, const Vehicle * const 
 /** Sort vehicles by the time they can still live */
 static bool VehicleTimeToLiveSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32((a->max_age - a->age) - (b->max_age - b->age));
+	int r = ClampTo<int32_t>((a->max_age - a->age) - (b->max_age - b->age));
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
@@ -1783,7 +1784,7 @@ static const NWidgetPart _nested_vehicle_list[] = {
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_VL_HIDE_BUTTONS),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VL_AVAILABLE_VEHICLES), SetMinimalSize(106, 12), SetFill(0, 1),
-								SetDataTip(STR_BLACK_STRING, STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP),
+								SetDataTip(STR_JUST_STRING, STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), SetFill(1, 1), EndContainer(),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_VL_MANAGE_VEHICLES_DROPDOWN), SetMinimalSize(118, 12), SetFill(0, 1),
 								SetDataTip(STR_VEHICLE_LIST_MANAGE_LIST, STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP),
@@ -1811,11 +1812,11 @@ static void DrawSmallOrderList(const Vehicle *v, int left, int right, int y, uin
 	VehicleOrderID oid = start;
 
 	do {
-		if (oid == v->cur_real_order_index) DrawString(left, right, y, STR_TINY_RIGHT_ARROW, TC_BLACK);
+		if (oid == v->cur_real_order_index) DrawString(left, right, y, STR_JUST_RIGHT_ARROW, TC_BLACK, SA_LEFT, false, FS_SMALL);
 
 		if (order->IsType(OT_GOTO_STATION)) {
 			SetDParam(0, order->GetDestination());
-			DrawString(left + l_offset, right - r_offset, y, STR_TINY_BLACK_STATION);
+			DrawString(left + l_offset, right - r_offset, y, STR_STATION_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 
 			y += FONT_HEIGHT_SMALL;
 			if (++i == 4) break;
@@ -1840,7 +1841,7 @@ static void DrawSmallOrderList(const Order *order, int left, int right, int y, u
 	while (order != nullptr) {
 		if (order->IsType(OT_GOTO_STATION)) {
 			SetDParam(0, order->GetDestination());
-			DrawString(left + l_offset, right - r_offset, y, STR_TINY_BLACK_STATION);
+			DrawString(left + l_offset, right - r_offset, y, STR_STATION_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 
 			y += FONT_HEIGHT_SMALL;
 			if (++i == 4) break;
@@ -2059,44 +2060,44 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 
 					if (!v->name.empty()) {
 						/* The vehicle got a name so we will print it and the cargoes */
-						SetDParam(0, STR_TINY_BLACK_VEHICLE);
+						SetDParam(0, STR_VEHICLE_NAME);
 						SetDParam(1, v->index);
 						SetDParam(2, STR_VEHICLE_LIST_CARGO);
 						SetDParam(3, vehicle_cargoes);
-						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_NAME_AND_CARGO);
+						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_NAME_AND_CARGO, TC_BLACK, SA_LEFT, false, FS_SMALL);
 					} else if (v->group_id != DEFAULT_GROUP) {
 						/* The vehicle has no name, but is member of a group, so print group name and the cargoes */
-						SetDParam(0, STR_TINY_GROUP);
+						SetDParam(0, STR_GROUP_NAME);
 						SetDParam(1, v->group_id);
 						SetDParam(2, STR_VEHICLE_LIST_CARGO);
 						SetDParam(3, vehicle_cargoes);
-						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_NAME_AND_CARGO);
+						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_NAME_AND_CARGO, TC_BLACK, SA_LEFT, false, FS_SMALL);
 					} else {
 						/* The vehicle has no name, and is not a member of a group, so just print the cargoes */
 						SetDParam(0, vehicle_cargoes);
-						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_CARGO);
+						DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_LIST_CARGO, TC_BLACK, SA_LEFT, false, FS_SMALL);
 					}
 				} else if (!v->name.empty()) {
 					/* The vehicle got a name so we will print it */
 					SetDParam(0, v->index);
-					DrawString(tr.left, tr.right, ir.top, STR_TINY_BLACK_VEHICLE);
+					DrawString(tr.left, tr.right, ir.top, STR_VEHICLE_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 				} else if (v->group_id != DEFAULT_GROUP) {
 					/* The vehicle has no name, but is member of a group, so print group name */
 					SetDParam(0, v->group_id | GROUP_NAME_HIERARCHY);
-					DrawString(tr.left, tr.right, ir.top, STR_TINY_GROUP, TC_BLACK);
+					DrawString(tr.left, tr.right, ir.top, STR_GROUP_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 				}
 
 				if (show_orderlist) DrawSmallOrderList(v, olr.left, olr.right, ir.top, this->order_arrow_width, v->cur_real_order_index);
 
-				StringID str;
+				TextColour tc;
 				if (v->IsChainInDepot()) {
-					str = STR_BLUE_COMMA;
+					tc = TC_BLUE;
 				} else {
-					str = (v->age > v->max_age - DAYS_IN_LEAP_YEAR) ? STR_RED_COMMA : STR_BLACK_COMMA;
+					tc = (v->age > v->max_age - DAYS_IN_LEAP_YEAR) ? TC_RED : TC_BLACK;
 				}
 
 				SetDParam(0, v->unitnumber);
-				DrawString(ir.left, ir.right, ir.top + WidgetDimensions::scaled.framerect.top, str);
+				DrawString(ir.left, ir.right, ir.top + WidgetDimensions::scaled.framerect.top, STR_JUST_COMMA, tc);
 				break;
 			}
 
@@ -2120,14 +2121,14 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 					}
 					if (show_group) {
 						SetDParam(0, gid | GROUP_NAME_HIERARCHY);
-						DrawString(tr.left, tr.right, ir.top, STR_TINY_GROUP, TC_BLACK);
+						DrawString(tr.left, tr.right, ir.top, STR_GROUP_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 					}
 				}
 
 				if (show_orderlist) DrawSmallOrderList((vehgroup.vehicles_begin[0])->GetFirstOrder(), olr.left, olr.right, ir.top, this->order_arrow_width);
 
 				SetDParam(0, vehgroup.NumVehicles());
-				DrawString(ir.left, ir.right, ir.top + WidgetDimensions::scaled.framerect.top, STR_BLACK_COMMA);
+				DrawString(ir.left, ir.right, ir.top + WidgetDimensions::scaled.framerect.top, STR_JUST_COMMA, TC_BLACK);
 				break;
 
 			default:
@@ -3141,7 +3142,7 @@ struct VehicleDetailsWindow : Window {
 					SetDParam(2, PackVelocity(v->GetDisplayMaxSpeed(), v->type));
 					SetDParam(1, gcache->cached_power);
 					SetDParam(0, gcache->cached_weight);
-					SetDParam(3, gcache->cached_max_te / 1000);
+					SetDParam(3, gcache->cached_max_te);
 					if (v->type == VEH_TRAIN && (_settings_game.vehicle.train_acceleration_model == AM_ORIGINAL ||
 							GetRailTypeInfo(Train::From(v)->railtype)->acceleration_type == 2)) {
 						string = STR_VEHICLE_INFO_WEIGHT_POWER_MAX_SPEED;
@@ -3170,7 +3171,7 @@ struct VehicleDetailsWindow : Window {
 					SetDParam(0, STR_VEHICLE_INFO_POWER_WEIGHT_RATIO);
 					SetDParam(1, (100 * Train::From(v)->gcache.cached_power) / std::max<uint>(1, Train::From(v)->gcache.cached_weight));
 					SetDParam(2, Train::From(v)->GetAccelerationType() == 2 ? STR_EMPTY : STR_VEHICLE_INFO_TE_WEIGHT_RATIO);
-					SetDParam(3, (Train::From(v)->gcache.cached_max_te / 10) / std::max<uint>(1, Train::From(v)->gcache.cached_weight));
+					SetDParam(3, (100 * Train::From(v)->gcache.cached_max_te) / std::max<uint>(1, Train::From(v)->gcache.cached_weight));
 					DrawString(tr, STR_VEHICLE_INFO_WEIGHT_RATIOS);
 					tr.top += FONT_HEIGHT_NORMAL;
 				}

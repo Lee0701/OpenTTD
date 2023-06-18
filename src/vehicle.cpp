@@ -117,7 +117,7 @@ Rect16 VehicleSpriteSeq::GetBounds() const
 	Rect16 bounds;
 	bounds.left = bounds.top = bounds.right = bounds.bottom = 0;
 	for (uint i = 0; i < this->count; ++i) {
-		const Sprite *spr = GetSprite(this->seq[i].sprite, ST_NORMAL);
+		const Sprite *spr = GetSprite(this->seq[i].sprite, SpriteType::Normal);
 		if (i == 0) {
 			bounds.left = spr->x_offs;
 			bounds.top  = spr->y_offs;
@@ -444,15 +444,6 @@ Vehicle::Vehicle(VehicleType type)
 	this->last_loading_tick = 0;
 	this->cur_image_valid_dir  = INVALID_DIR;
 	this->vcache.cached_veh_flags = 0;
-}
-
-/**
- * Get a value for a vehicle's random_bits.
- * @return A random value from 0 to 255.
- */
-byte VehicleRandomBits()
-{
-	return GB(Random(), 0, 8);
 }
 
 /* Size of the hash, 6 = 64 x 64, 7 = 128 x 128. Larger sizes will (in theory) reduce hash
@@ -1647,6 +1638,9 @@ void CallVehicleTicks()
 			const Company *c = Company::Get(_current_company);
 			SubtractMoneyFromCompany(CommandCost(EXPENSES_NEW_VEHICLES, (Money)c->settings.engine_renew_money));
 			CommandCost res2 = DoCommand(0, t_new, 1, DC_EXEC, CMD_AUTOREPLACE_VEHICLE);
+			if (res2.HasResultData()) {
+				t = Train::Get(res2.GetResultData());
+			}
 			SubtractMoneyFromCompany(CommandCost(EXPENSES_NEW_VEHICLES, -(Money)c->settings.engine_renew_money));
 			if (res2.Succeeded() || res.GetCost() == 0) res.AddCost(res2);
 		}
@@ -2140,7 +2134,7 @@ void CheckVehicleBreakdown(Vehicle *v)
 	/* increase chance of failure */
 	int chance = v->breakdown_chance + 1;
 	if (Chance16I(1, 25, r)) chance += 25;
-	chance = std::min(255, chance);
+	chance = ClampTo<uint8>(chance);
 	v->breakdown_chance = chance;
 
 	if (_settings_game.vehicle.improved_breakdowns) {

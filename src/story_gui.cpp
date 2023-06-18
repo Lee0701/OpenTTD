@@ -61,7 +61,7 @@ protected:
 	GUIStoryPageList story_pages;      ///< Sorted list of pages.
 	GUIStoryPageElementList story_page_elements; ///< Sorted list of page elements that belong to the current page.
 	StoryPageID selected_page_id;      ///< Pool index of selected page.
-	char selected_generic_title[255];  ///< If the selected page doesn't have a custom title, this buffer is used to store a generic page title.
+	std::string selected_generic_title;  ///< If the selected page doesn't have a custom title, this buffer is used to store a generic page title.
 
 	StoryPageElementID active_button_id; ///< Which button element the player is currently using
 
@@ -189,9 +189,9 @@ protected:
 	{
 		/* Generate generic title if selected page have no custom title. */
 		StoryPage *page = this->GetSelPage();
-		if (page != nullptr && page->title == nullptr) {
+		if (page != nullptr && page->title.empty()) {
 			SetDParam(0, GetSelPageNum() + 1);
-			GetString(selected_generic_title, STR_STORY_BOOK_GENERIC_PAGE_ITEM, lastof(selected_generic_title));
+			selected_generic_title = GetString(STR_STORY_BOOK_GENERIC_PAGE_ITEM);
 		}
 
 		this->story_page_elements.ForceRebuild();
@@ -256,7 +256,7 @@ protected:
 		for (const StoryPage *p : this->story_pages) {
 			bool current_page = p->index == this->selected_page_id;
 			DropDownListStringItem *item = nullptr;
-			if (p->title != nullptr) {
+			if (!p->title.empty()) {
 				item = new DropDownListCharStringItem(p->title, p->index, current_page);
 			} else {
 				/* No custom title => use a generic page title with page number. */
@@ -296,7 +296,7 @@ protected:
 
 		/* Title lines */
 		height += FONT_HEIGHT_NORMAL; // Date always use exactly one line.
-		SetDParamStr(0, page->title != nullptr ? page->title : this->selected_generic_title);
+		SetDParamStr(0, !page->title.empty() ? page->title : this->selected_generic_title);
 		height += GetStringHeight(STR_STORY_BOOK_TITLE, max_width);
 
 		return height;
@@ -334,7 +334,7 @@ protected:
 		switch (pe.type) {
 			case SPET_TEXT:
 				SetDParamStr(0, pe.text);
-				return GetStringHeight(STR_BLACK_RAW_STRING, max_width);
+				return GetStringHeight(STR_JUST_RAW_STRING, max_width);
 
 			case SPET_GOAL:
 			case SPET_LOCATION: {
@@ -617,7 +617,7 @@ public:
 		this->owner = (Owner)this->window_number;
 
 		/* Initialize selected vars. */
-		this->selected_generic_title[0] = '\0';
+		this->selected_generic_title.clear();
 		this->selected_page_id = INVALID_STORY_PAGE;
 
 		this->active_button_id = INVALID_STORY_PAGE_ELEMENT;
@@ -656,7 +656,7 @@ public:
 		switch (widget) {
 			case WID_SB_SEL_PAGE: {
 				StoryPage *page = this->GetSelPage();
-				SetDParamStr(0, page != nullptr && page->title != nullptr ? page->title : this->selected_generic_title);
+				SetDParamStr(0, page != nullptr && !page->title.empty() ? page->title : this->selected_generic_title);
 				break;
 			}
 			case WID_SB_CAPTION:
@@ -714,7 +714,7 @@ public:
 		y_offset += line_height;
 
 		/* Title */
-		SetDParamStr(0, page->title != nullptr ? page->title : this->selected_generic_title);
+		SetDParamStr(0, !page->title.empty() ? page->title : this->selected_generic_title);
 		y_offset = DrawStringMultiLine(0, fr.right, y_offset, fr.bottom, STR_STORY_BOOK_TITLE, TC_BLACK, SA_TOP | SA_HOR_CENTER);
 
 		/* Page elements */
@@ -774,12 +774,12 @@ public:
 				for (size_t i = 0; i < this->story_pages.size(); i++) {
 					const StoryPage *s = this->story_pages[i];
 
-					if (s->title != nullptr) {
+					if (!s->title.empty()) {
 						SetDParamStr(0, s->title);
 					} else {
 						SetDParamStr(0, this->selected_generic_title);
 					}
-					Dimension title_d = GetStringBoundingBox(STR_BLACK_RAW_STRING);
+					Dimension title_d = GetStringBoundingBox(STR_JUST_RAW_STRING);
 
 					if (title_d.width > d.width) {
 						d.width = title_d.width;
@@ -878,7 +878,7 @@ public:
 
 			/* Was the last page removed? */
 			if (this->story_pages.size() == 0) {
-				this->selected_generic_title[0] = '\0';
+				this->selected_generic_title.clear();
 			}
 
 			/* Verify page selection. */
@@ -970,7 +970,7 @@ static const NWidgetPart _nested_story_book_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_TEXTBTN, COLOUR_BROWN, WID_SB_PREV_PAGE), SetMinimalSize(100, 0), SetFill(0, 0), SetDataTip(STR_STORY_BOOK_PREV_PAGE, STR_STORY_BOOK_PREV_PAGE_TOOLTIP),
 		NWidget(NWID_BUTTON_DROPDOWN, COLOUR_BROWN, WID_SB_SEL_PAGE), SetMinimalSize(93, 12), SetFill(1, 0),
-												SetDataTip(STR_BLACK_RAW_STRING, STR_STORY_BOOK_SEL_PAGE_TOOLTIP), SetResize(1, 0),
+												SetDataTip(STR_JUST_RAW_STRING, STR_STORY_BOOK_SEL_PAGE_TOOLTIP), SetResize(1, 0),
 		NWidget(WWT_TEXTBTN, COLOUR_BROWN, WID_SB_NEXT_PAGE), SetMinimalSize(100, 0), SetFill(0, 0), SetDataTip(STR_STORY_BOOK_NEXT_PAGE, STR_STORY_BOOK_NEXT_PAGE_TOOLTIP),
 		NWidget(WWT_RESIZEBOX, COLOUR_BROWN),
 	EndContainer(),

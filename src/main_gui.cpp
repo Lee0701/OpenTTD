@@ -34,7 +34,7 @@
 #include "error.h"
 #include "news_gui.h"
 
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 
 #include "widgets/main_widget.h"
 
@@ -54,14 +54,14 @@ void CcGiveMoney(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2
 
 	/* Inform the company of the action of one of its clients (controllers). */
 	char msg[64];
-	SetDParam(0, p2);
+	SetDParam(0, p1);
 	GetString(msg, STR_COMPANY_NAME, lastof(msg));
 
 	/*
 	 * bits 31-16: source company
 	 * bits 15-0: target company
 	 */
-	uint64 auxdata = (p2 & 0xFFFF) | (((uint64) _local_company) << 16);
+	uint64 auxdata = (p1 & 0xFFFF) | (((uint64) _local_company) << 16);
 
 	if (!_network_server) {
 		NetworkClientSendChat(NETWORK_ACTION_GIVE_MONEY, DESTTYPE_BROADCAST_SS, p2, msg, NetworkTextMessageData(result.GetCost(), auxdata));
@@ -234,6 +234,7 @@ enum {
 	GHK_CHANGE_MAP_MODE_PREV,
 	GHK_CHANGE_MAP_MODE_NEXT,
 	GHK_SWITCH_VIEWPORT_ROUTE_OVERLAY_MODE,
+	GHK_SWITCH_VIEWPORT_MAP_SLOPE_MODE,
 };
 
 struct MainWindow : Window
@@ -466,6 +467,12 @@ struct MainWindow : Window
 					SetWindowDirty(WC_GAME_OPTIONS, WN_GAME_OPTIONS_GAME_SETTINGS);
 				}
 				break;
+			case GHK_SWITCH_VIEWPORT_MAP_SLOPE_MODE: {
+				_settings_client.gui.show_slopes_on_viewport_map = !_settings_client.gui.show_slopes_on_viewport_map;
+				extern void MarkAllViewportMapLandscapesDirty();
+				MarkAllViewportMapLandscapesDirty();
+				break;
+			}
 
 			default: return ES_NOT_HANDLED;
 		}
@@ -585,6 +592,7 @@ static Hotkey global_hotkeys[] = {
 	Hotkey(WKC_PAGEUP,   "previous_map_mode", GHK_CHANGE_MAP_MODE_PREV),
 	Hotkey(WKC_PAGEDOWN, "next_map_mode",     GHK_CHANGE_MAP_MODE_NEXT),
 	Hotkey((uint16)0,    "switch_viewport_route_overlay_mode", GHK_SWITCH_VIEWPORT_ROUTE_OVERLAY_MODE),
+	Hotkey((uint16)0,    "switch_viewport_map_slope_mode", GHK_SWITCH_VIEWPORT_MAP_SLOPE_MODE),
 	HOTKEY_LIST_END
 };
 HotkeyList MainWindow::hotkeys("global", global_hotkeys);
@@ -617,7 +625,7 @@ void ShowSelectGameWindow();
 void SetupColoursAndInitialWindow()
 {
 	for (uint i = 0; i != 16; i++) {
-		const byte *b = GetNonSprite(PALETTE_RECOLOUR_START + i, ST_RECOLOUR);
+		const byte *b = GetNonSprite(PALETTE_RECOLOUR_START + i, SpriteType::Recolour);
 
 		assert(b);
 		memcpy(_colour_gradient[i], b + 0xC6, sizeof(_colour_gradient[i]));

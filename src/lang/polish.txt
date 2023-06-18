@@ -501,39 +501,39 @@ STR_QUANTITY_N_A                                                :N/D
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PŻ
-STR_ABBREV_COAL                                                 :{TINY_FONT}WG
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PC
-STR_ABBREV_OIL                                                  :{TINY_FONT}RP
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}ŻC
-STR_ABBREV_GOODS                                                :{TINY_FONT}TW
-STR_ABBREV_GRAIN                                                :{TINY_FONT}ZB
-STR_ABBREV_WOOD                                                 :{TINY_FONT}DR
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}RŻ
-STR_ABBREV_STEEL                                                :{TINY_FONT}ST
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}KS
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}RM
-STR_ABBREV_MAIZE                                                :{TINY_FONT}KK
-STR_ABBREV_FRUIT                                                :{TINY_FONT}OW
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}ŻN
-STR_ABBREV_PAPER                                                :{TINY_FONT}PP
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ZŁ
-STR_ABBREV_WATER                                                :{TINY_FONT}WD
-STR_ABBREV_WHEAT                                                :{TINY_FONT}PS
-STR_ABBREV_RUBBER                                               :{TINY_FONT}KC
-STR_ABBREV_SUGAR                                                :{TINY_FONT}CK
-STR_ABBREV_TOYS                                                 :{TINY_FONT}ZA
-STR_ABBREV_SWEETS                                               :{TINY_FONT}SŁ
-STR_ABBREV_COLA                                                 :{TINY_FONT}CL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}WC
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BB
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}TF
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BT
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}NG
-STR_ABBREV_NONE                                                 :{TINY_FONT}0
-STR_ABBREV_ALL                                                  :{TINY_FONT}+
+STR_ABBREV_PASSENGERS                                           :PŻ
+STR_ABBREV_COAL                                                 :WG
+STR_ABBREV_MAIL                                                 :PC
+STR_ABBREV_OIL                                                  :RP
+STR_ABBREV_LIVESTOCK                                            :ŻC
+STR_ABBREV_GOODS                                                :TW
+STR_ABBREV_GRAIN                                                :ZB
+STR_ABBREV_WOOD                                                 :DR
+STR_ABBREV_IRON_ORE                                             :RŻ
+STR_ABBREV_STEEL                                                :ST
+STR_ABBREV_VALUABLES                                            :KS
+STR_ABBREV_COPPER_ORE                                           :RM
+STR_ABBREV_MAIZE                                                :KK
+STR_ABBREV_FRUIT                                                :OW
+STR_ABBREV_DIAMONDS                                             :DM
+STR_ABBREV_FOOD                                                 :ŻN
+STR_ABBREV_PAPER                                                :PP
+STR_ABBREV_GOLD                                                 :ZŁ
+STR_ABBREV_WATER                                                :WD
+STR_ABBREV_WHEAT                                                :PS
+STR_ABBREV_RUBBER                                               :KC
+STR_ABBREV_SUGAR                                                :CK
+STR_ABBREV_TOYS                                                 :ZA
+STR_ABBREV_SWEETS                                               :SŁ
+STR_ABBREV_COLA                                                 :CL
+STR_ABBREV_CANDYFLOSS                                           :WC
+STR_ABBREV_BUBBLES                                              :BB
+STR_ABBREV_TOFFEE                                               :TF
+STR_ABBREV_BATTERIES                                            :BT
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :NG
+STR_ABBREV_NONE                                                 :0
+STR_ABBREV_ALL                                                  :+
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}pasażer{P "" ów ów}
@@ -570,15 +570,15 @@ STR_COLOUR_WHITE                                                :Biały
 STR_COLOUR_RANDOM                                               :Losowy
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}p{P ole ola ól}/dzień
-STR_UNITS_VELOCITY_KNOTS                                        :{COMMA}{NBSP}w.
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}w.
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}KM
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}hp
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}KM
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hp/t
@@ -590,29 +590,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}ton{P a y ""}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}ton{P a y ""}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}ton{P a y ""}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}ton{P a y ""}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}galon{P "" y ów}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}litr{P "" y ów}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}galon{P "" y ów}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}litr{P "" y ów}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}st{P opa opy óp}
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}st{P opa opy óp}
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtr:
@@ -1047,7 +1047,7 @@ STR_PERFORMANCE_DETAIL_LOAN_TOOLTIP                             :{BLACK}Wielkoś
 STR_PERFORMANCE_DETAIL_TOTAL_TOOLTIP                            :{BLACK}Suma przyznanych punktów
 
 # Music window
-STR_MUSIC_JAZZ_JUKEBOX_CAPTION                                  :{WHITE}Jazz Jukebox
+STR_MUSIC_JAZZ_JUKEBOX_CAPTION                                  :{WHITE}Szafa Grająca
 STR_MUSIC_PLAYLIST_ALL                                          :{TINY_FONT}{BLACK}Wszystko
 STR_MUSIC_PLAYLIST_OLD_STYLE                                    :{TINY_FONT}{BLACK}Stary styl
 STR_MUSIC_PLAYLIST_NEW_STYLE                                    :{TINY_FONT}{BLACK}Nowy styl
@@ -1060,7 +1060,7 @@ STR_MUSIC_TRACK_NONE                                            :{TINY_FONT}{DKG
 STR_MUSIC_TRACK_DIGIT                                           :{TINY_FONT}{DKGREEN}{ZEROFILL_NUM}
 STR_MUSIC_TITLE_NONE                                            :{TINY_FONT}{DKGREEN}------
 STR_MUSIC_TITLE_NOMUSIC                                         :{TINY_FONT}{DKGREEN}Brak dostępnej muzyki
-STR_MUSIC_TITLE_NAME                                            :{TINY_FONT}{DKGREEN}"{STRING}"
+STR_MUSIC_TITLE_NAME                                            :{TINY_FONT}{DKGREEN}„{STRING}”
 STR_MUSIC_TRACK                                                 :{TINY_FONT}{BLACK}Ścieżka
 STR_MUSIC_XTITLE                                                :{TINY_FONT}{BLACK}Tytuł
 STR_MUSIC_SHUFFLE                                               :{TINY_FONT}{BLACK}Losowo
@@ -1070,20 +1070,20 @@ STR_MUSIC_TOOLTIP_SKIP_TO_NEXT_TRACK_IN_SELECTION               :{BLACK}Przejdź
 STR_MUSIC_TOOLTIP_STOP_PLAYING_MUSIC                            :{BLACK}Zatrzymaj muzykę
 STR_MUSIC_TOOLTIP_START_PLAYING_MUSIC                           :{BLACK}Odtwarzaj muzykę
 STR_MUSIC_TOOLTIP_DRAG_SLIDERS_TO_SET_MUSIC                     :{BLACK}Przesuń suwaki żeby ustawić głośność dźwięków i muzyki
-STR_MUSIC_TOOLTIP_SELECT_ALL_TRACKS_PROGRAM                     :{BLACK}Wybierz program 'Wszystko'
-STR_MUSIC_TOOLTIP_SELECT_OLD_STYLE_MUSIC                        :{BLACK}Wybierz program 'Stary styl'
-STR_MUSIC_TOOLTIP_SELECT_NEW_STYLE_MUSIC                        :{BLACK}Wybierz program 'Nowy styl'
-STR_MUSIC_TOOLTIP_SELECT_EZY_STREET_STYLE                       :{BLACK}Wybierz program 'Ezy Street'
-STR_MUSIC_TOOLTIP_SELECT_CUSTOM_1_USER_DEFINED                  :{BLACK}Wybierz program 'Własny 1' (definiowany)
-STR_MUSIC_TOOLTIP_SELECT_CUSTOM_2_USER_DEFINED                  :{BLACK}Wybierz program 'Własny 2' (definiowany)
-STR_MUSIC_TOOLTIP_TOGGLE_PROGRAM_SHUFFLE                        :{BLACK}Losowe odtwarzanie wł./wył.
+STR_MUSIC_TOOLTIP_SELECT_ALL_TRACKS_PROGRAM                     :{BLACK}Wybierz program „Wszystko”
+STR_MUSIC_TOOLTIP_SELECT_OLD_STYLE_MUSIC                        :{BLACK}Wybierz program „Stary styl”
+STR_MUSIC_TOOLTIP_SELECT_NEW_STYLE_MUSIC                        :{BLACK}Wybierz program „Nowy styl”
+STR_MUSIC_TOOLTIP_SELECT_EZY_STREET_STYLE                       :{BLACK}Wybierz program „Ezy Street”
+STR_MUSIC_TOOLTIP_SELECT_CUSTOM_1_USER_DEFINED                  :{BLACK}Wybierz program „Własny 1” (zdefiniowany przez użytkownika)
+STR_MUSIC_TOOLTIP_SELECT_CUSTOM_2_USER_DEFINED                  :{BLACK}Wybierz program „Własny 2” (zdefiniowany przez użytkownika)
+STR_MUSIC_TOOLTIP_TOGGLE_PROGRAM_SHUFFLE                        :{BLACK}Włącz/wyłącz losowe odtwarzanie
 STR_MUSIC_TOOLTIP_SHOW_MUSIC_TRACK_SELECTION                    :{BLACK}Pokaż okno wyboru ścieżek
 
 # Playlist window
-STR_PLAYLIST_MUSIC_SELECTION_SETNAME                            :{WHITE}Program muzyczny - '{STRING}'
-STR_PLAYLIST_TRACK_NAME                                         :{TINY_FONT}{LTBLUE}{ZEROFILL_NUM} "{STRING}"
+STR_PLAYLIST_MUSIC_SELECTION_SETNAME                            :{WHITE}Program muzyczny - „{STRING}”
+STR_PLAYLIST_TRACK_NAME                                         :{TINY_FONT}{LTBLUE}{ZEROFILL_NUM} „{STRING}”
 STR_PLAYLIST_TRACK_INDEX                                        :{TINY_FONT}{BLACK}Wykaz ścieżek
-STR_PLAYLIST_PROGRAM                                            :{TINY_FONT}{BLACK}Programuj - '{STRING}'
+STR_PLAYLIST_PROGRAM                                            :{TINY_FONT}{BLACK}Program - „{STRING}”
 STR_PLAYLIST_CLEAR                                              :{TINY_FONT}{BLACK}Wyczyść
 STR_PLAYLIST_CHANGE_SET                                         :{BLACK}Zmień zestaw
 STR_PLAYLIST_TOOLTIP_CLEAR_CURRENT_PROGRAM_CUSTOM1              :{BLACK}Wyczyść obecny program (tylko Wlasny1 lub Wlasny2)
@@ -1310,6 +1310,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Kopiuj p
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Opcje gry
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Ogólne
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Wybierz opcje ogólne
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Grafika
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Wybierz opcje grafiki
+STR_GAME_OPTIONS_TAB_SOUND                                      :Dźwięk
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Wybierz opcje dźwięku i muzyki
+
+STR_GAME_OPTIONS_VOLUME                                         :Głośność
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Efekty dźwiękowe
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muzyka
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0%
+STR_GAME_OPTIONS_VOLUME_25                                      :25%
+STR_GAME_OPTIONS_VOLUME_50                                      :50%
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+STR_GAME_OPTIONS_VOLUME_100                                     :100%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Waluta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Wybór waluty
 
@@ -1363,10 +1381,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Częstot
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Wył.
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Co 1 miesiąc
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Co 3 miesiące
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Co 6 miesięcy
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Co 12 miesięcy
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :Co 10 minut
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :Co 30 minut
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :Co 60 minut
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :Co 120 minut
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Język
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Wybierz język interfejsu
@@ -1402,6 +1420,14 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatyczna ankieta
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Udział w automatycznej ankiecie
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Kiedy włączone, OpenTTD prześle ankietę przy opuszczaniu gry
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}O ankiecie i prywatności
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Spowoduje to otwarcie przeglądarki z dodatkowymi informacjami na temat automatycznej ankiety
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Podejrzyj wynik ankiety
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Pokaż wynik ankiety dotyczącej bieżącej gry
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafika
 
@@ -1532,6 +1558,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Otwórz 
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Zamknij wszystko
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Zresetuj wszystkie ustawienia
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(wyjaśnienie niedostępne)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Domyślna wartość: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Typ ustawienia: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Ustawienie klienta (nie przechowywane w plikach zapisu; ma wpływ na wszystkie gry)
@@ -2092,7 +2119,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Ilość pamięc
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Okres między serwisowaniami w procentach: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Wybierz, czy serwisowanie pojazdów odbywa się na podstawie czasu od ostatniego serwisu, czy sprawności malejącej o pewien procent maksymalnej sprawności
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Kiedy włączone, pojazdy podejmują próbę serwisowania, gdy ich niezawodność spadnie o dany procent maksymalnej niezawodności.{}{}Na przykład, jeśli maksymalna niezawodność pojazdu wynosi 90%, a interwał serwisowy wynosi 20%, pojazd podejmie próbę serwisowania, gdy osiągnie 72% niezawodności.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Domyślny interwał serwisowania pociągów: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Ustaw domyślny okres serwisowania dla nowych pojazdów kolejowych, jeśli takowy nie istnieje dla określonego pojazdu
@@ -2183,15 +2210,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :Płynna ekonomi
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Oryginalna
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Płynna
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Zamrożona
-
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Pozwól kupować udziały w innych firmach: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Kiedy włączone, pozwala na kupowanie i sprzedawanie udziałów w firmie. Udziały będą dostępne tylko dla firm z odpowiednim stażem
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimalny wiek firmy pozwalający na handel udziałami: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Ustaw minimalny wiek firmy pozwalający innym kupować i sprzedawać jej akcje.
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_VALUE                   :{COMMA} {P "rok" "lata" "lat"}
-###setting-zero-is-special
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_NO_MIN                  :Brak minimum
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Podział przychodów w przypadku przeładunków: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Manipulowanie zrównoważeniem podziałów w łańcuchu dowozowym: przy 0% przychód zostanie zaksięgowany na konto wyłącznie ostatniego pojazdu w łańcuchu, wyższa wartość zwiększa zrównoważenie podziału
@@ -2306,10 +2324,10 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Żadne
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Początkowy mnożnik rozmiarów metropolii: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Średni rozmiar metropolii w porównaniu do normalnych miast na początku gry
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Aktualizuj graf dystrybucji co {STRING}{NBSP}{P 0:2 dzień dni dni}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Czas pomiędzy kolejnymi przeliczeniami grafu połączeń. Każde przeliczenie oblicza plany dla jednego komponentu grafu. Wartość X dla tego ustawienia nie oznacza, że cały graf będzie aktualizowany co X dni. Aktualizowane będą tylko niektóre komponenty. Im mniejszą wartość ustawisz, tym więcej czasu będzie potrzebował procesor, aby wykonać obliczenia. Im większą wartość ustawisz, tym więcej czasu upłynie, zanim rozpocznie się dystrybucja ładunków po nowych trasach.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Przeznacz {STRING}{NBSP}{P 0:2 dzień dni dni} na przeliczenie grafu dystrybucji
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Czas potrzebny na każde przeliczenie komponentu grafu połączeń. Po rozpoczęciu przeliczania tworzony jest wątek, który może działać przez podaną liczbę dni. Im mniejszą wartość ustawisz, tym większe prawdopodobieństwo, że wątek nie zostanie ukończony w wyznaczonym czasie. Wtedy gra zatrzymuje się do czasu jego zakończenia („lag”). Im większą wartość ustawisz, tym dłużej będzie trwała aktualizacja dystrybucji, gdy zmienią się trasy.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Aktualizuj graf dystrybucji co {STRING}{NBSP}sekund{P 0:2 ę y ""}
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Czas pomiędzy kolejnymi przeliczeniami grafu połączeń. Każde przeliczenie oblicza plany dla jednego komponentu grafu. Wartość X dla tego ustawienia nie oznacza, że cały graf będzie aktualizowany co X sekund. Aktualizowane będą tylko niektóre komponenty. Im mniejszą wartość ustawisz, tym więcej czasu będzie potrzebował procesor, aby wykonać obliczenia. Im większą wartość ustawisz, tym więcej czasu upłynie, zanim rozpocznie się dystrybucja ładunków po nowych trasach.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Przeznacz {STRING}{NBSP}sekund{P 0:2 ę y ""} na przeliczenie grafu dystrybucji
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME_HELPTEXT               :Czas potrzebny na każde przeliczenie komponentu grafu połączeń. Po rozpoczęciu przeliczania, tworzony jest wątek, który może działać przez podaną liczbę sekund. Im mniejszą wartość ustawisz, tym większe prawdopodobieństwo, że wątek nie zostanie ukończony w wyznaczonym czasie. Wtedy gra zatrzymuje się do czasu jego zakończenia („lag”). Im większą wartość ustawisz, tym dłużej będzie trwała aktualizacja dystrybucji, gdy zmienią się trasy.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Tryb dystrybucji dla pasażerów: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :Tryb „symetryczny” oznacza, że mniej więcej tyle samo pasażerów będzie podróżować ze stacji A do stacji B, co z B do A. Tryb „asymetryczny” oznacza, że w obu kierunkach może podróżować różna liczba pasażerów. Tryb „ręczny” oznacza, że dla pasażerów nie będzie przeprowadzana dystrybucja automatyczna.
@@ -2772,6 +2790,13 @@ STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Nie
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Tak, ten jeden raz
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Tak, nie pytaj ponownie
 
+STR_NETWORK_ASK_SURVEY_CAPTION                                  :Uczestniczyć w automatycznej ankiecie?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Czy chcesz wziąć udział w automatycznej ankiecie?{}OpenTTD prześle ankietę przy opuszczaniu gry.{}Możesz to zmienić w dowolnym momencie w „Opcjach gry”.
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Podejrzyj wynik ankiety
+STR_NETWORK_ASK_SURVEY_LINK                                     :O ankiecie i prywatności
+STR_NETWORK_ASK_SURVEY_NO                                       :Nie
+STR_NETWORK_ASK_SURVEY_YES                                      :Tak
+
 STR_NETWORK_SPECTATORS                                          :Widzowie
 
 # Network set password
@@ -2973,7 +2998,7 @@ STR_TRANSPARENT_SIGNS_TOOLTIP                                   :{BLACK}Przełą
 STR_TRANSPARENT_TREES_TOOLTIP                                   :{BLACK}Przełącz przeźroczystość dla drzew. Ctrl+klik, aby zablokować
 STR_TRANSPARENT_HOUSES_TOOLTIP                                  :{BLACK}Przełącz przeźroczystość dla budynków miejskich. Ctrl+klik, aby zablokować
 STR_TRANSPARENT_INDUSTRIES_TOOLTIP                              :{BLACK}Przełącz przeźroczystość dla przedsiębiorstw. Ctrl+klik, aby zablokować
-STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Przełącz przeźroczystość dla infrastruktury takiej jak stacje, zajezdnie i pkt. orientacyjne. Ctrl+klik, aby zablokować
+STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Przełącz przeźroczystość dla infrastruktury takiej jak stacje, zajezdnie i posterunki. Ctrl+klik, aby zablokować
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK}Przełącz przeźroczystość dla mostów. Ctrl+klik, aby zablokować
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Przełącz przeźroczystość dla obiektów takich jak latarnie morskie i anteny. Ctrl+klik, aby zablokować
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Przełącz przeźroczystość dla trakcji (linii nośnych). Ctrl+klik, aby zablokować
@@ -3061,8 +3086,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Buduj st
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Wybierz rodzaj stacji do pokazania
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Wybierz typ stacji do zbudowania
 
-STR_STATION_CLASS_DFLT                                          :Typowa stacja
+STR_STATION_CLASS_DFLT                                          :Standardowa
+STR_STATION_CLASS_DFLT_STATION                                  :Standardowa stacja
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Standardowy przystanek
 STR_STATION_CLASS_WAYP                                          :Posterunki
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Standardowy posterunek
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Wybór sygnałów
@@ -3151,7 +3179,7 @@ STR_WATERWAYS_TOOLBAR_BUILD_CANALS_TOOLTIP                      :{BLACK}Buduj ka
 STR_WATERWAYS_TOOLBAR_BUILD_LOCKS_TOOLTIP                       :{BLACK}Buduj śluzy. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_WATERWAYS_TOOLBAR_BUILD_DEPOT_TOOLTIP                       :{BLACK}Wybuduj stocznię (do kupowania i serwisowania statków). Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_WATERWAYS_TOOLBAR_BUILD_DOCK_TOOLTIP                        :{BLACK}Zbuduj port. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
-STR_WATERWAYS_TOOLBAR_BUOY_TOOLTIP                              :{BLACK}Ustaw boję, która może być użyta jako pkt. orientacyjny. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
+STR_WATERWAYS_TOOLBAR_BUOY_TOOLTIP                              :{BLACK}Ustaw boję, która może być użyta jako punkt orientacyjny. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_WATERWAYS_TOOLBAR_BUILD_AQUEDUCT_TOOLTIP                    :{BLACK}Zbuduj akwedukt. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_WATERWAYS_TOOLBAR_CREATE_LAKE_TOOLTIP                       :{BLACK}Stwórz akwen wodny.{}Tworzy kanał, chyba że przytrzymany jest CTRL na poziomie morza, wtedy pobliski teren zostanie zatopiony
 STR_WATERWAYS_TOOLBAR_CREATE_RIVER_TOOLTIP                      :{BLACK}Umieszczanie rzek. Ctrl zaznacza obszar po przekątnej.
@@ -4035,7 +4063,7 @@ STR_WAYPOINT_VIEW_CHANGE_WAYPOINT_NAME                          :{BLACK}Zmień n
 STR_BUOY_VIEW_CENTER_TOOLTIP                                    :{BLACK}Wyśrodkuj widok główny na lokalizacji boi. Ctrl+klik otwiera nowy podgląd na jej lokalizację
 STR_BUOY_VIEW_CHANGE_BUOY_NAME                                  :{BLACK}Zmień nazwę boi
 
-STR_EDIT_WAYPOINT_NAME                                          :{WHITE}Edytuj nazwę pkt. orientacyjnego
+STR_EDIT_WAYPOINT_NAME                                          :{WHITE}Edytuj nazwę posterunku
 
 # Finances window
 STR_FINANCES_CAPTION                                            :{WHITE}Finanse {COMPANY} {BLACK}{COMPANY_NUM}
@@ -4093,7 +4121,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} stat{P ek ki ków}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Brak
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Wartość firmy: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% w posiadaniu przez {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktura:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} element{P "" y ów} kolei
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} element{P "" y ów} drogi
@@ -4121,11 +4148,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nazwa Fi
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Zmień nazwę firmy
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Prezes
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Zmień imię prezesa
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Kup 25% udziałów w firmie
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Sprzedaj 25% udziałów w firmie
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Kup 25% udziałów w tej firmie. Shift+klik pokazuje szacunkowy koszt bez dokonania zakupu
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Sprzedaj 25% udziałów tej firmy. Shift+klik pokazuje szacunkowy koszt bez dokonania zakupu
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Nazwa firmy
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Nazwisko prezesa
@@ -4204,8 +4226,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Wyślij 
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Zastąp pojazdy
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Wyślij do serwisu
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Zysk w tym roku: {CURRENCY_LONG} (ostatni rok: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Wyślij do warsztatów
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Wyślij do zajezdni
@@ -4978,6 +5000,7 @@ STR_AI_CONFIG_RANDOM_AI                                         :Losowe SI
 STR_AI_CONFIG_NONE                                              :(brak)
 STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Maksymalna liczba przeciwników: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Odstęp czasowy pomiędzy uruchamianiem rywali: {ORANGE}{COMMA} minut{P a y ""}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Przesuń w górę
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Przesuń wybraną SI w górę listy
@@ -5024,7 +5047,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Game Script
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Zamknij
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetuj
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Liczba dni do aktywowania tej SI po uruchomieniu poprzedniej (zwiększ lub zmniejsz): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -5033,10 +5055,11 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Zawiń t
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Odczytaj plik „readme”
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Lista zmian
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licencja
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} - plik „readme”
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} {STRING} - lista zmian
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} {STRING} - licencja
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Podgląd wyniku ankiety
 
 
 # Vehicle loading indicators
@@ -5161,9 +5184,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Nie moż
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Nie możesz przekazać pieniędzy tej firmie...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Nie można kupić firmy...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Nie można zbudować siedziby firmy...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nie można kupić 25% udziałów w tej firmie...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Nie można sprzedać 25% udziałów tej firmy...
-STR_ERROR_PROTECTED                                             :{WHITE}Ta firma jeszcze nie sprzedaje akcji...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Nie można wybudować miasta
@@ -5249,7 +5269,7 @@ STR_ERROR_MUST_DEMOLISH_AIRPORT_FIRST                           :{WHITE}Należy 
 STR_ERROR_WAYPOINT_ADJOINS_MORE_THAN_ONE_EXISTING               :{WHITE}Przylega do więcej niż jednego istniejącego posterunku
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_WAYPOINT                         :{WHITE}Zbyt blisko innego posterunku
 
-STR_ERROR_CAN_T_BUILD_TRAIN_WAYPOINT                            :{WHITE}Nie można budować tutaj punktu orientacyjnego...
+STR_ERROR_CAN_T_BUILD_TRAIN_WAYPOINT                            :{WHITE}Nie można budować tutaj posterunku...
 STR_ERROR_CAN_T_POSITION_BUOY_HERE                              :{WHITE}Nie można tutaj ustawić boi...
 STR_ERROR_CAN_T_CHANGE_WAYPOINT_NAME                            :{WHITE}Nie można zmienić nazwy posterunku...
 
@@ -5496,6 +5516,7 @@ STR_ERROR_NO_BUOY                                               :{WHITE}Brak boi
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Nie można wyznaczyć rozkładu jazdy pojazdu...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Pojazdy mogą czekać tylko na stacjach
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Ten pojazd nie zatrzymuje się na tej stacji.
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... rozkład jazdy jest niekompletny
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... zbyt wiele napisów
@@ -5944,10 +5965,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Helikopter Powe
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Firma {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grupa {COMMA}
@@ -6012,11 +6033,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -6028,33 +6051,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

@@ -316,39 +316,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}VC
-STR_ABBREV_COAL                                                 :{TINY_FONT}CA
-STR_ABBREV_MAIL                                                 :{TINY_FONT}EP
-STR_ABBREV_OIL                                                  :{TINY_FONT}OL
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}PC
-STR_ABBREV_GOODS                                                :{TINY_FONT}ME
-STR_ABBREV_GRAIN                                                :{TINY_FONT}FR
-STR_ABBREV_WOOD                                                 :{TINY_FONT}LI
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}FE
-STR_ABBREV_STEEL                                                :{TINY_FONT}CH
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}RP
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}AE
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MZ
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FT
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}AD
-STR_ABBREV_FOOD                                                 :{TINY_FONT}AL
-STR_ABBREV_PAPER                                                :{TINY_FONT}CA
-STR_ABBREV_GOLD                                                 :{TINY_FONT}AU
-STR_ABBREV_WATER                                                :{TINY_FONT}AQ
-STR_ABBREV_WHEAT                                                :{TINY_FONT}TR
-STR_ABBREV_RUBBER                                               :{TINY_FONT}GU
-STR_ABBREV_SUGAR                                                :{TINY_FONT}SC
-STR_ABBREV_TOYS                                                 :{TINY_FONT}LD
-STR_ABBREV_SWEETS                                               :{TINY_FONT}BL
-STR_ABBREV_COLA                                                 :{TINY_FONT}CL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}SX
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}ST
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}PE
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}PC
-STR_ABBREV_NONE                                                 :{TINY_FONT}NO
-STR_ABBREV_ALL                                                  :{TINY_FONT}OMN
+STR_ABBREV_PASSENGERS                                           :VC
+STR_ABBREV_COAL                                                 :CA
+STR_ABBREV_MAIL                                                 :EP
+STR_ABBREV_OIL                                                  :OL
+STR_ABBREV_LIVESTOCK                                            :PC
+STR_ABBREV_GOODS                                                :ME
+STR_ABBREV_GRAIN                                                :FR
+STR_ABBREV_WOOD                                                 :LI
+STR_ABBREV_IRON_ORE                                             :FE
+STR_ABBREV_STEEL                                                :CH
+STR_ABBREV_VALUABLES                                            :RP
+STR_ABBREV_COPPER_ORE                                           :AE
+STR_ABBREV_MAIZE                                                :MZ
+STR_ABBREV_FRUIT                                                :FT
+STR_ABBREV_DIAMONDS                                             :AD
+STR_ABBREV_FOOD                                                 :AL
+STR_ABBREV_PAPER                                                :CA
+STR_ABBREV_GOLD                                                 :AU
+STR_ABBREV_WATER                                                :AQ
+STR_ABBREV_WHEAT                                                :TR
+STR_ABBREV_RUBBER                                               :GU
+STR_ABBREV_SUGAR                                                :SC
+STR_ABBREV_TOYS                                                 :LD
+STR_ABBREV_SWEETS                                               :BL
+STR_ABBREV_COLA                                                 :CL
+STR_ABBREV_CANDYFLOSS                                           :SX
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :ST
+STR_ABBREV_BATTERIES                                            :PE
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :PC
+STR_ABBREV_NONE                                                 :NO
+STR_ABBREV_ALL                                                  :OMN
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{G=mp}{COMMA}{NBSP}vector{P "" es}
@@ -379,38 +379,38 @@ STR_COLOUR_WHITE                                                :Albus
 STR_COLOUR_RANDOM                                               :Fortuitus
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}hp
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}hp
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}hp
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{G=fp}{COMMA}{NBSP}tona{P "" e}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{G=fp}{COMMA}{NBSP}tonna{P "" e}
-STR_UNITS_WEIGHT_LONG_SI                                        :{G=np}{COMMA}{NBSP}chiliogramma{P "" ta}
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{G=fp}{DECIMAL}{NBSP}tona{P "" e}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{G=fp}{DECIMAL}{NBSP}tonna{P "" e}
+STR_UNITS_WEIGHT_LONG_SI                                        :{G=np}{DECIMAL}{NBSP}chiliogramma{P "" ta}
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{G=mp}{COMMA}{NBSP}congi{P us i}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{G=np}{COMMA}{NBSP}litr{P um a}
-STR_UNITS_VOLUME_LONG_SI                                        :{G=np}{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{G=mp}{DECIMAL}{NBSP}congi{P us i}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{G=np}{DECIMAL}{NBSP}litr{P um a}
+STR_UNITS_VOLUME_LONG_SI                                        :{G=np}{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}pedes
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}pedes
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Series colans:
@@ -1081,6 +1081,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Transcri
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Ludi optiones
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unitates nummi
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Electio unitatum nummi
 
@@ -1127,10 +1131,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Eligere 
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Numquam
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Singulis mensibus
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Ternis mensibus
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Senis mensibus
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Duodenis mensibus
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Lingua
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Eligere linguam interfaciei
@@ -1141,6 +1141,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Optione 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Resolutio scrinii
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Eligere resolutio scrinii adhibenda
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :alia
+
 
 
 
@@ -1866,11 +1867,6 @@ STR_CONFIG_SETTING_STARTING_YEAR                                :Annus initii: {
 
 ###length 3
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Sinere mercari sortes societatum: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Sinere mercari sortes a societatibus. Sortes societatum satis aetatis modo mercari licet
-
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Centesimae partes lucri pendenda in translatione: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Centesimae lucri pars medietati data in systematibus transferendi, ut melius distribuatur lucrum vehiculorum
 
@@ -1971,10 +1967,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Nulla
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Multiplicator magnitudinis initialis urbis: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Quam maiores sunt urbes quam oppida in initio ludi
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Recensere formulam partitionis {STRING} quoque die
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Tempus inter recensiones formulae partitionis. Quaeque recensio calculat rationes unius partis formulae. Ergo valor X huius electionis non facit ut cuncta formula recenseatur X quoque die; modo aliquot pars/partes recensebuntur. Valoribus minoribus, plus tempus CPU requiritur. Valoribus maioribus, plus tempus erit ad onerum partitionem incipiendam novis itineribus.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :{STRING}{NBSP}die{P 0:2 "" s} ad formulam partitionis recalculandam
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Tempus cuiusque recalculationis partis partitionis. Cum recalculatio incipitur, linea generatur quae agitur hos dies electos. Paucis diebus, magis probabilis est lineam non finiri cum debet esse finitam; tunc ludus intermittitur usque ad finitur ("segnitia"). Pluribus diebus, plus tempus requiritur ad partitionem mutandam cum itinera mutantur.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Modus partitionis vectoribus: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :Partitio "symmetrica" facit ut fere eadem copia vectorum mittatur a statione A ad stationem B quam a B ad A. Partitio "asymmetrica" facit ut quaelibet copia vectorum mittatur inter A et B. In partitione "manu" vectores non automatice partiuntur.
@@ -2357,6 +2349,7 @@ STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Index clientum
 
 # Matches ConnectionType
 ###length 5
+
 
 
 
@@ -3555,7 +3548,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} nav{P is es}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Nulla
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Aestimatio societatis: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% posessa a {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastructura:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} par{P s tes} ferriviae
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} par{P s tes} viae
@@ -3581,11 +3573,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nomen So
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Mutare nomen societatis
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Nomen Praesidis
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Mutare nomen praesidis
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Quadrantem sortium huius societatis emere
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Quadrantem sortium huius societatis vendere
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Quadrantem sortium huius societatis emere. Shift+Preme ut pretium monstretur sine emptione
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Quadrantem sortium huius societatis vendere. Shift+Preme ut pretium monstretur sine emptione
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Nomen Societatis
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Nomen Praesidis
@@ -4425,7 +4412,6 @@ STR_AI_SETTINGS_CAPTION_AI                                      :IA
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Claudere
 STR_AI_SETTINGS_RESET                                           :{BLACK}Revertere
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Quot dies post IA priorem haec IA incipiet (plus minusve): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4434,7 +4420,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Volvere 
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Inspicere LegeMe
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Index Mutationum
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licentia
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} - {STRING} LegeMe
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} - {STRING} Index Mutationum
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} - {STRING} Licentia
@@ -4559,9 +4545,6 @@ STR_ERROR_CAN_T_REPAY_LOAN                                      :{WHITE}Non lice
 STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Non licet pecuniam mutuam largiri...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Non licet societatem emere...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Non licet sedem societatis struere...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Non licet quadrantem sortium huius societatis emere...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Non licet quadrantem sortium huius societatis vendere...
-STR_ERROR_PROTECTED                                             :{WHITE}Nondum licet sortes societatis mercari...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Non licet oppida condi
@@ -5389,10 +5372,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Helicopterum Po
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Societas {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grex {COMMA}
@@ -5476,33 +5459,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

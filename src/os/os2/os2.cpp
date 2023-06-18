@@ -78,11 +78,12 @@ void FiosGetDrives(FileList &file_list)
 			fios->type = FIOS_TYPE_DRIVE;
 			fios->mtime = 0;
 #ifndef __INNOTEK_LIBC__
-			snprintf(fios->name, lengthof(fios->name),  "%c:", 'A' + disk - 1);
+			fios->name += 'A' + disk - 1;
 #else
-			snprintf(fios->name, lengthof(fios->name),  "%c:", disk);
+			fios->name += (char)disk;
 #endif
-			strecpy(fios->title, fios->name, lastof(fios->title));
+			fios->name += ':';
+			fios->title = fios->name;
 		}
 	}
 
@@ -167,6 +168,11 @@ void ShowOSErrorBox(const char *buf, bool system)
 	/* terminate PM env. */
 	WinDestroyMsgQueue(hmq);
 	WinTerminate(hab);
+}
+
+void DoOSAbort()
+{
+	abort();
 }
 
 int CDECL main(int argc, char *argv[])

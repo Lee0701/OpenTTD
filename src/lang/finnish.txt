@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :-
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}MA
-STR_ABBREV_COAL                                                 :{TINY_FONT}HL
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PO
-STR_ABBREV_OIL                                                  :{TINY_FONT}ÖL
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}KA
-STR_ABBREV_GOODS                                                :{TINY_FONT}TA
-STR_ABBREV_GRAIN                                                :{TINY_FONT}VL
-STR_ABBREV_WOOD                                                 :{TINY_FONT}PU
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}RM
-STR_ABBREV_STEEL                                                :{TINY_FONT}TR
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}AT
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}KM
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MS
-STR_ABBREV_FRUIT                                                :{TINY_FONT}HE
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}TI
-STR_ABBREV_FOOD                                                 :{TINY_FONT}RU
-STR_ABBREV_PAPER                                                :{TINY_FONT}PA
-STR_ABBREV_GOLD                                                 :{TINY_FONT}KU
-STR_ABBREV_WATER                                                :{TINY_FONT}VS
-STR_ABBREV_WHEAT                                                :{TINY_FONT}VH
-STR_ABBREV_RUBBER                                               :{TINY_FONT}KI
-STR_ABBREV_SUGAR                                                :{TINY_FONT}SK
-STR_ABBREV_TOYS                                                 :{TINY_FONT}LL
-STR_ABBREV_SWEETS                                               :{TINY_FONT}KR
-STR_ABBREV_COLA                                                 :{TINY_FONT}LM
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}HT
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}KP
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}TF
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}PT
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}MV
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}SJ
-STR_ABBREV_NONE                                                 :{TINY_FONT}EI
-STR_ABBREV_ALL                                                  :{TINY_FONT}KAIKKI
+STR_ABBREV_PASSENGERS                                           :MA
+STR_ABBREV_COAL                                                 :HL
+STR_ABBREV_MAIL                                                 :PO
+STR_ABBREV_OIL                                                  :ÖL
+STR_ABBREV_LIVESTOCK                                            :KA
+STR_ABBREV_GOODS                                                :TA
+STR_ABBREV_GRAIN                                                :VL
+STR_ABBREV_WOOD                                                 :PU
+STR_ABBREV_IRON_ORE                                             :RM
+STR_ABBREV_STEEL                                                :TR
+STR_ABBREV_VALUABLES                                            :AT
+STR_ABBREV_COPPER_ORE                                           :KM
+STR_ABBREV_MAIZE                                                :MS
+STR_ABBREV_FRUIT                                                :HE
+STR_ABBREV_DIAMONDS                                             :TI
+STR_ABBREV_FOOD                                                 :RU
+STR_ABBREV_PAPER                                                :PA
+STR_ABBREV_GOLD                                                 :KU
+STR_ABBREV_WATER                                                :VS
+STR_ABBREV_WHEAT                                                :VH
+STR_ABBREV_RUBBER                                               :KI
+STR_ABBREV_SUGAR                                                :SK
+STR_ABBREV_TOYS                                                 :LL
+STR_ABBREV_SWEETS                                               :KR
+STR_ABBREV_COLA                                                 :LM
+STR_ABBREV_CANDYFLOSS                                           :HT
+STR_ABBREV_BUBBLES                                              :KP
+STR_ABBREV_TOFFEE                                               :TF
+STR_ABBREV_BATTERIES                                            :PT
+STR_ABBREV_PLASTIC                                              :MV
+STR_ABBREV_FIZZY_DRINKS                                         :SJ
+STR_ABBREV_NONE                                                 :EI
+STR_ABBREV_ALL                                                  :KAIKKI
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}matkustaja{P "" a}
@@ -191,15 +191,15 @@ STR_COLOUR_WHITE                                                :Valkoinen
 STR_COLOUR_RANDOM                                               :Satunnainen
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}ruutua/vrk
-STR_UNITS_VELOCITY_KNOTS                                        :{COMMA}{NBSP}solmua
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}solmua
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hv
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}hv
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}hv
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}hv
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hv/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hv/t
@@ -211,29 +211,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}tonni{P "" a}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}tonni{P "" a}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}tonni{P "" a}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}tonni{P "" a}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}gallona{P "" a}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}litra{P "" a}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}gallona{P "" a}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}litra{P "" a}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}ft
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Suodatin:
@@ -930,6 +930,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Siirrä 
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Pelin valinnat
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Yleiset
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Valitse yleisasetukset
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Grafiikka
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Valitse grafiikka-asetukset
+STR_GAME_OPTIONS_TAB_SOUND                                      :Ääni
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Valitse ääni- ja musiikkiasetukset
+
+STR_GAME_OPTIONS_VOLUME                                         :Äänenvoimakkuus
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Äänitehosteet
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musiikki
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0{NBSP}%
+STR_GAME_OPTIONS_VOLUME_25                                      :25{NBSP}%
+STR_GAME_OPTIONS_VOLUME_50                                      :50{NBSP}%
+STR_GAME_OPTIONS_VOLUME_75                                      :75{NBSP}%
+STR_GAME_OPTIONS_VOLUME_100                                     :100{NBSP}%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Rahayksikkö
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Rahayksikön valinta
 
@@ -983,10 +1001,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Valitse 
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Pois
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Kuukausittain
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Joka 3. kuukausi
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Joka 6. kuukausi
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Kerran vuodessa
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :10 minuutin välein
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :30 minuutin välein
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :60 minuutin välein
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :120 minuutin välein
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Kieli
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Valitse käyttöliittymän kieli
@@ -1022,6 +1040,14 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2×
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3×
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4×
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5×
+
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatisoitu tutkimus
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Osallistu automatisoituun tutkimukseen
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Mikäli käytössä, OpenTTD lähettää tilastointitietoja pelistä poistuttaessa
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}Tutkimuksesta ja yksityisyydestä
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Avaa selaimen, jossa lisätietoja automatisoidusta tutkimuksesta
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Esikatsele tutkimustulosta
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Näytä meneillään olevan pelin tutkimustulos
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafiikka
 
@@ -1152,6 +1178,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Avaa kai
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Sulje kaikki
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Palauta oletukset
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(selitystä ei saatavilla)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Oletusarvo: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Asetuksen tyyppi: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Yleinen asetus (ei tallenneta tallennuksiin; vaikuttaa kaikkiin peleihin)
@@ -1531,7 +1558,7 @@ STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREY_TO_RED                :Harmaasta punai
 STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREYSCALE                  :Harmaasävy
 
 STR_CONFIG_SETTING_SCROLLMODE                                   :Näkymän vieritystapa: {STRING}
-STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Toiminta karttaa vieritettäessä
+STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Toiminta karttaa vieritettäessä. Hiiren sijainnin lukitus ei toimi kaikissa järjestelmissä, kuten selainpohjaisissa versioissa, kosketusnäytöillä, Linuxissa Waylandilla ym.
 ###length 4
 STR_CONFIG_SETTING_SCROLLMODE_DEFAULT                           :Siirrä näkymää hiiren oikealla painikkeella, hiiren sijainti lukiten
 STR_CONFIG_SETTING_SCROLLMODE_RMB_LOCKED                        :Siirrä karttaa hiiren oikealla painikkeella, hiiren sijainti lukiten
@@ -1712,7 +1739,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Kuinka paljon m
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Huoltovälit ovat prosentteina: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Määritä, aiheuttaako edellisestä huollosta kulunut aika vai luotettavuuden laskeminen kulkuneuvon huoltamisen
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Kun tämä on valittuna, kulkuneuvot yrittävät mennä huoltoon niiden luotettavuuden laskettua annetun prosenttiosuuden verran enimmäisluotettavuudesta.{}{}Jos esimerkiksi kulkuneuvon enimmäisluotettavuus on 90 % ja huoltoväli 20 %, kulkuneuvo pyrkii huoltoon luotettavuuden laskettua 72 %:iin.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Junien oletushuoltoväli: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Määritä oletushuoltoväli uusille junille, mikäli kulkuneuvolle ei ole määritelty erillistä huoltoväliä
@@ -1803,15 +1830,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :Tasaisessa talo
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Alkuperäinen
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Tasainen
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Jäädytetty
-
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Salli toisten yhtiöiden osakkeiden ostaminen: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Mikäli käytössä, toisten yhtiöiden osakkeiden ostaminen ja myyminen on mahdollista. Osakkeet ovat saatavilla vain yhtiöille, jotka ovat saavuttaneet tietyn iän
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Yhtiön vähimmäisikä osakekaupoille: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Aseta yhtiölle vähimmäisikä, jonka jälkeen muut voivat ostaa ja myydä yhtiön osakkeita.
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_VALUE                   :{COMMA} vuo{P 0 si tta}
-###setting-zero-is-special
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_NO_MIN                  :Ei vähimmäisaikaa
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Syöttöjärjestelmään maksettavan tuoton osuus: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Osuus tuotosta, joka annetaan välittäjille syöttöjärjestelmissä
@@ -1926,10 +1944,10 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Ei yhtään
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Kasvukerroin alussa: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Kaupunkien keskimääräinen koko suhteessa muihin kuntiin pelin alussa
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Päivitä rahdin jakautuminen {STRING}{NBSP}päivän välein
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Yhteyskuvaajan uudelleenlaskujen välinen aika. Kukin uudelleenlasku laskee yhden kuvaajan komponentin. Tämä tarkoittaa sitä, että koko kuvaajaa ei lasketa uudelleen määrittämäsi ajan välein, vaan ainoastaan yksi komponentti. Mitä lyhyemmäksi määrität asetuksen, sitä enemmän prosessoriaikaa komponentin laskemiseen vaaditaan. Mitä pidemmäksi määrität sen, sitä pidempi aika kuluu, kunnes rahdin jakaminen alkaa uusilla reiteillä.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Käytä {STRING}{NBSP}päivä{P 0:2 "" ä} rahtijakauman päivittämiseen
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Jokaisen yhteyskuvaajan komponentin uudelleenlaskemiseen käytettävä aika. Uudelleenlaskun alkaessa käynnistetään uusi säie, jonka annetaan toimia näin monta päivää. Mitä lyhyemmäksi määrität tämän, sitä todennäköisempää on, että säie ei ole valmis ajoissa. Tällöin peli pysähtyy kunnes lasku on suoritettu loppuun (peli pätkii). Mitä pidemmäksi määrität asetuksen, sitä pitempään rahdin jakauman päivittämiseen kuluu aikaa reittien muuttuessa.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Päivitä yhteyskuvaaja {STRING}{NBSP}sekunnin välein
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Yhteyskuvaajan uudelleenlaskentojen välinen aika. Jokainen uudelleenlaskenta laskee suunnitelmat kuvaajan yhdelle osalle. Tämän asetuksen arvo X ei siis tarkoita, että koko kuvaaja päivittyisi X sekunnin välein, vaan ainoastaan sen yksi osa. Mitä lyhyemmäksi asetat tämän ajan, sitä enemmän suoritinaikaa kuluu laskentaan. Mitä pitemmäksi asetat ajan, sitä pitempään kestää rahdin jakautumisen alkaminen uusille reiteille.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Käytä {STRING}{NBSP}sekunti{P 0:2 "" a} yhteyskuvaajan uudelleenlaskentaan
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME_HELPTEXT               :Yhteyskuvaajan kunkin osan uudelleenlaskentaan käytettävä aika. Uudelleenlaskennan alkaessa käynnistetään säie, jonka annetaan toimia näin monta sekuntia. Mitä lyhyemmäksi asetat tämän ajan, sitä todennäköisemmin säie ei ehdi päättymään ajoissa, jolloin peli pysähtyy (”jumii”) säikeen valmistumiseen asti. Mitä pitemmäksi asetat ajan, sitä pitempään rahdin jakautumisen päivittyminen kestää reittien muuttuessa.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Matkustajien jakautuminen: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :”Symmetrinen” tarkoittaa, että suunnilleen sama määrä matkustajia kulkee asemalta A asemalle B kuin asemalta B asemalle A. ”Epäsymmetrinen” tarkoittaa, että matkustajia voi kulkea mielivaltainen määrä kumpaankin suuntaan. ”Manuaalinen” tarkoittaa, että automaattista jakautumista ei sovelleta matkustajiin.
@@ -2062,6 +2080,7 @@ STR_CONFIG_ERROR_SPRITECACHE_TOO_BIG                            :{WHITE}{BYTES} 
 # Video initalization errors
 STR_VIDEO_DRIVER_ERROR                                          :{WHITE}Virhe näyttöasetuksissa…
 STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :{WHITE}… yhteensopivaa grafiikkasuoritinta ei löytynyt. Laitteistokiihdytystä ei käytetä.
+STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :{WHITE}… Näytönohjaimen ajuri kaatoi pelin. Laitteistokiihdytys on poistettu käytöstä
 
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD {REV}
@@ -2392,6 +2411,13 @@ STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Ei
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Kyllä, tämän kerran
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Kyllä, älä kysy uudestaan
 
+STR_NETWORK_ASK_SURVEY_CAPTION                                  :Osallistutko automatisoituun tutkimukseen?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Haluatko osallistua automatisoituun tutkimukseen?{}Tällöin OpenTTD lähettää tilastointitietoja aina pelistä poistuttaessa.{}Voit muuttaa tätä milloin tahansa kohdassa ”Pelin asetukset”.
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Esikatsele tutkimustulosta
+STR_NETWORK_ASK_SURVEY_LINK                                     :Tutkimuksesta ja yksityisyydestä
+STR_NETWORK_ASK_SURVEY_NO                                       :En
+STR_NETWORK_ASK_SURVEY_YES                                      :Osallistun
+
 STR_NETWORK_SPECTATORS                                          :Katsojat
 
 # Network set password
@@ -2681,8 +2707,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Rakenna 
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Valitse asemaluokka
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Valitse asematyyppi
 
-STR_STATION_CLASS_DFLT                                          :Oletusasema
+STR_STATION_CLASS_DFLT                                          :Oletus
+STR_STATION_CLASS_DFLT_STATION                                  :Oletusasema
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Oletuspysäkki
 STR_STATION_CLASS_WAYP                                          :Reittipisteet
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Oletusreittipiste
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Opastimien valinta
@@ -3713,7 +3742,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} laiva{P "" a}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Ei mitään
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Yhtiön arvo: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}{NBSP}%:n omistus: {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktuuri:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} rautatiepala{P "" a}
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} tiepala{P "" a}
@@ -3741,11 +3769,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Yhtiön 
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Muuta yhtiön nimeä
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Pääjohtajan nimi
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Muuta pääjohtajan nimeä
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Osta 25{NBSP}%:n osuus yhtiöstä
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Myy 25{NBSP}%:n osuus yhtiöstä
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Osta 25{NBSP}%:n osuus tästä yhtiöstä. Vaihto+napsautus näyttää kustannusarvion ostamatta osuuksia.
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Myy 25{NBSP}%:n osuus tästä yhtiöstä. Vaihto+napsautus näyttää tuottoarvion myymättä osuuksia.
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Yhtiön nimi
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Pääjohtajan nimi
@@ -3824,8 +3847,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Ohjaa ka
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Korvaa kulkuneuvoja
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Lähetä huoltoon
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Tuotto tänä vuonna: {CURRENCY_LONG} (viime vuonna: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Lähetä varikolle
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Lähetä varikolle
@@ -4592,6 +4615,7 @@ STR_AI_CONFIG_RANDOM_AI                                         :Sattumanvaraine
 STR_AI_CONFIG_NONE                                              :(ei mitään)
 STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Vastustajien enimmäismäärä: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Kilpailijoiden käynnistämisen välinen aika: {ORANGE}{COMMA} minuutti{P "" a}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Siirrä ylöspäin
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Siirrä valittua tekoälyä ylöspäin listalla
@@ -4638,7 +4662,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Peliskripti
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Sulje
 STR_AI_SETTINGS_RESET                                           :{BLACK}Palauta
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Päiviä edellisen tekoälyn aloittamisesta tämän tekoälyn aloittamiseen (arvio): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4647,10 +4670,11 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Rivitä 
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Näytä readme-tiedosto
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Muutosloki
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Lisenssi
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING}:n {STRING} readme-tiedosto
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING}:n {STRING} muutosloki
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING}:n {STRING} lisenssi
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Tutkimustuloksen esikatselu
 
 
 # Vehicle loading indicators
@@ -4775,9 +4799,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Pankista
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Tälle yhtiölle ei voi antaa rahaa…
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Yhtiötä ei voi ostaa...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Yhtiön päärakennusta ei voi rakentaa...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Tästä yhtiöstä ei voi ostaa 25{NBSP}%:n osuutta...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Tästä yhtiöstä ei voi myydä 25{NBSP}%:n osuutta...
-STR_ERROR_PROTECTED                                             :{WHITE}Tällä yhtiöllä ei ole vielä osakkeita...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Kuntia ei voi luoda
@@ -5110,6 +5131,7 @@ STR_ERROR_NO_BUOY                                               :{WHITE}Poijua e
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Ei voi asettaa aikataulua.
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Kulkuneuvo voi odottaa vain asemalla
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Tämä kulkuneuvo ei pysähdy tällä asemalla
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}… aikataulu on puutteellinen
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... liian monta kylttiä.
@@ -5521,10 +5543,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut-helik
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(yhtiö {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Ryhmä {COMMA}
@@ -5589,11 +5611,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -5605,33 +5629,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

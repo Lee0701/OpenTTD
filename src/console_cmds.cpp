@@ -12,7 +12,7 @@
 #include "debug.h"
 #include "engine_func.h"
 #include "landscape.h"
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 #include "network/core/game_info.h"
 #include "network/network.h"
 #include "network/network_func.h"
@@ -460,15 +460,14 @@ DEF_CONSOLE_CMD(ConSave)
 	}
 
 	if (argc == 2) {
-		char *filename = str_fmt("%s.sav", argv[1]);
+		std::string filename = stdstr_fmt("%s.sav", argv[1]);
 		IConsolePrint(CC_DEFAULT, "Saving map...");
 
 		if (SaveOrLoad(filename, SLO_SAVE, DFT_GAME_FILE, SAVE_DIR) != SL_OK) {
 			IConsolePrint(CC_ERROR, "Saving map failed");
 		} else {
-			IConsolePrintF(CC_DEFAULT, "Map successfully saved to %s", filename);
+			IConsolePrintF(CC_DEFAULT, "Map successfully saved to %s", filename.c_str());
 		}
-		free(filename);
 		return true;
 	}
 
@@ -507,9 +506,7 @@ DEF_CONSOLE_CMD(ConLoad)
 	if (item != nullptr) {
 		if (GetAbstractFileType(item->type) == FT_SAVEGAME) {
 			_switch_mode = SM_LOAD_GAME;
-			_file_to_saveload.SetMode(item->type);
-			_file_to_saveload.SetName(FiosBrowseTo(item));
-			_file_to_saveload.SetTitle(item->title);
+			_file_to_saveload.Set(*item);
 		} else {
 			IConsolePrintF(CC_ERROR, "%s: Not a savegame.", file);
 		}
@@ -534,7 +531,7 @@ DEF_CONSOLE_CMD(ConRemove)
 	_console_file_list.ValidateFileList();
 	const FiosItem *item = _console_file_list.FindItem(file);
 	if (item != nullptr) {
-		if (unlink(item->name) != 0) {
+		if (unlink(item->name.c_str()) != 0) {
 			IConsolePrintF(CC_ERROR, "%s: Failed to delete file", file);
 		}
 	} else {
@@ -556,7 +553,7 @@ DEF_CONSOLE_CMD(ConListFiles)
 
 	_console_file_list.ValidateFileList(true);
 	for (uint i = 0; i < _console_file_list.size(); i++) {
-		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list[i].title);
+		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list[i].title.c_str());
 	}
 
 	return true;
@@ -1258,7 +1255,7 @@ DEF_CONSOLE_CMD(ConNewGame)
 		return true;
 	}
 
-	StartNewGameWithoutGUI((argc == 2) ? strtoul(argv[1], nullptr, 10) : GENERATE_NEW_SEED);
+	StartNewGameWithoutGUI((argc == 2) ? std::strtoul(argv[1], nullptr, 10) : GENERATE_NEW_SEED);
 	return true;
 }
 
@@ -1778,7 +1775,7 @@ DEF_CONSOLE_CMD(ConDebugLevel)
 	if (argc > 2) return false;
 
 	if (argc == 1) {
-		IConsolePrintF(CC_DEFAULT, "Current debug-level: '%s'", GetDebugString());
+		IConsolePrintF(CC_DEFAULT, "Current debug-level: '%s'", GetDebugString().c_str());
 	} else {
 		SetDebugString(argv[1], [](const char *err) { IConsolePrint(CC_ERROR, err); });
 	}
@@ -2097,7 +2094,7 @@ static ContentType StringToContentType(const char *str)
 {
 	static const char * const inv_lookup[] = { "", "base", "newgrf", "ai", "ailib", "scenario", "heightmap" };
 	for (uint i = 1 /* there is no type 0 */; i < lengthof(inv_lookup); i++) {
-		if (strcasecmp(str, inv_lookup[i]) == 0) return (ContentType)i;
+		if (StrEqualsIgnoreCase(str, inv_lookup[i])) return (ContentType)i;
 	}
 	return CONTENT_TYPE_END;
 }
@@ -2155,17 +2152,17 @@ DEF_CONSOLE_CMD(ConContent)
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "update") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "update")) {
 		_network_content_client.RequestContentList((argc > 2) ? StringToContentType(argv[2]) : CONTENT_TYPE_END);
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "upgrade") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "upgrade")) {
 		_network_content_client.SelectUpgrade();
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "select") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "select")) {
 		if (argc <= 2) {
 			/* List selected content */
 			IConsolePrintF(CC_WHITE, "id, type, state, name");
@@ -2173,7 +2170,7 @@ DEF_CONSOLE_CMD(ConContent)
 				if ((*iter)->state != ContentInfo::SELECTED && (*iter)->state != ContentInfo::AUTOSELECTED) continue;
 				OutputContentState(*iter);
 			}
-		} else if (strcasecmp(argv[2], "all") == 0) {
+		} else if (StrEqualsIgnoreCase(argv[2], "all")) {
 			/* The intention of this function was that you could download
 			 * everything after a filter was applied; but this never really
 			 * took off. Instead, a select few people used this functionality
@@ -2187,12 +2184,12 @@ DEF_CONSOLE_CMD(ConContent)
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "unselect") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "unselect")) {
 		if (argc <= 2) {
 			IConsoleError("You must enter the id.");
 			return false;
 		}
-		if (strcasecmp(argv[2], "all") == 0) {
+		if (StrEqualsIgnoreCase(argv[2], "all")) {
 			_network_content_client.UnselectAll();
 		} else {
 			_network_content_client.Unselect((ContentID)atoi(argv[2]));
@@ -2200,7 +2197,7 @@ DEF_CONSOLE_CMD(ConContent)
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "state") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "state")) {
 		IConsolePrintF(CC_WHITE, "id, type, state, name");
 		for (ConstContentIterator iter = _network_content_client.Begin(); iter != _network_content_client.End(); iter++) {
 			if (argc > 2 && strcasestr((*iter)->name.c_str(), argv[2]) == nullptr) continue;
@@ -2209,7 +2206,7 @@ DEF_CONSOLE_CMD(ConContent)
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "download") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "download")) {
 		uint files;
 		uint bytes;
 		_network_content_client.DownloadSelectedContent(files, bytes);
@@ -2236,7 +2233,7 @@ DEF_CONSOLE_CMD(ConFont)
 
 	FontSize argfs;
 	for (argfs = FS_BEGIN; argfs < FS_END; argfs++) {
-		if (argc > 1 && strcasecmp(argv[1], FontSizeToName(argfs)) == 0) break;
+		if (argc > 1 && StrEqualsIgnoreCase(argv[1], FontSizeToName(argfs))) break;
 	}
 
 	/* First argument must be a FontSize. */
@@ -2250,8 +2247,8 @@ DEF_CONSOLE_CMD(ConFont)
 
 		byte arg_index = 2;
 		/* We may encounter "aa" or "noaa" but it must be the last argument. */
-		if (strcasecmp(argv[arg_index], "aa") == 0 || strcasecmp(argv[arg_index], "noaa") == 0) {
-			aa = strncasecmp(argv[arg_index++], "no", 2) != 0;
+		if (StrEqualsIgnoreCase(argv[arg_index], "aa") || StrEqualsIgnoreCase(argv[arg_index], "noaa")) {
+			aa = !StrStartsWithIgnoreCase(argv[arg_index++], "no");
 			if (argc > arg_index) return false;
 		} else {
 			/* For <name> we want a string. */
@@ -2272,8 +2269,8 @@ DEF_CONSOLE_CMD(ConFont)
 
 		if (argc > arg_index) {
 			/* Last argument must be "aa" or "noaa". */
-			if (strcasecmp(argv[arg_index], "aa") != 0 && strcasecmp(argv[arg_index], "noaa") != 0) return false;
-			aa = strncasecmp(argv[arg_index++], "no", 2) != 0;
+			if (!StrEqualsIgnoreCase(argv[arg_index], "aa") && !StrEqualsIgnoreCase(argv[arg_index], "noaa")) return false;
+			aa = !StrStartsWithIgnoreCase(argv[arg_index++], "no");
 			if (argc > arg_index) return false;
 		}
 
@@ -2416,7 +2413,7 @@ DEF_CONSOLE_CMD(ConListDirs)
 
 	std::set<std::string> seen_dirs;
 	for (const SubdirNameMap &sdn : subdir_name_map) {
-		if (strcasecmp(argv[1], sdn.name) != 0)  continue;
+		if (!StrEqualsIgnoreCase(argv[1], sdn.name))  continue;
 		bool found = false;
 		for (Searchpath sp : _valid_searchpaths) {
 			/* Get the directory */
@@ -2776,7 +2773,7 @@ DEF_CONSOLE_CMD(ConDumpRoadTypes)
 		);
 	}
 	for (const auto &grf : grfs) {
-		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename);
+		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename.c_str());
 	}
 	return true;
 }
@@ -2834,7 +2831,7 @@ DEF_CONSOLE_CMD(ConDumpRailTypes)
 		);
 	}
 	for (const auto &grf : grfs) {
-		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename);
+		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename.c_str());
 	}
 	return true;
 }
@@ -2886,7 +2883,7 @@ DEF_CONSOLE_CMD(ConDumpBridgeTypes)
 	for (uint32 grfid : grfids) {
 		extern GRFFile *GetFileByGRFID(uint32 grfid);
 		const GRFFile *grffile = GetFileByGRFID(grfid);
-		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grfid), grffile ? grffile->filename : "????");
+		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grfid), grffile ? grffile->filename.c_str() : "????");
 	}
 	return true;
 }
@@ -2949,7 +2946,7 @@ DEF_CONSOLE_CMD(ConDumpCargoTypes)
 		);
 	}
 	for (const auto &grf : grfs) {
-		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename);
+		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename.c_str());
 	}
 	return true;
 }
@@ -3128,7 +3125,7 @@ DEF_CONSOLE_CMD(ConViewportDebug)
 	if (argc == 1) {
 		IConsolePrintF(CC_DEFAULT, "Viewport debug flags: %X", _viewport_debug_flags);
 	} else {
-		_viewport_debug_flags = strtoul(argv[1], nullptr, 16);
+		_viewport_debug_flags = std::strtoul(argv[1], nullptr, 16);
 	}
 
 	return true;
@@ -3142,8 +3139,8 @@ DEF_CONSOLE_CMD(ConViewportMarkDirty)
 	}
 
 	Viewport *vp = FindWindowByClass(WC_MAIN_WINDOW)->viewport;
-	uint l = strtoul(argv[1], nullptr, 0);
-	uint t = strtoul(argv[2], nullptr, 0);
+	uint l = std::strtoul(argv[1], nullptr, 0);
+	uint t = std::strtoul(argv[2], nullptr, 0);
 	uint r = std::min<uint>(l + ((argc > 3) ? strtoul(argv[3], nullptr, 0) : 1), vp->dirty_blocks_per_row);
 	uint b = std::min<uint>(t + ((argc > 4) ? strtoul(argv[4], nullptr, 0) : 1), vp->dirty_blocks_per_column);
 	for (uint x = l; x < r; x++) {
@@ -3189,7 +3186,7 @@ DEF_CONSOLE_CMD(ConGfxDebug)
 	if (argc == 1) {
 		IConsolePrintF(CC_DEFAULT, "Gfx debug flags: %X", _gfx_debug_flags);
 	} else {
-		_gfx_debug_flags = strtoul(argv[1], nullptr, 16);
+		_gfx_debug_flags = std::strtoul(argv[1], nullptr, 16);
 	}
 
 	return true;
@@ -3236,7 +3233,7 @@ DEF_CONSOLE_CMD(ConMiscDebug)
 	if (argc == 1) {
 		IConsolePrintF(CC_DEFAULT, "Misc debug flags: %X", _misc_debug_flags);
 	} else {
-		_misc_debug_flags = strtoul(argv[1], nullptr, 16);
+		_misc_debug_flags = std::strtoul(argv[1], nullptr, 16);
 	}
 
 	return true;
@@ -3262,7 +3259,7 @@ DEF_CONSOLE_CMD(ConSetNewGRFOptimiserFlags)
 			return true;
 		}
 
-		uint value = strtoul(argv[1], nullptr, 16);
+		uint value = std::strtoul(argv[1], nullptr, 16);
 		if (_settings_game.debug.newgrf_optimiser_flags == value) return true;
 		_settings_game.debug.newgrf_optimiser_flags = value;
 
@@ -3367,7 +3364,7 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 	const std::vector<GRFFile *> &files = GetAllGRFFiles();
 
 	/* "list" sub-command */
-	if (argc == 1 || strncasecmp(argv[1], "lis", 3) == 0) {
+	if (argc == 1 || StrStartsWithIgnoreCase(argv[1], "lis")) {
 		IConsolePrint(CC_INFO, "Loaded GRF files:");
 		int i = 1;
 		for (GRFFile *grf : files) {
@@ -3376,14 +3373,14 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 			bool active = selected && profiler->active;
 			TextColour tc = active ? TC_LIGHT_BLUE : selected ? TC_GREEN : CC_INFO;
 			const char *statustext = active ? " (active)" : selected ? " (selected)" : "";
-			IConsolePrintF(tc, "%d: [%08X] %s%s", i, BSWAP32(grf->grfid), grf->filename, statustext);
+			IConsolePrintF(tc, "%d: [%08X] %s%s", i, BSWAP32(grf->grfid), grf->filename.c_str(), statustext);
 			i++;
 		}
 		return true;
 	}
 
 	/* "select" sub-command */
-	if (strncasecmp(argv[1], "sel", 3) == 0 && argc >= 3) {
+	if (StrStartsWithIgnoreCase(argv[1], "sel") && argc >= 3) {
 		for (size_t argnum = 2; argnum < argc; ++argnum) {
 			int grfnum = atoi(argv[argnum]);
 			if (grfnum < 1 || grfnum > (int)files.size()) { // safe cast, files.size() should not be larger than a few hundred in the most extreme cases
@@ -3401,9 +3398,9 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 	}
 
 	/* "unselect" sub-command */
-	if (strncasecmp(argv[1], "uns", 3) == 0 && argc >= 3) {
+	if (StrStartsWithIgnoreCase(argv[1], "uns") && argc >= 3) {
 		for (size_t argnum = 2; argnum < argc; ++argnum) {
-			if (strcasecmp(argv[argnum], "all") == 0) {
+			if (StrEqualsIgnoreCase(argv[argnum], "all")) {
 				_newgrf_profilers.clear();
 				break;
 			}
@@ -3420,7 +3417,7 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 	}
 
 	/* "start" sub-command */
-	if (strncasecmp(argv[1], "sta", 3) == 0) {
+	if (StrStartsWithIgnoreCase(argv[1], "sta")) {
 		std::string grfids;
 		size_t started = 0;
 		for (NewGRFProfiler &pr : _newgrf_profilers) {
@@ -3456,13 +3453,13 @@ DEF_CONSOLE_CMD(ConNewGRFProfile)
 	}
 
 	/* "stop" sub-command */
-	if (strncasecmp(argv[1], "sto", 3) == 0) {
+	if (StrStartsWithIgnoreCase(argv[1], "sto")) {
 		NewGRFProfiler::FinishAll();
 		return true;
 	}
 
 	/* "abort" sub-command */
-	if (strncasecmp(argv[1], "abo", 3) == 0) {
+	if (StrStartsWithIgnoreCase(argv[1], "abo")) {
 		for (NewGRFProfiler &pr : _newgrf_profilers) {
 			pr.Abort();
 		}
@@ -3783,17 +3780,17 @@ DEF_CONSOLE_CMD(ConDumpInfo)
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "roadtypes") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "roadtypes")) {
 		ConDumpRoadTypes(argc, argv);
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "railtypes") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "railtypes")) {
 		ConDumpRailTypes(argc, argv);
 		return true;
 	}
 
-	if (strcasecmp(argv[1], "cargotypes") == 0) {
+	if (StrEqualsIgnoreCase(argv[1], "cargotypes")) {
 		ConDumpCargoTypes(argc, argv);
 		return true;
 	}

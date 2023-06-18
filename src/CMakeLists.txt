@@ -20,16 +20,24 @@ add_subdirectory(network)
 add_subdirectory(os)
 add_subdirectory(pathfinder)
 add_subdirectory(saveload)
+add_subdirectory(sl)
 add_subdirectory(sound)
 add_subdirectory(spriteloader)
 add_subdirectory(table)
 add_subdirectory(tests)
+add_subdirectory(timer)
 add_subdirectory(video)
 add_subdirectory(widgets)
 
 add_files(
     viewport_sprite_sorter_sse4.cpp
     CONDITION SSE_FOUND
+)
+
+add_files(
+    gfx_layout_icu.cpp
+    gfx_layout_icu.h
+    CONDITION ICU_i18n_FOUND AND HARFBUZZ_FOUND
 )
 
 add_files(
@@ -178,6 +186,8 @@ add_files(
     gfx_func.h
     gfx_layout.cpp
     gfx_layout.h
+    gfx_layout_fallback.cpp
+    gfx_layout_fallback.h
     gfx_type.h
     gfxinit.cpp
     gfxinit.h

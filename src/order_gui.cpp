@@ -222,7 +222,7 @@ public:
 			int text_right = rtl ? rect_left - WidgetDimensions::scaled.framerect.left : ir.right;
 			int text_top   = ir.top;
 			SetDParam(0, cs->name);
-			DrawString(text_left, text_right, text_top, STR_BLACK_STRING);
+			DrawString(text_left, text_right, text_top, STR_JUST_STRING, TC_BLACK);
 		}
 	}
 
@@ -707,9 +707,9 @@ static const StringID _order_conditional_condition_accepts[] = {
 	INVALID_STRING_ID,
 };
 
-static const StringID _order_conditional_condition_is_fully_occupied[] = {
-	STR_NULL,
-	STR_NULL,
+static const StringID _order_conditional_condition_occupancy[] = {
+	STR_ORDER_CONDITIONAL_COMPARATOR_OCCUPANCY_EMPTY,
+	STR_ORDER_CONDITIONAL_COMPARATOR_OCCUPANCY_NOT_EMPTY,
 	STR_NULL,
 	STR_NULL,
 	STR_NULL,
@@ -1009,7 +1009,17 @@ void DrawOrderString(const Vehicle *v, const Order *order, int order_index, int 
 					SetDParam(0, STR_ORDER_CONDITIONAL_INVALID_SLOT);
 					SetDParam(2, STR_TRACE_RESTRICT_VARIABLE_UNDEFINED);
 				}
-				SetDParam(3, order->GetConditionComparator() == OCC_IS_TRUE ? STR_ORDER_CONDITIONAL_COMPARATOR_FULLY_OCCUPIED : STR_ORDER_CONDITIONAL_COMPARATOR_NOT_YET_FULLY_OCCUPIED);
+				switch (order->GetConditionComparator()) {
+					case OCC_IS_TRUE:
+					case OCC_IS_FALSE:
+					case OCC_EQUALS:
+					case OCC_NOT_EQUALS: {
+						SetDParam(3, _order_conditional_condition_occupancy[order->GetConditionComparator()]);
+						break;
+					}
+					default:
+						NOT_REACHED();
+				}
 			} else if (ocv == OCV_VEH_IN_SLOT) {
 				if (TraceRestrictSlot::IsValidID(order->GetXData())) {
 					SetDParam(0, STR_ORDER_CONDITIONAL_IN_SLOT);
@@ -1378,7 +1388,7 @@ enum {
  *
  * For vehicles of other companies, both button rows are not displayed.
  */
-struct OrdersWindow : public Window {
+struct OrdersWindow : public GeneralVehicleWindow {
 private:
 	/** Under what reason are we using the PlaceObject functionality? */
 	enum OrderPlaceObjectState {
@@ -1462,7 +1472,6 @@ private:
 	int selected_order;
 	VehicleOrderID order_over;         ///< Order over which another order is dragged, \c INVALID_VEH_ORDER_ID if none.
 	OrderPlaceObjectState goto_type;
-	const Vehicle *vehicle; ///< Vehicle owning the orders being displayed and manipulated.
 	Scrollbar *vscroll;
 	bool can_do_refit;     ///< Vehicle chain can be refitted in depot.
 	bool can_do_autorefit; ///< Vehicle chain can be auto-refitted.
@@ -1520,7 +1529,7 @@ private:
 				return _order_conditional_condition_accepts;
 
 			case OCV_SLOT_OCCUPANCY:
-				return _order_conditional_condition_is_fully_occupied;
+				return _order_conditional_condition_occupancy;
 
 			case OCV_VEH_IN_SLOT:
 				return v->type == VEH_TRAIN ? _order_conditional_condition_is_in_slot : _order_conditional_condition_is_in_slot_non_train;
@@ -1812,10 +1821,8 @@ private:
 	}
 
 public:
-	OrdersWindow(WindowDesc *desc, const Vehicle *v) : Window(desc)
+	OrdersWindow(WindowDesc *desc, const Vehicle *v) : GeneralVehicleWindow(desc, v)
 	{
-		this->vehicle = v;
-
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_O_SCROLLBAR);
 		this->GetWidget<NWidgetStacked>(WID_O_SEL_OCCUPANCY)->SetDisplayedPlane(_settings_client.gui.show_order_occupancy_by_default ? 0 : SZSP_NONE);
@@ -2215,7 +2222,7 @@ public:
 						this->GetWidget<NWidgetCore>(WID_O_COND_TIMETABLE)->widget_data = STR_TRACE_RESTRICT_TIMETABLE_LATENESS + order->GetConditionValue();
 						aux_sel->SetDisplayedPlane(DP_COND_TIMETABLE);
 					} else if (is_sched_dispatch) {
-						this->GetWidget<NWidgetCore>(WID_O_COND_SCHED_SELECT)->widget_data = STR_BLACK_STRING1;
+						this->GetWidget<NWidgetCore>(WID_O_COND_SCHED_SELECT)->widget_data = STR_JUST_STRING1;
 						aux_sel->SetDisplayedPlane(DP_COND_SCHED_SELECT);
 					} else {
 						aux_sel->SetDisplayedPlane(SZSP_NONE);
@@ -2233,7 +2240,7 @@ public:
 					/* Set the strings for the dropdown boxes. */
 					this->GetWidget<NWidgetCore>(WID_O_COND_VARIABLE)->widget_data   = OrderStringForVariable(this->vehicle, ocv);
 					this->GetWidget<NWidgetCore>(WID_O_COND_COMPARATOR)->widget_data = GetComparatorStrings(this->vehicle, order)[order->GetConditionComparator()];
-					this->GetWidget<NWidgetCore>(WID_O_COND_VALUE)->widget_data = (ocv == OCV_TIME_DATE && order->GetConditionValue() == TRTDVF_HOUR_MINUTE) ? STR_BLACK_TIME_HHMM : STR_BLACK_COMMA;
+					this->GetWidget<NWidgetCore>(WID_O_COND_VALUE)->widget_data = (ocv == OCV_TIME_DATE && order->GetConditionValue() == TRTDVF_HOUR_MINUTE) ? STR_JUST_TIME_HHMM : STR_JUST_COMMA;
 					this->SetWidgetDisabledState(WID_O_COND_COMPARATOR, ocv == OCV_UNCONDITIONALLY || ocv == OCV_PERCENT);
 					this->SetWidgetDisabledState(WID_O_COND_VALUE, ocv == OCV_REQUIRES_SERVICE || ocv == OCV_UNCONDITIONALLY);
 					break;
@@ -2516,15 +2523,18 @@ public:
 				VehicleOrderID sel = this->OrderGetSel();
 				const Order *order = this->vehicle->GetOrder(sel);
 
-				if (order != nullptr && order->IsType(OT_CONDITIONAL) && GB(order->GetXData(), 0, 16) != UINT16_MAX) {
-					const DispatchSchedule &ds = this->vehicle->orders->GetDispatchScheduleByIndex(GB(order->GetXData(), 0, 16));
-					if (ds.ScheduleName().empty()) {
-						SetDParam(0, STR_TIMETABLE_ASSIGN_SCHEDULE_ID);
-						SetDParam(1, GB(order->GetXData(), 0, 16) + 1);
-					} else {
-						SetDParam(0, STR_JUST_RAW_STRING);
-						SetDParamStr(1, ds.ScheduleName().c_str());
+				uint schedule_index = GB(order->GetXData(), 0, 16);
+				if (order != nullptr && order->IsType(OT_CONDITIONAL) && order->GetConditionVariable() == OCV_DISPATCH_SLOT && schedule_index != UINT16_MAX) {
+					if (schedule_index < this->vehicle->orders->GetScheduledDispatchScheduleCount()) {
+						const DispatchSchedule &ds = this->vehicle->orders->GetDispatchScheduleByIndex(schedule_index);
+						if (!ds.ScheduleName().empty()) {
+							SetDParam(0, STR_JUST_RAW_STRING);
+							SetDParamStr(1, ds.ScheduleName().c_str());
+							break;
+						}
 					}
+					SetDParam(0, STR_TIMETABLE_ASSIGN_SCHEDULE_ID);
+					SetDParam(1, schedule_index + 1);
 				} else {
 					SetDParam(0, STR_TIMETABLE_ASSIGN_SCHEDULE_NONE);
 				}
@@ -2965,11 +2975,11 @@ public:
 					case OCV_REQUIRES_SERVICE:
 					case OCV_CARGO_ACCEPTANCE:
 					case OCV_CARGO_WAITING:
-					case OCV_SLOT_OCCUPANCY:
 						mask = 0x3F;
 						break;
 
 					case OCV_VEH_IN_SLOT:
+					case OCV_SLOT_OCCUPANCY:
 						mask = 0x3C;
 						break;
 
@@ -3507,6 +3517,22 @@ public:
 		}
 	}
 
+	bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	{
+		switch (widget) {
+			case WID_O_SHARED_ORDER_LIST: {
+				if (this->vehicle->owner == _local_company) {
+					uint64 args[] = { STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP };
+					GuiShowTooltips(this, STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP_EXTRA, lengthof(args), args, close_cond);
+					return true;
+				}
+				return false;
+			}
+			default:
+				return false;
+		}
+	}
+
 	const Vehicle *GetVehicle()
 	{
 		return this->vehicle;
@@ -3604,7 +3630,7 @@ static const NWidgetPart _nested_orders_train_widgets[] = {
 															SetDataTip(STR_NULL, STR_ORDER_CONDITIONAL_COMPARATOR_TOOLTIP), SetResize(1, 0),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_O_SEL_COND_VALUE),
 					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_COND_VALUE), SetMinimalSize(124, 12), SetFill(1, 0),
-															SetDataTip(STR_BLACK_COMMA, STR_ORDER_CONDITIONAL_VALUE_TOOLTIP), SetResize(1, 0),
+															SetDataTip(STR_JUST_COMMA, STR_ORDER_CONDITIONAL_VALUE_TOOLTIP), SetResize(1, 0),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_COND_CARGO), SetMinimalSize(124, 12), SetFill(1, 0),
 															SetDataTip(STR_NULL, STR_ORDER_CONDITIONAL_CARGO_TOOLTIP), SetResize(1, 0),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_COND_SLOT), SetMinimalSize(124, 12), SetFill(1, 0),
@@ -3623,7 +3649,7 @@ static const NWidgetPart _nested_orders_train_widgets[] = {
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_CHANGE_COUNTER), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_NULL, STR_ORDER_CHANGE_COUNTER_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_COUNTER_VALUE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_COMMA, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_COMMA, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
@@ -3635,7 +3661,7 @@ static const NWidgetPart _nested_orders_train_widgets[] = {
 				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_DEPARTURE_VIA_TYPE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_STRING, STR_ORDER_LABEL_DEPARTURES_VIA_TYPE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_STRING, STR_ORDER_LABEL_DEPARTURES_VIA_TYPE_TOOLTIP), SetResize(1, 0),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 		EndContainer(),
@@ -3748,7 +3774,7 @@ static const NWidgetPart _nested_orders_widgets[] = {
 													SetDataTip(STR_NULL, STR_ORDER_CONDITIONAL_COMPARATOR_TOOLTIP), SetResize(1, 0),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_O_SEL_COND_VALUE),
 					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_COND_VALUE), SetMinimalSize(124, 12), SetFill(1, 0),
-															SetDataTip(STR_BLACK_COMMA, STR_ORDER_CONDITIONAL_VALUE_TOOLTIP), SetResize(1, 0),
+															SetDataTip(STR_JUST_COMMA, STR_ORDER_CONDITIONAL_VALUE_TOOLTIP), SetResize(1, 0),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_COND_CARGO), SetMinimalSize(124, 12), SetFill(1, 0),
 													SetDataTip(STR_NULL, STR_ORDER_CONDITIONAL_CARGO_TOOLTIP), SetResize(1, 0),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_COND_SLOT), SetMinimalSize(124, 12), SetFill(1, 0),
@@ -3771,7 +3797,7 @@ static const NWidgetPart _nested_orders_widgets[] = {
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_CHANGE_COUNTER), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_NULL, STR_ORDER_CHANGE_COUNTER_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_COUNTER_VALUE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_COMMA, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_COMMA, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
 			EndContainer(),
 
 			/* Buttons for changing a text label */
@@ -3787,7 +3813,7 @@ static const NWidgetPart _nested_orders_widgets[] = {
 				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_O_DEPARTURE_VIA_TYPE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_STRING, STR_ORDER_LABEL_DEPARTURES_VIA_TYPE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_STRING, STR_ORDER_LABEL_DEPARTURES_VIA_TYPE_TOOLTIP), SetResize(1, 0),
 			EndContainer(),
 
 			/* No buttons */

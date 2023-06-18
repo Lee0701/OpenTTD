@@ -223,39 +223,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PU
-STR_ABBREV_COAL                                                 :{TINY_FONT}UG
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PT
-STR_ABBREV_OIL                                                  :{TINY_FONT}NF
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}ST
-STR_ABBREV_GOODS                                                :{TINY_FONT}RB
-STR_ABBREV_GRAIN                                                :{TINY_FONT}ŽT
-STR_ABBREV_WOOD                                                 :{TINY_FONT}DV
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}FE
-STR_ABBREV_STEEL                                                :{TINY_FONT}ČL
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}DC
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}CU
-STR_ABBREV_MAIZE                                                :{TINY_FONT}KK
-STR_ABBREV_FRUIT                                                :{TINY_FONT}VĆ
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}HN
-STR_ABBREV_PAPER                                                :{TINY_FONT}PR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ZL
-STR_ABBREV_WATER                                                :{TINY_FONT}VO
-STR_ABBREV_WHEAT                                                :{TINY_FONT}PŠ
-STR_ABBREV_RUBBER                                               :{TINY_FONT}GM
-STR_ABBREV_SUGAR                                                :{TINY_FONT}ŠĆ
-STR_ABBREV_TOYS                                                 :{TINY_FONT}IG
-STR_ABBREV_SWEETS                                               :{TINY_FONT}SL
-STR_ABBREV_COLA                                                 :{TINY_FONT}CL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}ŠV
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BL
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}MK
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}GP
-STR_ABBREV_NONE                                                 :{TINY_FONT}NI
-STR_ABBREV_ALL                                                  :{TINY_FONT}SVE
+STR_ABBREV_PASSENGERS                                           :PU
+STR_ABBREV_COAL                                                 :UG
+STR_ABBREV_MAIL                                                 :PT
+STR_ABBREV_OIL                                                  :NF
+STR_ABBREV_LIVESTOCK                                            :ST
+STR_ABBREV_GOODS                                                :RB
+STR_ABBREV_GRAIN                                                :ŽT
+STR_ABBREV_WOOD                                                 :DV
+STR_ABBREV_IRON_ORE                                             :FE
+STR_ABBREV_STEEL                                                :ČL
+STR_ABBREV_VALUABLES                                            :DC
+STR_ABBREV_COPPER_ORE                                           :CU
+STR_ABBREV_MAIZE                                                :KK
+STR_ABBREV_FRUIT                                                :VĆ
+STR_ABBREV_DIAMONDS                                             :DM
+STR_ABBREV_FOOD                                                 :HN
+STR_ABBREV_PAPER                                                :PR
+STR_ABBREV_GOLD                                                 :ZL
+STR_ABBREV_WATER                                                :VO
+STR_ABBREV_WHEAT                                                :PŠ
+STR_ABBREV_RUBBER                                               :GM
+STR_ABBREV_SUGAR                                                :ŠĆ
+STR_ABBREV_TOYS                                                 :IG
+STR_ABBREV_SWEETS                                               :SL
+STR_ABBREV_COLA                                                 :CL
+STR_ABBREV_CANDYFLOSS                                           :ŠV
+STR_ABBREV_BUBBLES                                              :BL
+STR_ABBREV_TOFFEE                                               :MK
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :GP
+STR_ABBREV_NONE                                                 :NI
+STR_ABBREV_ALL                                                  :SVE
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}putnik{P "" a ""}
@@ -287,38 +287,38 @@ STR_COLOUR_WHITE                                                :Bijela
 STR_COLOUR_RANDOM                                               :Nasumično
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}KS
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}KS
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}KS
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}KS
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}ton{P a e e}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}ton{P a e a}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}ton{P a e e}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}ton{P a e a}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}galon{P "" a a}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}lit{P ra re ara}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}galon{P "" a a}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}lit{P ra re ara}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}ft
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtriraj niz:
@@ -1000,6 +1000,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Kopiraj 
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Postavke igre
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Novčane jedinice
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Izbor novčanih jedinica
 
@@ -1051,10 +1055,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Odaberi 
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Isključeno
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Svaki mjesec
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Svaka 3 mjeseca
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Svakih 6 mjeseci
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Svakih 12 mjeseci
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Jezik
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Odaberi jezik sučelja
@@ -1069,6 +1069,7 @@ STR_GAME_OPTIONS_RESOLUTION_ITEM                                :{NUM}x{NUM}
 
 
 STR_GAME_OPTIONS_VIDEO_VSYNC                                    :{BLACK}VSync
+
 
 
 
@@ -1809,13 +1810,6 @@ STR_CONFIG_SETTING_ENDING_YEAR_ZERO                             :Nikada
 STR_CONFIG_SETTING_ECONOMY_TYPE                                 :Vrsta ekonomije: {STRING}
 ###length 3
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Dopusti kupovanje udjela u drugim tvrtkama: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Kada je uključeno, dopušta se kupnja i prodaja dionica tvrtki. Dionice će postati dostupne samo za tvrtke određene starosti
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Najmanja starost tvrtke za trgovanje udjelima: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Odredite najmanju starost tvtke da bi drugi mogli kupovati i prodavati dionice.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Postotak dobiti za dionicu koji se plaća kod sustava feedera: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Postotak prihoda koji će biti predan srednjim dionicama prijevoza feeder sustavima, daje više kontrole nad prihodima
 
@@ -1919,10 +1913,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Nijedan
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Početni množitelj veličine grada: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Prosječna veličina gradova u donosu na naselja kod početka igre
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Ažuriraj povezni grafikon svakih {STRING}{NBSP}dan{P 0:2 a a a}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Vrijeme između slijedećih rekalkulacija poveznog grafikona. Svaka rekalkulacija izračunava planove za jednu komponentu grafikona. To znači da vrijednost X za ovu postavku ne mora značiti i ažuriranje kompletnog grafikona unutar X dana. Samo neke komponente će biti ažurirane. Čim kraće vrijeme odredite, više će biti potrebno resursa CPU-a za izračun. Čim duže vrijeme odredite, trebati će više vremena za pokretanje distribucije po novim rutama.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Uzmi {STRING}{NBSP}dan{P 0:2 a a a} za rekalkulaciju poveznog grafikona
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Vrijeme potrebno za rekalkulaciju komponente poveznog grafikona. Kada se rekalkulacija pokrene, stvara se slijed koji može raditi broj dana koliko ovdje odredite. Čim kraće vrijeme odredite, postoji mogućnost da slijed neće biti gotov kada bi trebao. Tada se igra usporava odnosno zaustavlja dok ne bude gotovo. Čim duže vrijeme odredite, potrebno je duže da se distribucija ažurira kad se izmijene rute.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Način distribucije za putnike: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Simetrično" znači da će se otprilike isti broj putnika slati od stanice A prema stanici B ako od B prema A. "Asimetrično" znači da će se proizvoljni brojevi putnika slati u oba smjera. "Ručno" znači da se distribucija za putnike neće vršiti automatski.
@@ -2326,6 +2316,7 @@ STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Jeste l
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Koristi relej?
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Da, samo ovaj put
+
 
 STR_NETWORK_SPECTATORS                                          :Promatrači
 
@@ -3576,7 +3567,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} brod{P "" a ova}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Ništa
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Vrijednost tvrtke: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% u vlasništvu {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktura:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} dijelovi pruge
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} dio ceste
@@ -3602,11 +3592,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Ime tvrt
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Promijeni ime tvrtke
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Ime direktora
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Promjeni ime direktora
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Kupi 25% udjela u tvrtci
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Prodaj 25% udjela u tvrtci
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Kupi 25% udjela u ovoj tvrtci. Shift+Klik prikazuje trošak bez kupnje udjela.
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Prodaj 25% udjela u ovoj tvrtci. Shift+Klik prikazuje trošak bez prodaje udjela.
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Ime tvrtke
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Ime direktora
@@ -4477,7 +4462,6 @@ STR_AI_SETTINGS_CAPTION_AI                                      :UI
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Zatvori
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetiraj
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Broj dana za start ovog UI-ja nakon prethodnog (otprilike): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4486,7 +4470,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Posloži
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Pogledaj "pročitaj me" datoteku
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Zapis izmjena
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licenca
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} "pročitaj me" datoteka od {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} zapis izmjena od {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} licenca od {STRING}
@@ -4612,9 +4596,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Nije mog
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Nije moguće dati novac ovoj tvrtki...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Nije moguće kupiti tvrtku...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Nije moguće izgraditi sjedište tvrtke...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nije moguće kupiti 25% udjela u ovoj tvrtci...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Nije moguće prodati 25% udjela u ovoj tvrtci...
-STR_ERROR_PROTECTED                                             :{WHITE}Ova tvrtka još nije dovoljno stara da bi trgovala udjelima...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Nije moguće graditi gradove
@@ -5375,10 +5356,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Helikopter Powe
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Tvrtka {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Groupa {COMMA}
@@ -5459,33 +5440,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

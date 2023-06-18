@@ -44,7 +44,7 @@ struct SignList {
 
 	StringFilter string_filter;                                       ///< The match string to be used when the GUIList is (re)-sorted.
 	static bool match_case;                                           ///< Should case sensitive matching be used?
-	static char default_name[64];                                     ///< Default sign name, used if Sign::name is nullptr.
+	static std::string default_name;                                  ///< Default sign name, used if Sign::name is nullptr.
 
 	/**
 	 * Creates a SignList with filtering disabled by default.
@@ -76,10 +76,10 @@ struct SignList {
 		 * a lot of them. Therefore a worthwhile performance gain can be made by
 		 * directly comparing Sign::name instead of going through the string
 		 * system for each comparison. */
-		const char *a_name = a->name.empty() ? SignList::default_name : a->name.c_str();
-		const char *b_name = b->name.empty() ? SignList::default_name : b->name.c_str();
+		const std::string &a_name = a->name.empty() ? SignList::default_name : a->name;
+		const std::string &b_name = b->name.empty() ? SignList::default_name : b->name;
 
-		int r = strnatcmp(a_name, b_name); // Sort by name (natural sorting).
+		int r = StrNaturalCompare(a_name, b_name); // Sort by name (natural sorting).
 
 		return r != 0 ? r < 0 : (a->index < b->index);
 	}
@@ -93,10 +93,10 @@ struct SignList {
 	static bool SignNameFilter(const Sign * const *a, StringFilter &filter)
 	{
 		/* Same performance benefit as above for sorting. */
-		const char *a_name = (*a)->name.empty() ? SignList::default_name : (*a)->name.c_str();
+		const std::string &a_name = (*a)->name.empty() ? SignList::default_name : (*a)->name;
 
 		filter.ResetState();
-		filter.AddLine(a_name);
+		filter.AddLine(a_name.c_str());
 		return filter.GetState();
 	}
 
@@ -127,7 +127,7 @@ struct SignList {
 };
 
 bool SignList::match_case = false;
-char SignList::default_name[64];
+std::string SignList::default_name;
 
 /** Enum referring to the Hotkeys in the sign list window */
 enum SignListHotkeys {
@@ -162,7 +162,7 @@ struct SignListWindow : Window, SignList {
 	void OnInit() override
 	{
 		/* Default sign name, used if Sign::name is nullptr. */
-		GetString(SignList::default_name, STR_DEFAULT_SIGN_NAME, lastof(SignList::default_name));
+		SignList::default_name = GetString(STR_DEFAULT_SIGN_NAME);
 		this->signs.ForceResort();
 		this->SortSignsList();
 		this->SetDirty();
@@ -305,7 +305,7 @@ struct SignListWindow : Window, SignList {
 	{
 		if (this->signs.NeedRebuild()) {
 			this->BuildSignsList();
-			this->vscroll->SetCount((uint)this->signs.size());
+			this->vscroll->SetCount(this->signs.size());
 			this->SetWidgetDirty(WID_SIL_CAPTION);
 		}
 		this->SortSignsList();
@@ -536,7 +536,7 @@ struct SignWindow : Window, SignList {
 static const NWidgetPart _nested_query_sign_edit_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_CAPTION, COLOUR_GREY, WID_QES_CAPTION), SetDataTip(STR_WHITE_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_QES_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_QES_LOCATION), SetMinimalSize(12, 14), SetDataTip(SPR_GOTO_LOCATION, STR_EDIT_SIGN_LOCATION_TOOLTIP),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY),

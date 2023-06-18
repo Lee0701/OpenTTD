@@ -472,9 +472,9 @@ uint Engine::GetDisplayMaxTractiveEffort() const
 	/* Only trains and road vehicles have 'tractive effort'. */
 	switch (this->type) {
 		case VEH_TRAIN:
-			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_TRAIN_TRACTIVE_EFFORT, this->u.rail.tractive_effort)) / 256 / 1000;
+			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_TRAIN_TRACTIVE_EFFORT, this->u.rail.tractive_effort)) / 256;
 		case VEH_ROAD:
-			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_ROADVEH_TRACTIVE_EFFORT, this->u.road.tractive_effort)) / 256 / 1000;
+			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_ROADVEH_TRACTIVE_EFFORT, this->u.road.tractive_effort)) / 256;
 
 		default: NOT_REACHED();
 	}
@@ -521,6 +521,30 @@ StringID Engine::GetAircraftTypeText() const
 
 		default: NOT_REACHED();
 	}
+}
+
+/**
+ * Check whether the engine variant chain is hidden in the GUI for the given company.
+ * @param c Company to check.
+ * @return \c true iff the engine variant chain is hidden in the GUI for the given company.
+ */
+bool Engine::IsVariantHidden(CompanyID c) const
+{
+	/* In case company is spectator. */
+	if (c >= MAX_COMPANIES) return false;
+
+	/* Shortcut if this engine is explicitly hidden. */
+	if (this->IsHidden(c)) return true;
+
+	/* Check for hidden parent variants. This is a bit convoluted as we must check hidden status of
+	 * the last display variant rather than the actual parent variant. */
+	const Engine *re = this;
+	const Engine *ve = re->GetDisplayVariant();
+	while (!(ve->IsHidden(c)) && re->info.variant_id != INVALID_ENGINE && re->info.variant_id != re->index) {
+		re = Engine::Get(re->info.variant_id);
+		ve = re->GetDisplayVariant();
+	}
+	return ve->IsHidden(c);
 }
 
 /**
@@ -649,8 +673,8 @@ void CalcEngineReliability(Engine *e, bool new_month)
 		re = Engine::Get(re->info.variant_id);
 	}
 
-	uint age = re->age;
-	if (new_month && re->index > e->index && age != MAX_DAY) age++; /* parent variant's age has not yet updated. */
+	uint32 age = re->age;
+	if (new_month && re->index > e->index && age != INT32_MAX) age++; /* parent variant's age has not yet updated. */
 
 	/* Check for early retirement */
 	if (e->company_avail != 0 && !_settings_game.vehicle.never_expire_vehicles && e->info.base_life != 0xFF) {
@@ -1163,7 +1187,7 @@ void EnginesMonthlyLoop()
 		bool refresh = false;
 		for (Engine *e : Engine::Iterate()) {
 			/* Age the vehicle */
-			if ((e->flags & ENGINE_AVAILABLE) && e->age != MAX_DAY) {
+			if ((e->flags & ENGINE_AVAILABLE) && e->age != INT32_MAX) {
 				e->age++;
 				CalcEngineReliability(e, true);
 				refresh = true;
@@ -1338,6 +1362,9 @@ void CheckEngines()
 
 	for (const Engine *e : Engine::Iterate()) {
 		if (!e->IsEnabled()) continue;
+
+		/* Don't consider train wagons, we need a powered engine available. */
+		if (e->type == VEH_TRAIN && e->u.rail.railveh_type == RAILVEH_WAGON) continue;
 
 		/* We have an available engine... yay! */
 		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail != 0) return;

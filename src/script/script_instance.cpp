@@ -9,7 +9,7 @@
 
 #include "../stdafx.h"
 #include "../debug.h"
-#include "../saveload/saveload.h"
+#include "../sl/saveload.h"
 
 #include "../script/squirrel_class.hpp"
 #include "../script/squirrel_std.hpp"
@@ -35,7 +35,6 @@ ScriptStorage::~ScriptStorage()
 {
 	/* Free our pointers */
 	if (event_data != nullptr) ScriptEventController::FreeEventPointer();
-	if (log_data != nullptr) ScriptLog::FreeLogPointer();
 }
 
 /**
@@ -49,7 +48,7 @@ static void PrintFunc(bool error_msg, const SQChar *message)
 	ScriptController::Print(error_msg, message);
 }
 
-ScriptInstance::ScriptInstance(const char *APIName) :
+ScriptInstance::ScriptInstance(const char *APIName, ScriptType script_type) :
 	engine(nullptr),
 	versionAPI(nullptr),
 	controller(nullptr),
@@ -63,6 +62,7 @@ ScriptInstance::ScriptInstance(const char *APIName) :
 	in_shutdown(false),
 	callback(nullptr),
 	APIName(APIName),
+	script_type(script_type),
 	allow_text_param_mismatch(false)
 {
 	this->storage = new ScriptStorage();
@@ -91,7 +91,7 @@ void ScriptInstance::Initialize(const char *main_script, const char *instance_na
 			return;
 		}
 
-		if (strcmp(this->APIName, "GS") == 0) {
+		if (this->script_type == ScriptType::GS) {
 			if (strcmp(instance_name, "BeeRewardClass") == 0) {
 				this->LoadCompatibilityScripts("brgs", GAME_DIR);
 			}
@@ -257,7 +257,7 @@ void ScriptInstance::GameLoop()
 			}
 			ScriptObject::SetAllowDoCommand(true);
 			/* Start the script by calling Start() */
-			if (!this->engine->CallMethod(*this->instance, "Start",  _settings_game.script.script_max_opcode_till_suspend) || !this->engine->IsSuspended()) this->Died();
+			if (!this->engine->CallMethod(*this->instance, "Start", this->GetMaxOpsTillSuspend()) || !this->engine->IsSuspended()) this->Died();
 		} catch (Script_Suspend &e) {
 			this->suspend  = e.GetSuspendTime();
 			this->callback = e.GetSuspendCallback();
@@ -278,7 +278,7 @@ void ScriptInstance::GameLoop()
 
 	/* Continue the VM */
 	try {
-		if (!this->engine->Resume(_settings_game.script.script_max_opcode_till_suspend)) this->Died();
+		if (!this->engine->Resume(this->GetMaxOpsTillSuspend())) this->Died();
 	} catch (Script_Suspend &e) {
 		this->suspend  = e.GetSuspendTime();
 		this->callback = e.GetSuspendCallback();
@@ -349,11 +349,11 @@ ScriptStorage *ScriptInstance::GetStorage()
 	return this->storage;
 }
 
-void *ScriptInstance::GetLogPointer()
+ScriptLogTypes::LogData &ScriptInstance::GetLogData()
 {
 	ScriptObject::ActiveInstance active(this);
 
-	return ScriptObject::GetLogPointer();
+	return ScriptObject::GetLogData();
 }
 
 /*
@@ -580,7 +580,7 @@ void ScriptInstance::Pause()
 {
 	/* Suspend script. */
 	HSQUIRRELVM vm = this->engine->GetVM();
-	Squirrel::DecreaseOps(vm, _settings_game.script.script_max_opcode_till_suspend);
+	Squirrel::DecreaseOps(vm, this->GetOpsTillSuspend());
 
 	this->is_paused = true;
 }
@@ -653,7 +653,7 @@ bool ScriptInstance::IsPaused()
 	}
 
 	if (std::holds_alternative<std::string>(value)) {
-		sq_pushstring(vm, std::get<std::string>(value).c_str(), -1);
+		sq_pushstring(vm, std::get<std::string>(value), -1);
 		return true;
 	}
 
@@ -786,6 +786,15 @@ void ScriptInstance::LimitOpsTillSuspend(SQInteger suspend)
 		HSQUIRRELVM vm = this->engine->GetVM();
 		Squirrel::DecreaseOps(vm, current - suspend);
 	}
+}
+
+uint32 ScriptInstance::GetMaxOpsTillSuspend() const
+{
+	if (this->script_type == ScriptType::GS && (_pause_mode & PM_PAUSED_GAME_SCRIPT) != PM_UNPAUSED) {
+		/* Boost opcodes till suspend when paused due to game script */
+		return std::min<uint32>(250000, _settings_game.script.script_max_opcode_till_suspend * 10);
+	}
+	return _settings_game.script.script_max_opcode_till_suspend;
 }
 
 bool ScriptInstance::DoCommandCallback(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)

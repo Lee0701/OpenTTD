@@ -10,7 +10,7 @@
 #ifndef SETTINGS_INTERNAL_H
 #define SETTINGS_INTERNAL_H
 
-#include "saveload/saveload_types.h"
+#include "sl/saveload_types.h"
 
 enum SettingFlag : uint32 {
 	SF_NONE = 0,
@@ -340,6 +340,8 @@ struct ListSettingDesc : SettingDesc {
 struct NullSettingDesc : SettingDesc {
 	NullSettingDesc(const SaveLoad &save) :
 		SettingDesc(save, "", SF_NOT_IN_CONFIG, nullptr, false, nullptr) {}
+	NullSettingDesc(const SaveLoad &save, const char *name, const char *patx_name) :
+		SettingDesc(save, name, SF_NOT_IN_CONFIG, nullptr, false, patx_name) {}
 	virtual ~NullSettingDesc() {}
 
 	void FormatValue(char *buf, const char *last, const void *object) const override { NOT_REACHED(); }

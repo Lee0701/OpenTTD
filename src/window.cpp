@@ -41,6 +41,8 @@
 #include "news_func.h"
 #include "core/backup_type.hpp"
 
+#include <bitset>
+
 #include "safeguards.h"
 
 /** Values for _settings_client.gui.auto_scrolling */
@@ -85,6 +87,8 @@ Rect _scrolling_viewport_bound; ///< A viewport is being scrolled with the mouse
 bool _mouse_hovering;      ///< The mouse is hovering over the same point.
 
 SpecialMouseMode _special_mouse_mode; ///< Mode of the mouse.
+
+static std::bitset<WC_END> _present_window_types;
 
 /**
  * List of all WindowDescs.
@@ -213,8 +217,8 @@ int Window::GetRowFromWidget(int clickpos, int widget, int padding, int line_hei
 {
 	const NWidgetBase *wid = this->GetWidget<NWidgetBase>(widget);
 	if (line_height < 0) line_height = wid->resize_y;
-	if (clickpos < (int)wid->pos_y + padding) return INT_MAX;
-	return (clickpos - (int)wid->pos_y - padding) / line_height;
+	if (clickpos < wid->pos_y + padding) return INT_MAX;
+	return (clickpos - wid->pos_y - padding) / line_height;
 }
 
 /**
@@ -438,15 +442,15 @@ void Window::UpdateQueryStringSize()
 /**
  * Get the character that is rendered at a position by the focused edit box.
  * @param pt The position to test.
- * @return Pointer to the character at the position or nullptr if no character is at the position.
+ * @return Index of the character position or -1 if no character is at the position.
  */
-/* virtual */ const char *Window::GetTextCharacterAtPosition(const Point &pt) const
+/* virtual */ ptrdiff_t Window::GetTextCharacterAtPosition(const Point &pt) const
 {
 	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) {
 		return this->GetQueryString(this->nested_focus->index)->GetCharAtPosition(this, this->nested_focus->index, pt);
 	}
 
-	return nullptr;
+	return -1;
 }
 
 /**
@@ -754,7 +758,7 @@ static void DispatchLeftClickEvent(Window *w, int x, int y, int click_count)
 		case WWT_RESIZEBOX:
 			/* When the resize widget is on the left size of the window
 			 * we assume that that button is used to resize to the left. */
-			StartWindowSizing(w, (int)nw->pos_x < (w->width / 2));
+			StartWindowSizing(w, nw->pos_x < (w->width / 2));
 			nw->SetDirty(w);
 			return;
 
@@ -1028,9 +1032,10 @@ void Window::SetDirtyAsBlocks()
  * Re-initialize a window, and optionally change its size.
  * @param rx Horizontal resize of the window.
  * @param ry Vertical resize of the window.
+ * @param reposition If set, reposition the window to default location.
  * @note For just resizing the window, use #ResizeWindow instead.
  */
-void Window::ReInit(int rx, int ry)
+void Window::ReInit(int rx, int ry, bool reposition)
 {
 	this->SetDirtyAsBlocks(); // Mark whole current window as dirty.
 
@@ -1056,6 +1061,12 @@ void Window::ReInit(int rx, int ry)
 	 * The cast to int is necessary else dx/dy are implicitly casted to unsigned int, which won't work. */
 	if (this->resize.step_width  > 1) dx -= dx % (int)this->resize.step_width;
 	if (this->resize.step_height > 1) dy -= dy % (int)this->resize.step_height;
+
+	if (reposition) {
+		Point pt = this->OnInitialPosition(this->nested_root->smallest_x, this->nested_root->smallest_y, window_number);
+		this->InitializePositionSize(pt.x, pt.y, this->nested_root->smallest_x, this->nested_root->smallest_y);
+		this->FindWindowPlacementAndResize(this->window_desc->GetDefaultWidth(), this->window_desc->GetDefaultHeight());
+	}
 
 	ResizeWindow(this, dx, dy);
 	/* ResizeWindow() does this->SetDirty() already, no need to do it again here. */
@@ -1169,6 +1180,8 @@ Window::~Window()
  */
 Window *FindWindowById(WindowClass cls, WindowNumber number)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return nullptr;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls && w->window_number == number) return w;
 	}
@@ -1184,6 +1197,8 @@ Window *FindWindowById(WindowClass cls, WindowNumber number)
  */
 Window *FindWindowByClass(WindowClass cls)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return nullptr;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls) return w;
 	}
@@ -1225,6 +1240,8 @@ void DeleteWindowById(WindowClass cls, WindowNumber number, bool force)
  */
 void DeleteAllWindowsById(WindowClass cls, WindowNumber number, bool force)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	/* Note: the container remains stable, even when deleting windows. */
 	for (Window *w : Window::IterateUnordered()) {
 		if (w->window_class == cls && w->window_number == number && (force || (w->flags & WF_STICKY) == 0)) {
@@ -1239,6 +1256,8 @@ void DeleteAllWindowsById(WindowClass cls, WindowNumber number, bool force)
  */
 void DeleteWindowByClass(WindowClass cls)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	/* Note: the container remains stable, even when deleting windows. */
 	for (Window *w : Window::IterateUnordered()) {
 		if (w->window_class == cls) {
@@ -1508,6 +1527,12 @@ static void BringWindowToFront(Window *w)
 	w->SetDirty();
 }
 
+void Window::ChangeWindowClass(WindowClass cls)
+{
+	this->window_class = cls;
+	if (this->window_class < WC_END) _present_window_types.set(this->window_class);
+}
+
 /**
  * Initializes the data (except the position and initial size) of a new Window.
  * @param window_number Number being assigned to the new window
@@ -1518,7 +1543,7 @@ static void BringWindowToFront(Window *w)
 void Window::InitializeData(WindowNumber window_number)
 {
 	/* Set up window properties; some of them are needed to set up smallest size below */
-	this->window_class = this->window_desc->cls;
+	this->ChangeWindowClass(this->window_desc->cls);
 	this->SetWhiteBorder();
 	if (this->window_desc->default_pos == WDP_CENTER) this->flags |= WF_CENTERED;
 	this->owner = INVALID_OWNER;
@@ -2497,13 +2522,10 @@ static void HandleScrollbarScrolling(Window *w)
 		return;
 	}
 
-	/* Find the item we want to move to and make sure it's inside bounds. */
-	int pos = std::min(RoundDivSU(std::max(0, i + _scrollbar_start_pos) * sb->GetCount(), _scrollbar_size), std::max(0, sb->GetCount() - sb->GetCapacity()));
-	if (rtl) pos = std::max(0, sb->GetCount() - sb->GetCapacity() - pos);
-	if (pos != sb->GetPosition()) {
-		sb->SetPosition(pos);
-		w->SetDirty();
-	}
+	/* Find the item we want to move to. SetPosition will make sure it's inside bounds. */
+	int pos = RoundDivSU((i + _scrollbar_start_pos) * sb->GetCount(), _scrollbar_size);
+	if (rtl) pos = sb->GetCount() - sb->GetCapacity() - pos;
+	if (sb->SetPosition(pos)) w->SetDirty();
 }
 
 /**
@@ -3210,10 +3232,14 @@ void InputLoop()
 
 	bool reset_window_nexts = false;
 
+	_present_window_types.reset();
+
 	/* Do the actual free of the deleted windows. */
 	for (WindowBase *v = _z_front_window; v != nullptr; /* nothing */) {
 		WindowBase *w = v;
 		v = v->z_back;
+
+		if (w->window_class < WC_END) _present_window_types.set(w->window_class);
 
 		if (w->window_class != WC_INVALID) continue;
 
@@ -3340,6 +3366,8 @@ void UpdateWindows()
  */
 void SetWindowDirty(WindowClass cls, WindowNumber number)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls && w->window_number == number) w->SetDirty();
 	}
@@ -3353,6 +3381,8 @@ void SetWindowDirty(WindowClass cls, WindowNumber number)
  */
 void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_index)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls && w->window_number == number) {
 			w->SetWidgetDirty(widget_index);
@@ -3366,6 +3396,8 @@ void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_inde
  */
 void SetWindowClassesDirty(WindowClass cls)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls) w->SetDirty();
 	}
@@ -3440,6 +3472,8 @@ void Window::ProcessHighlightedInvalidations()
  */
 void InvalidateWindowData(WindowClass cls, WindowNumber number, int data, bool gui_scope)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls && w->window_number == number) {
 			w->InvalidateData(data, gui_scope);
@@ -3457,6 +3491,8 @@ void InvalidateWindowData(WindowClass cls, WindowNumber number, int data, bool g
  */
 void InvalidateWindowClassesData(WindowClass cls, int data, bool gui_scope)
 {
+	if (cls < WC_END && !_present_window_types[cls]) return;
+
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == cls) {
 			w->InvalidateData(data, gui_scope);
@@ -3582,7 +3618,10 @@ void ReInitAllWindows(bool zoom_changed)
 
 	/* When _gui_zoom has changed, we need to resize toolbar and statusbar first,
 	 * so EnsureVisibleCaption uses the updated size information. */
-	ReInitWindow(FindWindowById(WC_MAIN_TOOLBAR, 0), zoom_changed);
+	{
+		MainToolbarScaleAdjuster toolbar_scale_adjuster;
+		ReInitWindow(FindWindowById(WC_MAIN_TOOLBAR, 0), zoom_changed);
+	}
 	ReInitWindow(FindWindowById(WC_STATUS_BAR, 0), zoom_changed);
 	for (Window *w : Window::IterateFromBack()) {
 		if (w->window_class == WC_MAIN_TOOLBAR || w->window_class == WC_STATUS_BAR) continue;

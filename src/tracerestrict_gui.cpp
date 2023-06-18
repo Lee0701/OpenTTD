@@ -47,6 +47,7 @@
 #include "infrastructure_func.h"
 #include "zoom_func.h"
 #include "core/span_type.hpp"
+#include "3rdparty/cpp-btree/btree_map.h"
 
 #include "safeguards.h"
 
@@ -96,6 +97,7 @@ enum TraceRestrictWindowWidgets {
 	TR_WIDGET_DUPLICATE,
 	TR_WIDGET_SHARE,
 	TR_WIDGET_UNSHARE,
+	TR_WIDGET_SHARE_ONTO,
 };
 
 /** Selection mappings for NWID_SELECTION selectors */
@@ -130,6 +132,7 @@ enum PanelWidgets {
 	// Share
 	DPS_SHARE = 0,
 	DPS_UNSHARE,
+	DPS_SHARE_ONTO,
 
 	// Copy
 	DPC_COPY = 0,
@@ -672,7 +675,7 @@ static DropDownList GetGroupDropDownList(Owner owner, GroupID group_id, int &sel
 /** Sort slots by their name */
 static bool SlotNameSorter(const TraceRestrictSlot * const &a, const TraceRestrictSlot * const &b)
 {
-	int r = strnatcmp(a->name.c_str(), b->name.c_str()); // Sort by name (natural sorting).
+	int r = StrNaturalCompare(a->name, b->name); // Sort by name (natural sorting).
 	if (r == 0) return a->index < b->index;
 	return r < 0;
 }
@@ -732,7 +735,7 @@ DropDownList GetSlotDropDownList(Owner owner, TraceRestrictSlotID slot_id, int &
 /** Sort counters by their name */
 static bool CounterNameSorter(const TraceRestrictCounter * const &a, const TraceRestrictCounter * const &b)
 {
-	int r = strnatcmp(a->name.c_str(), b->name.c_str()); // Sort by name (natural sorting).
+	int r = StrNaturalCompare(a->name, b->name); // Sort by name (natural sorting).
 	if (r == 0) return a->index < b->index;
 	return r < 0;
 }
@@ -1000,8 +1003,8 @@ static uint ConvertIntegerValue(TraceRestrictValueType type, uint in, bool to_di
 
 		case TRVT_FORCE:
 			return to_display
-					? ConvertForceToDisplayForce(in)
-					: ConvertDisplayForceToForce(in);
+					? ConvertForceToDisplayForce(static_cast<int64>(in) * 1000)
+					: static_cast<uint>(ConvertDisplayForceToForce(in) / 1000);
 			break;
 
 		case TRVT_PF_PENALTY:
@@ -1028,7 +1031,7 @@ static void ConvertValueToDecimal(TraceRestrictValueType type, uint in, int64 &v
 			break;
 
 		case TRVT_FORCE_WEIGHT_RATIO:
-			ConvertForceWeightRatioToDisplay(in, value, decimal);
+			ConvertForceWeightRatioToDisplay(static_cast<int64>(in) * 1000, value, decimal);
 			break;
 
 		case TRVT_SPEED:
@@ -1051,7 +1054,7 @@ static uint ConvertDecimalToValue(TraceRestrictValueType type, double in)
 			return ConvertDisplayToPowerWeightRatio(in);
 
 		case TRVT_FORCE_WEIGHT_RATIO:
-			return ConvertDisplayToForceWeightRatio(in);
+			return ConvertDisplayToForceWeightRatio(in) / 1000;
 
 		case TRVT_SPEED:
 			return ConvertDisplaySpeedToKmhishSpeed(in * (_settings_game.locale.units_velocity == 3 ? 10 : 1), VEH_TRAIN);
@@ -1390,7 +1393,8 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 
 				case TRVT_FORCE:
 					instruction_string = STR_TRACE_RESTRICT_CONDITIONAL_COMPARE_FORCE;
-					DrawInstructionStringConditionalIntegerCommon(item, properties);
+					DrawInstructionStringConditionalCommon(item, properties);
+					SetDParam(3, GetTraceRestrictValue(item) * 1000);
 					break;
 
 				case TRVT_POWER_WEIGHT_RATIO:
@@ -1400,7 +1404,8 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 
 				case TRVT_FORCE_WEIGHT_RATIO:
 					instruction_string = STR_TRACE_RESTRICT_CONDITIONAL_COMPARE_FORCE_WEIGHT_RATIO;
-					DrawInstructionStringConditionalIntegerCommon(item, properties);
+					DrawInstructionStringConditionalCommon(item, properties);
+					SetDParam(3, GetTraceRestrictValue(item) * 1000);
 					break;
 
 				case TRVT_SLOT_INDEX:
@@ -1753,11 +1758,13 @@ class TraceRestrictWindow: public Window {
 	Track track;                                                                ///< track this window is for
 	int selected_instruction;                                                   ///< selected instruction index, this is offset by one due to the display of the "start" item
 	Scrollbar *vscroll;                                                         ///< scrollbar widget
-	std::map<int, const TraceRestrictDropDownListSet *> drop_down_list_mapping; ///< mapping of widget IDs to drop down list sets
+	btree::btree_map<int, const TraceRestrictDropDownListSet *> drop_down_list_mapping; ///< mapping of widget IDs to drop down list sets
 	bool value_drop_down_is_company;                                            ///< TR_WIDGET_VALUE_DROPDOWN is a company list
 	TraceRestrictItem expecting_inserted_item;                                  ///< set to instruction when performing an instruction insertion, used to handle selection update on insertion
 	int current_placement_widget;                                               ///< which widget has a SetObjectToPlaceWnd, if any
 	int current_left_aux_plane;                                                 ///< current plane for TR_WIDGET_SEL_TOP_LEFT_AUX widget
+	int base_copy_plane;                                                        ///< base plane for TR_WIDGET_SEL_COPY widget
+	int base_share_plane;                                                       ///< base plane for TR_WIDGET_SEL_SHARE widget
 
 public:
 	TraceRestrictWindow(WindowDesc *desc, TileIndex tile, Track track)
@@ -2172,7 +2179,28 @@ public:
 			case TR_WIDGET_COPY:
 			case TR_WIDGET_COPY_APPEND:
 			case TR_WIDGET_SHARE:
+			case TR_WIDGET_SHARE_ONTO:
 				SetObjectToPlaceAction(widget, ANIMCURSOR_BUILDSIGNALS);
+				switch (this->current_placement_widget) {
+					case TR_WIDGET_COPY:
+						_thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_GREEN;
+						break;
+
+					case TR_WIDGET_COPY_APPEND:
+						_thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_LIGHT_BLUE;
+						break;
+
+					case TR_WIDGET_SHARE:
+						_thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_YELLOW;
+						break;
+
+					case TR_WIDGET_SHARE_ONTO:
+						_thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_ORANGE;
+						break;
+
+					default:
+						break;
+				}
 				break;
 
 			case TR_WIDGET_UNSHARE: {
@@ -2341,10 +2369,12 @@ public:
 	virtual void OnPlaceObject(Point pt, TileIndex tile) override
 	{
 		int widget = this->current_placement_widget;
-		this->current_placement_widget = -1;
+		if (widget != TR_WIDGET_SHARE_ONTO) {
+			this->ResetObjectToPlaceAction();
 
-		this->RaiseButtons();
-		ResetObjectToPlace();
+			this->RaiseButtons();
+			ResetObjectToPlace();
+		}
 
 		if (widget < 0) {
 			return;
@@ -2360,6 +2390,7 @@ public:
 				break;
 
 			case TR_WIDGET_SHARE:
+			case TR_WIDGET_SHARE_ONTO:
 				OnPlaceObjectSignal(pt, tile, widget, STR_TRACE_RESTRICT_ERROR_CAN_T_SHARE_PROGRAM);
 				break;
 
@@ -2441,6 +2472,11 @@ public:
 			case TR_WIDGET_SHARE:
 				TraceRestrictProgMgmtWithSourceDoCommandP(this->tile, this->track, TRDCT_PROG_SHARE,
 						source_tile, source_track, STR_TRACE_RESTRICT_ERROR_CAN_T_SHARE_PROGRAM);
+				break;
+
+			case TR_WIDGET_SHARE_ONTO:
+				TraceRestrictProgMgmtWithSourceDoCommandP(source_tile, source_track, TRDCT_PROG_SHARE_IF_UNMAPPED,
+						this->tile, this->track, STR_TRACE_RESTRICT_ERROR_CAN_T_SHARE_PROGRAM);
 				break;
 
 			default:
@@ -2536,7 +2572,7 @@ public:
 	virtual void OnPlaceObjectAbort() override
 	{
 		this->RaiseButtons();
-		this->current_placement_widget = -1;
+		this->ResetObjectToPlaceAction();
 	}
 
 	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -2611,11 +2647,11 @@ public:
 	{
 		switch (widget) {
 			case TR_WIDGET_VALUE_INT: {
-				SetDParam(0, STR_BLACK_COMMA);
+				SetDParam(0, STR_JUST_COMMA);
 				TraceRestrictItem item = this->GetSelected();
 				TraceRestrictValueType type = GetTraceRestrictTypeProperties(item).value_type;
 				if (type == TRVT_TIME_DATE_INT && GetTraceRestrictValue(item) == TRTDVF_HOUR_MINUTE) {
-					SetDParam(0, STR_BLACK_TIME_HHMM);
+					SetDParam(0, STR_JUST_TIME_HHMM);
 				}
 				SetDParam(1, 0);
 				if (IsIntegerValueType(type)) {
@@ -2670,6 +2706,32 @@ public:
 				}
 				break;
 			}
+		}
+	}
+
+	bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	{
+		switch (widget) {
+			case TR_WIDGET_SHARE: {
+				uint64 arg = STR_TRACE_RESTRICT_SHARE_TOOLTIP;
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				return true;
+			}
+
+			case TR_WIDGET_UNSHARE: {
+				uint64 arg = STR_TRACE_RESTRICT_UNSHARE_TOOLTIP;
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				return true;
+			}
+
+			case TR_WIDGET_SHARE_ONTO: {
+				uint64 arg = (this->base_share_plane == DPS_UNSHARE) ? STR_TRACE_RESTRICT_UNSHARE_TOOLTIP : STR_TRACE_RESTRICT_SHARE_TOOLTIP;
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				return true;
+			}
+
+			default:
+				return false;
 		}
 	}
 
@@ -2839,6 +2901,23 @@ private:
 		return false;
 	}
 
+	void UpdatePlaceObjectPlanes()
+	{
+		int widget = this->current_placement_widget;
+
+		if (!(widget == TR_WIDGET_COPY || widget == TR_WIDGET_COPY_APPEND)) {
+			NWidgetStacked *copy_sel = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_COPY);
+			copy_sel->SetDisplayedPlane(_ctrl_pressed ? DPC_APPEND : this->base_copy_plane);
+			this->SetDirty();
+		}
+
+		if (!(widget == TR_WIDGET_SHARE || widget == TR_WIDGET_SHARE_ONTO)) {
+			NWidgetStacked *share_sel  = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_SHARE);
+			share_sel->SetDisplayedPlane(_ctrl_pressed ? DPS_SHARE_ONTO : this->base_share_plane);
+			this->SetDirty();
+		}
+	}
+
 	/**
 	 * Update button states, text values, etc.
 	 */
@@ -2865,8 +2944,6 @@ private:
 		NWidgetStacked *left_aux_sel = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_TOP_LEFT_AUX);
 		NWidgetStacked *middle_sel = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_TOP_MIDDLE);
 		NWidgetStacked *right_sel  = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_TOP_RIGHT);
-		NWidgetStacked *share_sel  = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_SHARE);
-		NWidgetStacked *copy_sel  = this->GetWidget<NWidgetStacked>(TR_WIDGET_SEL_COPY);
 
 		this->DisableWidget(TR_WIDGET_TYPE_COND);
 		this->DisableWidget(TR_WIDGET_TYPE_NONCOND);
@@ -2888,6 +2965,7 @@ private:
 		this->DisableWidget(TR_WIDGET_COPY);
 		this->DisableWidget(TR_WIDGET_SHARE);
 		this->DisableWidget(TR_WIDGET_UNSHARE);
+		this->DisableWidget(TR_WIDGET_SHARE_ONTO);
 
 		this->DisableWidget(TR_WIDGET_BLANK_L2);
 		this->DisableWidget(TR_WIDGET_BLANK_L);
@@ -2898,14 +2976,11 @@ private:
 		this->DisableWidget(TR_WIDGET_DOWN_BTN);
 		this->DisableWidget(TR_WIDGET_DUPLICATE);
 
-		this->EnableWidget(TR_WIDGET_COPY_APPEND);
-
 		left_2_sel->SetDisplayedPlane(DPL2_BLANK);
 		left_sel->SetDisplayedPlane(DPL_BLANK);
 		left_aux_sel->SetDisplayedPlane(SZSP_NONE);
 		middle_sel->SetDisplayedPlane(DPM_BLANK);
 		right_sel->SetDisplayedPlane(DPR_BLANK);
-		share_sel->SetDisplayedPlane(DPS_SHARE);
 
 		const TraceRestrictProgram *prog = this->GetProgram();
 
@@ -2929,11 +3004,15 @@ private:
 			return;
 		}
 
-		int copy_panel = DPC_DUPLICATE;
+		this->EnableWidget(TR_WIDGET_COPY_APPEND);
+		this->EnableWidget(TR_WIDGET_SHARE_ONTO);
 
-		if (prog && prog->refcount > 1) {
+		this->base_copy_plane = DPC_DUPLICATE;
+		this->base_share_plane = DPS_SHARE;
+
+		if (prog != nullptr && prog->refcount > 1) {
 			// program is shared, show and enable unshare button, and reset button
-			share_sel->SetDisplayedPlane(DPS_UNSHARE);
+			this->base_share_plane = DPS_UNSHARE;
 			this->EnableWidget(TR_WIDGET_UNSHARE);
 			this->EnableWidget(TR_WIDGET_RESET);
 		} else if (this->GetItemCount(prog) > 2) {
@@ -2943,11 +3022,11 @@ private:
 			// program is empty and not shared, show copy and share buttons
 			this->EnableWidget(TR_WIDGET_COPY);
 			this->EnableWidget(TR_WIDGET_SHARE);
-			copy_panel = DPC_COPY;
+			this->base_copy_plane = DPC_COPY;
 		}
 
-		this->GetWidget<NWidgetCore>(TR_WIDGET_COPY_APPEND)->tool_tip = (copy_panel == DPC_DUPLICATE) ? STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP : STR_TRACE_RESTRICT_COPY_TOOLTIP;
-		copy_sel->SetDisplayedPlane(_ctrl_pressed ? DPC_APPEND : copy_panel);
+		this->GetWidget<NWidgetCore>(TR_WIDGET_COPY_APPEND)->tool_tip = (this->base_copy_plane == DPC_DUPLICATE) ? STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP : STR_TRACE_RESTRICT_COPY_TOOLTIP;
+		this->UpdatePlaceObjectPlanes();
 
 		// haven't selected instruction
 		if (this->selected_instruction < 1) {
@@ -3087,7 +3166,7 @@ private:
 							right_sel->SetDisplayedPlane(DPR_VALUE_DROPDOWN);
 							this->EnableWidget(TR_WIDGET_VALUE_DROPDOWN);
 							if (GetTraceRestrictAuxField(item) == TRPPAF_VALUE) {
-								this->GetWidget<NWidgetCore>(TR_WIDGET_VALUE_DROPDOWN)->widget_data = STR_BLACK_COMMA;
+								this->GetWidget<NWidgetCore>(TR_WIDGET_VALUE_DROPDOWN)->widget_data = STR_JUST_COMMA;
 							} else {
 								this->GetWidget<NWidgetCore>(TR_WIDGET_VALUE_DROPDOWN)->widget_data =
 										GetDropDownStringByValue(&_pf_penalty_dropdown, GetPathfinderPenaltyDropdownIndex(item));
@@ -3360,6 +3439,13 @@ private:
 			ResetObjectToPlace();
 			this->current_placement_widget = -1;
 		}
+		this->UpdatePlaceObjectPlanes();
+	}
+
+	void ResetObjectToPlaceAction()
+	{
+		this->current_placement_widget = -1;
+		this->UpdatePlaceObjectPlanes();
 	}
 
 	/**
@@ -3467,7 +3553,7 @@ static const NWidgetPart _nested_program_widgets[] = {
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_VALUE_INT), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_JUST_STRING1, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_VALUE_DECIMAL), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_BLACK_DECIMAL, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_JUST_DECIMAL, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, TR_WIDGET_VALUE_DROPDOWN), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_NULL, STR_TRACE_RESTRICT_COND_VALUE_TOOLTIP), SetResize(1, 0),
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_VALUE_DEST), SetMinimalSize(124, 12), SetFill(1, 0),
@@ -3502,9 +3588,11 @@ static const NWidgetPart _nested_program_widgets[] = {
 				EndContainer(),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, TR_WIDGET_SEL_SHARE),
 					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_SHARE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_TRACE_RESTRICT_SHARE, STR_TRACE_RESTRICT_SHARE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_TRACE_RESTRICT_SHARE, STR_NULL), SetResize(1, 0),
 					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_UNSHARE), SetMinimalSize(124, 12), SetFill(1, 0),
-														SetDataTip(STR_TRACE_RESTRICT_UNSHARE, STR_TRACE_RESTRICT_UNSHARE_TOOLTIP), SetResize(1, 0),
+														SetDataTip(STR_TRACE_RESTRICT_UNSHARE, STR_NULL), SetResize(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, TR_WIDGET_SHARE_ONTO), SetMinimalSize(124, 12), SetFill(1, 0),
+														SetDataTip(STR_TRACE_RESTRICT_SHARE_ONTO, STR_NULL), SetResize(1, 0),
 				EndContainer(),
 		EndContainer(),
 		NWidget(WWT_RESIZEBOX, COLOUR_GREY),
@@ -3587,7 +3675,7 @@ static const NWidgetPart _nested_slot_widgets[] = {
 				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_TRSL_FILTER_BY_CARGO_SEL),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_TRSL_FILTER_BY_CARGO), SetMinimalSize(167, 12), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_FILTER_CRITERIA),
 				EndContainer(),
-				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(12, 12), SetResize(1, 0), EndContainer(),
+				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), EndContainer(),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_MATRIX, COLOUR_GREY, WID_TRSL_LIST_VEHICLE), SetMinimalSize(248, 0), SetMatrixDataTip(1, 0, STR_VEHICLE_LIST_TRAIN_LIST_TOOLTIP), SetResize(1, 1), SetFill(1, 0), SetScrollbar(WID_TRSL_LIST_VEHICLE_SCROLLBAR),
@@ -3595,7 +3683,7 @@ static const NWidgetPart _nested_slot_widgets[] = {
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(1, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), EndContainer(),
+				NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 			EndContainer(),
 		EndContainer(),
@@ -3653,7 +3741,7 @@ private:
 	uint ComputeSlotInfoSize()
 	{
 		this->column_size[VGC_NAME] = GetStringBoundingBox(STR_GROUP_ALL_TRAINS);
-		this->column_size[VGC_NAME].width = std::max(170u, this->column_size[VGC_NAME].width);
+		this->column_size[VGC_NAME].width = std::max((170u * FONT_HEIGHT_NORMAL) / 10u, this->column_size[VGC_NAME].width);
 		this->tiny_step_height = this->column_size[VGC_NAME].height;
 
 		SetDParamMaxValue(0, 9999, 3, FS_SMALL);

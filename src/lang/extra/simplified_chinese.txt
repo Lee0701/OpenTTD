@@ -48,6 +48,10 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :非常慢
 
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :修饰键软键盘
 
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :每月
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :每 3 个月
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :每 6 个月
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :每 12 个月
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_LABEL      :自定义间隔（按日）
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :自定义间隔（按现实分钟）
 
@@ -562,9 +566,6 @@ STR_CONFIG_SETTING_RANDOM_ROAD_RECONSTRUCTION_HELPTEXT          :随机城镇道
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE                            :城镇间最小距离：{STRING}
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE_HELPTEXT                   :设置在地图生成和随机建立城镇过程中城镇之间的在地图上的最小的以格子计的距离
 
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED               :不以日长因子对分配图重计算时间缩放：{STRING}
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED_HELPTEXT      :当启用时，分配图重计算间隔和时间将以未经缩放的单位运算。
-
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO                       :对此货物重载分配模式：{STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM                 :对{STRING}重载分配模式：{STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_HELPTEXT              :"（缺省）"意味着对此货物应用缺省分配模式。“对称的”意味着从甲车站运往乙车站的货物数量与从乙车站运往甲车站的大致相同。 “不对称”意味着任何一站前往另一个车站的货物的数量会被系统任意地决定。“手动”意味着对于此类货物系统不会自动分配其目的地。
@@ -1056,7 +1057,7 @@ STR_PROGSIG_COND_SLOT                                           :条目占用
 STR_PROGSIG_COND_SLOT_REMAINING                                 :条目占用剩余
 STR_PROGSIG_COND_COUNTER                                        :计数器值
 STR_PROGSIG_CONDVAR_SIGNAL_STATE_SPECIFIED                      :在{NUM} x {NUM}的信号是绿灯
-STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{RED}未特别指定的信号{STRING}是绿灯
+STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{PUSH_COLOUR}{RED}未特别指定的信号{POP_COLOUR}是绿灯
 STR_PROGSIG_CONDVAR_NUM_RED                                     :红灯
 STR_PROGSIG_CONDVAR_NUM_GREEN                                   :绿灯
 
@@ -1692,7 +1693,6 @@ STR_ERROR_DEPOT_HAS_WRONG_RAIL_TYPE                             :{WHITE}车库�
 STR_ERROR_CANNOT_MODIFY_TRACK_TRAIN_APPROACHING                 :{WHITE}移动中的火车正在接近...
 
 STR_ERROR_NO_ROAD_WAYPOINT                                      :{WHITE}这里没有公路路点...
-STR_ERROR_NO_BUOY                                               :{WHITE}这里没有浮漂...
 
 # Plan related errors
 STR_ERROR_TOO_MANY_PLANS                                        :{WHITE}...太多计划
@@ -1719,7 +1719,6 @@ STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_IMPLICIT                   :{GRAY}转
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_DEPOT                      :{RED}库
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_OVERFLOW                   :{RED}{NUM}x
 
-STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_DECIMAL1                                               :{DECIMAL1}
 
 STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
@@ -1731,15 +1730,8 @@ STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
 STR_JUST_STRING1                                                :{STRING}
 STR_JUST_STRING2                                                :{STRING}
 
-STR_BLACK_DECIMAL                                               :{BLACK}{DECIMAL}
-STR_WHITE_DATE_WALLCLOCK_LONG                                   :{WHITE}{DATE_WALLCLOCK_LONG}
-STR_WHITE_DATE_WALLCLOCK_SHORT                                  :{WHITE}{DATE_WALLCLOCK_SHORT}
-STR_BLACK_TIME_HHMM                                             :{BLACK}{TIME_HHMM}
 STR_RED_INT                                                     :{RED}{NUM}
-STR_BLACK_STRING1                                               :{BLACK}{STRING}
 STR_BLACK_PLUS                                                  :{BLACK}+
-STR_WHITE                                                       :{WHITE}
-STR_BLACK                                                       :{BLACK}
 
 STR_DECIMAL1_WITH_SCALE                                         :{DECIMAL1}（{DECIMAL}x）
 
@@ -1960,3 +1952,20 @@ STR_SHIFT_KEY_NAME                                              :{BLACK}Shift
 STR_CTRL_KEY_NAME                                               :{BLACK}Ctrl
 STR_MODIFIER_TOGGLE_SHIFT_TOOLTIP                               :{BLACK}点击以反转当强Shift键的状态
 STR_MODIFIER_TOGGLE_CTRL_TOOLTIP                                :{BLACK}点击以反转当强Ctrl键的状态
+
+STR_CONFIG_SETTING_ALLOW_SHARES                                 :允许购买其他公司的股份：{STRING}
+STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :“打开”时，允许买卖其它公司股份。被入股公司必须经营一定年限
+
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :公司可发售股份的最小已存续年份数：{STRING}
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :设置公司可发售股份的最小已存续年份数。
+
+STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% 由 {COMPANY} 所有)
+
+STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}购买其 25% 的股份
+STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}出售其 25% 的股份
+STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}购买此公司 25% 的股份，按住 Shift 键单击可以显示所需资金
+STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}出售此公司 25% 的股份，按住 Shift 键单击可以显示预计收入
+
+STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}不能购买此公司的股份……
+STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}不能出售此公司的股份……
+STR_ERROR_PROTECTED                                             :{WHITE}这个公司刚刚开业，还不能进行股权交易……

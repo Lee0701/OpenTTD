@@ -103,7 +103,7 @@ public:
 
 		if (!this->cargo_acceptance.empty()) {
 			uint width = GetStringBoundingBox(this->cargo_acceptance).width + WidgetDimensions::scaled.frametext.Horizontal();
-			size->width = std::max(size->width, std::min(300u, width));
+			size->width = std::max(size->width, std::min(static_cast<uint>(ScaleGUITrad(300)), width));
 			SetDParamStr(0, cargo_acceptance);
 			size->height += GetStringHeight(STR_JUST_RAW_STRING, size->width - WidgetDimensions::scaled.frametext.Horizontal());
 		}
@@ -423,9 +423,9 @@ static const NWidgetPart _nested_about_widgets[] = {
 		NWidget(WWT_FRAME, COLOUR_GREY), SetPadding(0, 5, 1, 5),
 			NWidget(WWT_EMPTY, INVALID_COLOUR, WID_A_SCROLLING_TEXT),
 		EndContainer(),
-		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE), SetDataTip(STR_BLACK_RAW_STRING, STR_NULL),
-		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE1), SetDataTip(STR_BLACK_RAW_STRING, STR_NULL),
-		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE2), SetDataTip(STR_BLACK_RAW_STRING, STR_NULL),
+		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE), SetDataTip(STR_JUST_RAW_STRING, STR_NULL),
+		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE1), SetDataTip(STR_JUST_RAW_STRING, STR_NULL),
+		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_WEBSITE2), SetDataTip(STR_JUST_RAW_STRING, STR_NULL),
 		NWidget(WWT_LABEL, COLOUR_GREY, WID_A_COPYRIGHT), SetDataTip(STR_ABOUT_COPYRIGHT_OPENTTD, STR_NULL),
 	EndContainer(),
 };
@@ -786,12 +786,12 @@ struct TooltipsWindow : public Window
 		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), PC_LIGHT_YELLOW);
 
 		if (this->paramcount == 0) {
-			DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect).Shrink(WidgetDimensions::scaled.fullbevel), this->buffer, TC_FROMSTRING, SA_CENTER);
+			DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect).Shrink(WidgetDimensions::scaled.fullbevel), this->buffer, TC_BLACK, SA_CENTER);
 		} else {
 			for (uint arg = 0; arg < this->paramcount; arg++) {
 				SetDParam(arg, this->params[arg]);
 			}
-			DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect).Shrink(WidgetDimensions::scaled.fullbevel), this->string_id, TC_FROMSTRING, SA_CENTER);
+			DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect).Shrink(WidgetDimensions::scaled.fullbevel), this->string_id, TC_BLACK, SA_CENTER);
 		}
 	}
 
@@ -872,7 +872,7 @@ void QueryString::DrawEditBox(const Window *w, int wid) const
 	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
 
 	bool rtl = _current_text_dir == TD_RTL;
-	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	Dimension sprite_size = GetScaledSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 	int clearbtn_width = sprite_size.width + WidgetDimensions::scaled.imgbtn.Horizontal();
 
 	Rect r = wi->GetCurrentRect();
@@ -880,7 +880,7 @@ void QueryString::DrawEditBox(const Window *w, int wid) const
 	Rect fr = r.Indent(clearbtn_width, !rtl);
 
 	DrawFrameRect(cr, wi->colour, wi->IsLowered() ? FR_LOWERED : FR_NONE);
-	DrawSprite(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT, PAL_NONE, cr.left + WidgetDimensions::scaled.imgbtn.left + (wi->IsLowered() ? 1 : 0), CenterBounds(r.top, r.bottom, sprite_size.height) + (wi->IsLowered() ? 1 : 0));
+	DrawSpriteIgnorePadding(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT, PAL_NONE, cr, wi->IsLowered(), SA_CENTER);
 	if (this->text.bytes == 1) GfxFillRect(cr.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[wi->colour & 0xF][2], FILLRECT_CHECKER);
 
 	DrawFrameRect(fr, wi->colour, FR_LOWERED | FR_DARKENED);
@@ -924,7 +924,7 @@ Point QueryString::GetCaretPosition(const Window *w, int wid) const
 	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
 
 	bool rtl = _current_text_dir == TD_RTL;
-	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	Dimension sprite_size = GetScaledSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 	int clearbtn_width = sprite_size.width + WidgetDimensions::scaled.imgbtn.Horizontal();
 
 	Rect r = wi->GetCurrentRect().Indent(clearbtn_width, !rtl).Shrink(WidgetDimensions::scaled.framerect);
@@ -953,7 +953,7 @@ Rect QueryString::GetBoundingRect(const Window *w, int wid, const char *from, co
 	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
 
 	bool rtl = _current_text_dir == TD_RTL;
-	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	Dimension sprite_size = GetScaledSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 	int clearbtn_width = sprite_size.width + WidgetDimensions::scaled.imgbtn.Horizontal();
 
 	Rect r = wi->GetCurrentRect().Indent(clearbtn_width, !rtl).Shrink(WidgetDimensions::scaled.framerect);
@@ -975,21 +975,21 @@ Rect QueryString::GetBoundingRect(const Window *w, int wid, const char *from, co
  * @param w Window the edit box is in.
  * @param wid Widget index.
  * @param pt Position to test.
- * @return Pointer to the character at the position or nullptr if no character is at the position.
+ * @return Index of the character position or -1 if no character is at the position.
  */
-const char *QueryString::GetCharAtPosition(const Window *w, int wid, const Point &pt) const
+ptrdiff_t QueryString::GetCharAtPosition(const Window *w, int wid, const Point &pt) const
 {
 	const NWidgetLeaf *wi = w->GetWidget<NWidgetLeaf>(wid);
 
 	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
 
 	bool rtl = _current_text_dir == TD_RTL;
-	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	Dimension sprite_size = GetScaledSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 	int clearbtn_width = sprite_size.width + WidgetDimensions::scaled.imgbtn.Horizontal();
 
 	Rect r = wi->GetCurrentRect().Indent(clearbtn_width, !rtl).Shrink(WidgetDimensions::scaled.framerect);
 
-	if (!IsInsideMM(pt.y, r.top, r.bottom)) return nullptr;
+	if (!IsInsideMM(pt.y, r.top, r.bottom)) return -1;
 
 	/* Clamp caret position to be inside our current width. */
 	const Textbuf *tb = &this->text;
@@ -1006,7 +1006,7 @@ void QueryString::ClickEditBox(Window *w, Point pt, int wid, int click_count, bo
 	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
 
 	bool rtl = _current_text_dir == TD_RTL;
-	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	Dimension sprite_size = GetScaledSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 	int clearbtn_width = sprite_size.width + WidgetDimensions::scaled.imgbtn.Horizontal();
 
 	Rect cr = wi->GetCurrentRect().WithWidth(clearbtn_width, !rtl);
@@ -1052,7 +1052,7 @@ struct QueryStringWindow : public Window
 
 		this->editbox.text.UpdateSize();
 
-		if ((flags & QSF_ACCEPT_UNCHANGED) == 0) this->editbox.orig = stredup(this->editbox.text.buf);
+		if ((flags & QSF_ACCEPT_UNCHANGED) == 0) this->editbox.orig = this->editbox.text.buf;
 
 		this->querystrings[WID_QS_TEXT] = &this->editbox;
 		this->editbox.caption = caption;
@@ -1114,14 +1114,10 @@ struct QueryStringWindow : public Window
 
 	void OnOk()
 	{
-		if (this->editbox.orig == nullptr || strcmp(this->editbox.text.buf, this->editbox.orig) != 0) {
-			/* If the parent is nullptr, the editbox is handled by general function
-			 * HandleOnEditText */
-			if (this->parent != nullptr) {
-				this->parent->OnQueryTextFinished(this->editbox.text.buf);
-			} else {
-				NOT_REACHED();
-			}
+		if (!this->editbox.orig.has_value() || this->editbox.text.buf != this->editbox.orig) {
+			assert(this->parent != nullptr);
+
+			this->parent->OnQueryTextFinished(this->editbox.text.buf);
 			this->editbox.handled = true;
 		}
 	}
@@ -1156,7 +1152,7 @@ struct QueryStringWindow : public Window
 static const NWidgetPart _nested_query_string_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_CAPTION, COLOUR_GREY, WID_QS_CAPTION), SetDataTip(STR_WHITE_STRING, STR_NULL),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_QS_CAPTION), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_WHITE),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY),
 		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_QS_TEXT), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
@@ -1200,14 +1196,31 @@ struct QueryWindow : public Window {
 	uint64 params[10];       ///< local copy of #_global_string_params
 	StringID message;        ///< message shown for query window
 	StringID caption;        ///< title of window
+	bool precomposed;
+	std::string caption_str;
+	mutable std::string message_str;
 
 	QueryWindow(WindowDesc *desc, StringID caption, StringID message, Window *parent, QueryCallbackProc *callback) : Window(desc)
 	{
 		/* Create a backup of the variadic arguments to strings because it will be
 		 * overridden pretty often. We will copy these back for drawing */
+		this->precomposed = false;
 		CopyOutDParam(this->params, 0, lengthof(this->params));
 		this->caption = caption;
 		this->message = message;
+		this->proc    = callback;
+		this->parent  = parent;
+
+		this->InitNested(WN_CONFIRM_POPUP_QUERY);
+	}
+
+	QueryWindow(WindowDesc *desc, std::string caption, std::string message, Window *parent, QueryCallbackProc *callback) : Window(desc)
+	{
+		this->precomposed = true;
+		this->caption = SPECSTR_TEMP_START;
+		this->message = STR_EMPTY;
+		this->caption_str = std::move(caption);
+		this->message_str = std::move(message);
 		this->proc    = callback;
 		this->parent  = parent;
 
@@ -1231,12 +1244,18 @@ struct QueryWindow : public Window {
 	{
 		switch (widget) {
 			case WID_Q_CAPTION:
-				CopyInDParam(1, this->params, lengthof(this->params));
+				if (this->precomposed) {
+					_temp_special_strings[0] = this->caption_str;
+				} else {
+					CopyInDParam(1, this->params, lengthof(this->params));
+				}
 				SetDParam(0, this->caption);
 				break;
 
 			case WID_Q_TEXT:
-				CopyInDParam(0, this->params, lengthof(this->params));
+				if (!this->precomposed) {
+					CopyInDParam(0, this->params, lengthof(this->params));
+				}
 				break;
 		}
 	}
@@ -1245,7 +1264,9 @@ struct QueryWindow : public Window {
 	{
 		if (widget != WID_Q_TEXT) return;
 
-		Dimension d = GetStringMultiLineBoundingBox(this->message, *size);
+		if (!this->precomposed) this->message_str = GetString(this->message);
+
+		Dimension d = GetStringMultiLineBoundingBox(this->message_str.c_str(), *size);
 		d.width += WidgetDimensions::scaled.frametext.Horizontal();
 		d.height += WidgetDimensions::scaled.framerect.Vertical();
 		*size = d;
@@ -1255,8 +1276,10 @@ struct QueryWindow : public Window {
 	{
 		if (widget != WID_Q_TEXT) return;
 
+		if (!this->precomposed) this->message_str = GetString(this->message);
+
 		DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.frametext, WidgetDimensions::scaled.framerect),
-				this->message, TC_FROMSTRING, SA_CENTER);
+				this->message_str, TC_FROMSTRING, SA_CENTER);
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
@@ -1325,6 +1348,19 @@ static WindowDesc _query_desc(
 	_nested_query_widgets, lengthof(_nested_query_widgets)
 );
 
+static void RemoveExistingQueryWindow(Window *parent, QueryCallbackProc *callback)
+{
+	for (const Window *w : Window::IterateFromBack()) {
+		if (w->window_class != WC_CONFIRM_POPUP_QUERY) continue;
+
+		const QueryWindow *qw = (const QueryWindow *)w;
+		if (qw->parent != parent || qw->proc != callback) continue;
+
+		delete qw;
+		break;
+	}
+}
+
 /**
  * Show a modal confirmation window with standard 'yes' and 'no' buttons
  * The window is aligned to the centre of its parent.
@@ -1338,17 +1374,27 @@ void ShowQuery(StringID caption, StringID message, Window *parent, QueryCallback
 {
 	if (parent == nullptr) parent = GetMainWindow();
 
-	for (const Window *w : Window::IterateFromBack()) {
-		if (w->window_class != WC_CONFIRM_POPUP_QUERY) continue;
-
-		const QueryWindow *qw = (const QueryWindow *)w;
-		if (qw->parent != parent || qw->proc != callback) continue;
-
-		delete qw;
-		break;
-	}
+	RemoveExistingQueryWindow(parent, callback);
 
 	new QueryWindow(&_query_desc, caption, message, parent, callback);
+}
+
+/**
+ * Show a modal confirmation window with standard 'yes' and 'no' buttons
+ * The window is aligned to the centre of its parent.
+ * @param caption string shown as window caption
+ * @param message string that will be shown for the window
+ * @param parent pointer to parent window, if this pointer is nullptr the parent becomes
+ * the main window WC_MAIN_WINDOW
+ * @param callback callback function pointer to set in the window descriptor
+ */
+void ShowQuery(std::string caption, std::string message, Window *parent, QueryCallbackProc *callback)
+{
+	if (parent == nullptr) parent = GetMainWindow();
+
+	RemoveExistingQueryWindow(parent, callback);
+
+	new QueryWindow(&_query_desc, std::move(caption), std::move(message), parent, callback);
 }
 
 static const NWidgetPart _modifier_key_toggle_widgets[] = {

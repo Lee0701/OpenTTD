@@ -86,7 +86,7 @@
 #define HAS_TRUETYPE_FONT
 #endif
 
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 
 #include "table/strings.h"
 #include "table/settings.h"
@@ -175,11 +175,13 @@ public:
  * location. These versions assist with situations like that.
  */
 enum IniFileVersion : uint32 {
-	IFV_0,               ///< 0  All versions prior to introduction.
-	IFV_PRIVATE_SECRETS, ///< 1  PR#9298  Moving of settings from openttd.cfg to private.cfg / secrets.cfg.
-	IFV_GAME_TYPE,       ///< 2  PR#9515  Convert server_advertise to server_game_type.
+	IFV_0,                                                 ///< 0  All versions prior to introduction.
+	IFV_PRIVATE_SECRETS,                                   ///< 1  PR#9298  Moving of settings from openttd.cfg to private.cfg / secrets.cfg.
+	IFV_GAME_TYPE,                                         ///< 2  PR#9515  Convert server_advertise to server_game_type.
+	IFV_LINKGRAPH_SECONDS,                                 ///< 3  PR#10610 Store linkgraph update intervals in seconds instead of days.
+	IFV_NETWORK_PRIVATE_SETTINGS,                          ///< 4  PR#10762 Move no_http_content_downloads / use_relay_service to private settings.
 
-	IFV_MAX_VERSION,     ///< Highest possible ini-file version.
+	IFV_MAX_VERSION,       ///< Highest possible ini-file version.
 };
 
 const uint16 INIFILE_VERSION = (IniFileVersion)(IFV_MAX_VERSION - 1); ///< Current ini-file version of OpenTTD.
@@ -205,7 +207,7 @@ const SettingDesc *GetSettingDescription(uint index)
 size_t OneOfManySettingDesc::ParseSingleValue(const char *str, size_t len, const std::vector<std::string> &many)
 {
 	/* check if it's an integer */
-	if (isdigit(*str)) return strtoul(str, nullptr, 0);
+	if (isdigit(*str)) return std::strtoul(str, nullptr, 0);
 
 	size_t idx = 0;
 	for (auto one : many) {
@@ -276,7 +278,7 @@ static int ParseIntList(const char *p, T *items, int maxitems)
 			default: {
 				if (n == maxitems) return -1; // we don't accept that many numbers
 				char *end;
-				unsigned long v = strtoul(p, &end, 0);
+				unsigned long v = std::strtoul(p, &end, 0);
 				if (p == end) return -1; // invalid character (not a number)
 				if (sizeof(T) < sizeof(v)) v = Clamp<unsigned long>(v, std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
 				items[n++] = v;
@@ -407,7 +409,7 @@ void ManyOfManySettingDesc::FormatIntValue(char *buf, const char *last, uint32 v
 size_t IntSettingDesc::ParseValue(const char *str) const
 {
 	char *end;
-	size_t val = strtoul(str, &end, 0);
+	size_t val = std::strtoul(str, &end, 0);
 	if (end == str) {
 		if (this->flags & SF_CONVERT_BOOL_TO_INT) {
 			if (strcmp(str, "true") == 0 || strcmp(str, "on") == 0) return 1;
@@ -1270,6 +1272,8 @@ static void UpdateTimeSettings(int32 new_value)
 	SetupTimeSettings();
 	InvalidateVehTimetableWindow(new_value);
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_REINIT);
+	InvalidateWindowClassesData(WC_GAME_OPTIONS);
+	InvalidateWindowClassesData(WC_DEPARTURES_BOARD, 1);
 	MarkWholeScreenDirty();
 }
 
@@ -1390,6 +1394,7 @@ static void ScriptMaxMemoryChange(int32 new_value)
 static void InvalidateCompanyWindow(int32 new_value)
 {
 	InvalidateWindowClassesData(WC_COMPANY);
+	InvalidateWindowClassesData(WC_GAME_OPTIONS);
 }
 
 static void EnableSingleVehSharedOrderGuiChanged(int32 new_value)
@@ -1894,6 +1899,19 @@ static bool ZoomMaxCfgName(SettingOnGuiCtrlData &data)
 	}
 }
 
+static bool TreePlacerSettingGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_DESCRIPTION_TEXT:
+			SetDParam(0, data.text);
+			data.text = STR_CONFIG_SETTING_TREE_PLACER_HELPTEXT_EXTRA;
+			return true;
+
+		default:
+			return false;
+	}
+}
+
 /* End - GUI callbacks */
 
 /**
@@ -2225,7 +2243,7 @@ static void GRFSaveConfig(IniFile &ini, const char *grpname, const GRFConfig *li
 
 		char *pos = key + seprintf(key, lastof(key), "%08X|", BSWAP32(c->ident.grfid));
 		pos = md5sumToString(pos, lastof(key), c->ident.md5sum);
-		seprintf(pos, lastof(key), "|%s", c->filename);
+		seprintf(pos, lastof(key), "|%s", c->filename.c_str());
 		group->GetItem(key, true)->SetValue(params);
 	}
 }
@@ -2322,6 +2340,36 @@ void LoadFromConfig(bool startup)
 			}
 		}
 
+		if (generic_version < IFV_LINKGRAPH_SECONDS) {
+			_settings_newgame.linkgraph.recalc_interval *= SECONDS_PER_DAY;
+			_settings_newgame.linkgraph.recalc_time     *= SECONDS_PER_DAY;
+		}
+
+		if (generic_version < IFV_NETWORK_PRIVATE_SETTINGS) {
+			IniGroup *network = generic_ini.GetGroup("network", false);
+			if (network != nullptr) {
+				IniItem *no_http_content_downloads = network->GetItem("no_http_content_downloads", false);
+				if (no_http_content_downloads != nullptr) {
+					if (no_http_content_downloads->value == "true") {
+						_settings_client.network.no_http_content_downloads = true;
+					} else if (no_http_content_downloads->value == "false") {
+						_settings_client.network.no_http_content_downloads = false;
+					}
+				}
+
+				IniItem *use_relay_service = network->GetItem("use_relay_service", false);
+				if (use_relay_service != nullptr) {
+					if (use_relay_service->value == "never") {
+						_settings_client.network.use_relay_service = UseRelayService::URS_NEVER;
+					} else if (use_relay_service->value == "ask") {
+						_settings_client.network.use_relay_service = UseRelayService::URS_ASK;
+					} else if (use_relay_service->value == "allow") {
+						_settings_client.network.use_relay_service = UseRelayService::URS_ALLOW;
+					}
+				}
+			}
+		}
+
 		_grfconfig_newgame = GRFLoadConfig(generic_ini, "newgrf", false);
 		_grfconfig_static  = GRFLoadConfig(generic_ini, "newgrf-static", true);
 		AILoadConfig(generic_ini, "ai_players");
@@ -2390,6 +2438,13 @@ void SaveToConfig()
 		IniGroup *network = generic_ini.GetGroup("network", false);
 		if (network != nullptr) {
 			network->RemoveItem("server_advertise");
+		}
+	}
+	if (generic_version < IFV_NETWORK_PRIVATE_SETTINGS) {
+		IniGroup *network = generic_ini.GetGroup("network", false);
+		if (network != nullptr) {
+			network->RemoveItem("no_http_content_downloads");
+			network->RemoveItem("use_relay_service");
 		}
 	}
 

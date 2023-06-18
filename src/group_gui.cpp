@@ -103,7 +103,7 @@ static const NWidgetPart _nested_group_widgets[] = {
 			NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(1, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_AVAILABLE_VEHICLES), SetMinimalSize(106, 12),
-						SetDataTip(STR_BLACK_STRING, STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP),
+						SetDataTip(STR_JUST_STRING, STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_MANAGE_VEHICLES_DROPDOWN), SetMinimalSize(118, 12),
 						SetDataTip(STR_VEHICLE_LIST_MANAGE_LIST, STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP),
@@ -137,7 +137,7 @@ bool GroupNameSorter(const Group * const &a, const Group * const &b)
 		GetString(last_name[1], STR_GROUP_NAME, lastof(last_name[1]));
 	}
 
-	int r = strnatcmp(last_name[0], last_name[1]); // Sort by name (natural sorting).
+	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
 	if (r == 0) return a->index < b->index;
 	return r < 0;
 }
@@ -355,7 +355,7 @@ private:
 		int num_vehicle = GroupStatistics::Get(this->vli.company, g_id, this->vli.vtype).num_vehicle;
 		if (IsAllGroupID(g_id) || IsDefaultGroupID(g_id) || num_vehicle_with_subgroups == num_vehicle) {
 			SetDParam(0, num_vehicle);
-			DrawString(x, x + this->column_size[VGC_NUMBER].width - 1, y + (this->tiny_step_height - this->column_size[VGC_NUMBER].height) / 2, STR_TINY_COMMA, colour, SA_RIGHT | SA_FORCE);
+			DrawString(x, x + this->column_size[VGC_NUMBER].width - 1, y + (this->tiny_step_height - this->column_size[VGC_NUMBER].height) / 2, STR_JUST_COMMA, colour, SA_RIGHT | SA_FORCE, false, FS_SMALL);
 		} else {
 			SetDParam(0, num_vehicle);
 			SetDParam(1, num_vehicle_with_subgroups - num_vehicle);
@@ -438,7 +438,7 @@ public:
 		this->groups.ForceRebuild();
 		this->groups.NeedResort();
 		this->BuildGroupList(vli.company);
-		this->group_sb->SetCount((uint)this->groups.size());
+		this->group_sb->SetCount(this->groups.size());
 
 		this->RecalculateInfoTotals();
 
@@ -587,8 +587,8 @@ public:
 
 		this->BuildGroupList(this->owner);
 
-		this->group_sb->SetCount(static_cast<int>(this->groups.size()));
-		this->vscroll->SetCount(static_cast<int>(this->vehgroups.size()));
+		this->group_sb->SetCount(this->groups.size());
+		this->vscroll->SetCount(this->vehgroups.size());
 
 		/* The drop down menu is out, *but* it may not be used, retract it. */
 		if (!this->ShouldShowActionDropdownList() && this->IsWidgetLowered(WID_GL_MANAGE_VEHICLES_DROPDOWN)) {
@@ -675,13 +675,13 @@ public:
 
 			case WID_GL_LIST_GROUP: {
 				int y1 = r.top + WidgetDimensions::scaled.framerect.top;
-				int max = std::min<size_t>(this->group_sb->GetPosition() + this->group_sb->GetCapacity(), this->groups.size());
-				for (int i = this->group_sb->GetPosition(); i < max; ++i) {
+				size_t max = std::min<size_t>(this->group_sb->GetPosition() + this->group_sb->GetCapacity(), this->groups.size());
+				for (size_t i = this->group_sb->GetPosition(); i < max; ++i) {
 					const Group *g = this->groups[i];
 
 					assert(g->owner == this->owner);
 
-					DrawGroupInfo(y1, r.left, r.right, g->index, this->indents[i] * WidgetDimensions::scaled.hsep_indent, HasBit(g->flags, GroupFlags::GF_REPLACE_PROTECTION), g->folded || (i + 1 < (int)this->groups.size() && indents[i + 1] > this->indents[i]));
+					DrawGroupInfo(y1, r.left, r.right, g->index, this->indents[i] * WidgetDimensions::scaled.hsep_indent, HasBit(g->flags, GroupFlags::GF_REPLACE_PROTECTION), g->folded || (i + 1 < this->groups.size() && indents[i + 1] > this->indents[i]));
 
 					y1 += this->tiny_step_height;
 				}
@@ -699,8 +699,8 @@ public:
 				if (this->vli.index != ALL_GROUP && this->grouping == GB_NONE) {
 					/* Mark vehicles which are in sub-groups (only if we are not using shared order coalescing) */
 					Rect mr = r.WithHeight(this->resize.step_height);
-					uint max = static_cast<uint>(std::min<size_t>(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), this->vehgroups.size()));
-					for (uint i = this->vscroll->GetPosition(); i < max; ++i) {
+					size_t max = std::min<size_t>(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), this->vehgroups.size());
+					for (size_t i = this->vscroll->GetPosition(); i < max; ++i) {
 						const Vehicle *v = this->vehgroups[i].GetSingleVehicle();
 						if (v->group_id != this->vli.index) {
 							GfxFillRect(mr.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[COLOUR_GREY][3], FILLRECT_CHECKER);
@@ -1242,7 +1242,7 @@ public:
 				}
 				this->groups.ForceRebuild();
 				this->BuildGroupList(this->owner);
-				this->group_sb->SetCount((uint)this->groups.size());
+				this->group_sb->SetCount(this->groups.size());
 				id_g = find_index(this->groups, g);
 			}
 			this->group_sb->ScrollTowards(id_g);

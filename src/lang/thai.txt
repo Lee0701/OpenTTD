@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}คน
-STR_ABBREV_COAL                                                 :{TINY_FONT}ถ่าน
-STR_ABBREV_MAIL                                                 :{TINY_FONT}พัสดุ
-STR_ABBREV_OIL                                                  :{TINY_FONT}น้ำมัน
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}สัตว์
-STR_ABBREV_GOODS                                                :{TINY_FONT}สินค้า
-STR_ABBREV_GRAIN                                                :{TINY_FONT}ข้าวเปลือก
-STR_ABBREV_WOOD                                                 :{TINY_FONT}ไม้
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}เหล็ก
-STR_ABBREV_STEEL                                                :{TINY_FONT}เหล็กกล้า
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}มีค่า
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}ทองแดง
-STR_ABBREV_MAIZE                                                :{TINY_FONT}ข้าวโพด
-STR_ABBREV_FRUIT                                                :{TINY_FONT}ผลไม้
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}เพชร
-STR_ABBREV_FOOD                                                 :{TINY_FONT}อาหาร
-STR_ABBREV_PAPER                                                :{TINY_FONT}กระดาษ
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ทอง
-STR_ABBREV_WATER                                                :{TINY_FONT}น้ำ
-STR_ABBREV_WHEAT                                                :{TINY_FONT}ข้าวสาลี
-STR_ABBREV_RUBBER                                               :{TINY_FONT}ยาง
-STR_ABBREV_SUGAR                                                :{TINY_FONT}น้ำตาล
-STR_ABBREV_TOYS                                                 :{TINY_FONT}ของเล่น
-STR_ABBREV_SWEETS                                               :{TINY_FONT}ขนม
-STR_ABBREV_COLA                                                 :{TINY_FONT}โคล่า
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}สายไหม
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}ฟอง
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}ลูกอม
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}ถ่าน
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}พลาสติก
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}น้ำอัดลม
-STR_ABBREV_NONE                                                 :{TINY_FONT}ว่าง
-STR_ABBREV_ALL                                                  :{TINY_FONT}ทั้งหมด
+STR_ABBREV_PASSENGERS                                           :คน
+STR_ABBREV_COAL                                                 :ถ่าน
+STR_ABBREV_MAIL                                                 :พัสดุ
+STR_ABBREV_OIL                                                  :น้ำมัน
+STR_ABBREV_LIVESTOCK                                            :สัตว์
+STR_ABBREV_GOODS                                                :สินค้า
+STR_ABBREV_GRAIN                                                :ข้าวเปลือก
+STR_ABBREV_WOOD                                                 :ไม้
+STR_ABBREV_IRON_ORE                                             :เหล็ก
+STR_ABBREV_STEEL                                                :เหล็กกล้า
+STR_ABBREV_VALUABLES                                            :มีค่า
+STR_ABBREV_COPPER_ORE                                           :ทองแดง
+STR_ABBREV_MAIZE                                                :ข้าวโพด
+STR_ABBREV_FRUIT                                                :ผลไม้
+STR_ABBREV_DIAMONDS                                             :เพชร
+STR_ABBREV_FOOD                                                 :อาหาร
+STR_ABBREV_PAPER                                                :กระดาษ
+STR_ABBREV_GOLD                                                 :ทอง
+STR_ABBREV_WATER                                                :น้ำ
+STR_ABBREV_WHEAT                                                :ข้าวสาลี
+STR_ABBREV_RUBBER                                               :ยาง
+STR_ABBREV_SUGAR                                                :น้ำตาล
+STR_ABBREV_TOYS                                                 :ของเล่น
+STR_ABBREV_SWEETS                                               :ขนม
+STR_ABBREV_COLA                                                 :โคล่า
+STR_ABBREV_CANDYFLOSS                                           :สายไหม
+STR_ABBREV_BUBBLES                                              :ฟอง
+STR_ABBREV_TOFFEE                                               :ลูกอม
+STR_ABBREV_BATTERIES                                            :ถ่าน
+STR_ABBREV_PLASTIC                                              :พลาสติก
+STR_ABBREV_FIZZY_DRINKS                                         :น้ำอัดลม
+STR_ABBREV_NONE                                                 :ว่าง
+STR_ABBREV_ALL                                                  :ทั้งหมด
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA} คน
@@ -190,38 +190,38 @@ STR_COLOUR_GREY                                                 :เทา
 STR_COLOUR_WHITE                                                :ขาว
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} ไมล์/ชม.
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} กม./ชม.
-STR_UNITS_VELOCITY_SI                                           :{COMMA} ม./วิ.
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} ไมล์/ชม.
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} กม./ชม.
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} ม./วิ.
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA} แรงม้า
-STR_UNITS_POWER_METRIC                                          :{COMMA} แรงม้า
-STR_UNITS_POWER_SI                                              :{COMMA} กิโลวัตต์
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL} แรงม้า
+STR_UNITS_POWER_METRIC                                          :{DECIMAL} แรงม้า
+STR_UNITS_POWER_SI                                              :{DECIMAL} กิโลวัตต์
 
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}ตัน
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA} ตัน
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA} กิโลกรัม
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}ตัน
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL} ตัน
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL} กิโลกรัม
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA} ตัน
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} ตัน
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} กิโลกรัม
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL} ตัน
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} ตัน
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} กิโลกรัม
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}แกลลอน
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA} ลิตร
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA} ลบ.ม.
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}แกลลอน
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL} ลิตร
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL} ลบ.ม.
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA} แกลลอน
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA} ลิตร
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA} ลบ.ม.
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL} แกลลอน
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL} ลิตร
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL} ลบ.ม.
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA} ปอนด์
-STR_UNITS_FORCE_METRIC                                          :{COMMA} กิโลกรัม
-STR_UNITS_FORCE_SI                                              :{COMMA} กิโลนิวตัน
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL} ปอนด์
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL} กิโลกรัม
+STR_UNITS_FORCE_SI                                              :{DECIMAL} กิโลนิวตัน
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA} ฟุต
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA} เมตร
-STR_UNITS_HEIGHT_SI                                             :{COMMA} ม.
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} ฟุต
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} เมตร
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL} ม.
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}คำกรอง:
@@ -900,6 +900,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}วา�
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}ตัวเลือกเกม
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}หน่วยสกุลเงิน
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}การเลือกสกุลเงิน
 
@@ -947,10 +951,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}เล�
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :ปิด
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :ทุกๆเดือน
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :ทุก 3 เดือน
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :ทุก 6 เดือน
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :ทุก 12 เดือน
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}ภาษา
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}เลือกภาษาที่จะใช้
@@ -961,6 +961,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}ทำ�
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}ความละเอียดของหน้าจอ
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}เลือกความละเอียดของหน้าจอที่จะใช้
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :อื่นๆ
+
 
 
 
@@ -1683,11 +1684,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE                                 :ประเภ
 STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :หากเศรษฐกิจราบรื่นจะทำให้การผลิตสินค้ามีการเปลี่ยนแปลงตลอด ในทางกลับกัน หากเศรษฐกิจไม่กระเตื้องเลย อุตสาหกรรมต่างๆจะไม่มีการเปลี่ยนแปลงผลผลิตและอาจจะปิดไปในที่สุดได้ ซึ่งการตั้งค่านี้อาจไม่ส่งผลหากใช้ NewGRF ประเภทอุตสาหกรรมบางอัน
 ###length 3
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :อนุญาตให้ซื้อหุ้นจากบริษัทอื่นได้: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :เมื่อเปิดการใช้งาน จะสามารถซื้่อชขายหุ้นระหว่างบริษัท จะสามารถซื้อขายหุ้นได้ต่อเมื่อบริษัทเปิดตัวมานานแล้วเท่านั้น
-
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :เปอเซนต์ของผลกำไรที่จะส่งเข้าสู่ระบบกระจายรายได้: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :เปอร์เซนต์ของรายได้ที่ส่งให้ฐานของระบบกระจายรายได้ ส่งผลต่อการควบคุมรายได้ทั้งหมด
 
@@ -1790,10 +1786,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :ไม่มี
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :ตัวคูณขนาดเมืองเริ่มต้น: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :ขนาดโดยเฉลี่ยของเมืองใหญ่ที่สัมพันธ์กับเมืองปกติ
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :อัพเดทกราฟการกระจายสินค้าทุกๆ {STRING} วัน
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :เวลาระหว่างการคำนวณหาเส้นทางการเชื่อมต่อของกราฟ. ทุกครั้งที่มีำการคำนวณใหม่ มีการวางแผนสำหรับหนึ่งชิ้นส่วนในกราฟ ค่าที่ตั้งไว้นี้ คือค่าที่จะให้มีการอัพเดททุกๆเวลากี่วัน การตั้งให้คำนวณถี่มากๆจะกินทรัพยากรเครื่องของท่าน
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :ใช้เวลา {STRING} วัน{P 0:2 s} ในการคำนวนกราฟการกระจายสินค้า
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :เวลาในการคำนวณการกระจายสินค้าสู่จุดหมายต่างๆที่แสดงเป็นเส้นกราฟบนแผนที่ การตั้งค่าถี่เกินไปอาจก่อให้เกิดอาการ lag ได้
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :โหมตการกระจายสินค้าสำหรับผู้โดยสาร: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :ผู้โดยสารจากเมืองหนึ่งเมื่อเดินทางออกไปที่ใดก็ตาม จะต้องย้อนกลับเข้ามายังจุดเริ่มค้น การตั้งค่าเป็นแบบ "สมมาตร" จะทำให้เกิดวงจรปกติเหมือนกับการโดยสารของผู้โดยสาร
@@ -2202,6 +2194,7 @@ STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}คุ�
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}ใช้รีเลย์มั้ย?
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}ใช่ครั้งเดียว
+
 
 STR_NETWORK_SPECTATORS                                          :ผู้ชม
 
@@ -3411,7 +3404,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} พาหนะทางน้ำ
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}ไม่มี
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}ทรัพสินสุทธิ: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}(หุ้น {COMMA}% เป็นของ {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}โครงสร้างพื้นฐาน:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} ทางรถไฟ
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} ถนน
@@ -3439,11 +3431,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}ชื�
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}เปลี่ยนชื่อบริษัท
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}ชื่อประธานบริษัท
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}เปลี่ยนชื่อประธานบริษัท
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}ซื้อหุ้น 25%
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}ขายหุ้น 25%
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}ซื้อหุ้น 25% จากบริษัทนี้
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}ขายหุ้น 25% คืนให้บริษัทนี้
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :ชื่อบริษัท
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :ชื่อประธานบริษัท
@@ -4275,7 +4262,6 @@ STR_AI_SETTINGS_CAPTION_AI                                      :AI
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}ปิด
 STR_AI_SETTINGS_RESET                                           :{BLACK}เริ่มใหม่
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :จำนวนที่จะให้เริ่มต้น AI นี้หลังจากที่มีการเริ่มต้น AI ก่อนหน้านี้ไป: {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4284,7 +4270,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}จั�
 STR_TEXTFILE_VIEW_README                                        :{BLACK}แสดง readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}ข้อมูลการอัพเดต
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}การอนุญาต
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} readme ของ {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} changelog ของ {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} การอนุญาตของ {STRING}
@@ -4410,9 +4396,6 @@ STR_ERROR_CAN_T_REPAY_LOAN                                      :{WHITE}ไม�
 STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}ไม่สามารถส่งเงินได้ นี่คือเงินกู้ที่มาจากธนาคาร...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}ไม่สามารถซื้อกิจการได้...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}ไม่สามารถสร้างสำนักงานได้...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}ไม่สามารถซื้อหุ้น 25% จากบริษัทนี้ได้...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}ไม่สามารถขายหุ้น 25% จากบริษัทนี้ได้...
-STR_ERROR_PROTECTED                                             :{WHITE}บริษัทนี้ยังไม่เก่าแก่พอที่จะซื้อหุ้นหรือซื้อกิจการได้...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}ไม่สามารถสร้างเมืองใดได้อีก
@@ -5127,10 +5110,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut Helic
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(บริษัท {COMMA})
 STR_FORMAT_GROUP_NAME                                           :กลุ่ม {COMMA}
@@ -5209,33 +5192,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE} {CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

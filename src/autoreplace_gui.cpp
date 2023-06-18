@@ -146,7 +146,7 @@ class ReplaceVehicleWindow : public Window {
 		GUIEngineList list;
 
 		for (const Engine *e : Engine::IterateType(type)) {
-			if (!draw_left && !this->show_hidden_engines && e->IsHidden(_local_company)) continue;
+			if (!draw_left && !this->show_hidden_engines && e->IsVariantHidden(_local_company)) continue;
 			EngineID eid = e->index;
 			switch (type) {
 				case VEH_TRAIN:
@@ -215,7 +215,7 @@ class ReplaceVehicleWindow : public Window {
 		if (this->engines[0].NeedRebuild()) {
 			/* We need to rebuild the left engines list */
 			this->GenerateReplaceVehList(true);
-			this->vscroll[0]->SetCount((uint)this->engines[0].size());
+			this->vscroll[0]->SetCount(this->engines[0].size());
 			if (this->reset_sel_engine && this->sel_engine[0] == INVALID_ENGINE && this->engines[0].size() != 0) {
 				this->sel_engine[0] = this->engines[0][0].engine_id;
 			}
@@ -235,7 +235,7 @@ class ReplaceVehicleWindow : public Window {
 				}
 				/* Regenerate the list on the right. Note: This resets sel_engine[1] to INVALID_ENGINE, if it is no longer available. */
 				this->GenerateReplaceVehList(false);
-				this->vscroll[1]->SetCount((uint)this->engines[1].size());
+				this->vscroll[1]->SetCount(this->engines[1].size());
 				if (this->reset_sel_engine && this->sel_engine[1] != INVALID_ENGINE) {
 					int position = 0;
 					for (const auto &item : this->engines[1]) {
@@ -770,7 +770,7 @@ static const NWidgetPart _nested_replace_rail_vehicle_widgets[] = {
 		NWidget(NWID_VERTICAL),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_RV_RAIL_ROAD_TYPE_DROPDOWN), SetMinimalSize(136, 12), SetDataTip(0x0, STR_REPLACE_HELP_RAILTYPE), SetFill(1, 0), SetResize(1, 0),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_RV_TRAIN_ENGINEWAGON_DROPDOWN), SetDataTip(STR_BLACK_STRING, STR_REPLACE_ENGINE_WAGON_SELECT_HELP),
+				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_RV_TRAIN_ENGINEWAGON_DROPDOWN), SetDataTip(STR_JUST_STRING, STR_REPLACE_ENGINE_WAGON_SELECT_HELP),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), EndContainer(),
 		EndContainer(),

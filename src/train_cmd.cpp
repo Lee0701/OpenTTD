@@ -1484,7 +1484,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 		v->date_of_last_service = _date;
 		v->build_year = _cur_year;
 		v->sprite_seq.Set(SPR_IMG_QUERY);
-		v->random_bits = VehicleRandomBits();
+		v->random_bits = Random();
 
 		v->group_id = DEFAULT_GROUP;
 
@@ -1520,7 +1520,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 }
 
 /** Move all free vehicles in the depot to the train */
-static void NormalizeTrainVehInDepot(const Train *u)
+void NormalizeTrainVehInDepot(const Train *u)
 {
 	for (const Train *v : Train::Iterate()) {
 		if (v->IsFreeWagon() && v->tile == u->tile &&
@@ -1559,7 +1559,7 @@ static void AddRearEngineToMultiheadedTrain(Train *v)
 	u->date_of_last_service = v->date_of_last_service;
 	u->build_year = v->build_year;
 	u->sprite_seq.Set(SPR_IMG_QUERY);
-	u->random_bits = VehicleRandomBits();
+	u->random_bits = Random();
 	v->SetMultiheaded();
 	u->SetMultiheaded();
 	if (v->IsVirtual()) u->SetVirtual();
@@ -1576,11 +1576,10 @@ static void AddRearEngineToMultiheadedTrain(Train *v)
  * @param tile     tile of the depot where rail-vehicle is built.
  * @param flags    type of operation.
  * @param e        the engine to build.
- * @param data     bit 0 prevents any free cars from being added to the train.
  * @param[out] ret the vehicle that has been built.
  * @return the cost of this operation or an error.
  */
-CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engine *e, uint16 data, Vehicle **ret)
+CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engine *e, Vehicle **ret)
 {
 	const RailVehicleInfo *rvi = &e->u.rail;
 
@@ -1629,7 +1628,7 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		v->date_of_last_service = _date;
 		v->build_year = _cur_year;
 		v->sprite_seq.Set(SPR_IMG_QUERY);
-		v->random_bits = VehicleRandomBits();
+		v->random_bits = Random();
 
 		if (e->flags & ENGINE_EXCLUSIVE_PREVIEW) SetBit(v->vehicle_flags, VF_BUILT_AS_PROTOTYPE);
 		v->SetServiceIntervalIsPercent(Company::Get(_current_company)->settings.vehicle.servint_ispercent);
@@ -1651,10 +1650,6 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 
 		v->ConsistChanged(CCF_ARRANGE);
 		UpdateTrainGroupID(v);
-
-		if (!HasBit(data, 0) && !(flags & DC_AUTOREPLACE)) { // check if the cars should be added to the new vehicle
-			NormalizeTrainVehInDepot(v);
-		}
 
 		CheckConsistencyOfArticulatedVehicle(v);
 
@@ -2211,11 +2206,17 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			DeleteNewGRFInspectWindow(GSF_TRAINS, src->index);
 			SetWindowDirty(WC_COMPANY, _current_company);
 
-			/* Delete orders, group stuff and the unit number as we're not the
-			 * front of any vehicle anymore. */
+			if (src_head != nullptr && src_head->IsFrontEngine()) {
+				/* Cases #?b: Transfer order, unit number and other stuff
+				 * to the new front engine. */
+				src_head->orders = src->orders;
+				if (src_head->orders != nullptr) src_head->AddToShared(src);
+				src_head->CopyVehicleConfigAndStatistics(src);
+			}
+			/* Remove stuff not valid anymore for non-front engines. */
 			DeleteVehicleOrders(src);
-			RemoveVehicleFromGroup(src);
 			src->unitnumber = 0;
+			src->name.clear();
 			if (HasBit(src->vehicle_flags, VF_HAVE_SLOT)) {
 				TraceRestrictRemoveVehicleFromAllSlots(src->index);
 				ClrBit(src->vehicle_flags, VF_HAVE_SLOT);
@@ -2724,7 +2725,7 @@ void UpdateLevelCrossing(TileIndex tile, bool sound, bool force_close)
 	}
 }
 
-void MarkDirtyAdjacentLevelCrossingTilesOnAddRemove(TileIndex tile, Axis road_axis)
+void MarkDirtyAdjacentLevelCrossingTilesOnAdd(TileIndex tile, Axis road_axis)
 {
 	if (!_settings_game.vehicle.adjacent_crossings) return;
 
@@ -2734,6 +2735,39 @@ void MarkDirtyAdjacentLevelCrossingTilesOnAddRemove(TileIndex tile, Axis road_ax
 		const TileIndex t = TileAddByDiagDir(tile, dir);
 		if (t < MapSize() && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == road_axis) {
 			MarkTileDirtyByTile(t, VMDF_NOT_MAP_MODE);
+		}
+	}
+}
+
+void UpdateAdjacentLevelCrossingTilesOnRemove(TileIndex tile, Axis road_axis)
+{
+	const DiagDirection dir1 = AxisToDiagDir(road_axis);
+	const DiagDirection dir2 = ReverseDiagDir(dir1);
+	for (DiagDirection dir : { dir1, dir2 }) {
+		const TileIndexDiff diff = TileOffsByDiagDir(dir);
+		bool occupied = false;
+		for (TileIndex t = tile + diff; IsValidTile(t) && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == road_axis; t += diff) {
+			occupied |= CheckLevelCrossing(t);
+		}
+		if (occupied) {
+			/* Mark the immediately adjacent tile dirty */
+			const TileIndex t = tile + diff;
+			if (IsValidTile(t) && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == road_axis) {
+				MarkTileDirtyByTile(t, VMDF_NOT_MAP_MODE);
+			}
+		} else {
+			/* Unbar the crossing tiles in this direction as necessary */
+			for (TileIndex t = tile + diff; IsValidTile(t) && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == road_axis; t += diff) {
+				if (IsCrossingBarred(t)) {
+					/* The crossing tile is barred, unbar it and continue to check the next tile */
+					SetCrossingBarred(t, false);
+					MarkTileDirtyByTile(t, VMDF_NOT_MAP_MODE);
+				} else {
+					/* The crossing tile is already unbarred, mark the tile dirty and stop checking */
+					MarkTileDirtyByTile(t, VMDF_NOT_MAP_MODE);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -6060,6 +6094,7 @@ reverse_train_direction:
 		v->track = old_trackbits;
 		v->direction = old_direction;
 		v->gv_flags = old_gv_flags;
+		if (!(v->track & TRACK_BIT_WORMHOLE)) v->z_pos = GetSlopePixelZ(v->x_pos, v->y_pos, true);
 	}
 	if (reverse) {
 		v->wait_counter = 0;
@@ -6925,7 +6960,7 @@ Train* CmdBuildVirtualRailWagon(const Engine *e, uint32 user, bool no_consist_ch
 
 	v->build_year = _cur_year;
 	v->sprite_seq.Set(SPR_IMG_QUERY);
-	v->random_bits = VehicleRandomBits();
+	v->random_bits = Random();
 
 	v->group_id = DEFAULT_GROUP;
 
@@ -7000,7 +7035,7 @@ Train* BuildVirtualRailVehicle(EngineID eid, StringID &error, uint32 user, bool 
 
 	v->build_year = _cur_year;
 	v->sprite_seq.Set(SPR_IMG_QUERY);
-	v->random_bits = VehicleRandomBits();
+	v->random_bits = Random();
 
 	v->group_id = DEFAULT_GROUP;
 
@@ -7413,7 +7448,7 @@ int GetTrainRealisticAccelerationAtSpeed(const int speed, const int mass, const 
 	/* Easy way out when there is no acceleration. */
 	if (force == resistance) return 0;
 
-	int acceleration = ClampToI32((force - resistance) / (mass * 4));
+	int acceleration = ClampTo<int32>((force - resistance) / (mass * 4));
 	acceleration = force < resistance ? std::min(-1, acceleration) : std::max(1, acceleration);
 
 	return acceleration;

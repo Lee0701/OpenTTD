@@ -24,6 +24,7 @@ extern const GRFFeatureInfo _grf_feature_list[] = {
 	GRFFeatureInfo("action0_station_prop1B", 1),
 	GRFFeatureInfo("action0_station_disallowed_bridge_pillars", 1),
 	GRFFeatureInfo("varaction2_station_var42", 1),
+	GRFFeatureInfo("varaction2_station_station_nearby_info_v2", 1),
 	GRFFeatureInfo("more_bridge_types", 1),
 	GRFFeatureInfo("action0_bridge_prop14", 1),
 	GRFFeatureInfo("action0_bridge_pillar_flags", 1),
@@ -60,9 +61,9 @@ extern const GRFFeatureInfo _grf_feature_list[] = {
 	GRFFeatureInfo("action0_object_edge_foundation_mode", 2),
 	GRFFeatureInfo("action0_object_flood_resistant", 1),
 	GRFFeatureInfo("action0_object_viewport_map_tile_type", 1),
-	GRFFeatureInfo("road_stops", 9),
+	GRFFeatureInfo("road_stops", 9, GFTOF_ROAD_STOPS),
 	GRFFeatureInfo("new_landscape", 2),
-	GRFFeatureInfo("more_objects_per_grf", 1, GFTOF_MORE_OBJECTS_PER_GRF),
+	GRFFeatureInfo("more_objects_per_grf", 1),
 	GRFFeatureInfo("more_action2_ids", 1, GFTOF_MORE_ACTION2_IDS),
 	GRFFeatureInfo("town_feature", 1),
 	GRFFeatureInfo("town_uncapped_variables", 1),
@@ -70,6 +71,7 @@ extern const GRFFeatureInfo _grf_feature_list[] = {
 	GRFFeatureInfo("varaction2_towns_town_xy", 1),
 	GRFFeatureInfo("more_varaction2_types", 1, GFTOF_MORE_VARACTION2_TYPES),
 	GRFFeatureInfo("multi_part_ships", 1, GFTOF_MULTI_PART_SHIPS),
+	GRFFeatureInfo("more_stations_per_grf", 1),
 	GRFFeatureInfo(),
 };
 
@@ -149,6 +151,7 @@ extern const GRFPropertyMapDefinition _grf_action0_remappable_properties[] = {
 
 /** Action14 Action2 remappable variable list */
 extern const GRFVariableMapDefinition _grf_action2_remappable_variables[] = {
+	GRFVariableMapDefinition(GSF_STATIONS, A2VRI_STATION_INFO_NEARBY_TILES_V2, "station_station_info_nearby_tiles_v2"),
 	GRFVariableMapDefinition(GSF_OBJECTS, A2VRI_OBJECT_FOUNDATION_SLOPE, "object_foundation_tile_slope"),
 	GRFVariableMapDefinition(GSF_OBJECTS, A2VRI_OBJECT_FOUNDATION_SLOPE_CHANGE, "object_foundation_change_tile_slope"),
 	GRFVariableMapDefinition(GSF_ROADSTOPS, 0x40, "roadstop_view"),
@@ -192,6 +195,12 @@ extern const GRFVariableMapDefinition _grf_action2_remappable_variables[] = {
 	GRFVariableMapDefinition(GSF_NEWLANDSCAPE, 0x45, "newlandscape_ground_info"),
 	GRFVariableMapDefinition(GSF_NEWLANDSCAPE, 0x60, "newlandscape_land_info_nearby_tiles"),
 	GRFVariableMapDefinition(),
+};
+
+extern const GRFNameOnlyVariableMapDefinition _grf_action2_internal_variable_names[] = {
+	GRFNameOnlyVariableMapDefinition(A2VRI_VEHICLE_CURRENT_SPEED_SCALED, "current speed scaled"),
+	GRFNameOnlyVariableMapDefinition(A2VRI_ROADSTOP_INFO_NEARBY_TILES_EXT, "68 (extended)"),
+	GRFNameOnlyVariableMapDefinition(),
 };
 
 /** Action14 Action5 remappable type list */

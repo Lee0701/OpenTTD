@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :غير متاح
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}راكب
-STR_ABBREV_COAL                                                 :{TINY_FONT}فحم
-STR_ABBREV_MAIL                                                 :{TINY_FONT}بريد
-STR_ABBREV_OIL                                                  :{TINY_FONT}نفط
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}ماشية
-STR_ABBREV_GOODS                                                :{TINY_FONT}بضائع
-STR_ABBREV_GRAIN                                                :{TINY_FONT}حبوب
-STR_ABBREV_WOOD                                                 :{TINY_FONT}خشب
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}خام حديد
-STR_ABBREV_STEEL                                                :{TINY_FONT}حديد
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}ممتلكات ثمينة
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}خام النحاس
-STR_ABBREV_MAIZE                                                :{TINY_FONT}ذرة
-STR_ABBREV_FRUIT                                                :{TINY_FONT}فواكة
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}جواهر
-STR_ABBREV_FOOD                                                 :{TINY_FONT}طعام
-STR_ABBREV_PAPER                                                :{TINY_FONT}ورق
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ذهب
-STR_ABBREV_WATER                                                :{TINY_FONT}ماء
-STR_ABBREV_WHEAT                                                :{TINY_FONT}قمح
-STR_ABBREV_RUBBER                                               :{TINY_FONT}مطاط
-STR_ABBREV_SUGAR                                                :{TINY_FONT}سكر
-STR_ABBREV_TOYS                                                 :{TINY_FONT}العاب
-STR_ABBREV_SWEETS                                               :{TINY_FONT}حلويات
-STR_ABBREV_COLA                                                 :{TINY_FONT}كولا
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}سكر نبات
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}فقاعات
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}توفي
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}بطاريات
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}بلاستيك
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}شراب مخفوق
-STR_ABBREV_NONE                                                 :{TINY_FONT}لا شيء
-STR_ABBREV_ALL                                                  :{TINY_FONT}الكل
+STR_ABBREV_PASSENGERS                                           :راكب
+STR_ABBREV_COAL                                                 :فحم
+STR_ABBREV_MAIL                                                 :بريد
+STR_ABBREV_OIL                                                  :نفط
+STR_ABBREV_LIVESTOCK                                            :ماشية
+STR_ABBREV_GOODS                                                :بضائع
+STR_ABBREV_GRAIN                                                :حبوب
+STR_ABBREV_WOOD                                                 :خشب
+STR_ABBREV_IRON_ORE                                             :خام حديد
+STR_ABBREV_STEEL                                                :حديد
+STR_ABBREV_VALUABLES                                            :ممتلكات ثمينة
+STR_ABBREV_COPPER_ORE                                           :خام النحاس
+STR_ABBREV_MAIZE                                                :ذرة
+STR_ABBREV_FRUIT                                                :فواكة
+STR_ABBREV_DIAMONDS                                             :جواهر
+STR_ABBREV_FOOD                                                 :طعام
+STR_ABBREV_PAPER                                                :ورق
+STR_ABBREV_GOLD                                                 :ذهب
+STR_ABBREV_WATER                                                :ماء
+STR_ABBREV_WHEAT                                                :قمح
+STR_ABBREV_RUBBER                                               :مطاط
+STR_ABBREV_SUGAR                                                :سكر
+STR_ABBREV_TOYS                                                 :العاب
+STR_ABBREV_SWEETS                                               :حلويات
+STR_ABBREV_COLA                                                 :كولا
+STR_ABBREV_CANDYFLOSS                                           :سكر نبات
+STR_ABBREV_BUBBLES                                              :فقاعات
+STR_ABBREV_TOFFEE                                               :توفي
+STR_ABBREV_BATTERIES                                            :بطاريات
+STR_ABBREV_PLASTIC                                              :بلاستيك
+STR_ABBREV_FIZZY_DRINKS                                         :شراب مخفوق
+STR_ABBREV_NONE                                                 :لا شيء
+STR_ABBREV_ALL                                                  :الكل
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP} راكب
@@ -190,40 +190,40 @@ STR_COLOUR_GREY                                                 :رمادي
 STR_COLOUR_WHITE                                                :ابيض
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}ميل/س
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}كم/س
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}م/ث
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}ميل/س
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}كم/س
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}م/ث
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}مربعات/ اليوم
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}حصان
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}حصان
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}ك واط
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}حصان
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}حصان
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}ك واط
 
 STR_UNITS_POWER_METRIC_TO_WEIGHT_SI                             :{DECIMAL}{NBSP}hp/Mg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP} طن
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}طن
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}كجم
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP} طن
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}طن
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}كجم
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}طن
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP} طن
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}كجم
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}طن
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP} طن
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}كجم
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}غال
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}ل
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}م3
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}غال
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}ل
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}م3
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}جالون
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP} لتر
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}م3
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}جالون
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP} لتر
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}م3
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}رطل قوة
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}كيلوغرام قوة
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP} كيلو نيوتن
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}رطل قوة
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}كيلوغرام قوة
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP} كيلو نيوتن
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP} قدم
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}م
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP} متر
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP} قدم
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}م
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP} متر
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}تصفية القائمة:
@@ -895,6 +895,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}لصق �
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}إعدادات اللعبه
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}وحدة العملة
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}اختيار وحدة العملة
 
@@ -942,10 +946,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}اختا
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :بدون
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :كل شهر
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :كل 3 اشهر
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :كل 6 اشهر
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :كل سنة
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}لغة
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}اختر لغة الواجهه
@@ -968,6 +968,7 @@ STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP                            :{BLACK}حدد �
 
 STR_GAME_OPTIONS_GUI_SCALE_AUTO                                 :{BLACK}الكشف التلقائي عن الحجم
 STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}اختر هذا المربع لكشف حجم الواجهة تلقائيا
+
 
 
 
@@ -1561,11 +1562,6 @@ STR_CONFIG_SETTING_ENDING_YEAR_ZERO                             :لا تنتهي
 ###length 3
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :مجمد
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :السماح بشراء حصص من الشركات الاخرى: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :عند التمكين ، السماح بشراء وبيع أسهم الشركة. ستكون الأسهم متاحة فقط للشركات التي بلغت سنًا معينة
-
-###setting-zero-is-special
-
 
 STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY                         :عند السحب ، ضع الإشارات كل: {STRING}
 
@@ -1645,7 +1641,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_VALUE                           :1 في {COMMA}
 ###setting-zero-is-special
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :مضاعف المدن المبدئي: {STRING}
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :الوقت بين عمليات إعادة الحساب المتتابعة للرسم البياني الرابط. تحسب كل عملية إعادة حساب الخطط لمكون واحد من الرسم البياني. هذا يعني أن القيمة X لهذا الإعداد لا تعني أنه سيتم تحديث الرسم البياني كل X أيام. إلا بعض المكونات. كلما قمت بتعيينه أقل، كلما زاد وقت الCPU لحسابها. كلما قمت بضبطها لفترة أطول ، كلما اسغرق الوقت حتى يتم بدأ توزيع البضائع على طرق جديدة.
 
 ###length 3
 
@@ -2000,6 +1995,7 @@ STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}هل أ
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}هل أنت متأكد أنك تريد حذف شركة '{COMPANY}'؟
 
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}لا
+
 
 STR_NETWORK_SPECTATORS                                          :المشاهدين
 
@@ -3151,7 +3147,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} سفينة
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}بدون
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}قيمة الشركة: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}( {COMMA}% مملوكة بواسطة {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}البنية تحتية:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} قطعة السكك الحديدية
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} قطعة الطريق
@@ -3179,11 +3174,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}اسم �
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}غير اسم الشركة
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}اسم صاحب الشركة
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}غير اسم المدير
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}اشتري 25% من أسهم الشركة
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}بيع 25% من أسهم الشركة
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}اشتري 25% من اسهم هذه الشركة, + مفتاح الاعلى لاظهار التكلفه
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}بيع 25% من اسهم هذه الشركة
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :اسم الشركة
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :اسم صاحب الشركة
@@ -4007,7 +3997,7 @@ STR_TEXTFILE_WRAP_TEXT                                          :{WHITE}التف
 STR_TEXTFILE_VIEW_README                                        :{BLACK}اعرض ملف التعليمات ريدمي
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}اعرض سجل التغييرات
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}الرخصة
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING}اقراني {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} سجل التغيير ل{STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING}رخصة {STRING}
@@ -4126,9 +4116,6 @@ STR_ERROR_CAN_T_REPAY_LOAN                                      :{WHITE}لا ي�
 STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}لا يمكن التخلي عن النقود المعطاة من البنك على سبيل الاعارة ...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}لا يمكن شراء الشركة ...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}لا يمكن بناء مبنى الشركة الئيسي ...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}لا يمكن شراء 25% من اسهم الشركة ...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}لا يمكن بيع 25% من اسهم الشركة ...
-STR_ERROR_PROTECTED                                             :{WHITE}هذه الشركة ليست عريقة بقدر كافي لمشاركة الأسهم ...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}لا يمكن انشاء اي مدينة
@@ -4843,10 +4830,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :باور هيل
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :شركة {COMMA}
 STR_FORMAT_GROUP_NAME                                           :مجموعة{COMMA}
@@ -4927,33 +4914,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

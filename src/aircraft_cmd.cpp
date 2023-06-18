@@ -278,11 +278,10 @@ void GetAircraftSpriteSize(EngineID engine, uint &width, uint &height, int &xoff
  * @param tile     tile of the depot where aircraft is built.
  * @param flags    type of operation.
  * @param e        the engine to build.
- * @param data     unused.
  * @param[out] ret the vehicle that has been built.
  * @return the cost of this operation or an error.
  */
-CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *e, uint16 data, Vehicle **ret)
+CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *e, Vehicle **ret)
 {
 	const AircraftVehicleInfo *avi = &e->u.air;
 	const Station *st = Station::GetByTile(tile);
@@ -364,8 +363,8 @@ CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		u->sprite_seq.Set(SPR_IMG_QUERY);
 
-		v->random_bits = VehicleRandomBits();
-		u->random_bits = VehicleRandomBits();
+		v->random_bits = Random();
+		u->random_bits = Random();
 
 		v->vehicle_flags = 0;
 		if (e->flags & ENGINE_EXCLUSIVE_PREVIEW) SetBit(v->vehicle_flags, VF_BUILT_AS_PROTOTYPE);
@@ -398,7 +397,7 @@ CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *
 			w->subtype = AIR_ROTOR;
 			w->sprite_seq.Set(SPR_ROTOR_STOPPED);
 			w->UpdateSpriteSeqBound();
-			w->random_bits = VehicleRandomBits();
+			w->random_bits = Random();
 			/* Use rotor's air.state to store the rotor animation frame */
 			w->state = HRS_ROTOR_STOPPED;
 			w->UpdateDeltaXY();
@@ -1702,7 +1701,7 @@ static void AircraftEventHandler_AtTerminal(Aircraft *v, const AirportFTAClass *
 			return;
 		default:  // orders have been deleted (no orders), goto depot and don't bother us
 			v->current_order.Free();
-			go_to_hangar = Station::Get(v->targetairport)->airport.HasHangar();
+			go_to_hangar = true;
 	}
 
 	if (go_to_hangar && Station::Get(v->targetairport)->airport.HasHangar()) {

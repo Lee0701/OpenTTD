@@ -85,7 +85,7 @@ static void ShowNewGRFInfo(const GRFConfig *c, const Rect &r, bool show_params)
 	}
 
 	/* Draw filename or not if it is not known (GRF sent over internet) */
-	if (c->filename != nullptr) {
+	if (!c->filename.empty()) {
 		SetDParamStr(0, c->filename);
 		tr.top = DrawStringMultiLine(tr, STR_NEWGRF_SETTINGS_FILENAME);
 	}
@@ -139,7 +139,7 @@ static void ShowNewGRFInfo(const GRFConfig *c, const Rect &r, bool show_params)
 	/* Draw GRF info if it exists */
 	if (!StrEmpty(c->GetDescription())) {
 		SetDParamStr(0, c->GetDescription());
-		tr.top = DrawStringMultiLine(tr, STR_BLACK_RAW_STRING);
+		tr.top = DrawStringMultiLine(tr, STR_JUST_RAW_STRING, TC_BLACK);
 	} else {
 		tr.top = DrawStringMultiLine(tr, STR_NEWGRF_SETTINGS_NO_INFO);
 	}
@@ -181,6 +181,11 @@ struct NewGRFParametersWindow : public Window {
 		this->SetWidgetDisabledState(WID_NP_RESET, !this->editable);
 
 		this->InvalidateData();
+	}
+
+	~NewGRFParametersWindow()
+	{
+		HideDropDownMenu(this);
 	}
 
 	/**
@@ -1434,7 +1439,7 @@ private:
 	/** Sort grfs by name. */
 	static bool NameSorter(const GRFConfig * const &a, const GRFConfig * const &b)
 	{
-		int i = strnatcmp(a->GetName(), b->GetName(), true); // Sort by name (natural sorting).
+		int i = StrNaturalCompare(a->GetName(), b->GetName(), true); // Sort by name (natural sorting).
 		if (i != 0) return i < 0;
 
 		i = a->version - b->version;
@@ -1448,7 +1453,7 @@ private:
 	{
 		filter.ResetState();
 		filter.AddLine((*a)->GetName());
-		filter.AddLine((*a)->filename);
+		filter.AddLine((*a)->filename.c_str());
 		filter.AddLine((*a)->GetDescription());
 		return filter.GetState();;
 	}
@@ -1496,7 +1501,7 @@ private:
 			}
 		}
 
-		this->vscroll2->SetCount((uint)this->avails.size()); // Update the scrollbar
+		this->vscroll2->SetCount(this->avails.size()); // Update the scrollbar
 	}
 
 	/**
@@ -2092,7 +2097,7 @@ struct SavePresetWindow : public Window {
 		this->vscroll = this->GetScrollbar(WID_SVP_SCROLLBAR);
 		this->FinishInitNested(0);
 
-		this->vscroll->SetCount((uint)this->presets.size());
+		this->vscroll->SetCount(this->presets.size());
 		this->SetFocusedWidget(WID_SVP_EDITBOX);
 		if (initial_text != nullptr) this->presetname_editbox.text.Assign(initial_text);
 	}
@@ -2208,19 +2213,13 @@ static WindowDesc _scan_progress_desc(
 
 /** Window for showing the progress of NewGRF scanning. */
 struct ScanProgressWindow : public Window {
-	char *last_name; ///< The name of the last 'seen' NewGRF.
-	int scanned;     ///< The number of NewGRFs that we have seen.
+	std::string last_name; ///< The name of the last 'seen' NewGRF.
+	int scanned;           ///< The number of NewGRFs that we have seen.
 
 	/** Create the window. */
-	ScanProgressWindow() : Window(&_scan_progress_desc), last_name(nullptr), scanned(0)
+	ScanProgressWindow() : Window(&_scan_progress_desc), scanned(0)
 	{
 		this->InitNested(1);
-	}
-
-	/** Free the last name buffer. */
-	~ScanProgressWindow()
-	{
-		free(last_name);
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -2265,7 +2264,7 @@ struct ScanProgressWindow : public Window {
 				SetDParam(1, _settings_client.gui.last_newgrf_count);
 				DrawString(r.left, r.right, r.top, STR_NEWGRF_SCAN_STATUS, TC_FROMSTRING, SA_HOR_CENTER);
 
-				DrawString(r.left, r.right, r.top + FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal, this->last_name == nullptr ? "" : this->last_name, TC_BLACK, SA_HOR_CENTER);
+				DrawString(r.left, r.right, r.top + FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal, this->last_name, TC_BLACK, SA_HOR_CENTER);
 				break;
 		}
 	}
@@ -2277,13 +2276,10 @@ struct ScanProgressWindow : public Window {
 	 */
 	void UpdateNewGRFScanStatus(uint num, const char *name)
 	{
-		free(this->last_name);
 		if (name == nullptr) {
-			char buf[256];
-			GetString(buf, STR_NEWGRF_SCAN_ARCHIVES, lastof(buf));
-			this->last_name = stredup(buf);
+			this->last_name = GetString(STR_NEWGRF_SCAN_ARCHIVES);
 		} else {
-			this->last_name = stredup(name);
+			this->last_name = name;
 		}
 		this->scanned = num;
 		if (num > _settings_client.gui.last_newgrf_count) _settings_client.gui.last_newgrf_count = num;

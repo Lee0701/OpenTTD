@@ -177,10 +177,10 @@ CommandProc CmdCloneOrder;
 
 CommandProc CmdClearArea;
 
-CommandProc CmdGiveMoney;
-CommandProc CmdMoneyCheat;
-CommandProc CmdMoneyCheatAdmin;
-CommandProc CmdChangeBankBalance;
+CommandProcEx CmdGiveMoney;
+CommandProcEx CmdMoneyCheat;
+CommandProcEx CmdMoneyCheatAdmin;
+CommandProcEx CmdChangeBankBalance;
 CommandProc CmdCheatSetting;
 CommandProc CmdBuildCanal;
 CommandProc CmdBuildLock;
@@ -570,6 +570,7 @@ static const Command _command_proc_table[] = {
 
 	DEF_CMD(CmdDesyncCheck,                           CMD_SERVER, CMDT_SERVER_SETTING        ), // CMD_DESYNC_CHECK
 };
+static_assert(lengthof(_command_proc_table) == CMD_END);
 
 ClientID _cmd_client_id = INVALID_CLIENT_ID;
 
@@ -589,6 +590,7 @@ enum CommandLogEntryFlag : uint16 {
 	CLEF_TWICE               = 0x100, ///< command logged twice (only sending and execution)
 	CLEF_RANDOM              = 0x200, ///< command changed random seed
 	CLEF_ORDER_BACKUP        = 0x400, ///< command changed order backups
+	CLEF_SCRIPT_ASYNC        = 0x800, ///< command run by AI/game script - asynchronous
 };
 DECLARE_ENUM_AS_BIT_SET(CommandLogEntryFlag)
 
@@ -644,30 +646,26 @@ void ClearCommandLog()
 	_command_log_aux.Reset();
 }
 
-static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog &cmd_log, const unsigned int count)
+static void DumpSubCommandLogEntry(char *&buffer, const char *last, const CommandLogEntry &entry)
 {
-	unsigned int log_index = cmd_log.next;
-	for (unsigned int i = 0 ; i < count; i++) {
-		if (log_index > 0) {
-			log_index--;
-		} else {
-			log_index = (uint)cmd_log.log.size() - 1;
-		}
-		const CommandLogEntry &entry = cmd_log.log[log_index];
-
 		auto fc = [&](CommandLogEntryFlag flag, char c) -> char {
 			return entry.log_flags & flag ? c : '-';
 		};
 
+		auto script_fc = [&]() -> char {
+			if (!(entry.log_flags & CLEF_SCRIPT)) return '-';
+			return (entry.log_flags & CLEF_SCRIPT_ASYNC) ? 'A' : 'a';
+		};
+
 		YearMonthDay ymd;
 		ConvertDateToYMD(entry.date, &ymd);
-		buffer += seprintf(buffer, last, " %3u | %4i-%02i-%02i, %2i, %3i", i, ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter);
+		buffer += seprintf(buffer, last, "%4i-%02i-%02i, %2i, %3i", ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter);
 		if (_networking) {
 			buffer += seprintf(buffer, last, ", %08X", entry.frame_counter);
 		}
 		buffer += seprintf(buffer, last, " | %c%c%c%c%c%c%c%c%c%c%c | ",
 				fc(CLEF_ORDER_BACKUP, 'o'), fc(CLEF_RANDOM, 'r'), fc(CLEF_TWICE, '2'),
-				fc(CLEF_SCRIPT, 'a'), fc(CLEF_AUX_DATA, 'b'), fc(CLEF_MY_CMD, 'm'), fc(CLEF_ONLY_SENDING, 's'),
+				script_fc(), fc(CLEF_AUX_DATA, 'b'), fc(CLEF_MY_CMD, 'm'), fc(CLEF_ONLY_SENDING, 's'),
 				fc(CLEF_ESTIMATE_ONLY, 'e'), fc(CLEF_TEXT, 't'), fc(CLEF_GENERATING_WORLD, 'g'), fc(CLEF_CMD_FAILED, 'f'));
 		buffer += seprintf(buffer, last, " %7d x %7d, p1: 0x%08X, p2: 0x%08X, ",
 				TileX(entry.tile), TileY(entry.tile), entry.p1, entry.p2);
@@ -686,6 +684,22 @@ static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog 
 				buffer += seprintf(buffer, last, " [%s]", entry.text.c_str());
 				break;
 		}
+}
+
+static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog &cmd_log, const unsigned int count)
+{
+	unsigned int log_index = cmd_log.next;
+	for (unsigned int i = 0 ; i < count; i++) {
+		if (log_index > 0) {
+			log_index--;
+		} else {
+			log_index = (uint)cmd_log.log.size() - 1;
+		}
+
+		buffer += seprintf(buffer, last, " %3u | ", i);
+
+		const CommandLogEntry &entry = cmd_log.log[log_index];
+		DumpSubCommandLogEntry(buffer, last, entry);
 
 		buffer += seprintf(buffer, last, "\n");
 	}
@@ -876,6 +890,16 @@ Money GetAvailableMoneyForCommand()
 	return Company::Get(company)->money;
 }
 
+static void DebugLogCommandLogEntry(const CommandLogEntry &entry)
+{
+	if (_debug_command_level <= 0) return;
+
+	char buffer[256];
+	char *b = buffer;
+	DumpSubCommandLogEntry(b, lastof(buffer), entry);
+	debug_print("command", buffer);
+}
+
 static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd, CommandLogEntryFlag log_flags, const char *text)
 {
 	if (res.Failed()) log_flags |= CLEF_CMD_FAILED;
@@ -892,6 +916,7 @@ static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32
 				current.current_company == _current_company && current.local_company == _local_company) {
 			current.log_flags |= log_flags | CLEF_TWICE;
 			current.log_flags &= ~CLEF_ONLY_SENDING;
+			DebugLogCommandLogEntry(current);
 			return;
 		}
 	}
@@ -905,6 +930,7 @@ static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32
 	}
 
 	cmd_log.log[cmd_log.next] = CommandLogEntry(tile, p1, p2, p3, cmd, log_flags, std::move(str));
+	DebugLogCommandLogEntry(cmd_log.log[cmd_log.next]);
 	cmd_log.next = (cmd_log.next + 1) % cmd_log.log.size();
 	cmd_log.count++;
 }
@@ -1005,7 +1031,7 @@ bool DoCommandPEx(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd, C
 	return res.Succeeded();
 }
 
-CommandCost DoCommandPScript(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd, CommandCallback *callback, const char *text, bool my_cmd, bool estimate_only, const CommandAuxiliaryBase *aux_data)
+CommandCost DoCommandPScript(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd, CommandCallback *callback, const char *text, bool my_cmd, bool estimate_only, bool asynchronous, const CommandAuxiliaryBase *aux_data)
 {
 	GameRandomSeedChecker random_state;
 	uint order_backup_update_counter = OrderBackup::GetUpdateCounter();
@@ -1014,6 +1040,7 @@ CommandCost DoCommandPScript(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, ui
 
 	CommandLogEntryFlag log_flags;
 	log_flags = CLEF_SCRIPT;
+	if (asynchronous) log_flags |= CLEF_SCRIPT_ASYNC;
 	if (!StrEmpty(text)) log_flags |= CLEF_TEXT;
 	if (estimate_only) log_flags |= CLEF_ESTIMATE_ONLY;
 	if (_networking && !(cmd & CMD_NETWORK_COMMAND)) log_flags |= CLEF_ONLY_SENDING;
@@ -1363,6 +1390,8 @@ void CommandCost::SetTile(TileIndex tile)
 
 void CommandCost::SetResultData(uint32 result)
 {
+	this->flags |= CCIF_VALID_RESULT;
+
 	if (result == this->GetResultData()) return;
 
 	if (this->AddInlineData(CCIF_INLINE_RESULT)) {

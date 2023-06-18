@@ -14,7 +14,7 @@
 #include "strings_type.h"
 #include "tile_type.h"
 #include "core/span_type.hpp"
-#include "3rdparty/optional/ottd_optional.h"
+#include <optional>
 #include <string>
 
 struct GRFFile;
@@ -25,6 +25,7 @@ enum CommandCostIntlFlags : uint8 {
 	CCIF_INLINE_EXTRA_MSG         = 1 << 1,
 	CCIF_INLINE_TILE              = 1 << 2,
 	CCIF_INLINE_RESULT            = 1 << 3,
+	CCIF_VALID_RESULT             = 1 << 4,
 };
 DECLARE_ENUM_AS_BIT_SET(CommandCostIntlFlags)
 
@@ -256,6 +257,11 @@ public:
 	}
 
 	void SetTile(TileIndex tile);
+
+	bool HasResultData() const
+	{
+		return (this->flags & CCIF_VALID_RESULT);
+	}
 
 	uint32 GetResultData() const
 	{
@@ -708,7 +714,7 @@ struct CommandAuxiliaryBase {
 
 	virtual CommandAuxiliaryBase *Clone() const = 0;
 
-	virtual opt::optional<span<const uint8>> GetDeserialisationSrc() const = 0;
+	virtual std::optional<span<const uint8>> GetDeserialisationSrc() const = 0;
 
 	virtual void Serialise(CommandSerialisationBuffer &buffer) const = 0;
 };

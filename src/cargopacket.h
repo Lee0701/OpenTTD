@@ -18,7 +18,7 @@
 #include "vehicle_type.h"
 #include "company_type.h"
 #include "core/multimap.hpp"
-#include "saveload/saveload_common.h"
+#include "sl/saveload_common.h"
 #include <deque>
 
 /** Unique identifier for a single cargo packet. */
@@ -84,7 +84,7 @@ public:
 
 	CargoPacket();
 	CargoPacket(StationID source, TileIndex source_xy, uint16 count, SourceType source_type, SourceID source_id);
-	CargoPacket(uint16 count, uint16 days_in_transit, StationID source, TileIndex source_xy, TileIndex loaded_at_xy, Money feeder_share = 0, SourceType source_type = ST_INDUSTRY, SourceID source_id = INVALID_SOURCE);
+	CargoPacket(uint16 count, uint16 days_in_transit, StationID source, TileIndex source_xy, TileIndex loaded_at_xy, Money feeder_share = 0, SourceType source_type = SourceType::Industry, SourceID source_id = INVALID_SOURCE);
 	~CargoPacket();
 
 	CargoPacket *Split(uint new_size);

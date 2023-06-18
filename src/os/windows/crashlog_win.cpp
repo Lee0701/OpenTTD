@@ -17,7 +17,7 @@
 #include "../../fileio_func.h"
 #include "../../strings_func.h"
 #include "../../gamelog.h"
-#include "../../saveload/saveload.h"
+#include "../../sl/saveload.h"
 #include "../../video/video_driver.hpp"
 #include "../../screenshot.h"
 #include "../../debug.h"
@@ -750,6 +750,9 @@ static LONG WINAPI VectoredExceptionHandler(EXCEPTION_POINTERS *ep)
 		return ExceptionHandler(ep);
 	}
 	if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW) {
+		return ExceptionHandler(ep);
+	}
+	if (ep->ExceptionRecord->ExceptionCode == 0xE1212012) {
 		return ExceptionHandler(ep);
 	}
 	return EXCEPTION_CONTINUE_SEARCH;

@@ -259,7 +259,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 
 				SetDParamMaxValue(0, _settings_time.time_in_minutes ? 0 : MAX_YEAR * DAYS_IN_YEAR);
 				Dimension unumber = GetStringBoundingBox(STR_JUST_DATE_WALLCLOCK_TINY);
-				const Sprite *spr = GetSprite(SPR_FLAG_VEH_STOPPED, ST_NORMAL);
+				const Sprite *spr = GetSprite(SPR_FLAG_VEH_STOPPED, SpriteType::Normal);
 				this->flag_width  = UnScaleGUI(spr->width) + WidgetDimensions::scaled.framerect.right;
 				this->flag_height = UnScaleGUI(spr->height);
 
@@ -856,7 +856,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 				if (StrEmpty(str)) break;
 
 				char *end;
-				int32 val = strtoul(str, &end, 10);
+				int32 val = std::strtoul(str, &end, 10);
 				if (val >= 0 && end != nullptr && *end == 0) {
 					uint minutes = (val % 100) % 60;
 					uint hours = (val / 100) % 24;
@@ -874,7 +874,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 				if (StrEmpty(str)) break;
 
 				char *end;
-				int32 val = strtoul(str, &end, 10);
+				int32 val = std::strtoul(str, &end, 10);
 				if (val >= 0 && end != nullptr && *end == 0) {
 					uint minutes = (val % 100) % 60;
 					uint hours = (val / 100) % 24;
@@ -1256,7 +1256,7 @@ void SchdispatchInvalidateWindows(const Vehicle *v)
 		if (w->window_class == WC_VEHICLE_TIMETABLE) {
 			if (static_cast<GeneralVehicleWindow *>(w)->vehicle->FirstShared() == v) w->SetDirty();
 		}
-		if (w->window_class == WC_SCHDISPATCH_SLOTS) {
+		if (w->window_class == WC_SCHDISPATCH_SLOTS || w->window_class == WC_VEHICLE_ORDERS) {
 			if (static_cast<GeneralVehicleWindow *>(w)->vehicle->FirstShared() == v) w->InvalidateData(VIWD_MODIFY_ORDERS, false);
 		}
 	}

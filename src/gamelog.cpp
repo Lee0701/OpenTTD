@@ -8,7 +8,7 @@
 /** @file gamelog.cpp Definition of functions used for logging of important changes in the game */
 
 #include "stdafx.h"
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 #include "string_func.h"
 #include "settings_type.h"
 #include "gamelog_internal.h"
@@ -120,11 +120,11 @@ static char *PrintGrfInfo(char *buf, const char *last, uint grfid, const uint8 *
 	}
 
 	if (gc != nullptr) {
-		buf += seprintf(buf, last, ", filename: %s (md5sum matches)", gc->filename);
+		buf += seprintf(buf, last, ", filename: %s (md5sum matches)", gc->filename.c_str());
 	} else {
 		gc = FindGRFConfig(grfid, FGCM_ANY);
 		if (gc != nullptr) {
-			buf += seprintf(buf, last, ", filename: %s (matches GRFID only)", gc->filename);
+			buf += seprintf(buf, last, ", filename: %s (matches GRFID only)", gc->filename.c_str());
 		} else {
 			buf += seprintf(buf, last, ", unknown GRF");
 		}
@@ -808,4 +808,23 @@ void GamelogInfo(LoggedAction *gamelog_action, uint gamelog_actions, uint32 *las
 			}
 		}
 	}
+}
+
+const char *GamelogGetLastRevision(const LoggedAction *gamelog_action, uint gamelog_actions)
+{
+	for (uint i = gamelog_actions; i > 0; i--) {
+		const LoggedAction &la = gamelog_action[i - 1];
+		const LoggedChange *lcend = &(la.change[la.changes]);
+		for (const LoggedChange *lc = la.change; lc != lcend; lc++) {
+			switch (lc->ct) {
+				case GLCT_REVISION:
+					return lc->revision.text;
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+	return nullptr;
 }

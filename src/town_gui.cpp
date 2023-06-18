@@ -70,7 +70,7 @@ static const NWidgetPart _nested_town_authority_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_TA_BTN_SEL),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_BROWN, WID_TA_EXECUTE),  SetMinimalSize(317, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_LOCAL_AUTHORITY_DO_IT_BUTTON, STR_LOCAL_AUTHORITY_DO_IT_TOOLTIP),
-			NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_TA_SETTING),  SetMinimalSize(317, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_BLACK_STRING1, STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_TOOLTIP),
+			NWidget(WWT_DROPDOWN, COLOUR_BROWN, WID_TA_SETTING),  SetMinimalSize(317, 12), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING1, STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_TOOLTIP),
 		EndContainer(),
 		NWidget(WWT_RESIZEBOX, COLOUR_BROWN),
 	EndContainer()
@@ -872,7 +872,7 @@ static const NWidgetPart _nested_town_directory_widgets[] = {
 			NWidget(WWT_PANEL, COLOUR_BROWN, WID_TD_LIST), SetDataTip(0x0, STR_TOWN_DIRECTORY_LIST_TOOLTIP),
 							SetFill(1, 0), SetResize(1, 1), SetScrollbar(WID_TD_SCROLLBAR), EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_BROWN),
-				NWidget(WWT_TEXT, COLOUR_BROWN, WID_TD_WORLD_POPULATION), SetPadding(2, 0, 2, 2), SetMinimalTextLines(1, 0), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TOWN_POPULATION, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_BROWN, WID_TD_WORLD_POPULATION), SetPadding(2, 0, 2, 2), SetMinimalTextLines(1, 0), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TOWN_DIRECTORY_INFO, STR_NULL),
 			EndContainer(),
 		EndContainer(),
 		NWidget(NWID_VERTICAL),
@@ -916,7 +916,7 @@ private:
 
 			this->towns.shrink_to_fit();
 			this->towns.RebuildDone();
-			this->vscroll->SetCount((uint)this->towns.size()); // Update scrollbar as well.
+			this->vscroll->SetCount(this->towns.size()); // Update scrollbar as well.
 		}
 		/* Always sort the towns. */
 		this->towns.Sort();
@@ -926,7 +926,7 @@ private:
 	/** Sort by town name */
 	static bool TownNameSorter(const Town * const &a, const Town * const &b)
 	{
-		return strnatcmp(a->GetCachedName(), b->GetCachedName()) < 0; // Sort by name (natural sorting).
+		return StrNaturalCompare(a->GetCachedName(), b->GetCachedName()) < 0; // Sort by name (natural sorting).
 	}
 
 	/** Sort by population (default descending, as big towns are of the most interest). */
@@ -982,7 +982,9 @@ public:
 	{
 		switch (widget) {
 			case WID_TD_WORLD_POPULATION:
-				SetDParam(0, GetWorldPopulation());
+				SetDParam(0, STR_TOWN_POPULATION);
+				SetDParam(1, GetWorldPopulation());
+				SetDParam(2, Town::GetNumItems());
 				break;
 
 			case WID_TD_SORT_CRITERIA:
@@ -1090,8 +1092,10 @@ public:
 				break;
 			}
 			case WID_TD_WORLD_POPULATION: {
-				SetDParamMaxDigits(0, 10);
-				Dimension d = GetStringBoundingBox(STR_TOWN_POPULATION);
+				SetDParam(0, STR_TOWN_POPULATION);
+				SetDParamMaxDigits(1, 10);
+				SetDParamMaxDigits(2, 5);
+				Dimension d = GetStringBoundingBox(STR_TOWN_DIRECTORY_INFO);
 				d.width += padding.width;
 				d.height += padding.height;
 				*size = maxdim(*size, d);

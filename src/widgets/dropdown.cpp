@@ -51,10 +51,9 @@ void DropDownListStringItem::Draw(const Rect &r, bool sel, Colours bg_colour) co
  */
 /* static */ bool DropDownListStringItem::NatSortFunc(std::unique_ptr<const DropDownListItem> const &first, std::unique_ptr<const DropDownListItem> const &second)
 {
-	char buffer1[512], buffer2[512];
-	GetString(buffer1, static_cast<const DropDownListStringItem*>(first.get())->String(), lastof(buffer1));
-	GetString(buffer2, static_cast<const DropDownListStringItem*>(second.get())->String(), lastof(buffer2));
-	return strnatcmp(buffer1, buffer2) < 0;
+	std::string str1 = GetString(static_cast<const DropDownListStringItem*>(first.get())->String());
+	std::string str2 = GetString(static_cast<const DropDownListStringItem*>(second.get())->String());
+	return StrNaturalCompare(str1, str2) < 0;
 }
 
 StringID DropDownListParamStringItem::String() const
@@ -177,8 +176,8 @@ struct DropdownWindow : Window {
 		}
 
 		/* Capacity is the average number of items visible */
-		this->vscroll->SetCapacity(size.height * (uint16)this->list.size() / list_height);
-		this->vscroll->SetCount((uint16)this->list.size());
+		this->vscroll->SetCapacity(size.height * this->list.size() / list_height);
+		this->vscroll->SetCount(this->list.size());
 
 		this->parent_button    = button;
 		this->selected_index   = selected;
@@ -290,14 +289,9 @@ struct DropdownWindow : Window {
 		this->scrolling_timer.SetInterval(MILLISECONDS_PER_TICK);
 
 		if (this->scrolling != 0) {
-			int pos = this->vscroll->GetPosition();
+			if (this->vscroll->UpdatePosition(this->scrolling)) this->SetDirty();
 
-			this->vscroll->UpdatePosition(this->scrolling);
 			this->scrolling = 0;
-
-			if (pos != this->vscroll->GetPosition()) {
-				this->SetDirty();
-			}
 		}
 	}
 

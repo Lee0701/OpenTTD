@@ -2,6 +2,55 @@
 
 * * *
 
+### v0.54.1 (2023-06-11)
+* Fix crash on Windows (Vista and later)
+
+### v0.54.0 (2023-06-11)
+* Fix crash in template replacement failure news message if autorenew succeeds.
+* Fix crash when re-opening GRF/script settings windows with a dropdown open.
+* Fix crash when using train build and refit that is then attached to existing wagons/engines in the depot, in some cases with certain GRFs.
+* Fix vehicle route overlays for unfocused windows not being redrawn when removed.
+* Fix trains ascending a sloped bridge ramp being 1 pixel too high in the middle part of the bridge.
+* Fix the first town on the map not being included in public road networks.
+* Add picker tool for objects, rail types, road types, rail stations/waypoints and road stops/waypoints, to the main toolbar help menu.
+* Add conditional order test for whether a slot is empty/not empty.
+* Highlight rail/road waypoint tiles when adjacent or distant joining.
+* Add coverage button to waypoint window.
+* Show town count in town directory window.
+* Add text filtering to rail/road waypoint and vehicle build windows.
+* Add setting to increase the size of the main toolbar.
+* Add hotkey for convert rail type by track piece.
+* Company delivered cargo graph:
+  * Add cargo type filters.
+  * Add mode to show data by cargo instead of by company.
+* Viewport map mode:
+  * Show bridges and tunnels in rail/road type colour in routes mode.
+  * Fix vertical alignment of tunnels.
+  * Add unset hotkey to toggle showing slopes.
+* Add departure boards setting for maximum time in advance to show departyres, when using time in minutes (default 24 hours).
+* Remove linkgraph duration not day length scaled setting, linkgraph job durations are now in seconds (of game time).
+* Game script:
+  * Add class to enable asynchronous execution of commands.
+  * Fix not being able to reload the game script in the script debug window.
+* MacOS: Minimum version increased to 10.13.
+* Bump trunk base from commit e5af5907ecfe3845adc613a3312695ed8b40bffc to commit 3a03a12a9c460918e81af96cca55399b60064261.
+
+### v0.53.3 (2023-05-20)
+* Fix crash when selecting conditional orders in order window.
+* Fix crash which could occur on MacOS when using UI scaling.
+* Fix crash which could occur when upgrading airports when order backups are present.
+* Fix train disconnection which could occur when a train reverses at the top of a sloped bridge ramp because the bridge is signalled in the opposite direction.
+* Fix multi-track level crossings being left barred after removing the middle part.
+* Fix horizontal resizing and UI scaling issues in slots window.
+* Add routing restriction button to set other signals to be shared with the current signal.
+* Allow changing tree placement algorithm setting in game.
+* Reduce strength of the station rating penalty applied to cargo source stations on station cargo truncation.
+* Remove the command delay for game scripts in single player when the game is paused by the game script.
+* Avoid unnecessarily resetting the scrollbar in the vehicle refit window.
+* Save game window:
+  * Fix the "overwriting a different save file" warning being shown when the file name has been changed to not overwrite the file.
+  * Mention in warning if the save file being overwritten is a vanilla save.
+
 ### v0.53.2 (2023-05-11)
 * Fix crash when clicking the goto dropdown in the order window when a departure board via order is selected.
 * Fix rail platforms being left partially reserved after removing a train (due to a crash or company bankruptcy).

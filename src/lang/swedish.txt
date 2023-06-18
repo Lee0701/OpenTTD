@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PS
-STR_ABBREV_COAL                                                 :{TINY_FONT}KL
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PO
-STR_ABBREV_OIL                                                  :{TINY_FONT}OL
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}BO
-STR_ABBREV_GOODS                                                :{TINY_FONT}GD
-STR_ABBREV_GRAIN                                                :{TINY_FONT}SP
-STR_ABBREV_WOOD                                                 :{TINY_FONT}TI
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}JÄ
-STR_ABBREV_STEEL                                                :{TINY_FONT}ST
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}VÄ
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}KO
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MA
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FR
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DI
-STR_ABBREV_FOOD                                                 :{TINY_FONT}MT
-STR_ABBREV_PAPER                                                :{TINY_FONT}PA
-STR_ABBREV_GOLD                                                 :{TINY_FONT}GL
-STR_ABBREV_WATER                                                :{TINY_FONT}VA
-STR_ABBREV_WHEAT                                                :{TINY_FONT}VE
-STR_ABBREV_RUBBER                                               :{TINY_FONT}GU
-STR_ABBREV_SUGAR                                                :{TINY_FONT}SO
-STR_ABBREV_TOYS                                                 :{TINY_FONT}LE
-STR_ABBREV_SWEETS                                               :{TINY_FONT}GO
-STR_ABBREV_COLA                                                 :{TINY_FONT}KA
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}SS
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}KN
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}LÄ
-STR_ABBREV_NONE                                                 :{TINY_FONT}NEJ
-STR_ABBREV_ALL                                                  :{TINY_FONT}ALLA
+STR_ABBREV_PASSENGERS                                           :PS
+STR_ABBREV_COAL                                                 :KL
+STR_ABBREV_MAIL                                                 :PO
+STR_ABBREV_OIL                                                  :OL
+STR_ABBREV_LIVESTOCK                                            :BO
+STR_ABBREV_GOODS                                                :GD
+STR_ABBREV_GRAIN                                                :SP
+STR_ABBREV_WOOD                                                 :TI
+STR_ABBREV_IRON_ORE                                             :JÄ
+STR_ABBREV_STEEL                                                :ST
+STR_ABBREV_VALUABLES                                            :VÄ
+STR_ABBREV_COPPER_ORE                                           :KO
+STR_ABBREV_MAIZE                                                :MA
+STR_ABBREV_FRUIT                                                :FR
+STR_ABBREV_DIAMONDS                                             :DI
+STR_ABBREV_FOOD                                                 :MT
+STR_ABBREV_PAPER                                                :PA
+STR_ABBREV_GOLD                                                 :GL
+STR_ABBREV_WATER                                                :VA
+STR_ABBREV_WHEAT                                                :VE
+STR_ABBREV_RUBBER                                               :GU
+STR_ABBREV_SUGAR                                                :SO
+STR_ABBREV_TOYS                                                 :LE
+STR_ABBREV_SWEETS                                               :GO
+STR_ABBREV_COLA                                                 :KA
+STR_ABBREV_CANDYFLOSS                                           :SS
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :KN
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :LÄ
+STR_ABBREV_NONE                                                 :NEJ
+STR_ABBREV_ALL                                                  :ALLA
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}passagerare
@@ -191,14 +191,14 @@ STR_COLOUR_WHITE                                                :Vit
 STR_COLOUR_RANDOM                                               :Slumpmässig
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}rutor/dag
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hk
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}hk
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}hk
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}hk
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hk/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hk/t
@@ -210,29 +210,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}ton
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}ton
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}ton
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}ton
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}gallon{P "" s}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}liter
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}gallon{P "" s}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}liter
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}fot
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}fot
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Sökfilter:
@@ -929,6 +929,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Kopiera 
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Spelinställningar
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valutaenheter
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Välj valutaenhet
 
@@ -982,10 +986,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Välj in
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Avstängd
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Varje månad
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Var 3:e månad
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Var 6:e månad
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Var 12:e månad
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Språk
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Välj vilket språk som ska användas
@@ -1021,6 +1021,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafik
 
@@ -1803,13 +1804,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Original
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Jämn
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Frusen
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Tillåt köp av aktier från andra företag: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :När det är aktiverat blir det tillåtet att köpa och sälja andelar i företag. För att dess andelar ska bli tillgängliga måste ett företag ha uppnått en viss ålder
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Lägsta företagsålder för aktiehandel: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Ställ in den lägsta ålder från vilken ett företags aktier kan köpas och säljas av andra företag.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Inkomstprocent per etapp i matarsystem: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Procentandel av inkomsten som ges till de mellanliggande etapperna i matarsystem. Ger mer kontroll över inkomsterna
 
@@ -1923,10 +1917,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Inga
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Initial stadsstorleks-multiplikator: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Storstäders genomsnittliga storlek i relation till vanliga städers vid spelets början
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Uppdatera distributionsgrafen var {STRING}:e{NBSP}dag
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Tid mellan efterföljande omräkningar av länkgrafen. Varje omräkning beräknar planerna för en komponent i grafen. Det medför att ett värde X för den här inställningen inte innebär att hela grafen uppdateras var X:e dag, utan bara vissa komponenter. Ju kortare intervall du ställer in desto mer processorkraft kommer att behövas för beräkningarna. Ju längre intervall du ställer in desto längre tid kommer det att ta innan distributionen av last börjar använda nya rutter.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Avsätt {STRING}{NBSP}dag{P 0:2 "" ar} för omberäkning av distributionsgraf
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Den tid varje omberäkning av en länkgrafkomponent tillåts ta. När en omberäkning startas skapas en tråd som tillåts löpa detta antal dagar. Ju kortare du sätter denna, desto mer troligt är det att tråden inte är hinner bli färdig i tid. Då kommer spelet att stanna tills den är klar (vilket gör att det laggar). Ju längre du sätter denna, desto längre tid tar det för distributionen att uppdateras när rutter ändras.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Distributionssätt för passagerare: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Symmetriskt" innebär att ungefär samma antal passagerare färdas från station A till station B som från B till A. "Asymmetriskt" innebär att en godtycklig mängd passagerare kan färdas i vardera riktningen. "Manuellt" innebär att ingen automatisk distribution av passagerare sker.
@@ -2386,6 +2376,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Misslyc
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Nej
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Ja, den här gången
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Ja, fråga inte igen
+
 
 STR_NETWORK_SPECTATORS                                          :Åskådare
 
@@ -3708,7 +3699,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} skepp
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Inga
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Företagets värde: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% ägs av {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktur
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} järnvägsbit{P "" ar}
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} vägbit{P "" ar}
@@ -3736,11 +3726,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Företag
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Byt företagets namn
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Namn på VD
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Byt namn på VD:n
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Köp 25% andelar i företaget
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Sälj 25% andelar i företaget
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Köp 25% andelar i detta företag. Shift+klick visar kostnad utan att köpa
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Sälj 25% andelar i detta företag. Shift+klick visar inkomst utan att sälja
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Företagsnamn
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Namn på VD
@@ -3819,8 +3804,6 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Skicka i
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Byt ut fordon
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Skicka på service
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Vinst detta år: {CURRENCY_LONG} (förra året: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Skicka till depå
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Skicka till depå
@@ -4632,7 +4615,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Spelskript
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Stäng
 STR_AI_SETTINGS_RESET                                           :{BLACK}Återställ
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Ungefärligt antal dagar som denna datorspelare startar efter föregående datorspelare: {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4641,7 +4623,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Bryt rad
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Visa manual
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Ändringshistorik
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licens
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE} {STRING}-manual för {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Ändringshistorik för {STRING} {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}Licens för {STRING}{STRING}
@@ -4769,9 +4751,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Kan inte
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Kan ej ge pengar till detta företaget...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Kan inte köpa företag...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Kan inte bygga huvudkontor här...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Kan inte köpa 25% andelar i detta företag...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Kan inte sälja 25% andelar i detta företag...
-STR_ERROR_PROTECTED                                             :{WHITE}Det här företaget bedriver inte aktiehandel ännu...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Kan inte bygga några städer
@@ -5515,10 +5494,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Powernaut helik
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Företag {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grupp {COMMA}
@@ -5599,33 +5578,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

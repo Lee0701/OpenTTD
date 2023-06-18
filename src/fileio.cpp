@@ -140,7 +140,7 @@ void FioFCloseFile(FILE *f)
  * @param filename Filename to look for.
  * @return String containing the path if the path was found, else an empty string.
  */
-std::string FioFindFullPath(Subdirectory subdir, const char *filename)
+std::string FioFindFullPath(Subdirectory subdir, const std::string &filename)
 {
 	assert(subdir < NUM_SUBDIRS);
 
@@ -291,12 +291,12 @@ FILE *FioFOpenFile(const std::string &filename, const char *mode, Subdirectory s
 		}
 
 		/* Resolve ONE directory link */
-		for (TarLinkList::iterator link = _tar_linklist[subdir].begin(); link != _tar_linklist[subdir].end(); link++) {
-			const std::string &src = link->first;
+		for (const auto &link : _tar_linklist[subdir]) {
+			const std::string &src = link.first;
 			size_t len = src.length();
 			if (resolved_name.length() >= len && resolved_name[len - 1] == PATHSEPCHAR && src.compare(0, len, resolved_name, 0, len) == 0) {
 				/* Apply link */
-				resolved_name.replace(0, len, link->second);
+				resolved_name.replace(0, len, link.second);
 				break; // Only resolve one level
 			}
 		}
@@ -544,7 +544,7 @@ bool TarScanner::AddFile(const std::string &filename, size_t basepath_length, co
 
 		/* Calculate the size of the file.. for some strange reason this is stored as a string */
 		strecpy(buf, th.size, lastof(buf));
-		size_t skip = strtoul(buf, &end, 8);
+		size_t skip = std::strtoul(buf, &end, 8);
 
 		switch (th.typeflag) {
 			case '\0':
@@ -672,10 +672,8 @@ bool TarScanner::AddFile(const std::string &filename, size_t basepath_length, co
 	 *      The destination path must NOT contain any links.
 	 *      The source path may contain one directory link.
 	 */
-	for (TarLinkList::iterator link = links.begin(); link != links.end(); link++) {
-		const std::string &src = link->first;
-		const std::string &dest = link->second;
-		TarAddLink(src, dest, this->subdir);
+	for (auto &it : links) {
+		TarAddLink(it.first, it.second, this->subdir);
 	}
 
 	return true;
@@ -711,16 +709,16 @@ bool ExtractTar(const std::string &tar_filename, Subdirectory subdir)
 	DEBUG(misc, 8, "Extracting %s to directory %s", tar_filename.c_str(), filename.c_str());
 	FioCreateDirectory(filename);
 
-	for (TarFileList::iterator it2 = _tar_filelist[subdir].begin(); it2 != _tar_filelist[subdir].end(); it2++) {
-		if (tar_filename != it2->second.tar_filename) continue;
+	for (auto &it2 : _tar_filelist[subdir]) {
+		if (tar_filename != it2.second.tar_filename) continue;
 
-		filename.replace(p + 1, std::string::npos, it2->first);
+		filename.replace(p + 1, std::string::npos, it2.first);
 
 		DEBUG(misc, 9, "  extracting %s", filename.c_str());
 
 		/* First open the file in the .tar. */
 		size_t to_copy = 0;
-		std::unique_ptr<FILE, FileDeleter> in(FioFOpenFileTar(it2->second, &to_copy));
+		std::unique_ptr<FILE, FileDeleter> in(FioFOpenFileTar(it2.second, &to_copy));
 		if (!in) {
 			DEBUG(misc, 6, "Extracting %s failed; could not open %s", filename.c_str(), tar_filename.c_str());
 			return false;
@@ -775,7 +773,7 @@ static bool ChangeWorkingDirectoryToExecutable(const char *exe)
 	bool success = false;
 #ifdef WITH_COCOA
 	char *app_bundle = strchr(tmp, '.');
-	while (app_bundle != nullptr && strncasecmp(app_bundle, ".app", 4) != 0) app_bundle = strchr(&app_bundle[1], '.');
+	while (app_bundle != nullptr && !StrStartsWithIgnoreCase(app_bundle, ".app")) app_bundle = strchr(&app_bundle[1], '.');
 
 	if (app_bundle != nullptr) *app_bundle = '\0';
 #endif /* WITH_COCOA */
@@ -1148,7 +1146,7 @@ static bool MatchesExtension(const char *extension, const char *filename)
 	if (extension == nullptr) return true;
 
 	const char *ext = strrchr(filename, extension[0]);
-	return ext != nullptr && strcasecmp(ext, extension) == 0;
+	return ext != nullptr && StrEqualsIgnoreCase(ext, extension);
 }
 
 /**

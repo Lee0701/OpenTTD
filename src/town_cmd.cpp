@@ -149,9 +149,9 @@ Town::~Town()
 	/* Clear the persistent storage list. */
 	this->psa_list.clear();
 
-	DeleteSubsidyWith(ST_TOWN, this->index);
+	DeleteSubsidyWith(SourceType::Town, this->index);
 	DeleteNewGRFInspectWindow(GSF_FAKE_TOWNS, this->index);
-	CargoPacket::InvalidateAllFrom(ST_TOWN, this->index);
+	CargoPacket::InvalidateAllFrom(SourceType::Town, this->index);
 	MarkWholeScreenDirty();
 }
 
@@ -653,7 +653,7 @@ static void TownGenerateCargo(Town *t, CargoID ct, uint amount, StationFinder &s
 	if (amount == 0) return;
 
 	t->supplied[ct].new_max += amount;
-	t->supplied[ct].new_act += MoveGoodsToStation(ct, amount, ST_TOWN, t->index, stations.GetStations());
+	t->supplied[ct].new_act += MoveGoodsToStation(ct, amount, SourceType::Town, t->index, stations.GetStations());
 }
 
 /**
@@ -3384,7 +3384,7 @@ CommandCost CmdExpandTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 	if (flags & DC_EXEC) {
 		/* The more houses, the faster we grow */
 		if (p2 == 0) {
-			uint amount = RandomRange(ClampToU16(t->cache.num_houses / 10)) + 3;
+			uint amount = RandomRange(ClampTo<uint16>(t->cache.num_houses / 10)) + 3;
 			t->cache.num_houses += amount;
 			UpdateTownRadius(t);
 
@@ -4427,8 +4427,8 @@ HouseSpec _house_specs[NUM_HOUSES];
 
 void ResetHouses()
 {
-	memset(&_house_specs, 0, sizeof(_house_specs));
-	memcpy(&_house_specs, &_original_house_specs, sizeof(_original_house_specs));
+	auto insert = std::copy(std::begin(_original_house_specs), std::end(_original_house_specs), std::begin(_house_specs));
+	std::fill(insert, std::end(_house_specs), HouseSpec{});
 
 	/* Reset any overrides that have been set. */
 	_house_mngr.ResetOverride();

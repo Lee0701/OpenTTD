@@ -209,6 +209,22 @@ struct GRFVariableMapDefinition {
 	{}
 };
 
+struct GRFNameOnlyVariableMapDefinition {
+	const char *name; // nullptr indicates the end of the list
+	int id;
+
+	/** Create empty object used to identify the end of a list. */
+	GRFNameOnlyVariableMapDefinition() :
+		name(nullptr),
+		id(0)
+	{}
+
+	GRFNameOnlyVariableMapDefinition(int id, const char *name) :
+		name(name),
+		id(id)
+	{}
+};
+
 struct GRFVariableMapEntry {
 	uint16 id = 0;
 	uint8 feature = 0;
@@ -307,21 +323,21 @@ struct NewSignalStyle;
 
 /** Dynamic data of a loaded NewGRF */
 struct GRFFile : ZeroedMemoryAllocator {
-	char *filename;
+	std::string filename;
 	uint32 grfid;
 	byte grf_version;
 
 	uint sound_offset;
 	uint16 num_sounds;
 
-	struct StationSpec **stations;
-	struct HouseSpec **housespec;
-	struct IndustrySpec **industryspec;
-	struct IndustryTileSpec **indtspec;
-	std::vector<struct ObjectSpec *> objectspec;
-	struct AirportSpec **airportspec;
-	struct AirportTileSpec **airtspec;
-	std::vector<struct RoadStopSpec *> roadstops;
+	std::vector<std::unique_ptr<struct StationSpec>> stations;
+	std::vector<std::unique_ptr<struct HouseSpec>> housespec;
+	std::vector<std::unique_ptr<struct IndustrySpec>> industryspec;
+	std::vector<std::unique_ptr<struct IndustryTileSpec>> indtspec;
+	std::vector<std::unique_ptr<struct ObjectSpec>> objectspec;
+	std::vector<std::unique_ptr<struct AirportSpec>> airportspec;
+	std::vector<std::unique_ptr<struct AirportTileSpec>> airtspec;
+	std::vector<std::unique_ptr<struct RoadStopSpec>> roadstops;
 
 	GRFFeatureMapRemapSet feature_id_remaps;
 	GRFFilePropertyRemapSet action0_property_remaps[GSF_END];
@@ -449,5 +465,7 @@ const char *GetFeatureString(GrfSpecFeatureRef feature);
 const char *GetFeatureString(GrfSpecFeature feature);
 
 void InitGRFGlobalVars();
+
+const char *GetExtendedVariableNameById(int id);
 
 #endif /* NEWGRF_H */

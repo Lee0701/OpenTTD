@@ -1015,7 +1015,7 @@ CommandCost IsRoadStopBridgeAboveOK(TileIndex tile, const RoadStopSpec *spec, bo
  * @param numtracks Number of platforms.
  * @return The cost in case of success, or an error code if it failed.
  */
-static CommandCost CheckFlatLandRailStation(TileArea tile_area, DoCommandFlag flags, Axis axis, StationID *station, RailType rt, std::vector<Train *> &affected_vehicles, StationClassID spec_class, byte spec_index, byte plat_len, byte numtracks)
+static CommandCost CheckFlatLandRailStation(TileArea tile_area, DoCommandFlag flags, Axis axis, StationID *station, RailType rt, std::vector<Train *> &affected_vehicles, StationClassID spec_class, uint16_t spec_index, byte plat_len, byte numtracks)
 {
 	CommandCost cost(EXPENSES_CONSTRUCTION);
 	int allowed_z = -1;
@@ -1484,7 +1484,7 @@ CommandCost CmdBuildRailStation(TileIndex tile_org, DoCommandFlag flags, uint32 
 	bool adjacent  = HasBit(p1, 24);
 
 	StationClassID spec_class = Extract<StationClassID, 0, 8>(p2);
-	byte spec_index           = GB(p3, 0, 16);
+	uint16 spec_index         = GB(p3, 0, 16);
 	StationID station_to_join = GB(p2, 16, 16);
 
 	/* Does the authority allow this? */
@@ -2804,9 +2804,9 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 			ZoningMarkDirtyStationCoverageArea(st);
 
 			for (uint i = 0; i < st->airport.GetNumHangars(); ++i) {
-				DeleteWindowById(
-					WC_VEHICLE_DEPOT, st->airport.GetHangarTile(i)
-				);
+				TileIndex tile_cur = st->airport.GetHangarTile(i);
+				OrderBackup::Reset(tile_cur, false);
+				DeleteWindowById(WC_VEHICLE_DEPOT, tile_cur);
 			}
 
 			const AirportSpec *old_as = st->airport.GetSpec();
@@ -2822,7 +2822,6 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 			}
 
 			for (TileIndex tile_cur : st->airport) {
-				if (IsHangarTile(tile_cur)) OrderBackup::Reset(tile_cur, false);
 				DeleteAnimatedTile(tile_cur);
 				DoClearSquare(tile_cur);
 				DeleteNewGRFInspectWindow(GSF_AIRPORTTILES, tile_cur);
@@ -4119,7 +4118,9 @@ static void TruncateCargo(const CargoSpec *cs, GoodsEntry *ge, uint amount = UIN
 		if (source_station == nullptr) continue;
 
 		GoodsEntry &source_ge = source_station->goods[cs->Index()];
-		source_ge.max_waiting_cargo = std::max(source_ge.max_waiting_cargo, i->second);
+		if (i->second > source_ge.max_waiting_cargo) {
+			source_ge.max_waiting_cargo += (i->second - source_ge.max_waiting_cargo) / 4;
+		}
 	}
 }
 
@@ -4250,7 +4251,7 @@ int GetTargetRating(const Station *st, const CargoSpec *cs, const GoodsEntry *ge
 	rating += GetStatueRating(st);
 	rating += GetVehicleAgeRating(ge);
 
-	return Clamp(rating, 0, 255);
+	return ClampTo<uint8>(rating);
 }
 
 static void UpdateStationRating(Station *st)
@@ -4387,9 +4388,9 @@ void RerouteCargo(Station *st, CargoID c, StationID avoid, StationID avoid2)
 
 	/* Reroute cargo staged to be transferred. */
 	for (Vehicle *v : st->loading_vehicles) {
-		for (; v != nullptr; v = v->Next()) {
-			if (v->cargo_type != c) continue;
-			v->cargo.Reroute(UINT_MAX, &v->cargo, avoid, avoid2, &ge);
+		for (Vehicle *u = v; u != nullptr; u = u->Next()) {
+			if (u->cargo_type != c) continue;
+			u->cargo.Reroute(UINT_MAX, &u->cargo, avoid, avoid2, &ge);
 		}
 	}
 }
@@ -4670,7 +4671,7 @@ void ModifyStationRatingAround(TileIndex tile, Owner owner, int amount, uint rad
 				GoodsEntry *ge = &st->goods[i];
 
 				if (ge->status != 0) {
-					ge->rating = Clamp(ge->rating + amount, 0, 255);
+					ge->rating = ClampTo<uint8_t>(ge->rating + amount);
 				}
 			}
 		}
@@ -5556,8 +5557,7 @@ void FlowStatMap::PassOnFlow(StationID origin, StationID via, uint flow)
  */
 void FlowStatMap::FinalizeLocalConsumption(StationID self)
 {
-	for (FlowStatMap::iterator i = this->begin(); i != this->end(); ++i) {
-		FlowStat &fs = *i;
+	for (FlowStat &fs : *this) {
 		uint local = fs.GetShare(INVALID_STATION);
 		if (local > INT_MAX) { // make sure it fits in an int
 			fs.ChangeShare(self, -INT_MAX);
@@ -5601,8 +5601,8 @@ StationIDStack FlowStatMap::DeleteFlows(StationID via)
  */
 void FlowStatMap::RestrictFlows(StationID via)
 {
-	for (FlowStatMap::iterator it = this->begin(); it != this->end(); ++it) {
-		it->RestrictShare(via);
+	for (FlowStat &it : *this) {
+		it.RestrictShare(via);
 	}
 }
 
@@ -5613,9 +5613,9 @@ void FlowStatMap::RestrictFlows(StationID via)
 uint FlowStatMap::GetFlow() const
 {
 	uint ret = 0;
-	for (FlowStatMap::const_iterator i = this->begin(); i != this->end(); ++i) {
-		if (i->IsInvalid()) continue;
-		ret += (i->end() - 1)->first;
+	for (const FlowStat &it : *this) {
+		if (it.IsInvalid()) continue;
+		ret += (it.end() - 1)->first;
 	}
 	return ret;
 }
@@ -5628,9 +5628,9 @@ uint FlowStatMap::GetFlow() const
 uint FlowStatMap::GetFlowVia(StationID via) const
 {
 	uint ret = 0;
-	for (FlowStatMap::const_iterator i = this->begin(); i != this->end(); ++i) {
-		if (i->IsInvalid()) continue;
-		ret += i->GetShare(via);
+	for (const FlowStat &it : *this) {
+		if (it.IsInvalid()) continue;
+		ret += it.GetShare(via);
 	}
 	return ret;
 }

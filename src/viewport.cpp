@@ -1062,7 +1062,7 @@ void OffsetGroundSprite(int x, int y)
 static void AddCombinedSprite(SpriteID image, PaletteID pal, int x, int y, int z, const SubSprite *sub)
 {
 	Point pt = RemapCoords(x, y, z);
-	const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
+	const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal);
 
 	int left = pt.x + spr->x_offs;
 	int right = pt.x + spr->x_offs + spr->width;
@@ -1138,7 +1138,7 @@ void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w,
 		tmp_width = right - left;
 		tmp_height = bottom - top;
 	} else {
-		const Sprite *spr = GetSprite(image & SPRITE_MASK, ST_NORMAL);
+		const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal);
 		left = tmp_left = (pt.x += spr->x_offs);
 		right           = (pt.x +  spr->width );
 		top  = tmp_top  = (pt.y += spr->y_offs);
@@ -1478,8 +1478,9 @@ enum TileHighlightType {
 	THT_LIGHT_BLUE,
 };
 
-const Station *_viewport_highlight_station; ///< Currently selected station for coverage area highlight
-const Town *_viewport_highlight_town;       ///< Currently selected town for coverage area highlight
+const Station *_viewport_highlight_station;   ///< Currently selected station for coverage area highlight
+const Waypoint *_viewport_highlight_waypoint; ///< Currently selected waypoint for coverage area highlight
+const Town *_viewport_highlight_town;         ///< Currently selected town for coverage area highlight
 const TraceRestrictProgram *_viewport_highlight_tracerestrict_program; ///< Currently selected tracerestrict program for highlight
 
 /**
@@ -1492,6 +1493,9 @@ static TileHighlightType GetTileHighlightType(TileIndex t)
 	if (_viewport_highlight_station != nullptr) {
 		if (IsTileType(t, MP_STATION) && GetStationIndex(t) == _viewport_highlight_station->index) return THT_LIGHT_BLUE;
 		if (_viewport_highlight_station->TileIsInCatchment(t)) return THT_BLUE;
+	}
+	if (_viewport_highlight_waypoint != nullptr) {
+		if (IsTileType(t, MP_STATION) && GetStationIndex(t) == _viewport_highlight_waypoint->index) return THT_LIGHT_BLUE;
 	}
 
 	if (_viewport_highlight_town != nullptr) {
@@ -3435,6 +3439,35 @@ static void ViewportMapDrawBridgeTunnel(Viewport * const vp, const TunnelBridgeT
 	if (vp->map_type == VPMT_OWNER && _settings_client.gui.use_owner_colour_for_tunnelbridge && o < MAX_COMPANIES) {
 		colour = _legend_land_owners[_company_to_list_pos[o]].colour;
 		colour = is_tunnel ? _darken_colour[colour] : _lighten_colour[colour];
+	} else if (vp->map_type == VPMT_ROUTES && IsTileType(tile, MP_TUNNELBRIDGE)) {
+		switch (GetTunnelBridgeTransportType(tile)) {
+			case TRANSPORT_WATER:
+				colour = PC_WATER;
+				break;
+
+			case TRANSPORT_RAIL:
+				colour = GetRailTypeInfo(GetRailType(tile))->map_colour;
+				break;
+
+			case TRANSPORT_ROAD: {
+				const RoadTypeInfo *rti = nullptr;
+				if (GetRoadTypeRoad(tile) != INVALID_ROADTYPE) {
+					rti = GetRoadTypeInfo(GetRoadTypeRoad(tile));
+				} else {
+					rti = GetRoadTypeInfo(GetRoadTypeTram(tile));
+				}
+				if (rti != nullptr) {
+					colour = rti->map_colour;
+					break;
+				}
+				FALLTHROUGH;
+			}
+
+			default:
+				colour = PC_BLACK;
+				break;
+		}
+
 	} else {
 		colour = is_tunnel ? PC_BLACK : PC_VERY_LIGHT_YELLOW;
 	}
@@ -3533,7 +3566,7 @@ void ViewportMapDraw(Viewport * const vp)
 		});
 		for (; iter != storage.tunnels.end() && iter->y_intercept <= y_intercept_max; ++iter) {
 			const TunnelToMap &ttm = *iter;
-			const int tunnel_z = ttm.tunnel_z * TILE_HEIGHT;
+			const int tunnel_z = (ttm.tunnel_z - 1) * TILE_HEIGHT;
 			const Point pt_from = RemapCoords(TileX(ttm.tb.from_tile) * TILE_SIZE, TileY(ttm.tb.from_tile) * TILE_SIZE, tunnel_z);
 			const Point pt_to = RemapCoords(TileX(ttm.tb.to_tile) * TILE_SIZE, TileY(ttm.tb.to_tile) * TILE_SIZE, tunnel_z);
 
@@ -3710,7 +3743,7 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 			if (_settings_client.gui.show_slopes_on_viewport_map) ViewportMapDraw<true, true>(vp);
 			else ViewportMapDraw<true, false>(vp);
 		} else {
-			_pal2trsp_remap_ptr = IsTransparencySet(TO_TREES) ? GetNonSprite(GB(PALETTE_TO_TRANSPARENT, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1 : nullptr;
+			_pal2trsp_remap_ptr = IsTransparencySet(TO_TREES) ? GetNonSprite(GB(PALETTE_TO_TRANSPARENT, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1 : nullptr;
 			if (_settings_client.gui.show_slopes_on_viewport_map) ViewportMapDraw<false, true>(vp);
 			else ViewportMapDraw<false, false>(vp);
 		}
@@ -4461,8 +4494,12 @@ void AddFixedViewportRoutePath(VehicleID veh)
 
 void RemoveFixedViewportRoutePath(VehicleID veh)
 {
-	container_unordered_remove_if(_vp_fixed_route_overlays, [&](const FixedVehicleViewportRouteOverlay &it) -> bool {
-		return it.veh == veh;
+	container_unordered_remove_if(_vp_fixed_route_overlays, [&](FixedVehicleViewportRouteOverlay &it) -> bool {
+		if (it.veh == veh) {
+			it.MarkAllDirty(Vehicle::GetIfValid(it.veh));
+			return true;
+		}
+		return false;
 	});
 }
 
@@ -4596,7 +4633,12 @@ static void SetSelectionTilesDirty()
 
 void SetSelectionRed(bool b)
 {
-	_thd.square_palette = b ? PALETTE_SEL_TILE_RED : PAL_NONE;
+	SetSelectionPalette(b ? PALETTE_SEL_TILE_RED : PAL_NONE);
+}
+
+void SetSelectionPalette(PaletteID pal)
+{
+	_thd.square_palette = pal;
 	SetSelectionTilesDirty();
 }
 
@@ -6485,6 +6527,12 @@ static void MarkCatchmentTilesDirty()
 			}
 		}
 	}
+	if (_viewport_highlight_waypoint != nullptr) {
+		if (!_viewport_highlight_waypoint->IsInUse()) {
+			_viewport_highlight_waypoint = nullptr;
+		}
+		MarkWholeNonMapViewportsDirty();
+	}
 }
 
 bool CurrentlySnappingRailPlacement()
@@ -6534,6 +6582,23 @@ void ResetRailPlacementSnapping()
 	_current_snap_lock.x = -1;
 }
 
+static void SetWindowDirtyForViewportCatchment()
+{
+	if (_viewport_highlight_station != nullptr) SetWindowDirty(WC_STATION_VIEW, _viewport_highlight_station->index);
+	if (_viewport_highlight_waypoint != nullptr) SetWindowDirty(WC_WAYPOINT_VIEW, _viewport_highlight_waypoint->index);
+	if (_viewport_highlight_town != nullptr) SetWindowDirty(WC_TOWN_VIEW, _viewport_highlight_town->index);
+	if (_viewport_highlight_tracerestrict_program != nullptr) InvalidateWindowClassesData(WC_TRACE_RESTRICT);
+}
+
+static void ClearViewportCatchment()
+{
+	MarkCatchmentTilesDirty();
+	_viewport_highlight_station = nullptr;
+	_viewport_highlight_waypoint = nullptr;
+	_viewport_highlight_town = nullptr;
+	_viewport_highlight_tracerestrict_program = nullptr;
+}
+
 /**
  * Select or deselect station for coverage area highlight.
  * Selecting a station will deselect a town.
@@ -6542,20 +6607,36 @@ void ResetRailPlacementSnapping()
  */
 void SetViewportCatchmentStation(const Station *st, bool sel)
 {
-	if (_viewport_highlight_station != nullptr) SetWindowDirty(WC_STATION_VIEW, _viewport_highlight_station->index);
-	if (_viewport_highlight_town != nullptr) SetWindowDirty(WC_TOWN_VIEW, _viewport_highlight_town->index);
+	SetWindowDirtyForViewportCatchment();
 	if (sel && _viewport_highlight_station != st) {
-		MarkCatchmentTilesDirty();
+		ClearViewportCatchment();
 		_viewport_highlight_station = st;
-		_viewport_highlight_town = nullptr;
-		if (_viewport_highlight_tracerestrict_program != nullptr) InvalidateWindowClassesData(WC_TRACE_RESTRICT);
-		_viewport_highlight_tracerestrict_program = nullptr;
 		MarkCatchmentTilesDirty();
 	} else if (!sel && _viewport_highlight_station == st) {
 		MarkCatchmentTilesDirty();
 		_viewport_highlight_station = nullptr;
 	}
 	if (_viewport_highlight_station != nullptr) SetWindowDirty(WC_STATION_VIEW, _viewport_highlight_station->index);
+}
+
+/**
+ * Select or deselect waypoint for coverage area highlight.
+ * Selecting a waypoint will deselect a town.
+ * @param *wp Waypoint in question
+ * @param sel Select or deselect given waypoint
+ */
+void SetViewportCatchmentWaypoint(const Waypoint *wp, bool sel)
+{
+	SetWindowDirtyForViewportCatchment();
+	if (sel && _viewport_highlight_waypoint != wp) {
+		ClearViewportCatchment();
+		_viewport_highlight_waypoint = wp;
+		MarkCatchmentTilesDirty();
+	} else if (!sel && _viewport_highlight_waypoint == wp) {
+		MarkCatchmentTilesDirty();
+		_viewport_highlight_waypoint = nullptr;
+	}
+	if (_viewport_highlight_waypoint != nullptr) SetWindowDirty(WC_WAYPOINT_VIEW, _viewport_highlight_waypoint->index);
 }
 
 /**
@@ -6566,13 +6647,10 @@ void SetViewportCatchmentStation(const Station *st, bool sel)
  */
 void SetViewportCatchmentTown(const Town *t, bool sel)
 {
-	if (_viewport_highlight_town != nullptr) SetWindowDirty(WC_TOWN_VIEW, _viewport_highlight_town->index);
-	if (_viewport_highlight_station != nullptr) SetWindowDirty(WC_STATION_VIEW, _viewport_highlight_station->index);
+	SetWindowDirtyForViewportCatchment();
 	if (sel && _viewport_highlight_town != t) {
-		_viewport_highlight_station = nullptr;
+		ClearViewportCatchment();
 		_viewport_highlight_town = t;
-		if (_viewport_highlight_tracerestrict_program != nullptr) InvalidateWindowClassesData(WC_TRACE_RESTRICT);
-		_viewport_highlight_tracerestrict_program = nullptr;
 		MarkWholeNonMapViewportsDirty();
 	} else if (!sel && _viewport_highlight_town == t) {
 		_viewport_highlight_town = nullptr;
@@ -6583,19 +6661,16 @@ void SetViewportCatchmentTown(const Town *t, bool sel)
 
 void SetViewportCatchmentTraceRestrictProgram(const TraceRestrictProgram *prog, bool sel)
 {
-	if (_viewport_highlight_town != nullptr) SetWindowDirty(WC_TOWN_VIEW, _viewport_highlight_town->index);
-	if (_viewport_highlight_station != nullptr) SetWindowDirty(WC_STATION_VIEW, _viewport_highlight_station->index);
+	SetWindowDirtyForViewportCatchment();
 	if (sel && _viewport_highlight_tracerestrict_program != prog) {
-		_viewport_highlight_station = nullptr;
-		_viewport_highlight_town = nullptr;
+		ClearViewportCatchment();
 		_viewport_highlight_tracerestrict_program = prog;
-		InvalidateWindowClassesData(WC_TRACE_RESTRICT);
 		MarkWholeNonMapViewportsDirty();
 	} else if (!sel && _viewport_highlight_tracerestrict_program == prog) {
 		_viewport_highlight_tracerestrict_program = nullptr;
-		InvalidateWindowClassesData(WC_TRACE_RESTRICT);
 		MarkWholeNonMapViewportsDirty();
 	}
+	if (_viewport_highlight_tracerestrict_program != nullptr) InvalidateWindowClassesData(WC_TRACE_RESTRICT);
 }
 
 int GetSlopeTreeBrightnessAdjust(Slope slope)

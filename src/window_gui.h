@@ -74,7 +74,7 @@ static inline void DrawFrameRect(const Rect &r, Colours colour, FrameFlags flags
 	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, flags);
 }
 
-void DrawCaption(const Rect &r, Colours colour, Owner owner, TextColour text_colour, StringID str, StringAlignment align);
+void DrawCaption(const Rect &r, Colours colour, Owner owner, TextColour text_colour, StringID str, StringAlignment align, FontSize fs);
 
 /* window.cpp */
 extern WindowBase *_z_front_window;
@@ -356,11 +356,13 @@ public:
 	virtual const char *GetMarkedText(size_t *length) const;
 	virtual Point GetCaretPosition() const;
 	virtual Rect GetTextBoundingRect(const char *from, const char *to) const;
-	virtual const char *GetTextCharacterAtPosition(const Point &pt) const;
+	virtual ptrdiff_t GetTextCharacterAtPosition(const Point &pt) const;
 
 	void InitNested(WindowNumber number = 0);
 	void CreateNestedTree(bool fill_nested = true);
 	void FinishInitNested(WindowNumber window_number = 0);
+
+	void ChangeWindowClass(WindowClass cls);
 
 	/**
 	 * Set the timeout flag of the window and initiate the timer.
@@ -521,7 +523,7 @@ public:
 
 	void SetDirty();
 	void SetDirtyAsBlocks();
-	void ReInit(int rx = 0, int ry = 0);
+	void ReInit(int rx = 0, int ry = 0, bool reposition = false);
 
 	/** Is window shaded currently? */
 	inline bool IsShaded() const

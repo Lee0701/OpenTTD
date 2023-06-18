@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PN
-STR_ABBREV_COAL                                                 :{TINY_FONT}BB
-STR_ABBREV_MAIL                                                 :{TINY_FONT}SR
-STR_ABBREV_OIL                                                  :{TINY_FONT}MY
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}TR
-STR_ABBREV_GOODS                                                :{TINY_FONT}BR
-STR_ABBREV_GRAIN                                                :{TINY_FONT}GD
-STR_ABBREV_WOOD                                                 :{TINY_FONT}KY
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}BS
-STR_ABBREV_STEEL                                                :{TINY_FONT}BJ
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}BB
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}TB
-STR_ABBREV_MAIZE                                                :{TINY_FONT}JG
-STR_ABBREV_FRUIT                                                :{TINY_FONT}BH
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}IN
-STR_ABBREV_FOOD                                                 :{TINY_FONT}MK
-STR_ABBREV_PAPER                                                :{TINY_FONT}KR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}EM
-STR_ABBREV_WATER                                                :{TINY_FONT}AR
-STR_ABBREV_WHEAT                                                :{TINY_FONT}TG
-STR_ABBREV_RUBBER                                               :{TINY_FONT}KR
-STR_ABBREV_SUGAR                                                :{TINY_FONT}GL
-STR_ABBREV_TOYS                                                 :{TINY_FONT}MA
-STR_ABBREV_SWEETS                                               :{TINY_FONT}GG
-STR_ABBREV_COLA                                                 :{TINY_FONT}KL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}AM
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}GL
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}PM
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}MR
-STR_ABBREV_NONE                                                 :{TINY_FONT}TANPA
-STR_ABBREV_ALL                                                  :{TINY_FONT}SMA
+STR_ABBREV_PASSENGERS                                           :PN
+STR_ABBREV_COAL                                                 :BB
+STR_ABBREV_MAIL                                                 :SR
+STR_ABBREV_OIL                                                  :MY
+STR_ABBREV_LIVESTOCK                                            :TR
+STR_ABBREV_GOODS                                                :BR
+STR_ABBREV_GRAIN                                                :GD
+STR_ABBREV_WOOD                                                 :KY
+STR_ABBREV_IRON_ORE                                             :BS
+STR_ABBREV_STEEL                                                :BJ
+STR_ABBREV_VALUABLES                                            :BB
+STR_ABBREV_COPPER_ORE                                           :TB
+STR_ABBREV_MAIZE                                                :JG
+STR_ABBREV_FRUIT                                                :BH
+STR_ABBREV_DIAMONDS                                             :IN
+STR_ABBREV_FOOD                                                 :MK
+STR_ABBREV_PAPER                                                :KR
+STR_ABBREV_GOLD                                                 :EM
+STR_ABBREV_WATER                                                :AR
+STR_ABBREV_WHEAT                                                :TG
+STR_ABBREV_RUBBER                                               :KR
+STR_ABBREV_SUGAR                                                :GL
+STR_ABBREV_TOYS                                                 :MA
+STR_ABBREV_SWEETS                                               :GG
+STR_ABBREV_COLA                                                 :KL
+STR_ABBREV_CANDYFLOSS                                           :AM
+STR_ABBREV_BUBBLES                                              :GL
+STR_ABBREV_TOFFEE                                               :PM
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :MR
+STR_ABBREV_NONE                                                 :TANPA
+STR_ABBREV_ALL                                                  :SMA
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}penumpang
@@ -191,14 +191,14 @@ STR_COLOUR_WHITE                                                :Putih
 STR_COLOUR_RANDOM                                               :Acak
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mil/j
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/jam
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}meter/detik
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mil/j
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/jam
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}meter/detik
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}ubin/hari
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}dk
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}dk
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}dk
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}dk
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hp/t
@@ -210,29 +210,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/waktu
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}ton
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} ton
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}ton
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} ton
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}galon
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}liter
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}galon
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}liter
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}kaki
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}kaki
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Saring:
@@ -929,6 +929,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Perlihat
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Opsi permainan
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Mata uang
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Pilih mata uang
 
@@ -982,10 +986,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Pilih se
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Mati
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Setiap bulan
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Setiap 3 bulan
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Setiap 6 bulan
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Setiap 12 bulan
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Bahasa
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Pilih antar muka bahasa yang akan dipergunakan
@@ -1021,6 +1021,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafik
 
@@ -1801,13 +1802,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Asli
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Halus
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Beku
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Ijinkan pembelian saham perusahaan lain: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Jika diaktifkan, pemain dibolehkan membeli saham suatu perusahaan. Saham hanya bisa dibeli saat perusahaan memasuki umur tertentu
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Usia minimum perusahaan untuk memperdagangkan saham: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Set umur minimal perusahaan saat sahamnya dapat dibeli atau dijual.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Persentase keuntungan akhir dari sistem pengisi: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Persentase pendapatan yang diberikan dari sistem pengisi, memberikan lebih banyak kendali pendapatan
 
@@ -1921,10 +1915,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Tidak ada
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Faktor kali ukuran kota awal: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Ukuran rata-rata kota besar terhadap kota kecil saat permainan dimulai
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Perbarui grafik distribusi setiap {STRING}{NBSP}hari
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Waktu diantara dua penghitungan linkgraph berurutan. Setiap penghitungan hanya menghitung satu komponen perencanaan dari grafik. Namun, angka yang diberikan untuk seting ini bukan berarti seluruh grafik akan diperbaharui dalam angka hari yang sama, hanya beberapa bagian. Semakin sedikit semakin banyak proses CPU yang diperlukan untuk menghitung. Semakin banyak semakin lama waktu sebelum cargo distribution dimulai pada rute baru.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Ambil {STRING}{NBSP}hari untuk menghitung grafik distribusi
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Waktu dibutuhkan untuk setiap perhitungan dari komponen 'linkgraph'. Ketika perhitungan dimulai, ada utas 'dibuat' yang boleh dijalankan untuk jumlah hari ini. Semakin pendek anda mengatur ini lebih mungkin utas ini belum selesai ketika itu seharusnya. Kemudian permainan berhenti sampai itu ("lag"). Semakin lama anda mengatur semakin lama itu untuk distribusinya untuk memperbarui ketika rute mengganti.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Modus distribusi untuk penumpang: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Simetris" berarti kira-kira jumlah penumpang sama akan pergi dari stasiun A ke stasiun B sebagaimana dari B ke A. "Asimetris" berarti jumlah penumpang pergi pada kedua arah bisa berbeda-beda. "Manual" berarti bahwa tidak ada distribusi otomatis akan dilakukan untuk penumpang.
@@ -2382,6 +2372,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW} Gagal 
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Tidak
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Ya, kali ini
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Iya, Jangan tanya lagi
+
 
 STR_NETWORK_SPECTATORS                                          :Penonton
 
@@ -3698,7 +3689,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} kapal
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Tidak punya
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Nilai Perusahaan: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% saham dimiliki oleh {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastruktur:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} bagian rel
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} bagian jalan
@@ -3726,11 +3716,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nama Per
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Ubah nama perusahaan
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Nama Manajer
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Ubah nama manajer
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Beli 25% saham perusahaan
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Jual 25% saham perusahaan
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Beli 25% saham perusahaan ini. Shift+klik untuk menampilkan perkiraan biaya tanpa membeli saham.
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Jual 25% saham perusahaan ini. Shift untuk menampilkan perkiraan biaya tanpa menjual saham
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Nama Perusahaan
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Nama Manajer
@@ -3809,8 +3794,6 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Kirim pe
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Ganti kendaraan
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Perintahkan untuk diperbaiki
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Laba tahun ini: {CURRENCY_LONG} (tahun lalu: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Perintahkan ke bengkel
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Perintahkan ke Bengkel
@@ -4620,7 +4603,6 @@ STR_AI_SETTINGS_CAPTION_AI                                      :{WHITE}Paramete
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Tutup
 STR_AI_SETTINGS_RESET                                           :{BLACK}Reset
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Jalankan AI setelah berapa hari : {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4629,7 +4611,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Mengebat
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Lihat readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Catatan Perubahan
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Lisensi
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}keterangan {STRING} dari {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Catatan perubahan {STRING} dari {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}Lisensi {STRING} dari {STRING}
@@ -4757,9 +4739,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Tidak da
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Tidak bisa memberikan uang kepada perusahaan ini...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Tidak dapat membeli perusahaan...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Tidak dapat membangun kantor pusat perusahaan...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Tidak dapat membeli 25% saham perusahaan ini...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Tidak dapat menjual 25% saham perusahaan ini...
-STR_ERROR_PROTECTED                                             :{WHITE}Perusahaan ini terlalu muda untuk diperjualbelikan saham kepemilikannya...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Tidak dapat membuat satu kota pun
@@ -5491,10 +5470,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Helikopter Powe
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Perusahaan {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Kelompok {COMMA}
@@ -5575,33 +5554,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

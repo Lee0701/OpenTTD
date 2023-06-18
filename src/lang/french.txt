@@ -129,39 +129,39 @@ STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PS
-STR_ABBREV_COAL                                                 :{TINY_FONT}CH
-STR_ABBREV_MAIL                                                 :{TINY_FONT}CO
-STR_ABBREV_OIL                                                  :{TINY_FONT}PT
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}BT
-STR_ABBREV_GOODS                                                :{TINY_FONT}BN
-STR_ABBREV_GRAIN                                                :{TINY_FONT}CR
-STR_ABBREV_WOOD                                                 :{TINY_FONT}BO
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}FE
-STR_ABBREV_STEEL                                                :{TINY_FONT}AC
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}VL
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}CV
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MS
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FR
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}NR
-STR_ABBREV_PAPER                                                :{TINY_FONT}PR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}OR
-STR_ABBREV_WATER                                                :{TINY_FONT}EA
-STR_ABBREV_WHEAT                                                :{TINY_FONT}BL
-STR_ABBREV_RUBBER                                               :{TINY_FONT}CA
-STR_ABBREV_SUGAR                                                :{TINY_FONT}SU
-STR_ABBREV_TOYS                                                 :{TINY_FONT}JT
-STR_ABBREV_SWEETS                                               :{TINY_FONT}BB
-STR_ABBREV_COLA                                                 :{TINY_FONT}CL
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}BP
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}CM
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}GZ
-STR_ABBREV_NONE                                                 :{TINY_FONT}NO
-STR_ABBREV_ALL                                                  :{TINY_FONT}TOUT
+STR_ABBREV_PASSENGERS                                           :PS
+STR_ABBREV_COAL                                                 :CH
+STR_ABBREV_MAIL                                                 :CO
+STR_ABBREV_OIL                                                  :PT
+STR_ABBREV_LIVESTOCK                                            :BT
+STR_ABBREV_GOODS                                                :BN
+STR_ABBREV_GRAIN                                                :CR
+STR_ABBREV_WOOD                                                 :BO
+STR_ABBREV_IRON_ORE                                             :FE
+STR_ABBREV_STEEL                                                :AC
+STR_ABBREV_VALUABLES                                            :VL
+STR_ABBREV_COPPER_ORE                                           :CV
+STR_ABBREV_MAIZE                                                :MS
+STR_ABBREV_FRUIT                                                :FR
+STR_ABBREV_DIAMONDS                                             :DM
+STR_ABBREV_FOOD                                                 :NR
+STR_ABBREV_PAPER                                                :PR
+STR_ABBREV_GOLD                                                 :OR
+STR_ABBREV_WATER                                                :EA
+STR_ABBREV_WHEAT                                                :BL
+STR_ABBREV_RUBBER                                               :CA
+STR_ABBREV_SUGAR                                                :SU
+STR_ABBREV_TOYS                                                 :JT
+STR_ABBREV_SWEETS                                               :BB
+STR_ABBREV_COLA                                                 :CL
+STR_ABBREV_CANDYFLOSS                                           :BP
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :CM
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :GZ
+STR_ABBREV_NONE                                                 :NO
+STR_ABBREV_ALL                                                  :TOUT
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}passager{P "" s}
@@ -192,15 +192,15 @@ STR_COLOUR_WHITE                                                :Blanc
 STR_COLOUR_RANDOM                                               :Aléatoire
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA}{NBSP}mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA}{NBSP}km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA}{NBSP}m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL}{NBSP}m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}cases/jour
-STR_UNITS_VELOCITY_KNOTS                                        :{COMMA}{NBSP}nœuds
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}nœuds
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}{NBSP}hp
-STR_UNITS_POWER_METRIC                                          :{COMMA}{NBSP}ch
-STR_UNITS_POWER_SI                                              :{COMMA}{NBSP}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}{NBSP}hp
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}{NBSP}ch
+STR_UNITS_POWER_SI                                              :{DECIMAL}{NBSP}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hp/t
@@ -212,29 +212,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{G=f}{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{G=f}{COMMA}{NBSP}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{G=f}{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{G=f}{DECIMAL}{NBSP}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}{NBSP}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{G=f}{COMMA}{NBSP}tonne{P "" s}{NBSP}courte{P "" s}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{G=f}{COMMA}{NBSP}tonne{P "" s}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA}{NBSP}kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{G=f}{DECIMAL}{NBSP}tonne{P "" s}{NBSP}courte{P "" s}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{G=f}{DECIMAL}{NBSP}tonne{P "" s}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL}{NBSP}kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}{NBSP}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}{NBSP}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}{NBSP}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}{NBSP}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}gallon{P "" s}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}litre{P "" s}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}gallon{P "" s}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}litre{P "" s}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}ft
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}m
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtre{NBSP}:
@@ -931,6 +931,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Copier l
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Options du jeu
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Général
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Régler les paramètres généraux
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Graphiques
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Régler les paramètres graphiques
+STR_GAME_OPTIONS_TAB_SOUND                                      :Son
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Régler les paramètres de son et de musique
+
+STR_GAME_OPTIONS_VOLUME                                         :Volume
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Effets sonores
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musique
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0%
+STR_GAME_OPTIONS_VOLUME_25                                      :25%
+STR_GAME_OPTIONS_VOLUME_50                                      :50%
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+STR_GAME_OPTIONS_VOLUME_100                                     :100%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Devise
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Sélectionner l'unité monétaire
 
@@ -984,10 +1002,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Sélecti
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Désactivée
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Tous les mois
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Tous les 3 mois
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Tous les 6 mois
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Tous les 12 mois
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :Toutes les 10 minutes
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :Toutes les 30 minutes
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :Toutes les 60 minutes
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :Toutes les 120 minutes
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Langue
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Sélectionner la langue à utiliser pour l'interface
@@ -1023,6 +1041,14 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :x5
+
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Données d'analyse
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Participer à l'envoi de données d'analyse
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Si activé, OpenTTD transmettra les données d'analyse en quittant une partie
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}À propos des données et de la confidentialité
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Ouvre une fenêtre à propos de la confidentialité des données d'analyse envoyées
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Prévisualisation des données d'analyse
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Voir les données d'analyse de la partie en cours
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK} Graphiques
 
@@ -1153,6 +1179,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Tout dé
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Tout réduire
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Réinitialiser tous les réglages
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(pas d'explication disponible)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Valeur par défaut{NBSP}: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Type de paramètre{NBSP}: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Paramètre du client (n'est pas enregistré dans les sauvegardes{NBSP}; affecte toutes les parties)
@@ -1532,7 +1559,7 @@ STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREY_TO_RED                :Gris à rouge
 STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREYSCALE                  :Niveaux de gris
 
 STR_CONFIG_SETTING_SCROLLMODE                                   :Défilement de la vue{NBSP}: {STRING}
-STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Comportement lors du défilement de la carte
+STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Comportement lors du défilement de la carte. L'option "position de la souris verrouillée" ne fonctionne pas sur certains systèmes, comme les versions pour navigateurs, les écrans tactiles, Linux avec Wayland, et autres
 ###length 4
 STR_CONFIG_SETTING_SCROLLMODE_DEFAULT                           :Défilement de la vue par clic droit, position de la souris verrouillée
 STR_CONFIG_SETTING_SCROLLMODE_RMB_LOCKED                        :Défilement de la carte par clic droit, position de la souris verrouillée
@@ -1713,7 +1740,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Quantité de m�
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} Mio
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Les intervalles de service sont en pourcentage{NBSP}: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Choisir si l'entretien des véhicule est activé par le temps passé depuis le dernier entretien ou par la fiabilité passant sous un pourcentage de la fiabilité maximum
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Lorsqu'il est activé, les véhicules essaient d'être entretenus quand leur fiabilité passe sous le pourcentage donné de la fiabilité maximum.{}{}Par exemple, si la fiabilité maximum d'un véhicule est 90% et l'intervalle d'entretien 20%, le véhicule essayera d'être entretenu quand sa fiabilité atteindra 72%.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Intervalle d'entretien par défaut pour les trains{NBSP}: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Définit l'intervalle d'entretien par défaut des nouveaux véhicules ferroviaires, si aucun intervalle d'entretien n'est défini pour le véhicule
@@ -1804,15 +1831,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :Une économie s
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Original
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Stable
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Gelée
-
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Permettre d'acheter des actions d'autres compagnies{NBSP}: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Lorsqu'il est activé, l'achat et la vente des parts de compagnie sont autorisées. Les parts ne seront disponibles que pour les compagnies ayant atteint un certain âge
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Âge minimum de la compagnie pour la vente d'actions{NBSP}: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Définir l'âge minimum qu'une compagnie doit avoir pour que les autres puissent acheter ou vendre ses parts.
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_VALUE                   :{COMMA} an{P "" s}
-###setting-zero-is-special
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_NO_MIN                  :Pas de minimum
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Pourcentage du profit de branche à payer dans les systèmes multimodaux{NBSP}: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Pourcentage du profit donné aux branches intermédiaires dans les systèmes multimodaux, donnant plus de contrôle sur les profits
@@ -1927,10 +1945,10 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Aucune
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Multiplicateur initial pour la taille des métropoles{NBSP}: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Taille moyenne des métropoles par rapport aux villes normales au début de la partie
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Recalculer le graphe de distribution tous les {STRING}{NBSP}jour{P 0:2 "" s}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Intervalle entre le recalcul du graphe de distribution. À chaque itération, une seule composante du graphe est recalculée. Donc, une valeur X pour ce réglage ne signifie pas que le graphe est réactualisé entièrement tous les X jours. Plus l'intervalle est court, plus de temps CPU est nécessaire pour la recalcul. Plus il est long, et plus de temps sera nécessaire pour que la distribution s'effectue sur de nouvelles routes.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Prendre {STRING}{NBSP}jour{P 0:2 "" s} pour recalculer le graphe de distribution
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Durée maximale (en jours) du recalcul d'une composante du graphe. À chaque itération, un thread est initié, qui a une durée maximale définie par ce réglage. Plus celui-ci est court, plus la probabilité que le thread ne termine pas sa tâche à temps est élevée. Le jeu s'interrompt alors jusqu'à la fin du recalcul ("lag"). Plus le réglage est long, et moins rapidement la distribution sera réactualisée en cas de changement de routes.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Mise à jour le graphe de distribution toutes les {STRING}{NBSP}seconde{P 0:2 "" s}
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Intervalle entre les recalculs successifs du graphe de liaison. Chaque recalcul planifie un composant du graphe. Cela signifie qu'une valeur X pour ce paramètre ne signifie pas que l'ensemble du graphe sera mis à jour toutes les X secondes. Seul un composant le sera. Plus vous définissez cet intervalle court, plus le temps de processeur nécessaire pour le calcul sera important. Plus vous définissez cet intervalle long, plus il faudra de temps pour que la distribution de marchandises commence sur de nouveaux itinéraires.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Prend {STRING}{NBSP}seconde{P 0:2 "" s} pour le recalcul du graphe de distribution
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME_HELPTEXT               :Temps pris pour chaque recalcul d'un composant du graphe de liaison. Lorsqu'un recalcul est lancé, un fil d'exécution est créé et autorisé à fonctionner pendant ce nombre de secondes. Plus vous définissez cette durée courte, plus il est probable que le fil ne soit pas terminé lorsqu'il est censé l'être. Ensuite, le jeu s'arrête jusqu'à ce qu'il le soit ("lag"). Plus vous définissez cette durée longue, plus il faut de temps pour que la distribution soit mise à jour lorsque les itinéraires changent.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Type de distribution pour les passagers{NBSP}: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Symétrique" signifie qu'autant de passagers iront d'une station A vers une station B, que de la station B vers la station A. "Asymétrique" signifie qu'un nombre arbitraire de passagers peut être envoyé dans les deux directions. "Manuel" signifie qu'aucune distribution n'est mise en place pour les passagers.
@@ -2063,6 +2081,7 @@ STR_CONFIG_ERROR_SPRITECACHE_TOO_BIG                            :{WHITE}L'alloca
 # Video initalization errors
 STR_VIDEO_DRIVER_ERROR                                          :{WHITE} Erreur avec les paramètres vidéo...
 STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :{WHITE} ... aucun GPU compatible trouvé. l'accélération matérielle est désactivée
+STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :{WHITE}... le pilote du GPU a fait planter le jeu. L'accélération matérielle est désactivée
 
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD {REV}
@@ -2393,6 +2412,13 @@ STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Non
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Oui, cette fois uniquement
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Oui, ne plus me demander
 
+STR_NETWORK_ASK_SURVEY_CAPTION                                  :Participer à l'envoi automatique de données d'analyse ?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Souhaitez-vous participer à l'envoi automatique de données d'analyse ?{}OpenTTD transmettra les données d'analyse lorsque vous quitterez une partie.{}Vous pouvez changer ceci à tout moment dans les options du jeu.
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Prévisualiser les données d'analyse
+STR_NETWORK_ASK_SURVEY_LINK                                     :Données d'analyse et confidentialité
+STR_NETWORK_ASK_SURVEY_NO                                       :Non
+STR_NETWORK_ASK_SURVEY_YES                                      :Oui
+
 STR_NETWORK_SPECTATORS                                          :Spectateurs
 
 # Network set password
@@ -2682,8 +2708,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Construi
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Choisir le type de station à afficher
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Choisir le type de station à construire
 
-STR_STATION_CLASS_DFLT                                          :Station par défaut
+STR_STATION_CLASS_DFLT                                          :Par défaut
+STR_STATION_CLASS_DFLT_STATION                                  :Stations par défaut
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Arrêts routiers par défaut
 STR_STATION_CLASS_WAYP                                          :Points de contrôle
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Points de contrôle par défaut
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Sélection des signaux
@@ -3714,7 +3743,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} navire{P "" s}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Aucun
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Valeur de la compagnie{NBSP}: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}{NBSP}% détenu{P "" s} par {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{G=f}{GOLD}Infrastructure{NBSP}:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} morceau{P "" x} de voie ferrée
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} morceau{P "" x} de route
@@ -3742,11 +3770,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nom de l
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Changer le nom de la compagnie
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Nom du P.D.G.
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Changer le nom du président directeur général
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Acheter 25{NBSP}% de la compagnie
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Vendre 25{NBSP}% de la compagnie
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Acheter 25% de la compagnie.{}Shift-clic pour afficher seulement le coût estimé.
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Vendre 25% de la compagnie. Shift-clic pour afficher le revenu estimé sans vendre
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Nom de la société
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Nom du P.D.G.
@@ -3825,8 +3848,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Envoyer 
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Remplacer des véhicules
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Envoyer à l'entretien
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Profit cette année{NBSP}: {CURRENCY_LONG} (année précédente{NBSP}: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Envoyer au dépôt
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Envoyer au dépôt
@@ -4593,6 +4616,7 @@ STR_AI_CONFIG_RANDOM_AI                                         :IA aléatoire
 STR_AI_CONFIG_NONE                                              :(aucun)
 STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Nombre maximal de concurrents{NBSP}: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Intervalle entre le démarrage des concurrents : {ORANGE}{COMMA} minute{P "" s}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Déplacer vers le haut
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Déplacer l'IA sélectionnée vers le haut
@@ -4639,7 +4663,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :du script de je
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Fermer
 STR_AI_SETTINGS_RESET                                           :{BLACK}Réinitialiser
 STR_AI_SETTINGS_SETTING                                         :{STRING}{NBSP}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Nombre de jours avant de démarrer cette IA après la précédente (approximativement){NBSP}: {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4648,10 +4671,11 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Insérer
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Voir le Lisez-moi
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Journal des modifications
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licence
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}Lisez-moi du module {STRING} {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Journal des modifications pour le module {STRING} {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}Licence du module {STRING} {STRING}
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Prévisualisation des données d'analyse
 
 
 # Vehicle loading indicators
@@ -4776,9 +4800,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Impossib
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Vous ne pouvez pas donner de l’argent à cette compagnie
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Impossible d'acheter la compagnie...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Impossible de construire le siège...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Impossible d'acheter 25{NBSP}% des parts...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Impossible de vendre 25{NBSP}% des parts...
-STR_ERROR_PROTECTED                                             :{WHITE}Cette compagnie ne vend pas d'actions pour le moment...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Ne peut plus bâtir de villes
@@ -5111,6 +5132,7 @@ STR_ERROR_NO_BUOY                                               :{WHITE}Il n'y a
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Impossible d'affecter un horaire au véhicule...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Les véhicules ne peuvent attendre qu'aux stations
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Ce véhicule ne s'arrête pas à cette station
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... l'horaire est incomplet
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... trop de panneaux
@@ -5522,10 +5544,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Hélicoptère P
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}/{STRING}/{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}/{ZEROFILL_NUM}/{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Compagnie {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Groupe {COMMA}
@@ -5590,11 +5612,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -5606,33 +5630,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

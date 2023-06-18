@@ -23,6 +23,7 @@
 #include "tunnelbridge_map.h"
 #include "newgrf_animation_base.h"
 #include "newgrf_class_func.h"
+#include "newgrf_extension.h"
 
 #include "safeguards.h"
 
@@ -31,13 +32,10 @@ template <typename Tspec, typename Tid, Tid Tmax>
 /* static */ void NewGRFClass<Tspec, Tid, Tmax>::InsertDefaults()
 {
 	/* Set up initial data */
-	classes[0].global_id = 'DFLT';
-	classes[0].name = STR_STATION_CLASS_DFLT;
-	classes[0].Insert(nullptr);
-
-	classes[1].global_id = 'WAYP';
-	classes[1].name = STR_STATION_CLASS_WAYP;
-	classes[1].Insert(nullptr);
+	StationClass::Get(StationClass::Allocate('DFLT'))->name = STR_STATION_CLASS_DFLT;
+	StationClass::Get(StationClass::Allocate('DFLT'))->Insert(nullptr);
+	StationClass::Get(StationClass::Allocate('WAYP'))->name = STR_STATION_CLASS_WAYP;
+	StationClass::Get(StationClass::Allocate('WAYP'))->Insert(nullptr);
 }
 
 template <typename Tspec, typename Tid, Tid Tmax>
@@ -268,6 +266,34 @@ TownScopeResolver *StationResolverObject::GetTown()
 	return this->town_scope;
 }
 
+uint32 StationScopeResolver::GetNearbyStationInfo(uint32 parameter, StationScopeResolver::NearbyStationInfoMode mode) const
+{
+	TileIndex nearby_tile = GetNearbyTile(parameter, this->tile);
+
+	if (!HasStationTileRail(nearby_tile)) return 0xFFFFFFFF;
+
+	uint32 grfid = this->st->speclist[GetCustomStationSpecIndex(this->tile)].grfid;
+	bool perpendicular = GetRailStationAxis(this->tile) != GetRailStationAxis(nearby_tile);
+	bool same_station = this->st->TileBelongsToRailStation(nearby_tile);
+	uint32 res = GB(GetStationGfx(nearby_tile), 1, 2) << 12 | !!perpendicular << 11 | !!same_station << 10;
+
+	uint16 localidx = 0;
+	if (IsCustomStationSpecIndex(nearby_tile)) {
+		const StationSpecList ssl = BaseStation::GetByTile(nearby_tile)->speclist[GetCustomStationSpecIndex(nearby_tile)];
+		localidx = ssl.localidx;
+		res |= 1 << (ssl.grfid != grfid ? 9 : 8);
+	}
+
+	switch (mode) {
+		case NearbyStationInfoMode::Standard:
+		default:
+			return res | ClampTo<uint8>(localidx);
+
+		case NearbyStationInfoMode::V2:
+			return (res << 8) | localidx;
+	}
+}
+
 /* virtual */ uint32 StationScopeResolver::GetVariable(uint16 variable, uint32 parameter, GetVariableExtra *extra) const
 {
 	if (this->st == nullptr) {
@@ -295,7 +321,7 @@ TownScopeResolver *StationResolverObject::GetTown()
 				}
 				break;
 
-			case 0xFA: return Clamp(_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 65535); // Build date, clamped to a 16 bit value
+			case 0xFA: return ClampTo<uint16>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR); // Build date, clamped to a 16 bit value
 		}
 
 		extra->available = false;
@@ -355,21 +381,14 @@ TownScopeResolver *StationResolverObject::GetTown()
 			return result;
 		}
 
-		case 0x68: { // Station info of nearby tiles
-			TileIndex nearby_tile = GetNearbyTile(parameter, this->tile);
+		/* Station info of nearby tiles */
+		case 0x68: {
+			return this->GetNearbyStationInfo(parameter, NearbyStationInfoMode::Standard);
+		}
 
-			if (!HasStationTileRail(nearby_tile)) return 0xFFFFFFFF;
-
-			uint32 grfid = this->st->speclist[GetCustomStationSpecIndex(this->tile)].grfid;
-			bool perpendicular = GetRailStationAxis(this->tile) != GetRailStationAxis(nearby_tile);
-			bool same_station = this->st->TileBelongsToRailStation(nearby_tile);
-			uint32 res = GB(GetStationGfx(nearby_tile), 1, 2) << 12 | !!perpendicular << 11 | !!same_station << 10;
-
-			if (IsCustomStationSpecIndex(nearby_tile)) {
-				const StationSpecList ssl = BaseStation::GetByTile(nearby_tile)->speclist[GetCustomStationSpecIndex(nearby_tile)];
-				res |= 1 << (ssl.grfid != grfid ? 9 : 8) | ssl.localidx;
-			}
-			return res;
+		/* Station info of nearby tiles: v2 */
+		case A2VRI_STATION_INFO_NEARBY_TILES_V2: {
+			return this->GetNearbyStationInfo(parameter, NearbyStationInfoMode::V2);
 		}
 
 		case 0x6A: { // GRFID of nearby station tiles
@@ -387,7 +406,7 @@ TownScopeResolver *StationResolverObject::GetTown()
 		case 0x84: return this->st->string_id;
 		case 0x86: return 0;
 		case 0xF0: return this->st->facilities;
-		case 0xFA: return Clamp(this->st->build_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 65535);
+		case 0xFA: return ClampTo<uint16_t>(this->st->build_date - DAYS_TILL_ORIGINAL_BASE_YEAR);
 	}
 
 	return this->st->GetNewGRFVariable(this->ro, variable, parameter, &(extra->available));

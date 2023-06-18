@@ -33,16 +33,17 @@ private:
 	FT_Face face;  ///< The font face associated with this font.
 
 	void SetFontSize(FontSize fs, FT_Face face, int pixels);
-	virtual const void *InternalGetFontTable(uint32 tag, size_t &length);
-	virtual const Sprite *InternalGetGlyph(GlyphID key, bool aa);
+	const void *InternalGetFontTable(uint32 tag, size_t &length) override;
+	const Sprite *InternalGetGlyph(GlyphID key, bool aa) override;
 
 public:
 	FreeTypeFontCache(FontSize fs, FT_Face face, int pixels);
 	~FreeTypeFontCache();
-	virtual void ClearFontCache();
-	virtual GlyphID MapCharToGlyph(WChar key);
-	virtual const char *GetFontName() { return face->family_name; }
-	virtual bool IsBuiltInFont() { return false; }
+	void ClearFontCache() override;
+	GlyphID MapCharToGlyph(WChar key) override;
+	const char *GetFontName() override { return face->family_name; }
+	bool IsBuiltInFont() override { return false; }
+	const void *GetOSHandle() override { return &face; }
 };
 
 FT_Library _library = nullptr;
@@ -243,7 +244,7 @@ const Sprite *FreeTypeFontCache::InternalGetGlyph(GlyphID key, bool aa)
 	/* FreeType has rendered the glyph, now we allocate a sprite and copy the image into it */
 	SpriteLoader::Sprite sprite;
 	sprite.AllocateData(ZOOM_LVL_NORMAL, static_cast<size_t>(width) * height);
-	sprite.type = ST_FONT;
+	sprite.type = SpriteType::Font;
 	sprite.colours = (aa ? SCC_PAL | SCC_ALPHA : SCC_PAL);
 	sprite.width = width;
 	sprite.height = height;

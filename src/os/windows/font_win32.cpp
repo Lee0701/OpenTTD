@@ -134,9 +134,9 @@ FT_Error GetFontByFaceName(const char *font_name, FT_Face *face)
 		err = FT_New_Face(_library, font_path, index, face);
 		if (err != FT_Err_Ok) break;
 
-		if (strncasecmp(font_name, (*face)->family_name, strlen((*face)->family_name)) == 0) break;
+		if (StrStartsWithIgnoreCase(font_name, (*face)->family_name)) break;
 		/* Try english name if font name failed */
-		if (strncasecmp(font_name + strlen(font_name) + 1, (*face)->family_name, strlen((*face)->family_name)) == 0) break;
+		if (StrStartsWithIgnoreCase(font_name + strlen(font_name) + 1, (*face)->family_name)) break;
 		err = FT_Err_Cannot_Open_Resource;
 
 	} while ((FT_Long)++index != (*face)->num_faces);
@@ -457,7 +457,7 @@ void Win32FontCache::ClearFontCache()
 	/* GDI has rendered the glyph, now we allocate a sprite and copy the image into it. */
 	SpriteLoader::Sprite sprite;
 	sprite.AllocateData(ZOOM_LVL_NORMAL, width * height);
-	sprite.type = ST_FONT;
+	sprite.type = SpriteType::Font;
 	sprite.colours = (aa ? SCC_PAL | SCC_ALPHA : SCC_PAL);
 	sprite.width = width;
 	sprite.height = height;

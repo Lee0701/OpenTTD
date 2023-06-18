@@ -77,6 +77,7 @@ struct DifficultySettings {
 	byte   competitor_intelligence;          ///< Unused value, used to load old savegames.
 
 	byte   max_no_competitors;               ///< the number of competitors (AIs)
+	uint16 competitors_interval;             ///< the interval (in minutes) between adding competitors
 	byte   number_towns;                     ///< the amount of towns
 	byte   industry_density;                 ///< The industry density. @see IndustryDensity
 	uint32 max_loan;                         ///< the maximum initial loan
@@ -173,7 +174,8 @@ struct GUISettings : public TimeSettings {
 	bool   use_owner_colour_for_tunnelbridge;///< bridges and tunnels are rendered with their owner's colour
 	bool   timetable_arrival_departure;      ///< show arrivals and departures in vehicle timetables
 	uint8  max_departures;                   ///< maximum number of departures to show per station
-	uint16 max_departure_time;               ///< maximum time in advance to show departures
+	uint16 max_departure_time;               ///< maximum time in advance to show departures (days)
+	uint16 max_departure_time_minutes;       ///< maximum time in advance to show departures (minutes)
 	uint16 departure_calc_frequency;         ///< how often to calculate departures (in ticks)
 	bool   departure_show_vehicle;           ///< whether to show vehicle names with departures
 	bool   departure_show_group;             ///< whether to show group names with departures
@@ -279,6 +281,7 @@ struct GUISettings : public TimeSettings {
 	bool   newgrf_disable_big_gui;           ///< whether to disable "big GUI" NewGRFs
 
 	bool   scale_bevels;                     ///< bevels are scaled with GUI scale.
+	bool   bigger_main_toolbar;              ///< bigger main toolbar.
 
 	/**
 	 * Returns true when the user has sufficient privileges to edit newgrfs on a running game
@@ -353,6 +356,7 @@ struct NetworkSettings {
 	uint16      sync_freq;                                ///< how often do we check whether we are still in-sync
 	uint8       frame_freq;                               ///< how often do we send commands to the clients
 	uint16      commands_per_frame;                       ///< how many commands may be sent each frame_freq frames?
+	uint16      commands_per_frame_server;                ///< how many commands may be sent each frame_freq frames? (server-originating commands)
 	uint16      max_commands_in_queue;                    ///< how many commands may there be in the incoming queue before dropping the connection?
 	uint16      bytes_per_frame;                          ///< how many bytes may, over a long period, be received per frame?
 	uint16      bytes_per_frame_burst;                    ///< how many bytes may, over a short period, be received?
@@ -706,12 +710,12 @@ struct EconomySettings {
 	uint16 random_road_reconstruction;       ///< chance out of 1000 per tile loop for towns to start random road re-construction
 	bool disable_inflation_newgrf_flag;      ///< Disable NewGRF inflation flag
 	CargoPaymentAlgorithm payment_algorithm; ///< Cargo payment algorithm
+	TickRateMode tick_rate;                  ///< Tick rate mode
 };
 
 struct LinkGraphSettings {
 	uint16 recalc_time;                         ///< time (in days) for recalculating each link graph component.
 	uint16 recalc_interval;                     ///< time (in days) between subsequent checks for link graphs to be calculated.
-	bool recalc_not_scaled_by_daylength;        ///< whether the time should be in daylength-scaled days (false) or unscaled days (true)
 	DistributionType distribution_pax;          ///< distribution type for passengers
 	DistributionType distribution_mail;         ///< distribution type for mail
 	DistributionType distribution_armoured;     ///< distribution type for armoured cargo class

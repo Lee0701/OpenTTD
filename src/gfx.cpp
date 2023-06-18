@@ -46,6 +46,8 @@ bool _shift_pressed;  ///< Is Shift pressed?
 bool _invert_ctrl;
 bool _invert_shift;
 uint16 _game_speed = 100; ///< Current game-speed; 100 is 1x, 0 is infinite.
+uint8 _milliseconds_per_tick = 27; ///< Milliseconds per tick
+float _ticks_per_second;           ///< Ticks per second
 bool _left_button_down;     ///< Is left mouse button pressed?
 bool _left_button_clicked;  ///< Is left mouse button clicked?
 bool _right_button_down;    ///< Is right mouse button pressed?
@@ -61,6 +63,7 @@ uint32 _pause_countdown;
 Palette _cur_palette;
 std::mutex _cur_palette_mutex;
 std::string _switch_baseset;
+static bool _adjust_gui_zoom_startup_done = false;
 
 static byte _stringwidth_table[FS_END][224]; ///< Cache containing width of often used characters. @see GetCharacterWidth()
 DrawPixelInfo *_cur_dpi;
@@ -88,7 +91,7 @@ byte _colour_value[COLOUR_END] = {
 struct GfxBlitterCtx {
 	const DrawPixelInfo *dpi;
 	const byte *colour_remap_ptr = nullptr;
-	byte string_colourremap[3]; ///< Recoloursprite for stringdrawing. The grf loader ensures that #ST_FONT sprites only use colours 0 to 2.
+	byte string_colourremap[3]; ///< Recoloursprite for stringdrawing. The grf loader ensures that #SpriteType::Font sprites only use colours 0 to 2.
 	int sprite_brightness_adjust = 0;
 
 	GfxBlitterCtx(const DrawPixelInfo *dpi) : dpi(dpi) {}
@@ -676,7 +679,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
  * @return In case of left or center alignment the right most pixel we have drawn to.
  *         In case of right alignment the left most pixel we have drawn to.
  */
-int DrawString(int left, int right, int top, const char *str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
+int DrawString(int left, int right, int top, std::string_view str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
 {
 	/* The string may contain control chars to change the font, just use the biggest font for clipping. */
 	int max_height = std::max({FONT_HEIGHT_SMALL, FONT_HEIGHT_NORMAL, FONT_HEIGHT_LARGE, FONT_HEIGHT_MONO});
@@ -712,28 +715,6 @@ int DrawString(int left, int right, int top, const char *str, TextColour colour,
  * @return In case of left or center alignment the right most pixel we have drawn to.
  *         In case of right alignment the left most pixel we have drawn to.
  */
-int DrawString(int left, int right, int top, const std::string &str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
-{
-	return DrawString(left, right, top, str.c_str(), colour, align, underline, fontsize);
-}
-
-/**
- * Draw string, possibly truncated to make it fit in its allocated space
- *
- * @param left   The left most position to draw on.
- * @param right  The right most position to draw on.
- * @param top    The top most position to draw on.
- * @param str    String to draw.
- * @param colour Colour used for drawing the string, for details see _string_colourmap in
- *               table/palettes.h or docs/ottd-colourtext-palette.png or the enum TextColour in gfx_type.h
- * @param align  The alignment of the string when drawing left-to-right. In the
- *               case a right-to-left language is chosen this is inverted so it
- *               will be drawn in the right direction.
- * @param underline Whether to underline what has been drawn or not.
- * @param fontsize The size of the initial characters.
- * @return In case of left or center alignment the right most pixel we have drawn to.
- *         In case of right alignment the left most pixel we have drawn to.
- */
 int DrawString(int left, int right, int top, StringID str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
 {
 	char buffer[DRAW_STRING_BUFFER];
@@ -747,7 +728,7 @@ int DrawString(int left, int right, int top, StringID str, TextColour colour, St
  * @param maxw maximum string width
  * @return height of pixels of string when it is drawn
  */
-int GetStringHeight(const char *str, int maxw, FontSize fontsize)
+int GetStringHeight(std::string_view str, int maxw, FontSize fontsize)
 {
 	Layouter layout(str, maxw, TC_FROMSTRING, fontsize);
 	return layout.GetBounds().height;
@@ -799,7 +780,7 @@ Dimension GetStringMultiLineBoundingBox(StringID str, const Dimension &suggestio
  * @param suggestion Suggested bounding box.
  * @return Bounding box for the multi-line string, may be bigger than \a suggestion.
  */
-Dimension GetStringMultiLineBoundingBox(const char *str, const Dimension &suggestion)
+Dimension GetStringMultiLineBoundingBox(std::string_view str, const Dimension &suggestion)
 {
 	Dimension box = {suggestion.width, (uint)GetStringHeight(str, suggestion.width)};
 	return box;
@@ -821,7 +802,7 @@ Dimension GetStringMultiLineBoundingBox(const char *str, const Dimension &sugges
  *
  * @return If \a align is #SA_BOTTOM, the top to where we have written, else the bottom to where we have written.
  */
-int DrawStringMultiLine(int left, int right, int top, int bottom, const char *str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
+int DrawStringMultiLine(int left, int right, int top, int bottom, std::string_view str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
 {
 	int maxw = right - left + 1;
 	int maxh = bottom - top + 1;
@@ -867,28 +848,6 @@ int DrawStringMultiLine(int left, int right, int top, int bottom, const char *st
 	return ((align & SA_VERT_MASK) == SA_BOTTOM) ? first_line : last_line;
 }
 
-
-/**
- * Draw string, possibly over multiple lines.
- *
- * @param left   The left most position to draw on.
- * @param right  The right most position to draw on.
- * @param top    The top most position to draw on.
- * @param bottom The bottom most position to draw on.
- * @param str    String to draw.
- * @param colour Colour used for drawing the string, for details see _string_colourmap in
- *               table/palettes.h or docs/ottd-colourtext-palette.png or the enum TextColour in gfx_type.h
- * @param align  The horizontal and vertical alignment of the string.
- * @param underline Whether to underline all strings
- * @param fontsize The size of the initial characters.
- *
- * @return If \a align is #SA_BOTTOM, the top to where we have written, else the bottom to where we have written.
- */
-int DrawStringMultiLine(int left, int right, int top, int bottom, const std::string &str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
-{
-	return DrawStringMultiLine(left, right, top, bottom, str.c_str(), colour, align, underline, fontsize);
-}
-
 /**
  * Draw string, possibly over multiple lines.
  *
@@ -922,30 +881,15 @@ int DrawStringMultiLine(int left, int right, int top, int bottom, StringID str, 
  * @param start_fontsize Fontsize to start the text with
  * @return string width and height in pixels
  */
-Dimension GetStringBoundingBox(const char *str, FontSize start_fontsize)
+Dimension GetStringBoundingBox(std::string_view str, FontSize start_fontsize)
 {
 	Layouter layout(str, INT32_MAX, TC_FROMSTRING, start_fontsize);
 	return layout.GetBounds();
 }
 
 /**
- * Return the string dimension in pixels. The height and width are returned
- * in a single Dimension value. TINYFONT, BIGFONT modifiers are only
- * supported as the first character of the string. The returned dimensions
- * are therefore a rough estimation correct for all the current strings
- * but not every possible combination
- * @param str string to calculate pixel-width
- * @param start_fontsize Fontsize to start the text with
- * @return string width and height in pixels
- */
-Dimension GetStringBoundingBox(const std::string &str, FontSize start_fontsize)
-{
-	return GetStringBoundingBox(str.c_str(), start_fontsize);
-}
-
-/**
  * Get bounding box of a string. Uses parameters set by #SetDParam if needed.
- * Has the same restrictions as #GetStringBoundingBox(const char *str, FontSize start_fontsize).
+ * Has the same restrictions as #GetStringBoundingBox(std::string_view str, FontSize start_fontsize).
  * @param strid String to examine.
  * @return Width and height of the bounding box for the string in pixels.
  */
@@ -980,10 +924,14 @@ uint GetStringListWidth(const StringID *list, FontSize fontsize)
  * @param start_fontsize Font size to start the text with.
  * @return Upper left corner of the glyph associated with the character.
  */
-Point GetCharPosInString(const char *str, const char *ch, FontSize start_fontsize)
+Point GetCharPosInString(std::string_view str, const char *ch, FontSize start_fontsize)
 {
+	/* Ensure "ch" is inside "str" or at the exact end. */
+	assert(ch >= str.data() && (ch - str.data()) <= static_cast<ptrdiff_t>(str.size()));
+	auto it_ch = str.begin() + (ch - str.data());
+
 	Layouter layout(str, INT32_MAX, TC_FROMSTRING, start_fontsize);
-	return layout.GetCharPosition(ch);
+	return layout.GetCharPosition(it_ch);
 }
 
 /**
@@ -991,11 +939,11 @@ Point GetCharPosInString(const char *str, const char *ch, FontSize start_fontsiz
  * @param str String to test.
  * @param x Position relative to the start of the string.
  * @param start_fontsize Font size to start the text with.
- * @return Pointer to the character at the position or nullptr if there is no character at the position.
+ * @return Index of the character position or -1 if there is no character at the position.
  */
-const char *GetCharAtPosition(const char *str, int x, FontSize start_fontsize)
+ptrdiff_t GetCharAtPosition(std::string_view str, int x, FontSize start_fontsize)
 {
-	if (x < 0) return nullptr;
+	if (x < 0) return -1;
 
 	Layouter layout(str, INT32_MAX, TC_FROMSTRING, start_fontsize);
 	return layout.GetCharAtPosition(x);
@@ -1028,7 +976,7 @@ void DrawCharCentered(WChar c, const Rect &r, TextColour colour)
  */
 Dimension GetSpriteSize(SpriteID sprid, Point *offset, ZoomLevel zoom)
 {
-	const Sprite *sprite = GetSprite(sprid, ST_NORMAL);
+	const Sprite *sprite = GetSprite(sprid, SpriteType::Normal);
 
 	if (offset != nullptr) {
 		offset->x = UnScaleByZoom(sprite->x_offs, zoom);
@@ -1074,7 +1022,7 @@ void DrawSpriteViewport(const SpritePointerHolder &sprite_store, const DrawPixel
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
 		ctx.colour_remap_ptr = sprite_store.GetRecolourSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
-		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, ST_NORMAL), x, y, BM_TRANSPARENT, sub, real_sprite);
+		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, SpriteType::Normal), x, y, BM_TRANSPARENT, sub, real_sprite);
 	} else if (pal != PAL_NONE) {
 		if (HasBit(pal, PALETTE_TEXT_RECOLOUR)) {
 			ctx.SetColourRemap((TextColour)GB(pal, 0, PALETTE_WIDTH));
@@ -1087,21 +1035,21 @@ void DrawSpriteViewport(const SpritePointerHolder &sprite_store, const DrawPixel
 			int sign_bit = 1 << (PALETTE_BRIGHTNESS_WIDTH - 1);
 			ctx.sprite_brightness_adjust = (adjust ^ sign_bit) - sign_bit;
 		}
-		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, ST_NORMAL), x, y, GetBlitterMode(pal), sub, real_sprite);
+		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, SpriteType::Normal), x, y, GetBlitterMode(pal), sub, real_sprite);
 	} else {
-		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, ST_NORMAL), x, y, BM_NORMAL, sub, real_sprite);
+		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, SpriteType::Normal), x, y, BM_NORMAL, sub, real_sprite);
 	}
 }
 
 void PrepareDrawSpriteViewportSpriteStore(SpritePointerHolder &sprite_store, SpriteID img, PaletteID pal)
 {
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
-	sprite_store.CacheSprite(real_sprite, ST_NORMAL);
+	sprite_store.CacheSprite(real_sprite, SpriteType::Normal);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
-		sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR);
+		sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour);
 	} else if (pal != PAL_NONE) {
 		if (!HasBit(pal, PALETTE_TEXT_RECOLOUR) && GB(pal, 0, PALETTE_WIDTH) != PAL_NONE) {
-			sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR);
+			sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour);
 		}
 	}
 }
@@ -1120,17 +1068,17 @@ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub,
 	GfxBlitterCtx ctx(_cur_dpi);
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
-		ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
-		GfxMainBlitter(ctx, GetSprite(real_sprite, ST_NORMAL), x, y, BM_TRANSPARENT, sub, real_sprite, zoom);
+		ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1;
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, BM_TRANSPARENT, sub, real_sprite, zoom);
 	} else if (pal != PAL_NONE) {
 		if (HasBit(pal, PALETTE_TEXT_RECOLOUR)) {
 			ctx.SetColourRemap((TextColour)GB(pal, 0, PALETTE_WIDTH));
 		} else {
-			ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), ST_RECOLOUR) + 1;
+			ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1;
 		}
-		GfxMainBlitter(ctx, GetSprite(real_sprite, ST_NORMAL), x, y, GetBlitterMode(pal), sub, real_sprite, zoom);
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, GetBlitterMode(pal), sub, real_sprite, zoom);
 	} else {
-		GfxMainBlitter(ctx, GetSprite(real_sprite, ST_NORMAL), x, y, BM_NORMAL, sub, real_sprite, zoom);
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, BM_NORMAL, sub, real_sprite, zoom);
 	}
 }
 
@@ -1280,7 +1228,7 @@ std::unique_ptr<uint32[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel zo
 
 	/* Gather information about the sprite to write, reserve memory */
 	const SpriteID real_sprite = GB(spriteId, 0, SPRITE_WIDTH);
-	const Sprite *sprite = GetSprite(real_sprite, ST_NORMAL);
+	const Sprite *sprite = GetSprite(real_sprite, SpriteType::Normal);
 	Dimension dim = GetSpriteSize(real_sprite, nullptr, zoom);
 	size_t dim_size = static_cast<size_t>(dim.width) * dim.height;
 	std::unique_ptr<uint32[]> result(new uint32[dim_size]);
@@ -1523,6 +1471,24 @@ byte GetDigitWidth(FontSize size)
 		width = std::max(GetCharacterWidth(size, c), width);
 	}
 	return width;
+}
+
+/**
+ * Return some number that is suitable for string size computations.
+ * @param count Number of digits which shall be displayable.
+ * @param size  Font of the number
+ * @return The number.
+ */
+uint64 GetBroadestDigitsValue(uint count, FontSize size)
+{
+	uint front = 0;
+	uint next = 0;
+	GetBroadestDigit(&front, &next, size);
+	uint64 val = count > 1 ? front : next;
+	for (; count > 1; count--) {
+		val = 10 * val + next;
+	}
+	return val;
 }
 
 /**
@@ -2152,7 +2118,7 @@ void UpdateCursorSize()
 	static_assert(lengthof(_cursor.sprite_seq) == lengthof(_cursor.sprite_pos));
 	assert(_cursor.sprite_count <= lengthof(_cursor.sprite_seq));
 	for (uint i = 0; i < _cursor.sprite_count; ++i) {
-		const Sprite *p = GetSprite(GB(_cursor.sprite_seq[i].sprite, 0, SPRITE_WIDTH), ST_NORMAL);
+		const Sprite *p = GetSprite(GB(_cursor.sprite_seq[i].sprite, 0, SPRITE_WIDTH), SpriteType::Normal);
 		Point offs, size;
 		offs.x = UnScaleGUI(p->x_offs) + _cursor.sprite_pos[i].x;
 		offs.y = UnScaleGUI(p->y_offs) + _cursor.sprite_pos[i].y;
@@ -2380,6 +2346,12 @@ void UpdateGUIZoom()
  */
 bool AdjustGUIZoom(AdjustGUIZoomMode mode)
 {
+	if (mode == AGZM_STARTUP) {
+		_adjust_gui_zoom_startup_done = true;
+	} else if (!_adjust_gui_zoom_startup_done) {
+		return false;
+	}
+
 	ZoomLevel old_gui_zoom = _gui_zoom;
 	ZoomLevel old_font_zoom = _font_zoom;
 	int old_scale = _gui_scale;
@@ -2431,4 +2403,10 @@ void ChangeGameSpeed(bool enable_fast_forward)
 	} else {
 		_game_speed = 100;
 	}
+}
+
+void SetupTickRate()
+{
+	_milliseconds_per_tick = (_settings_game.economy.tick_rate == TRM_MODERN) ? 27 : 30;
+	_ticks_per_second = 1000.0f / _milliseconds_per_tick;
 }

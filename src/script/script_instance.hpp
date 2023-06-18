@@ -13,7 +13,9 @@
 #include <variant>
 #include <list>
 #include <squirrel.h>
+#include "squirrel.hpp"
 #include "script_suspend.hpp"
+#include "script_log_types.hpp"
 
 #include "../command_type.h"
 #include "../company_type.h"
@@ -45,7 +47,7 @@ public:
 	/**
 	 * Create a new script.
 	 */
-	ScriptInstance(const char *APIName);
+	ScriptInstance(const char *APIName, ScriptType script_type);
 	virtual ~ScriptInstance();
 
 	/**
@@ -95,7 +97,7 @@ public:
 	/**
 	 * Get the log pointer of this script.
 	 */
-	void *GetLogPointer();
+	ScriptLogTypes::LogData &GetLogData();
 
 	/**
 	 * Return a true/false reply for a DoCommand.
@@ -210,6 +212,8 @@ public:
 
 	void LimitOpsTillSuspend(SQInteger suspend);
 
+	uint32 GetMaxOpsTillSuspend() const;
+
 	/**
 	 * DoCommand callback function for all commands executed by scripts.
 	 * @param result The result of the command.
@@ -296,6 +300,7 @@ private:
 	Script_SuspendCallbackProc *callback; ///< Callback that should be called in the next tick the script runs.
 	size_t last_allocated_memory;         ///< Last known allocated memory value (for display for crashed scripts)
 	const char *APIName;                  ///< Name of the API used for this squirrel.
+	ScriptType script_type;               ///< Script type.
 	bool allow_text_param_mismatch;       ///< Whether ScriptText parameter mismatches are allowed
 
 	/**
@@ -325,6 +330,8 @@ private:
 	static bool LoadObjects(HSQUIRRELVM vm, ScriptData *data);
 
 public:
+	inline ScriptType GetScriptType() const { return this->script_type; }
+
 	inline bool IsTextParamMismatchAllowed() const { return this->allow_text_param_mismatch; }
 };
 

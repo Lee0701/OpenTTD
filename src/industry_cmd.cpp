@@ -74,21 +74,16 @@ IndustryBuildData _industry_builder; ///< In-game manager of industries.
  */
 void ResetIndustries()
 {
-	for (IndustryType i = 0; i < NUM_INDUSTRYTYPES; i++) {
-		/* Reset the spec to default */
-		if (i < lengthof(_origin_industry_specs)) {
-			_industry_specs[i] = _origin_industry_specs[i];
-		} else {
-			_industry_specs[i] = IndustrySpec{};
-		}
+	auto industry_insert = std::copy(std::begin(_origin_industry_specs), std::end(_origin_industry_specs), std::begin(_industry_specs));
+	std::fill(industry_insert, std::end(_industry_specs), IndustrySpec{});
 
+	for (IndustryType i = 0; i < lengthof(_origin_industry_specs); i++) {
 		/* Enable only the current climate industries */
-		_industry_specs[i].enabled = i < NEW_INDUSTRYOFFSET &&
-				HasBit(_origin_industry_specs[i].climate_availability, _settings_game.game_creation.landscape);
+		_industry_specs[i].enabled = HasBit(_industry_specs[i].climate_availability, _settings_game.game_creation.landscape);
 	}
 
-	memset(&_industry_tile_specs, 0, sizeof(_industry_tile_specs));
-	memcpy(&_industry_tile_specs, &_origin_industry_tile_specs, sizeof(_origin_industry_tile_specs));
+	auto industry_tile_insert = std::copy(std::begin(_origin_industry_tile_specs), std::end(_origin_industry_tile_specs), std::begin(_industry_tile_specs));
+	std::fill(industry_tile_insert, std::end(_industry_tile_specs), IndustryTileSpec{});
 
 	/* Reset any overrides that have been set. */
 	_industile_mngr.ResetOverride();
@@ -195,8 +190,8 @@ Industry::~Industry()
 	DeleteWindowById(WC_INDUSTRY_VIEW, this->index);
 	DeleteNewGRFInspectWindow(GSF_INDUSTRIES, this->index);
 
-	DeleteSubsidyWith(ST_INDUSTRY, this->index);
-	CargoPacket::InvalidateAllFrom(ST_INDUSTRY, this->index);
+	DeleteSubsidyWith(SourceType::Industry, this->index);
+	CargoPacket::InvalidateAllFrom(SourceType::Industry, this->index);
 
 	for (Station *st : this->stations_near) {
 		st->RemoveIndustryToDeliver(this);
@@ -212,6 +207,7 @@ Industry::~Industry()
 void Industry::PostDestructor(size_t index)
 {
 	InvalidateWindowData(WC_INDUSTRY_DIRECTORY, 0, IDIWD_FORCE_REBUILD);
+	SetWindowDirty(WC_BUILD_INDUSTRY, 0);
 }
 
 
@@ -546,7 +542,7 @@ static bool TransportIndustryGoods(TileIndex tile)
 
 			i->this_month_production[j] = std::min<uint>(i->this_month_production[j] + cw, 0xFFFF);
 
-			uint am = MoveGoodsToStation(i->produced_cargo[j], cw, ST_INDUSTRY, i->index, &i->stations_near, i->exclusive_consumer);
+			uint am = MoveGoodsToStation(i->produced_cargo[j], cw, SourceType::Industry, i->index, &i->stations_near, i->exclusive_consumer);
 			i->this_month_transported[j] += am;
 
 			moved_cargo |= (am != 0);
@@ -1187,7 +1183,7 @@ static void ChopLumberMillTrees(Industry *i)
 
 	TileIndex tile = i->location.tile;
 	if (CircularTileSearch(&tile, 40, SearchLumberMillTrees, nullptr)) { // 40x40 tiles  to search.
-		i->produced_cargo_waiting[0] = std::min(0xffff, i->produced_cargo_waiting[0] + 45); // Found a tree, add according value to waiting cargo.
+		i->produced_cargo_waiting[0] = ClampTo<uint16_t>(i->produced_cargo_waiting[0] + 45); // Found a tree, add according value to waiting cargo.
 	}
 }
 
@@ -1198,7 +1194,7 @@ static void ProduceIndustryGoodsFromRate(Industry *i, bool scale)
 		if (amount != 0 && scale) {
 			amount = ScaleQuantity(amount, _settings_game.economy.industry_cargo_scale_factor);
 		}
-		i->produced_cargo_waiting[j] = std::min<uint>(0xffff, i->produced_cargo_waiting[j] + amount);
+		i->produced_cargo_waiting[j] = ClampTo<uint16>(i->produced_cargo_waiting[j] + amount);
 	}
 }
 
@@ -1858,7 +1854,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 	/* Randomize inital production if non-original economy is used and there are no production related callbacks. */
 	if (!indspec->UsesOriginalEconomy()) {
 		for (size_t ci = 0; ci < lengthof(i->production_rate); ci++) {
-			i->production_rate[ci] = std::min((RandomRange(256) + 128) * i->production_rate[ci] >> 8, 255u);
+			i->production_rate[ci] = ClampTo<byte>((RandomRange(256) + 128) * i->production_rate[ci] >> 8);
 		}
 	}
 
@@ -2023,6 +2019,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 		for (uint j = 0; j != 50; j++) PlantRandomFarmField(i);
 	}
 	InvalidateWindowData(WC_INDUSTRY_DIRECTORY, 0, IDIWD_FORCE_REBUILD);
+	SetWindowDirty(WC_BUILD_INDUSTRY, 0);
 
 	if (!_generating_world) PopulateStationsNearby(i);
 	if (_game_mode == GM_NORMAL) RegisterGameEvents(GEF_INDUSTRY_CREATE);
@@ -2508,7 +2505,7 @@ static void UpdateIndustryStatistics(Industry *i)
 			byte pct = 0;
 			if (i->this_month_production[j] != 0) {
 				i->last_prod_year = _cur_year;
-				pct = std::min(i->this_month_transported[j] * 256 / i->this_month_production[j], 255);
+				pct = ClampTo<byte>(i->this_month_transported[j] * 256 / i->this_month_production[j]);
 			}
 			i->last_month_pct_transported[j] = pct;
 
@@ -2532,7 +2529,7 @@ void Industry::RecomputeProductionMultipliers()
 
 	/* Rates are rounded up, so e.g. oilrig always produces some passengers */
 	for (size_t i = 0; i < lengthof(this->production_rate); i++) {
-		this->production_rate[i] = std::min(CeilDiv(indspec->production_rate[i] * this->prod_level, PRODLEVEL_DEFAULT), 0xFFu);
+		this->production_rate[i] = ClampTo<byte>(CeilDiv(indspec->production_rate[i] * this->prod_level, PRODLEVEL_DEFAULT));
 	}
 }
 
@@ -2942,7 +2939,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 	if ((i->ctlflags & INDCTL_NO_PRODUCTION_INCREASE) && (mul > 0 || increment > 0)) return;
 
 	if (!callback_enabled && (indspec->life_type & INDUSTRYLIFE_PROCESSING)) {
-		if ( (byte)(_cur_year - i->last_prod_year) >= 5 && Chance16(1, original_economy ? 2 : 180)) {
+		if ((_cur_year - i->last_prod_year) >= PROCESSING_INDUSTRY_ABANDONMENT_YEARS && Chance16(1, original_economy ? 2 : 180)) {
 			closeit = true;
 		}
 	}

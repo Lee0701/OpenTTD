@@ -173,6 +173,18 @@ static const std::map<int, StringID> _scale_labels = {
 	{  500, STR_GAME_OPTIONS_GUI_SCALE_5X },
 };
 
+static const std::map<int, StringID> _volume_labels = {
+	{  0, STR_GAME_OPTIONS_VOLUME_0 },
+	{  15, STR_NULL },
+	{  31, STR_GAME_OPTIONS_VOLUME_25 },
+	{  47, STR_NULL },
+	{  63, STR_GAME_OPTIONS_VOLUME_50 },
+	{  79, STR_NULL },
+	{  95, STR_GAME_OPTIONS_VOLUME_75 },
+	{  111, STR_NULL },
+	{  127, STR_GAME_OPTIONS_VOLUME_100 },
+};
+
 struct GameOptionsWindow : Window {
 	GameSettings *opt;
 	bool reload;
@@ -195,6 +207,8 @@ struct GameOptionsWindow : Window {
 
 		this->InitNested(WN_GAME_OPTIONS_GAME_OPTIONS);
 		this->OnInvalidateData(0);
+
+		this->SetTab(WID_GO_TAB_GENERAL);
 	}
 
 	~GameOptionsWindow()
@@ -325,7 +339,6 @@ struct GameOptionsWindow : Window {
 			case WID_GO_BASE_SFX_DROPDOWN:     SetDParamStr(0, BaseSounds::GetUsedSet()->name); break;
 			case WID_GO_BASE_MUSIC_DROPDOWN:   SetDParamStr(0, BaseMusic::GetUsedSet()->name); break;
 			case WID_GO_BASE_MUSIC_STATUS:     SetDParam(0, BaseMusic::GetUsedSet()->GetNumInvalid()); break;
-			case WID_GO_VIDEO_DRIVER_INFO:     SetDParamStr(0, VideoDriver::GetInstance()->GetInfoString()); break;
 			case WID_GO_REFRESH_RATE_DROPDOWN: SetDParam(0, _settings_client.gui.refresh_rate); break;
 			case WID_GO_RESOLUTION_DROPDOWN: {
 				auto current_resolution = GetCurrentResolutionIndex();
@@ -347,44 +360,89 @@ struct GameOptionsWindow : Window {
 		switch (widget) {
 			case WID_GO_BASE_GRF_DESCRIPTION:
 				SetDParamStr(0, BaseGraphics::GetUsedSet()->GetDescription(GetCurrentLanguageIsoCode()));
-				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_BLACK_RAW_STRING);
+				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_JUST_RAW_STRING, TC_BLACK);
 				break;
 
 			case WID_GO_BASE_SFX_DESCRIPTION:
 				SetDParamStr(0, BaseSounds::GetUsedSet()->GetDescription(GetCurrentLanguageIsoCode()));
-				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_BLACK_RAW_STRING);
+				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_JUST_RAW_STRING, TC_BLACK);
 				break;
 
 			case WID_GO_BASE_MUSIC_DESCRIPTION:
 				SetDParamStr(0, BaseMusic::GetUsedSet()->GetDescription(GetCurrentLanguageIsoCode()));
-				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_BLACK_RAW_STRING);
+				DrawStringMultiLine(r.left, r.right, r.top, UINT16_MAX, STR_JUST_RAW_STRING, TC_BLACK);
 				break;
 
 			case WID_GO_GUI_SCALE:
 				DrawSliderWidget(r, MIN_INTERFACE_SCALE, MAX_INTERFACE_SCALE, this->gui_scale, _scale_labels);
 				break;
 
+			case WID_GO_VIDEO_DRIVER_INFO:
+				SetDParamStr(0, VideoDriver::GetInstance()->GetInfoString());
+				DrawStringMultiLine(r, STR_GAME_OPTIONS_VIDEO_DRIVER_INFO);
+				break;
+
 			case WID_GO_BASE_SFX_VOLUME:
-				DrawSliderWidget(r, 0, INT8_MAX, _settings_client.music.effect_vol, {});
+				DrawSliderWidget(r, 0, INT8_MAX, _settings_client.music.effect_vol, _volume_labels);
 				break;
 
 			case WID_GO_BASE_MUSIC_VOLUME:
-				DrawSliderWidget(r, 0, INT8_MAX, _settings_client.music.music_vol, {});
+				DrawSliderWidget(r, 0, INT8_MAX, _settings_client.music.music_vol, _volume_labels);
 				break;
 		}
+	}
+
+	void SetTab(int widget)
+	{
+		this->SetWidgetsLoweredState(false, WID_GO_TAB_GENERAL, WID_GO_TAB_GRAPHICS, WID_GO_TAB_SOUND, WIDGET_LIST_END);
+		this->LowerWidget(widget);
+
+		int pane = 0;
+		if (widget == WID_GO_TAB_GRAPHICS) pane = 1;
+		else if (widget == WID_GO_TAB_SOUND) pane = 2;
+		this->GetWidget<NWidgetStacked>(WID_GO_TAB_SELECTION)->SetDisplayedPlane(pane);
+		this->SetDirty();
+	}
+
+	void OnResize() override
+	{
+		bool changed = false;
+
+		NWidgetResizeBase *wid = this->GetWidget<NWidgetResizeBase>(WID_GO_BASE_GRF_DESCRIPTION);
+		int y = 0;
+		for (int i = 0; i < BaseGraphics::GetNumSets(); i++) {
+			SetDParamStr(0, BaseGraphics::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
+			y = std::max(y, GetStringHeight(STR_JUST_RAW_STRING, wid->current_x));
+		}
+		changed |= wid->UpdateVerticalSize(y);
+
+		wid = this->GetWidget<NWidgetResizeBase>(WID_GO_BASE_SFX_DESCRIPTION);
+		y = 0;
+		for (int i = 0; i < BaseSounds::GetNumSets(); i++) {
+			SetDParamStr(0, BaseSounds::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
+			y = std::max(y, GetStringHeight(STR_JUST_RAW_STRING, wid->current_x));
+		}
+		changed |= wid->UpdateVerticalSize(y);
+
+		wid = this->GetWidget<NWidgetResizeBase>(WID_GO_BASE_MUSIC_DESCRIPTION);
+		y = 0;
+		for (int i = 0; i < BaseMusic::GetNumSets(); i++) {
+			SetDParamStr(0, BaseMusic::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
+			y = std::max(y, GetStringHeight(STR_JUST_RAW_STRING, wid->current_x));
+		}
+		changed |= wid->UpdateVerticalSize(y);
+
+		wid = this->GetWidget<NWidgetResizeBase>(WID_GO_VIDEO_DRIVER_INFO);
+		SetDParamStr(0, VideoDriver::GetInstance()->GetInfoString());
+		y = GetStringHeight(STR_GAME_OPTIONS_VIDEO_DRIVER_INFO, wid->current_x);
+		changed |= wid->UpdateVerticalSize(y);
+
+		if (changed) this->ReInit(0, 0, this->flags & WF_CENTERED);
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
-			case WID_GO_BASE_GRF_DESCRIPTION:
-				/* Find the biggest description for the default size. */
-				for (int i = 0; i < BaseGraphics::GetNumSets(); i++) {
-					SetDParamStr(0, BaseGraphics::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
-					size->height = std::max(size->height, (uint)GetStringHeight(STR_BLACK_RAW_STRING, size->width));
-				}
-				break;
-
 			case WID_GO_BASE_GRF_STATUS:
 				/* Find the biggest description for the default size. */
 				for (int i = 0; i < BaseGraphics::GetNumSets(); i++) {
@@ -393,22 +451,6 @@ struct GameOptionsWindow : Window {
 
 					SetDParam(0, invalid_files);
 					*size = maxdim(*size, GetStringBoundingBox(STR_GAME_OPTIONS_BASE_GRF_STATUS));
-				}
-				break;
-
-			case WID_GO_BASE_SFX_DESCRIPTION:
-				/* Find the biggest description for the default size. */
-				for (int i = 0; i < BaseSounds::GetNumSets(); i++) {
-					SetDParamStr(0, BaseSounds::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
-					size->height = std::max(size->height, (uint)GetStringHeight(STR_BLACK_RAW_STRING, size->width));
-				}
-				break;
-
-			case WID_GO_BASE_MUSIC_DESCRIPTION:
-				/* Find the biggest description for the default size. */
-				for (int i = 0; i < BaseMusic::GetNumSets(); i++) {
-					SetDParamStr(0, BaseMusic::GetSet(i)->GetDescription(GetCurrentLanguageIsoCode()));
-					size->height = std::max(size->height, (uint)GetStringHeight(STR_BLACK_RAW_STRING, size->width));
 				}
 				break;
 
@@ -422,6 +464,15 @@ struct GameOptionsWindow : Window {
 					*size = maxdim(*size, GetStringBoundingBox(STR_GAME_OPTIONS_BASE_MUSIC_STATUS));
 				}
 				break;
+
+			case WID_GO_TEXT_SFX_VOLUME:
+			case WID_GO_TEXT_MUSIC_VOLUME: {
+				Dimension d = maxdim(GetStringBoundingBox(STR_GAME_OPTIONS_SFX_VOLUME), GetStringBoundingBox(STR_GAME_OPTIONS_MUSIC_VOLUME));
+				d.width += padding.width;
+				d.height += padding.height;
+				*size = maxdim(*size, d);
+				break;
+			}
 
 			default: {
 				int selected;
@@ -461,6 +512,12 @@ struct GameOptionsWindow : Window {
 			return;
 		}
 		switch (widget) {
+			case WID_GO_TAB_GENERAL:
+			case WID_GO_TAB_GRAPHICS:
+			case WID_GO_TAB_SOUND:
+				this->SetTab(widget);
+				break;
+
 			case WID_GO_FULLSCREEN_BUTTON: // Click fullscreen on/off
 				/* try to toggle full-screen on/off */
 				if (!ToggleFullScreen(!_fullscreen)) {
@@ -500,6 +557,16 @@ struct GameOptionsWindow : Window {
 				this->SetDirty();
 
 				SetupWidgetDimensions();
+				ReInitAllWindows(true);
+				break;
+			}
+
+			case WID_GO_GUI_SCALE_MAIN_TOOLBAR: {
+				_settings_client.gui.bigger_main_toolbar = !_settings_client.gui.bigger_main_toolbar;
+
+				this->SetWidgetLoweredState(WID_GO_GUI_SCALE_MAIN_TOOLBAR, _settings_client.gui.bigger_main_toolbar);
+				this->SetDirty();
+
 				ReInitAllWindows(true);
 				break;
 			}
@@ -709,6 +776,7 @@ struct GameOptionsWindow : Window {
 
 		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_AUTO, _gui_scale_cfg == -1);
 		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_BEVEL_BUTTON, _settings_client.gui.scale_bevels);
+		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_MAIN_TOOLBAR, _settings_client.gui.bigger_main_toolbar);
 
 		bool missing_files = BaseGraphics::GetUsedSet()->GetNumMissing() == 0;
 		this->GetWidget<NWidgetCore>(WID_GO_BASE_GRF_STATUS)->SetDataTip(missing_files ? STR_EMPTY : STR_GAME_OPTIONS_BASE_GRF_STATUS, STR_NULL);
@@ -729,21 +797,32 @@ static const NWidgetPart _nested_game_options_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_GREY, WID_GO_BACKGROUND), SetPIP(6, 6, 10),
-		NWidget(NWID_HORIZONTAL), SetPIP(10, 10, 10),
-			NWidget(NWID_VERTICAL), SetPIP(0, 6, 0),
-				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_AUTOSAVE_FRAME, STR_NULL),
-					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_AUTOSAVE_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP), SetFill(1, 0),
+	NWidget(WWT_PANEL, COLOUR_GREY),
+		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPadding(5, 10, 5, 10),
+			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_GENERAL),  SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_GENERAL, STR_GAME_OPTIONS_TAB_GENERAL_TT), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_GRAPHICS), SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_GRAPHICS, STR_GAME_OPTIONS_TAB_GRAPHICS_TT), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_SOUND),    SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_SOUND, STR_GAME_OPTIONS_TAB_SOUND_TT), SetFill(1, 0),
+		EndContainer(),
+	EndContainer(),
+	NWidget(WWT_PANEL, COLOUR_GREY),
+		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_GO_TAB_SELECTION),
+			/* General tab */
+			NWidget(NWID_VERTICAL), SetPadding(10), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_LANGUAGE, STR_NULL),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_LANG_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_RAW_STRING, STR_GAME_OPTIONS_LANGUAGE_TOOLTIP), SetFill(1, 0),
 				EndContainer(),
+
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_AUTOSAVE_FRAME, STR_NULL),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_AUTOSAVE_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING, STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP), SetFill(1, 0),
+				EndContainer(),
+
 				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME, STR_NULL),
-					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_CURRENCY_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP), SetFill(1, 0),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_CURRENCY_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING, STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP), SetFill(1, 0),
 				EndContainer(),
 			EndContainer(),
 
-			NWidget(NWID_VERTICAL), SetPIP(0, 6, 0),
-				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_LANGUAGE, STR_NULL),
-					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_LANG_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_RAW_STRING, STR_GAME_OPTIONS_LANGUAGE_TOOLTIP), SetFill(1, 0),
-				EndContainer(),
+			/* Graphics tab */
+			NWidget(NWID_VERTICAL), SetPadding(10), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
 				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_GUI_SCALE_FRAME, STR_NULL),
 					NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0),
 						NWidget(WWT_EMPTY, COLOUR_GREY, WID_GO_GUI_SCALE), SetMinimalSize(67, 0), SetMinimalTextLines(1, 12 + WidgetDimensions::unscaled.vsep_normal, FS_SMALL), SetFill(0, 0), SetDataTip(0x0, STR_GAME_OPTIONS_GUI_SCALE_TOOLTIP),
@@ -757,91 +836,108 @@ static const NWidgetPart _nested_game_options_widgets[] = {
 							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
 							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_GUI_SCALE_BEVEL_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP),
 						EndContainer(),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_GUI_SCALE_MAIN_TOOLBAR), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR_TOOLTIP),
+						EndContainer(),
 					EndContainer(),
 				EndContainer(),
-			EndContainer(),
-		EndContainer(),
 
-		NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_GRAPHICS, STR_NULL), SetPadding(0, 10, 0, 10),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(NWID_VERTICAL), SetPIP(0, 2, 0),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12),SetDataTip(STR_GAME_OPTIONS_RESOLUTION, STR_NULL),
-						NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_RESOLUTION_DROPDOWN), SetMinimalSize(200, 12), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_RESOLUTION_TOOLTIP),
-					EndContainer(),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_REFRESH_RATE, STR_NULL),
-						NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_REFRESH_RATE_DROPDOWN), SetMinimalSize(200, 12), SetDataTip(STR_GAME_OPTIONS_REFRESH_RATE_ITEM, STR_GAME_OPTIONS_REFRESH_RATE_TOOLTIP),
-					EndContainer(),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_FULLSCREEN, STR_NULL),
-						NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
-						NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_FULLSCREEN_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP),
-					EndContainer(),
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_VIDEO_ACCELERATION, STR_NULL),
-						NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
-						NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_VIDEO_ACCEL_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_VIDEO_ACCELERATION_TOOLTIP),
-					EndContainer(),
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_GRAPHICS, STR_NULL),
+					NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12),SetDataTip(STR_GAME_OPTIONS_RESOLUTION, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_RESOLUTION_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING, STR_GAME_OPTIONS_RESOLUTION_TOOLTIP),
+						EndContainer(),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_REFRESH_RATE, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_REFRESH_RATE_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_GAME_OPTIONS_REFRESH_RATE_ITEM, STR_GAME_OPTIONS_REFRESH_RATE_TOOLTIP),
+						EndContainer(),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_FULLSCREEN, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_FULLSCREEN_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP),
+						EndContainer(),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_VIDEO_ACCELERATION, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_VIDEO_ACCEL_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_VIDEO_ACCELERATION_TOOLTIP),
+						EndContainer(),
 #ifndef __APPLE__
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_VIDEO_VSYNC, STR_NULL),
-						NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
-						NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_VIDEO_VSYNC_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP),
-					EndContainer(),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_VIDEO_VSYNC, STR_NULL),
+							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_VIDEO_VSYNC_BUTTON), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP),
+						EndContainer(),
 #endif
-					NWidget(NWID_HORIZONTAL),
-						NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_VIDEO_DRIVER_INFO), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_VIDEO_DRIVER_INFO, STR_NULL),
+						NWidget(NWID_HORIZONTAL),
+							NWidget(WWT_EMPTY, INVALID_COLOUR, WID_GO_VIDEO_DRIVER_INFO), SetMinimalTextLines(1, 0), SetFill(1, 0),
+						EndContainer(),
+					EndContainer(),
+				EndContainer(),
+
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_GRF, STR_NULL),
+					NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 0),
+						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_GRF_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_RAW_STRING, STR_GAME_OPTIONS_BASE_GRF_TOOLTIP),
+						NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_GRF_STATUS), SetMinimalSize(100, 12), SetDataTip(STR_EMPTY, STR_NULL), SetFill(1, 0),
+					EndContainer(),
+					NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_GRF_DESCRIPTION), SetMinimalSize(200, 0), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
+					NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
 					EndContainer(),
 				EndContainer(),
 			EndContainer(),
-		EndContainer(),
 
-		NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_GRF, STR_NULL), SetPadding(0, 10, 0, 10),
-			NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 0),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_GRF_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_RAW_STRING, STR_GAME_OPTIONS_BASE_GRF_TOOLTIP),
-				NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_GRF_STATUS), SetMinimalSize(150, 12), SetDataTip(STR_EMPTY, STR_NULL), SetFill(1, 0),
-			EndContainer(),
-			NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_GRF_DESCRIPTION), SetMinimalSize(330, 0), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
-			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_GRF_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
-			EndContainer(),
-		EndContainer(),
-
-		NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_SFX, STR_NULL), SetPadding(0, 10, 0, 10),
-			NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_SFX_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_RAW_STRING, STR_GAME_OPTIONS_BASE_SFX_TOOLTIP),
-				NWidget(NWID_SPACER), SetMinimalSize(150, 12), SetFill(1, 0),
-				NWidget(WWT_EMPTY, COLOUR_GREY, WID_GO_BASE_SFX_VOLUME), SetMinimalSize(67, 12), SetFill(0, 0), SetDataTip(0x0, STR_MUSIC_TOOLTIP_DRAG_SLIDERS_TO_SET_MUSIC),
-			EndContainer(),
-			NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_SFX_DESCRIPTION), SetMinimalSize(330, 0), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
-			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
-			EndContainer(),
-		EndContainer(),
-
-		NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_MUSIC, STR_NULL), SetPadding(0, 10, 0, 10),
-			NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
-				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_MUSIC_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_RAW_STRING, STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP),
-				NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_MUSIC_STATUS), SetMinimalSize(150, 12), SetDataTip(STR_EMPTY, STR_NULL), SetFill(1, 0),
-				NWidget(WWT_EMPTY, COLOUR_GREY, WID_GO_BASE_MUSIC_VOLUME), SetMinimalSize(67, 12), SetFill(0, 0), SetDataTip(0x0, STR_MUSIC_TOOLTIP_DRAG_SLIDERS_TO_SET_MUSIC),
-			EndContainer(),
-			NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
-				NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_MUSIC_DESCRIPTION), SetMinimalSize(330, 0), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
-				NWidget(NWID_VERTICAL), SetPIP(0, 0, 0),
-					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_JUKEBOX), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_MUSIC, STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW), SetPadding(6, 0, 6, 0),
+			/* Sound/Music tab */
+			NWidget(NWID_VERTICAL), SetPadding(10), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_VOLUME, STR_NULL),
+					NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
+						NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_wide, 0),
+							NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_TEXT_SFX_VOLUME), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_SFX_VOLUME, STR_NULL),
+							NWidget(WWT_EMPTY, COLOUR_GREY, WID_GO_BASE_SFX_VOLUME), SetMinimalSize(67, 0), SetMinimalTextLines(1, 12 + WidgetDimensions::unscaled.vsep_normal, FS_SMALL), SetFill(1, 0), SetDataTip(0x0, STR_MUSIC_TOOLTIP_DRAG_SLIDERS_TO_SET_MUSIC),
+						EndContainer(),
+						NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_wide, 0),
+							NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_TEXT_MUSIC_VOLUME), SetMinimalSize(0, 12), SetDataTip(STR_GAME_OPTIONS_MUSIC_VOLUME, STR_NULL),
+							NWidget(WWT_EMPTY, COLOUR_GREY, WID_GO_BASE_MUSIC_VOLUME), SetMinimalSize(67, 0), SetMinimalTextLines(1, 12 + WidgetDimensions::unscaled.vsep_normal, FS_SMALL), SetFill(1, 0), SetDataTip(0x0, STR_MUSIC_TOOLTIP_DRAG_SLIDERS_TO_SET_MUSIC),
+						EndContainer(),
+					EndContainer(),
 				EndContainer(),
-			EndContainer(),
-			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
+
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_SFX, STR_NULL),
+					NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
+						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_SFX_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_RAW_STRING, STR_GAME_OPTIONS_BASE_SFX_TOOLTIP),
+						NWidget(NWID_SPACER), SetMinimalSize(100, 12), SetFill(1, 0),
+					EndContainer(),
+					NWidget(WWT_EMPTY, INVALID_COLOUR, WID_GO_BASE_SFX_DESCRIPTION), SetMinimalSize(200, 0), SetMinimalTextLines(1, 0), SetDataTip(STR_NULL, STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
+					NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_SFX_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
+					EndContainer(),
+				EndContainer(),
+
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_BASE_MUSIC, STR_NULL),
+					NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
+						NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_BASE_MUSIC_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_RAW_STRING, STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP),
+						NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_BASE_MUSIC_STATUS), SetMinimalSize(100, 12), SetDataTip(STR_EMPTY, STR_NULL), SetFill(1, 0),
+					EndContainer(),
+					NWidget(NWID_HORIZONTAL), SetPIP(0, 30, 7),
+						NWidget(WWT_EMPTY, INVALID_COLOUR, WID_GO_BASE_MUSIC_DESCRIPTION), SetMinimalSize(200, 0), SetMinimalTextLines(1, 0), SetDataTip(STR_NULL, STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP), SetFill(1, 0), SetPadding(6, 0, 6, 0),
+						NWidget(NWID_VERTICAL), SetPIP(0, 0, 0),
+							NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_JUKEBOX), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_MUSIC, STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW), SetPadding(6, 0, 6, 0),
+						EndContainer(),
+					EndContainer(),
+					NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
+						NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GO_BASE_MUSIC_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
+					EndContainer(),
+				EndContainer(),
 			EndContainer(),
 		EndContainer(),
 	EndContainer(),
@@ -1381,7 +1477,7 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right, 
 	/* We do not allow changes of some items when we are a client in a networkgame */
 	bool editable = sd->IsEditable();
 
-	SetDParam(0, highlight ? STR_ORANGE_STRING1_WHITE : STR_ORANGE_STRING1_LTBLUE);
+	SetDParam(0, STR_CONFIG_SETTING_VALUE);
 	int32 value = sd->Read(ResolveObject(settings_ptr, sd));
 	if (sd->IsBoolSetting()) {
 		/* Draw checkbox for boolean-value either on/off */
@@ -1425,7 +1521,7 @@ void CargoDestPerCargoSettingEntry::DrawSettingString(uint left, uint right, int
 {
 	assert(this->setting->str == STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO);
 	SetDParam(0, CargoSpec::Get(this->cargo)->name);
-	SetDParam(1, highlight ? STR_ORANGE_STRING1_WHITE : STR_ORANGE_STRING1_LTBLUE);
+	SetDParam(1, STR_CONFIG_SETTING_VALUE);
 	std::unique_ptr<SettingEntry::SetValueDParamsTempData> tempdata;
 	this->SetValueDParams(2, value, tempdata);
 	DrawString(left, right, y, STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM, highlight ? TC_WHITE : TC_LIGHT_BLUE);
@@ -1459,8 +1555,8 @@ bool ConditionallyHiddenSettingEntry::UpdateFilterState(SettingFilter &filter, b
  */
 void SettingsContainer::Init(byte level)
 {
-	for (EntryVector::iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		(*it)->Init(level);
+	for (auto &it : this->entries) {
+		it->Init(level);
 	}
 }
 
@@ -1475,16 +1571,16 @@ void SettingsContainer::ResetAll()
 /** Recursively close all folds of sub-pages */
 void SettingsContainer::FoldAll()
 {
-	for (EntryVector::iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		(*it)->FoldAll();
+	for (auto &it : this->entries) {
+		it->FoldAll();
 	}
 }
 
 /** Recursively open all folds of sub-pages */
 void SettingsContainer::UnFoldAll()
 {
-	for (EntryVector::iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		(*it)->UnFoldAll();
+	for (auto &it : this->entries) {
+		it->UnFoldAll();
 	}
 }
 
@@ -1495,8 +1591,8 @@ void SettingsContainer::UnFoldAll()
  */
 void SettingsContainer::GetFoldingState(bool &all_folded, bool &all_unfolded) const
 {
-	for (EntryVector::const_iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		(*it)->GetFoldingState(all_folded, all_unfolded);
+	for (auto &it : this->entries) {
+		it->GetFoldingState(all_folded, all_unfolded);
 	}
 }
 
@@ -1527,8 +1623,8 @@ bool SettingsContainer::UpdateFilterState(SettingFilter &filter, bool force_visi
  */
 bool SettingsContainer::IsVisible(const BaseSettingEntry *item) const
 {
-	for (EntryVector::const_iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		if ((*it)->IsVisible(item)) return true;
+	for (const auto &it : this->entries) {
+		if (it->IsVisible(item)) return true;
 	}
 	return false;
 }
@@ -1537,8 +1633,8 @@ bool SettingsContainer::IsVisible(const BaseSettingEntry *item) const
 uint SettingsContainer::Length() const
 {
 	uint length = 0;
-	for (EntryVector::const_iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		length += (*it)->Length();
+	for (const auto &it : this->entries) {
+		length += it->Length();
 	}
 	return length;
 }
@@ -1552,8 +1648,8 @@ uint SettingsContainer::Length() const
 BaseSettingEntry *SettingsContainer::FindEntry(uint row_num, uint *cur_row)
 {
 	BaseSettingEntry *pe = nullptr;
-	for (EntryVector::iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		pe = (*it)->FindEntry(row_num, cur_row);
+	for (const auto &it : this->entries) {
+		pe = it->FindEntry(row_num, cur_row);
 		if (pe != nullptr) {
 			break;
 		}
@@ -1569,8 +1665,8 @@ BaseSettingEntry *SettingsContainer::FindEntry(uint row_num, uint *cur_row)
 uint SettingsContainer::GetMaxHelpHeight(int maxw)
 {
 	uint biggest = 0;
-	for (EntryVector::const_iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		biggest = std::max(biggest, (*it)->GetMaxHelpHeight(maxw));
+	for (const auto &it : this->entries) {
+		biggest = std::max(biggest, it->GetMaxHelpHeight(maxw));
 	}
 	return biggest;
 }
@@ -1591,11 +1687,9 @@ uint SettingsContainer::GetMaxHelpHeight(int maxw)
  */
 uint SettingsContainer::Draw(GameSettings *settings_ptr, int left, int right, int y, uint first_row, uint max_row, BaseSettingEntry *selected, uint cur_row, uint parent_last) const
 {
-	for (EntryVector::const_iterator it = this->entries.begin(); it != this->entries.end(); ++it) {
-		cur_row = (*it)->Draw(settings_ptr, left, right, y, first_row, max_row, selected, cur_row, parent_last);
-		if (cur_row >= max_row) {
-			break;
-		}
+	for (const auto &it : this->entries) {
+		cur_row = it->Draw(settings_ptr, left, right, y, first_row, max_row, selected, cur_row, parent_last);
+		if (cur_row >= max_row) break;
 	}
 	return cur_row;
 }
@@ -1836,6 +1930,15 @@ static SettingsContainer &GetSettingsTree()
 				general->Add(new SettingEntry("gui.right_mouse_wnd_close"));
 			}
 
+			SettingsPage *save = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_SAVE));
+			{
+				save->Add(new SettingEntry("gui.autosave"));
+				save->Add(new ConditionallyHiddenSettingEntry("gui.autosave_custom_days", []() -> bool { return _settings_client.gui.autosave != 5; }));
+				save->Add(new ConditionallyHiddenSettingEntry("gui.autosave_custom_minutes", []() -> bool { return _settings_client.gui.autosave != 6; }));
+				save->Add(new SettingEntry("gui.autosave_on_network_disconnect"));
+				save->Add(new SettingEntry("gui.savegame_overwrite_confirm"));
+			}
+
 			SettingsPage *viewports = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_VIEWPORTS));
 			{
 				SettingsPage *viewport_map = viewports->Add(new SettingsPage(STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS));
@@ -1880,6 +1983,7 @@ static SettingsContainer &GetSettingsTree()
 				viewports->Add(new SettingEntry("gui.measure_tooltip"));
 				viewports->Add(new SettingEntry("gui.loading_indicators"));
 				viewports->Add(new SettingEntry("gui.show_track_reservation"));
+				viewports->Add(new SettingEntry("gui.disable_water_animation"));
 			}
 
 			SettingsPage *construction = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_CONSTRUCTION));
@@ -1892,10 +1996,37 @@ static SettingsContainer &GetSettingsTree()
 				construction->Add(new SettingEntry("gui.demolish_confirm_mode"));
 			}
 
+			SettingsPage *vehicle_windows = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS));
+			{
+				vehicle_windows->Add(new SettingEntry("gui.advanced_vehicle_list"));
+				vehicle_windows->Add(new SettingEntry("gui.show_newgrf_name"));
+				vehicle_windows->Add(new SettingEntry("gui.show_cargo_in_vehicle_lists"));
+				vehicle_windows->Add(new SettingEntry("gui.show_wagon_intro_year"));
+				vehicle_windows->Add(new SettingEntry("gui.show_train_length_in_details"));
+				vehicle_windows->Add(new SettingEntry("gui.show_train_weight_ratios_in_details"));
+				vehicle_windows->Add(new SettingEntry("gui.show_vehicle_group_in_details"));
+				vehicle_windows->Add(new SettingEntry("gui.show_vehicle_list_company_colour"));
+				vehicle_windows->Add(new SettingEntry("gui.show_veh_list_cargo_filter"));
+				vehicle_windows->Add(new SettingEntry("gui.show_adv_load_mode_features"));
+				vehicle_windows->Add(new SettingEntry("gui.disable_top_veh_list_mass_actions"));
+				vehicle_windows->Add(new SettingEntry("gui.show_depot_sell_gui"));
+				vehicle_windows->Add(new SettingEntry("gui.open_vehicle_gui_clone_share"));
+				vehicle_windows->Add(new SettingEntry("gui.vehicle_names"));
+				vehicle_windows->Add(new SettingEntry("gui.station_rating_tooltip_mode"));
+				vehicle_windows->Add(new SettingEntry("gui.dual_pane_train_purchase_window"));
+				vehicle_windows->Add(new ConditionallyHiddenSettingEntry("gui.dual_pane_train_purchase_window_dual_buttons", []() -> bool { return !_settings_client.gui.dual_pane_train_purchase_window; }));
+				vehicle_windows->Add(new SettingEntry("gui.show_order_occupancy_by_default"));
+				vehicle_windows->Add(new SettingEntry("gui.show_order_management_button"));
+				vehicle_windows->Add(new SettingEntry("gui.show_group_hierarchy_name"));
+				vehicle_windows->Add(new ConditionallyHiddenSettingEntry("gui.show_vehicle_group_hierarchy_name", []() -> bool { return !_settings_client.gui.show_group_hierarchy_name; }));
+				vehicle_windows->Add(new SettingEntry("gui.enable_single_veh_shared_order_gui"));
+			}
+
 			SettingsPage *departureboards = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_DEPARTUREBOARDS));
 			{
 				departureboards->Add(new SettingEntry("gui.max_departures"));
-				departureboards->Add(new SettingEntry("gui.max_departure_time"));
+				departureboards->Add(new ConditionallyHiddenSettingEntry("gui.max_departure_time", []() -> bool { return _settings_time.time_in_minutes; }));
+				departureboards->Add(new ConditionallyHiddenSettingEntry("gui.max_departure_time_minutes", []() -> bool { return !_settings_time.time_in_minutes; }));
 				departureboards->Add(new SettingEntry("gui.departure_calc_frequency"));
 				departureboards->Add(new SettingEntry("gui.departure_show_vehicle"));
 				departureboards->Add(new SettingEntry("gui.departure_show_group"));
@@ -1950,42 +2081,15 @@ static SettingsContainer &GetSettingsTree()
 				advsig->Add(new SettingEntry("gui.show_progsig_ui"));
 				advsig->Add(new SettingEntry("gui.show_noentrysig_ui"));
 				advsig->Add(new SettingEntry("gui.show_adv_tracerestrict_features"));
+				advsig->Add(new SettingEntry("gui.adv_sig_bridge_tun_modes"));
 			}
 
 			interface->Add(new SettingEntry("gui.fast_forward_speed_limit"));
-			interface->Add(new SettingEntry("gui.autosave"));
-			interface->Add(new ConditionallyHiddenSettingEntry("gui.autosave_custom_days", []() -> bool { return _settings_client.gui.autosave != 5; }));
-			interface->Add(new ConditionallyHiddenSettingEntry("gui.autosave_custom_minutes", []() -> bool { return _settings_client.gui.autosave != 6; }));
-			interface->Add(new SettingEntry("gui.autosave_on_network_disconnect"));
-			interface->Add(new SettingEntry("gui.savegame_overwrite_confirm"));
 			interface->Add(new SettingEntry("gui.toolbar_pos"));
 			interface->Add(new SettingEntry("gui.statusbar_pos"));
 			interface->Add(new SettingEntry("gui.prefer_teamchat"));
-			interface->Add(new SettingEntry("gui.advanced_vehicle_list"));
-			interface->Add(new SettingEntry("gui.show_newgrf_name"));
-			interface->Add(new SettingEntry("gui.show_cargo_in_vehicle_lists"));
-			interface->Add(new SettingEntry("gui.show_wagon_intro_year"));
-			interface->Add(new SettingEntry("gui.show_train_length_in_details"));
-			interface->Add(new SettingEntry("gui.show_train_weight_ratios_in_details"));
-			interface->Add(new SettingEntry("gui.show_vehicle_group_in_details"));
-			interface->Add(new SettingEntry("gui.show_vehicle_list_company_colour"));
-			interface->Add(new SettingEntry("gui.show_veh_list_cargo_filter"));
-			interface->Add(new SettingEntry("gui.show_adv_load_mode_features"));
-			interface->Add(new SettingEntry("gui.disable_top_veh_list_mass_actions"));
-			interface->Add(new SettingEntry("gui.adv_sig_bridge_tun_modes"));
 			interface->Add(new SettingEntry("gui.sort_track_types_by_speed"));
-			interface->Add(new SettingEntry("gui.show_depot_sell_gui"));
-			interface->Add(new SettingEntry("gui.open_vehicle_gui_clone_share"));
-			interface->Add(new SettingEntry("gui.vehicle_names"));
-			interface->Add(new SettingEntry("gui.station_rating_tooltip_mode"));
-			interface->Add(new SettingEntry("gui.dual_pane_train_purchase_window"));
-			interface->Add(new ConditionallyHiddenSettingEntry("gui.dual_pane_train_purchase_window_dual_buttons", []() -> bool { return !_settings_client.gui.dual_pane_train_purchase_window; }));
 			interface->Add(new SettingEntry("gui.allow_hiding_waypoint_labels"));
-			interface->Add(new SettingEntry("gui.disable_water_animation"));
-			interface->Add(new SettingEntry("gui.show_order_occupancy_by_default"));
-			interface->Add(new SettingEntry("gui.show_order_management_button"));
-			interface->Add(new SettingEntry("gui.show_group_hierarchy_name"));
-			interface->Add(new ConditionallyHiddenSettingEntry("gui.show_vehicle_group_hierarchy_name", []() -> bool { return !_settings_client.gui.show_group_hierarchy_name; }));
 		}
 
 		SettingsPage *advisors = main->Add(new SettingsPage(STR_CONFIG_SETTING_ADVISORS));
@@ -2278,7 +2382,6 @@ static SettingsContainer &GetSettingsTree()
 				cdist->Add(new SettingEntry("linkgraph.demand_distance"));
 				cdist->Add(new SettingEntry("linkgraph.demand_size"));
 				cdist->Add(new SettingEntry("linkgraph.short_path_saturation"));
-				cdist->Add(new SettingEntry("linkgraph.recalc_not_scaled_by_daylength"));
 				cdist->Add(new SettingEntry("linkgraph.aircraft_link_scale"));
 			}
 			SettingsPage *treedist = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_TREES));
@@ -2295,6 +2398,7 @@ static SettingsContainer &GetSettingsTree()
 			environment->Add(new SettingEntry("station.catchment_increase"));
 			environment->Add(new SettingEntry("station.cargo_class_rating_wait_time"));
 			environment->Add(new SettingEntry("station.station_size_rating_cargo_amount"));
+			environment->Add(new SettingEntry("economy.tick_rate"));
 		}
 
 		SettingsPage *ai = main->Add(new SettingsPage(STR_CONFIG_SETTING_AI));
@@ -2327,7 +2431,7 @@ static SettingsContainer &GetSettingsTree()
 
 			ai->Add(new SettingEntry("economy.give_money"));
 			ai->Add(new SettingEntry("economy.allow_shares"));
-			ai->Add(new SettingEntry("economy.min_years_for_shares"));
+			ai->Add(new ConditionallyHiddenSettingEntry("economy.min_years_for_shares", []() -> bool { return !GetGameSettings().economy.allow_shares; }));
 			ai->Add(new SettingEntry("difficulty.money_cheat_in_multiplayer"));
 			ai->Add(new SettingEntry("difficulty.rename_towns_in_multiplayer"));
 			ai->Add(new SettingEntry("difficulty.override_town_settings_in_multiplayer"));
@@ -2712,7 +2816,7 @@ struct GameSettingsWindow : Window {
 				this->closing_dropdown = false;
 
 				const NWidgetBase *wid = this->GetWidget<NWidgetBase>(WID_GS_OPTIONSPANEL);
-				int rel_y = (pt.y - (int)wid->pos_y - WidgetDimensions::scaled.framerect.top) % wid->resize_y;
+				int rel_y = (pt.y - wid->pos_y - WidgetDimensions::scaled.framerect.top) % wid->resize_y;
 
 				Rect wi_rect;
 				wi_rect.left = pt.x - (_current_text_dir == TD_RTL ? SETTING_BUTTON_WIDTH - 1 - x : x);
@@ -2858,7 +2962,7 @@ struct GameSettingsWindow : Window {
 			/* Save the correct currency-translated value */
 			if (sd->flags & SF_GUI_CURRENCY) llvalue /= _currency->rate;
 
-			value = (int32)ClampToI32(llvalue);
+			value = ClampTo<int32>(llvalue);
 
 			/* Save the correct velocity-translated value */
 			if (sd->flags & SF_GUI_VELOCITY) value = ConvertDisplaySpeedToKmhishSpeed(value, VEH_TRAIN);
@@ -2989,11 +3093,11 @@ static const NWidgetPart _nested_settings_selection_widgets[] = {
 		NWidget(NWID_VERTICAL), SetPIP(WidgetDimensions::unscaled.frametext.top, WidgetDimensions::unscaled.vsep_normal, WidgetDimensions::unscaled.frametext.bottom),
 			NWidget(NWID_HORIZONTAL), SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.hsep_wide, WidgetDimensions::unscaled.frametext.right),
 				NWidget(WWT_TEXT, COLOUR_MAUVE, WID_GS_RESTRICT_CATEGORY), SetDataTip(STR_CONFIG_SETTING_RESTRICT_CATEGORY, STR_NULL),
-				NWidget(WWT_DROPDOWN, COLOUR_MAUVE, WID_GS_RESTRICT_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_BLACK_STRING, STR_CONFIG_SETTING_RESTRICT_DROPDOWN_HELPTEXT), SetFill(1, 0), SetResize(1, 0),
+				NWidget(WWT_DROPDOWN, COLOUR_MAUVE, WID_GS_RESTRICT_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING, STR_CONFIG_SETTING_RESTRICT_DROPDOWN_HELPTEXT), SetFill(1, 0), SetResize(1, 0),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL), SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.hsep_wide, WidgetDimensions::unscaled.frametext.right),
 				NWidget(WWT_TEXT, COLOUR_MAUVE, WID_GS_RESTRICT_TYPE), SetDataTip(STR_CONFIG_SETTING_RESTRICT_TYPE, STR_NULL),
-				NWidget(WWT_DROPDOWN, COLOUR_MAUVE, WID_GS_TYPE_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_BLACK_STRING, STR_CONFIG_SETTING_TYPE_DROPDOWN_HELPTEXT), SetFill(1, 0), SetResize(1, 0),
+				NWidget(WWT_DROPDOWN, COLOUR_MAUVE, WID_GS_TYPE_DROPDOWN), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING, STR_CONFIG_SETTING_TYPE_DROPDOWN_HELPTEXT), SetFill(1, 0), SetResize(1, 0),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL), SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.hsep_wide, WidgetDimensions::unscaled.frametext.right),
 				NWidget(WWT_TEXT, COLOUR_MAUVE), SetFill(0, 1), SetDataTip(STR_CONFIG_SETTING_FILTER_TITLE, STR_NULL),

@@ -128,39 +128,39 @@ STR_QUANTITY_N_A                                                :indisponibilă
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}CL
-STR_ABBREV_COAL                                                 :{TINY_FONT}CB
-STR_ABBREV_MAIL                                                 :{TINY_FONT}PO
-STR_ABBREV_OIL                                                  :{TINY_FONT}PT
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}AN
-STR_ABBREV_GOODS                                                :{TINY_FONT}BN
-STR_ABBREV_GRAIN                                                :{TINY_FONT}CR
-STR_ABBREV_WOOD                                                 :{TINY_FONT}LM
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}FE
-STR_ABBREV_STEEL                                                :{TINY_FONT}OT
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}VL
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}CP
-STR_ABBREV_MAIZE                                                :{TINY_FONT}PR
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FR
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DM
-STR_ABBREV_FOOD                                                 :{TINY_FONT}AL
-STR_ABBREV_PAPER                                                :{TINY_FONT}HR
-STR_ABBREV_GOLD                                                 :{TINY_FONT}AU
-STR_ABBREV_WATER                                                :{TINY_FONT}AP
-STR_ABBREV_WHEAT                                                :{TINY_FONT}GR
-STR_ABBREV_RUBBER                                               :{TINY_FONT}CC
-STR_ABBREV_SUGAR                                                :{TINY_FONT}ZH
-STR_ABBREV_TOYS                                                 :{TINY_FONT}JC
-STR_ABBREV_SWEETS                                               :{TINY_FONT}BB
-STR_ABBREV_COLA                                                 :{TINY_FONT}CO
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}VZ
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BL
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}CM
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}BA
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}SC
-STR_ABBREV_NONE                                                 :{TINY_FONT}NU
-STR_ABBREV_ALL                                                  :{TINY_FONT}TOT
+STR_ABBREV_PASSENGERS                                           :CL
+STR_ABBREV_COAL                                                 :CB
+STR_ABBREV_MAIL                                                 :PO
+STR_ABBREV_OIL                                                  :PT
+STR_ABBREV_LIVESTOCK                                            :AN
+STR_ABBREV_GOODS                                                :BN
+STR_ABBREV_GRAIN                                                :CR
+STR_ABBREV_WOOD                                                 :LM
+STR_ABBREV_IRON_ORE                                             :FE
+STR_ABBREV_STEEL                                                :OT
+STR_ABBREV_VALUABLES                                            :VL
+STR_ABBREV_COPPER_ORE                                           :CP
+STR_ABBREV_MAIZE                                                :PR
+STR_ABBREV_FRUIT                                                :FR
+STR_ABBREV_DIAMONDS                                             :DM
+STR_ABBREV_FOOD                                                 :AL
+STR_ABBREV_PAPER                                                :HR
+STR_ABBREV_GOLD                                                 :AU
+STR_ABBREV_WATER                                                :AP
+STR_ABBREV_WHEAT                                                :GR
+STR_ABBREV_RUBBER                                               :CC
+STR_ABBREV_SUGAR                                                :ZH
+STR_ABBREV_TOYS                                                 :JC
+STR_ABBREV_SWEETS                                               :BB
+STR_ABBREV_COLA                                                 :CO
+STR_ABBREV_CANDYFLOSS                                           :VZ
+STR_ABBREV_BUBBLES                                              :BL
+STR_ABBREV_TOFFEE                                               :CM
+STR_ABBREV_BATTERIES                                            :BA
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :SC
+STR_ABBREV_NONE                                                 :NU
+STR_ABBREV_ALL                                                  :TOT
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA}{NBSP}{P călător călători "de călători"}
@@ -191,14 +191,15 @@ STR_COLOUR_WHITE                                                :Alb
 STR_COLOUR_RANDOM                                               :Aleator
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA} m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}dale/zi
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}Noduri
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}cp
-STR_UNITS_POWER_METRIC                                          :{COMMA}cp
-STR_UNITS_POWER_SI                                              :{COMMA}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}cp
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}cp
+STR_UNITS_POWER_SI                                              :{DECIMAL}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}cp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}cp/t
@@ -210,29 +211,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA}{NBSP}{P tonă tone "de tone"}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA}{NBSP}{P tonă tone "de tone"}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}{P tonă tone "de tone"}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL}{NBSP}{P tonă tone "de tone"}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}{P galon galoane "de galoane"}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}{P litru litri "de litri"}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA} m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}{P galon galoane "de galoane"}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}{P litru litri "de litri"}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL} m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA} lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA} kgf
-STR_UNITS_FORCE_SI                                              :{COMMA} kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL} lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL} kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL} kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA} ft
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA} m
-STR_UNITS_HEIGHT_SI                                             :{COMMA} m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} ft
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtru:
@@ -929,6 +930,16 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Copiază
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Opţiuni
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :General
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Grafică
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Alegeți setările de sunet și muzică
+
+STR_GAME_OPTIONS_VOLUME                                         :Volum
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muzică
+
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unitate monetară
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Alege unitatea monetară
 
@@ -982,10 +993,8 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Alege in
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Dezactivată
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :În fiecare lună
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :La fiecare 3 luni
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :La fiecare 6 luni
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :La fiecare 12 luni
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :La fiecare 30 de minute
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :La fiecare 120 de minute
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Limba
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Alege limba în care doreşti afişată interfaţa
@@ -1021,6 +1030,7 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Grafică
 
@@ -1803,13 +1813,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Original
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Lin
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Înghețată
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Permite cumpărarea de acţiuni de la alte companii: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Dacă este activată, se permite cumpărarea și vânzarea de acțiuni ale companiilor. Acțiunile devin disponibile doar când compania depășește o anumită vârstă
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Vârsta minimă a companiilor pentru tranzacțiile cu acțiuni: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Stabilește vechimea minimă a unei companii, ca alții să-i poată tranzacționa acțiunile.
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Procentul din profitul pe secţiune care să fie plătit pentru alimentare: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Procentul din câştig care este oferit legăturilor intermediare pentru alimentare, oferind mai mult control asupra încasărilor
 
@@ -1923,10 +1926,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :deloc
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Multiplicator iniţial dimensiune oraş: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Dimensiunea medie a orașelor mari față de orașele normale, la începutul jocului
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Actualizează graficul de distribuţie la fiecare {STRING}{NBSP}{P 0:2 zi zile "de zile"}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Interval de timp între recalculările graficului de conexiuni. Fiecare recalculare calculează planurile unei componente ale graficului. Asta înseamnă că o valoare X pentru această setare nu va duce la actualizarea întregului grafic la fiecare X zile, ci doar o componentă va fi actualizată. Cu cât e mai mică valoarea, cu atât mai mult timp va fi necesar pentru calcule. Cu cât e mai mare valoarea, cu atât va dura mai mult până va începe distribuția mărfii pe rute noi.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Acordă {STRING}{NBSP}{P 0:2 zi zile "de zile"} pentru recalcularea graficului de distribuţie
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Timpul necesar pentru fiecare recalculare a unei componente a graficului de legătură. Când se începe o recalculare, este generat un fir de execuție căruia i se permite să ruleze pentru acest număr de zile. Cu cât setați acest lucru mai scurt, cu atât este mai probabil ca firul să nu fie terminat atunci când trebuie. Apoi jocul se oprește până când este ("lag"). Cu cât îl setați mai mult, cu atât este nevoie de mai mult pentru ca distribuția să fie actualizată când se schimbă rutele.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Modalitatea de distribuire a pasagerilor: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Simetric" înseamnă că aproximativ același număr de pasageri va fi transportat din stația A spre stația B, precum de la B la A. "Asimetric" presupune transportul unui număr arbitrar de pasageri în fiecare direcție. "Manual" înseamnă că repartizarea pasagerilor nu va fi automatizată.
@@ -1959,6 +1958,7 @@ STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Imperial (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Metric (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Unități de joc (dale/zi)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Noduri
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Unitate putere vehicule: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Afişează puterea vehiculelor în interfaţă folosind unităţile selectate
@@ -2385,6 +2385,7 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Conexiu
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}Nu
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Da, de data asta
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Da, nu mă mai întreba
+
 
 STR_NETWORK_SPECTATORS                                          :Spectatori
 
@@ -3707,7 +3708,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} {P navă nave "de nave"}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Niciunul
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Valoarea companiei: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% deţinute de {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infrastructură:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} pătrățele de cale ferată
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} pătrățele cu drumuri
@@ -3735,11 +3735,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nume com
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Schimbă numele companiei
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Nume preşedinte
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Schimbă numele președintelui
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Cumpără 25% din acţiunile companiei
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Vinde 25% din acţiunile companiei
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Cumpără 25% din acțiunile acestei companii. Shift+clic arată costul estimat fără să cumpere acțiuni
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Vinde 25% din acțiunile acestei companii. Shift+clic arată costul estimat fără să efectueze vânzarea
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Noul nume al companiei
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Noul nume al preşedintelui
@@ -3818,8 +3813,6 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Trimite 
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Înlocuiește vehiculele
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Trimite in service
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Profit anul acesta: {CURRENCY_LONG} (anul trecut: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Trimite la depou
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Trimite la depou
@@ -4631,7 +4624,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Script de joc
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Închide
 STR_AI_SETTINGS_RESET                                           :{BLACK}Resetează
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Perioada (în zile) după care această librărie IA va fi activată, după cea anterioară (valoare aproximativă): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4640,7 +4632,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Încadre
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Vezi fișierul readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Listă modificări
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licenţă
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING}, fișier readme al {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING}, lista de modificări a {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING}, licența fișierului {STRING}
@@ -4768,9 +4760,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Nu poţi
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Nu se pot da bani acestei companii...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Nu se poate cumpăra compania...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Nu se poate construi sediul companiei...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nu se pot cumpăra 25% din acţiunile acestei companii...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Nu se pot vinde 25% din acţiunile acestei companii...
-STR_ERROR_PROTECTED                                             :{WHITE}Compania nu are vechimea necesară pentru tranzacționarea de acțiuni...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Nu pot construi nici un oras
@@ -5103,6 +5092,7 @@ STR_ERROR_NO_BUOY                                               :{WHITE}Nu exist
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Nu pot programa vehiculul...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Vehiculele pot aştepta numai în staţii
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Acest vehicul nu are oprire în această staţie
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... orarul este incomplet
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... prea multe semne
@@ -5514,10 +5504,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Elicopter Power
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Companie {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grup {COMMA}
@@ -5598,33 +5588,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

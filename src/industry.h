@@ -21,6 +21,8 @@
 typedef Pool<Industry, IndustryID, 64, 64000> IndustryPool;
 extern IndustryPool _industry_pool;
 
+static const Year PROCESSING_INDUSTRY_ABANDONMENT_YEARS = 5; ///< If a processing industry doesn't produce for this many consecutive years, it may close.
+
 /**
  * Production level maximum, minimum and default values.
  * It is not a value been really used in order to change, but rather an indicator
@@ -181,10 +183,10 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 		memset(&counts, 0, sizeof(counts));
 	}
 
-	inline const char *GetCachedName() const
+	inline const std::string &GetCachedName() const
 	{
 		if (this->cached_name.empty()) this->FillCachedName();
-		return this->cached_name.c_str();
+		return this->cached_name;
 	}
 
 private:

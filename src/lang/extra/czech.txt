@@ -11,6 +11,11 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :velmi pomalá
 
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Okno modifikačních kláves
 
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Každý měsíc
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Každé 3 měsíce
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Každých 6 měsíců
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Každých 12 měsíců
+
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -245,9 +250,6 @@ STR_CONFIG_SETTING_RANDOM_ROAD_RECONSTRUCTION_HELPTEXT          :Pravděpodobnos
 
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE                            :Minimální vzdálenost mezi městy: {STRING}
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE_HELPTEXT                   :Nastaví minimální počet políček mezi městy pro generování mapy a náhodně založené město
-
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED               :Neupravovat měřítko dnů distribučního grafu podle faktoru délky dne: {STRING}
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED_HELPTEXT      :Pokud je zapnuto, interval přepočtu distribučního grafu a čas jsou v jednotkách původních dnů, namísto kalendářních dnů naškálovaných podle délky dne.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO                       :Přepsat mód distribuce pro tento náklad: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM                 :Přepsat mód distribuce pro {STRING}: {STRING}
@@ -577,7 +579,7 @@ STR_PROGSIG_COND_NEVER                                          :nikdy
 STR_PROGSIG_COND_COMPARE                                        :{STRING} {STRING} {NUM}
 STR_PROGSIG_COND_SIGNAL_STATE                                   :stav návěstidla
 STR_PROGSIG_CONDVAR_SIGNAL_STATE_SPECIFIED                      :návěstidlo na {NUM} x {NUM} je zelený
-STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{RED}nespecifikované návěstidlo{STRING} je zelený
+STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{PUSH_COLOUR}{RED}nespecifikované návěstidlo{POP_COLOUR} je zelený
 STR_PROGSIG_CONDVAR_NUM_RED                                     :červených návěstidel
 STR_PROGSIG_CONDVAR_NUM_GREEN                                   :zelených návěstidel
 
@@ -624,3 +626,20 @@ STR_TRADITIONAL_AIRCRAFT_NAME                                   :{G=n}Letadlo {C
 # Scheduled Dispatch
 
 # Modifier key toggle window
+
+STR_CONFIG_SETTING_ALLOW_SHARES                                 :Povolit kupování podílu z ostatních společností: {STRING}
+STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Pokud je zapnuto, umožní kupovaní akcií ve společnostech. Akcie jsou k dispozici pouze u společností od určitého stáří
+
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimální stáří společnosti pro obchod s akciemi: {STRING}
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Určuje stáří společnosti, od kterého mohou ostatní společnosti kupovat a prodávat její akcie.
+
+STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% vlastněno {COMPANY})
+
+STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Koupit 25% podíl ve společnosti
+STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Prodat 25% podíl ve společnosti
+STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Koupit 25% podíl v této společnosti. Stisknutý Shift+Kliknutí pro zobrazení odhadované ceny
+STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Prodat 25% podíl v této společnosti. Stisknutý Shift+Kliknutí pro zobrazení odhadované ceny
+
+STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Nelze koupit podíl v této společnosti...
+STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Nelze prodat podíl v této společnosti...
+STR_ERROR_PROTECTED                                             :{WHITE}Tato společnost zatím neobchoduje s akciemi...

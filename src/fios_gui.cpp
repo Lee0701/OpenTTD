@@ -8,7 +8,7 @@
 /** @file fios_gui.cpp GUIs for loading/saving games, scenarios, heightmaps, ... */
 
 #include "stdafx.h"
-#include "saveload/saveload.h"
+#include "sl/saveload.h"
 #include "error.h"
 #include "gui.h"
 #include "gfx_func.h"
@@ -27,6 +27,7 @@
 #include "core/geometry_func.hpp"
 #include "gamelog.h"
 #include "stringfilter_type.h"
+#include "gamelog.h"
 
 #include "widgets/fios_widget.h"
 
@@ -48,8 +49,7 @@ void LoadCheckData::Clear()
 {
 	this->checkable = false;
 	this->error = INVALID_STRING_ID;
-	free(this->error_data);
-	this->error_data = nullptr;
+	this->error_msg.clear();
 
 	this->map_size_x = this->map_size_y = 256; // Default for old savegames which do not store mapsize.
 	this->current_date = 0;
@@ -68,6 +68,8 @@ void LoadCheckData::Clear()
 
 	this->debug_log_data.clear();
 	this->debug_config_data.clear();
+
+	this->sl_is_ext_version = false;
 }
 
 /** Load game/scenario with optional content download */
@@ -382,24 +384,22 @@ public:
 
 		/* Select the initial directory. */
 		o_dir.type = FIOS_TYPE_DIRECT;
-		std::string dir;
 		switch (this->abstract_filetype) {
 			case FT_SAVEGAME:
-				dir = FioFindDirectory(SAVE_DIR);
+				o_dir.name = FioFindDirectory(SAVE_DIR);
 				break;
 
 			case FT_SCENARIO:
-				dir = FioFindDirectory(SCENARIO_DIR);
+				o_dir.name = FioFindDirectory(SCENARIO_DIR);
 				break;
 
 			case FT_HEIGHTMAP:
-				dir = FioFindDirectory(HEIGHTMAP_DIR);
+				o_dir.name = FioFindDirectory(HEIGHTMAP_DIR);
 				break;
 
 			default:
-				dir = _personal_dir;
+				o_dir.name = _personal_dir;
 		}
-		strecpy(o_dir.name, dir.c_str(), lastof(o_dir.name));
 
 		switch (this->fop) {
 			case SLO_SAVE:
@@ -505,7 +505,7 @@ public:
 			tr.top += FONT_HEIGHT_NORMAL;
 		} else if (_load_check_data.error != INVALID_STRING_ID) {
 			/* Incompatible / broken savegame */
-			SetDParamStr(0, _load_check_data.error_data);
+			SetDParamStr(0, _load_check_data.error_msg);
 			tr.top = DrawStringMultiLine(tr, _load_check_data.error, TC_RED);
 		} else {
 			/* Warning if save unique id differ when saving */
@@ -648,10 +648,7 @@ public:
 			case WID_SL_LOAD_BUTTON: {
 				if (this->selected == nullptr || _load_check_data.HasErrors()) break;
 
-				const char *name = FiosBrowseTo(this->selected);
-				_file_to_saveload.SetMode(this->selected->type);
-				_file_to_saveload.SetName(name);
-				_file_to_saveload.SetTitle(this->selected->title);
+				_file_to_saveload.Set(*this->selected);
 
 				if (this->abstract_filetype == FT_HEIGHTMAP) {
 					delete this;
@@ -690,8 +687,7 @@ public:
 				}
 				const FiosItem *file = &this->fios_items[y];
 
-				const char *name = FiosBrowseTo(file);
-				if (name == nullptr) {
+				if (FiosBrowseTo(file)) {
 					/* Changed directory, need refresh. */
 					this->InvalidateData(SLIWD_RESCAN_FILES);
 					break;
@@ -704,14 +700,14 @@ public:
 
 						if (GetDetailedFileType(file->type) == DFT_GAME_FILE) {
 							/* Other detailed file types cannot be checked before. */
-							SaveOrLoad(name, SLO_CHECK, DFT_GAME_FILE, NO_DIRECTORY, false);
+							SaveOrLoad(file->name, SLO_CHECK, DFT_GAME_FILE, NO_DIRECTORY, false);
 						}
 
 						this->InvalidateData(SLIWD_SELECTION_CHANGES);
 					}
 					if (this->fop == SLO_SAVE) {
 						/* Copy clicked name to editbox */
-						this->filename_editbox.text.Assign(file->title);
+						this->filename_editbox.text.Assign(file->title.c_str());
 						this->SetWidgetDirty(WID_SL_SAVE_OSK_TITLE);
 					}
 				} else if (!_load_check_data.HasErrors()) {
@@ -721,9 +717,7 @@ public:
 							this->OnClick(pt, WID_SL_LOAD_BUTTON, 1);
 						} else {
 							assert(this->abstract_filetype == FT_HEIGHTMAP);
-							_file_to_saveload.SetMode(file->type);
-							_file_to_saveload.SetName(name);
-							_file_to_saveload.SetTitle(file->title);
+							_file_to_saveload.Set(*file);
 
 							delete this;
 							ShowHeightmapLoad();
@@ -808,12 +802,27 @@ public:
 				_file_to_saveload.name = FiosMakeSavegameName(this->filename_editbox.text.buf);
 				const bool known_id = _load_check_data.settings.game_creation.generation_unique_id != 0;
 				const bool different_id = known_id && _load_check_data.settings.game_creation.generation_unique_id != _settings_game.game_creation.generation_unique_id;
-				if (_settings_client.gui.savegame_overwrite_confirm >= 1 && different_id) {
+				const bool file_exists = FioCheckFileExists(_file_to_saveload.name, Subdirectory::SAVE_DIR);
+				if (_settings_client.gui.savegame_overwrite_confirm >= 1 && different_id && file_exists) {
 					/* The save has a different id to the current game */
 					/* Show a caption box asking whether the user is sure to overwrite the save */
 					ShowQuery(STR_SAVELOAD_OVERWRITE_TITLE_DIFFERENT_ID, STR_SAVELOAD_OVERWRITE_WARNING_DIFFERENT_ID, this, SaveLoadWindow::SaveGameConfirmationCallback);
-				} else if (_settings_client.gui.savegame_overwrite_confirm >= (known_id ? 3 : 2) && FioCheckFileExists(_file_to_saveload.name, Subdirectory::SAVE_DIR)) {
-					ShowQuery(STR_SAVELOAD_OVERWRITE_TITLE, STR_SAVELOAD_OVERWRITE_WARNING, this, SaveLoadWindow::SaveGameConfirmationCallback);
+				} else if (_settings_client.gui.savegame_overwrite_confirm >= (known_id ? 3 : 2) && file_exists) {
+					if (this->selected != nullptr && !_load_check_data.sl_is_ext_version) {
+						const char *version = GamelogGetLastRevision(_load_check_data.gamelog_action, _load_check_data.gamelog_actions);
+
+						SetDParam(0, STR_SAVELOAD_OVERWRITE_TITLE);
+						std::string caption = GetString(STR_SAVELOAD_OVERWRITE_TITLE_DIFFERENT_VERSION_SUFFIX);
+
+						SetDParam(0, STR_SAVELOAD_OVERWRITE_WARNING);
+						SetDParam(1, (version != nullptr) ? STR_SAVELOAD_OVERWRITE_WARNING_VERSION_NAME : STR_EMPTY);
+						SetDParamStr(2, version);
+						std::string message = GetString(STR_SAVELOAD_OVERWRITE_WARNING_DIFFERENT_VERSION_SUFFIX);
+
+						ShowQuery(std::move(caption), std::move(message), this, SaveLoadWindow::SaveGameConfirmationCallback);
+					} else {
+						ShowQuery(STR_SAVELOAD_OVERWRITE_TITLE, STR_SAVELOAD_OVERWRITE_WARNING, this, SaveLoadWindow::SaveGameConfirmationCallback);
+					}
 				} else {
 					_switch_mode = SM_SAVE_GAME;
 				}
@@ -852,7 +861,7 @@ public:
 
 				_fios_path_changed = true;
 				this->fios_items.BuildFileList(this->abstract_filetype, this->fop);
-				this->vscroll->SetCount((uint)this->fios_items.size());
+				this->vscroll->SetCount(this->fios_items.size());
 				this->selected = nullptr;
 				_load_check_data.Clear();
 
@@ -902,7 +911,7 @@ public:
 						items_shown_count++;
 					} else {
 						this->string_filter.ResetState();
-						this->string_filter.AddLine(this->fios_items[i].title);
+						this->string_filter.AddLine(this->fios_items[i].title.c_str());
 						/* We set the vector to show this fios element as filtered depending on the result of the filter */
 						this->fios_items_shown[i] = this->string_filter.GetState();
 						if (this->fios_items_shown[i]) items_shown_count++;

@@ -123,7 +123,7 @@ public:
 
 		ResetObjectToPlace();
 
-		this->vscroll->SetCount((int)this->object_classes.size());
+		this->vscroll->SetCount(this->object_classes.size());
 
 		EnsureSelectedObjectClassIsVisible();
 
@@ -140,11 +140,9 @@ public:
 	static bool TagNameFilter(ObjectClassID const *oc, StringFilter &filter)
 	{
 		ObjectClass *objclass = ObjectClass::Get(*oc);
-		char buffer[DRAW_STRING_BUFFER];
-		GetString(buffer, objclass->name, lastof(buffer));
 
 		filter.ResetState();
-		filter.AddLine(buffer);
+		filter.AddLine(GetString(objclass->name));
 		return filter.GetState();
 	}
 
@@ -166,7 +164,7 @@ public:
 		this->object_classes.RebuildDone();
 		this->object_classes.Sort();
 
-		this->vscroll->SetCount((uint)this->object_classes.size());
+		this->vscroll->SetCount(this->object_classes.size());
 	}
 
 	/**
@@ -715,7 +713,7 @@ static const NWidgetPart _nested_build_object_widgets[] = {
 						NWidget(WWT_PANEL, COLOUR_GREY, WID_BO_OBJECT_SPRITE), SetDataTip(0x0, STR_OBJECT_BUILD_PREVIEW_TOOLTIP), EndContainer(),
 					EndContainer(),
 				EndContainer(),
-				NWidget(WWT_TEXT, COLOUR_DARK_GREEN, WID_BO_OBJECT_NAME), SetDataTip(STR_ORANGE_STRING, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_DARK_GREEN, WID_BO_OBJECT_NAME), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_ORANGE),
 				NWidget(WWT_TEXT, COLOUR_DARK_GREEN, WID_BO_OBJECT_SIZE), SetDataTip(STR_OBJECT_BUILD_SIZE, STR_NULL),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetScrollbar(WID_BO_SELECT_SCROLL),
@@ -755,6 +753,27 @@ Window *ShowBuildObjectPicker()
 		return AllocateWindowDescFront<BuildObjectWindow>(&_build_object_desc, 0);
 	}
 	return nullptr;
+}
+
+/** Show our object picker, and select a particular spec.  */
+void ShowBuildObjectPickerAndSelect(const ObjectSpec *spec)
+{
+	if (spec == nullptr || !spec->IsAvailable() || !ObjectClass::HasUIClass()) return;
+
+	int spec_id = -1;
+	const ObjectClass *objclass = ObjectClass::Get(spec->cls_id);
+	for (int i = 0; i < (int)objclass->GetSpecCount(); i++) {
+		if (objclass->GetSpec(i) == spec) {
+			spec_id = i;
+		}
+	}
+	if (spec_id < 0) return;
+
+	BuildObjectWindow *w = AllocateWindowDescFront<BuildObjectWindow>(&_build_object_desc, 0, true);
+	if (w != nullptr) {
+		w->SelectOtherClass(spec->cls_id);
+		w->SelectOtherObject(spec_id);
+	}
 }
 
 /** Reset all data of the object GUI. */

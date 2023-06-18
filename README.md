@@ -1,4 +1,4 @@
-## JGR's Patchpack version 0.53.2
+## JGR's Patchpack version 0.54.1
 
 This is a collection of patches applied to [OpenTTD](http://www.openttd.org/)
 
@@ -199,6 +199,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add setting to limit length of continuous inclined roads built by towns.
 * Allow overriding town road construction settings and whether town growth is enabled on a per-town basis, add setting to enable this for multiplayer clients.
 * Allow NewGRFs to set town zone radii.
+* Show town count in town directory window.
 
 #### Industries
 
@@ -227,6 +228,7 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Add setting to disable object expiry after a given year.
 * Add setting to ignore object introduction dates.
 * Add setting for whether to confirm before demolishing industries and/or rail stations.
+* Add picker tool for objects, rail types, road types, rail stations/waypoints and road stops/waypoints, to the main toolbar help menu.
 
 #### Scenario Editor
 
@@ -254,6 +256,8 @@ See [installation.md](/installation.md) for instructions on how to install.
 * Make the company infrastructure window scrollable.
 * Add setting to disable water animation depending on zoom level.
 * Add zoom in support to the minimap window.
+* Add setting to increase the size of the main toolbar.
+* Add cargo filtering and a show by cargo mode to the company delivered cargo graph.
 
 #### Limits
 
@@ -569,6 +573,9 @@ The exact licensing terms can be found in `src/3rdparty/os2/getaddrinfo.c` resp.
 The implementation of C++17 `std::optional` in `src/3rdparty/optional` is licensed under the Boost Software License - Version 1.0.
 See `src/3rdparty/optional/LICENSE_1_0.txt` for the complete license text.
 
+
+The icu scriptrun implementation in `src/3rdparty/icu` is licensed under the Unicode license.
+See `src/3rdparty/icu/LICENSE` for the complete license text.
 
 ## 4.0 Credits
 

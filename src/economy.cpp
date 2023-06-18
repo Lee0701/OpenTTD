@@ -1051,7 +1051,7 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_days,
 
 	/* Use callback to calculate cargo profit, if available */
 	if (HasBit(cs->callback_mask, CBM_CARGO_PROFIT_CALC)) {
-		uint32 var18 = std::min(dist, 0xFFFFu) | (std::min(num_pieces, 0xFFu) << 16) | (std::min<uint16>(transit_days, 0xFFu) << 24);
+		uint32 var18 = ClampTo<uint16_t>(dist) | (ClampTo<uint8_t>(num_pieces) << 16) | (ClampTo<uint8_t>(transit_days) << 24);
 		uint16 callback = GetCargoCallback(CBID_CARGO_PROFIT_CALC, 0, var18, cs);
 		if (callback != CALLBACK_FAILED) {
 			int result = GB(callback, 0, 14);
@@ -1151,7 +1151,7 @@ uint DeliverGoodsToIndustryNearestFirst(const Station *st, CargoID cargo_type, u
 		accepted += amount;
 
 		/* Update the cargo monitor. */
-		AddCargoDelivery(cargo_type, company, amount, ST_INDUSTRY, source, st, ind->index);
+		AddCargoDelivery(cargo_type, company, amount, SourceType::Industry, source, st, ind->index);
 
 		return num_pieces != 0;
 	});
@@ -1192,7 +1192,7 @@ uint DeliverGoodsToIndustryEqually(const Station *st, CargoID cargo_type, uint n
 		include(_cargo_delivery_destinations, e.ind);
 		e.ind->incoming_cargo_waiting[e.cargo_index] += e.delivered;
 		e.ind->last_cargo_accepted_at[e.cargo_index] = _date;
-		AddCargoDelivery(cargo_type, company, e.delivered, ST_INDUSTRY, source, st, e.ind->index);
+		AddCargoDelivery(cargo_type, company, e.delivered, SourceType::Industry, source, st, e.ind->index);
 	};
 
 	if (acceptingIndustries.size() == 1) {
@@ -1293,7 +1293,7 @@ static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, Ti
 	Station *st = Station::Get(dest);
 
 	/* Give the goods to the industry. */
-	uint accepted_ind = DeliverGoodsToIndustry(st, cargo_type, num_pieces, src_type == ST_INDUSTRY ? src : INVALID_INDUSTRY, company->index);
+	uint accepted_ind = DeliverGoodsToIndustry(st, cargo_type, num_pieces, src_type == SourceType::Industry ? src : INVALID_INDUSTRY, company->index);
 
 	/* If this cargo type is always accepted, accept all */
 	uint accepted_total = HasBit(st->always_accepted, cargo_type) ? num_pieces : accepted_ind;
@@ -1355,7 +1355,7 @@ static void TriggerIndustryProduction(Industry *i)
 			if (cargo_waiting == 0) continue;
 
 			for (uint ci_out = 0; ci_out < lengthof(i->produced_cargo_waiting); ci_out++) {
-				i->produced_cargo_waiting[ci_out] = std::min(i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256), 0xFFFFu);
+				i->produced_cargo_waiting[ci_out] = ClampTo<uint16_t>(i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256));
 			}
 
 			i->incoming_cargo_waiting[ci_in] = 0;
@@ -2132,8 +2132,8 @@ static void LoadUnloadVehicle(Vehicle *front)
 		}
 
 		/* if last speed is 0, we treat that as if no vehicle has ever visited the station. */
-		ge->last_speed = std::min(t, 255);
-		ge->last_age = std::min(_cur_year - front->build_year, 255);
+		ge->last_speed = ClampTo<uint8_t>(t);
+		ge->last_age = ClampTo<uint8_t>(_cur_year - front->build_year);
 
 		assert(v->cargo_cap >= v->cargo.StoredCount());
 		/* Capacity available for loading more cargo. */
@@ -2395,12 +2395,12 @@ void LoadUnloadStation(Station *st)
  */
 void CompaniesMonthlyLoop()
 {
+	CompaniesPayInterest();
 	CompaniesGenStatistics();
 	if (_settings_game.economy.inflation) {
 		AddInflation();
 		RecomputePrices();
 	}
-	CompaniesPayInterest();
 	HandleEconomyFluctuations();
 }
 
@@ -2482,17 +2482,14 @@ CommandCost CmdBuyShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1,
 
 	cost.AddCost(CalculateCompanyValue(c) >> 2);
 	if (flags & DC_EXEC) {
-		Owner *b = c->share_owners;
+		auto unowned_share = std::find(c->share_owners.begin(), c->share_owners.end(), INVALID_OWNER);
+		assert(unowned_share != c->share_owners.end()); // share owners is guaranteed to contain at least one INVALID_OWNER, i.e. unowned share
+		*unowned_share = _current_company;
 
-		while (*b != COMPANY_SPECTATOR) b++; // share owners is guaranteed to contain at least one COMPANY_SPECTATOR
-		*b = _current_company;
-
-		for (int i = 0; c->share_owners[i] == _current_company;) {
-			if (++i == 4) {
-				c->bankrupt_value = 0;
-				DoAcquireCompany(c);
-				break;
-			}
+		auto current_company_owns_share = [](auto share_owner) { return share_owner == _current_company; };
+		if (std::all_of(c->share_owners.begin(), c->share_owners.end(), current_company_owns_share)) {
+			c->bankrupt_value = 0;
+			DoAcquireCompany(c);
 		}
 		InvalidateWindowData(WC_COMPANY, target_company);
 		CompanyAdminUpdate(c);
@@ -2529,9 +2526,9 @@ CommandCost CmdSellShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1
 	cost = -(cost - (cost >> 7));
 
 	if (flags & DC_EXEC) {
-		Owner *b = c->share_owners;
-		while (*b != _current_company) b++; // share owners is guaranteed to contain company
-		*b = COMPANY_SPECTATOR;
+		auto our_owner = std::find(c->share_owners.begin(), c->share_owners.end(), _current_company);
+		assert(our_owner != c->share_owners.end()); // share owners is guaranteed to contain at least one INVALID_OWNER
+		*our_owner = INVALID_OWNER;
 		InvalidateWindowData(WC_COMPANY, target_company);
 		CompanyAdminUpdate(c);
 	}

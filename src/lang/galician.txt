@@ -129,39 +129,39 @@ STR_QUANTITY_N_A                                                :N/D
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}PX
-STR_ABBREV_COAL                                                 :{TINY_FONT}CA
-STR_ABBREV_MAIL                                                 :{TINY_FONT}CO
-STR_ABBREV_OIL                                                  :{TINY_FONT}PE
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}GA
-STR_ABBREV_GOODS                                                :{TINY_FONT}ME
-STR_ABBREV_GRAIN                                                :{TINY_FONT}GR
-STR_ABBREV_WOOD                                                 :{TINY_FONT}MA
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}FE
-STR_ABBREV_STEEL                                                :{TINY_FONT}AÇ
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}VA
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}CO
-STR_ABBREV_MAIZE                                                :{TINY_FONT}MI
-STR_ABBREV_FRUIT                                                :{TINY_FONT}FR
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}DI
-STR_ABBREV_FOOD                                                 :{TINY_FONT}CO
-STR_ABBREV_PAPER                                                :{TINY_FONT}PA
-STR_ABBREV_GOLD                                                 :{TINY_FONT}OU
-STR_ABBREV_WATER                                                :{TINY_FONT}AU
-STR_ABBREV_WHEAT                                                :{TINY_FONT}MI
-STR_ABBREV_RUBBER                                               :{TINY_FONT}CA
-STR_ABBREV_SUGAR                                                :{TINY_FONT}AZ
-STR_ABBREV_TOYS                                                 :{TINY_FONT}XO
-STR_ABBREV_SWEETS                                               :{TINY_FONT}LA
-STR_ABBREV_COLA                                                 :{TINY_FONT}CO
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}AL
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}BU
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}TO
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}PI
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}PL
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}BE
-STR_ABBREV_NONE                                                 :{TINY_FONT}NON
-STR_ABBREV_ALL                                                  :{TINY_FONT}TODO
+STR_ABBREV_PASSENGERS                                           :PX
+STR_ABBREV_COAL                                                 :CA
+STR_ABBREV_MAIL                                                 :CO
+STR_ABBREV_OIL                                                  :PE
+STR_ABBREV_LIVESTOCK                                            :GA
+STR_ABBREV_GOODS                                                :ME
+STR_ABBREV_GRAIN                                                :GR
+STR_ABBREV_WOOD                                                 :MA
+STR_ABBREV_IRON_ORE                                             :FE
+STR_ABBREV_STEEL                                                :AÇ
+STR_ABBREV_VALUABLES                                            :VA
+STR_ABBREV_COPPER_ORE                                           :CO
+STR_ABBREV_MAIZE                                                :MI
+STR_ABBREV_FRUIT                                                :FR
+STR_ABBREV_DIAMONDS                                             :DI
+STR_ABBREV_FOOD                                                 :CO
+STR_ABBREV_PAPER                                                :PA
+STR_ABBREV_GOLD                                                 :OU
+STR_ABBREV_WATER                                                :AU
+STR_ABBREV_WHEAT                                                :MI
+STR_ABBREV_RUBBER                                               :CA
+STR_ABBREV_SUGAR                                                :AZ
+STR_ABBREV_TOYS                                                 :XO
+STR_ABBREV_SWEETS                                               :LA
+STR_ABBREV_COLA                                                 :CO
+STR_ABBREV_CANDYFLOSS                                           :AL
+STR_ABBREV_BUBBLES                                              :BU
+STR_ABBREV_TOFFEE                                               :TO
+STR_ABBREV_BATTERIES                                            :PI
+STR_ABBREV_PLASTIC                                              :PL
+STR_ABBREV_FIZZY_DRINKS                                         :BE
+STR_ABBREV_NONE                                                 :NON
+STR_ABBREV_ALL                                                  :TODO
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA} pasaxeiro{P "" s}
@@ -192,14 +192,15 @@ STR_COLOUR_WHITE                                                :Branco
 STR_COLOUR_RANDOM                                               :Ao chou
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} mph
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} km/h
-STR_UNITS_VELOCITY_SI                                           :{COMMA} m/s
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} mph
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} km/h
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} m/s
 STR_UNITS_VELOCITY_GAMEUNITS                                    :{DECIMAL}{NBSP}cadros/día
+STR_UNITS_VELOCITY_KNOTS                                        :{DECIMAL}{NBSP}nudos
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA}cv
-STR_UNITS_POWER_METRIC                                          :{COMMA}cv
-STR_UNITS_POWER_SI                                              :{COMMA}kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL}cv
+STR_UNITS_POWER_METRIC                                          :{DECIMAL}cv
+STR_UNITS_POWER_SI                                              :{DECIMAL}kW
 
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_IMPERIAL                     :{DECIMAL}{NBSP}hp/t
 STR_UNITS_POWER_IMPERIAL_TO_WEIGHT_METRIC                       :{DECIMAL}{NBSP}hp/t
@@ -211,29 +212,29 @@ STR_UNITS_POWER_SI_TO_WEIGHT_IMPERIAL                           :{DECIMAL}{NBSP}
 STR_UNITS_POWER_SI_TO_WEIGHT_METRIC                             :{DECIMAL}{NBSP}kW/t
 STR_UNITS_POWER_SI_TO_WEIGHT_SI                                 :{DECIMAL}{NBSP}W/kg
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA}t
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA}kg
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL}t
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL}kg
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA} tonelada{P "" s}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} tonelada{P "" s}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} kg
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL} tonelada{P "" s}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} tonelada{P "" s}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} kg
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}gal
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA}l
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}m³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}gal
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL}l
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}m³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA} galón{P "" s}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA} litro{P "" s}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA} m³
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL} galón{P "" s}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL} litro{P "" s}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL} m³
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA} lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA} kgf
-STR_UNITS_FORCE_SI                                              :{COMMA} kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL} lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL} kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL} kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA} pés
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA} m
-STR_UNITS_HEIGHT_SI                                             :{COMMA} m
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} pés
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} m
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtrar:
@@ -344,9 +345,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}Abre a v
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Pausar partida
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Avance rápido da partida
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Opcións
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Gravar partida, abandonar partida, saír
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Amosa-lo mapa, ventá extra ou lista de rótulos
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Opcións e axustes
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Gravar, cargar ou abandonar partida, saír do programa
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Amosa-lo mapa, ventá extra, fluxo de carga ou lista de rótulos
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Amosa-lo directorio de cidades
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Amosa-las subvencións
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Amosa-la lista das estacións da compañía
@@ -354,9 +355,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Amosa-la
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Amosa-la información xeral da compañía
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Mostrar historial
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK} Mostrar lista de obxectivos
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Amosa-las gráficas
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Mostrar gráficos de compañías e taxas de pago de carga.
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}Amosa-lo cadro da liga de compañías
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Financia-la construción dunha nova industria ou listar tódalas industrias
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Examinar as industrias ou financiar a construción dunha nova industria.
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Amosa-la lista dos trens da compañía. Ctrl+Click alterna entre lista de grupos/vehículos
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Amosa-la lista dos vehículos de estrada da compañía. Ctrl+Click alterna entre lista de grupos/vehículos
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Amosar a lista dos barcos da compañía. Ctrl+Click alterna entre lista de grupos/vehículos
@@ -370,8 +371,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Constru�
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Construír aeroportos
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Abri-la ferramenta de terreo para subir/baixar terreo, plantar árbores, etc.
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Amosa-la ventá de son/música
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Amosa-la última mensaxe/nova, amosa-las opcións das mensaxes
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Información dunha área de terreo, consola, depuración de scripts, capturas de pantalla, acerca de OpenTTD
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Amosa-la última mensaxe/nova, histórico de mensaxes ou borra todas as mensaxes
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Información sobre a área de terra, capturas de pantalla, sobre OpenTTD e ferramentas de desenvolvedor.
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Intercambiar barras de ferramentas
 
 # Extra tooltips for the scenario editor toolbar
@@ -930,6 +931,24 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Copia a 
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Opcións da partida
+
+STR_GAME_OPTIONS_TAB_GENERAL                                    :Xeral
+STR_GAME_OPTIONS_TAB_GENERAL_TT                                 :{BLACK}Escolle os axustes xerais
+STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Gráficos
+STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Escoller opcións gráficas
+STR_GAME_OPTIONS_TAB_SOUND                                      :Son
+STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Escoller axustes de son e música
+
+STR_GAME_OPTIONS_VOLUME                                         :Volume
+STR_GAME_OPTIONS_SFX_VOLUME                                     :Efectos de son
+STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Música
+
+STR_GAME_OPTIONS_VOLUME_0                                       :0%
+STR_GAME_OPTIONS_VOLUME_25                                      :25%
+STR_GAME_OPTIONS_VOLUME_50                                      :50%
+STR_GAME_OPTIONS_VOLUME_75                                      :75%
+STR_GAME_OPTIONS_VOLUME_100                                     :100%
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unidades monetarias
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Selección de unidades monetarias
 
@@ -983,10 +1002,10 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Seleccio
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :Apagado
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Cada mes
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Cada 3 meses
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Cada 6 meses
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Cada 12 meses
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES             :Cada 10 minutos
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_30_MINUTES             :Cada 30 minutos
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_60_MINUTES             :Cada 60 minutos
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_120_MINUTES            :Cada 120 minutos
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Lingua
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Selecciona a lingua para a interface
@@ -1022,6 +1041,14 @@ STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
 STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
 STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Enquisa automática
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Participar nunha enquisa automática
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Cando se activa, OpenTTD enviará unha enquisa cando se sala dunha partida
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}Acerca da enquisa e privacidade
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Isto abre un navegador con máis información sobre a enquisa automática
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Previsualizar resultado da enquisa
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Amosar o resultado da enquisa da partida actual
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Gráficos
 
@@ -1152,6 +1179,7 @@ STR_CONFIG_SETTING_EXPAND_ALL                                   :{BLACK}Expandir
 STR_CONFIG_SETTING_COLLAPSE_ALL                                 :{BLACK}Minimizar todos
 STR_CONFIG_SETTING_RESET_ALL                                    :{BLACK}Restablecer todos os valores
 STR_CONFIG_SETTING_NO_EXPLANATION_AVAILABLE_HELPTEXT            :(sen explicación dispoñíbel)
+STR_CONFIG_SETTING_VALUE                                        :{PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}
 STR_CONFIG_SETTING_DEFAULT_VALUE                                :{LTBLUE}Valor por defecto: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE                                         :{LTBLUE}Tipo de configuración: {ORANGE}{STRING}
 STR_CONFIG_SETTING_TYPE_CLIENT                                  :Configuración de cliente (non se almacena nas partidas gravadas; afecta a tódalas partidas)
@@ -1712,7 +1740,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Canta memoria p
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Intervalos de servizo en porcentaxes: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Permite escoller se o mantemento de vehículos comezará debido ao tempo transcurrido dende o último mantemento ou por unha redución da fiabilidade cando se sobrepase unha porcentaxe determinado
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Cando está habilitado, os vehículos intentan ser reparados cando a súa fiabilidade baixa unha porcentaxe dada da fiabilidade máxima.{}{}Por exemplo, se a fiabilidade máxima dun vehículo é do 90% e o intervalo de mantemento é do 20%, o vehículo tentará ser reparado cando alcance unha fiabilidade do 72%.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Intervalo de mantemento por defecto para trens: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Fixa o intervalo de mantemento por defecto para trens novos, o cal se empregará no caso de que non se defina explicitamente un novo intervalo de mantemento para o vehículo
@@ -1803,13 +1831,6 @@ STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :A economía sua
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :Orixinal
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :Suave
 STR_CONFIG_SETTING_ECONOMY_TYPE_FROZEN                          :Conxelado
-
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Permiti-la compra de accións de outras compañías: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Cando se activa, permite comprar ou vender accións da compañía. As accións só estarán dispoñíbeis para compañías que acaden certa idade
-
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Idade mínima da compañía para compraventa de accións: {STRING}
-STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Establece a idade mínima dunha compañía para que outros poidan comprar e vender accións dela.
-###setting-zero-is-special
 
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Porcentaxe do beneficio parcial a pagar en sistemas transitivos: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Porcentaxe dos beneficios asignados ás partes intermedias da ruta en sistemas transitivos, dando un maior control sobre os ingresos
@@ -1924,10 +1945,10 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Ningunha
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Multiplicador inicial do tamaño da cidade: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Relación entre o tamaño medio das cidades e o dos pobos ao inicio da partida
 
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL                           :Actualiza o gráfico de distribución cada {STRING}{NBSP}day{P 0:2 "" s}
-STR_CONFIG_SETTING_LINKGRAPH_INTERVAL_HELPTEXT                  :Tempo entre recálculos subseguintes do gráfico de ligazóns. Cada recálculo calcula os plans para unha compoñente do gráfico. Isto non significa que un valor de X para esta opción supoña que o gráfico completo será actualizado cada X días. Só algunhas compoñentes o serán. Canto máis curto sexa, máis tempo de CPU será necesario para calculalo. Canto máis longo sexa, máis tempo levará ata que a distribución das mercadorías comeza para rutas novas.
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Leva {STRING}{NBSP}día{P 0:2 "" s} recalcular o gráfico de distribución
-STR_CONFIG_SETTING_LINKGRAPH_TIME_HELPTEXT                      :Tempo empregado para cada recálculo dunha compoñente do gráfico de ligazóns. Cando comeza un recálculo, creáse un fío que funciona por este número de días. Canto máis pequeno sexa este, é máis probable que o fío non remate cando se supón. Nese intre o xogo para para compensar este retardo. Canto máis longo sexa, máis tempo leva actualizar a distribución cando cambian as rutas.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Actualizar o grafo de distribución cada {STRING}{NBSP}segundo{P 0:2 "" s}.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Tempo entre recálculos sucesivos do grafo de ligazóns. Cada recálculo calcula os plans para un compoñente do grafo. Iso significa que un valor X para esta configuración non significa que o grafo completo sexa actualizado cada X segundos. Só algúns compoñentes o serán. Canto máis curto sexa o tempo establecido, máis tempo de CPU será necesario para calculalo. Canto máis longo sexa o tempo establecido, máis tempo levará ata que a distribución de carga comece a percorrer novas rutas.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Toma {STRING}{NBSP}segundo{P 0:2 "" s} para o recálculo do grafo de distribución.
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME_HELPTEXT               :Tempo necesario para cada recalculación dun compoñente do grafo de ligazóns. Cando se inicia unha recalculación, abrese un fío que se pode executar durante este número de segundos. Canto máis curto o establezas, máis probable é que o fío non remate cando se supón que debe facelo. Entón, o xogo detense ata que o fío remata («lag»). Canto máis longo o estabelezas, máis tempo levará actualizar a distribución cando cambien as rutas.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Modo de distribución para pasaxeiros: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"Simétrico" significa que máis ou menos o mesmo número de pasaxeiros irán dende a estación A cada a estación B e tamén da B cara a A. "Asimétrico" significa que calquera número de pasaxeiros pode ir en calquera dirección. "manual" significa que non haberá distribución automática para os pasaxeiros.
@@ -1953,13 +1974,15 @@ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :Fixar esta opci
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :Saturación de rutas curtas antes de empregar rutas con capacidade: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :Frecuentemente hai múltiples rutas posíbeis entre dúas estacións dadas. En primero lugar intentarase satura-la ruta máis curta, para posteriormente satura-la segunda máis curta e así sucesivamente. A saturación está determinada por unha estimación de capacidade e uso planificado. Unha vez saturadas tódalas rutas, se aínda queda demanda, sobrecargaranse as rutas comezando por aquelas de maior capacidade. A maior parte das veces, o algoritmo non estimará a capacidade con precisión. Esta opción permite especificar ata que porcentaxe de saturación pode ter unha ruta curta na primeira volta do algoritmo antes de escolle-la seguinte máis curta. Fíxao en menos do 100% para evitar estacións sobrecargadas no caso de que se sobreestime a capacidade.
 
-STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Unidades de velocidade: {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Unidades de velocidade (terra): {STRING}
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Unidade de velocidade (náutica): {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Cando unha velocidade apareza na interfaz de usuario, facelo nas unidades seleccionadas
 ###length 5
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Imperial (mph)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Métrico (km/h)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :SI (m/s)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS        :Unidades do xogo (cadros/día)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :Nudos
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Unidades de potencia dos vehículos: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Cando a potencia dun vehículo se amose na interfaz de usuario, facelo nas unidades seleccionadas
@@ -2360,6 +2383,8 @@ STR_NETWORK_CLIENT_LIST_NEW_COMPANY                             :(Nova compañí
 STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP                     :{BLACK}Crear unha nova compañía e unirte a ela
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_SELF_TOOLTIP                :{BLACK}Este es ti
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_HOST_TOOLTIP                :{BLACK}Este é o anfitrión da partida
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} cliente{P "" s} - {NUM}/{NUM} compañía{P "" "s"}
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT_TOOLTIP            :{BLACK}O número de clientes conectados actualmente, o número de compañías e o número máximo de compañías permitidas polo administrador do servidor.
 
 # Matches ConnectionType
 ###length 5
@@ -2385,6 +2410,13 @@ STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Fallou 
 STR_NETWORK_ASK_RELAY_NO                                        :{BLACK}No
 STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Si, esta vez
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Si, non volvas preguntar
+
+STR_NETWORK_ASK_SURVEY_CAPTION                                  :Participar nunha enquisa automática?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Queres participar na enquisa automática?{}OpenTTD enviará unha enquisa cando se sala dunha partida.{}Podes cambiar isto en calquera momento dende as "Opcións de xogo".
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Previsualizar resultado da enquisa
+STR_NETWORK_ASK_SURVEY_LINK                                     :Acerca da enquisa e privacidade
+STR_NETWORK_ASK_SURVEY_NO                                       :Non
+STR_NETWORK_ASK_SURVEY_YES                                      :Si
 
 STR_NETWORK_SPECTATORS                                          :Espectadores
 
@@ -2675,8 +2707,11 @@ STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Constru�
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Selecciona a clase de estación a mostrar
 STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Selecciona o tipo da estación a construir
 
-STR_STATION_CLASS_DFLT                                          :Estación por defecto
+STR_STATION_CLASS_DFLT                                          :Por defecto
+STR_STATION_CLASS_DFLT_STATION                                  :Estación por defecto
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Parada de estrada por defecto
 STR_STATION_CLASS_WAYP                                          :Puntos de ruta
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Punto de ruta por defecto
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Selección de sinais
@@ -3707,7 +3742,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE} {COMMA}
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} barco{P "" s}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Ningún
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Valor da compañía: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% propiedade de {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Infraestrutura:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} segmento{P "" s} de vías de ferrocarril
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} segmento{P "" s} de estrada
@@ -3735,11 +3769,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Nome da 
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Cambiar o nome da compañía
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Nome do presidente
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Cambiar o nome do presidente
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Mercar un 25% das accións da compañía
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Vender un 25% das accións da compañía
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Mercar un 25% das accións desta compañía. Shift+Click mostra o custo estimado sen mercar ningunha acción
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Vender un 25% das accións desta compañía. Shift+Click mostra o custo estimado sen vender ningunha acción
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Nome da compañía
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Nome do presidente
@@ -3818,8 +3847,8 @@ STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Envia-la
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Reemprazar vehículos
 STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Enviar para servizo
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Beneficio este ano: {CURRENCY_LONG} (ano pasado: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CARGO                                          :{TINY_FONT}{BLACK}[{CARGO_LIST}]
-STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING} {STRING}
+STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
 STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Enviar ao depósito
 STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Enviar ao depósito
@@ -4584,7 +4613,9 @@ STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}As IAs q
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Xogador humano
 STR_AI_CONFIG_RANDOM_AI                                         :IA aleatoria
 STR_AI_CONFIG_NONE                                              :(ningunha)
+STR_AI_CONFIG_NAME_VERSION                                      :{STRING} {YELLOW}v{NUM}
 STR_AI_CONFIG_MAX_COMPETITORS                                   :{LTBLUE}Nº máximo de opoñentes: {ORANGE}{COMMA}
+STR_AI_CONFIG_COMPETITORS_INTERVAL                              :{LTBLUE}Intervalo entre o comezo dos competidores: {ORANGE}{COMMA} minuto{P "" s}
 
 STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Subir
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Mover a IA seleccionada cara arriba na lista
@@ -4597,7 +4628,7 @@ STR_AI_CONFIG_AI                                                :{SILVER}IAs
 
 STR_AI_CONFIG_CHANGE_AI                                         :{BLACK}Seleccionar IA
 STR_AI_CONFIG_CHANGE_GAMESCRIPT                                 :{BLACK}Seleccionar script do xogo
-STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Cargar outro script
+STR_AI_CONFIG_CHANGE_TOOLTIP                                    :{BLACK}Cargar outro script. Ctrl+Click amosa todas as versións dispoñibles
 STR_AI_CONFIG_CONFIGURE                                         :{BLACK}Configurar
 STR_AI_CONFIG_CONFIGURE_TOOLTIP                                 :{BLACK}Configurar os parámetros do script
 
@@ -4631,7 +4662,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Script do xogo
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Pechar
 STR_AI_SETTINGS_RESET                                           :{BLACK}Restablecer
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Número de días para iniciar esta IA despois da anterior: {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4640,10 +4670,11 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Axusta o
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Ver "readme"
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Rexistro de cambios
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licenza
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE} "readme" de {STRING} {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Rexistro de cambios de {STRING} {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE} licenza de {STRING}{STRING}
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Previsualizar resultado da enquisa
 
 
 # Vehicle loading indicators
@@ -4768,9 +4799,6 @@ STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Non pode
 STR_ERROR_CAN_T_GIVE_MONEY                                      :{WHITE}Non se poden dar cartos a esta compañía...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Non se pode compra-la compañía...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Non se pode construí-la sede
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Non se pode comprar un 25% das accións desta compañía...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Non se pode vender un 25% das accións desta compañía...
-STR_ERROR_PROTECTED                                             :{WHITE}Esta compañía aínda non é suficientemente antiga para comerciar con accións...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Non se poden construír cidades
@@ -5086,11 +5114,24 @@ STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION                     :{WHITE}... dema
 STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... o avión non ten autonomía suficiente
 
 # Extra messages which go on the third line of errors, explaining why orders failed
+STR_ERROR_NO_RAIL_STATION                                       :{WHITE}Non hai estación de ferrocarril
+STR_ERROR_NO_BUS_STATION                                        :{WHITE}Non hai estación de bus
+STR_ERROR_NO_TRUCK_STATION                                      :{WHITE}Non hai estación de camións
+STR_ERROR_NO_DOCK                                               :{WHITE}Non hai porto
+STR_ERROR_NO_AIRPORT                                            :{WHITE}Non hai aeroporto/heliporto
+STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE                          :{WHITE}Non hai paradas con un tipo de estrada compatible.
+STR_ERROR_NO_STOP_COMPATIBLE_TRAM_TYPE                          :{WHITE}Non hai paradas con un tipo de tranvía compatible
+STR_ERROR_NO_STOP_ARTICULATED_VEHICLE                           :{WHITE}Non hai paradas que sexan axeitadas para vehículos articulados.{} Os vehículos articulados requiren dunha parada na que se poida pasar directamente, non unha parada en baía.
+STR_ERROR_AIRPORT_NO_PLANES                                     :{WHITE}Este avión non pode aterrar neste heliporto
+STR_ERROR_AIRPORT_NO_HELICOPTERS                                :{WHITE}Este helicóptero non pode aterrar neste aeroporto
+STR_ERROR_NO_RAIL_WAYPOINT                                      :{WHITE}Non hai punto de ruta da liña férrea
+STR_ERROR_NO_BUOY                                               :{WHITE}Non hai boia
 
 # Timetable related errors
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Non se pode axusta-lo horario do vehículo...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Os vehículos só poden parar nas estacións
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Este vehículo non para nesta estación
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... horario incompleto
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... demasiados sinais
@@ -5502,10 +5543,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Helicóptero Po
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Compañía {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Grupo {COMMA}
@@ -5570,11 +5611,13 @@ STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
+STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}
 STR_JUST_CHECKMARK                                              :{CHECKMARK}
 STR_JUST_COMMA                                                  :{COMMA}
 STR_JUST_CURRENCY_SHORT                                         :{CURRENCY_SHORT}
 STR_JUST_CURRENCY_LONG                                          :{CURRENCY_LONG}
 STR_JUST_CARGO_LIST                                             :{CARGO_LIST}
+STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_INT                                                    :{NUM}
 STR_JUST_DATE_TINY                                              :{DATE_TINY}
 STR_JUST_DATE_SHORT                                             :{DATE_SHORT}
@@ -5586,33 +5629,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

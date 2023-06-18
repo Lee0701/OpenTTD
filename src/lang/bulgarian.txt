@@ -130,39 +130,39 @@ STR_QUANTITY_N_A                                                :Не се пр�
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
-STR_ABBREV_PASSENGERS                                           :{TINY_FONT}ПС
-STR_ABBREV_COAL                                                 :{TINY_FONT}ВГ
-STR_ABBREV_MAIL                                                 :{TINY_FONT}ПЩ
-STR_ABBREV_OIL                                                  :{TINY_FONT}НФ
-STR_ABBREV_LIVESTOCK                                            :{TINY_FONT}ДБ
-STR_ABBREV_GOODS                                                :{TINY_FONT}СТ
-STR_ABBREV_GRAIN                                                :{TINY_FONT}ЗР
-STR_ABBREV_WOOD                                                 :{TINY_FONT}ДВ
-STR_ABBREV_IRON_ORE                                             :{TINY_FONT}ЖР
-STR_ABBREV_STEEL                                                :{TINY_FONT}СТ
-STR_ABBREV_VALUABLES                                            :{TINY_FONT}СЦ
-STR_ABBREV_COPPER_ORE                                           :{TINY_FONT}МР
-STR_ABBREV_MAIZE                                                :{TINY_FONT}ЦВ
-STR_ABBREV_FRUIT                                                :{TINY_FONT}ПЛ
-STR_ABBREV_DIAMONDS                                             :{TINY_FONT}ДМ
-STR_ABBREV_FOOD                                                 :{TINY_FONT}ХР
-STR_ABBREV_PAPER                                                :{TINY_FONT}ХТ
-STR_ABBREV_GOLD                                                 :{TINY_FONT}ЗЛ
-STR_ABBREV_WATER                                                :{TINY_FONT}ВД
-STR_ABBREV_WHEAT                                                :{TINY_FONT}ЗР
-STR_ABBREV_RUBBER                                               :{TINY_FONT}КЧ
-STR_ABBREV_SUGAR                                                :{TINY_FONT}ЗХ
-STR_ABBREV_TOYS                                                 :{TINY_FONT}ИЧ
-STR_ABBREV_SWEETS                                               :{TINY_FONT}СЛ
-STR_ABBREV_COLA                                                 :{TINY_FONT}КЛ
-STR_ABBREV_CANDYFLOSS                                           :{TINY_FONT}ЗП
-STR_ABBREV_BUBBLES                                              :{TINY_FONT}БЛ
-STR_ABBREV_TOFFEE                                               :{TINY_FONT}КМ
-STR_ABBREV_BATTERIES                                            :{TINY_FONT}БТ
-STR_ABBREV_PLASTIC                                              :{TINY_FONT}ПМ
-STR_ABBREV_FIZZY_DRINKS                                         :{TINY_FONT}ГН
-STR_ABBREV_NONE                                                 :{TINY_FONT}НЩ
-STR_ABBREV_ALL                                                  :{TINY_FONT}ВЧ
+STR_ABBREV_PASSENGERS                                           :ПС
+STR_ABBREV_COAL                                                 :ВГ
+STR_ABBREV_MAIL                                                 :ПЩ
+STR_ABBREV_OIL                                                  :НФ
+STR_ABBREV_LIVESTOCK                                            :ДБ
+STR_ABBREV_GOODS                                                :СТ
+STR_ABBREV_GRAIN                                                :ЗР
+STR_ABBREV_WOOD                                                 :ДВ
+STR_ABBREV_IRON_ORE                                             :ЖР
+STR_ABBREV_STEEL                                                :СТ
+STR_ABBREV_VALUABLES                                            :СЦ
+STR_ABBREV_COPPER_ORE                                           :МР
+STR_ABBREV_MAIZE                                                :ЦВ
+STR_ABBREV_FRUIT                                                :ПЛ
+STR_ABBREV_DIAMONDS                                             :ДМ
+STR_ABBREV_FOOD                                                 :ХР
+STR_ABBREV_PAPER                                                :ХТ
+STR_ABBREV_GOLD                                                 :ЗЛ
+STR_ABBREV_WATER                                                :ВД
+STR_ABBREV_WHEAT                                                :ЗР
+STR_ABBREV_RUBBER                                               :КЧ
+STR_ABBREV_SUGAR                                                :ЗХ
+STR_ABBREV_TOYS                                                 :ИЧ
+STR_ABBREV_SWEETS                                               :СЛ
+STR_ABBREV_COLA                                                 :КЛ
+STR_ABBREV_CANDYFLOSS                                           :ЗП
+STR_ABBREV_BUBBLES                                              :БЛ
+STR_ABBREV_TOFFEE                                               :КМ
+STR_ABBREV_BATTERIES                                            :БТ
+STR_ABBREV_PLASTIC                                              :ПМ
+STR_ABBREV_FIZZY_DRINKS                                         :ГН
+STR_ABBREV_NONE                                                 :НЩ
+STR_ABBREV_ALL                                                  :ВЧ
 
 # 'Mode' of transport for cargoes
 STR_PASSENGERS                                                  :{COMMA} пътни{P к ци}
@@ -192,38 +192,38 @@ STR_COLOUR_GREY                                                 :Сиво
 STR_COLOUR_WHITE                                                :Бяло
 
 # Units used in OpenTTD
-STR_UNITS_VELOCITY_IMPERIAL                                     :{COMMA} мил{P я и}/ч
-STR_UNITS_VELOCITY_METRIC                                       :{COMMA} км/ч
-STR_UNITS_VELOCITY_SI                                           :{COMMA} м/с
+STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} мил{P я и}/ч
+STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} км/ч
+STR_UNITS_VELOCITY_SI                                           :{DECIMAL} м/с
 
-STR_UNITS_POWER_IMPERIAL                                        :{COMMA} к.с.
-STR_UNITS_POWER_METRIC                                          :{COMMA} к.с.
-STR_UNITS_POWER_SI                                              :{COMMA} kW
+STR_UNITS_POWER_IMPERIAL                                        :{DECIMAL} к.с.
+STR_UNITS_POWER_METRIC                                          :{DECIMAL} к.с.
+STR_UNITS_POWER_SI                                              :{DECIMAL} kW
 
 
-STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{COMMA}т
-STR_UNITS_WEIGHT_SHORT_METRIC                                   :{COMMA} т.
-STR_UNITS_WEIGHT_SHORT_SI                                       :{COMMA} кг.
+STR_UNITS_WEIGHT_SHORT_IMPERIAL                                 :{DECIMAL}т
+STR_UNITS_WEIGHT_SHORT_METRIC                                   :{DECIMAL} т.
+STR_UNITS_WEIGHT_SHORT_SI                                       :{DECIMAL} кг.
 
-STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{COMMA} тон{P "" а}
-STR_UNITS_WEIGHT_LONG_METRIC                                    :{COMMA} тон{P "" а}
-STR_UNITS_WEIGHT_LONG_SI                                        :{COMMA} кг
+STR_UNITS_WEIGHT_LONG_IMPERIAL                                  :{DECIMAL} тон{P "" а}
+STR_UNITS_WEIGHT_LONG_METRIC                                    :{DECIMAL} тон{P "" а}
+STR_UNITS_WEIGHT_LONG_SI                                        :{DECIMAL} кг
 
-STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{COMMA}гал
-STR_UNITS_VOLUME_SHORT_METRIC                                   :{COMMA} л.
-STR_UNITS_VOLUME_SHORT_SI                                       :{COMMA}{NBSP}м³
+STR_UNITS_VOLUME_SHORT_IMPERIAL                                 :{DECIMAL}гал
+STR_UNITS_VOLUME_SHORT_METRIC                                   :{DECIMAL} л.
+STR_UNITS_VOLUME_SHORT_SI                                       :{DECIMAL}{NBSP}м³
 
-STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{COMMA}{NBSP}галон{P "" и}
-STR_UNITS_VOLUME_LONG_METRIC                                    :{COMMA}{NBSP}лит{P ър ри}
-STR_UNITS_VOLUME_LONG_SI                                        :{COMMA}{NBSP}куб. м.
+STR_UNITS_VOLUME_LONG_IMPERIAL                                  :{DECIMAL}{NBSP}галон{P "" и}
+STR_UNITS_VOLUME_LONG_METRIC                                    :{DECIMAL}{NBSP}лит{P ър ри}
+STR_UNITS_VOLUME_LONG_SI                                        :{DECIMAL}{NBSP}куб. м.
 
-STR_UNITS_FORCE_IMPERIAL                                        :{COMMA}{NBSP}lbf
-STR_UNITS_FORCE_METRIC                                          :{COMMA}{NBSP}kgf
-STR_UNITS_FORCE_SI                                              :{COMMA}{NBSP}kN
+STR_UNITS_FORCE_IMPERIAL                                        :{DECIMAL}{NBSP}lbf
+STR_UNITS_FORCE_METRIC                                          :{DECIMAL}{NBSP}kgf
+STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}kN
 
-STR_UNITS_HEIGHT_IMPERIAL                                       :{COMMA}{NBSP}фут
-STR_UNITS_HEIGHT_METRIC                                         :{COMMA}{NBSP}м
-STR_UNITS_HEIGHT_SI                                             :{COMMA}{NBSP}м
+STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}фут
+STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}м
+STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}м
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Филтриращ низ:
@@ -883,6 +883,10 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}Прем
 
 # Game options window
 STR_GAME_OPTIONS_CAPTION                                        :{WHITE}Настройки
+
+
+
+
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Парична единица
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Избор на парична единица
 
@@ -930,10 +934,6 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Инте
 # Autosave dropdown
 ###length 5
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF                          :изключено
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :всеки месец
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :всеки 3 месеца
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :всеки 6 месеца
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :всеки 12 месеца
 
 STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}Език
 STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Избор на език
@@ -944,6 +944,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Избе
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Размер на екрана
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Избор размера на екран
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :друго
+
 
 
 
@@ -1653,11 +1654,6 @@ STR_CONFIG_SETTING_STARTING_YEAR                                :Начална 
 
 ###length 3
 
-STR_CONFIG_SETTING_ALLOW_SHARES                                 :Разреши купуване на акции от други компании: {STRING}
-STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :Ако тази опция бъде активирана, ще можете да купувате и продавате дялове на компании. Това ще бъде възможно единствено когато дадената компания достигне определена възраст
-
-###setting-zero-is-special
-
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE                         :Процент от leg profit to pay in feeder systems: {STRING}
 STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Процент от приходите, който се плаща на intermediate legs in feeder systems, давайки ви повече контрол върху приходите
 
@@ -1754,7 +1750,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Без
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Множител за големината на града: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Относителен размер на мегаполисите в сравнение с градовете в началото на играта
 
-STR_CONFIG_SETTING_LINKGRAPH_TIME                               :Вземи {STRING}{NBSP}дни{P 0:2 "" s} за преизчисляване на графа за резпределение
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :"симетрично" означава, че приблизително един и същ брой пътници ще пътуват от спирка А до спирка Б и обратно. "асиметрично" означава, че произволен брой пътници могат да пътуват във всяка от посоките. "ръчно" означава, че няма да има автоматично разпределение за пътниците.
 STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT                         :Режим на разпределение на други класове товари: {STRING}
@@ -2110,6 +2105,7 @@ STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Списък с
 
 # Matches ConnectionType
 ###length 5
+
 
 
 
@@ -3267,7 +3263,6 @@ STR_COMPANY_VIEW_AIRCRAFT                                       :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_SHIPS                                          :{WHITE}{COMMA} кораб{P "" и}
 STR_COMPANY_VIEW_VEHICLES_NONE                                  :{WHITE}Николко
 STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Стойност на Компанията: {WHITE}{CURRENCY_LONG}
-STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% е притежание на {COMPANY})
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Инфраструктура:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} релсов{P а и} част{P "" и}
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} пътн{P а и} част{P "" и}
@@ -3293,11 +3288,6 @@ STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Име �
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Смени името на компанията
 STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Име на управителя
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Смени името на управителя
-
-STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Купи 25% от акциите на компанията
-STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Продай 25% от акциите на компанията
-STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Купи 25% от акциите на тази компания. Shift показва цената на 25% от акциите
-STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Продай 25% от акциите на тази компания. Shift показва цената на 25% от акциите
 
 STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Име на компанията
 STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Име на управителя
@@ -4115,7 +4105,6 @@ STR_AI_SETTINGS_CAPTION_AI                                      :AI
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Затвори
 STR_AI_SETTINGS_RESET                                           :{BLACK}Рестартиране
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_START_DELAY                                     :Броят дни докато този ИИ бъде стартиран след предишния (give or take): {ORANGE}{STRING}
 
 
 # Textfile window
@@ -4124,7 +4113,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Реор
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Отвори readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Дневник на промените
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Лиценз
-###length 3
+###length 4
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} readme of {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} Дневник на промените на {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} лиценз на {STRING}
@@ -4249,9 +4238,6 @@ STR_ERROR_CAN_T_REPAY_LOAN                                      :{WHITE}Не м�
 STR_ERROR_INSUFFICIENT_FUNDS                                    :{WHITE}Не може да се харчат пари които са заети от банка...
 STR_ERROR_CAN_T_BUY_COMPANY                                     :{WHITE}Не може да купиш компанията...
 STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS                      :{WHITE}Не може да бъде построен централен офис...
-STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Не може да купиш 25% от акциите на тази компания...
-STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Не може да продадеш 25% от акциите на тази компания...
-STR_ERROR_PROTECTED                                             :{WHITE}Тази компания все още не е достатъчно стара да предлага акции...
 
 # Town related errors
 STR_ERROR_CAN_T_GENERATE_TOWN                                   :{WHITE}Не може да се строят градове
@@ -4968,10 +4954,10 @@ STR_VEHICLE_NAME_AIRCRAFT_POWERNAUT_HELICOPTER                  :Пауерна�
 
 ##id 0x8800
 # Formatting of some strings
-STR_FORMAT_DATE_TINY                                            :{STRING}-{STRING}-{NUM}
+STR_FORMAT_DATE_TINY                                            :{ZEROFILL_NUM}-{ZEROFILL_NUM}-{NUM}
 STR_FORMAT_DATE_SHORT                                           :{STRING} {NUM}
 STR_FORMAT_DATE_LONG                                            :{STRING} {STRING} {NUM}
-STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:STRING}-{0:STRING}
+STR_FORMAT_DATE_ISO                                             :{2:NUM}-{1:ZEROFILL_NUM}-{0:ZEROFILL_NUM}
 
 STR_FORMAT_COMPANY_NUM                                          :(Компания {COMMA})
 STR_FORMAT_GROUP_NAME                                           :Група {COMMA}
@@ -5051,33 +5037,8 @@ STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}
 
 # Slightly 'raw' stringcodes with colour or size
-STR_BLACK_COMMA                                                 :{BLACK}{COMMA}
-STR_TINY_BLACK_COMA                                             :{TINY_FONT}{BLACK}{COMMA}
-STR_TINY_COMMA                                                  :{TINY_FONT}{COMMA}
-STR_BLUE_COMMA                                                  :{BLUE}{COMMA}
-STR_RED_COMMA                                                   :{RED}{COMMA}
-STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
-STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
-STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
-STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
-STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
-STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
-STR_TINY_GROUP                                                  :{TINY_FONT}{GROUP}
-STR_BLACK_INT                                                   :{BLACK}{NUM}
-STR_ORANGE_INT                                                  :{ORANGE}{NUM}
 STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
-STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
-STR_BLACK_STRING                                                :{BLACK}{STRING}
-STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
-STR_WHITE_STRING                                                :{WHITE}{STRING}
-STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}
-STR_ORANGE_STRING1_LTBLUE                                       :{ORANGE}{STRING}{LTBLUE}
 STR_TINY_BLACK_HEIGHT                                           :{TINY_FONT}{BLACK}{HEIGHT}
-STR_TINY_BLACK_VEHICLE                                          :{TINY_FONT}{BLACK}{VEHICLE}
-STR_TINY_RIGHT_ARROW                                            :{TINY_FONT}{RIGHT_ARROW}
 
 STR_BLACK_1                                                     :{BLACK}1
 STR_BLACK_2                                                     :{BLACK}2

@@ -101,7 +101,7 @@ void DumpCargoPacketDeferredPaymentStats(char *buffer, const char *last)
  */
 CargoPacket::CargoPacket()
 {
-	this->source_type = ST_INDUSTRY;
+	this->source_type = SourceType::Industry;
 	this->source_id   = INVALID_SOURCE;
 }
 
@@ -337,7 +337,7 @@ void CargoList<Tinst, Tcont>::RemoveFromCache(const CargoPacket *cp, uint count)
 {
 	dbg_assert(count <= cp->count);
 	this->count                 -= count;
-	this->cargo_days_in_transit -= cp->days_in_transit * count;
+	this->cargo_days_in_transit -= static_cast<uint64_t>(cp->days_in_transit) * count;
 }
 
 /**
@@ -349,7 +349,7 @@ template <class Tinst, class Tcont>
 void CargoList<Tinst, Tcont>::AddToCache(const CargoPacket *cp)
 {
 	this->count                 += cp->count;
-	this->cargo_days_in_transit += cp->days_in_transit * cp->count;
+	this->cargo_days_in_transit += static_cast<uint64_t>(cp->days_in_transit) * cp->count;
 }
 
 /** Invalidates the cached data and rebuilds it. */
@@ -566,8 +566,7 @@ void VehicleCargoList::AddToMeta(const CargoPacket *cp, MoveToAction action)
  */
 void VehicleCargoList::AgeCargo()
 {
-	for (ConstIterator it(this->packets.begin()); it != this->packets.end(); it++) {
-		CargoPacket *cp = *it;
+	for (const auto &cp : this->packets) {
 		/* If we're at the maximum, then we can't increase no more. */
 		if (cp->days_in_transit == UINT16_MAX) continue;
 

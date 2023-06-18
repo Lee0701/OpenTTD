@@ -52,8 +52,7 @@
 static RailType _cur_railtype;               ///< Rail type of the current build-rail toolbar.
 static bool _remove_button_clicked;          ///< Flag whether 'remove' toggle-button is currently enabled
 static DiagDirection _build_depot_direction; ///< Currently selected depot direction
-static uint _waypoint_count = 1;             ///< Number of waypoint types
-static uint _cur_waypoint_type;              ///< Currently selected waypoint type
+static uint16_t _cur_waypoint_type;          ///< Currently selected waypoint type
 static bool _convert_signal_button;          ///< convert signal button in the signal GUI pressed
 static bool _trace_restrict_button;          ///< trace restrict button in the signal GUI pressed
 static bool _program_signal_button;          ///< program signal button in the signal GUI pressed
@@ -72,8 +71,8 @@ struct RailStationGUISettings {
 
 	bool newstations;                 ///< Are custom station definitions available?
 	StationClassID station_class;     ///< Currently selected custom station class (if newstations is \c true )
-	uint16 station_type;                ///< %Station type within the currently selected custom station class (if newstations is \c true )
-	uint16 station_count;               ///< Number of custom stations (if newstations is \c true )
+	uint16 station_type;              ///< %Station type within the currently selected custom station class (if newstations is \c true )
+	uint16 station_count;             ///< Number of custom stations (if newstations is \c true )
 };
 static RailStationGUISettings _railstation; ///< Settings of the station builder GUI
 
@@ -519,7 +518,9 @@ struct BuildRailToolbarWindow : Window {
 	~BuildRailToolbarWindow()
 	{
 		if (this->IsWidgetLowered(WID_RAT_BUILD_STATION)) SetViewportCatchmentStation(nullptr, true);
+		if (this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT)) SetViewportCatchmentWaypoint(nullptr, true);
 		if (_settings_client.gui.link_terraform_toolbar) DeleteWindowById(WC_SCEN_LAND_GEN, 0, false);
+		DeleteWindowById(WC_SELECT_STATION, 0);
 	}
 
 	/**
@@ -686,9 +687,8 @@ struct BuildRailToolbarWindow : Window {
 
 			case WID_RAT_BUILD_WAYPOINT:
 				this->last_user_action = widget;
-				_waypoint_count = StationClass::Get(STAT_CLASS_WAYP)->GetSpecCount();
 				if (HandlePlacePushButton(this, WID_RAT_BUILD_WAYPOINT, SPR_CURSOR_WAYPOINT, HT_RECT)) {
-					if (_waypoint_count > 1) {
+					if (StationClass::Get(STAT_CLASS_WAYP)->GetSpecCount() > 1) {
 						ShowBuildWaypointPicker(this);
 					} else {
 						_cur_waypoint_type = 0;
@@ -753,14 +753,35 @@ struct BuildRailToolbarWindow : Window {
 	{
 		MarkTileDirtyByTile(TileVirtXY(_thd.pos.x, _thd.pos.y)); // redraw tile selection
 
-		if (hotkey == HOTKEY_POLYRAIL || hotkey == HOTKEY_NEW_POLYRAIL) {
-			/* Indicate to the OnClick that the action comes from a hotkey rather
-			 * then from a click and that the CTRL state should be ignored. */
-			this->last_user_action = hotkey;
-			hotkey = WID_RAT_POLYRAIL;
-		}
+		switch (hotkey) {
+			case HOTKEY_POLYRAIL:
+			case HOTKEY_NEW_POLYRAIL:
+				/* Indicate to the OnClick that the action comes from a hotkey rather
+				 * then from a click and that the CTRL state should be ignored. */
+				this->last_user_action = hotkey;
+				hotkey = WID_RAT_POLYRAIL;
+				return this->Window::OnHotkey(hotkey);
 
-		return this->Window::OnHotkey(hotkey);
+			case WID_RAT_CONVERT_RAIL: {
+				HandlePlacePushButton(this, WID_RAT_CONVERT_RAIL, GetRailTypeInfo(_cur_railtype)->cursor.convert, HT_RECT | HT_DIAGONAL);
+				this->last_user_action = WID_RAT_CONVERT_RAIL;
+				this->UpdateRemoveWidgetStatus(WID_RAT_CONVERT_RAIL);
+				if (_ctrl_pressed) RailToolbar_CtrlChanged(this);
+				return ES_HANDLED;
+			}
+
+			case WID_RAT_CONVERT_RAIL_TRACK: {
+				bool active = HandlePlacePushButton(this, WID_RAT_CONVERT_RAIL, GetRailTypeInfo(_cur_railtype)->cursor.convert, HT_RAIL);
+				if (active) _thd.square_palette = SPR_ZONING_INNER_HIGHLIGHT_GREEN;
+				this->last_user_action = WID_RAT_CONVERT_RAIL;
+				this->UpdateRemoveWidgetStatus(WID_RAT_CONVERT_RAIL);
+				if (_ctrl_pressed) RailToolbar_CtrlChanged(this);
+				return ES_HANDLED;
+			}
+
+			default:
+				return this->Window::OnHotkey(hotkey);
+		}
 	}
 
 	void OnPlaceObject(Point pt, TileIndex tile) override
@@ -903,6 +924,7 @@ struct BuildRailToolbarWindow : Window {
 	void OnPlaceObjectAbort() override
 	{
 		if (this->IsWidgetLowered(WID_RAT_BUILD_STATION)) SetViewportCatchmentStation(nullptr, true);
+		if (this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT)) SetViewportCatchmentWaypoint(nullptr, true);
 
 		this->RaiseButtons();
 		this->DisableWidget(WID_RAT_REMOVE);
@@ -927,6 +949,11 @@ struct BuildRailToolbarWindow : Window {
 		/* do not toggle Remove button by Ctrl when placing station */
 		if (!this->IsWidgetLowered(WID_RAT_BUILD_STATION) && !this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT) && RailToolbar_CtrlChanged(this)) return ES_HANDLED;
 		return ES_NOT_HANDLED;
+	}
+
+	void OnRealtimeTick(uint delta_ms) override
+	{
+		if (this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT)) CheckRedrawWaypointCoverage(this, false);
 	}
 
 	static HotkeyList hotkeys;
@@ -967,6 +994,7 @@ static Hotkey railtoolbar_hotkeys[] = {
 	Hotkey('T', "tunnel", WID_RAT_BUILD_TUNNEL),
 	Hotkey('R', "remove", WID_RAT_REMOVE),
 	Hotkey('C', "convert", WID_RAT_CONVERT_RAIL),
+	Hotkey(WKC_CTRL | 'C', "convert_track", WID_RAT_CONVERT_RAIL_TRACK),
 	HOTKEY_LIST_END
 };
 HotkeyList BuildRailToolbarWindow::hotkeys("railtoolbar", railtoolbar_hotkeys, RailToolbarGlobalHotkeys);
@@ -974,7 +1002,7 @@ HotkeyList BuildRailToolbarWindow::hotkeys("railtoolbar", railtoolbar_hotkeys, R
 static const NWidgetPart _nested_build_rail_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
-		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN, WID_RAT_CAPTION), SetDataTip(STR_WHITE_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN, WID_RAT_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
 		NWidget(WWT_STICKYBOX, COLOUR_DARK_GREEN),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
@@ -1100,7 +1128,7 @@ private:
 			if (station_class == _railstation.station_class) break;
 			pos++;
 		}
-		this->vscroll->SetCount((int)this->station_classes.size());
+		this->vscroll->SetCount(this->station_classes.size());
 		this->vscroll->ScrollTowards(pos);
 	}
 
@@ -1134,6 +1162,22 @@ private:
 				}
 				this->LowerWidget(_settings_client.gui.station_platlength + WID_BRAS_PLATFORM_LEN_BEGIN);
 			}
+		}
+	}
+
+	void SelectClass(StationClassID station_class_id) {
+		if (_railstation.station_class != station_class_id) {
+			StationClass *station_class = StationClass::Get(station_class_id);
+			_railstation.station_class = station_class_id;
+			_railstation.station_count = station_class->GetSpecCount();
+			_railstation.station_type  = 0;
+
+			this->CheckSelectedSize(station_class->GetSpec(_railstation.station_type));
+
+			NWidgetMatrix *matrix = this->GetWidget<NWidgetMatrix>(WID_BRAS_MATRIX);
+			matrix->SetCount(_railstation.station_count);
+			matrix->SetClicked(_railstation.station_type);
+			this->SetDirty();
 		}
 	}
 
@@ -1216,11 +1260,8 @@ public:
 	/** Filter station classes by class name. */
 	static bool TagNameFilter(StationClassID const * sc, StringFilter &filter)
 	{
-		char buffer[DRAW_STRING_BUFFER];
-		GetString(buffer, StationClass::Get(*sc)->name, lastof(buffer));
-
 		filter.ResetState();
-		filter.AddLine(buffer);
+		filter.AddLine(GetString(StationClass::Get(*sc)->name));
 		return filter.GetState();
 	}
 
@@ -1248,7 +1289,7 @@ public:
 			this->station_classes.RebuildDone();
 			this->station_classes.Sort();
 
-			this->vscroll->SetCount((uint)this->station_classes.size());
+			this->vscroll->SetCount(this->station_classes.size());
 		}
 	}
 
@@ -1393,7 +1434,7 @@ public:
 					StationClass *stclass = StationClass::Get(station_class);
 					for (uint j = 0; j < stclass->GetSpecCount(); j++) {
 						const StationSpec *statspec = stclass->GetSpec(j);
-						SetDParam(0, (statspec != nullptr && statspec->name != 0) ? statspec->name : STR_STATION_CLASS_DFLT);
+						SetDParam(0, (statspec != nullptr && statspec->name != 0) ? statspec->name : STR_STATION_CLASS_DFLT_STATION);
 						d = maxdim(d, GetStringBoundingBox(str));
 					}
 				}
@@ -1465,7 +1506,7 @@ public:
 			}
 
 			case WID_BRAS_IMAGE: {
-				byte type = GB(widget, 16, 16);
+				uint16_t type = GB(widget, 16, 16);
 				assert(type < _railstation.station_count);
 				/* Check station availability callback */
 				const StationSpec *statspec = StationClass::Get(_railstation.station_class)->GetSpec(type);
@@ -1498,7 +1539,7 @@ public:
 	{
 		if (widget == WID_BRAS_SHOW_NEWST_TYPE) {
 			const StationSpec *statspec = StationClass::Get(_railstation.station_class)->GetSpec(_railstation.station_type);
-			SetDParam(0, (statspec != nullptr && statspec->name != 0) ? statspec->name : STR_STATION_CLASS_DFLT);
+			SetDParam(0, (statspec != nullptr && statspec->name != 0) ? statspec->name : STR_STATION_CLASS_DFLT_STATION);
 		}
 	}
 
@@ -1634,18 +1675,7 @@ public:
 				int y = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_BRAS_NEWST_LIST);
 				if (y >= (int)this->station_classes.size()) return;
 				StationClassID station_class_id = this->station_classes[y];
-				if (_railstation.station_class != station_class_id) {
-					StationClass *station_class = StationClass::Get(station_class_id);
-					_railstation.station_class = station_class_id;
-					_railstation.station_count = station_class->GetSpecCount();
-					_railstation.station_type  = 0;
-
-					this->CheckSelectedSize(station_class->GetSpec(_railstation.station_type));
-
-					NWidgetMatrix *matrix = this->GetWidget<NWidgetMatrix>(WID_BRAS_MATRIX);
-					matrix->SetCount(_railstation.station_count);
-					matrix->SetClicked(_railstation.station_type);
-				}
+				this->SelectClass(station_class_id);
 				if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 				this->SetDirty();
 				DeleteWindowById(WC_SELECT_STATION, 0);
@@ -1653,7 +1683,7 @@ public:
 			}
 
 			case WID_BRAS_IMAGE: {
-				int y = GB(widget, 16, 16);
+				uint16_t y = GB(widget, 16, 16);
 				if (y >= _railstation.station_count) return;
 
 				/* Check station availability callback */
@@ -1676,6 +1706,13 @@ public:
 	void OnRealtimeTick(uint delta_ms) override
 	{
 		CheckRedrawStationCoverage(this);
+	}
+
+	void SelectClassAndSpec(StationClassID class_id, int spec_id)
+	{
+		this->SelectClass(class_id);
+		this->EnsureSelectedStationClassIsVisible();
+		this->OnClick({}, WID_BRAS_IMAGE | (spec_id << 16), 1);
 	}
 
 	static HotkeyList hotkeys;
@@ -1745,7 +1782,7 @@ static const NWidgetPart _nested_station_builder_widgets[] = {
 					NWidget(WWT_PANEL, COLOUR_GREY, WID_BRAS_PLATFORM_DIR_Y), SetMinimalSize(66, 60), SetFill(0, 0), SetDataTip(0x0, STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP), EndContainer(),
 					NWidget(NWID_SPACER), SetMinimalSize(7, 0), SetFill(1, 0),
 				EndContainer(),
-				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BRAS_SHOW_NEWST_TYPE), SetMinimalSize(144, 11), SetDataTip(STR_ORANGE_STRING, STR_NULL), SetPadding(1, 2, 4, 2),
+				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BRAS_SHOW_NEWST_TYPE), SetMinimalSize(144, 11), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_ORANGE), SetPadding(1, 2, 4, 2),
 				NWidget(WWT_LABEL, COLOUR_DARK_GREEN), SetMinimalSize(144, 11), SetDataTip(STR_STATION_BUILD_NUMBER_OF_TRACKS, STR_NULL), SetPadding(0, 2, 0, 2),
 				NWidget(NWID_HORIZONTAL),
 					NWidget(NWID_SPACER), SetFill(1, 0),
@@ -2267,7 +2304,7 @@ static const NWidgetPart _nested_signal_builder_widgets[] = {
 				NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_BS_ELECTRIC_NO_ENTRY), SetDataTip(STR_NULL, STR_BUILD_SIGNAL_ELECTRIC_NO_ENTRY_TOOLTIP), EndContainer(), SetFill(1, 1),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetDataTip(STR_NULL, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_TOOLTIP), SetFill(1, 1),
-				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BS_DRAG_SIGNALS_DENSITY_LABEL), SetDataTip(STR_ORANGE_INT, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_TOOLTIP), SetFill(1, 1),
+				NWidget(WWT_LABEL, COLOUR_DARK_GREEN, WID_BS_DRAG_SIGNALS_DENSITY_LABEL), SetDataTip(STR_JUST_INT, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_TOOLTIP), SetTextStyle(TC_ORANGE), SetFill(1, 1),
 				NWidget(NWID_HORIZONTAL), SetPIP(2, 0, 2),
 					NWidget(NWID_SPACER), SetFill(1, 0),
 					NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_BS_DRAG_SIGNALS_DENSITY_DECREASE), SetMinimalSize(9, 12), SetDataTip(AWV_DECREASE, STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_DECREASE_TOOLTIP),
@@ -2282,7 +2319,7 @@ static const NWidgetPart _nested_signal_builder_widgets[] = {
 			EndContainer(),
 		EndContainer(),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_BS_STYLE_SEL),
-			NWidget(WWT_DROPDOWN, COLOUR_DARK_GREEN, WID_BS_STYLE), SetFill(1, 0), SetDataTip(STR_BLACK_STRING, STR_BUILD_SIGNAL_STYLE_TOOLTIP),
+			NWidget(WWT_DROPDOWN, COLOUR_DARK_GREEN, WID_BS_STYLE), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_BUILD_SIGNAL_STYLE_TOOLTIP),
 		EndContainer(),
 	EndContainer(),
 };
@@ -2393,8 +2430,18 @@ static void ShowBuildTrainDepotPicker(Window *parent)
 }
 
 struct BuildRailWaypointWindow : PickerWindowBase {
-	BuildRailWaypointWindow(WindowDesc *desc, Window *parent) : PickerWindowBase(desc, parent)
+	using WaypointList = GUIList<uint>;
+	static const uint FILTER_LENGTH = 20;
+
+	const StationClass *waypoints;
+	WaypointList list;
+	StringFilter string_filter; ///< Filter for waypoint name
+	QueryString editbox;        ///< Filter editbox
+
+	BuildRailWaypointWindow(WindowDesc *desc, Window *parent) : PickerWindowBase(desc, parent), editbox(FILTER_LENGTH * MAX_CHAR_LENGTH, FILTER_LENGTH)
 	{
+		this->waypoints = StationClass::Get(STAT_CLASS_WAYP);
+
 		this->CreateNestedTree();
 
 		NWidgetMatrix *matrix = this->GetWidget<NWidgetMatrix>(WID_BRW_WAYPOINT_MATRIX);
@@ -2402,18 +2449,75 @@ struct BuildRailWaypointWindow : PickerWindowBase {
 
 		this->FinishInitNested(TRANSPORT_RAIL);
 
-		matrix->SetCount(_waypoint_count);
-		if (_cur_waypoint_type >= _waypoint_count) _cur_waypoint_type = 0;
-		matrix->SetClicked(_cur_waypoint_type);
+		this->querystrings[WID_BRW_FILTER] = &this->editbox;
+		this->editbox.cancel_button = QueryString::ACTION_CLEAR;
+
+		this->list.ForceRebuild();
+		this->BuildPickerList();
+	}
+
+	bool FilterByText(const StationSpec *statspec)
+	{
+		if (this->string_filter.IsEmpty()) return true;
+		this->string_filter.ResetState();
+		if (statspec == nullptr) {
+			this->string_filter.AddLine(GetString(STR_STATION_CLASS_WAYP_WAYPOINT));
+		} else {
+			this->string_filter.AddLine(GetString(statspec->name));
+			if (statspec->grf_prop.grffile != nullptr) {
+				const GRFConfig *gc = GetGRFConfig(statspec->grf_prop.grffile->grfid);
+				this->string_filter.AddLine(gc->GetName());
+			}
+		}
+		return this->string_filter.GetState();
+	}
+
+	void BuildPickerList()
+	{
+		if (!this->list.NeedRebuild()) return;
+
+		this->list.clear();
+		this->list.reserve(this->waypoints->GetSpecCount());
+		for (uint i = 0; i < this->waypoints->GetSpecCount(); i++) {
+			const StationSpec *statspec = this->waypoints->GetSpec(i);
+			if (!FilterByText(statspec)) continue;
+
+			this->list.push_back(i);
+		}
+		this->list.RebuildDone();
+
+		NWidgetMatrix *matrix = this->GetWidget<NWidgetMatrix>(WID_BRW_WAYPOINT_MATRIX);
+		matrix->SetCount((int)this->list.size());
+		matrix->SetClicked(this->UpdateSelection(_cur_waypoint_type));
+	}
+
+	uint UpdateSelection(uint type)
+	{
+		auto found = std::find(std::begin(this->list), std::end(this->list), type);
+		if (found != std::end(this->list)) return found - std::begin(this->list);
+
+		/* Selection isn't in the list, default to first */
+		if (this->list.empty()) {
+			_cur_waypoint_type = 0;
+			return -1;
+		} else {
+			_cur_waypoint_type = this->list.front();
+			return 0;
+		}
+	}
+
+	virtual ~BuildRailWaypointWindow()
+	{
+		DeleteWindowById(WC_SELECT_STATION, 0);
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_BRW_WAYPOINT_MATRIX:
-				/* Three blobs high and wide. */
+				/* Two blobs high and three wide. */
 				size->width  += resize->width  * 2;
-				size->height += resize->height * 2;
+				size->height += resize->height * 1;
 
 				/* Resizing in X direction only at blob size, but at pixel level in Y. */
 				resize->height = 1;
@@ -2426,12 +2530,34 @@ struct BuildRailWaypointWindow : PickerWindowBase {
 		}
 	}
 
+	void SetStringParameters(int widget) const override
+	{
+		if (widget == WID_BRW_NAME) {
+			if (!this->list.empty() && IsInsideBS(_cur_waypoint_type, 0, this->waypoints->GetSpecCount())) {
+				const StationSpec *statspec = this->waypoints->GetSpec(_cur_waypoint_type);
+				if (statspec == nullptr) {
+					SetDParam(0, STR_STATION_CLASS_WAYP_WAYPOINT);
+				} else {
+					SetDParam(0, statspec->name);
+				}
+			} else {
+				SetDParam(0, STR_EMPTY);
+			}
+		}
+	}
+
+	void OnPaint() override
+	{
+		this->BuildPickerList();
+		this->DrawWidgets();
+	}
+
 	void DrawWidget(const Rect &r, int widget) const override
 	{
 		switch (GB(widget, 0, 16)) {
 			case WID_BRW_WAYPOINT: {
-				uint type = GB(widget, 16, 16);
-				const StationSpec *statspec = StationClass::Get(STAT_CLASS_WAYP)->GetSpec(type);
+				uint16_t type = this->list.at(GB(widget, 16, 16));
+				const StationSpec *statspec = this->waypoints->GetSpec(type);
 
 				DrawPixelInfo tmp_dpi;
 				if (FillDrawPixelInfo(&tmp_dpi, r.left, r.top, r.Width(), r.Height())) {
@@ -2452,19 +2578,49 @@ struct BuildRailWaypointWindow : PickerWindowBase {
 	{
 		switch (GB(widget, 0, 16)) {
 			case WID_BRW_WAYPOINT: {
-				uint type = GB(widget, 16, 16);
-				this->GetWidget<NWidgetMatrix>(WID_BRW_WAYPOINT_MATRIX)->SetClicked(_cur_waypoint_type);
+				uint16_t sel = GB(widget, 16, 16);
+				assert(sel < this->list.size());
+				uint16_t type = this->list.at(sel);
 
 				/* Check station availability callback */
-				const StationSpec *statspec = StationClass::Get(STAT_CLASS_WAYP)->GetSpec(type);
+				const StationSpec *statspec = this->waypoints->GetSpec(type);
 				if (!IsStationAvailable(statspec)) return;
 
 				_cur_waypoint_type = type;
-				this->GetWidget<NWidgetMatrix>(WID_BRW_WAYPOINT_MATRIX)->SetClicked(_cur_waypoint_type);
+				this->GetWidget<NWidgetMatrix>(WID_BRW_WAYPOINT_MATRIX)->SetClicked(sel);
 				if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 				this->SetDirty();
 				break;
 			}
+		}
+	}
+
+	void OnRealtimeTick(uint delta_ms) override
+	{
+		CheckRedrawWaypointCoverage(this, false);
+	}
+
+	void SelectWaypointSpec(uint16 spec_id)
+	{
+		for (uint i = 0; i < (uint)this->list.size(); i++) {
+			if (this->list[i] == spec_id) {
+				this->OnClick({}, WID_BRW_WAYPOINT | (i << 16), 1);
+				break;
+			}
+		}
+	}
+
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	{
+		if (!gui_scope) return;
+		this->list.ForceRebuild();
+	}
+
+	void OnEditboxChanged(int wid) override
+	{
+		if (wid == WID_BRW_FILTER) {
+			this->string_filter.SetFilterTerm(this->editbox.text.buf);
+			this->InvalidateData();
 		}
 	}
 };
@@ -2476,16 +2632,22 @@ static const NWidgetPart _nested_build_waypoint_widgets[] = {
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_WAYPOINT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_DARK_GREEN),
 	EndContainer(),
+	NWidget(WWT_PANEL, COLOUR_DARK_GREEN),
+		NWidget(WWT_EDITBOX, COLOUR_DARK_GREEN, WID_BRW_FILTER), SetPadding(2), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
+	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_PANEL, COLOUR_DARK_GREEN),
+		NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetScrollbar(WID_BRW_SCROLL),
 			NWidget(NWID_MATRIX, COLOUR_DARK_GREEN, WID_BRW_WAYPOINT_MATRIX), SetPIP(0, 2, 0),  SetPadding(3), SetScrollbar(WID_BRW_SCROLL),
-				NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_BRW_WAYPOINT), SetMinimalSize(66, 60), SetDataTip(0x0, STR_WAYPOINT_GRAPHICS_TOOLTIP), SetScrollbar(WID_BRW_SCROLL), EndContainer(),
+				NWidget(WWT_PANEL, COLOUR_GREY, WID_BRW_WAYPOINT), SetDataTip(0x0, STR_WAYPOINT_GRAPHICS_TOOLTIP), SetScrollbar(WID_BRW_SCROLL), EndContainer(),
 			EndContainer(),
 		EndContainer(),
-		NWidget(NWID_VERTICAL),
-			NWidget(NWID_VSCROLLBAR, COLOUR_DARK_GREEN, WID_BRW_SCROLL),
-			NWidget(WWT_RESIZEBOX, COLOUR_DARK_GREEN),
+		NWidget(NWID_VSCROLLBAR, COLOUR_DARK_GREEN, WID_BRW_SCROLL),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PANEL, COLOUR_DARK_GREEN),
+			NWidget(WWT_TEXT, COLOUR_DARK_GREEN, WID_BRW_NAME), SetPadding(2), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_NULL), SetTextStyle(TC_ORANGE), SetAlignment(SA_CENTER),
 		EndContainer(),
+		NWidget(WWT_RESIZEBOX, COLOUR_DARK_GREEN),
 	EndContainer(),
 };
 
@@ -2676,4 +2838,52 @@ DropDownList GetRailTypeDropDownList(bool for_replacement, bool all_option)
 	}
 
 	return list;
+}
+
+void ShowBuildRailStationPickerAndSelect(StationType station_type, const StationSpec *spec)
+{
+	if (!IsStationAvailable(spec)) return;
+
+	StationClassID class_id;
+	if (spec != nullptr) {
+		if ((spec->cls_id == STAT_CLASS_WAYP) != (station_type == STATION_WAYPOINT)) return;
+		class_id = spec->cls_id;
+	} else {
+		class_id = (station_type == STATION_ROADWAYPOINT) ? STAT_CLASS_WAYP : STAT_CLASS_DFLT;
+	}
+
+	int spec_id = -1;
+	const StationClass *stclass = StationClass::Get(class_id);
+	for (int i = 0; i < (int)stclass->GetSpecCount(); i++) {
+		if (stclass->GetSpec(i) == spec) {
+			spec_id = i;
+		}
+	}
+	if (spec_id < 0) return;
+
+
+	Window *w = FindWindowById(WC_BUILD_TOOLBAR, TRANSPORT_RAIL);
+	if (w == nullptr) {
+		extern RailType _last_built_railtype;
+		w = ShowBuildRailToolbar(_last_built_railtype);
+	}
+	if (w == nullptr) return;
+
+	auto trigger_widget = [&](int widget) {
+		if (!w->IsWidgetLowered(widget)) {
+			w->OnHotkey(widget);
+		}
+	};
+
+	if (station_type == STATION_WAYPOINT) {
+		trigger_widget(WID_RAT_BUILD_WAYPOINT);
+
+		BuildRailWaypointWindow *waypoint_window = dynamic_cast<BuildRailWaypointWindow *>(FindWindowById(WC_BUILD_WAYPOINT, TRANSPORT_RAIL));
+		if (waypoint_window != nullptr) waypoint_window->SelectWaypointSpec((uint16)spec_id);
+	} else {
+		trigger_widget(WID_RAT_BUILD_STATION);
+
+		BuildRailStationWindow *station_window = dynamic_cast<BuildRailStationWindow *>(FindWindowById(WC_BUILD_STATION, TRANSPORT_RAIL));
+		if (station_window != nullptr) station_window->SelectClassAndSpec(class_id, spec_id);
+	}
 }

@@ -8,6 +8,9 @@ STR_ORDER_TEXT                                                  :{STRING6} {STRI
 ##after STR_CONFIG_SETTING_TREE_PLACER_IMPROVED
 STR_CONFIG_SETTING_TREE_PLACER_PERFECT                          :Perfect
 
+##after STR_CONFIG_SETTING_TREE_PLACER_HELPTEXT
+STR_CONFIG_SETTING_TREE_PLACER_HELPTEXT_EXTRA                   :{STRING}, 'Perfect' improves spreading and grouping
+
 ##after STR_FINANCES_SECTION_OTHER
 STR_FINANCES_SECTION_INFRASTRUCTURE_COSTS                       :{GOLD}Infrastructure Sharing
 STR_FINANCES_SECTION_INFRASTRUCTURE_INCOME                      :{GOLD}Infrastructure Sharing
@@ -67,10 +70,17 @@ STR_VIEWPORT_TOWN_TINY_EXCELLENT_RATING                         :{TINY_FONT}{GRE
 STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :Extremely slow
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :Very slow
 
+##after STR_ABOUT_MENU_LAND_BLOCK_INFO
+STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Picker tool
+
 ##after STR_ABOUT_MENU_SHOW_FRAMERATE
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Modifier key window
 
-##after STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS
+##after STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Every month
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Every 3 months
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Every 6 months
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Every 12 months
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_LABEL      :Custom interval (days)
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Custom interval (real-time minutes)
 
@@ -116,6 +126,11 @@ STR_GRAPH_CARGO_DAYS_MODE                                       :{TINY_FONT}{BLA
 STR_GRAPH_CARGO_SPEED_MODE                                      :{TINY_FONT}{BLACK}Average speed
 STR_GRAPH_CARGO_TOOLTIP_DAYS_MODE                               :{BLACK}Display days in transit on the x-axis of the graph
 STR_GRAPH_CARGO_TOOLTIP_SPEED_MODE                              :{BLACK}Display average transit speed on the x-axis of the graph
+
+STR_GRAPH_DELIVERED_CARGO_BY_COMPANY_MODE                       :{TINY_FONT}{BLACK}Companies
+STR_GRAPH_DELIVERED_CARGO_BY_CARGO_MODE                         :{TINY_FONT}{BLACK}Cargoes
+STR_GRAPH_DELIVERED_CARGO_BY_COMPANY_MODE_TOOLTIP               :{BLACK}Display one line for each selected company
+STR_GRAPH_DELIVERED_CARGO_BY_CARGO_MODE_TOOLTIP                 :{BLACK}Display one line for each selected cargo
 
 STR_SMALLMAP_SCREENSHOT                                         :{BLACK}Screenshot
 
@@ -599,11 +614,13 @@ STR_CONFIG_SETTING_CARGO_PAYMENT_ALGORITHM_HELPTEXT             :The algorithm t
 STR_CONFIG_SETTING_CARGO_PAYMENT_ALGORITHM_TRADITIONAL          :Traditional
 STR_CONFIG_SETTING_CARGO_PAYMENT_ALGORITHM_MODERN               :Modern
 
+STR_CONFIG_SETTING_TICK_RATE                                    :Game tick rate: {STRING2}
+STR_CONFIG_SETTING_TICK_RATE_HELPTEXT                           :Number of milliseconds per game tick.
+STR_CONFIG_SETTING_TICK_RATE_TRADITIONAL                        :30 ms/tick (traditional)
+STR_CONFIG_SETTING_TICK_RATE_MODERN                             :27 ms/tick (modern)
+
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE                            :Minimum distance between towns: {STRING2}
 STR_CONFIG_SETTING_TOWN_MIN_DISTANCE_HELPTEXT                   :Set the minimum distance in tiles between towns for map generation and random founding
-
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED               :Do not scale the linkgraph days by the day length factor: {STRING2}
-STR_CONFIG_SETTING_LINKGRAPH_NOT_DAYLENGTH_SCALED_HELPTEXT      :When enabled, the linkgraph recalculation interval and time are in units of unscaled, original days, instead of day-length scaled calendar days.
 
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO                       :Distribution mode override for this cargo: {STRING2}
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM                 :Distribution mode override for {STRING}: {STRING2}
@@ -623,6 +640,8 @@ STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}Client 
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}Savegame settings
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}Timetables
 STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}Signals (advanced)
+STR_CONFIG_SETTING_INTERFACE_SAVE                               :{ORANGE}Save & Autosave
+STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS                    :{ORANGE}Vehicle windows
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}Rivers & Lakes
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}Cargo distribution - per cargo overrides
 STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}Trees
@@ -1001,16 +1020,18 @@ STR_TRACE_RESTRICT_APPEND                                       :{BLACK}Append
 STR_TRACE_RESTRICT_DUPLICATE                                    :{BLACK}Duplicate
 STR_TRACE_RESTRICT_SHARE                                        :{BLACK}Share
 STR_TRACE_RESTRICT_UNSHARE                                      :{BLACK}Unshare
+STR_TRACE_RESTRICT_SHARE_ONTO                                   :{BLACK}Share Onto
 STR_TRACE_RESTRICT_SELECT_TARGET                                :{BLACK}Select Target
 STR_TRACE_RESTRICT_SELECT_SIGNAL                                :{BLACK}Select Signal
 STR_TRACE_RESTRICT_SELECT_TILE                                  :{BLACK}Select Tile
 STR_TRACE_RESTRICT_INSERT_TOOLTIP                               :{BLACK}Insert an instruction
 STR_TRACE_RESTRICT_REMOVE_TOOLTIP                               :{BLACK}Remove the selected instruction{}Ctrl+Click to remove the selected conditional instruction but retain its contents
 STR_TRACE_RESTRICT_RESET_TOOLTIP                                :{BLACK}Reset the current signal (without affecting shared programs)
-STR_TRACE_RESTRICT_COPY_TOOLTIP                                 :{BLACK}Copy program from another signal{}Ctrl+click to append program from another signal
-STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP                            :{BLACK}Duplicate the selected instruction{}Ctrl+click to append program from another signal
+STR_TRACE_RESTRICT_COPY_TOOLTIP                                 :{BLACK}Copy program from another signal{}Ctrl+Click to append program from another signal
+STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP                            :{BLACK}Duplicate the selected instruction{}Ctrl+Click to append program from another signal
 STR_TRACE_RESTRICT_SHARE_TOOLTIP                                :{BLACK}Share program with another signal
 STR_TRACE_RESTRICT_UNSHARE_TOOLTIP                              :{BLACK}Stop sharing program with other signals, create a copy of the program
+STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA                          :{STRING}{}{BLACK}Ctrl+Click to set other signals to share with this program
 STR_TRACE_RESTRICT_SIGNAL_GUI_TOOLTIP                           :{BLACK}Routefinding restriction
 STR_TRACE_RESTRICT_INSTRUCTION_LIST_TOOLTIP                     :{BLACK}Click an instruction to select it{}Ctrl+Click to scroll to the instruction's target (if any)
 STR_TRACE_RESTRICT_HIGHLIGHT_TOOLTIP                            :{BLACK}Toggle highlighting all signals sharing this program
@@ -1023,7 +1044,7 @@ STR_TRACE_RESTRICT_ERROR_CAN_T_REMOVE_ITEM                      :{WHITE}Can't re
 STR_TRACE_RESTRICT_ERROR_CAN_T_MOVE_ITEM                        :{WHITE}Can't move instruction
 STR_TRACE_RESTRICT_ERROR_CAN_T_DUPLICATE_ITEM                   :{WHITE}Can't duplicate instruction
 STR_TRACE_RESTRICT_ERROR_VALUE_TOO_LARGE                        :{WHITE}Value too large, maximum is {DECIMAL}
-STR_TRACE_RESTRICT_ERROR_NO_PROGRAM                             :No trace restrict program exists
+STR_TRACE_RESTRICT_ERROR_NO_PROGRAM                             :No program exists
 STR_TRACE_RESTRICT_ERROR_OFFSET_TOO_LARGE                       :Offset too large
 STR_TRACE_RESTRICT_ERROR_CAN_T_CHANGE_CONDITIONALITY            :Can't change conditionality
 STR_TRACE_RESTRICT_ERROR_CAN_T_REMOVE_ENDIF                     :Can't remove an 'end if'
@@ -1034,6 +1055,7 @@ STR_TRACE_RESTRICT_ERROR_VALIDATE_DUP_ELSE                      :Validation fail
 STR_TRACE_RESTRICT_ERROR_VALIDATE_ELIF_NO_IF                    :Validation failed: else if without opening if
 STR_TRACE_RESTRICT_ERROR_VALIDATE_UNKNOWN_INSTRUCTION           :Validation failed: unknown instruction
 STR_TRACE_RESTRICT_ERROR_SOURCE_SAME_AS_TARGET                  :Source and target signals are the same
+STR_TRACE_RESTRICT_ERROR_TARGET_ALREADY_HAS_PROGRAM             :Target signal already has a program
 STR_TRACE_RESTRICT_ERROR_CAN_T_RESET_SIGNAL                     :{WHITE}Can't reset signal
 STR_TRACE_RESTRICT_ERROR_CAN_T_COPY_PROGRAM                     :{WHITE}Can't copy program
 STR_TRACE_RESTRICT_ERROR_CAN_T_COPY_APPEND_PROGRAM              :{WHITE}Can't append program
@@ -1108,7 +1130,7 @@ STR_PROGSIG_COND_SLOT                                           :slot occupancy
 STR_PROGSIG_COND_SLOT_REMAINING                                 :slot occupancy remaining
 STR_PROGSIG_COND_COUNTER                                        :counter value
 STR_PROGSIG_CONDVAR_SIGNAL_STATE_SPECIFIED                      :signal at {NUM} x {NUM} is green
-STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{RED}unspecified signal{STRING} is green
+STR_PROGSIG_CONDVAR_SIGNAL_STATE_UNSPECIFIED                    :{PUSH_COLOUR}{RED}unspecified signal{POP_COLOUR} is green
 STR_PROGSIG_CONDVAR_NUM_RED                                     :red signals
 STR_PROGSIG_CONDVAR_NUM_GREEN                                   :green signals
 
@@ -1198,7 +1220,10 @@ STR_LAI_BRIDGE_DESCRIPTION_RAILROAD_SIGNAL                      :Railway bridge 
 STR_SAVELOAD_UNKNOWN_ID                                         :{YELLOW}This file may be from a different game.
 STR_SAVELOAD_DIFFERENT_ID                                       :{YELLOW}This file is from a different game.
 STR_SAVELOAD_OVERWRITE_TITLE_DIFFERENT_ID                       :{WHITE}Overwrite File (Different Game)
+STR_SAVELOAD_OVERWRITE_TITLE_DIFFERENT_VERSION_SUFFIX           :{STRING} (Different Version)
 STR_SAVELOAD_OVERWRITE_WARNING_DIFFERENT_ID                     :{YELLOW}Are you sure you want to overwrite the existing file?{}{}The file is from a different game.
+STR_SAVELOAD_OVERWRITE_WARNING_DIFFERENT_VERSION_SUFFIX         :{STRING}{}{}The file is from a different version{STRING1}.{}If overwritten the file will no longer be readable by the original version.
+STR_SAVELOAD_OVERWRITE_WARNING_VERSION_NAME                     : ({RAW_STRING})
 
 STR_MAPGEN_SNOW_LINE_HEIGHT                                     :{BLACK}Snow line height:
 STR_MAPGEN_SNOW_LINE_UP                                         :{BLACK}Move the snow line height one up
@@ -1322,6 +1347,8 @@ STR_CONFIG_MAX_DEPARTURES                                       :Show at most {S
 STR_CONFIG_MAX_DEPARTURES_HELPTEXT                              :The maximum number of entries to show on a departure board
 STR_CONFIG_MAX_DEPARTURE_TIME                                   :Show arrivals/departures at most {STRING2} days in advance
 STR_CONFIG_MAX_DEPARTURE_TIME_HELPTEXT                          :How far in advance to show arrivals and departures, in days
+STR_CONFIG_MAX_DEPARTURE_TIME_MINUTES                           :Show arrivals/departures at most {STRING2} minutes in advance
+STR_CONFIG_MAX_DEPARTURE_TIME_MINUTES_HELPTEXT                  :How far in advance to show arrivals and departures, in minutes
 STR_CONFIG_DEPARTURE_CALC_FREQUENCY                             :Calculate departure board entries every {STRING2} ticks
 STR_CONFIG_DEPARTURE_CALC_FREQUENCY_HELPTEXT                    :How frequently to refresh a list of arrivals/departures, in ticks
 STR_CONFIG_DEPARTURE_VEHICLE_NAME                               :Show vehicle name in entries: {STRING2}
@@ -1525,6 +1552,8 @@ STR_ORDER_CONDITIONAL_COMPARATOR_HAS_MORE_THAN                  :has more than
 STR_ORDER_CONDITIONAL_COMPARATOR_HAS_MORE_EQUALS                :has more than or exactly
 STR_ORDER_CONDITIONAL_COMPARATOR_FULLY_OCCUPIED                 :is fully occupied
 STR_ORDER_CONDITIONAL_COMPARATOR_NOT_YET_FULLY_OCCUPIED         :is not fully occupied
+STR_ORDER_CONDITIONAL_COMPARATOR_OCCUPANCY_EMPTY                :is empty
+STR_ORDER_CONDITIONAL_COMPARATOR_OCCUPANCY_NOT_EMPTY            :is not empty
 STR_ORDER_CONDITIONAL_COMPARATOR_TRAIN_IN_SLOT                  :train is in
 STR_ORDER_CONDITIONAL_COMPARATOR_TRAIN_NOT_IN_SLOT              :train is not in
 STR_ORDER_CONDITIONAL_COMPARATOR_TRAIN_IN_ACQUIRE_SLOT          :train is in/acquire
@@ -1572,6 +1601,7 @@ STR_ORDERS_OCCUPANCY_LIST_TOOLTIP                               :{BLACK}Order oc
 STR_ORDERS_OCCUPANCY_PERCENT                                    :{NUM}%
 
 STR_ORDERS_NEW_GROUP_TOOLTIP                                    :{BLACK}Create group from single vehicle
+STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP_EXTRA            :{STRING}{}{BLACK}Ctrl+Click to create group from single vehicle
 
 STR_ORDER_GO_TO_WAYPOINT_REVERSE                                :Go via and reverse at {WAYPOINT}
 STR_ORDER_GO_NON_STOP_TO_WAYPOINT_REVERSE                       :Go non-stop via and reverse at {WAYPOINT}
@@ -1791,7 +1821,6 @@ STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_IMPLICIT                   :{GRAY}IM
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_DEPOT                      :{RED}DE
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_OVERFLOW                   :{RED}{NUM}x
 
-STR_JUST_DECIMAL                                                :{DECIMAL}
 STR_JUST_DECIMAL1                                               :{DECIMAL1}
 
 STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
@@ -1809,15 +1838,8 @@ STR_JUST_VELOCITY                                               :{VELOCITY}
 STR_JUST_TT_TICKS                                               :{TT_TICKS}
 STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
 
-STR_BLACK_DECIMAL                                               :{BLACK}{DECIMAL}
-STR_WHITE_DATE_WALLCLOCK_LONG                                   :{WHITE}{DATE_WALLCLOCK_LONG}
-STR_WHITE_DATE_WALLCLOCK_SHORT                                  :{WHITE}{DATE_WALLCLOCK_SHORT}
-STR_BLACK_TIME_HHMM                                             :{BLACK}{TIME_HHMM}
 STR_RED_INT                                                     :{RED}{NUM}
-STR_BLACK_STRING1                                               :{BLACK}{STRING1}
 STR_BLACK_PLUS                                                  :{BLACK}+
-STR_WHITE                                                       :{WHITE}
-STR_BLACK                                                       :{BLACK}
 
 STR_DECIMAL1_WITH_SCALE                                         :{DECIMAL1} ({DECIMAL}x)
 
@@ -2073,3 +2095,28 @@ STR_ERROR_STATIONS_NOT_IN_SAME_TOWN                             :{WHITE}... stat
 STR_ERROR_STATION_ATTACHED_TO_INDUSTRY                          :{WHITE}... station is attached to an industry
 
 STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_EXTRA                     :{STRING}{}{BLACK}Ctrl+Click to convert track pieces instead of whole tiles.
+
+STR_CONFIG_SETTING_ALLOW_SHARES                                 :Allow buying shares from other companies: {STRING2}
+STR_CONFIG_SETTING_ALLOW_SHARES_HELPTEXT                        :When enabled, allow buying and selling of company shares. Shares will only be available for companies reaching a certain age
+
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES                         :Minimum company age to trade shares: {STRING2}
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_HELPTEXT                :Set the minimum age of a company for others to be able to buy and sell shares from them.
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_VALUE                   :{COMMA} year{P "" s}
+###setting-zero-is-special
+STR_CONFIG_SETTING_MIN_YEARS_FOR_SHARES_NO_MIN                  :No minimum
+
+STR_COMPANY_VIEW_SHARES_OWNED_BY                                :{WHITE}({COMMA}% owned by {COMPANY})
+
+STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Buy 25% share in company
+STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Sell 25% share in company
+STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Buy 25% share in this company. Shift+Click shows estimated cost without purchasing any share
+STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Sell 25% share in this company. Shift+Click shows estimated income without selling any share
+
+STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Can't buy 25% share in this company...
+STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Can't sell 25% share in this company...
+STR_ERROR_PROTECTED                                             :{WHITE}This company is not old enough to trade shares yet...
+
+STR_TOWN_DIRECTORY_INFO                                         :{BLACK}{STRING1}, Towns: {COMMA}
+
+STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR                         :{BLACK}Bigger main toolbar
+STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR_TOOLTIP                 :{BLACK}Check this box to increase the scale of the main toolbar
