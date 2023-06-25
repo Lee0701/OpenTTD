@@ -16,6 +16,8 @@
 #include "../../screenshot.h"
 #include "../../debug.h"
 #include "../../video/video_driver.hpp"
+#include "../../scope.h"
+#include "../../walltime_func.h"
 #include "macos.h"
 
 #include <errno.h>
@@ -235,6 +237,10 @@ class CrashLogOSX : public CrashLog {
 #endif
 
 		for (; frame != nullptr && i < MAX_STACK_FRAMES; i++) {
+			auto guard = scope_guard([&]() {
+				this->CrashLogFaultSectionCheckpoint(buffer);
+			});
+
 			/* Get IP for current stack frame. */
 #if defined(__ppc__) || defined(__ppc64__)
 			void *ip = frame[2];
@@ -306,10 +312,16 @@ class CrashLogOSX : public CrashLog {
 	/**
 	 * Log LLDB information if available
 	 */
+	char *LogDebugExtra(char *buffer, const char *last) const override
+	{
+		return this->LogLldbInfo(buffer, last);
+	}
+
+	/**
+	 * Log registers if available
+	 */
 	char *LogRegisters(char *buffer, const char *last) const override
 	{
-		buffer = LogLldbInfo(buffer, last);
-
 #ifdef WITH_UCONTEXT
 		ucontext_t *ucontext = static_cast<ucontext_t *>(context);
 #if defined(__x86_64__)
@@ -404,27 +416,35 @@ public:
 		bool ret = true;
 
 		printf("Crash encountered, generating crash log...\n");
-		this->FillCrashLog(buffer, last);
-		printf("%s\n", buffer);
-		printf("Crash log generated.\n\n");
+
+		char *name_buffer_date = this->name_buffer + seprintf(this->name_buffer, lastof(this->name_buffer), "crash-");
+		UTCTime::Format(name_buffer_date, lastof(this->name_buffer), "%Y%m%dT%H%M%SZ");
 
 		printf("Writing crash log to disk...\n");
-		if (!this->WriteCrashLog(buffer, filename_log, lastof(filename_log))) {
-			filename_log[0] = '\0';
+		bool bret = this->WriteCrashLog("", this->filename_log, lastof(this->filename_log), this->name_buffer, &(this->crash_file));
+		if (bret) {
+			printf("Crash log written to %s. Please add this file to any bug reports.\n\n", this->filename_log);
+		} else {
+			printf("Writing crash log failed. Please attach the output above to any bug reports.\n\n");
 			ret = false;
 		}
+		this->crash_buffer_write = buffer;
+
+		this->FillCrashLog(buffer, last);
+		this->CloseCrashLogFile();
+		printf("Crash log generated.\n\n");
 
 		printf("Writing crash savegame...\n");
 		_savegame_DBGL_data = buffer;
 		_save_DBGC_data = true;
-		if (!this->WriteSavegame(filename_save, lastof(filename_save))) {
+		if (!this->WriteSavegame(filename_save, lastof(filename_save), this->name_buffer)) {
 			filename_save[0] = '\0';
 			ret = false;
 		}
 
 		printf("Writing crash screenshot...\n");
 		SetScreenshotAuxiliaryText("Crash Log", buffer);
-		if (!this->WriteScreenshot(filename_screenshot, lastof(filename_screenshot))) {
+		if (!this->WriteScreenshot(filename_screenshot, lastof(filename_screenshot), this->name_buffer)) {
 			filename_screenshot[0] = '\0';
 			ret = false;
 		}
@@ -466,6 +486,8 @@ static const int _signals_to_handle[] = { SIGSEGV, SIGABRT, SIGFPE, SIGBUS, SIGI
  */
 void CDECL HandleCrash(int signum, siginfo_t *si, void *context)
 {
+	CrashLog::RegisterCrashed();
+
 	/* Disable all handling of signals by us, so we don't go into infinite loops. */
 	for (const int *i = _signals_to_handle; i != endof(_signals_to_handle); i++) {
 		signal(*i, SIG_DFL);

@@ -37,7 +37,9 @@
 #include "../error.h"
 #include "../core/checksum_func.hpp"
 #include "../string_func_extra.h"
+#include "../core/serialisation.hpp"
 #include "../3rdparty/randombytes/randombytes.h"
+#include "../3rdparty/monocypher/monocypher.h"
 #include "../settings_internal.h"
 #include <sstream>
 #include <iomanip>
@@ -219,6 +221,32 @@ std::string GenerateCompanyPasswordHash(const std::string &password, const std::
 	for (int di = 0; di < 16; di++) hashed_password << std::setw(2) << (int)digest[di]; // Cast needed, otherwise interpreted as character to add
 
 	return hashed_password.str();
+}
+
+/**
+ * Hash the given password using server ID and game seed.
+ * @param password Password to hash.
+ * @param password_server_id Server ID.
+ * @param password_game_seed Game seed.
+ * @return The hashed password.
+ */
+std::vector<uint8> GenerateGeneralPasswordHash(const std::string &password, const std::string &password_server_id, uint64 password_game_seed)
+{
+	if (password.empty()) return {};
+
+	std::vector<byte> data;
+	data.reserve(password_server_id.size() + password.size() + 10);
+	BufferSerialiser buffer(data);
+
+	buffer.Send_uint64(password_game_seed);
+	buffer.Send_string(password_server_id);
+	buffer.Send_string(password);
+
+	std::vector<byte> output;
+	output.resize(64);
+	crypto_blake2b(output.data(), output.size(), data.data(), data.size());
+
+	return output;
 }
 
 /**
@@ -635,6 +663,7 @@ void NetworkClose(bool close_admins)
 
 		_network_coordinator_client.CloseAllConnections();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 
 	TCPConnecter::KillAll();
 
@@ -1047,12 +1076,15 @@ void NetworkUpdateServerGameType()
  */
 static bool NetworkReceive()
 {
+	bool result;
 	if (_network_server) {
 		ServerNetworkAdminSocketHandler::Receive();
-		return ServerNetworkGameSocketHandler::Receive();
+		result = ServerNetworkGameSocketHandler::Receive();
 	} else {
-		return ClientNetworkGameSocketHandler::Receive();
+		result = ClientNetworkGameSocketHandler::Receive();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
+	return result;
 }
 
 /* This sends all buffered commands (if possible) */
@@ -1064,6 +1096,7 @@ static void NetworkSend()
 	} else {
 		ClientNetworkGameSocketHandler::Send();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 }
 
 /**
@@ -1078,6 +1111,7 @@ void NetworkBackgroundLoop()
 	TCPConnecter::CheckCallbacks();
 	NetworkHTTPSocketHandler::HTTPReceive();
 	QueryNetworkGameSocketHandler::SendReceive();
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 
 	NetworkBackgroundUDPLoop();
 }
@@ -1284,27 +1318,27 @@ static void NetworkGenerateServerId()
 	_settings_client.network.network_id = hex_output;
 }
 
+std::string BytesToHexString(const byte *data, uint length)
+{
+	std::string hex_output;
+	hex_output.resize(length * 2);
+
+	char txt[3];
+	for (uint i = 0; i < length; ++i) {
+		seprintf(txt, lastof(txt), "%02x", data[i]);
+		hex_output[i * 2] = txt[0];
+		hex_output[(i * 2) + 1] = txt[1];
+	}
+
+	return hex_output;
+}
+
 std::string NetworkGenerateRandomKeyString(uint bytes)
 {
 	uint8 *key = AllocaM(uint8, bytes);
-	char *hex_output = AllocaM(char, bytes * 2);
+	NetworkRandomBytesWithFallback(key, bytes);
 
-	if (randombytes(key, bytes) < 0) {
-		/* Fallback poor-quality random */
-		DEBUG(misc, 0, "High quality random source unavailable");
-		for (uint i = 0; i < bytes; i++) {
-			key[i] = (uint8)InteractiveRandom();
-		}
-	}
-
-	char txt[3];
-	for (uint i = 0; i < bytes; ++i) {
-		seprintf(txt, lastof(txt), "%02x", key[i]);
-		hex_output[i * 2] = txt[0];
-		hex_output[i * 2 + 1] = txt[1];
-	}
-
-	return std::string(hex_output, hex_output + bytes * 2);
+	return BytesToHexString(key, bytes);
 }
 
 class TCPNetworkDebugConnecter : TCPConnecter {
@@ -1371,6 +1405,34 @@ void NetworkShutDown()
 	_network_available = false;
 
 	NetworkCoreShutdown();
+}
+
+void NetworkRandomBytesWithFallback(void *buf, size_t bytes)
+{
+	if (randombytes(buf, bytes) < 0) {
+		/* Fallback poor-quality random */
+		DEBUG(net, 0, "High quality random source unavailable");
+		for (uint i = 0; i < bytes; i++) {
+			reinterpret_cast<byte *>(buf)[i] = (byte)InteractiveRandom();
+		}
+	}
+}
+
+void NetworkGameKeys::Initialise()
+{
+	assert(!this->inited);
+
+	this->inited = true;
+
+	static_assert(sizeof(this->x25519_priv_key) == 32);
+	NetworkRandomBytesWithFallback(this->x25519_priv_key, sizeof(this->x25519_priv_key));
+	crypto_x25519_public_key(this->x25519_pub_key, this->x25519_priv_key);
+}
+
+NetworkSharedSecrets::~NetworkSharedSecrets()
+{
+	static_assert(sizeof(*this) == 64);
+	crypto_wipe(this, sizeof(*this));
 }
 
 #ifdef __EMSCRIPTEN__

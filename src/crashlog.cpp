@@ -33,6 +33,7 @@
 #include "debug_desync.h"
 #include "event_logs.h"
 #include "scope.h"
+#include "progress.h"
 
 #include "ai/ai_info.hpp"
 #include "game/game.hpp"
@@ -86,6 +87,7 @@
 /* static */ const char *CrashLog::message = nullptr;
 /* static */ char *CrashLog::gamelog_buffer = nullptr;
 /* static */ const char *CrashLog::gamelog_last = nullptr;
+/* static */ bool CrashLog::have_crashed = false;
 
 char *CrashLog::LogCompiler(char *buffer, const char *last) const
 {
@@ -119,6 +121,12 @@ char *CrashLog::LogCompiler(char *buffer, const char *last) const
 	return buffer;
 }
 
+/* virtual */ char *CrashLog::LogDebugExtra(char *buffer, const char *last) const
+{
+	/* Stub implementation; not all OSes support this. */
+	return buffer;
+}
+
 /* virtual */ char *CrashLog::LogRegisters(char *buffer, const char *last) const
 {
 	/* Stub implementation; not all OSes support this. */
@@ -137,6 +145,29 @@ char *CrashLog::LogCompiler(char *buffer, const char *last) const
 	return buffer + WriteScopeLog(buffer, last);
 }
 #endif
+
+/* virtual */ void CrashLog::StartCrashLogFaultHandler()
+{
+	/* Stub implementation; not all OSes support this. */
+}
+
+/* virtual */ void CrashLog::StopCrashLogFaultHandler()
+{
+	/* Stub implementation; not all OSes support this. */
+}
+
+/* virtual */ char *CrashLog::TryCrashLogFaultSection(char *buffer, const char *last, const char *section_name, CrashLogSectionWriter writer)
+{
+	/* Stub implementation; not all OSes support internal fault handling. */
+	this->FlushCrashLogBuffer();
+	return writer(this, buffer, last);
+}
+
+/* virtual */ void CrashLog::CrashLogFaultSectionCheckpoint(char *buffer) const
+{
+	/* Stub implementation; not all OSes support this. */
+	const_cast<CrashLog *>(this)->FlushCrashLogBuffer();
+}
 
 /**
  * Writes OpenTTD's version to the buffer.
@@ -196,6 +227,15 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			default: return "-";
 		};
 	};
+	auto mode_name = []() -> const char * {
+		switch (_game_mode) {
+			case GM_MENU: return "MENU";
+			case GM_NORMAL: return "NORMAL";
+			case GM_EDITOR: return "EDITOR";
+			case GM_BOOTSTRAP:  return "BOOTSTRAP";
+			default: return "-";
+		};
+	};
 	buffer += seprintf(buffer, last,
 			"Configuration:\n"
 			" Blitter:      %s\n"
@@ -207,7 +247,7 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			" Sound driver: %s\n"
 			" Sound set:    %s (%u)\n"
 			" Video driver: %s\n"
-			" Pathfinder:   %s %s %s\n\n",
+			" Pathfinder:   %s %s %s\n",
 			BlitterFactory::GetCurrentBlitter() == nullptr ? "none" : BlitterFactory::GetCurrentBlitter()->GetName(),
 			BaseGraphics::GetUsedSet() == nullptr ? "none" : BaseGraphics::GetUsedSet()->name.c_str(),
 			BaseGraphics::GetUsedSet() == nullptr ? UINT32_MAX : BaseGraphics::GetUsedSet()->version,
@@ -222,6 +262,12 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			VideoDriver::GetInstance() == nullptr ? "none" : VideoDriver::GetInstance()->GetInfoString(),
 			pathfinder_name(_settings_game.pf.pathfinder_for_trains), pathfinder_name(_settings_game.pf.pathfinder_for_roadvehs), pathfinder_name(_settings_game.pf.pathfinder_for_ships)
 	);
+	buffer += seprintf(buffer, last, " Game mode:    %s", mode_name());
+	if (_switch_mode != SM_NONE) buffer += seprintf(buffer, last, ", SM: %u", _switch_mode);
+	if (HasModalProgress()) buffer += seprintf(buffer, last, ", HMP");
+	buffer += seprintf(buffer, last, "\n\n");
+
+	this->CrashLogFaultSectionCheckpoint(buffer);
 
 	auto log_font = [&](FontSize fs) -> const char * {
 		FontCache *fc = FontCache::Get(fs);
@@ -244,6 +290,8 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			log_font(FS_MONO)
 	);
 
+	this->CrashLogFaultSectionCheckpoint(buffer);
+
 	buffer += seprintf(buffer, last, "Map size: 0x%X (%u x %u)%s\n\n", MapSize(), MapSizeX(), MapSizeY(), (!_m || !_me) ? ", NO MAP ALLOCATED" : "");
 
 	if (_settings_game.debug.chicken_bits != 0) {
@@ -252,6 +300,8 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 	if (_settings_game.debug.newgrf_optimiser_flags != 0) {
 		buffer += seprintf(buffer, last, "NewGRF optimiser flags: 0x%08X\n\n", _settings_game.debug.newgrf_optimiser_flags);
 	}
+
+	this->CrashLogFaultSectionCheckpoint(buffer);
 
 	buffer += seprintf(buffer, last, "AI Configuration (local: %i) (current: %i):\n", (int)_local_company, (int)_current_company);
 	for (const Company *c : Company::Iterate()) {
@@ -267,6 +317,8 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 	}
 	buffer += seprintf(buffer, last, "\n");
 
+	this->CrashLogFaultSectionCheckpoint(buffer);
+
 	if (_grfconfig_static != nullptr) {
 		buffer += seprintf(buffer, last, "Static NewGRFs present:\n");
 		for (GRFConfig *c = _grfconfig_static; c != nullptr; c = c->next) {
@@ -276,6 +328,8 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 		}
 		buffer += seprintf(buffer, last, "\n");
 	}
+
+	this->CrashLogFaultSectionCheckpoint(buffer);
 
 	if (_network_server) {
 		extern char *NetworkServerDumpClients(char *buffer, const char *last);
@@ -468,60 +522,97 @@ char *CrashLog::LogCommandLog(char *buffer, const char *last) const
  */
 char *CrashLog::FillCrashLog(char *buffer, const char *last)
 {
+	this->StartCrashLogFaultHandler();
 	buffer += seprintf(buffer, last, "*** OpenTTD Crash Report ***\n\n");
 
-	if (GamelogTestEmergency()) {
-		buffer += seprintf(buffer, last, "-=-=- As you loaded an emergency savegame no crash information would ordinarily be generated. -=-=-\n\n");
-	}
-	if (SaveloadCrashWithMissingNewGRFs()) {
-		buffer += seprintf(buffer, last, "-=-=- As you loaded a savegame for which you do not have the required NewGRFs no crash information would ordinarily be generated. -=-=-\n\n");
-	}
+	buffer = this->TryCrashLogFaultSection(buffer, last, "emergency test", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		if (GamelogTestEmergency()) {
+			buffer += seprintf(buffer, last, "-=-=- As you loaded an emergency savegame no crash information would ordinarily be generated. -=-=-\n\n");
+		}
+		if (SaveloadCrashWithMissingNewGRFs()) {
+			buffer += seprintf(buffer, last, "-=-=- As you loaded a savegame for which you do not have the required NewGRFs no crash information would ordinarily be generated. -=-=-\n\n");
+		}
+		return buffer;
+	});
 
-	buffer += UTCTime::Format(buffer, last, "Crash at: %Y-%m-%d %H:%M:%S (UTC)\n");
+	buffer = this->TryCrashLogFaultSection(buffer, last, "times", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		buffer += UTCTime::Format(buffer, last, "Crash at: %Y-%m-%d %H:%M:%S (UTC)\n");
 
-	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u)\n", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor);
-	if (_game_load_time != 0) {
-		buffer += seprintf(buffer, last, "Game loaded at: %i-%02i-%02i (%i, %i), ",
-				_game_load_cur_date_ymd.year, _game_load_cur_date_ymd.month + 1, _game_load_cur_date_ymd.day, _game_load_date_fract, _game_load_tick_skip_counter);
-		buffer += UTCTime::Format(buffer, last, _game_load_time, "%Y-%m-%d %H:%M:%S");
-	}
+		buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u)\n", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor);
+		if (_game_load_time != 0) {
+			buffer += seprintf(buffer, last, "Game loaded at: %i-%02i-%02i (%i, %i), ",
+					_game_load_cur_date_ymd.year, _game_load_cur_date_ymd.month + 1, _game_load_cur_date_ymd.day, _game_load_date_fract, _game_load_tick_skip_counter);
+			buffer += UTCTime::Format(buffer, last, _game_load_time, "%Y-%m-%d %H:%M:%S");
+		}
+		return buffer;
+	});
+
 	buffer += seprintf(buffer, last, "\n");
 
-	this->FlushCrashLogBuffer();
-
-	buffer = this->LogError(buffer, last, CrashLog::message);
+	buffer = this->TryCrashLogFaultSection(buffer, last, "message", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogError(buffer, last, CrashLog::message);
+	});
 
 #ifdef USE_SCOPE_INFO
-	if (IsMainThread() || IsGameThread()) {
-		this->FlushCrashLogBuffer();
-		buffer += WriteScopeLog(buffer, last);
-	}
+	buffer = this->TryCrashLogFaultSection(buffer, last, "scope", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		if (IsMainThread() || IsGameThread()) {
+			buffer += WriteScopeLog(buffer, last);
+		}
+		return buffer;
+	});
 #endif
 
-	if (IsNonMainThread()) {
-		buffer += seprintf(buffer, last, "Non-main thread (");
-		buffer += GetCurrentThreadName(buffer, last);
-		buffer += seprintf(buffer, last, ")\n\n");
-	}
+	buffer = this->TryCrashLogFaultSection(buffer, last, "thread", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		if (IsNonMainThread()) {
+			buffer += seprintf(buffer, last, "Non-main thread (");
+			buffer += GetCurrentThreadName(buffer, last);
+			buffer += seprintf(buffer, last, ")\n\n");
+		}
+		return buffer;
+	});
 
-	buffer = this->LogOpenTTDVersion(buffer, last);
-	this->FlushCrashLogBuffer();
-	buffer = this->LogStacktrace(buffer, last);
-	this->FlushCrashLogBuffer();
-	buffer = this->LogRegisters(buffer, last);
-	this->FlushCrashLogBuffer();
-	buffer = this->LogOSVersion(buffer, last);
-	this->FlushCrashLogBuffer();
-	buffer = this->LogCompiler(buffer, last);
-	buffer = this->LogOSVersionDetail(buffer, last);
-	buffer = this->LogConfiguration(buffer, last);
-	buffer = this->LogLibraries(buffer, last);
-	buffer = this->LogModules(buffer, last);
-	buffer = this->LogGamelog(buffer, last);
-	buffer = this->LogRecentNews(buffer, last);
-	buffer = this->LogCommandLog(buffer, last);
+	buffer = this->TryCrashLogFaultSection(buffer, last, "OpenTTD version", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogOpenTTDVersion(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "stacktrace", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogStacktrace(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "debug extra", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogDebugExtra(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "registers", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogRegisters(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "OS version", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogOSVersion(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "compiler", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogCompiler(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "OS version detail", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogOSVersionDetail(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "config", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogConfiguration(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "libraries", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogLibraries(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "modules", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogModules(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "gamelog", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogGamelog(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "news", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogRecentNews(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "command log", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogCommandLog(buffer, last);
+	});
 
 	buffer += seprintf(buffer, last, "*** End of OpenTTD Crash Report ***\n");
+	this->StopCrashLogFaultHandler();
 	return buffer;
 }
 
@@ -720,10 +811,21 @@ void CrashLog::FlushCrashLogBuffer()
 		fwrite(this->crash_buffer_write, 1, len, this->crash_file);
 		fflush(this->crash_file);
 	}
+#if !defined(_WIN32)
 	fwrite(this->crash_buffer_write, 1, len, stdout);
 	fflush(stdout);
+#endif
 
 	this->crash_buffer_write += len;
+}
+
+void CrashLog::CloseCrashLogFile()
+{
+	this->FlushCrashLogBuffer();
+	if (this->crash_file != nullptr) {
+		FioFCloseFile(this->crash_file);
+		this->crash_file = nullptr;
+	}
 }
 
 /* virtual */ int CrashLog::WriteCrashDump(char *filename, const char *filename_last) const
@@ -834,9 +936,8 @@ static bool CopyAutosave(const std::string &old_name, const std::string &new_nam
 bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 {
 	/* Don't keep looping logging crashes. */
-	static bool crashlogged = false;
-	if (crashlogged) return false;
-	crashlogged = true;
+	if (CrashLog::HaveAlreadyCrashed()) return false;
+	CrashLog::RegisterCrashed();
 
 	char *name_buffer_date = this->name_buffer + seprintf(this->name_buffer, lastof(this->name_buffer), "crash-");
 	UTCTime::Format(name_buffer_date, lastof(this->name_buffer), "%Y%m%dT%H%M%SZ");
@@ -878,11 +979,7 @@ bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 	this->crash_buffer_write = buffer;
 
 	this->FillCrashLog(buffer, last);
-	this->FlushCrashLogBuffer();
-	if (this->crash_file != nullptr) {
-		FioFCloseFile(this->crash_file);
-		this->crash_file = nullptr;
-	}
+	this->CloseCrashLogFile();
 	printf("Crash log generated.\n\n");
 
 

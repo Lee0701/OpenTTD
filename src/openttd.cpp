@@ -168,6 +168,8 @@ void CDECL usererror(const char *s, ...)
  */
 void CDECL error(const char *s, ...)
 {
+	if (CrashLog::HaveAlreadyCrashed()) DoOSAbort();
+
 	va_list va;
 	char buf[2048];
 
@@ -186,6 +188,8 @@ void CDECL error(const char *s, ...)
 
 void CDECL assert_msg_error(int line, const char *file, const char *expr, const char *extra, const char *str, ...)
 {
+	if (CrashLog::HaveAlreadyCrashed()) DoOSAbort();
+
 	va_list va;
 	char buf[2048];
 
@@ -200,7 +204,9 @@ void CDECL assert_msg_error(int line, const char *file, const char *expr, const 
 	vseprintf(b, lastof(buf), str, va);
 	va_end(va);
 
-	ShowOSErrorBox(buf, true);
+	if (VideoDriver::GetInstance() == nullptr || VideoDriver::GetInstance()->HasGUI()) {
+		ShowOSErrorBox(buf, true);
+	}
 
 	/* Set the error message for the crash log and then invoke it. */
 	CrashLog::SetErrorMessage(buf);
@@ -2044,13 +2050,14 @@ void StateGameLoop()
 		RunAuxiliaryTileLoop();
 		if (_tick_skip_counter < _settings_game.economy.day_length_factor) {
 			AnimateAnimatedTiles();
+			RunTileLoop(true);
 			CallVehicleTicks();
 			OnTick_Companies(false);
 		} else {
 			_tick_skip_counter = 0;
 			IncreaseDate();
 			AnimateAnimatedTiles();
-			RunTileLoop();
+			RunTileLoop(true);
 			CallVehicleTicks();
 			CallLandscapeTick();
 			OnTick_Companies(true);
@@ -2183,6 +2190,7 @@ void GameLoop()
 	if (_switch_mode != SM_NONE && !HasModalProgress()) {
 		SwitchToMode(_switch_mode);
 		_switch_mode = SM_NONE;
+		if (_exit_game) return;
 	}
 
 	IncreaseSpriteLRU();

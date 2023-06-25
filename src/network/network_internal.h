@@ -122,6 +122,20 @@ struct NetworkGameList *NetworkAddServer(const std::string &connection_string, b
 void NetworkRebuildHostList();
 void UpdateNetworkGameWindow();
 
+struct NetworkGameKeys {
+	byte x25519_priv_key[32];    ///< x25519 key: private part
+	byte x25519_pub_key[32];     ///< x25519 key: public part
+	bool inited = false;
+
+	void Initialise();
+};
+
+struct NetworkSharedSecrets {
+	byte shared_data[64];
+
+	~NetworkSharedSecrets();
+};
+
 /* From network_command.cpp */
 /**
  * Everything we need to know about a command to be able to execute it.
@@ -147,6 +161,8 @@ uint NetworkCalculateLag(const NetworkClientSocket *cs);
 StringID GetNetworkErrorMsg(NetworkErrorCode err);
 bool NetworkMakeClientNameUnique(std::string &new_name);
 std::string GenerateCompanyPasswordHash(const std::string &password, const std::string &password_server_id, uint32 password_game_seed);
+std::vector<uint8> GenerateGeneralPasswordHash(const std::string &password, const std::string &password_server_id, uint64 password_game_seed);
+std::string BytesToHexString(const byte *data, uint length);
 std::string NetworkGenerateRandomKeyString(uint bytes);
 
 std::string_view ParseCompanyFromConnectionString(const std::string &connection_string, CompanyID *company_id);
@@ -154,5 +170,7 @@ NetworkAddress ParseConnectionString(const std::string &connection_string, uint1
 std::string NormalizeConnectionString(const std::string &connection_string, uint16 default_port);
 
 void ClientNetworkEmergencySave();
+
+void NetworkRandomBytesWithFallback(void *buf, size_t n);
 
 #endif /* NETWORK_INTERNAL_H */

@@ -894,6 +894,7 @@ void IniSaveWindowSettings(IniFile &ini, const char *grpname, void *desc)
 bool SettingDesc::IsEditable(bool do_command) const
 {
 	if (!do_command && !(this->flags & SF_NO_NETWORK_SYNC) && _networking && !(_network_server || _network_settings_access) && !(this->flags & SF_PER_COMPANY)) return false;
+	if (do_command && (this->flags & SF_NO_NETWORK_SYNC)) return false;
 	if ((this->flags & SF_NETWORK_ONLY) && !_networking && _game_mode != GM_MENU) return false;
 	if ((this->flags & SF_NO_NETWORK) && _networking) return false;
 	if ((this->flags & SF_NEWGAME_ONLY) &&
@@ -1274,6 +1275,7 @@ static void UpdateTimeSettings(int32 new_value)
 	InvalidateWindowData(WC_STATUS_BAR, 0, SBI_REINIT);
 	InvalidateWindowClassesData(WC_GAME_OPTIONS);
 	InvalidateWindowClassesData(WC_DEPARTURES_BOARD, 1);
+	InvalidateWindowClassesData(WC_PAYMENT_RATES);
 	MarkWholeScreenDirty();
 }
 
@@ -1741,6 +1743,8 @@ static void DayLengthChanged(int32 new_value)
 
 	extern void VehicleDayLengthChanged(DateTicksScaled old_scaled_date_ticks, DateTicksScaled old_scaled_date_ticks_offset, uint8 old_day_length_factor);
 	VehicleDayLengthChanged(old_scaled_date_ticks, old_scaled_date_ticks_offset, _pre_change_day_length_factor);
+
+	SetupTileLoopCounts();
 
 	MarkWholeScreenDirty();
 }

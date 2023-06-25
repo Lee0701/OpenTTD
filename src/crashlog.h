@@ -55,6 +55,9 @@ private:
 	/** Temporary 'local' location of the end of the buffer. */
 	static const char *gamelog_last;
 
+	/** Whether a crash has already occured */
+	static bool have_crashed;
+
 	static void GamelogFillCrashLog(const char *s);
 protected:
 	/**
@@ -100,6 +103,15 @@ protected:
 	virtual char *LogStacktrace(char *buffer, const char *last) const = 0;
 
 	/**
+	 * Writes information about extra debug info, if there is
+	 * information about it available.
+	 * @param buffer The begin where to write at.
+	 * @param last   The last position in the buffer to write to.
+	 * @return the position of the \c '\0' character after the buffer.
+	 */
+	virtual char *LogDebugExtra(char *buffer, const char *last) const;
+
+	/**
 	 * Writes information about the data in the registers, if there is
 	 * information about it available.
 	 * @param buffer The begin where to write at.
@@ -125,7 +137,7 @@ protected:
 	 * @param last   The last position in the buffer to write to.
 	 * @return the position of the \c '\0' character after the buffer.
 	 */
-	virtual char *LogScopeInfo(char *buffer, const char *last) const;
+	char *LogScopeInfo(char *buffer, const char *last) const;
 #endif
 
 	char *LogOpenTTDVersion(char *buffer, const char *last) const;
@@ -134,6 +146,13 @@ protected:
 	char *LogGamelog(char *buffer, const char *last) const;
 	char *LogRecentNews(char *buffer, const char *list) const;
 	char *LogCommandLog(char *buffer, const char *last) const;
+
+	virtual void StartCrashLogFaultHandler();
+	virtual void StopCrashLogFaultHandler();
+
+	using CrashLogSectionWriter = char *(*)(CrashLog *self, char *buffer, const char *last);
+	virtual char *TryCrashLogFaultSection(char *buffer, const char *last, const char *section_name, CrashLogSectionWriter writer);
+	virtual void CrashLogFaultSectionCheckpoint(char *buffer) const;
 
 public:
 	/** Buffer for the filename name prefix */
@@ -146,6 +165,7 @@ public:
 
 	char *FillCrashLog(char *buffer, const char *last);
 	void FlushCrashLogBuffer();
+	void CloseCrashLogFile();
 	char *FillDesyncCrashLog(char *buffer, const char *last, const DesyncExtraInfo &info) const;
 	char *FillInconsistencyLog(char *buffer, const char *last, const InconsistencyExtraInfo &info) const;
 	char *FillVersionInfoLog(char *buffer, const char *last) const;
@@ -191,6 +211,8 @@ public:
 	static void InconsistencyLog(const InconsistencyExtraInfo &info);
 	static void VersionInfoLog();
 
+	static void RegisterCrashed() { CrashLog::have_crashed = true; }
+	static bool HaveAlreadyCrashed() { return CrashLog::have_crashed; }
 	static void SetErrorMessage(const char *message);
 	static void AfterCrashLogCleanup();
 
