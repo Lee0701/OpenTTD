@@ -292,12 +292,6 @@ STR_CONFIG_SETTING_VEHICLE_NAMES_LONG                           :Long
 STR_CONFIG_SETTING_SHADED_TREES_ON_SLOPES                       :Shade trees on slopes: {STRING2}
 STR_CONFIG_SETTING_SHADED_TREES_ON_SLOPES_HELPTEXT              :Change brightness of trees drawn on slopes. Improves the look of tree cover in mountainous areas.
 
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE                  :Station rating tooltips: {STRING2}
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Set whether station rating tooltips are shown and the level of information detail.
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Off
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Simple
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailed
-
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE                        :Ask before demolishing structures: {STRING2}
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE_HELPTEXT               :Ask for confirmation before irreversibly demolishing structures.
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE_OFF                    :Off
@@ -404,25 +398,42 @@ STR_CONFIG_SETTING_SHOW_VEHICLE_LIST_COMPANY_COLOUR_HELPTEXT    :Vehicles in a v
 STR_CONFIG_SETTING_ENABLE_SINGLE_VEH_SHARED_ORDER_GUI           :Enable single vehicles in shared order group window: {STRING2}
 STR_CONFIG_SETTING_ENABLE_SINGLE_VEH_SHARED_ORDER_GUI_HELPTEXT  :Allow using the shared order group window with single vehicles, without shared orders.
 
-STR_CONFIG_SETTING_VIEWPORT_MAP_SCAN_SURROUNDINGS               :Scan surroundings (better for high zoom out levels): {STRING2}
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SLOPES                     :Show slopes: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SLOPES_HELPTEXT            :Whether to shade slopes, when zoomed out into map mode.
+
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_HEIGHT                     :Show height: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_HEIGHT_HELPTEXT            :Whether to shade height levels, when zoomed out into map mode and not in vegetation mode.
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_BRIDGES                    :Show bridges: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_BRIDGES_HELPTEXT           :Whether to show a dotted line for bridges, when zoomed out into map mode.
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_TUNNELS                    :Show tunnels: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_TUNNELS_HELPTEXT           :Whether to show a dotted line for tunnels, when zoomed out into map mode.
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP               :Show scrolling viewport: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_HELPTEXT      :When scrolling a viewport which is not in map mode, show an indication of where the scrolling viewport is on any map mode viewports.
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_NOTHING       :No
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_CONTOUR       :Contour
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_BLEND         :Blend with some white (32bpp only)
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_ALL           :Blend + contour
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_USE_OWNER_COLOUR_BRIDGE_TUNNEL  :Use owner's colour for bridges and tunnels: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_USE_OWNER_COLOUR_BRIDGE_TUNNEL_HELPTEXT :Whether to use the owner's colour for bridge and tunnel dotted lines, when zoomed out into map mode in the owner display mode.
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_DEFAULT_MODE                    :Default mode: {STRING2}
 STR_CONFIG_SETTING_VIEWPORT_MAP_DEFAULT_MODE_HELPTEXT           :Default display mode for the main viewport and any extra viewport windows, when zoomed out into map mode.
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK                 :Function of double-click: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_HELPTEXT        :What action to take when double-clicking on a viewport, when zoomed out into map mode.
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_DO_NOTHING      :Do nothing
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_ZOOM_MAIN       :Zoom in directly to 1X
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_NEW_EXTRA       :Open an extra viewport
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_VEHICLE_ROUTE              :Show vehicle route overlay lines: {STRING2}
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_VEHICLE_ROUTE_HELPTEXT     :When enabled, and a vehicle window is focused, lines are drawn between the locations of each of the vehicle's orders. (Conditional order branches are shown using yellow lines).
-STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH                 :Drawing style of vehicle's route: {STRING}
+
+STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH                 :Drawing style of vehicle route overlay lines: {STRING2}
+STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_HELPTEXT        :How to draw the lines between the locations of each of the vehicle's orders, when showing a vehicle route overlay.
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_VALUE           :dashed lines of {COMMA} pixel{P "" s}
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_DISABLED        :plain lines
 
@@ -1389,11 +1400,28 @@ STR_FINANCES_REPAY_TOOLTIP_EXTRA                                :{BLACK}{STRING}
 STR_FINANCES_BORROW_QUERY_CAPT                                  :{WHITE}Enter the amount of money to borrow
 STR_FINANCES_REPAY_QUERY_CAPT                                   :{WHITE}Enter the amount of money to repay
 
-STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP                           :{BLACK}{STRING}{RAW_STRING}
-STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP_EXTENSION                 :{}{BLACK}{CARGO_LONG} ({COMMA}%)
-
 # Town tooltip
 STR_TOWN_NAME_TOOLTIP                                           :{BLACK}{TOWN}
+STR_TOWN_NAME_POP_TOOLTIP                                       :{BLACK}{TOWN}: {COMMA}
+STR_TOWN_NAME_RATING_TOOLTIP                                    :{STRING2}{}Your rating is {STRING}
+
+STR_INDUSTRY_VIEW_NAME_TOOLTIP                                  :{STRING}
+STR_INDUSTRY_VIEW_REQUIRED_TOOLTIP_FIRST                        :{STRING}{RAW_STRING}
+STR_INDUSTRY_VIEW_REQUIRED_TOOLTIP_NEXT                         :, {STRING}{RAW_STRING}
+STR_INDUSTRY_VIEW_STOCKPILED_TOOLTIP                            :{CARGO_LONG} waiting{RAW_STRING}
+STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP_EXTENSION                 :{CARGO_LONG}{RAW_STRING} ({COMMA}%)
+
+STR_DEPOT_VIEW_COUNT_TOOLTIP                                    :{BLACK}{COMMA} vehicle{P "" s} inside
+STR_DEPOT_VIEW_COUNT_STOPPED_TOOLTIP                            :{BLACK}{COMMA} stopped vehicle{P "" s} inside
+STR_DEPOT_VIEW_COUNT_WAITING_TOOLTIP                            :{BLACK}{COMMA} waiting vehicle{P "" s} inside
+STR_DEPOT_VIEW_TOTAL_TOOLTIP                                    :{BLACK}{COMMA} vehicles inside:
+STR_DEPOT_VIEW_STOPPED_TOOLTIP                                  :{}{COMMA} {P is are} stopped
+STR_DEPOT_VIEW_WAITING_TOOLTIP                                  :{}{COMMA} {P is are} waiting
+STR_DEPOT_VIEW_FREE_WAGONS_TOOLTIP                              :{BLACK}{COMMA} wagon{P "" s} inside
+STR_DEPOT_VIEW_MIXED_CONTENTS_TOOLTIP                           :{BLACK}{STRING1}{}{STRING1}
+
+STR_STATION_VIEW_NAME_TOOLTIP                                   :{STATION}{NBSP}{STATION_FEATURES}
+STR_STATION_VIEW_CARGO_LINE_TOOLTIP                             :{STRING} ({COMMA}%): {CARGO_SHORT}
 
 STR_VEHICLE_LIST_AGE                                            :{STRING2}, Age: {COMMA} year{P "" s} ({COMMA})
 STR_VEHICLE_LIST_AGE_RED                                        :{STRING2}, Age: {RED}{COMMA} {BLACK}year{P "" s} ({COMMA})
@@ -2121,3 +2149,52 @@ STR_TOWN_DIRECTORY_INFO                                         :{BLACK}{STRING1
 
 STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR                         :{BLACK}Bigger main toolbar
 STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR_TOOLTIP                 :{BLACK}Check this box to increase the scale of the main toolbar
+
+STR_CONFIG_SETTING_INTERFACE_TOOLTIPS                           :{ORANGE}Tooltips
+
+STR_CONFIG_SETTING_INSTANT_TILE_TOOLTIP                         :Show viewport tooltips for tiles without a right-click: {STRING2}
+STR_CONFIG_SETTING_INSTANT_TILE_TOOLTIP_HELPTEXT                :Show viewport tooltips for tile types such as industries without requiring a right-click, when the show tooltips setting is set to right-click.
+
+STR_CONFIG_SETTING_TOWN_NAME_TOOLTIP_MODE                       :Show viewport tooltips with town names: {STRING2}
+STR_CONFIG_SETTING_TOWN_NAME_TOOLTIP_MODE_HELPTEXT              :Show viewport tooltips for road and house tiles that belong to towns.
+STR_CONFIG_SETTING_TOWN_NAME_TOOLTIP_MODE_OFF                   :Off
+STR_CONFIG_SETTING_TOWN_NAME_TOOLTIP_MODE_ON_IF_HIDDEN          :On, if town names are hidden
+STR_CONFIG_SETTING_TOWN_NAME_TOOLTIP_MODE_ALWAYS_ON             :Always on
+
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_SHOW                        :Show viewport tooltips for industries: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_SHOW_HELPTEXT               :Show tooltips when hovering over industry tiles.
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_NAME                        :Show names in industry viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_NAME_HELPTEXT               :Show names of industries in viewport tooltips when hovering over industry tiles.
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_REQUIRED                    :Show required cargoes in industry viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_REQUIRED_HELPTEXT           :Show a list of cargoes required by industries in viewport tooltips when hovering over industry tiles.
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_STOCKPILED                  :Show stockpiled cargoes in industry viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_STOCKPILED_HELPTEXT         :Show a list of cargoes stockpiled by industries in viewport tooltips when hovering over industry tiles.
+
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_PRODUCED                    :Show produced cargoes in industry viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_TOOLTIP_PRODUCED_HELPTEXT           :Show a list of cargoes produced by industries in viewport tooltips when hovering over industry tiles.
+
+STR_CONFIG_SETTING_DEPOT_TOOLTIP_MODE                           :Depot viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_DEPOT_TOOLTIP_MODE_HELPTEXT                  :Set whether to show viewport tooltips when hovering over depot tiles and how much information to display.
+STR_CONFIG_SETTING_DEPOT_TOOLTIP_MODE_OFF                       :Off
+STR_CONFIG_SETTING_DEPOT_TOOLTIP_MODE_SIMPLE                    :Simple
+STR_CONFIG_SETTING_DEPOT_TOOLTIP_MODE_DETAILED                  :Detailed
+
+STR_CONFIG_SETTING_WAYPOINT_VIEWPORT_TOOLTIP_NAME               :Show viewport tooltips for waypoints and buoys: {STRING2}
+STR_CONFIG_SETTING_WAYPOINT_VIEWPORT_TOOLTIP_NAME_HELPTEXT      :Show the name of the waypoint or buoy in a viewport tooltip when hovering over it.
+STR_CONFIG_SETTING_WAYPOINT_VIEWPORT_TOOLTIP_NAME_OFF           :Off
+STR_CONFIG_SETTING_WAYPOINT_VIEWPORT_TOOLTIP_NAME_ON_IF_HIDDEN  :On, if waypoint names are hidden
+STR_CONFIG_SETTING_WAYPOINT_VIEWPORT_TOOLTIP_NAME_ALWAYS_ON     :Always on
+
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_NAME                :Show names in station viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_NAME_HELPTEXT       :Show the name of the station in a viewport tooltip when hovering over it.
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_CARGO               :Show cargo details in station viewport tooltips: {STRING2}
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_CARGO_HELPTEXT      :Show the list of amounts and ratings of cargo that had ever been delivered to the station by industries, towns or by vehicles via unload/transfer order that doesn't result in the final delivery.
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_NAME_OFF            :Off
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_NAME_ON_IF_HIDDEN   :On, if station names are hidden
+STR_CONFIG_SETTING_STATION_VIEWPORT_TOOLTIP_NAME_ALWAYS_ON      :Always on
+
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE                  :Station rating tooltips: {STRING2}
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Set whether station rating tooltips are shown and the level of information detail.
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Off
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Simple
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailed

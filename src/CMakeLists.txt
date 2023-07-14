@@ -238,6 +238,7 @@ add_files(
     league_gui.cpp
     league_type.h
     livery.h
+    load_check.h
     main_gui.cpp
     map.cpp
     map_func.h
@@ -441,6 +442,7 @@ add_files(
     strgen/strgen.h
     string.cpp
     string_base.h
+    string_extra.cpp
     string_func.h
     string_func_extra.h
     string_type.h

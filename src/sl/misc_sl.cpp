@@ -16,6 +16,7 @@
 #include "../gfx_func.h"
 #include "../core/random_func.hpp"
 #include "../fios.h"
+#include "../load_check.h"
 #include "../road_type.h"
 #include "../core/checksum_func.hpp"
 #include "../event_logs.h"
@@ -31,6 +32,7 @@ extern TileIndex _aux_tileloop_tile;
 extern uint16 _disaster_delay;
 extern byte _trees_tick_ctr;
 extern uint64 _aspect_cfg_hash;
+extern std::string _savegame_id;
 
 /* Keep track of current game position */
 int _saved_scrollpos_x;
@@ -178,9 +180,19 @@ static void SaveLoad_VIEW()
 	SlGlobList(_view_desc);
 }
 
+static const SaveLoad _misc_desc[] = {
+	SLEG_CONDSSTR_X(_savegame_id, 0,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SAVEGAME_ID)),
+};
+
+static void SaveLoad_MISC()
+{
+	SlGlobList(_misc_desc);
+}
+
 static const ChunkHandler misc_chunk_handlers[] = {
 	{ 'DATE', SaveLoad_DATE, SaveLoad_DATE, nullptr, Check_DATE, CH_RIFF },
 	{ 'VIEW', SaveLoad_VIEW, SaveLoad_VIEW, nullptr, nullptr,    CH_RIFF },
+	{ 'MISC', SaveLoad_MISC, SaveLoad_MISC, nullptr, nullptr,    CH_RIFF },
 };
 
 extern const ChunkHandlerTable _misc_chunk_handlers(misc_chunk_handlers);

@@ -1699,9 +1699,9 @@ public:
 				break;
 
 			case WID_BROS_NEWST_LIST: {
-				int y = this->vscrollList->GetScrolledRowFromWidget(pt.y, this, WID_BROS_NEWST_LIST);
-				if (y >= (int)this->roadstop_classes.size()) return;
-				RoadStopClassID class_id = this->roadstop_classes[y];
+				auto it = this->vscrollList->GetScrolledItemFromWidget(this->roadstop_classes, pt.y, this, WID_BROS_NEWST_LIST);
+				if (it == this->roadstop_classes.end()) return;
+				RoadStopClassID class_id = *it;
 				this->SelectClass(class_id);
 				if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 				this->SetDirty();
@@ -1858,7 +1858,7 @@ static const NWidgetPart _nested_road_station_picker_widgets[] = {
 };
 
 static WindowDesc _road_station_picker_desc(
-	WDP_AUTO, nullptr, 0, 0,
+	WDP_AUTO, "build_station_road", 0, 0,
 	WC_BUS_STATION, WC_BUILD_TOOLBAR,
 	WDF_CONSTRUCTION,
 	_nested_road_station_picker_widgets, lengthof(_nested_road_station_picker_widgets)
@@ -1944,7 +1944,7 @@ static const NWidgetPart _nested_tram_station_picker_widgets[] = {
 };
 
 static WindowDesc _tram_station_picker_desc(
-	WDP_AUTO, nullptr, 0, 0,
+	WDP_AUTO, "build_station_tram", 0, 0,
 	WC_BUS_STATION, WC_BUILD_TOOLBAR,
 	WDF_CONSTRUCTION,
 	_nested_tram_station_picker_widgets, lengthof(_nested_tram_station_picker_widgets)
@@ -2179,7 +2179,7 @@ static const NWidgetPart _nested_build_waypoint_widgets[] = {
 };
 
 static WindowDesc _build_waypoint_desc(
-	WDP_AUTO, "build_waypoint", 0, 0,
+	WDP_AUTO, "build_road_waypoint", 0, 0,
 	WC_BUILD_WAYPOINT, WC_BUILD_TOOLBAR,
 	WDF_CONSTRUCTION,
 	_nested_build_waypoint_widgets, lengthof(_nested_build_waypoint_widgets)

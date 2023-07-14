@@ -15,8 +15,14 @@
 #include "textfile_type.h"
 #include "window_gui.h"
 #include <optional>
+#include <vector>
 
 const char *GetTextfile(TextfileType type, Subdirectory dir, const char *filename);
+
+inline const char *GetTextfile(TextfileType type, Subdirectory dir, const std::string &filename)
+{
+	return GetTextfile(type, dir, filename.c_str());
+}
 
 /** Window for displaying a textfile */
 struct TextfileWindow : public Window, MissingGlyphSearcher {
@@ -42,6 +48,9 @@ struct TextfileWindow : public Window, MissingGlyphSearcher {
 	void SetFontNames(FontCacheSettings *settings, const char *font_name, const void *os_data) override;
 
 	virtual void LoadTextfile(const char *textfile, Subdirectory dir);
+
+protected:
+	void LoadText(std::string_view buf);
 
 private:
 	struct Line {

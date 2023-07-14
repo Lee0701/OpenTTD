@@ -652,9 +652,9 @@ public:
 			}
 
 			case WID_DPI_MATRIX_WIDGET: {
-				int y = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_DPI_MATRIX_WIDGET);
-				if (y != INT_MAX) { // Is it within the boundaries of available data?
-					this->selected_type = this->list[y];
+				auto it = this->vscroll->GetScrolledItemFromWidget(this->list, pt.y, this, WID_DPI_MATRIX_WIDGET);
+				if (it != this->list.end()) { // Is it within the boundaries of available data?
+					this->selected_type = *it;
 					this->UpdateAvailability();
 
 					const IndustrySpec *indsp = GetIndustrySpec(this->selected_type);
@@ -1277,14 +1277,11 @@ static bool CargoFilter(const Industry * const *industry, const std::pair<CargoI
 			break;
 
 		case CF_NONE:
-			accepted_cargo_matches = std::all_of(std::begin((*industry)->accepts_cargo), std::end((*industry)->accepts_cargo), [](CargoID cargo) {
-				return cargo == CT_INVALID;
-			});
+			accepted_cargo_matches = !(*industry)->IsCargoAccepted();
 			break;
 
 		default:
-			const auto &ac = (*industry)->accepts_cargo;
-			accepted_cargo_matches = std::find(std::begin(ac), std::end(ac), accepted_cargo) != std::end(ac);
+			accepted_cargo_matches = (*industry)->IsCargoAccepted(accepted_cargo);
 			break;
 	}
 
@@ -1296,14 +1293,11 @@ static bool CargoFilter(const Industry * const *industry, const std::pair<CargoI
 			break;
 
 		case CF_NONE:
-			produced_cargo_matches = std::all_of(std::begin((*industry)->produced_cargo), std::end((*industry)->produced_cargo), [](CargoID cargo) {
-				return cargo == CT_INVALID;
-			});
+			produced_cargo_matches = !(*industry)->IsCargoProduced();
 			break;
 
 		default:
-			const auto &pc = (*industry)->produced_cargo;
-			produced_cargo_matches = std::find(std::begin(pc), std::end(pc), produced_cargo) != std::end(pc);
+			produced_cargo_matches = (*industry)->IsCargoProduced(produced_cargo);
 			break;
 	}
 
@@ -1764,12 +1758,12 @@ public:
 				break;
 
 			case WID_ID_INDUSTRY_LIST: {
-				uint p = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_ID_INDUSTRY_LIST, WidgetDimensions::scaled.framerect.top);
-				if (p < this->industries.size()) {
+				auto it = this->vscroll->GetScrolledItemFromWidget(this->industries, pt.y, this, WID_ID_INDUSTRY_LIST, WidgetDimensions::scaled.framerect.top);
+				if (it != this->industries.end()) {
 					if (_ctrl_pressed) {
-						ShowExtraViewportWindow(this->industries[p]->location.tile);
+						ShowExtraViewportWindow((*it)->location.tile);
 					} else {
-						ScrollMainWindowToTile(this->industries[p]->location.tile);
+						ScrollMainWindowToTile((*it)->location.tile);
 					}
 				}
 				break;
@@ -2566,8 +2560,8 @@ struct IndustryCargoesWindow : public Window {
 			const IndustrySpec *indsp = GetIndustrySpec(it);
 			if (!indsp->enabled) continue;
 			this->ind_textsize = maxdim(this->ind_textsize, GetStringBoundingBox(indsp->name));
-			CargoesField::max_cargoes = std::max<uint>(CargoesField::max_cargoes, std::count_if(indsp->accepts_cargo, endof(indsp->accepts_cargo), IsCargoIDValid));
-			CargoesField::max_cargoes = std::max<uint>(CargoesField::max_cargoes, std::count_if(indsp->produced_cargo, endof(indsp->produced_cargo), IsCargoIDValid));
+			CargoesField::max_cargoes = std::max<uint>(CargoesField::max_cargoes, std::count_if(indsp->accepts_cargo, endof(indsp->accepts_cargo), IsValidCargoID));
+			CargoesField::max_cargoes = std::max<uint>(CargoesField::max_cargoes, std::count_if(indsp->produced_cargo, endof(indsp->produced_cargo), IsValidCargoID));
 		}
 		d.width = std::max(d.width, this->ind_textsize.width);
 		d.height = this->ind_textsize.height;
@@ -3243,4 +3237,119 @@ static void ShowIndustryCargoesWindow(IndustryType id)
 void ShowIndustryCargoesWindow()
 {
 	ShowIndustryCargoesWindow(NUM_INDUSTRYTYPES);
+}
+
+void ShowIndustryTooltip(Window *w, const TileIndex tile)
+{
+	if (!_settings_client.gui.industry_tooltip_show) return;
+	if (!(_settings_client.gui.industry_tooltip_show_name || _settings_client.gui.industry_tooltip_show_produced ||
+			_settings_client.gui.industry_tooltip_show_required || _settings_client.gui.industry_tooltip_show_stockpiled)) return;
+
+	const Industry *industry = Industry::GetByTile(tile);
+	const IndustrySpec *industry_spec = GetIndustrySpec(industry->type);
+
+	std::string msg;
+
+	if (_settings_client.gui.industry_tooltip_show_name) {
+		// Print out the name of the industry.
+		SetDParam(0, industry_spec->name);
+		msg = GetString(STR_INDUSTRY_VIEW_NAME_TOOLTIP);
+	}
+
+	if (_settings_client.gui.industry_tooltip_show_required || _settings_client.gui.industry_tooltip_show_stockpiled) {
+		const size_t accepted_cargo_count = lengthof(industry->accepts_cargo);
+
+		CargoSuffix suffixes[accepted_cargo_count];
+		GetAllCargoSuffixes(CARGOSUFFIX_IN, CST_VIEW, industry, industry->type, industry_spec, industry->accepts_cargo, suffixes);
+
+		// Have to query the stockpiling right now, in case callback 37 returns fail.
+		bool stockpiling = HasBit(industry_spec->callback_mask, CBM_IND_PRODUCTION_CARGO_ARRIVAL) ||
+				HasBit(industry_spec->callback_mask, CBM_IND_PRODUCTION_256_TICKS);
+
+		if (_settings_client.gui.industry_tooltip_show_required) {
+			// Print out required cargo.
+			bool first = true;
+			std::string required_cargo_list;
+
+			for (size_t i = 0; i < accepted_cargo_count; ++i) {
+				CargoID required_cargo = industry->accepts_cargo[i];
+				if (required_cargo == CT_INVALID) {
+					continue;
+				}
+
+				const CargoSuffix &suffix = suffixes[i];
+
+				const bool is_stockpile_with_suffix = (suffix.display == CSD_CARGO_AMOUNT_TEXT);
+				const bool is_stockpile_without_suffix = (suffix.display == CSD_CARGO_AMOUNT);
+				const bool is_proper_stockpile_without_suffix = (is_stockpile_without_suffix && stockpiling); // If callback 37 fails, the result is interpreted as a stockpile, for some reason.
+				if (is_stockpile_with_suffix || is_proper_stockpile_without_suffix) {
+					if (_settings_client.gui.industry_tooltip_show_stockpiled) continue;
+				}
+
+				StringID format = STR_INDUSTRY_VIEW_REQUIRED_TOOLTIP_NEXT;
+				if (first) {
+					format = STR_INDUSTRY_VIEW_REQUIRED_TOOLTIP_FIRST;
+					first = false;
+				}
+
+				SetDParam(0, CargoSpec::Get(required_cargo)->name);
+				SetDParamStr(1, suffix.text);
+				required_cargo_list += GetString(format);
+			}
+
+			if (!required_cargo_list.empty()) {
+				if (!msg.empty()) msg += '\n';
+				msg += required_cargo_list;
+			}
+		}
+
+		// Print out stockpiled cargo.
+
+		if (stockpiling && _settings_client.gui.industry_tooltip_show_stockpiled) {
+			for (size_t i = 0; i < accepted_cargo_count; ++i) {
+				CargoID stockpiled_cargo = industry->accepts_cargo[i];
+				if (stockpiled_cargo == CT_INVALID) continue;
+
+				const CargoSuffix &suffix = suffixes[i];
+
+				if (suffix.display == CSD_CARGO || suffix.display == CSD_CARGO_TEXT) {
+					continue;
+				}
+
+				if (!msg.empty()) msg += '\n';
+
+				SetDParam(0, stockpiled_cargo);
+				SetDParam(1, industry->incoming_cargo_waiting[i]);
+				SetDParamStr(2, suffix.text);
+				msg += GetString(STR_INDUSTRY_VIEW_STOCKPILED_TOOLTIP);
+			}
+		}
+	}
+
+	if (_settings_client.gui.industry_tooltip_show_produced) {
+		const size_t produced_cargo_count = lengthof(industry->produced_cargo);
+
+		CargoSuffix suffixes[produced_cargo_count];
+		GetAllCargoSuffixes(CARGOSUFFIX_OUT, CST_VIEW, industry, industry->type, industry_spec, industry->produced_cargo, suffixes);
+
+		// Print out amounts of produced cargo.
+
+		for (size_t i = 0; i < produced_cargo_count; i++) {
+			CargoID produced_cargo = industry->produced_cargo[i];
+			if (produced_cargo == CT_INVALID) continue;
+
+			if (!msg.empty()) msg += '\n';
+
+			SetDParam(0, produced_cargo);
+			SetDParam(1, industry->last_month_production[i]);
+			SetDParamStr(2, suffixes[i].text);
+			SetDParam(3, ToPercent8(industry->last_month_pct_transported[i]));
+			msg += GetString(STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP_EXTENSION);
+		}
+	}
+
+	if (!msg.empty()) {
+		_temp_special_strings[0] = std::move(msg);
+		GuiShowTooltips(w, SPECSTR_TEMP_START, 0, nullptr, TCC_HOVER_VIEWPORT);
+	}
 }

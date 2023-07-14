@@ -1514,7 +1514,6 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
 		case WID_SM_SHOW_HEIGHT: // Enable/disable showing of heightmap.
 			_smallmap_show_heightmap = !_smallmap_show_heightmap;
 			this->SetWidgetLoweredState(WID_SM_SHOW_HEIGHT, _smallmap_show_heightmap);
-			NotifyAllViewports(VPMT_INDUSTRY);
 			this->SetDirty();
 			break;
 
@@ -1719,9 +1718,8 @@ void SmallMapWindow::ScreenshotCallbackHandler(void *buf, uint y, uint pitch, ui
 	dpi.left = 0;
 	dpi.top = y;
 
-	int32 pos = (((int32)MapMaxX() + 1) * TILE_PIXELS) / 4;
-	this->scroll_x = pos;
-	this->scroll_y = -pos;
+	this->scroll_x = (dpi.width / 2) - ((16 * ((int)MapSizeY() - (int)MapSizeX())) / this->zoom);
+	this->scroll_y = 0;
 
 	/* make the screenshot */
 	this->DrawSmallMap(&dpi, false);

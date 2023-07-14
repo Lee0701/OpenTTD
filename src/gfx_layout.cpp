@@ -8,6 +8,7 @@
 /** @file gfx_layout.cpp Handling of laying out text. */
 
 #include "stdafx.h"
+#include "core/math_func.hpp"
 #include "gfx_layout.h"
 #include "string_func.h"
 #include "debug.h"
@@ -63,8 +64,8 @@ static inline void GetLayouter(Layouter::LineCacheItem &line, std::string_view s
 {
 	if (line.buffer != nullptr) free(line.buffer);
 
-	typename T::CharType *buff_begin = MallocT<typename T::CharType>(DRAW_STRING_BUFFER);
-	const typename T::CharType *buffer_last = buff_begin + DRAW_STRING_BUFFER;
+	typename T::CharType *buff_begin = MallocT<typename T::CharType>(str.size() + 1);
+	const typename T::CharType *buffer_last = buff_begin + str.size() + 1;
 	typename T::CharType *buff = buff_begin;
 	FontMap &fontMapping = line.runs;
 	Font *f = Layouter::GetFont(state.fontsize, state.cur_colour);
@@ -103,8 +104,8 @@ static inline void GetLayouter(Layouter::LineCacheItem &line, std::string_view s
 			continue;
 		}
 
-		if (!fontMapping.Contains(buff - buff_begin)) {
-			fontMapping.Insert(buff - buff_begin, f);
+		if (fontMapping.count(buff - buff_begin) == 0) {
+			fontMapping[buff - buff_begin] = f;
 		}
 		f = Layouter::GetFont(state.fontsize, state.cur_colour);
 	}
@@ -112,8 +113,8 @@ static inline void GetLayouter(Layouter::LineCacheItem &line, std::string_view s
 	/* Better safe than sorry. */
 	*buff = '\0';
 
-	if (!fontMapping.Contains(buff - buff_begin)) {
-		fontMapping.Insert(buff - buff_begin, f);
+	if (fontMapping.count(buff - buff_begin) == 0) {
+		fontMapping[buff - buff_begin] = f;
 	}
 	line.layout = T::GetParagraphLayout(buff_begin, buff, fontMapping);
 	line.state_after = state;
@@ -206,6 +207,19 @@ Dimension Layouter::GetBounds()
 }
 
 /**
+ * Test whether a character is a non-printable formatting code
+ */
+static bool IsConsumedFormattingCode(WChar ch)
+{
+	if (ch >= SCC_BLUE && ch <= SCC_BLACK) return true;
+	if (ch == SCC_PUSH_COLOUR) return true;
+	if (ch == SCC_POP_COLOUR) return true;
+	if (ch >= SCC_FIRST_FONT && ch <= SCC_LAST_FONT) return true;
+	// All other characters defined in Unicode standard are assumed to be non-consumed.
+	return false;
+}
+
+/**
  * Get the position of a character in the layout.
  * @param ch Character to get the position of. Must be an iterator of the string passed to the constructor.
  * @return Upper left corner of the character relative to the start of the string.
@@ -227,7 +241,7 @@ Point Layouter::GetCharPosition(std::string_view::const_iterator ch) const
 	auto str = this->string.begin();
 	while (str < ch) {
 		WChar c = Utf8Consume(str);
-		index += line->GetInternalCharLength(c);
+		if (!IsConsumedFormattingCode(c)) index += line->GetInternalCharLength(c);
 	}
 
 	/* We couldn't find the code point index. */
@@ -254,9 +268,9 @@ Point Layouter::GetCharPosition(std::string_view::const_iterator ch) const
 }
 
 /**
- * Get the character that is at a position.
+ * Get the character that is at a pixel position in the first line of the layouted text.
  * @param x Position in the string.
- * @return Index of the position or -1 if no character is at the position.
+ * @return String offset of the position (bytes) or -1 if no character is at the position.
  */
 ptrdiff_t Layouter::GetCharAtPosition(int x) const
 {
@@ -277,12 +291,11 @@ ptrdiff_t Layouter::GetCharAtPosition(int x) const
 				size_t index = run.GetGlyphToCharMap()[i];
 
 				size_t cur_idx = 0;
-				int char_index = 0;
-				for (auto str = this->string.begin(); str != this->string.end(); char_index++) {
-					if (cur_idx == index) return char_index;
+				for (auto str = this->string.begin(); str != this->string.end();) {
+					if (cur_idx == index) return str - this->string.begin();
 
 					WChar c = Utf8Consume(str);
-					cur_idx += line->GetInternalCharLength(c);
+					if (!IsConsumedFormattingCode(c)) cur_idx += line->GetInternalCharLength(c);
 				}
 			}
 		}
@@ -296,12 +309,11 @@ ptrdiff_t Layouter::GetCharAtPosition(int x) const
  */
 Font *Layouter::GetFont(FontSize size, TextColour colour)
 {
-	FontColourMap::iterator it = fonts[size].Find(colour);
-	if (it != fonts[size].End()) return it->second;
+	FontColourMap::iterator it = fonts[size].find(colour);
+	if (it != fonts[size].end()) return it->second.get();
 
-	Font *f = new Font(size, colour);
-	fonts[size].emplace_back(colour, f);
-	return f;
+	fonts[size][colour] = std::make_unique<Font>(size, colour);
+	return fonts[size][colour].get();
 }
 
 /**
@@ -310,9 +322,6 @@ Font *Layouter::GetFont(FontSize size, TextColour colour)
  */
 void Layouter::ResetFontCache(FontSize size)
 {
-	for (auto &pair : fonts[size]) {
-		delete pair.second;
-	}
 	fonts[size].clear();
 
 	/* We must reset the linecache since it references the just freed fonts */

@@ -10,7 +10,6 @@
 #ifndef VEHICLE_BASE_H
 #define VEHICLE_BASE_H
 
-#include "core/smallmap_type.hpp"
 #include "track_type.h"
 #include "command_type.h"
 #include "order_base.h"
@@ -25,9 +24,11 @@
 #include "newgrf_cache_check.h"
 #include "landscape.h"
 #include "network/network.h"
+#include "core/mem_func.hpp"
 #include "sl/saveload_common.h"
 #include <list>
 #include <map>
+#include <vector>
 
 CommandCost CmdRefitVehicle(TileIndex, DoCommandFlag, uint32, uint32, const char*);
 

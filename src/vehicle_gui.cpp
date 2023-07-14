@@ -31,6 +31,7 @@
 #include "articulated_vehicles.h"
 #include "spritecache.h"
 #include "core/geometry_func.hpp"
+#include "core/container_func.hpp"
 #include "company_base.h"
 #include "engine_func.h"
 #include "station_base.h"
@@ -1595,7 +1596,7 @@ static bool VehicleProfitLifetimeSorter(const Vehicle * const &a, const Vehicle 
 static bool VehicleCargoSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
 	const Vehicle *v;
-	CargoArray diff;
+	CargoArray diff{};
 
 	/* Append the cargo of the connected waggons */
 	for (v = a; v != nullptr; v = v->Next()) diff[v->cargo_type] += v->cargo_cap;
@@ -2461,10 +2462,10 @@ public:
 				break;
 
 			case WID_VL_LIST: { // Matrix to show vehicles
-				uint id_v = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_VL_LIST);
-				if (id_v >= this->vehgroups.size()) return; // click out of list bound
+				auto it = this->vscroll->GetScrolledItemFromWidget(this->vehgroups, pt.y, this, WID_VL_LIST);
+				if (it == this->vehgroups.end()) return; // click out of list bound
 
-				const GUIVehicleGroup &vehgroup = this->vehgroups[id_v];
+				const GUIVehicleGroup &vehgroup = *it;
 				switch (this->grouping) {
 					case GB_NONE: {
 						const Vehicle *v = vehgroup.GetSingleVehicle();

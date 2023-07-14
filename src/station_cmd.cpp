@@ -46,6 +46,7 @@
 #include "pbs.h"
 #include "debug.h"
 #include "core/random_func.hpp"
+#include "core/container_func.hpp"
 #include "company_base.h"
 #include "table/airporttile_ids.h"
 #include "newgrf_airporttiles.h"
@@ -313,7 +314,8 @@ static StringID GenerateStationName(Station *st, TileIndex tile, StationNaming n
 
 	/* check close enough to town to get central as name? */
 	const bool is_central = DistanceMax(tile, t->xy) < 8;
-	if (HasBit(free_names, M(STR_SV_STNAME)) && (is_central || DistanceSquare(tile, t->xy) <= t->cache.squared_town_zone_radius[HZB_TOWN_INNER_SUBURB])) {
+	if (HasBit(free_names, M(STR_SV_STNAME)) && (is_central ||
+			DistanceSquare(tile, t->xy) <= std::max(t->cache.squared_town_zone_radius[HZB_TOWN_INNER_SUBURB], t->cache.squared_town_zone_radius[HZB_TOWN_OUTER_SUBURB]))) {
 		return STR_SV_STNAME;
 	}
 
@@ -588,7 +590,7 @@ static void ShowRejectOrAcceptNews(const Station *st, uint num_items, CargoID *c
  */
 CargoArray GetProductionAroundTiles(TileIndex north_tile, int w, int h, int rad)
 {
-	CargoArray produced;
+	CargoArray produced{};
 
 	btree::btree_set<IndustryID> industries;
 	TileArea ta = TileArea(north_tile, w, h).Expand(rad);
@@ -628,7 +630,7 @@ CargoArray GetProductionAroundTiles(TileIndex north_tile, int w, int h, int rad)
  */
 CargoArray GetAcceptanceAroundTiles(TileIndex center_tile, int w, int h, int rad, CargoTypes *always_accepted)
 {
-	CargoArray acceptance;
+	CargoArray acceptance{};
 	if (always_accepted != nullptr) *always_accepted = 0;
 
 	TileArea ta = TileArea(center_tile, w, h).Expand(rad);
@@ -650,7 +652,7 @@ CargoArray GetAcceptanceAroundTiles(TileIndex center_tile, int w, int h, int rad
  */
 static CargoArray GetAcceptanceAroundStation(const Station *st, CargoTypes *always_accepted)
 {
-	CargoArray acceptance;
+	CargoArray acceptance{};
 	if (always_accepted != nullptr) *always_accepted = 0;
 
 	BitmapTileIterator it(st->catchment_tiles);
@@ -672,7 +674,7 @@ void UpdateStationAcceptance(Station *st, bool show_msg)
 	CargoTypes old_acc = GetAcceptanceMask(st);
 
 	/* And retrieve the acceptance. */
-	CargoArray acceptance;
+	CargoArray acceptance{};
 	if (!st->rect.IsEmpty()) {
 		acceptance = GetAcceptanceAroundStation(st, &st->always_accepted);
 	}
@@ -4529,8 +4531,8 @@ void DeleteStaleLinks(Station *from)
 
 			return result;
 		});
-		assert(_date >= lg->LastCompression());
-		if ((uint)(_date - lg->LastCompression()) > std::max<uint>(LinkGraph::COMPRESSION_INTERVAL / _settings_game.economy.day_length_factor, 1)) {
+		assert(_scaled_date_ticks >= lg->LastCompression());
+		if ((_scaled_date_ticks - lg->LastCompression()) > LinkGraph::COMPRESSION_INTERVAL) {
 			lg->Compress();
 		}
 	}
@@ -5498,7 +5500,7 @@ void FlowStat::ReleaseShare(StationID st)
 
 /**
  * Scale all shares from link graph's runtime to monthly values.
- * @param runtime Time the link graph has been running without compression.
+ * @param runtime Time the link graph has been running without compression, in scaled ticks.
  * @pre runtime must be greater than 0 as we don't want infinite flow values.
  */
 void FlowStat::ScaleToMonthly(uint runtime)
@@ -5506,7 +5508,7 @@ void FlowStat::ScaleToMonthly(uint runtime)
 	assert(runtime > 0);
 	uint share = 0;
 	for (iterator i = this->begin(); i != this->end(); ++i) {
-		share = std::max(share + 1, i->first * 30 / runtime);
+		share = std::max(share + 1, ClampTo<uint>((static_cast<uint64>(i->first) * 30 * DAY_TICKS * _settings_game.economy.day_length_factor) / runtime));
 		if (this->unrestricted == i->first) this->unrestricted = share;
 		i->first = share;
 	}

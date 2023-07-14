@@ -389,12 +389,11 @@ static void ResetSignalHandlers()
  */
 static const GRFIdentifier *GetOverriddenIdentifier(const GRFConfig *c)
 {
-	const LoggedAction *la = &_gamelog_action[_gamelog_actions - 1];
-	if (la->at != GLAT_LOAD) return &c->ident;
+	const LoggedAction &la = _gamelog_actions.back();
+	if (la.at != GLAT_LOAD) return &c->ident;
 
-	const LoggedChange *lcend = &la->change[la->changes];
-	for (const LoggedChange *lc = la->change; lc != lcend; lc++) {
-		if (lc->ct == GLCT_GRFCOMPAT && lc->grfcompat.grfid == c->ident.grfid) return &lc->grfcompat;
+	for (const LoggedChange &lc : la.changes) {
+		if (lc.ct == GLCT_GRFCOMPAT && lc.grfcompat.grfid == c->ident.grfid) return &lc.grfcompat;
 	}
 
 	return &c->ident;
@@ -911,6 +910,12 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SLV_LINKGRAPH_SECONDS) && SlXvIsFeatureMissing(XSLFI_LINKGRAPH_DAY_SCALE, 3)) {
 		_settings_game.linkgraph.recalc_interval *= SECONDS_PER_DAY;
 		_settings_game.linkgraph.recalc_time     *= SECONDS_PER_DAY;
+	}
+
+	/* Convert link graph last compression from date to scaled ticks. */
+	if (SlXvIsFeatureMissing(XSLFI_LINKGRAPH_DAY_SCALE, 4)) {
+		extern void LinkGraphFixupLastCompressionAfterLoad();
+		LinkGraphFixupLastCompressionAfterLoad();
 	}
 
 	/* Load the sprites */
@@ -4211,6 +4216,10 @@ bool AfterLoadGame()
 		extern TimeoutTimer<TimerGameTick> _new_competitor_timeout;
 		_new_competitor_timeout.storage.elapsed = 0;
 		_new_competitor_timeout.fired = _new_competitor_timeout.period == 0;
+	}
+
+	if (SlXvIsFeatureMissing(XSLFI_SAVEGAME_ID) && IsSavegameVersionBefore(SLV_SAVEGAME_ID)) {
+		GenerateSavegameId();
 	}
 
 	InitializeRoadGUI();

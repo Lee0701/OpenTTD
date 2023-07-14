@@ -12,8 +12,8 @@
 
 #include "../window_type.h"
 #include "../gfx_func.h"
-#include "../core/smallvec_type.hpp"
 #include "table/strings.h"
+#include <vector>
 
 enum DropDownSyncFocus {
 	DDSF_NONE = 0,
@@ -32,7 +32,7 @@ public:
 	bool masked; ///< Masked and unselectable item
 
 	DropDownListItem(int result, bool masked) : result(result), masked(masked) {}
-	virtual ~DropDownListItem() {}
+	virtual ~DropDownListItem() = default;
 
 	virtual bool Selectable() const { return false; }
 	virtual uint Height(uint width) const { return FONT_HEIGHT_NORMAL; }

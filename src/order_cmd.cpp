@@ -23,6 +23,7 @@
 #include "vehicle_func.h"
 #include "depot_base.h"
 #include "core/bitmath_func.hpp"
+#include "core/container_func.hpp"
 #include "core/pool_func.hpp"
 #include "core/random_func.hpp"
 #include "aircraft.h"
@@ -1432,7 +1433,7 @@ void InsertOrder(Vehicle *v, Order *new_o, VehicleOrderID sel_ord)
 static CommandCost DecloneOrder(Vehicle *dst, DoCommandFlag flags)
 {
 	if (flags & DC_EXEC) {
-		/* Clear cheduled dispatch flag if any */
+		/* Clear scheduled dispatch flag if any */
 		if (HasBit(dst->vehicle_flags, VF_SCHEDULED_DISPATCH)) {
 			ClrBit(dst->vehicle_flags, VF_SCHEDULED_DISPATCH);
 		}

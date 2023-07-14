@@ -15,6 +15,7 @@
 #include "../company_func.h"
 #include "../company_manager_face.h"
 #include "../fios.h"
+#include "../load_check.h"
 #include "../tunnelbridge_map.h"
 #include "../tunnelbridge.h"
 #include "../station_base.h"
@@ -320,8 +321,8 @@ struct PLYRChunkHandler : ChunkHandler {
 
 		int index;
 		while ((index = SlIterateArray()) != -1) {
-			CompanyProperties *cprops = new CompanyProperties();
-			SlObject(cprops, slt);
+			std::unique_ptr<CompanyProperties> cprops = std::make_unique<CompanyProperties>();
+			SlObject(cprops.get(), slt);
 
 			/* We do not load old custom names */
 			if (IsSavegameVersionBefore(SLV_84)) {
@@ -341,7 +342,9 @@ struct PLYRChunkHandler : ChunkHandler {
 				cprops->name_1 = STR_GAME_SAVELOAD_NOT_AVAILABLE;
 			}
 
-			if (!_load_check_data.companies.Insert(index, cprops)) delete cprops;
+			if (_load_check_data.companies.count(index) == 0) {
+				_load_check_data.companies[index] = std::move(cprops);
+			}
 		}
 	}
 

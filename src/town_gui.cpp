@@ -1126,10 +1126,10 @@ public:
 				break;
 
 			case WID_TD_LIST: { // Click on Town Matrix
-				uint id_v = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_TD_LIST, WidgetDimensions::scaled.framerect.top);
-				if (id_v >= this->towns.size()) return; // click out of town bounds
+				auto it = this->vscroll->GetScrolledItemFromWidget(this->towns, pt.y, this, WID_TD_LIST, WidgetDimensions::scaled.framerect.top);
+				if (it == this->towns.end()) return; // click out of town bounds
 
-				const Town *t = this->towns[id_v];
+				const Town *t = *it;
 				assert(t != nullptr);
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(t->xy);
@@ -1811,7 +1811,7 @@ public:
 				case WID_HP_HOUSE_ACCEPTANCE: {
 					static char buff[DRAW_STRING_BUFFER] = "";
 					char *str = buff;
-					CargoArray cargo;
+					CargoArray cargo{};
 					CargoTypes dummy = 0;
 					AddAcceptedHouseCargo(this->display_house, INVALID_TILE, cargo, &dummy);
 					for (uint i = 0; i < NUM_CARGO; i++) {
@@ -1828,7 +1828,7 @@ public:
 				}
 
 				case WID_HP_HOUSE_SUPPLY: {
-					CargoArray cargo;
+					CargoArray cargo{};
 					AddProducedHouseCargo(this->display_house, INVALID_TILE, cargo);
 					uint32 cargo_mask = 0;
 					for (uint i = 0; i < NUM_CARGO; i++) if (cargo[i] != 0) SetBit(cargo_mask, i);

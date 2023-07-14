@@ -12,6 +12,7 @@
 #include "strings_func.h"
 #include "stringfilter_type.h"
 #include "gfx_func.h"
+#include "core/alloc_func.hpp"
 
 #include "safeguards.h"
 
@@ -80,6 +81,15 @@ void StringFilter::SetFilterTerm(const char *str)
 		memcpy(dest, pos, len);
 		dest += len;
 	}
+}
+
+/**
+ * Set the term to filter on.
+ * @param str Filter term
+ */
+void StringFilter::SetFilterTerm(const std::string &str)
+{
+	this->SetFilterTerm(str.c_str());
 }
 
 /**

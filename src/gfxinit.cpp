@@ -177,7 +177,10 @@ static void LoadSpriteTables()
 {
 	const GraphicsSet *used_set = BaseGraphics::GetUsedSet();
 
-	LoadGrfFile(used_set->files[GFT_BASE].filename, 0, PAL_DOS != used_set->palette);
+	SpriteFile &baseset_file = LoadGrfFile(used_set->files[GFT_BASE].filename, 0, PAL_DOS != used_set->palette);
+	if (StrStartsWith(used_set->name, "original_")) {
+		baseset_file.flags |= SFF_OPENTTDGRF;
+	}
 
 	/* Progsignal sprites. */
 	SpriteFile &progsig_file = LoadGrfFile("progsignals.grf", SPR_PROGSIGNAL_BASE, false);
@@ -602,7 +605,7 @@ MD5File::ChecksumResult MD5File::CheckMD5(Subdirectory subdir, size_t max_size) 
 
 	Md5 checksum;
 	uint8 buffer[1024];
-	uint8 digest[16];
+	MD5Hash digest;
 	size_t len;
 
 	while ((len = fread(buffer, 1, (size > sizeof(buffer)) ? sizeof(buffer) : size, f)) != 0 && size != 0) {
@@ -613,7 +616,7 @@ MD5File::ChecksumResult MD5File::CheckMD5(Subdirectory subdir, size_t max_size) 
 	FioFCloseFile(f);
 
 	checksum.Finish(digest);
-	return memcmp(this->hash, digest, sizeof(this->hash)) == 0 ? CR_MATCH : CR_MISMATCH;
+	return this->hash == digest ? CR_MATCH : CR_MISMATCH;
 }
 
 /** Names corresponding to the GraphicsFileType */

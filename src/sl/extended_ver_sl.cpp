@@ -107,7 +107,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_EXTRA_LARGE_MAP,                  XSCF_NULL,                0,   1, "extra_large_map",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_REVERSE_AT_WAYPOINT,              XSCF_NULL,                1,   1, "reverse_at_waypoint",              nullptr, nullptr, nullptr          },
 	{ XSLFI_VEH_LIFETIME_PROFIT,              XSCF_NULL,                1,   1, "veh_lifetime_profit",              nullptr, nullptr, nullptr          },
-	{ XSLFI_LINKGRAPH_DAY_SCALE,              XSCF_NULL,                3,   3, "linkgraph_day_scale",              nullptr, nullptr, nullptr          },
+	{ XSLFI_LINKGRAPH_DAY_SCALE,              XSCF_NULL,                4,   4, "linkgraph_day_scale",              nullptr, nullptr, nullptr          },
 	{ XSLFI_TEMPLATE_REPLACEMENT,             XSCF_NULL,                9,   9, "template_replacement",             nullptr, nullptr, "TRPL,TMPL"      },
 	{ XSLFI_MORE_RAIL_TYPES,                  XSCF_NULL,                0,   1, "more_rail_types",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_CARGO_TYPE_ORDERS,                XSCF_NULL,                3,   3, "cargo_type_orders",                nullptr, nullptr, "ORDX,VEOX"      },
@@ -200,6 +200,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_AI_START_DATE,                    XSCF_NULL,                1,   1, "slv_ai_start_date",                nullptr, nullptr, nullptr          },
 	{ XSLFI_EXTEND_VEHICLE_RANDOM,            XSCF_NULL,                1,   1, "slv_extend_vehicle_random",        nullptr, nullptr, nullptr          },
 	{ XSLFI_DISASTER_VEH_STATE,               XSCF_NULL,                1,   1, "slv_disaster_veh_state",           nullptr, nullptr, nullptr          },
+	{ XSLFI_SAVEGAME_ID,                      XSCF_NULL,                1,   1, "slv_savegame_id",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr },// This is the end marker
 };
 

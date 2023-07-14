@@ -24,6 +24,7 @@
 #include "screenshot.h"
 #include "gfx_func.h"
 #include "network/network.h"
+#include "network/network_survey.h"
 #include "language.h"
 #include "fontcache.h"
 #include "news_gui.h"
@@ -269,7 +270,7 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 
 	this->CrashLogFaultSectionCheckpoint(buffer);
 
-	auto log_font = [&](FontSize fs) -> const char * {
+	auto log_font = [&](FontSize fs) -> std::string {
 		FontCache *fc = FontCache::Get(fs);
 		if (fc != nullptr) {
 			return fc->GetFontName();
@@ -284,10 +285,10 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			" Medium: %s\n"
 			" Large:  %s\n"
 			" Mono:   %s\n\n",
-			log_font(FS_SMALL),
-			log_font(FS_NORMAL),
-			log_font(FS_LARGE),
-			log_font(FS_MONO)
+			log_font(FS_SMALL).c_str(),
+			log_font(FS_NORMAL).c_str(),
+			log_font(FS_LARGE).c_str(),
+			log_font(FS_MONO).c_str()
 	);
 
 	this->CrashLogFaultSectionCheckpoint(buffer);
@@ -308,12 +309,12 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 		if (c->ai_info == nullptr) {
 			buffer += seprintf(buffer, last, " %2i: Human\n", (int)c->index);
 		} else {
-			buffer += seprintf(buffer, last, " %2i: %s (v%d)\n", (int)c->index, c->ai_info->GetName(), c->ai_info->GetVersion());
+			buffer += seprintf(buffer, last, " %2i: %s (v%d)\n", (int)c->index, c->ai_info->GetName().c_str(), c->ai_info->GetVersion());
 		}
 	}
 
 	if (Game::GetInfo() != nullptr) {
-		buffer += seprintf(buffer, last, " GS: %s (v%d)\n", Game::GetInfo()->GetName(), Game::GetInfo()->GetVersion());
+		buffer += seprintf(buffer, last, " GS: %s (v%d)\n", Game::GetInfo()->GetName().c_str(), Game::GetInfo()->GetVersion());
 	}
 	buffer += seprintf(buffer, last, "\n");
 
@@ -927,6 +928,13 @@ static bool CopyAutosave(const std::string &old_name, const std::string &new_nam
 }
 #endif
 
+void CrashLog::SendSurvey() const
+{
+	if (_game_mode == GM_NORMAL) {
+		_survey.Transmit(NetworkSurveyHandler::Reason::CRASH, true);
+	}
+}
+
 /**
  * Makes the crash log, writes it to a file and then subsequently tries
  * to make a crash dump and crash savegame. It uses DEBUG to write
@@ -1172,6 +1180,8 @@ bool CrashLog::MakeCrashSavegameAndScreenshot() const
 		ret = false;
 		printf("Writing crash screenshot failed.\n\n");
 	}
+
+	this->SendSurvey();
 
 	return ret;
 }

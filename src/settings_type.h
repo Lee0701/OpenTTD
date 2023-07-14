@@ -64,11 +64,18 @@ enum IndustryDensity {
 	ID_END,       ///< Number of industry density settings.
 };
 
-/** Possible values for "userelayservice" setting. */
+/** Possible values for "use_relay_service" setting. */
 enum UseRelayService {
 	URS_NEVER = 0,
 	URS_ASK,
 	URS_ALLOW,
+};
+
+/** Possible values for "participate_survey" setting. */
+enum ParticipateSurvey {
+	PS_ASK = 0,
+	PS_NO,
+	PS_YES,
 };
 
 /** Settings related to the difficulty of the game */
@@ -132,6 +139,18 @@ struct GUISettings : public TimeSettings {
 	uint8  auto_scrolling;                   ///< scroll when moving mouse to the edge (see #ViewportAutoscrolling)
 	byte   errmsg_duration;                  ///< duration of error message
 	uint16 hover_delay_ms;                   ///< time required to activate a hover event, in milliseconds
+	bool   instant_tile_tooltip;             ///< don't require a right click to activate a hover event to show a tooltip for an in-game tile (e.g. industry).
+	uint8  town_name_tooltip_mode;           ///< when to display town names when hovering over roads and houses. (0 = never, 1 = only if town names are hidden, 2 = always)
+	bool   industry_tooltip_show;            ///< whether to display tooltips, when hovering over industry tiles.
+	bool   industry_tooltip_show_name;       ///< whether to display the name of the industry, when hovering over one of its tiles.
+	bool   industry_tooltip_show_required;   ///< whether to display cargoes required by the industry, when hovering over one of its tiles.
+	bool   industry_tooltip_show_stockpiled; ///< whether to display cargoes stockpiled by the industry, when hovering over one of its tiles.
+	bool   industry_tooltip_show_produced;   ///< whether to display cargoes produced by the industry, when hovering over one of its tiles.
+	uint8  depot_tooltip_mode;               ///< Display mode for depot viewport tooltips. (0 = never, 1 = just a total number of vehicles, 2 = total number of vehicles in the depot along with a breakdown of numbers)
+	uint8  waypoint_viewport_tooltip_name;   ///< Show the name of the waypoint or buoy in a viewport tooltip. (0 = never, 1 = only if waypoint names are hidden, 2 = always)
+	uint8  station_viewport_tooltip_name;    ///< Show the name of the station in a viewport tooltip. (0 = never, 1 = only if station names are hidden, 2 = always)
+	bool   station_viewport_tooltip_cargo;   ///< Show a list of cargo details at the station in a viewport tooltip.
+	uint8  station_rating_tooltip_mode;      ///< Station rating tooltip mode
 	bool   link_terraform_toolbar;           ///< display terraform toolbar when displaying rail, road, water and airport toolbars
 	uint8  smallmap_land_colour;             ///< colour used for land and heightmap at the smallmap
 	uint8  scroll_mode;                      ///< viewport scroll mode
@@ -159,13 +178,14 @@ struct GUISettings : public TimeSettings {
 	bool   autosave_on_network_disconnect;   ///< save an autosave when you get disconnected from a network game with an error?
 	uint8  date_format_in_default_names;     ///< should the default savegame/screenshot name use long dates (31th Dec 2008), short dates (31-12-2008) or ISO dates (2008-12-31)
 	byte   max_num_autosaves;                ///< controls how many autosavegames are made before the game starts to overwrite (names them 0 to max_num_autosaves - 1)
+	byte   max_num_lt_autosaves;             ///< controls how many long-term autosavegames are made before the game starts to overwrite (names them 0 to max_num_lt_autosaves - 1)
 	uint8  savegame_overwrite_confirm;       ///< Mode for when to warn about overwriting an existing savegame
 	bool   population_in_label;              ///< show the population of a town in its label?
 	uint8  right_mouse_btn_emulation;        ///< should we emulate right mouse clicking?
 	uint8  scrollwheel_scrolling;            ///< scrolling using the scroll wheel?
 	uint8  scrollwheel_multiplier;           ///< how much 'wheel' per incoming event from the OS?
-	bool   viewport_map_scan_surroundings;   ///< look for the most important tile in surroundings
 	bool   show_slopes_on_viewport_map;      ///< use slope orientation to render the ground
+	bool   show_height_on_viewport_map;      ///< use height for shading when rendering the ground
 	uint32 default_viewport_map_mode;        ///< the mode to use by default when a viewport is in map mode, 0=owner, 1=industry, 2=vegetation
 	uint32 action_when_viewport_map_is_dblclicked; ///< what to do when a doubleclick occurs on the viewport map
 	uint32 show_scrolling_viewport_on_map;   ///< when a no map viewport is scrolled, its location is marked on the other map viewports
@@ -248,7 +268,6 @@ struct GUISettings : public TimeSettings {
 	uint8  linkgraph_colours;                ///< linkgraph overlay colours
 	uint8  vehicle_names;                    ///< Vehicle naming scheme
 	bool   shade_trees_on_slopes;            ///< Shade trees on slopes
-	uint8  station_rating_tooltip_mode;      ///< Station rating tooltip mode
 	uint8  demolish_confirm_mode;            ///< Demolition confirmation mode
 	bool   dual_pane_train_purchase_window;  ///< Dual pane train purchase window
 	bool   dual_pane_train_purchase_window_dual_buttons;  ///< Dual pane train purchase window: dual buttons
@@ -394,8 +413,9 @@ struct NetworkSettings {
 	uint8       min_active_clients;                       ///< minimum amount of active clients to unpause the game
 	bool        reload_cfg;                               ///< reload the config file before restarting
 	std::string last_joined;                              ///< Last joined server
-	bool        no_http_content_downloads;                     ///< do not do content downloads over HTTP
+	bool        no_http_content_downloads;                ///< do not do content downloads over HTTP
 	UseRelayService use_relay_service;                    ///< Use relay service?
+	ParticipateSurvey participate_survey;                 ///< Participate in the automated survey
 };
 
 /** Settings related to the creation of games. */

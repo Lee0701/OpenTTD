@@ -240,12 +240,6 @@ STR_CONFIG_SETTING_VEHICLE_NAMES_LONG                           :Lang
 STR_CONFIG_SETTING_SHADED_TREES_ON_SLOPES                       :Ändern des Farbtons der Bäume an Hängen: {STRING}
 STR_CONFIG_SETTING_SHADED_TREES_ON_SLOPES_HELPTEXT              :Ändert die Helligkeit der Bäume an Hängen. Dies verbessert das Aussehen in bergigem Gelände.
 
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE                  :Tooltips für Stationsbewertung: {STRING}
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Legt die Anzeige des Tooltips für die Stationsbewertung und den Detailgrad der angezeigten Informationen fest.
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Aus
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Einfach
-STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailliert
-
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE                        :Abreißen von Strukturen erfordert Bestätigung: {STRING}
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE_HELPTEXT               :Frage vor dem endgültigen Abreißen von Strukturen nach einer Bestätigung.
 STR_CONFIG_SETTING_DEMOLISH_CONFIRM_MODE_OFF                    :Aus
@@ -335,22 +329,29 @@ STR_CONFIG_SETTING_SHOW_VEHICLE_LIST_COMPANY_COLOUR_HELPTEXT    :Fahrzeuge in Fa
 STR_CONFIG_SETTING_ENABLE_SINGLE_VEH_SHARED_ORDER_GUI           :Erlaube ein einzelnes Fahrzeug im Fenster einer Gruppe mit gemeinsam genutzten Fahrplan: {STRING}
 STR_CONFIG_SETTING_ENABLE_SINGLE_VEH_SHARED_ORDER_GUI_HELPTEXT  :Erlaube die Benutzung des Fensters für Gruppen mit gemeinsam genutzten Fahrplan auch mit nur einem Fahrzeug ohne gemeinsam genutzten Fahrplan.
 
-STR_CONFIG_SETTING_VIEWPORT_MAP_SCAN_SURROUNDINGS               :Scanne die Umgebung einer Kachel (verbesserte Anzeige bei hohen Zoomstufen): {STRING}
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SLOPES                     :Zeige Geländesteigungen an: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_BRIDGES                    :Zeige Brücken an: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_TUNNELS                    :Zeige Tunnel an: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP               :Zeige Ausschnitt für scrollende Zusatzansicht: {STRING}
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_NOTHING       :Aus
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_CONTOUR       :Umrisse
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_BLEND         :transparente weiße Fläche (nur 32bpp)
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_SCROLLING_VP_ALL           :Fläche und Umrisse
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_USE_OWNER_COLOUR_BRIDGE_TUNNEL  :Firmenfarben für Brücken und Tunnel: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_DEFAULT_MODE                    :Standardmodus: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK                 :Funktion des Doppelklicks: {STRING}
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_DO_NOTHING      :Keine
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_ZOOM_MAIN       :Zoome direkt auf Faktor 1x
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_NEW_EXTRA       :Öffne eine neue Zusatzansicht
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_VEHICLE_ROUTE              :Zeige die Fahrzeugroute: {STRING}
+
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH                 :Zeichenstil der Fahrzeugroute: {STRING}
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_VALUE           :gestrichelte Linie von {COMMA} Pixel{P "" n} Länge
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_DISABLED        :durchgezogene Linie
@@ -1238,9 +1239,6 @@ STR_FINANCES_REPAY_TOOLTIP_EXTRA                                :{BLACK}{STRING}
 STR_FINANCES_BORROW_QUERY_CAPT                                  :{WHITE}Gib die zu leihende Summe ein
 STR_FINANCES_REPAY_QUERY_CAPT                                   :{WHITE}Gib die zurückzuzahlende Summe ein
 
-STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP                           :{BLACK}{STRING}{STRING}
-STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP_EXTENSION                 :{}{BLACK}{CARGO_LONG} ({COMMA}%)
-
 # Town tooltip
 STR_TOWN_NAME_TOOLTIP                                           :{BLACK}{TOWN}
 
@@ -1815,3 +1813,9 @@ STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}25% der 
 STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Kauf von 25% der Aktien dieser Firma nicht möglich ...
 STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Verkauf von 25% der Aktien dieser Firma nicht möglich ...
 STR_ERROR_PROTECTED                                             :{WHITE}Diese Firma ist noch nicht alt genug, um an der Börse gehandelt zu werden...
+
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE                  :Tooltips für Stationsbewertung: {STRING}
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Legt die Anzeige des Tooltips für die Stationsbewertung und den Detailgrad der angezeigten Informationen fest.
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Aus
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Einfach
+STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailliert

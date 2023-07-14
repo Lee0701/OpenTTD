@@ -161,7 +161,7 @@ public:
 	const char *crash_buffer_write = nullptr;
 
 	/** Stub destructor to silence some compilers. */
-	virtual ~CrashLog() {}
+	virtual ~CrashLog() = default;
 
 	char *FillCrashLog(char *buffer, const char *last);
 	void FlushCrashLogBuffer();
@@ -193,6 +193,8 @@ public:
 	bool MakeInconsistencyLog(const InconsistencyExtraInfo &info) const;
 	bool MakeVersionInfoLog() const;
 	bool MakeCrashSavegameAndScreenshot() const;
+
+	void SendSurvey() const;
 
 	/**
 	 * Initialiser for crash logs; do the appropriate things so crashes are

@@ -12,6 +12,7 @@
 #include <stdarg.h>
 
 #include "newgrf_internal.h"
+#include "core/container_func.hpp"
 #include "debug.h"
 #include "fileio_func.h"
 #include "engine_func.h"
@@ -7351,7 +7352,8 @@ static void GraphicsNew(ByteReader *buf)
 		}
 	}
 
-	if (type == 0x04 && ((_cur.grfconfig->ident.grfid & 0x00FFFFFF) == OPENTTD_GRAPHICS_BASE_GRF_ID || _cur.grfconfig->ident.grfid == BSWAP32(0xFF4F4701))) {
+	if (type == 0x04 && ((_cur.grfconfig->ident.grfid & 0x00FFFFFF) == OPENTTD_GRAPHICS_BASE_GRF_ID ||
+			_cur.grfconfig->ident.grfid == BSWAP32(0xFF4F4701) || _cur.grfconfig->ident.grfid == BSWAP32(0xFFFFFFFE))) {
 		/* Signal graphics action 5: Fill duplicate signal sprite block if this is a baseset GRF or OpenGFX */
 		const SpriteID end = offset + num;
 		for (SpriteID i = offset; i < end; i++) {
@@ -8092,7 +8094,7 @@ static void GRFLoadError(ByteReader *buf)
 	}
 
 	/* Only two parameter numbers can be used in the string. */
-	for (uint i = 0; i < lengthof(error->param_value) && buf->HasData(); i++) {
+	for (uint i = 0; i < error->param_value.size() && buf->HasData(); i++) {
 		uint param_number = buf->ReadByte();
 		error->param_value[i] = _cur.grffile->GetParam(param_number);
 	}
@@ -8992,7 +8994,7 @@ static bool ChangeGRFNumUsedParams(size_t len, ByteReader *buf)
 		grfmsg(2, "StaticGRFInfo: expected only 1 byte for 'INFO'->'NPAR' but got " PRINTF_SIZE ", ignoring this field", len);
 		buf->Skip(len);
 	} else {
-		_cur.grfconfig->num_valid_params = std::min<byte>(buf->ReadByte(), lengthof(_cur.grfconfig->param));
+		_cur.grfconfig->num_valid_params = std::min(buf->ReadByte(), ClampTo<uint8_t>(_cur.grfconfig->param.size()));
 	}
 	return true;
 }
@@ -9141,7 +9143,7 @@ static bool ChangeGRFParamMask(size_t len, ByteReader *buf)
 		buf->Skip(len);
 	} else {
 		byte param_nr = buf->ReadByte();
-		if (param_nr >= lengthof(_cur.grfconfig->param)) {
+		if (param_nr >= _cur.grfconfig->param.size()) {
 			grfmsg(2, "StaticGRFInfo: invalid parameter number in 'INFO'->'PARA'->'MASK', param %d, ignoring this field", param_nr);
 			buf->Skip(len - 1);
 		} else {
@@ -9291,13 +9293,13 @@ static bool ChangeGRFParamValueNames(ByteReader *buf)
 		byte langid = buf->ReadByte();
 		const char *name_string = buf->ReadString();
 
-		std::pair<uint32, GRFTextList> *val_name = _cur_parameter->value_names.Find(id);
-		if (val_name != _cur_parameter->value_names.End()) {
+		auto val_name = _cur_parameter->value_names.find(id);
+		if (val_name != _cur_parameter->value_names.end()) {
 			AddGRFTextToList(val_name->second, langid, _cur.grfconfig->ident.grfid, false, name_string);
 		} else {
 			GRFTextList list;
 			AddGRFTextToList(list, langid, _cur.grfconfig->ident.grfid, false, name_string);
-			_cur_parameter->value_names.Insert(id, list);
+			_cur_parameter->value_names[id] = list;
 		}
 
 		type = buf->ReadByte();
@@ -9338,10 +9340,10 @@ static bool HandleParameterInfo(ByteReader *buf)
 		if (id >= _cur.grfconfig->param_info.size()) {
 			_cur.grfconfig->param_info.resize(id + 1);
 		}
-		if (_cur.grfconfig->param_info[id] == nullptr) {
-			_cur.grfconfig->param_info[id] = new GRFParameterInfo(id);
+		if (!_cur.grfconfig->param_info[id].has_value()) {
+			_cur.grfconfig->param_info[id] = GRFParameterInfo(id);
 		}
-		_cur_parameter = _cur.grfconfig->param_info[id];
+		_cur_parameter = &_cur.grfconfig->param_info[id].value();
 		/* Read all parameter-data and process each node. */
 		if (!HandleNodes(buf, _tags_parameters)) return false;
 		type = buf->ReadByte();
@@ -10570,13 +10572,8 @@ GRFFile::GRFFile(const GRFConfig *config)
 
 	/* Copy the initial parameter list
 	 * 'Uninitialised' parameters are zeroed as that is their default value when dynamically creating them. */
-	static_assert(lengthof(this->param) == lengthof(config->param) && lengthof(this->param) == 0x80);
-
-	assert(config->num_params <= lengthof(config->param));
+	this->param = config->param;
 	this->param_end = config->num_params;
-	if (this->param_end > 0) {
-		MemCpyT(this->param, config->param, this->param_end);
-	}
 }
 
 GRFFile::~GRFFile()
@@ -11290,8 +11287,8 @@ void LoadNewGRFFile(GRFConfig *config, GrfLoadingStage stage, Subdirectory subdi
 	} else {
 		SpriteFile &file = OpenCachedSpriteFile(filename, subdir, needs_palette_remap);
 		LoadNewGRFFileFromFile(config, stage, file);
-		file.flags |= SFF_USERGRF;
-		if (config->ident.grfid == BSWAP32(0xFF4F4701)) file.flags |= SFF_OGFX;
+		if (!HasBit(config->flags, GCF_SYSTEM)) file.flags |= SFF_USERGRF;
+		if (config->ident.grfid == BSWAP32(0xFFFFFFFE)) file.flags |= SFF_OPENTTDGRF;
 	}
 }
 
@@ -11632,7 +11629,7 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 	 */
 	for (GRFConfig *c = _grfconfig; c != nullptr; c = c->next) {
 		if (c->status != GCS_NOT_FOUND) c->status = GCS_UNKNOWN;
-		if (_settings_client.gui.newgrf_disable_big_gui && c->ident.grfid == BSWAP32(0x52577801)) {
+		if (_settings_client.gui.newgrf_disable_big_gui && (c->ident.grfid == BSWAP32(0x52577801) || c->ident.grfid == BSWAP32(0x55464970))) {
 			c->status = GCS_DISABLED;
 		}
 	}
