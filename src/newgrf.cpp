@@ -4761,7 +4761,13 @@ static ChangeInfoResult RoadTypeChangeInfo(uint id, int numinfo, int prop, const
 					RoadType resolved_rt = GetRoadTypeByLabel(BSWAP32(label), false);
 					if (resolved_rt != INVALID_ROADTYPE) {
 						switch (prop) {
-							case 0x0F: SetBit(rti->powered_roadtypes, resolved_rt);               break;
+							case 0x0F:
+								if (GetRoadTramType(resolved_rt) == rtt) {
+									SetBit(rti->powered_roadtypes, resolved_rt);
+								} else {
+									grfmsg(1, "RoadTypeChangeInfo: Powered road type list: Road type %u road/tram type does not match road type %u, ignoring", resolved_rt, rt);
+								}
+								break;
 							case 0x18: SetBit(rti->introduction_required_roadtypes, resolved_rt); break;
 							case 0x19: SetBit(rti->introduces_roadtypes, resolved_rt);            break;
 						}
@@ -11691,7 +11697,7 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 				SetBit(c->flags, GCF_RESERVED);
 			} else if (stage == GLS_ACTIVATION) {
 				ClrBit(c->flags, GCF_RESERVED);
-				assert(GetFileByGRFID(c->ident.grfid) == _cur.grffile);
+				assert_msg(GetFileByGRFID(c->ident.grfid) == _cur.grffile, "%08X", BSWAP32(c->ident.grfid));
 				ClearTemporaryNewGRFData(_cur.grffile);
 				BuildCargoTranslationMap();
 				HandleVarAction2OptimisationPasses();

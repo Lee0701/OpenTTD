@@ -60,6 +60,7 @@ static const CmdStruct _cmd_structs[] = {
 	{"BLACK",             EmitSingleChar, SCC_BLACK,              0, -1, C_DONTCOUNT},
 	{"PUSH_COLOUR",       EmitSingleChar, SCC_PUSH_COLOUR,        0, -1, C_DONTCOUNT},
 	{"POP_COLOUR",        EmitSingleChar, SCC_POP_COLOUR,         0, -1, C_DONTCOUNT},
+	{"SET_COLOUR",        EmitSingleChar, SCC_SET_COLOUR,         1, -1, C_NONE},
 
 	{"REV",               EmitSingleChar, SCC_REVISION,           0, -1, C_NONE}, // openttd revision string
 
@@ -135,6 +136,9 @@ static const CmdStruct _cmd_structs[] = {
 	{"PRESIDENT_NAME",    EmitSingleChar, SCC_PRESIDENT_NAME,     1, -1, C_NONE | C_GENDER},
 	{"TRSLOT",            EmitSingleChar, SCC_TR_SLOT_NAME,       1, -1, C_NONE | C_GENDER},
 	{"TRCOUNTER",         EmitSingleChar, SCC_TR_COUNTER_NAME,    1, -1, C_NONE | C_GENDER},
+
+	{"VP_TOWN_LABEL1",    EmitSingleChar, SCC_VIEWPORT_TOWN_LABEL1, 2, -1, C_NONE},
+	{"VP_TOWN_LABEL2",    EmitSingleChar, SCC_VIEWPORT_TOWN_LABEL2, 2, -1, C_NONE},
 
 	{"",                  EmitSingleChar, '\n',                   0, -1, C_DONTCOUNT},
 	{"{",                 EmitSingleChar, '{',                    0, -1, C_DONTCOUNT},

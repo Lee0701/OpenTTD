@@ -5,6 +5,26 @@ STR_NEWGRF_ERROR_POPUP                                          :{WHITE}The NewG
 STR_ORDER_TEXT                                                  :{STRING6} {STRING2} {STRING}
 ##override off
 
+##no-translate on
+STR_JUST_DECIMAL1                                               :{DECIMAL1}
+STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
+STR_JUST_DATE_WALLCLOCK_SHORT                                   :{DATE_WALLCLOCK_SHORT}
+STR_JUST_DATE_WALLCLOCK_LONG                                    :{DATE_WALLCLOCK_LONG}
+STR_JUST_DATE_WALLCLOCK_ISO                                     :{DATE_WALLCLOCK_ISO}
+STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
+STR_JUST_STRING1                                                :{STRING1}
+STR_JUST_STRING2                                                :{STRING2}
+STR_JUST_STRING3                                                :{STRING3}
+STR_JUST_VELOCITY                                               :{VELOCITY}
+STR_JUST_TT_TICKS                                               :{TT_TICKS}
+STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
+
+STR_RED_INT                                                     :{RED}{NUM}
+
+STR_VIEWPORT_TOWN_LABEL                                         :{VP_TOWN_LABEL1}
+STR_VIEWPORT_TOWN_LABEL_TINY                                    :{TINY_FONT}{VP_TOWN_LABEL2}
+##no-translate off
+
 ##after STR_CONFIG_SETTING_TREE_PLACER_IMPROVED
 STR_CONFIG_SETTING_TREE_PLACER_PERFECT                          :Perfect
 
@@ -44,27 +64,6 @@ STR_ORDER_CONDITIONAL_DISPATCH_SLOT                             :Dispatch slot
 
 ##after STR_ORDER_STOP_LOCATION_FAR_END
 STR_ORDER_STOP_LOCATION_THROUGH                                 :[through load]
-
-##before STR_VIEWPORT_TOWN_POP
-STR_VIEWPORT_TOWN_POP_VERY_POOR_RATING                          :{WHITE}{TOWN} {RED}({COMMA})
-STR_VIEWPORT_TOWN_POP_MEDIOCRE_RATING                           :{WHITE}{TOWN} {ORANGE}({COMMA})
-STR_VIEWPORT_TOWN_POP_GOOD_RATING                               :{WHITE}{TOWN} {YELLOW}({COMMA})
-##after STR_VIEWPORT_TOWN_POP
-STR_VIEWPORT_TOWN_POP_EXCELLENT_RATING                          :{WHITE}{TOWN} {GREEN}({COMMA})
-
-##before STR_VIEWPORT_TOWN
-STR_VIEWPORT_TOWN_VERY_POOR_RATING                              :{RED}{TOWN}
-STR_VIEWPORT_TOWN_MEDIOCRE_RATING                               :{ORANGE}{TOWN}
-STR_VIEWPORT_TOWN_GOOD_RATING                                   :{YELLOW}{TOWN}
-##after STR_VIEWPORT_TOWN
-STR_VIEWPORT_TOWN_EXCELLENT_RATING                              :{GREEN}{TOWN}
-
-##before STR_VIEWPORT_TOWN_TINY_WHITE
-STR_VIEWPORT_TOWN_TINY_VERY_POOR_RATING                         :{TINY_FONT}{RED}{TOWN}
-STR_VIEWPORT_TOWN_TINY_MEDIOCRE_RATING                          :{TINY_FONT}{ORANGE}{TOWN}
-STR_VIEWPORT_TOWN_TINY_GOOD_RATING                              :{TINY_FONT}{YELLOW}{TOWN}
-##after STR_VIEWPORT_TOWN_TINY_WHITE
-STR_VIEWPORT_TOWN_TINY_EXCELLENT_RATING                         :{TINY_FONT}{GREEN}{TOWN}
 
 ##before STR_CONFIG_SETTING_TOWN_GROWTH_NONE
 STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :Extremely slow
@@ -324,6 +323,9 @@ STR_CONFIG_SETTING_SHOW_GROUP_HIERARCHY_NAME_HELPTEXT           :When enabled, g
 
 STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_HIERARCHY_NAME            :Show group hierarchy in vehicle names: {STRING2}
 STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_HIERARCHY_NAME_HELPTEXT   :When enabled, and show group hierarchy in name is enabled, vehicle names which include a group name use the full group name with hierarchy
+
+STR_CONFIG_SETTING_SHOW_ORDER_NUMBER_IN_VEHICLE_VIEW            :Show order number in vehicle view window: {STRING2}
+STR_CONFIG_SETTING_SHOW_ORDER_NUMBER_IN_VEHICLE_VIEW_HELPTEXT   :When enabled, the current vehicle order is shown in the vehicle view window start/stop bar
 
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES                     :Enable signals on bridges/tunnels advanced modes: {STRING2}
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :Enables use of advanced modes of signal simulation on bridges and tunnels. When disabled, bridges/tunnels which are not already in an advanced mode cannot be changed to an advanced mode, however other players may choose to enable this setting and use an advanced mode.
@@ -767,6 +769,7 @@ STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}Toggle t
 
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}Average travel time: {STRING1}
 STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY                            :{}Capacity: {CARGO_LONG}
+STR_LINKGRAPH_STATS_TOOLTIP_DISTANCE                            :Manhattan Distance: {COMMA} tile{P 0 "" s}{}Bird Fly Distance: {COMMA} tile{P 1 "" s}
 
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_POLYRAIL                         :{BLACK}Build railway track using the Polyline mode. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
 
@@ -1488,6 +1491,8 @@ STR_VEHICLE_VIEW_SEND_TO_DEPOT_MENU                             :{BLACK}Cancel s
 
 STR_VEHICLE_VIEW_TRAIN_CENTER_TOOLTIP_EXTRA                     :{STRING}{BLACK}{}Shift+Click to toggle showing route overlay even when window is not focused
 
+STR_VEHICLE_VIEW_ORDER_NUMBER                                   :{COMMA}: {STRING}
+
 STR_VEHICLE_STATUS_LOADING_UNLOADING_ADVANCE                    :{STRING}, {VELOCITY}
 STR_VEHICLE_STATUS_BROKEN_DOWN_VEL                              :{RED}Broken down - {STRING2}, {LTBLUE} {VELOCITY}
 STR_VEHICLE_STATUS_BROKEN_DOWN_VEL_SHORT                        :{RED}Broken down - {STRING2}
@@ -1850,24 +1855,6 @@ STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_IMPLICIT                   :{GRAY}IM
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_DEPOT                      :{RED}DE
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_OVERFLOW                   :{RED}{NUM}x
 
-STR_JUST_DECIMAL1                                               :{DECIMAL1}
-
-STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
-STR_JUST_DATE_WALLCLOCK_SHORT                                   :{DATE_WALLCLOCK_SHORT}
-STR_JUST_DATE_WALLCLOCK_LONG                                    :{DATE_WALLCLOCK_LONG}
-STR_JUST_DATE_WALLCLOCK_ISO                                     :{DATE_WALLCLOCK_ISO}
-STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
-
-STR_JUST_STRING1                                                :{STRING1}
-STR_JUST_STRING2                                                :{STRING2}
-STR_JUST_STRING3                                                :{STRING3}
-
-STR_JUST_VELOCITY                                               :{VELOCITY}
-
-STR_JUST_TT_TICKS                                               :{TT_TICKS}
-STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
-
-STR_RED_INT                                                     :{RED}{NUM}
 STR_BLACK_PLUS                                                  :{BLACK}+
 
 STR_DECIMAL1_WITH_SCALE                                         :{DECIMAL1} ({DECIMAL}x)
@@ -1908,34 +1895,15 @@ STR_STATION_RATING_MAX_PERCENTAGE                               : (max {PLUS_NUM
 STR_STATION_RATING_MAX_PERCENTAGE_COMMA                         :, max {PLUS_NUM}%
 STR_STATION_RATING_PERCENTAGE_COMMA                             :, {PLUS_NUM}%
 
-STR_STATION_RATING_TOOLTIP_SPEED                                :Max speed of last vehicle{STRING1}: {STRING3} ({STRING})
-STR_STATION_RATING_TOOLTIP_SPEED_ZERO                           :{RED}{VELOCITY}{STRING1}
-STR_STATION_RATING_TOOLTIP_SPEED_0                              :{ORANGE}{VELOCITY}{STRING1}
-STR_STATION_RATING_TOOLTIP_SPEED_1                              :{GOLD}{VELOCITY}{STRING1}
-STR_STATION_RATING_TOOLTIP_SPEED_2                              :{YELLOW}{VELOCITY}{STRING1}
-STR_STATION_RATING_TOOLTIP_SPEED_3                              :{GREEN}{VELOCITY}{STRING1}
+STR_STATION_RATING_TOOLTIP_SPEED                                :Max speed of last vehicle{STRING1}: {SET_COLOUR}{VELOCITY}{STRING1} ({STRING})
 
-STR_STATION_RATING_TOOLTIP_AGE                                  :Age of last vehicle{STRING1}: {STRING3}
-STR_STATION_RATING_TOOLTIP_AGE_0                                :{ORANGE}{NUM} year{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_AGE_1                                :{GOLD}{NUM} year{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_AGE_2                                :{YELLOW}{NUM} year{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_AGE_3                                :{GREEN}{NUM} year{P "" s}{STRING1}
+STR_STATION_RATING_TOOLTIP_AGE                                  :Age of last vehicle{STRING1}: {SET_COLOUR}{NUM} year{P "" s}{STRING1}
 
-STR_STATION_RATING_TOOLTIP_WAITTIME                             :Time since last pickup{STRING1}: {STRING3}
-STR_STATION_RATING_TOOLTIP_WAITTIME_SHIP                        :Time since last pickup{STRING1}: {STRING3} (by ship)
-STR_STATION_RATING_TOOLTIP_WAITTIME_0                           :{RED}{NUM} day{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITTIME_1                           :{ORANGE}{NUM} day{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITTIME_2                           :{GOLD}{NUM} day{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITTIME_3                           :{YELLOW}{NUM} day{P "" s}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITTIME_4                           :{GREEN}{NUM} day{P "" s}{STRING1}
+STR_STATION_RATING_TOOLTIP_WAITTIME                             :Time since last pickup{STRING1}: {STRING4}
+STR_STATION_RATING_TOOLTIP_WAITTIME_SHIP                        :Time since last pickup{STRING1}: {STRING4} (by ship)
+STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{SET_COLOUR}{NUM} day{P "" s}{STRING1}
 
-STR_STATION_RATING_TOOLTIP_WAITUNITS                            :Cargo waiting (on average per next stop{STRING1}): {STRING3}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_0                          :{RED}{NUM}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_1                          :{ORANGE}{NUM}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_2                          :{GOLD}{NUM}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_3                          :{YELLOW}{NUM}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_4                          :{YELLOW}{NUM}{STRING1}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_5                          :{GREEN}{NUM}{STRING1}
+STR_STATION_RATING_TOOLTIP_WAITUNITS                            :Cargo waiting (on average per next stop{STRING1}): {SET_COLOUR}{NUM}{STRING1}
 
 STR_STATION_RATING_TOOLTIP_STATUE                               :Statue in town{STRING1}: {STRING2}
 STR_STATION_RATING_TOOLTIP_STATUE_NO                            :{GOLD}no{STRING1}
@@ -2198,3 +2166,12 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Set whether sta
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Off
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Simple
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailed
+
+STR_CONFIG_SETTING_CITY_IN_LABEL                                :Show city in town name label: {STRING2}
+STR_CONFIG_SETTING_CITY_IN_LABEL_HELPTEXT                       :Display if a town is also a city in their label on the map
+
+###length 4
+STR_VIEWPORT_TOWN_COLOUR                                        :{1:SET_COLOUR}{0:TOWN}
+STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {SET_COLOUR}({COMMA})
+STR_VIEWPORT_TOWN_COLOUR_CITY                                   :{1:SET_COLOUR}{0:TOWN} (City)
+STR_VIEWPORT_TOWN_COLOUR_CITY_POP                               :{WHITE}{TOWN} {SET_COLOUR}(City, {COMMA})

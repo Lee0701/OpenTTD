@@ -181,6 +181,7 @@ struct GUISettings : public TimeSettings {
 	byte   max_num_lt_autosaves;             ///< controls how many long-term autosavegames are made before the game starts to overwrite (names them 0 to max_num_lt_autosaves - 1)
 	uint8  savegame_overwrite_confirm;       ///< Mode for when to warn about overwriting an existing savegame
 	bool   population_in_label;              ///< show the population of a town in its label?
+	bool   city_in_label;                    ///< show cities in label?
 	uint8  right_mouse_btn_emulation;        ///< should we emulate right mouse clicking?
 	uint8  scrollwheel_scrolling;            ///< scrolling using the scroll wheel?
 	uint8  scrollwheel_multiplier;           ///< how much 'wheel' per incoming event from the OS?
@@ -277,6 +278,7 @@ struct GUISettings : public TimeSettings {
 	bool   show_order_management_button;     ///< Show order management button in vehicle order window
 	bool   show_group_hierarchy_name;        ///< Show the full hierarchy in group names
 	bool   show_vehicle_group_hierarchy_name;///< Show the full group hierarchy in vehicle names
+	bool   show_order_number_vehicle_view;   ///< Show order number in vehicle view window
 
 	uint16 console_backlog_timeout;          ///< the minimum amount of time items should be in the console backlog before they will be removed in ~3 seconds granularity.
 	uint16 console_backlog_length;           ///< the minimum amount of items in the console backlog before items will be removed.

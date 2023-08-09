@@ -505,8 +505,8 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 
 		/* Check the distance from the cursor to the line defined by the two stations. */
 		auto check_distance = [&]() -> bool {
-			int64 a = ((ptb.x - pta.x) * (pta.y - pt.y) - (pta.x - pt.x) * (ptb.y - pta.y));
-			int64 b = ((ptb.x - pta.x) * (ptb.x - pta.x) + (ptb.y - pta.y) * (ptb.y - pta.y));
+			int64 a = ((int64)(ptb.x - pta.x) * (int64)(pta.y - pt.y) - (int64)(pta.x - pt.x) * (int64)(ptb.y - pta.y));
+			int64 b = ((int64)(ptb.x - pta.x) * (int64)(ptb.x - pta.x) + (int64)(ptb.y - pta.y) * (int64)(ptb.y - pta.y));
 			if (b == 0) return false;
 			return ((a * a) / b) <= 16;
 		};
@@ -518,7 +518,7 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 				pt.y - 2 <= std::max(pta.y, ptb.y) &&
 				check_distance()) {
 
-			static char buf[1024];
+			static char buf[1024 + 512];
 			char *buf_end = buf;
 			buf[0] = 0;
 
@@ -566,6 +566,18 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 			if (!_ctrl_pressed) {
 				/* Add information about the travel time if known. */
 				add_travel_time(link.time ? (back_time ? ((link.time + back_time) / 2) : link.time) : back_time);
+			}
+
+			if (_ctrl_pressed) {
+				/* Add distance information */
+				buf_end = strecat(buf_end, "\n\n", lastof(buf));
+				TileIndex t0 = Station::Get(i->from_id)->xy;
+				TileIndex t1 = Station::Get(i->to_id)->xy;
+				uint dx = Delta(TileX(t0), TileX(t1));
+				uint dy = Delta(TileY(t0), TileY(t1));
+				SetDParam(0, DistanceManhattan(t0, t1));
+				SetDParam(1, IntSqrt64(((uint64)dx * (uint64)dx) + ((uint64)dy * (uint64)dy))); // Avoid overflow in DistanceSquare
+				buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_DISTANCE, lastof(buf));
 			}
 
 			SetDParam(0, link.cargo);

@@ -1304,6 +1304,14 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
+			case SCC_SET_COLOUR: {// {SET_COLOUR}
+				int64 tc = args->GetInt64(SCC_SET_COLOUR);
+				if (tc >= 0 && tc < TC_END) {
+					buff += Utf8Encode(buff, SCC_BLUE + tc);
+				}
+				break;
+			}
+
 			case SCC_REVISION: // {REV}
 				buff = strecpy(buff, _openttd_revision, last);
 				break;
@@ -1920,6 +1928,20 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				} else {
 					buff = GetTownName(buff, t, last);
 				}
+				break;
+			}
+
+			case SCC_VIEWPORT_TOWN_LABEL1:
+			case SCC_VIEWPORT_TOWN_LABEL2: { // {VIEWPORT_TOWN_LABEL1..2}
+				int32 t = args->GetInt32(b);
+				uint64 data = (uint64)args->GetInt64(b);
+
+				bool tiny = (b == SCC_VIEWPORT_TOWN_LABEL2);
+				StringID string_id = STR_VIEWPORT_TOWN_COLOUR;
+				if (!tiny) string_id += GB(data, 40, 2);
+				int64 args_array[] = {t, GB(data, 32, 8), GB(data, 0, 32)};
+				StringParameters tmp_params(args_array);
+				buff = GetStringWithArgs(buff, string_id, &tmp_params, last);
 				break;
 			}
 

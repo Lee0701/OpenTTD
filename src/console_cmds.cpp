@@ -64,7 +64,7 @@
 #include "object_base.h"
 #include <time.h>
 
-#include <set>
+#include "3rdparty/cpp-btree/btree_set.h"
 
 #include <sstream>
 
@@ -204,6 +204,14 @@ DEF_CONSOLE_HOOK(ConHookNewGRFDeveloperTool)
 			if (echo) IConsoleError("This command is only available in-game and in the editor.");
 			return CHR_DISALLOW;
 		}
+		return ConHookNoNetwork(echo);
+	}
+	return CHR_HIDE;
+}
+
+DEF_CONSOLE_HOOK(ConHookSpecialCmd)
+{
+	if (HasBit(_misc_debug_flags, MDF_SPECIAL_CMDS)) {
 		return ConHookNoNetwork(echo);
 	}
 	return CHR_HIDE;
@@ -2411,7 +2419,7 @@ DEF_CONSOLE_CMD(ConListDirs)
 		return true;
 	}
 
-	std::set<std::string> seen_dirs;
+	btree::btree_set<std::string> seen_dirs;
 	for (const SubdirNameMap &sdn : subdir_name_map) {
 		if (!StrEqualsIgnoreCase(argv[1], sdn.name))  continue;
 		bool found = false;
@@ -2483,6 +2491,23 @@ DEF_CONSOLE_CMD(ConMergeLinkgraphJobsAsap)
 
 	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) lgj->ShiftJoinDate((((_date * DAY_TICKS) + _date_fract) - lgj->JoinDateTicks()) / DAY_TICKS);
 	return true;
+}
+
+DEF_CONSOLE_CMD(ConDbgSpecial)
+{
+	if (argc == 0) {
+		IConsoleHelp("Debug special.");
+		return true;
+	}
+
+	if (argc == 2) {
+		if (strcmp(argv[1], "error") == 0) {
+			error("User triggered");
+			return true;
+		}
+	}
+
+	return false;
 }
 
 #ifdef _DEBUG
@@ -3020,6 +3045,39 @@ DEF_CONSOLE_CMD(ConDumpTile)
 	return false;
 }
 
+DEF_CONSOLE_CMD(ConDumpGrfCargoTables)
+{
+	if (argc == 0) {
+		IConsoleHelp("Dump GRF cargo translation tables.");
+		return true;
+	}
+
+	const std::vector<GRFFile *> &files = GetAllGRFFiles();
+
+	char buffer[256];
+
+	for (const GRFFile *grf : files) {
+		if (grf->cargo_list.empty()) continue;
+
+		IConsolePrintF(CC_DEFAULT, "[%08X] %s: %u cargoes", BSWAP32(grf->grfid), grf->filename.c_str(), uint(grf->cargo_list.size()));
+
+		uint i = 0;
+		for (const CargoLabel &cl : grf->cargo_list) {
+			buffer[0] = 0;
+			char *b = buffer;
+			for (const CargoSpec *cs : CargoSpec::Iterate()) {
+				if (grf->cargo_map[cs->Index()] == i) {
+					b += seprintf(b, lastof(buffer), "%s%02u[%c%c%c%c]", (b == buffer) ? ": " : ", ", cs->Index(), GB(cs->label, 24, 8), GB(cs->label, 16, 8), GB(cs->label, 8, 8), GB(cs->label, 0, 8));
+				}
+			}
+			IConsolePrintF(CC_DEFAULT, "  %c%c%c%c%s", GB(cl, 24, 8), GB(cl, 16, 8), GB(cl, 8, 8), GB(cl, 0, 8), buffer);
+			i++;
+		}
+	}
+
+	return true;
+}
+
 DEF_CONSOLE_CMD(ConCheckCaches)
 {
 	if (argc == 0) {
@@ -3227,6 +3285,7 @@ DEF_CONSOLE_CMD(ConMiscDebug)
 		IConsoleHelp("  8: MDF_ZONING_RS_ANIMATED_TILE");
 		IConsoleHelp(" 10: MDF_NEWGRF_SG_SAVE_RAW");
 		IConsoleHelp(" 20: MDF_NEWGRF_SG_DUMP_MORE_DETAIL");
+		IConsoleHelp(" 40: MDF_SPECIAL_CMDS");
 		return true;
 	}
 
@@ -3970,6 +4029,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("dump_cargo_types",        ConDumpCargoTypes,   nullptr, true);
 	IConsole::CmdRegister("dump_vehicle",            ConDumpVehicle,      nullptr, true);
 	IConsole::CmdRegister("dump_tile",               ConDumpTile,         nullptr, true);
+	IConsole::CmdRegister("dump_grf_cargo_tables",   ConDumpGrfCargoTables, nullptr, true);
 	IConsole::CmdRegister("check_caches",            ConCheckCaches,      nullptr, true);
 	IConsole::CmdRegister("show_town_window",        ConShowTownWindow,   nullptr, true);
 	IConsole::CmdRegister("show_station_window",     ConShowStationWindow, nullptr, true);
@@ -3997,6 +4057,8 @@ void IConsoleStdLibRegister()
 	/* Bug workarounds */
 	IConsole::CmdRegister("jgrpp_bug_workaround_unblock_heliports", ConResetBlockedHeliports, ConHookNoNetwork, true);
 	IConsole::CmdRegister("merge_linkgraph_jobs_asap", ConMergeLinkgraphJobsAsap, ConHookNoNetwork, true);
+
+	IConsole::CmdRegister("dbgspecial",              ConDbgSpecial,       ConHookSpecialCmd, true);
 
 #ifdef _DEBUG
 	IConsole::CmdRegister("delete_vehicle_id",       ConDeleteVehicleID,  ConHookNoNetwork, true);

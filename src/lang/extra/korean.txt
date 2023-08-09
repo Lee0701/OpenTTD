@@ -30,21 +30,6 @@ STR_ORDER_CONDITIONAL_DISPATCH_SLOT                             :{G=m}배차일�
 
 STR_ORDER_STOP_LOCATION_THROUGH                                 :[차례로 나눠 싣기]
 
-STR_VIEWPORT_TOWN_POP_VERY_POOR_RATING                          :{WHITE}{TOWN} {RED}({COMMA})
-STR_VIEWPORT_TOWN_POP_MEDIOCRE_RATING                           :{WHITE}{TOWN} {ORANGE}({COMMA})
-STR_VIEWPORT_TOWN_POP_GOOD_RATING                               :{WHITE}{TOWN} {YELLOW}({COMMA})
-STR_VIEWPORT_TOWN_POP_EXCELLENT_RATING                          :{WHITE}{TOWN} {GREEN}({COMMA})
-
-STR_VIEWPORT_TOWN_VERY_POOR_RATING                              :{RED}{TOWN}
-STR_VIEWPORT_TOWN_MEDIOCRE_RATING                               :{ORANGE}{TOWN}
-STR_VIEWPORT_TOWN_GOOD_RATING                                   :{YELLOW}{TOWN}
-STR_VIEWPORT_TOWN_EXCELLENT_RATING                              :{GREEN}{TOWN}
-
-STR_VIEWPORT_TOWN_TINY_VERY_POOR_RATING                         :{TINY_FONT}{RED}{TOWN}
-STR_VIEWPORT_TOWN_TINY_MEDIOCRE_RATING                          :{TINY_FONT}{ORANGE}{TOWN}
-STR_VIEWPORT_TOWN_TINY_GOOD_RATING                              :{TINY_FONT}{YELLOW}{TOWN}
-STR_VIEWPORT_TOWN_TINY_EXCELLENT_RATING                         :{TINY_FONT}{GREEN}{TOWN}
-
 STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :매우 느림
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :더 느림
 
@@ -66,7 +51,7 @@ STR_UNIT_NAME_VELOCITY_GAMEUNITS                                :칸/일
 
 STR_BUTTON_RENAME                                               :{BLACK}이름 바꾸기
 
-STR_MEASURE_DIST_HEIGHTDIFF                                     :{BLACK}맨해튼 거리: {NUM}{}직선거리: {NUM}{}가장 가까운 모서리로부터의 거리: {NUM}{}해발고도: {HEIGHT}{}고도차: {HEIGHT}
+STR_MEASURE_DIST_HEIGHTDIFF                                     :{BLACK}맨해튼 거리: {NUM}{}직선 거리: {NUM}{}가장 가까운 모서리로부터의 거리: {NUM}{}해발고도: {HEIGHT}{}고도차: {HEIGHT}
 
 STR_SORT_BY_PROFIT_LIFETIME                                     :평생 수익
 STR_SORT_BY_AVG_ORDER_OCCUPANCY                                 :평균 경로 사용률
@@ -297,6 +282,9 @@ STR_CONFIG_SETTING_SHOW_GROUP_HIERARCHY_NAME_HELPTEXT           :이 설정을 �
 
 STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_HIERARCHY_NAME            :차량 이름에 그룹 체계 표시: {STRING}
 STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_HIERARCHY_NAME_HELPTEXT   :이 설정과 이름에 그룹 순서롤 모두 표시 설정을 켜면, 그룹 이름을 포함한 차량 이름에 부모 그룹의 이름을 모두 포함시켜 표시합니다
+
+STR_CONFIG_SETTING_SHOW_ORDER_NUMBER_IN_VEHICLE_VIEW            :차량 정보 창에 경로 번호 표시: {STRING}
+STR_CONFIG_SETTING_SHOW_ORDER_NUMBER_IN_VEHICLE_VIEW_HELPTEXT   :이 설정을 켜면, 차량 정보 창 하단의 출발/정지 부분에 현재 경로의 번호를 표시합니다
 
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES                     :고급 다리/터널 신호기 활성화: {STRING}
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :다리와 터널 위 신호기 시뮬레이션 고급 모드를 활성화합니다. 이 설정을 끄면, 고급 모드에 있지 않은 다리와 터널을 고급 모드로 변경할 수 없지만 다른 플레이어는 이 설정을 켜서 고급 모드를 사용할 수 있습니다.
@@ -737,6 +725,7 @@ STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}터널 �
 
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}평균 운행 시간: {STRING}
 STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY                            :{}수송량: {CARGO_LONG}
+STR_LINKGRAPH_STATS_TOOLTIP_DISTANCE                            :맨해튼 거리: {COMMA}칸{}직선 거리: {COMMA}칸
 
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_POLYRAIL                         :{BLACK}다각건설 모드로 선로를 건설합니다. CTRL 키를 누르면 건설/철거모드를 바꿀 수 있습니다. SHIFT 키를 누른 채로 사용하면 예상 비용을 볼 수 있습니다
 
@@ -1457,6 +1446,8 @@ STR_VEHICLE_VIEW_SEND_TO_DEPOT_MENU                             :{BLACK}기지�
 
 STR_VEHICLE_VIEW_TRAIN_CENTER_TOOLTIP_EXTRA                     :{STRING}{BLACK}{}SHIFT + 클릭하면 창에 포커스가 없어도 경로 오버레이를 보여줄지 여부를 전환할 수 있습니다
 
+STR_VEHICLE_VIEW_ORDER_NUMBER                                   :{COMMA}: {STRING}
+
 STR_VEHICLE_STATUS_LOADING_UNLOADING_ADVANCE                    :{STRING}, {VELOCITY}
 STR_VEHICLE_STATUS_BROKEN_DOWN_VEL                              :{RED}고장 - {STRING}, {LTBLUE} {VELOCITY}
 STR_VEHICLE_STATUS_BROKEN_DOWN_VEL_SHORT                        :{RED}고장 - {STRING}
@@ -1818,24 +1809,6 @@ STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_IMPLICIT                   :{GRAY}암
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_DEPOT                      :{RED}기
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_OVERFLOW                   :{RED}{NUM}x
 
-STR_JUST_DECIMAL1                                               :{DECIMAL1}
-
-STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
-STR_JUST_DATE_WALLCLOCK_SHORT                                   :{DATE_WALLCLOCK_SHORT}
-STR_JUST_DATE_WALLCLOCK_LONG                                    :{DATE_WALLCLOCK_LONG}
-STR_JUST_DATE_WALLCLOCK_ISO                                     :{DATE_WALLCLOCK_ISO}
-STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
-
-STR_JUST_STRING1                                                :{STRING}
-STR_JUST_STRING2                                                :{STRING}
-STR_JUST_STRING3                                                :{STRING}
-
-STR_JUST_VELOCITY                                               :{VELOCITY}
-
-STR_JUST_TT_TICKS                                               :{TT_TICKS}
-STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
-
-STR_RED_INT                                                     :{RED}{NUM}
 STR_BLACK_PLUS                                                  :{BLACK}+
 
 STR_DECIMAL1_WITH_SCALE                                         :{DECIMAL1} (x{DECIMAL})
@@ -1876,34 +1849,15 @@ STR_STATION_RATING_MAX_PERCENTAGE                               : (최대 {PLUS_
 STR_STATION_RATING_MAX_PERCENTAGE_COMMA                         :, 최대 {PLUS_NUM}%
 STR_STATION_RATING_PERCENTAGE_COMMA                             :, {PLUS_NUM}%
 
-STR_STATION_RATING_TOOLTIP_SPEED                                :마지막으로 도착한 열차의 최대 속력{STRING}: {STRING} ({STRING})
-STR_STATION_RATING_TOOLTIP_SPEED_ZERO                           :{RED}{VELOCITY}{STRING}
-STR_STATION_RATING_TOOLTIP_SPEED_0                              :{ORANGE}{VELOCITY}{STRING}
-STR_STATION_RATING_TOOLTIP_SPEED_1                              :{GOLD}{VELOCITY}{STRING}
-STR_STATION_RATING_TOOLTIP_SPEED_2                              :{YELLOW}{VELOCITY}{STRING}
-STR_STATION_RATING_TOOLTIP_SPEED_3                              :{GREEN}{VELOCITY}{STRING}
+STR_STATION_RATING_TOOLTIP_SPEED                                :마지막으로 도착한 열차의 최대 속력{STRING}: {SET_COLOUR}{VELOCITY}{STRING} ({STRING})
 
-STR_STATION_RATING_TOOLTIP_AGE                                  :지난 열차의 연식{STRING}: {STRING}
-STR_STATION_RATING_TOOLTIP_AGE_0                                :{ORANGE}{NUM}년{STRING}
-STR_STATION_RATING_TOOLTIP_AGE_1                                :{GOLD}{NUM}년{STRING}
-STR_STATION_RATING_TOOLTIP_AGE_2                                :{YELLOW}{NUM}년{STRING}
-STR_STATION_RATING_TOOLTIP_AGE_3                                :{GREEN}{NUM}년{STRING}
+STR_STATION_RATING_TOOLTIP_AGE                                  :지난 열차의 연식{STRING}: {SET_COLOUR}{NUM}년{STRING}
 
 STR_STATION_RATING_TOOLTIP_WAITTIME                             :지난 화물 적재 이후 지난 시간{STRING}: {STRING}
 STR_STATION_RATING_TOOLTIP_WAITTIME_SHIP                        :지난 화물 적재 이후 지난 시간{STRING}: {STRING} (선박)
-STR_STATION_RATING_TOOLTIP_WAITTIME_0                           :{RED}{NUM}일{STRING}
-STR_STATION_RATING_TOOLTIP_WAITTIME_1                           :{ORANGE}{NUM}일{STRING}
-STR_STATION_RATING_TOOLTIP_WAITTIME_2                           :{GOLD}{NUM}일{STRING}
-STR_STATION_RATING_TOOLTIP_WAITTIME_3                           :{YELLOW}{NUM}일{STRING}
-STR_STATION_RATING_TOOLTIP_WAITTIME_4                           :{GREEN}{NUM}일{STRING}
+STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{SET_COLOUR}{NUM}일{STRING}
 
-STR_STATION_RATING_TOOLTIP_WAITUNITS                            :대기 화물량 (각 목적지별 평균치{STRING}): {STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_0                          :{RED}{NUM}{STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_1                          :{ORANGE}{NUM}{STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_2                          :{GOLD}{NUM}{STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_3                          :{YELLOW}{NUM}{STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_4                          :{YELLOW}{NUM}{STRING}
-STR_STATION_RATING_TOOLTIP_WAITUNITS_5                          :{GREEN}{NUM}{STRING}
+STR_STATION_RATING_TOOLTIP_WAITUNITS                            :대기 화물량 (각 목적지별 평균치{STRING}): {SET_COLOUR}{NUM}{STRING}
 
 STR_STATION_RATING_TOOLTIP_STATUE                               :도시에 회사 소유주 동상{STRING}: {STRING}
 STR_STATION_RATING_TOOLTIP_STATUE_NO                            :{GOLD}없음{STRING}
@@ -2165,3 +2119,6 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :역 등급 도�
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :끄기
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :간단히
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :자세히
+
+STR_VIEWPORT_TOWN_COLOUR                                        :{1:SET_COLOUR}{0:TOWN}
+STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {SET_COLOUR}({COMMA})
