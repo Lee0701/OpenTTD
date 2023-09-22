@@ -561,8 +561,6 @@ void InitializeWindowViewport(Window *w, int x, int y,
 	FillViewportCoverageRect();
 }
 
-static Point _vp_move_offs;
-
 struct ViewportRedrawRegion {
 	Rect coords;
 };
@@ -666,11 +664,10 @@ static void DoSetViewportPositionFillRegion(int left, int top, int width, int he
 	DrawOverlappedWindowForAll(left, top, left + width, top + height);
 };
 
-static void DoSetViewportPosition(Window *w, const int vp_left, const int vp_top, const int vp_width, const int vp_height)
+static void DoSetViewportPosition(Window *w, const Point move_offset, const int vp_left, const int vp_top, const int vp_width, const int vp_height)
 {
-	const int xo = _vp_move_offs.x;
-	const int yo = _vp_move_offs.y;
-
+	const int xo = move_offset.x;
+	const int yo = move_offset.y;
 
 	IncrementWindowUpdateNumber();
 
@@ -789,8 +786,7 @@ static void SetViewportPosition(Window *w, int x, int y, bool force_update_overl
 
 	if (old_top == 0 && old_left == 0) return;
 
-	_vp_move_offs.x = old_left;
-	_vp_move_offs.y = old_top;
+	Point move_offset = { old_left, old_top };
 
 	left = vp->left;
 	top = vp->top;
@@ -814,11 +810,11 @@ static void SetViewportPosition(Window *w, int x, int y, bool force_update_overl
 		i = top + height - _screen.height;
 		if (i >= 0) height -= i;
 
-		if (height > 0 && (_vp_move_offs.x != 0 || _vp_move_offs.y != 0)) {
+		if (height > 0 && (move_offset.x != 0 || move_offset.y != 0)) {
 			ClearViewportLandPixelCache(vp);
-			SCOPE_INFO_FMT([&], "DoSetViewportPosition: %d, %d, %d, %d, %d, %d, %s", left, top, width, height, _vp_move_offs.x, _vp_move_offs.y, scope_dumper().WindowInfo(w));
+			SCOPE_INFO_FMT([&], "DoSetViewportPosition: %d, %d, %d, %d, %d, %d, %s", left, top, width, height, move_offset.x, move_offset.y, scope_dumper().WindowInfo(w));
 			w->viewport->update_vehicles = true;
-			DoSetViewportPosition((Window *) w->z_front, left, top, width, height);
+			DoSetViewportPosition((Window *) w->z_front, move_offset, left, top, width, height);
 			ClearViewportCache(w->viewport);
 			FillViewportCoverageRect();
 		}
@@ -1061,7 +1057,7 @@ void OffsetGroundSprite(int x, int y)
 static void AddCombinedSprite(SpriteID image, PaletteID pal, int x, int y, int z, const SubSprite *sub)
 {
 	Point pt = RemapCoords(x, y, z);
-	const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal);
+	const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal, ZoomMask(_vdd->dpi.zoom));
 
 	int left = pt.x + spr->x_offs;
 	int right = pt.x + spr->x_offs + spr->width;
@@ -1137,7 +1133,7 @@ void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w,
 		tmp_width = right - left;
 		tmp_height = bottom - top;
 	} else {
-		const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal);
+		const Sprite *spr = GetSprite(image & SPRITE_MASK, SpriteType::Normal, ZoomMask(_vdd->dpi.zoom));
 		left = tmp_left = (pt.x += spr->x_offs);
 		right           = (pt.x +  spr->width );
 		top  = tmp_top  = (pt.y += spr->y_offs);
@@ -1626,7 +1622,7 @@ static void DrawTileSelection(const TileInfo *ti)
 						if (IsSteepSlope(ti->tileh)) z -= TILE_HEIGHT;
 					}
 				}
-				DrawSelectionSprite(_cur_dpi->zoom <= ZOOM_LVL_DETAIL ? SPR_DOT : SPR_DOT_SMALL, PAL_NONE, ti, z, foundation_part);
+				DrawSelectionSprite(SPR_DOT, PAL_NONE, ti, z, foundation_part);
 			}
 			break;
 
@@ -1912,6 +1908,9 @@ static void ViewportAddKdtreeSigns(ViewportDrawerDynamic *vdd, DrawPixelInfo *dp
 			STR_VIEWPORT_TOWN_LABEL, STR_VIEWPORT_TOWN_LABEL_TINY, STR_VIEWPORT_TOWN_TINY_BLACK,
 			t->index, t->LabelParam2());
 	}
+
+	/* Do not draw signs nor station names if they are set invisible */
+	if (vdd->IsInvisibilitySet(TO_SIGNS)) return;
 
 	for (const auto *si : signs) {
 		ViewportAddString(vdd, dpi, ZOOM_LVL_OUT_16X, &si->sign,
@@ -2277,9 +2276,6 @@ static void ViewportDrawStrings(ViewportDrawerDynamic *vdd, ZoomLevel zoom, cons
 		SetDParam(1, ss.params[1]);
 
 		if (ss.colour != INVALID_COLOUR) {
-			/* Do not draw signs nor station names if they are set invisible */
-			if (vdd->IsInvisibilitySet(TO_SIGNS) && ss.string != STR_WHITE_SIGN) continue;
-
 			if (vdd->IsTransparencySet(TO_SIGNS) && ss.string != STR_WHITE_SIGN) {
 				/* Don't draw the rectangle.
 				 * Real colours need the TC_IS_PALETTE_COLOUR flag.
@@ -3328,32 +3324,29 @@ static inline void PixelBlend(uint32 * const d, const uint32 s)
 static void ViewportMapDrawScrollingViewportBox(const Viewport * const vp)
 {
 	if (_scrolling_viewport && _scrolling_viewport->viewport) {
-		const Viewport * const vp_scrolling = _scrolling_viewport->viewport;
+		const ViewportData * const vp_scrolling = _scrolling_viewport->viewport;
 		if (vp_scrolling->zoom < ZOOM_LVL_DRAW_MAP) {
+			const int w = UnScaleByZoom(_vdd->dpi.width, vp->zoom);
+			const int l = UnScaleByZoomLower(vp_scrolling->next_scrollpos_x - _vdd->dpi.left, _vdd->dpi.zoom);
+			const int r = UnScaleByZoomLower(vp_scrolling->next_scrollpos_x + vp_scrolling->virtual_width - _vdd->dpi.left, _vdd->dpi.zoom);
 			/* Check intersection of dpi and vp_scrolling */
-			const int mask = ScaleByZoom(-1, vp->zoom);
-			const int vp_scrolling_virtual_top_mask = vp_scrolling->virtual_top & mask;
-			const int vp_scrolling_virtual_bottom_mask = (vp_scrolling->virtual_top + vp_scrolling->virtual_height) & mask;
-			const int t_inter = std::max(vp_scrolling_virtual_top_mask, _vdd->dpi.top);
-			const int b_inter = std::min(vp_scrolling_virtual_bottom_mask, _vdd->dpi.top + _vdd->dpi.height);
-			if (t_inter < b_inter) {
-				const int vp_scrolling_virtual_left_mask = vp_scrolling->virtual_left & mask;
-				const int vp_scrolling_virtual_right_mask = (vp_scrolling->virtual_left + vp_scrolling->virtual_width) & mask;
-				const int l_inter = std::max(vp_scrolling_virtual_left_mask, _vdd->dpi.left);
-				const int r_inter = std::min(vp_scrolling_virtual_right_mask, _vdd->dpi.left + _vdd->dpi.width);
-				if (l_inter < r_inter) {
+			if (l < w && r >= 0) {
+				const int h = UnScaleByZoom(_vdd->dpi.height, vp->zoom);
+				const int t = UnScaleByZoomLower(vp_scrolling->next_scrollpos_y - _vdd->dpi.top, _vdd->dpi.zoom);
+				const int b = UnScaleByZoomLower(vp_scrolling->next_scrollpos_y + vp_scrolling->virtual_height - _vdd->dpi.top, _vdd->dpi.zoom);
+				if (t < h && b >= 0) {
 					/* OK, so we can draw something that tells where the scrolling viewport is */
 					Blitter * const blitter = BlitterFactory::GetCurrentBlitter();
-					const int w_inter = UnScaleByZoom(r_inter - l_inter, vp->zoom);
-					const int h_inter = UnScaleByZoom(b_inter - t_inter, vp->zoom);
-					const int x = UnScaleByZoom(l_inter - _vdd->dpi.left, vp->zoom);
-					const int y = UnScaleByZoom(t_inter - _vdd->dpi.top, vp->zoom);
+					const int l_inter = std::max(l, 0);
+					const int r_inter = std::min(r, w);
+					const int t_inter = std::max(t, 0);
+					const int b_inter = std::min(b, h);
 
 					/* If asked, with 32bpp we can do some blending */
 					if (_settings_client.gui.show_scrolling_viewport_on_map >= 2 && blitter->GetScreenDepth() == 32) {
-						for (int j = y; j < y + h_inter; j++) {
-							uint32 *buf = (uint32*) blitter->MoveTo(_vdd->dpi.dst_ptr, x, j);
-							for (int i = 0; i < w_inter; i++) {
+						for (int j = t_inter; j < b_inter; j++) {
+							uint32 *buf = (uint32*) blitter->MoveTo(_vdd->dpi.dst_ptr, 0, j);
+							for (int i = l_inter; i < r_inter; i++) {
 								PixelBlend(buf + i, 0x40FCFCFC);
 							}
 						}
@@ -3361,18 +3354,26 @@ static void ViewportMapDrawScrollingViewportBox(const Viewport * const vp)
 
 					/* Draw area contour */
 					if (_settings_client.gui.show_scrolling_viewport_on_map != 2) {
-						if (t_inter == vp_scrolling_virtual_top_mask)
-							for (int i = x; i < x + w_inter; i += 2)
-								blitter->SetPixel(_vdd->dpi.dst_ptr, i, y, PC_WHITE);
-						if (b_inter == vp_scrolling_virtual_bottom_mask)
-							for (int i = x; i < x + w_inter; i += 2)
-								blitter->SetPixel(_vdd->dpi.dst_ptr, i, y + h_inter, PC_WHITE);
-						if (l_inter == vp_scrolling_virtual_left_mask)
-							for (int j = y; j < y + h_inter; j += 2)
-								blitter->SetPixel(_vdd->dpi.dst_ptr, x, j, PC_WHITE);
-						if (r_inter == vp_scrolling_virtual_right_mask)
-							for (int j = y; j < y + h_inter; j += 2)
-								blitter->SetPixel(_vdd->dpi.dst_ptr, x + w_inter, j, PC_WHITE);
+						if (t >= 0) {
+							for (int i = l_inter; i < r_inter; i += 2) {
+								blitter->SetPixel(_vdd->dpi.dst_ptr, i, t, PC_WHITE);
+							}
+						}
+						if (b < h) {
+							for (int i = l_inter; i < r_inter; i += 2) {
+								blitter->SetPixel(_vdd->dpi.dst_ptr, i, b, PC_WHITE);
+							}
+						}
+						if (l >= 0) {
+							for (int j = t_inter; j < b_inter; j += 2) {
+								blitter->SetPixel(_vdd->dpi.dst_ptr, l, j, PC_WHITE);
+							}
+						}
+						if (r < w) {
+							for (int j = t_inter; j < b_inter; j += 2) {
+								blitter->SetPixel(_vdd->dpi.dst_ptr, r, j, PC_WHITE);
+							}
+						}
 					}
 				}
 			}
@@ -3762,13 +3763,13 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 		ViewportAddVehicles(&_vdd->dpi, vp->update_vehicles);
 
 		for (const TileSpriteToDraw &ts : _vdd->tile_sprites_to_draw) {
-			PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, ts.image, ts.pal);
+			PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, &_vdd->dpi, ts.image, ts.pal);
 		}
 		for (const ParentSpriteToDraw &ps : _vdd->parent_sprites_to_draw) {
-			if (ps.image != SPR_EMPTY_BOUNDING_BOX) PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, ps.image, ps.pal);
+			if (ps.image != SPR_EMPTY_BOUNDING_BOX) PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, &_vdd->dpi, ps.image, ps.pal);
 		}
 		for (const ChildScreenSpriteToDraw &cs : _vdd->child_screen_sprites_to_draw) {
-			PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, cs.image, cs.pal);
+			PrepareDrawSpriteViewportSpriteStore(_vdd->sprite_data, &_vdd->dpi, cs.image, cs.pal);
 		}
 
 		_viewport_drawer_jobs++;
@@ -4027,10 +4028,10 @@ static inline void ClampViewportToMap(const Viewport *vp, int *scroll_x, int *sc
 }
 
 /**
- * Update the viewport position being displayed.
+ * Update the next viewport position being displayed.
  * @param w %Window owning the viewport.
  */
-void UpdateViewportPosition(Window *w)
+void UpdateNextViewportPosition(Window *w)
 {
 	const Viewport *vp = w->viewport;
 
@@ -4038,9 +4039,9 @@ void UpdateViewportPosition(Window *w)
 		const Vehicle *veh = Vehicle::Get(w->viewport->follow_vehicle);
 		Point pt = MapXYZToViewport(vp, veh->x_pos, veh->y_pos, veh->z_pos);
 
-		w->viewport->scrollpos_x = pt.x;
-		w->viewport->scrollpos_y = pt.y;
-		SetViewportPosition(w, pt.x, pt.y, false);
+		w->viewport->next_scrollpos_x = pt.x;
+		w->viewport->next_scrollpos_y = pt.y;
+		w->viewport->force_update_overlay_pending = false;
 	} else {
 		/* Ensure the destination location is within the map */
 		ClampViewportToMap(vp, &w->viewport->dest_scrollpos_x, &w->viewport->dest_scrollpos_y);
@@ -4048,27 +4049,38 @@ void UpdateViewportPosition(Window *w)
 		int delta_x = w->viewport->dest_scrollpos_x - w->viewport->scrollpos_x;
 		int delta_y = w->viewport->dest_scrollpos_y - w->viewport->scrollpos_y;
 
+		w->viewport->next_scrollpos_x = w->viewport->scrollpos_x;
+		w->viewport->next_scrollpos_y = w->viewport->scrollpos_y;
+
 		bool update_overlay = false;
 		if (delta_x != 0 || delta_y != 0) {
 			if (_settings_client.gui.smooth_scroll) {
 				int max_scroll = ScaleByMapSize1D(512 * ZOOM_LVL_BASE);
 				/* Not at our desired position yet... */
-				w->viewport->scrollpos_x += Clamp(DivAwayFromZero(delta_x, 4), -max_scroll, max_scroll);
-				w->viewport->scrollpos_y += Clamp(DivAwayFromZero(delta_y, 4), -max_scroll, max_scroll);
+				w->viewport->next_scrollpos_x += Clamp(DivAwayFromZero(delta_x, 4), -max_scroll, max_scroll);
+				w->viewport->next_scrollpos_y += Clamp(DivAwayFromZero(delta_y, 4), -max_scroll, max_scroll);
 			} else {
-				w->viewport->scrollpos_x = w->viewport->dest_scrollpos_x;
-				w->viewport->scrollpos_y = w->viewport->dest_scrollpos_y;
+				w->viewport->next_scrollpos_x = w->viewport->dest_scrollpos_x;
+				w->viewport->next_scrollpos_y = w->viewport->dest_scrollpos_y;
 			}
-			update_overlay = (w->viewport->scrollpos_x == w->viewport->dest_scrollpos_x &&
-								w->viewport->scrollpos_y == w->viewport->dest_scrollpos_y);
+			update_overlay = (w->viewport->next_scrollpos_x == w->viewport->dest_scrollpos_x &&
+								w->viewport->next_scrollpos_y == w->viewport->dest_scrollpos_y);
 		}
+		w->viewport->force_update_overlay_pending = update_overlay;
 
-		ClampViewportToMap(vp, &w->viewport->scrollpos_x, &w->viewport->scrollpos_y);
+		ClampViewportToMap(vp, &w->viewport->next_scrollpos_x, &w->viewport->next_scrollpos_y);
 
 		if (_scrolling_viewport == w) UpdateActiveScrollingViewport(w);
-
-		SetViewportPosition(w, w->viewport->scrollpos_x, w->viewport->scrollpos_y, update_overlay);
 	}
+}
+
+/**
+ * Apply the next viewport position being displayed.
+ * @param w %Window owning the viewport.
+ */
+void ApplyNextViewportPosition(Window *w)
+{
+	SetViewportPosition(w, w->viewport->next_scrollpos_x, w->viewport->next_scrollpos_y, w->viewport->force_update_overlay_pending);
 }
 
 void UpdateViewportSizeZoom(Viewport *vp)
@@ -4106,18 +4118,8 @@ void UpdateActiveScrollingViewport(Window *w)
 
 	const int gap = ScaleByZoom(1, ZOOM_LVL_MAX);
 
-	auto get_bounds = [&gap](const ViewportData *vp) -> Rect {
-		int lr_low = vp->virtual_left;
-		int lr_hi = vp->dest_scrollpos_x;
-		if (lr_low > lr_hi) Swap(lr_low, lr_hi);
-		int right = lr_hi + vp->virtual_width + gap;
-
-		int tb_low = vp->virtual_top;
-		int tb_hi = vp->scrollpos_y;
-		if (tb_low > tb_hi) Swap(tb_low, tb_hi);
-		int bottom = tb_hi + vp->virtual_height + gap;
-
-		return { lr_low, tb_low, right, bottom };
+	auto get_bounds = [](const ViewportData *vp) -> Rect {
+		return { vp->next_scrollpos_x, vp->next_scrollpos_y, vp->next_scrollpos_x + vp->virtual_width + 1, vp->next_scrollpos_y + vp->virtual_height + 1 };
 	};
 
 	if (w && !bound_valid) {
@@ -4134,8 +4136,8 @@ void UpdateActiveScrollingViewport(Window *w)
 		const Rect &b = _scrolling_viewport_bound;
 		if (a.left != b.left) MarkAllViewportMapsDirty(std::min(a.left, b.left) - gap, std::min(a.top, b.top) - gap, std::max(a.left, b.left) + gap, std::max(a.bottom, b.bottom) + gap);
 		if (a.top != b.top) MarkAllViewportMapsDirty(std::min(a.left, b.left) - gap, std::min(a.top, b.top) - gap, std::max(a.right, b.right) + gap, std::max(a.top, b.top) + gap);
-		if (a.right != b.right) MarkAllViewportMapsDirty(std::min(a.right, b.right) - (2 * gap), std::min(a.top, b.top) - gap, std::max(a.right, b.right) + gap, std::max(a.bottom, b.bottom) + gap);
-		if (a.bottom != b.bottom) MarkAllViewportMapsDirty(std::min(a.left, b.left) - gap, std::min(a.bottom, b.bottom) - (2 * gap), std::max(a.right, b.right) + gap, std::max(a.bottom, b.bottom) + gap);
+		if (a.right != b.right) MarkAllViewportMapsDirty(std::min(a.right, b.right) - gap, std::min(a.top, b.top) - gap, std::max(a.right, b.right) + gap, std::max(a.bottom, b.bottom) + gap);
+		if (a.bottom != b.bottom) MarkAllViewportMapsDirty(std::min(a.left, b.left) - gap, std::min(a.bottom, b.bottom) - gap, std::max(a.right, b.right) + gap, std::max(a.bottom, b.bottom) + gap);
 		_scrolling_viewport_bound = a;
 	}
 }
@@ -4266,9 +4268,8 @@ void ViewportRouteOverlay::MarkAllRouteStepsDirty(const Vehicle *veh)
  */
 void MarkAllViewportMapsDirty(int left, int top, int right, int bottom)
 {
-	for (Window *w : Window::IterateFromBack()) {
-		Viewport *vp = w->viewport;
-		if (vp != nullptr && vp->zoom >= ZOOM_LVL_DRAW_MAP) {
+	for (Viewport *vp : _viewport_window_cache) {
+		if (vp->zoom >= ZOOM_LVL_DRAW_MAP) {
 			MarkViewportDirty(vp, left, top, right, bottom, VMDF_NOT_LANDSCAPE);
 		}
 	}
@@ -4276,7 +4277,7 @@ void MarkAllViewportMapsDirty(int left, int top, int right, int bottom)
 
 void MarkAllViewportMapLandscapesDirty()
 {
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		Viewport *vp = w->viewport;
 		if (vp != nullptr && vp->zoom >= ZOOM_LVL_DRAW_MAP) {
 			ClearViewportLandPixelCache(vp);
@@ -4287,7 +4288,7 @@ void MarkAllViewportMapLandscapesDirty()
 
 void MarkWholeNonMapViewportsDirty()
 {
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		Viewport *vp = w->viewport;
 		if (vp != nullptr && vp->zoom < ZOOM_LVL_DRAW_MAP) {
 			w->SetDirty();
@@ -4302,9 +4303,8 @@ void MarkWholeNonMapViewportsDirty()
  */
 void MarkAllViewportOverlayStationLinksDirty(const Station *st)
 {
-	for (Window *w : Window::IterateFromBack()) {
-		Viewport *vp = w->viewport;
-		if (vp != nullptr && vp->overlay != nullptr) {
+	for (Viewport *vp : _viewport_window_cache) {
+		if (vp->overlay != nullptr) {
 			vp->overlay->MarkStationViewportLinksDirty(st);
 		}
 	}
@@ -4312,7 +4312,7 @@ void MarkAllViewportOverlayStationLinksDirty(const Station *st)
 
 void ConstrainAllViewportsZoom()
 {
-	for (Window *w : Window::IterateFromFront()) {
+	for (Window *w : Window::Iterate()) {
 		if (w->viewport == nullptr) continue;
 
 		ZoomLevel zoom = static_cast<ZoomLevel>(Clamp(w->viewport->zoom, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max));
@@ -5302,7 +5302,7 @@ static inline void ShowMeasurementTooltips(StringID str, uint paramcount, const 
 
 static void HideMeasurementTooltips()
 {
-	DeleteWindowById(WC_TOOLTIPS, 0);
+	CloseWindowById(WC_TOOLTIPS, 0);
 }
 
 /** highlighting tiles while only going over them with the mouse */

@@ -281,6 +281,7 @@ static void LoadSpriteTables()
 	LoadNewGRF(SPR_NEWGRFS_BASE, 2);
 
 	uint total_extra_graphics = SPR_NEWGRFS_BASE - SPR_OPENTTD_BASE;
+	DEBUG(sprite, 4, "Checking sprites from fallback grf");
 	_missing_extra_graphics = GetSpriteCountForFile(master_filename, SPR_OPENTTD_BASE, SPR_NEWGRFS_BASE);
 	DEBUG(sprite, 1, "%u extra sprites, %u from baseset, %u from fallback", total_extra_graphics, total_extra_graphics - _missing_extra_graphics, _missing_extra_graphics);
 
@@ -556,7 +557,7 @@ bool GraphicsSet::FillSetDetails(IniFile *ini, const std::string &path, const st
 		this->palette = ((*item->value)[0] == 'D' || (*item->value)[0] == 'd') ? PAL_DOS : PAL_WINDOWS;
 
 		/* Get optional blitter information. */
-		item = metadata->GetItem("blitter", false);
+		item = metadata->GetItem("blitter");
 		this->blitter = (item != nullptr && (*item->value)[0] == '3') ? BLT_32BPP : BLT_8BPP;
 	}
 	return ret;

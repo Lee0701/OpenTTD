@@ -19,7 +19,8 @@
 #include "company_type.h"
 #include "core/multimap.hpp"
 #include "sl/saveload_common.h"
-#include <deque>
+#include "core/ring_buffer.hpp"
+#include "3rdparty/cpp-btree/btree_map.h"
 
 /** Unique identifier for a single cargo packet. */
 typedef uint32 CargoPacketID;
@@ -52,18 +53,18 @@ void ChangeOwnershipOfCargoPacketDeferredPayments(Owner old_owner, Owner new_own
  */
 struct CargoPacket : CargoPacketPool::PoolItem<&_cargopacket_pool> {
 private:
-	Money feeder_share;     ///< Value of feeder pickup to be paid for on delivery of cargo.
 	uint16 count;           ///< The amount of cargo in this packet.
 	uint16 days_in_transit; ///< Amount of days this packet has been in transit.
-	SourceType source_type; ///< Type of \c source_id.
+	Money feeder_share;     ///< Value of feeder pickup to be paid for on delivery of cargo.
 	SourceID source_id;     ///< Index of source, INVALID_SOURCE if unknown/invalid.
-	StationID source;       ///< The station where the cargo came from first.
 	TileIndex source_xy;    ///< The origin of the cargo (first station in feeder chain).
 	union {
 		TileOrStationID loaded_at_xy; ///< Location where this cargo has been loaded into the vehicle.
 		TileOrStationID next_station; ///< Station where the cargo wants to go next.
 	};
-	uint flags = 0;             ///< NOSAVE: temporary flags
+	StationID source;       ///< The station where the cargo came from first.
+	SourceType source_type; ///< Type of \c source_id.
+	uint8 flags = 0;        ///< NOSAVE: temporary flags
 
 	/** Cargo packet flag bits in CargoPacket::flags. */
 	enum CargoPacketFlags {
@@ -296,7 +297,7 @@ public:
 	void InvalidateCache();
 };
 
-typedef std::deque<CargoPacket *> CargoPacketList;
+typedef ring_buffer<CargoPacket *> CargoPacketList;
 
 /**
  * CargoList that is used for vehicles.
@@ -492,7 +493,7 @@ public:
 };
 
 typedef MultiMap<StationID, CargoPacket *, CargoPacketList> StationCargoPacketMap;
-typedef std::map<StationID, uint> StationCargoAmountMap;
+typedef btree::btree_map<StationID, uint> StationCargoAmountMap;
 
 /**
  * CargoList that is used for stations.
@@ -602,6 +603,11 @@ public:
 	void AfterLoadIncreaseReservationCount(uint count)
 	{
 		this->reserved_count += count;
+	}
+
+	void LoadSetReservedCount(uint count)
+	{
+		this->reserved_count = count;
 	}
 
 	/**

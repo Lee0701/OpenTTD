@@ -103,7 +103,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_INFRA_SHARING,                    XSCF_NULL,                2,   2, "infra_sharing",                    nullptr, nullptr, "CPDP"           },
 	{ XSLFI_VARIABLE_DAY_LENGTH,              XSCF_NULL,                3,   3, "variable_day_length",              nullptr, nullptr, nullptr          },
 	{ XSLFI_ORDER_OCCUPANCY,                  XSCF_NULL,                2,   2, "order_occupancy",                  nullptr, nullptr, nullptr          },
-	{ XSLFI_MORE_COND_ORDERS,                 XSCF_NULL,               14,  14, "more_cond_orders",                 nullptr, nullptr, nullptr          },
+	{ XSLFI_MORE_COND_ORDERS,                 XSCF_NULL,               15,  15, "more_cond_orders",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_EXTRA_LARGE_MAP,                  XSCF_NULL,                0,   1, "extra_large_map",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_REVERSE_AT_WAYPOINT,              XSCF_NULL,                1,   1, "reverse_at_waypoint",              nullptr, nullptr, nullptr          },
 	{ XSLFI_VEH_LIFETIME_PROFIT,              XSCF_NULL,                1,   1, "veh_lifetime_profit",              nullptr, nullptr, nullptr          },
@@ -122,7 +122,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_TRAIN_FLAGS_EXTRA,                XSCF_NULL,                1,   1, "train_flags_extra",                nullptr, nullptr, nullptr          },
 	{ XSLFI_VEHICLE_FLAGS_EXTRA,              XSCF_NULL,                1,   1, "veh_flags_extra",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_TRAIN_THROUGH_LOAD,               XSCF_NULL,                2,   2, "train_through_load",               nullptr, nullptr, nullptr          },
-	{ XSLFI_ORDER_EXTRA_DATA,                 XSCF_NULL,                2,   2, "order_extra_data",                 nullptr, nullptr, nullptr          },
+	{ XSLFI_ORDER_EXTRA_DATA,                 XSCF_NULL,                3,   3, "order_extra_data",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_WHOLE_MAP_CHUNK,                  XSCF_NULL,                2,   2, "whole_map_chunk",                  nullptr, nullptr, "WMAP"           },
 	{ XSLFI_ST_LAST_VEH_TYPE,                 XSCF_NULL,                1,   1, "station_last_veh_type",            nullptr, nullptr, nullptr          },
 	{ XSLFI_SELL_AT_DEPOT_ORDER,              XSCF_NULL,                1,   1, "sell_at_depot_order",              nullptr, nullptr, nullptr          },
@@ -189,6 +189,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_REMAIN_NEXT_ORDER_STATION,        XSCF_IGNORABLE_UNKNOWN,   1,   1, "remain_next_order_station",        nullptr, nullptr, nullptr          },
 	{ XSLFI_LABEL_ORDERS,                     XSCF_NULL,                2,   2, "label_orders",                     nullptr, nullptr, nullptr          },
 	{ XSLFI_VARIABLE_TICK_RATE,               XSCF_IGNORABLE_ALL,       1,   1, "variable_tick_rate",               nullptr, nullptr, nullptr          },
+	{ XSLFI_ROAD_VEH_FLAGS,                   XSCF_NULL,                1,   1, "road_veh_flags",                   nullptr, nullptr, nullptr          },
 	{ XSLFI_SCRIPT_INT64,                     XSCF_NULL,                1,   1, "script_int64",                     nullptr, nullptr, nullptr          },
 	{ XSLFI_U64_TICK_COUNTER,                 XSCF_NULL,                1,   1, "u64_tick_counter",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_LINKGRAPH_TRAVEL_TIME,            XSCF_NULL,                1,   1, "linkgraph_travel_time",            nullptr, nullptr, nullptr          },
@@ -201,6 +202,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_EXTEND_VEHICLE_RANDOM,            XSCF_NULL,                1,   1, "slv_extend_vehicle_random",        nullptr, nullptr, nullptr          },
 	{ XSLFI_DISASTER_VEH_STATE,               XSCF_NULL,                1,   1, "slv_disaster_veh_state",           nullptr, nullptr, nullptr          },
 	{ XSLFI_SAVEGAME_ID,                      XSCF_NULL,                1,   1, "slv_savegame_id",                  nullptr, nullptr, nullptr          },
+	{ XSLFI_NEWGRF_LAST_SERVICE,              XSCF_NULL,                1,   1, "slv_newgrf_last_service",          nullptr, nullptr, nullptr          },
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr },// This is the end marker
 };
 

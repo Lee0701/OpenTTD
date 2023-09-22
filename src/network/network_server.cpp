@@ -701,9 +701,6 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendFrame()
 	p->Send_uint32(_frame_counter_max);
 #ifdef ENABLE_NETWORK_SYNC_EVERY_FRAME
 	p->Send_uint32(_sync_seed_1);
-#ifdef NETWORK_SEND_DOUBLE_SEED
-	p->Send_uint32(_sync_seed_2);
-#endif
 	p->Send_uint64(_sync_state_checksum);
 #endif
 
@@ -724,9 +721,6 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendSync()
 	p->Send_uint32(_frame_counter);
 	p->Send_uint32(_sync_seed_1);
 
-#ifdef NETWORK_SEND_DOUBLE_SEED
-	p->Send_uint32(_sync_seed_2);
-#endif
 	p->Send_uint64(_sync_state_checksum);
 	this->SendPacket(p);
 	return NETWORK_RECV_STATUS_OKAY;
@@ -1027,6 +1021,7 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_JOIN(Packet *p)
 	ci->join_date = _date;
 	ci->join_date_fract = _date_fract;
 	ci->join_tick_skip_counter = _tick_skip_counter;
+	ci->join_frame = _frame_counter;
 	ci->client_name = client_name;
 	ci->client_playas = playas;
 	DEBUG(desync, 1, "client: date{%08x; %02x; %02x}; client: %02x; company: %02x", _date, _date_fract, _tick_skip_counter, (int)ci->index, (int)ci->client_playas);
@@ -1179,7 +1174,11 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_MAP_OK(Packet *
 		this->SendConfigUpdate();
 
 		/* quickly update the syncing client with company details */
-		return this->SendCompanyUpdate();
+		NetworkRecvStatus status = this->SendCompanyUpdate();
+
+		this->ShrinkToFitSendQueue();
+
+		return status;
 	}
 
 	/* Wrong status for this packet, give a warning to client, and close connection */
@@ -1293,8 +1292,7 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_ERROR(Packet *p
 		DesyncExtraInfo info;
 		info.client_name = client_name;
 		info.client_id = this->client_id;
-		info.desync_frame_seed = this->desync_frame_seed;
-		info.desync_frame_state_checksum = this->desync_frame_state_checksum;
+		info.desync_frame_info = std::move(this->desync_frame_info);
 		CrashLog::DesyncCrashLog(&(this->desync_log), &server_desync_log, info);
 		this->SendDesyncLog(server_desync_log);
 
@@ -1338,32 +1336,58 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_DESYNC_MSG(Pack
 
 NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_DESYNC_SYNC_DATA(Packet *p)
 {
-	uint32 frame = p->Recv_uint32();
-	uint32 count = p->Recv_uint32();
+	uint32 frame_count = p->Recv_uint32();
 
-	DEBUG(net, 2, "Received desync sync data: %u frames from %08X", count, frame);
+	DEBUG(net, 2, "Received desync sync data: %u frames", frame_count);
 
-	uint server_idx = UINT32_MAX;
-	for (uint i = 0; i < _network_server_sync_records->size(); i++) {
-		if ((*_network_server_sync_records)[i].frame == frame) {
-			server_idx = i;
-			break;
+	if (frame_count == 0 || _network_sync_record_counts.empty()) return NETWORK_RECV_STATUS_OKAY;
+
+	size_t record_count_offset = 0;
+	size_t record_offset = 0;
+	for (uint i = 0; i < frame_count; i++) {
+		uint32 item_count = p->Recv_uint32();
+		if (item_count == 0) continue;
+		uint32 local_item_count = 0;
+		uint32 frame = 0;
+		NetworkSyncRecordEvents event = NSRE_BEGIN;
+		for (uint j = 0; j < item_count; j++) {
+			if (j == 0) {
+				frame = p->Recv_uint32();
+				while (_network_sync_records[record_offset].frame != frame) {
+					if (record_count_offset == _network_sync_record_counts.size()) {
+						return NETWORK_RECV_STATUS_OKAY;
+					}
+					record_offset += _network_sync_record_counts[record_count_offset];
+					record_count_offset++;
+				}
+				local_item_count = _network_sync_record_counts[record_count_offset];
+			} else {
+				event = (NetworkSyncRecordEvents)p->Recv_uint32();
+			}
+			uint32 seed_1 = p->Recv_uint32();
+			uint64 state_checksum = p->Recv_uint64();
+			if (j == local_item_count) {
+				this->desync_frame_info = stdstr_fmt("Desync subframe count mismatch: extra client record: %08X, %s", frame, GetSyncRecordEventName(event));
+				return NETWORK_RECV_STATUS_OKAY;
+			}
+
+			const NetworkSyncRecord &record = _network_sync_records[record_offset + j];
+			if (j != 0 && record.frame != event) {
+				this->desync_frame_info = stdstr_fmt("Desync subframe event mismatch: %08X, client: %s != server: %s",
+						frame, GetSyncRecordEventName(event), GetSyncRecordEventName((NetworkSyncRecordEvents)record.frame));
+				return NETWORK_RECV_STATUS_OKAY;
+			}
+			if (seed_1 != record.seed_1 || state_checksum != record.state_checksum) {
+				this->desync_frame_info = stdstr_fmt("Desync subframe mismatch: %08X, %s%s%s",
+						frame, GetSyncRecordEventName(event), (seed_1 != record.seed_1) ? ", seed" : "", (state_checksum != record.state_checksum) ? ", state checksum" : "");
+				return NETWORK_RECV_STATUS_OKAY;
+			}
 		}
-	}
-	if (server_idx == UINT32_MAX) return NETWORK_RECV_STATUS_OKAY;
-
-	for (uint i = 0; i < count; i++) {
-		uint32 seed_1 = p->Recv_uint32();
-		uint64 state_checksum = p->Recv_uint64();
-
-		const NetworkSyncRecord &record = (*_network_server_sync_records)[server_idx];
-
-		if (record.frame != frame) break;
-		if (record.seed_1 != seed_1 && this->desync_frame_seed == 0) this->desync_frame_seed = frame;
-		if (record.state_checksum != state_checksum && this->desync_frame_state_checksum == 0) this->desync_frame_state_checksum = frame;
-
-		frame++;
-		server_idx = (server_idx + 1) % _network_server_sync_records->size();
+		if (local_item_count > item_count) {
+			const NetworkSyncRecord &record = _network_sync_records[record_offset + item_count];
+			this->desync_frame_info = stdstr_fmt("Desync subframe count mismatch: extra server record: %08X, %s", frame, GetSyncRecordEventName((NetworkSyncRecordEvents)record.frame));
+			return NETWORK_RECV_STATUS_OKAY;
+		}
 	}
 
 	return NETWORK_RECV_STATUS_OKAY;
@@ -1678,7 +1702,7 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::Receive_CLIENT_RCON(Packet *p)
 
 	_redirect_console_to_client = this->client_id;
 	this->rcon_reply_key = ss.shared_data + 32; /* second key */
-	IConsoleCmdExec(command.c_str());
+	IConsoleCmdExec(command);
 	_redirect_console_to_client = INVALID_CLIENT_ID;
 	this->rcon_auth_failures = 0;
 	this->rcon_reply_key = nullptr;
@@ -2444,8 +2468,8 @@ char *NetworkServerDumpClients(char *buffer, const char *last)
 		if (ci->join_date != 0) {
 			YearMonthDay ymd;
 			ConvertDateToYMD(ci->join_date, &ymd);
-			buffer += seprintf(buffer, last, ", joined: %4i-%02i-%02i, %2i, %3i",
-					ymd.year, ymd.month + 1, ymd.day, ci->join_date_fract, ci->join_tick_skip_counter);
+			buffer += seprintf(buffer, last, ", joined: %4i-%02i-%02i, %i, %i, frame: %08X",
+					ymd.year, ymd.month + 1, ymd.day, ci->join_date_fract, ci->join_tick_skip_counter, ci->join_frame);
 		}
 		buffer += seprintf(buffer, last, "\n");
 	}

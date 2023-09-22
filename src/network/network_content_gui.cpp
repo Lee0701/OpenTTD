@@ -76,7 +76,7 @@ struct ContentTextfileWindow : public TextfileWindow {
 
 void ShowContentTextfileWindow(TextfileType file_type, const ContentInfo *ci)
 {
-	DeleteWindowById(WC_TEXTFILE, file_type);
+	CloseWindowById(WC_TEXTFILE, file_type);
 	new ContentTextfileWindow(file_type, ci);
 }
 
@@ -109,9 +109,10 @@ BaseNetworkContentDownloadStatusWindow::BaseNetworkContentDownloadStatusWindow(W
 	this->InitNested(WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD);
 }
 
-BaseNetworkContentDownloadStatusWindow::~BaseNetworkContentDownloadStatusWindow()
+void BaseNetworkContentDownloadStatusWindow::Close()
 {
 	_network_content_client.RemoveCallback(this);
+	this->Window::Close();
 }
 
 void BaseNetworkContentDownloadStatusWindow::UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
@@ -200,8 +201,7 @@ public:
 		this->parent = FindWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST);
 	}
 
-	/** Free whatever we've allocated */
-	~NetworkContentDownloadStatusWindow()
+	void Close() override
 	{
 		TarScanner::Mode mode = TarScanner::NONE;
 		for (auto ctype : this->receivedTypes) {
@@ -282,6 +282,8 @@ public:
 
 		/* Always invalidate the download window; tell it we are going to be gone */
 		InvalidateWindowData(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST, 2);
+
+		this->BaseNetworkContentDownloadStatusWindow::Close();
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
@@ -289,11 +291,11 @@ public:
 		if (widget == WID_NCDS_CANCELOK) {
 			if (this->downloaded_bytes != this->total_bytes) {
 				_network_content_client.CloseConnection();
-				delete this;
+				this->Close();
 			} else {
 				/* If downloading succeeded, close the online content window. This will close
 				 * the current window as well. */
-				DeleteWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST);
+				CloseWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST);
 			}
 		}
 	}
@@ -344,7 +346,7 @@ class NetworkContentListWindow : public Window, ContentCallback {
 	uint filesize_sum;           ///< The sum of all selected file sizes
 	Scrollbar *vscroll;          ///< Cache of the vertical scrollbar
 
-	static char content_type_strs[CONTENT_TYPE_END][64]; ///< Cached strings for all content types.
+	static std::string content_type_strs[CONTENT_TYPE_END]; ///< Cached strings for all content types.
 
 	/** Search external websites for content */
 	void OpenExternalSearch()
@@ -572,10 +574,10 @@ public:
 		this->InvalidateData();
 	}
 
-	/** Free everything we allocated */
-	~NetworkContentListWindow()
+	void Close() override
 	{
 		_network_content_client.RemoveCallback(this);
+		this->Window::Close();
 	}
 
 	void OnInit() override
@@ -852,7 +854,7 @@ public:
 				break;
 
 			case WID_NCL_CANCEL:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_NCL_OPEN_URL:
@@ -955,7 +957,7 @@ public:
 	{
 		if (!success) {
 			ShowErrorMessage(STR_CONTENT_ERROR_COULD_NOT_CONNECT, INVALID_STRING_ID, WL_ERROR);
-			delete this;
+			this->Close();
 			return;
 		}
 
@@ -1021,7 +1023,7 @@ NetworkContentListWindow::GUIContentList::FilterFunction * const NetworkContentL
 	&TypeOrSelectedFilter,
 };
 
-char NetworkContentListWindow::content_type_strs[CONTENT_TYPE_END][64];
+std::string NetworkContentListWindow::content_type_strs[CONTENT_TYPE_END];
 
 /**
  * Build array of all strings corresponding to the content types.
@@ -1029,7 +1031,7 @@ char NetworkContentListWindow::content_type_strs[CONTENT_TYPE_END][64];
 void BuildContentTypeStringList()
 {
 	for (int i = CONTENT_TYPE_BEGIN; i < CONTENT_TYPE_END; i++) {
-		GetString(NetworkContentListWindow::content_type_strs[i], STR_CONTENT_TYPE_BASE_GRAPHICS + i - CONTENT_TYPE_BASE_GRAPHICS, lastof(NetworkContentListWindow::content_type_strs[i]));
+		NetworkContentListWindow::content_type_strs[i] = GetString(STR_CONTENT_TYPE_BASE_GRAPHICS + i - CONTENT_TYPE_BASE_GRAPHICS);
 	}
 }
 
@@ -1142,7 +1144,7 @@ void ShowNetworkContentListWindow(ContentVector *cv, ContentType type1, ContentT
 		_network_content_client.RequestContentList(cv, true);
 	}
 
-	DeleteWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST);
+	CloseWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_CONTENT_LIST);
 	new NetworkContentListWindow(&_network_content_list_desc, cv != nullptr, types);
 #else
 	ShowErrorMessage(STR_CONTENT_NO_ZLIB, STR_CONTENT_NO_ZLIB_SUB, WL_ERROR);

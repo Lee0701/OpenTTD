@@ -145,11 +145,7 @@ struct CursorVars {
 	bool vehchain;                ///< vehicle chain is dragged
 
 	void UpdateCursorPositionRelative(int delta_x, int delta_y);
-	bool UpdateCursorPosition(int x, int y, bool queued_warp);
-
-private:
-	bool queued_warp;
-	Point last_position;
+	bool UpdateCursorPosition(int x, int y);
 };
 
 /** Data about how and where to blit pixels. */
@@ -180,7 +176,7 @@ union Colour {
 	 * @param b The channel for the blue colour.
 	 * @param a The channel for the alpha/transparency.
 	 */
-	Colour(uint8 r, uint8 g, uint8 b, uint8 a = 0xFF) :
+	constexpr Colour(uint8 r, uint8 g, uint8 b, uint8 a = 0xFF) :
 #if defined(__EMSCRIPTEN__)
 		r(r), g(g), b(b), a(a)
 #elif TTD_ENDIAN == TTD_BIG_ENDIAN
@@ -195,7 +191,7 @@ union Colour {
 	 * Create a new colour.
 	 * @param data The colour in the correct packed format.
 	 */
-	Colour(uint data = 0) : data(data)
+	constexpr Colour(uint data = 0) : data(data)
 	{
 	}
 };

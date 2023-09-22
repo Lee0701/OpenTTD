@@ -496,6 +496,7 @@ struct ConstructionSettings {
 	bool   build_object_area_permitted;      ///< whether building objects by area is permitted
 	Year   no_expire_objects_after;          ///< do not expire objects after this year
 	bool   ignore_object_intro_dates;        ///< allow players to build objects before their introduction dates (does not include during map generation)
+	bool   convert_town_road_no_houses;      ///< allow converting town roads to a type which does not allow houses
 
 	uint32 terraform_per_64k_frames;         ///< how many tile heights may, over a long period, be terraformed per 65536 frames?
 	uint16 terraform_frame_burst;            ///< how many tile heights may, over a short period, be terraformed?
@@ -643,6 +644,7 @@ struct VehicleSettings {
 	uint8  train_acceleration_model;         ///< realistic acceleration for trains
 	uint8  train_braking_model;              ///< braking model for trains
 	uint8  realistic_braking_aspect_limited; ///< realistic braking lookahead is aspect limited
+	bool   limit_train_acceleration;         ///< when using realistic braking, also limit train acceleration
 	uint8  roadveh_acceleration_model;       ///< realistic acceleration for road vehicles
 	uint8  train_slope_steepness;            ///< Steepness of hills for trains when using realistic acceleration
 	uint8  roadveh_slope_steepness;          ///< Steepness of hills for road vehicles when using realistic acceleration

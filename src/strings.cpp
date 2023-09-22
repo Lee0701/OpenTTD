@@ -37,6 +37,7 @@
 #include "game/game_text.hpp"
 #include "network/network_content_gui.h"
 #include "newgrf_engine.h"
+#include "tbtr_template_vehicle_func.h"
 #include "core/backup_type.hpp"
 #include "core/y_combinator.hpp"
 #include <stack>
@@ -52,7 +53,7 @@ std::string _config_language_file;                ///< The file (name) stored in
 LanguageList _languages;                          ///< The actual list of language meta data.
 const LanguageMetadata *_current_language = nullptr; ///< The currently loaded language.
 
-TextDirection _current_text_dir; ///< Text direction of the currently selected language.
+TextDirection _current_text_dir = TD_LTR; ///< Text direction of the currently selected language.
 
 #ifdef WITH_ICU_I18N
 std::unique_ptr<icu::Collator> _current_collator;    ///< Collator for the language currently in use.
@@ -970,7 +971,7 @@ static char *FormatUnitWeightRatio(char *buff, const char *last, const Units &un
 	const char *unit_str = GetStringPtr(unit.s);
 	const char *weight_str = GetStringPtr(_units_weight[_settings_game.locale.units_weight].s);
 
-	char tmp_buffer[32];
+	char tmp_buffer[128];
 	char *insert_pt = strecpy(tmp_buffer, unit_str, lastof(tmp_buffer));
 	strecpy(insert_pt, weight_str, lastof(tmp_buffer));
 	str_replace_wchar(insert_pt, lastof(tmp_buffer), SCC_DECIMAL, '/');
@@ -1304,21 +1305,15 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
-			case SCC_SET_COLOUR: {// {SET_COLOUR}
-				int64 tc = args->GetInt64(SCC_SET_COLOUR);
-				if (tc >= 0 && tc < TC_END) {
-					buff += Utf8Encode(buff, SCC_BLUE + tc);
-				}
-				break;
-			}
-
 			case SCC_REVISION: // {REV}
 				buff = strecpy(buff, _openttd_revision, last);
 				break;
 
 			case SCC_RAW_STRING_POINTER: { // {RAW_STRING}
 				const char *raw_string = (const char *)(size_t)args->GetInt64(SCC_RAW_STRING_POINTER);
-				if (game_script && std::find(_game_script_raw_strings.begin(), _game_script_raw_strings.end(), raw_string) == _game_script_raw_strings.end()) {
+				/* raw_string can be(come) nullptr when the parameter is out of range and 0 is returned instead. */
+				if (raw_string == nullptr ||
+						(game_script && std::find(_game_script_raw_strings.begin(), _game_script_raw_strings.end(), raw_string) == _game_script_raw_strings.end())) {
 					buff = strecat(buff, "(invalid RAW_STRING parameter)", last);
 					break;
 				}
@@ -2046,6 +2041,14 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 			}
 
+			case SCC_COLOUR: {// {COLOUR}
+				int64 tc = args->GetInt64(SCC_COLOUR);
+				if (tc >= 0 && tc < TC_END) {
+					buff += Utf8Encode(buff, SCC_BLUE + tc);
+				}
+				break;
+			}
+
 			case SCC_CONSUME_ARG:
 				// do nothing
 				break;
@@ -2307,13 +2310,14 @@ bool ReadLanguagePack(const LanguageMetadata *lang)
 	_langpack.langtab_start = tab_start;
 
 	_current_language = lang;
+	const TextDirection old_text_dir = _current_text_dir;
 	_current_text_dir = (TextDirection)_current_language->text_dir;
 	const char *c_file = strrchr(_current_language->file, PATHSEPCHAR) + 1;
 	_config_language_file = c_file;
 	SetCurrentGrfLangID(_current_language->newgrflangid);
 
 #ifdef _WIN32
-	extern void Win32SetCurrentLocaleName(const char *iso_code);
+	extern void Win32SetCurrentLocaleName(std::string iso_code);
 	Win32SetCurrentLocaleName(_current_language->isocode);
 #endif
 
@@ -2349,6 +2353,10 @@ bool ReadLanguagePack(const LanguageMetadata *lang)
 	InvalidateWindowClassesData(WC_AIRCRAFT_LIST);      // Aircraft group window.
 	InvalidateWindowClassesData(WC_INDUSTRY_DIRECTORY); // Industry directory window.
 	InvalidateWindowClassesData(WC_STATION_LIST);       // Station list window.
+
+	if (old_text_dir != _current_text_dir) {
+		InvalidateTemplateReplacementImages();
+	}
 
 	return true;
 }
@@ -2551,10 +2559,10 @@ bool MissingGlyphSearcher::FindMissingGlyphs()
 				std::string size_name;
 
 				switch (size) {
-					case 0: size_name = "medium"; break;
-					case 1: size_name = "small"; break;
-					case 2: size_name = "large"; break;
-					case 3: size_name = "mono"; break;
+					case FS_NORMAL: size_name = "medium"; break;
+					case FS_SMALL: size_name = "small"; break;
+					case FS_LARGE: size_name = "large"; break;
+					case FS_MONO: size_name = "mono"; break;
 					default: NOT_REACHED();
 				}
 

@@ -205,7 +205,7 @@ class NIHVehicle : public NIHelper {
 			b += seprintf(b, lastof(buffer), "  [-] Flags:\n");
 			b = v->DumpVehicleFlagsMultiline(b, lastof(buffer), "    ", "  ");
 			ProcessLineByLine(buffer, output.print);
-			seprintf(buffer, lastof(buffer), "    Tile hash: %s", (v->hash_tile_current != nullptr) ? "yes" : "no");
+			seprintf(buffer, lastof(buffer), "    Tile hash: %s", (v->hash_tile_current != INVALID_TILE) ? "yes" : "no");
 			output.print(buffer);
 		} else {
 			b += seprintf(b, lastof(buffer), "  [+] Flags: ");
@@ -413,9 +413,31 @@ class NIHVehicle : public NIHelper {
 			seprintf(buffer, lastof(buffer), "  Overtaking: %u, overtaking_ctr: %u, overtaking threshold: %u",
 					rv->overtaking, rv->overtaking_ctr, rv->GetOvertakingCounterThreshold());
 			output.print(buffer);
-			seprintf(buffer, lastof(buffer), "  Speed: %u, path cache length: %u",
-					rv->cur_speed, (uint) rv->path.size());
+			seprintf(buffer, lastof(buffer), "  Speed: %u", rv->cur_speed);
 			output.print(buffer);
+
+			b = buffer + seprintf(buffer, lastof(buffer), "  Path cache: ");
+			if (rv->cached_path != nullptr) {
+				b += seprintf(b, lastof(buffer), "length: %u, layout ctr: %X (current: %X)", (uint)rv->cached_path->size(), rv->cached_path->layout_ctr, _road_layout_change_counter);
+				output.print(buffer);
+				b = buffer;
+				uint idx = rv->cached_path->start;
+				for (uint i = 0; i < rv->cached_path->size(); i++) {
+					if ((i & 3) == 0) {
+						if (b > buffer + 4) output.print(buffer);
+						b = buffer + seprintf(buffer, lastof(buffer), "    ");
+					} else {
+						b += seprintf(b, lastof(buffer), ", ");
+					}
+					b += seprintf(b, lastof(buffer), "(%ux%u, %X)", TileX(rv->cached_path->tile[idx]), TileY(rv->cached_path->tile[idx]), rv->cached_path->td[idx]);
+					idx = (idx + 1) & RV_PATH_CACHE_SEGMENT_MASK;
+				}
+				if (b > buffer + 4) output.print(buffer);
+			} else {
+				b += seprintf(b, lastof(buffer), "none");
+				output.print(buffer);
+			}
+
 			output.register_next_line_click_flag_toggle(8 << flag_shift);
 			seprintf(buffer, lastof(buffer), "  [%c] Roadtype: %u (%s), Compatible: 0x" OTTD_PRINTFHEX64,
 					(output.flags & (8 << flag_shift)) ? '-' : '+', rv->roadtype, dumper().RoadTypeLabel(rv->roadtype), rv->compatible_roadtypes);
@@ -1680,9 +1702,22 @@ static const NICallback _nic_airporttiles[] = {
 	NIC_END()
 };
 
+static const NIVariable _niv_airporttiles[] = {
+	NIV(0x41, "ground type"),
+	NIV(0x42, "current town zone in nearest town"),
+	NIV(0x43, "relative position"),
+	NIV(0x44, "animation frame"),
+	NIV(0x60, "land info of nearby tiles"),
+	NIV(0x61, "animation stage of nearby tiles"),
+	NIV(0x62, "get industry or airport tile ID at offset"),
+	NIV(A2VRI_AIRPORTTILES_AIRPORT_LAYOUT, "airport layout"),
+	NIV(A2VRI_AIRPORTTILES_AIRPORT_ID, "airport local ID"),
+	NIV_END()
+};
+
 class NIHAirportTile : public NIHelper {
 	bool IsInspectable(uint index) const override        { return AirportTileSpec::Get(GetAirportGfx(index))->grf_prop.grffile != nullptr; }
-	uint GetParent(uint index) const override            { return GetTownInspectWindowNumber(Station::GetByTile(index)->town); }
+	uint GetParent(uint index) const override            { return GetInspectWindowNumber(GSF_AIRPORTS, GetStationIndex(index)); }
 	const void *GetInstance(uint index)const override    { return nullptr; }
 	const void *GetSpec(uint index) const override       { return AirportTileSpec::Get(GetAirportGfx(index)); }
 	void SetStringParameters(uint index) const override  { this->SetObjectAtStringParameters(STR_STATION_NAME, GetStationIndex(index), index); }
@@ -1711,8 +1746,59 @@ class NIHAirportTile : public NIHelper {
 static const NIFeature _nif_airporttile = {
 	nullptr,
 	_nic_airporttiles,
-	_niv_industrytiles, // Yes, they share this (at least now)
+	_niv_airporttiles,
 	new NIHAirportTile(),
+};
+
+
+/*** NewGRF airports ***/
+
+static const NIVariable _niv_airports[] = {
+	NIV(0x40, "Layout number"),
+	NIV(0x48, "bitmask of accepted cargoes"),
+	NIV(0x60, "amount of cargo waiting"),
+	NIV(0x61, "time since last cargo pickup"),
+	NIV(0x62, "rating of cargo"),
+	NIV(0x63, "time spent on route"),
+	NIV(0x64, "information about last vehicle picking cargo up"),
+	NIV(0x65, "amount of cargo acceptance"),
+	NIV(0x69, "information about cargo accepted in the past"),
+	NIV(0xF1, "type of the airport"),
+	NIV(0xF6, "airport block status"),
+	NIV(0xFA, "built date"),
+	NIV_END()
+};
+
+class NIHAiport : public NIHelper {
+	bool IsInspectable(uint index) const override        { return AirportSpec::Get(Station::Get(index)->airport.type)->grf_prop.grffile != nullptr; }
+	uint GetParent(uint index) const override            { return GetInspectWindowNumber(GSF_FAKE_TOWNS, Station::Get(index)->town->index); }
+	const void *GetInstance(uint index)const override    { return Station::Get(index); }
+	const void *GetSpec(uint index) const override       { return AirportSpec::Get(Station::Get(index)->airport.type); }
+	void SetStringParameters(uint index) const override  { this->SetObjectAtStringParameters(STR_STATION_NAME, index, Station::Get(index)->airport.tile); }
+	uint32_t GetGRFID(uint index) const override         { return (this->IsInspectable(index)) ? AirportSpec::Get(Station::Get(index)->airport.type)->grf_prop.grffile->grfid : 0; }
+
+	uint Resolve(uint index, uint var, uint param, GetVariableExtra *extra) const override
+	{
+		Station *st = Station::Get(index);
+		AirportResolverObject ro(st->airport.tile, st, st->airport.type, st->airport.layout);
+		return ro.GetScope(VSG_SCOPE_SELF)->GetVariable(var, param, extra);
+	}
+
+	uint GetPSASize(uint index, uint32_t grfid) const override { return cpp_lengthof(PersistentStorage, storage); }
+
+	const int32_t *GetPSAFirstPosition(uint index, uint32_t grfid) const override
+	{
+		const Station *st = (const Station *)this->GetInstance(index);
+		if (st->airport.psa == nullptr) return nullptr;
+		return (int32_t *)(&st->airport.psa->storage);
+	}
+};
+
+static const NIFeature _nif_airport = {
+	nullptr,
+	nullptr,
+	_niv_airports,
+	new NIHAiport(),
 };
 
 
@@ -1883,6 +1969,63 @@ class NIHStationStruct : public NIHelper {
 			output.print(buffer);
 			seprintf(buffer, lastof(buffer), "  Time since: load: %u, unload: %u", st->time_since_load, st->time_since_unload);
 			output.print(buffer);
+
+			if (st->airport.tile != INVALID_TILE) {
+				seprintf(buffer, lastof(buffer), "  Airport: type: %u (local: %u), layout: %u, rotation: %u",
+						st->airport.type, st->airport.GetSpec()->grf_prop.local_id, st->airport.layout, st->airport.rotation);
+				output.print(buffer);
+			}
+
+			for (const CargoSpec *cs : CargoSpec::Iterate()) {
+				const GoodsEntry *ge = &st->goods[cs->Index()];
+
+				if (ge->data == nullptr && ge->status == 0) {
+					/* Nothing of note to show */
+					continue;
+				}
+
+				const StationCargoPacketMap *pkts = ge->data != nullptr ? ge->data->cargo.Packets() : nullptr;
+
+				seprintf(buffer, lastof(buffer), "  Goods entry: %u: %s", cs->Index(), GetStringPtr(cs->name));
+				output.print(buffer);
+				char *b = buffer + seprintf(buffer, lastof(buffer), "    Status: %c%c%c%c%c%c%c",
+						HasBit(ge->status, GoodsEntry::GES_ACCEPTANCE)       ? 'a' : '-',
+						HasBit(ge->status, GoodsEntry::GES_RATING)           ? 'r' : '-',
+						HasBit(ge->status, GoodsEntry::GES_EVER_ACCEPTED)    ? 'e' : '-',
+						HasBit(ge->status, GoodsEntry::GES_LAST_MONTH)       ? 'l' : '-',
+						HasBit(ge->status, GoodsEntry::GES_CURRENT_MONTH)    ? 'c' : '-',
+						HasBit(ge->status, GoodsEntry::GES_ACCEPTED_BIGTICK) ? 'b' : '-',
+						HasBit(ge->status, GoodsEntry::GES_NO_CARGO_SUPPLY)  ? 'n' : '-');
+				if (ge->data != nullptr && ge->data->MayBeRemoved()) b += seprintf(b, lastof(buffer), ", (removable)");
+				if (ge->data == nullptr) b += seprintf(b, lastof(buffer), ", (no data)");
+				output.print(buffer);
+
+				if (ge->amount_fract > 0) {
+					seprintf(buffer, lastof(buffer), "    Amount fract: %u", ge->amount_fract);
+					output.print(buffer);
+				}
+				if (pkts != nullptr && (pkts->MapSize() > 0 || ge->CargoTotalCount() > 0)) {
+					seprintf(buffer, lastof(buffer), "    Cargo packets: %u, cargo packet keys: %u, available: %u, reserved: %u",
+							(uint)pkts->size(), (uint)pkts->MapSize(), ge->CargoAvailableCount(), ge->CargoReservedCount());
+					output.print(buffer);
+				}
+				if (ge->link_graph != INVALID_LINK_GRAPH) {
+					seprintf(buffer, lastof(buffer), "    Link graph: %u, node: %u", ge->link_graph, ge->node);
+					output.print(buffer);
+				}
+				if (ge->max_waiting_cargo > 0) {
+					seprintf(buffer, lastof(buffer), "    Max waiting cargo: %u", ge->max_waiting_cargo);
+					output.print(buffer);
+				}
+				if (ge->data != nullptr && ge->data->flows.size() > 0) {
+					size_t total_shares = 0;
+					for (const FlowStat &fs : ge->data->flows) {
+						total_shares += fs.size();
+					}
+					seprintf(buffer, lastof(buffer), "    Flows: %u, total shares: %u", (uint)ge->data->flows.size(), (uint)total_shares);
+					output.print(buffer);
+				}
+			}
 		}
 		const Waypoint *wp = Waypoint::GetIfValid(index);
 		if (wp) {
@@ -2168,15 +2311,15 @@ static const NIFeature * const _nifeatures[] = {
 	&_nif_vehicle,      // GSF_SHIPS
 	&_nif_vehicle,      // GSF_AIRCRAFT
 	&_nif_station,      // GSF_STATIONS
-	nullptr,               // GSF_CANALS (no callbacks/action2 implemented)
-	nullptr,               // GSF_BRIDGES (no callbacks/action2)
+	nullptr,            // GSF_CANALS (no callbacks/action2 implemented)
+	nullptr,            // GSF_BRIDGES (no callbacks/action2)
 	&_nif_house,        // GSF_HOUSES
-	nullptr,               // GSF_GLOBALVAR (has no "physical" objects)
+	nullptr,            // GSF_GLOBALVAR (has no "physical" objects)
 	&_nif_industrytile, // GSF_INDUSTRYTILES
 	&_nif_industry,     // GSF_INDUSTRIES
 	&_nif_cargo,        // GSF_CARGOES (has no "physical" objects)
-	nullptr,               // GSF_SOUNDFX (has no "physical" objects)
-	nullptr,               // GSF_AIRPORTS (feature not implemented)
+	nullptr,            // GSF_SOUNDFX (has no "physical" objects)
+	&_nif_airport,      // GSF_AIRPORTS
 	&_nif_signals,      // GSF_SIGNALS
 	&_nif_object,       // GSF_OBJECTS
 	&_nif_railtype,     // GSF_RAILTYPES

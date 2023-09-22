@@ -95,6 +95,7 @@ add_files(
     command.cpp
     command_aux.h
     command_func.h
+    command_log.h
     command_type.h
     company_base.h
     company_cmd.cpp
@@ -203,6 +204,7 @@ add_files(
     group_cmd.cpp
     group_gui.cpp
     group_gui.h
+    group_gui_list.h
     group_type.h
     gui.h
     guitimer_func.h
@@ -228,6 +230,7 @@ add_files(
     infrastructure_func.h
     intro_gui.cpp
     landscape.cpp
+    landscape_ppz.cpp
     landscape.h
     landscape_type.h
     language.h

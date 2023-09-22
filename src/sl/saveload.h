@@ -287,7 +287,7 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 #define SLE_CONDREFLIST(base, variable, type, from, to) SLE_CONDREFLIST_X(base, variable, type, from, to, SlXvFeatureTest())
 
 /**
- * Storage of a deque in some savegame versions.
+ * Storage of a ring in some savegame versions.
  * @param base     Name of the class or struct containing the list.
  * @param variable Name of the variable in the class or struct referenced by \a base.
  * @param type     Storage of the data in memory and in the savegame.
@@ -295,8 +295,8 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
  * @param to       Last savegame version that has the list.
  * @param extver   SlXvFeatureTest to test (along with from and to) which savegames have the field
  */
-#define SLE_CONDPTRDEQ_X(base, variable, type, from, to, extver) SLE_GENERAL_X(SL_PTRDEQ, base, variable, type, 0, from, to, extver)
-#define SLE_CONDPTRDEQ(base, variable, type, from, to) SLE_CONDPTRDEQ_X(base, variable, type, from, to, SlXvFeatureTest())
+#define SLE_CONDPTRRING_X(base, variable, type, from, to, extver) SLE_GENERAL_X(SL_PTRRING, base, variable, type, 0, from, to, extver)
+#define SLE_CONDPTRRING(base, variable, type, from, to) SLE_CONDPTRRING_X(base, variable, type, from, to, SlXvFeatureTest())
 
 /**
  * Storage of a vector in some savegame versions.
@@ -323,7 +323,7 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 #define SLE_CONDVARVEC(base, variable, type, from, to) SLE_CONDVARVEC_X(base, variable, type, from, to, SlXvFeatureTest())
 
 /**
- * Storage of a deque of #SL_VAR elements in some savegame versions.
+ * Storage of a ring of #SL_VAR elements in some savegame versions.
  * @param base     Name of the class or struct containing the list.
  * @param variable Name of the variable in the class or struct referenced by \a base.
  * @param type     Storage of the data in memory and in the savegame.
@@ -331,8 +331,8 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
  * @param to       Last savegame version that has the list.
  * @param extver   SlXvFeatureTest to test (along with from and to) which savegames have the field
  */
-#define SLE_CONDDEQUE_X(base, variable, type, from, to, extver) SLE_GENERAL_X(SL_DEQUE, base, variable, type, 0, from, to, extver)
-#define SLE_CONDDEQUE(base, variable, type, from, to) SLE_CONDDEQUE_X(base, variable, type, from, to, SlXvFeatureTest())
+#define SLE_CONDRING_X(base, variable, type, from, to, extver) SLE_GENERAL_X(SL_RING, base, variable, type, 0, from, to, extver)
+#define SLE_CONDRING(base, variable, type, from, to) SLE_CONDRING_X(base, variable, type, from, to, SlXvFeatureTest())
 
 /**
  * Storage of a variable in every version of a savegame.
@@ -385,12 +385,12 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 #define SLE_REFLIST(base, variable, type) SLE_CONDREFLIST(base, variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
 
 /**
- * Storage of a deque in every savegame version.
+ * Storage of a ring in every savegame version.
  * @param base     Name of the class or struct containing the list.
  * @param variable Name of the variable in the class or struct referenced by \a base.
  * @param type     Storage of the data in memory and in the savegame.
  */
-#define SLE_PTRDEQ(base, variable, type) SLE_CONDPTRDEQ(base, variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
+#define SLE_PTRRING(base, variable, type) SLE_CONDPTRRING(base, variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
 
 /**
  * Storage of a vector in every savegame version.
@@ -511,15 +511,15 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 #define SLEG_CONDREFLIST(variable, type, from, to) SLEG_CONDREFLIST_X(variable, type, from, to, SlXvFeatureTest())
 
 /**
- * Storage of a global deque in some savegame versions.
+ * Storage of a global ring in some savegame versions.
  * @param variable Name of the global variable.
  * @param type     Storage of the data in memory and in the savegame.
  * @param from     First savegame version that has the list.
  * @param to       Last savegame version that has the list.
  * @param extver   SlXvFeatureTest to test (along with from and to) which savegames have the field
  */
-#define SLEG_CONDPTRDEQ_X(variable, type, from, to, extver) SLEG_GENERAL_X(SL_PTRDEQ, variable, type, 0, from, to, extver)
-#define SLEG_CONDPTRDEQ(variable, type, from, to) SLEG_CONDPTRDEQ_X(variable, type, from, to, SlXvFeatureTest())
+#define SLEG_CONDPTRRING_X(variable, type, from, to, extver) SLEG_GENERAL_X(SL_PTRRING, variable, type, 0, from, to, extver)
+#define SLEG_CONDPTRRING(variable, type, from, to) SLEG_CONDPTRRING_X(variable, type, from, to, SlXvFeatureTest())
 
 /**
  * Storage of a global vector in some savegame versions.
@@ -586,11 +586,11 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 #define SLEG_REFLIST(variable, type) SLEG_CONDREFLIST(variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
 
 /**
- * Storage of a global deque in every savegame version.
+ * Storage of a global ring in every savegame version.
  * @param variable Name of the global variable.
  * @param type     Storage of the data in memory and in the savegame.
  */
-#define SLEG_PTRDEQ(variable, type) SLEG_CONDPTRDEQ(variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
+#define SLEG_PTRRING(variable, type) SLEG_CONDPTRRING(variable, type, SL_MIN_VERSION, SL_MAX_VERSION)
 
 /**
  * Storage of a global vector in every savegame version.
@@ -712,11 +712,63 @@ void SlSetArrayIndex(uint index);
 int SlIterateArray();
 
 void SlAutolength(AutolengthProc *proc, void *arg);
-std::vector<uint8> SlSaveToVector(AutolengthProc *proc, void *arg);
 size_t SlGetFieldLength();
 void SlSetLength(size_t length);
 size_t SlCalcObjMemberLength(const void *object, const SaveLoad &sld);
 size_t SlCalcObjLength(const void *object, const SaveLoadTable &slt);
+
+/**
+ * Run proc, saving result in the autolength temp buffer
+ * @param proc The callback procedure that is called
+ * @return Span of the saved data, in the autolength temp buffer
+ */
+template <typename F>
+span<byte> SlSaveToTempBuffer(F proc)
+{
+	extern uint8 SlSaveToTempBufferSetup();
+	extern std::pair<byte *, size_t> SlSaveToTempBufferRestore(uint8 state);
+
+	uint8 state = SlSaveToTempBufferSetup();
+	proc();
+	auto result = SlSaveToTempBufferRestore(state);
+	return span<byte>(result.first, result.second);
+}
+
+/**
+ * Run proc, saving result to a std::vector
+ * This is implemented in terms of SlSaveToTempBuffer
+ * @param proc The callback procedure that is called
+ * @return a vector containing the saved data
+ */
+template <typename F>
+std::vector<uint8> SlSaveToVector(F proc)
+{
+	span<byte> result = SlSaveToTempBuffer(proc);
+	return std::vector<uint8>(result.begin(), result.end());
+}
+
+struct SlConditionallySaveState {
+	size_t current_len;
+	uint8 need_length;
+	bool nested;
+};
+
+/**
+ * Run proc, saving as normal if proc returns true, otherwise the saved data is discarded
+ * @param proc The callback procedure that is called, this should return true to save, false to discard
+ * @return Whether the callback procedure returned true to save
+ */
+template <typename F>
+bool SlConditionallySave(F proc)
+{
+	extern SlConditionallySaveState SlConditionallySaveSetup();
+	extern void SlConditionallySaveCompletion(const SlConditionallySaveState &state, bool save);
+
+	SlConditionallySaveState state = SlConditionallySaveSetup();
+	bool save = proc();
+	SlConditionallySaveCompletion(state, save);
+	return save;
+}
 
 struct SlLoadFromBufferState {
 	size_t old_obj_len;

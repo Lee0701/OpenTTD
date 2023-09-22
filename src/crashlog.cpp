@@ -25,11 +25,13 @@
 #include "gfx_func.h"
 #include "network/network.h"
 #include "network/network_survey.h"
+#include "network/network_sync.h"
 #include "language.h"
 #include "fontcache.h"
 #include "news_gui.h"
 #include "scope_info.h"
 #include "command_func.h"
+#include "command_log.h"
 #include "thread.h"
 #include "debug_desync.h"
 #include "event_logs.h"
@@ -103,8 +105,6 @@ char *CrashLog::LogCompiler(char *buffer, const char *last) const
 			"ICC %d", __ICC
 #elif defined(__GNUC__)
 			"GCC %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__
-#elif defined(__WATCOMC__)
-			"WatcomC %d", __WATCOMC__
 #else
 			"<unknown>"
 #endif
@@ -508,7 +508,7 @@ char *CrashLog::LogRecentNews(char *buffer, const char *last) const
  */
 char *CrashLog::LogCommandLog(char *buffer, const char *last) const
 {
-	buffer = DumpCommandLog(buffer, last);
+	buffer = DumpCommandLog(buffer, last, nullptr);
 	buffer += seprintf(buffer, last, "\n");
 	buffer = DumpSpecialEventsLog(buffer, last);
 	buffer += seprintf(buffer, last, "\n");
@@ -556,12 +556,29 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 
 #ifdef USE_SCOPE_INFO
 	buffer = this->TryCrashLogFaultSection(buffer, last, "scope", [](CrashLog *self, char *buffer, const char *last) -> char * {
-		if (IsMainThread() || IsGameThread()) {
+		if (IsGameThread()) {
 			buffer += WriteScopeLog(buffer, last);
 		}
 		return buffer;
 	});
 #endif
+
+	if (_networking) {
+		buffer = this->TryCrashLogFaultSection(buffer, last, "network sync", [](CrashLog *self, char *buffer, const char *last) -> char * {
+			if (IsGameThread() && _record_sync_records && !_network_sync_records.empty()) {
+				uint total = 0;
+				for (uint32 count : _network_sync_record_counts) {
+					total += count;
+				}
+				NetworkSyncRecordEvents event = NSRE_BEGIN;
+				if (_network_sync_records.size() > total + 1) {
+					event = (NetworkSyncRecordEvents)(_network_sync_records.back().frame);
+				}
+				buffer += seprintf(buffer, last, "Last sync record type: %s\n\n", GetSyncRecordEventName(event));
+			}
+			return buffer;
+		});
+	}
 
 	buffer = this->TryCrashLogFaultSection(buffer, last, "thread", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		if (IsNonMainThread()) {
@@ -633,14 +650,12 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 		auto flag_check = [&](DesyncExtraInfo::Flags flag, const char *str) {
 			return info.flags & flag ? str : "";
 		};
-		buffer += seprintf(buffer, last, "Flags: %s%s%s%s\n",
-				flag_check(DesyncExtraInfo::DEIF_RAND1, "R"),
-				flag_check(DesyncExtraInfo::DEIF_RAND2, "Z"),
-				flag_check(DesyncExtraInfo::DEIF_STATE, "S"),
-				flag_check(DesyncExtraInfo::DEIF_DBL_RAND, "D"));
+		buffer += seprintf(buffer, last, "Flags: %s%s\n",
+				flag_check(DesyncExtraInfo::DEIF_RAND, "R"),
+				flag_check(DesyncExtraInfo::DEIF_STATE, "S"));
 	}
-	if (_network_server && (info.desync_frame_seed || info.desync_frame_state_checksum)) {
-		buffer += seprintf(buffer, last, "Desync frame: %08X (seed), %08X (state checksum)\n", info.desync_frame_seed, info.desync_frame_state_checksum);
+	if (_network_server && !info.desync_frame_info.empty()) {
+		buffer += seprintf(buffer, last, "%s\n", info.desync_frame_info.c_str());
 	}
 
 	extern uint32 _frame_counter;

@@ -21,6 +21,7 @@
 #include "network/network_client.h"
 #include "network/network_server.h"
 #include "command_func.h"
+#include "command_log.h"
 #include "settings_func.h"
 #include "fios.h"
 #include "fileio_func.h"
@@ -62,6 +63,7 @@
 #include "event_logs.h"
 #include "tile_cmd.h"
 #include "object_base.h"
+#include "newgrf_newsignals.h"
 #include <time.h>
 
 #include "3rdparty/cpp-btree/btree_set.h"
@@ -494,7 +496,7 @@ DEF_CONSOLE_CMD(ConSaveConfig)
 		return true;
 	}
 
-	SaveToConfig();
+	SaveToConfig(STCF_ALL);
 	IConsolePrint(CC_DEFAULT, "Saved config.");
 	return true;
 }
@@ -597,8 +599,6 @@ DEF_CONSOLE_CMD(ConChangeDirectory)
 
 DEF_CONSOLE_CMD(ConPrintWorkingDirectory)
 {
-	const char *path;
-
 	if (argc == 0) {
 		IConsoleHelp("Print out the current working directory. Usage: 'pwd'");
 		return true;
@@ -608,8 +608,7 @@ DEF_CONSOLE_CMD(ConPrintWorkingDirectory)
 	_console_file_list.ValidateFileList(true);
 	_console_file_list.InvalidateFileList();
 
-	FiosGetDescText(&path, nullptr);
-	IConsolePrint(CC_DEFAULT, path);
+	IConsolePrint(CC_DEFAULT, FiosGetCurrentPath().c_str());
 	return true;
 }
 
@@ -1426,16 +1425,14 @@ DEF_CONSOLE_CMD(ConStartAI)
 		 * try again with the assumption everything right of the dot is
 		 * the version the user wants to load. */
 		if (!config->HasScript()) {
-			char *name = stredup(argv[1]);
-			char *e = strrchr(name, '.');
+			const char *e = strrchr(argv[1], '.');
 			if (e != nullptr) {
-				*e = '\0';
+				size_t name_length = e - argv[1];
 				e++;
 
 				int version = atoi(e);
-				config->Change(name, version, true);
+				config->Change(std::string(argv[1], name_length), version, true);
 			}
-			free(name);
 		}
 
 		if (!config->HasScript()) {
@@ -2365,6 +2362,11 @@ DEF_CONSOLE_CMD(ConListSettingsDefaults)
 
 DEF_CONSOLE_CMD(ConGamelogPrint)
 {
+	if (argc == 0) {
+		IConsoleHelp("Print logged fundamental changes to the game since the start. Usage: 'gamelog'.");
+		return true;
+	}
+
 	GamelogPrintConsole();
 	return true;
 }
@@ -2577,9 +2579,11 @@ DEF_CONSOLE_CMD(ConDumpCommandLog)
 		return true;
 	}
 
-	char buffer[32768];
-	DumpCommandLog(buffer, lastof(buffer));
-	PrintLineByLine(buffer);
+	char buffer[2048];
+	DumpCommandLog(buffer, lastof(buffer), [&](char *current) -> char * {
+		PrintLineByLine(buffer);
+		return buffer;
+	});
 	return true;
 }
 
@@ -3075,6 +3079,68 @@ DEF_CONSOLE_CMD(ConDumpGrfCargoTables)
 		}
 	}
 
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConDumpSignalStyles)
+{
+	if (argc == 0) {
+		IConsoleHelp("Dump custom signal styles.");
+		return true;
+	}
+
+	IConsolePrintF(CC_DEFAULT, "  Flags:");
+	IConsolePrintF(CC_DEFAULT, "    n = no aspect increment");
+	IConsolePrintF(CC_DEFAULT, "    a = always reserve through");
+	IConsolePrintF(CC_DEFAULT, "    l = lookahead aspects set");
+	IConsolePrintF(CC_DEFAULT, "    o = opposite side");
+	IConsolePrintF(CC_DEFAULT, "    s = lookahead single signal");
+	IConsolePrintF(CC_DEFAULT, "    c = combined normal and shunt");
+	IConsolePrintF(CC_DEFAULT, "    r = realistic braking only");
+	IConsolePrintF(CC_DEFAULT, "  Extra aspects: %u", _extra_aspects);
+
+	btree::btree_map<uint32, const GRFFile *> grfs;
+	for (uint8 i = 0; i < _num_new_signal_styles; i++) {
+		const NewSignalStyle &style = _new_signal_styles[i];
+
+		uint32 grfid = 0;
+		if (style.grffile != nullptr) {
+			grfid = style.grffile->grfid;
+			grfs.insert(std::pair<uint32, const GRFFile *>(grfid, style.grffile));
+		}
+		IConsolePrintF(CC_DEFAULT, "  %2u: GRF: %08X, Local: %2u, Extra aspects: %3u, Flags: %c%c%c%c%c%c%c, %s",
+				(uint) (i + 1),
+				BSWAP32(grfid),
+				style.grf_local_id,
+				style.lookahead_extra_aspects,
+				HasBit(style.style_flags, NSSF_NO_ASPECT_INC)           ? 'n' : '-',
+				HasBit(style.style_flags, NSSF_ALWAYS_RESERVE_THROUGH)  ? 'a' : '-',
+				HasBit(style.style_flags, NSSF_LOOKAHEAD_ASPECTS_SET)   ? 'l' : '-',
+				HasBit(style.style_flags, NSSF_OPPOSITE_SIDE)           ? 'o' : '-',
+				HasBit(style.style_flags, NSSF_LOOKAHEAD_SINGLE_SIGNAL) ? 's' : '-',
+				HasBit(style.style_flags, NSSF_COMBINED_NORMAL_SHUNT)   ? 'c' : '-',
+				HasBit(style.style_flags, NSSF_REALISTIC_BRAKING_ONLY)  ? 'r' : '-',
+				GetStringPtr(style.name)
+		);
+	}
+	for (const auto &grf : grfs) {
+		IConsolePrintF(CC_DEFAULT, "  GRF: %08X = %s", BSWAP32(grf.first), grf.second->filename.c_str());
+	}
+
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConSpriteCacheStats)
+{
+	if (argc == 0) {
+		IConsoleHelp("Dump sprite cache stats.");
+		return true;
+	}
+
+	extern void DumpSpriteCacheStats(char *buffer, const char *last);
+	char buffer[8192];
+	DumpSpriteCacheStats(buffer, lastof(buffer));
+	PrintLineByLine(buffer);
 	return true;
 }
 
@@ -4030,6 +4096,8 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("dump_vehicle",            ConDumpVehicle,      nullptr, true);
 	IConsole::CmdRegister("dump_tile",               ConDumpTile,         nullptr, true);
 	IConsole::CmdRegister("dump_grf_cargo_tables",   ConDumpGrfCargoTables, nullptr, true);
+	IConsole::CmdRegister("dump_signal_styles",      ConDumpSignalStyles, nullptr, true);
+	IConsole::CmdRegister("dump_sprite_cache_stats", ConSpriteCacheStats, nullptr, true);
 	IConsole::CmdRegister("check_caches",            ConCheckCaches,      nullptr, true);
 	IConsole::CmdRegister("show_town_window",        ConShowTownWindow,   nullptr, true);
 	IConsole::CmdRegister("show_station_window",     ConShowStationWindow, nullptr, true);

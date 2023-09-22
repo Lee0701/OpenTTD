@@ -22,13 +22,13 @@
 #include "network_client.h"
 #include "network_base.h"
 #include "../core/format.hpp"
+#include "core/ring_buffer.hpp"
 
 #include "../widgets/network_chat_widget.h"
 
 #include "table/strings.h"
 
 #include <stdarg.h> /* va_list */
-#include <deque>
 #include <optional>
 
 #include "../safeguards.h"
@@ -48,7 +48,7 @@ struct ChatMessage {
 };
 
 /* used for chat window */
-static std::deque<ChatMessage> _chatmsg_list; ///< The actual chat message list.
+static ring_buffer<ChatMessage> _chatmsg_list; ///< The actual chat message list.
 static bool _chatmessage_dirty = false;   ///< Does the chat message need repainting?
 static bool _chatmessage_visible = false; ///< Is a chat message visible.
 static bool _chat_tab_completion_active;  ///< Whether tab completion is active.
@@ -314,9 +314,10 @@ struct NetworkChatWindow : public Window {
 		PositionNetworkChatWindow(this);
 	}
 
-	~NetworkChatWindow()
+	void Close() override
 	{
 		InvalidateWindowData(WC_NEWS_WINDOW, 0, 0);
+		this->Window::Close();
 	}
 
 	void FindWindowPlacementAndResize(int def_width, int def_height) override
@@ -470,7 +471,7 @@ struct NetworkChatWindow : public Window {
 				FALLTHROUGH;
 
 			case WID_NC_CLOSE: /* Cancel */
-				delete this;
+				this->Close();
 				break;
 		}
 	}
@@ -497,7 +498,7 @@ struct NetworkChatWindow : public Window {
 	 */
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
-		if (data == this->dest) delete this;
+		if (data == this->dest) this->Close();
 	}
 };
 
@@ -532,6 +533,6 @@ static WindowDesc _chat_window_desc(
  */
 void ShowNetworkChatQueryWindow(DestType type, int dest)
 {
-	DeleteWindowByClass(WC_SEND_NETWORK_MSG);
+	CloseWindowByClass(WC_SEND_NETWORK_MSG);
 	new NetworkChatWindow(&_chat_window_desc, type, dest);
 }

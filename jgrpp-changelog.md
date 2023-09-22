@@ -2,6 +2,39 @@
 
 * * *
 
+### v0.55.2 (2023-09-20)
+* Fix crash which could occur when drawing with palette animation disabled.
+* Fix multiplayer desync which could occur when adding a track piece of a different rail type to an existing rail tile, where this would change the tile's rail type, but this fails due to an obstruction.
+* Fix graphical issues which could occur with scrolling viewport overlays on map mode viewports.
+* Bump trunk base from commit 3effb8931c36b8bbacae8fe77ad5b85406767d9f to commit 26f3efb419e49885bb0452211a2f359a98a875da.
+
+### v0.55.1 (2023-09-05)
+* Fix various failures which could occur when running on Windows.
+* Fix autorenew/autoreplace not charging for the cost of a new ship, when replacing a multi-cargo ship.
+
+### v0.55.0 (2023-09-04)
+* Fix incorrect NewGRF industry texts in some cases.
+* Fix inaccurate waiting cargo total in station window when using cargodist.
+* Fix autorenew/autoreplace of multi-cargo articulated vehicles and multi-cargo ships.
+* Fix engine news messages with multi-cargo articulated vehicles and multi-cargo ships.
+* Fix crash which could occur on Linux when using ICU and mixed script texts.
+* Fix train-only texts and sorts modes being shown in non-train slots windows.
+* Template-based train replacement:
+  * Fix various refit issues in refit as incoming vehicle mode.
+  * The autoreplace button in depot windows now also does template replacements.
+* Add signal support to picker tool.
+* Add setting for whether to allow converting town road to non-house types.
+* Add setting to also limit acceleration when using realistic braking.
+* Change cargo at next station conditional orders to use a manually specified station.
+* Allow custom signal styles to disable aspect-limited mode.
+* Right to left languages:
+  * Fix layout in template replacement windows.
+  * Fix block indent in routing restriction and programmable pre-signals windows.
+* Do not unnecessarily re-write configuration files for in-game only setting changes.
+* Various minor performance improvements.
+* Linux release builds: Remove Ubuntu 18.04, add Debian bookworm.
+* Bump trunk base from commit 1ff0dc11d8d017dbbd8f9d1e94ff5087a21063b5 to commit 3effb8931c36b8bbacae8fe77ad5b85406767d9f.
+
 ### v0.54.5 (2023-08-02)
 * Fix crash using picker tool on rail/road stations when no GRF classes defined.
 * Fix crash which could occur after using the date cheat, when using cargo distribution.

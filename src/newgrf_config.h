@@ -17,7 +17,7 @@
 #include "textfile_type.h"
 #include "newgrf_text.h"
 #include "3rdparty/md5/md5.h"
-#include <map>
+#include "3rdparty/cpp-btree/btree_map.h"
 #include <vector>
 #include <optional>
 
@@ -116,9 +116,9 @@ struct GRFError {
 
 	std::string custom_message; ///< Custom message (if present)
 	std::string data;           ///< Additional data for message and custom_message
-	StringID message;           ///< Default message
-	StringID severity;          ///< Info / Warning / Error / Fatal
-	std::array<uint32_t, 4> param_value; ///< Values of GRF parameters to show for message and custom_message
+	StringID message{};         ///< Default message
+	StringID severity{};        ///< Info / Warning / Error / Fatal
+	std::array<uint32_t, 4> param_value{}; ///< Values of GRF parameters to show for message and custom_message
 };
 
 /** The possible types of a newgrf parameter. */
@@ -140,7 +140,7 @@ struct GRFParameterInfo {
 	byte param_nr;         ///< GRF parameter to store content in
 	byte first_bit;        ///< First bit to use in the GRF parameter
 	byte num_bit;          ///< Number of bits to use for this parameter
-	std::map<uint32_t, GRFTextList> value_names; ///< Names for each value.
+	btree::btree_map<uint32_t, GRFTextList> value_names; ///< Names for each value.
 	bool complete_labels;  ///< True if all values have a label.
 
 	uint32 GetValue(struct GRFConfig *config) const;
@@ -163,7 +163,7 @@ struct GRFConfig : ZeroedMemoryAllocator {
 	GRFTextWrapper name;                        ///< NOSAVE: GRF name (Action 0x08)
 	GRFTextWrapper info;                        ///< NOSAVE: GRF info (author, copyright, ...) (Action 0x08)
 	GRFTextWrapper url;                         ///< NOSAVE: URL belonging to this GRF.
-	std::unique_ptr<GRFError> error;            ///< NOSAVE: Error/Warning during GRF loading (Action 0x0B)
+	std::optional<GRFError> error;              ///< NOSAVE: Error/Warning during GRF loading (Action 0x0B)
 
 	uint32 version;                             ///< NOSAVE: Version a NewGRF can set so only the newest NewGRF is shown
 	uint32 min_loadable_version;                ///< NOSAVE: Minimum compatible version a NewGRF can define

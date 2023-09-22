@@ -357,6 +357,12 @@ static CommandCost EnsureNoTrainOnTrack(TileIndex tile, Track track)
 	return EnsureNoTrainOnTrackBits(tile, rail_bits);
 }
 
+struct CheckTrackCombinationRailTypeChanges {
+	RailType convert_to = INVALID_RAILTYPE;
+	RailType primary = INVALID_RAILTYPE;
+	RailType secondary = INVALID_RAILTYPE;
+};
+
 /**
  * Check that the new track bits may be built.
  * @param tile %Tile to build on.
@@ -366,7 +372,8 @@ static CommandCost EnsureNoTrainOnTrack(TileIndex tile, Track track)
  * @param flags    Flags of the operation.
  * @return Succeeded or failed command.
  */
-static CommandCost CheckTrackCombination(TileIndex tile, TrackBits to_build, RailType railtype, bool disable_dual_rail_type, DoCommandFlag flags, bool auto_remove_signals)
+static CommandCost CheckTrackCombination(TileIndex tile, TrackBits to_build, RailType railtype, bool disable_dual_rail_type,
+		DoCommandFlag flags, bool auto_remove_signals, CheckTrackCombinationRailTypeChanges &changes)
 {
 	if (!IsPlainRail(tile)) return_cmd_error(STR_ERROR_IMPOSSIBLE_TRACK_COMBINATION);
 
@@ -390,10 +397,10 @@ static CommandCost CheckTrackCombination(TileIndex tile, TrackBits to_build, Rai
 		if (flags & DC_EXEC) {
 			if (to_build & TRACK_BIT_RT_1) {
 				RailType current_rt = GetRailType(tile);
-				SetRailType(tile, railtype);
-				SetSecondaryRailType(tile, current_rt);
+				changes.primary = railtype;
+				changes.secondary = current_rt;
 			} else {
-				SetSecondaryRailType(tile, railtype);
+				changes.secondary = railtype;
 			}
 		}
 		return CommandCost();
@@ -460,13 +467,14 @@ static CommandCost CheckTrackCombination(TileIndex tile, TrackBits to_build, Rai
 
 	CommandCost ret;
 	if (rt != INVALID_RAILTYPE) {
-		ret = DoCommand(tile, tile, rt, flags, CMD_CONVERT_RAIL);
+		ret = DoCommand(tile, tile, rt, flags & ~DC_EXEC, CMD_CONVERT_RAIL);
 		if (ret.Failed()) return ret;
+		changes.convert_to = rt;
 	}
 
 	if (flags & DC_EXEC) {
-		SetRailType(tile, railtype);
-		SetSecondaryRailType(tile, railtype);
+		changes.primary = railtype;
+		changes.secondary = railtype;
 	}
 
 	return ret;
@@ -656,6 +664,8 @@ static inline bool ValParamTrackOrientation(Track track)
  * @param p2 various bitstuffed elements
  *           - (bit  0- 2) - track-orientation, valid values: 0-5 (@see Track)
  *           - (bit  3)    - 0 = error on signal in the way, 1 = auto remove signals when in the way
+ *           - (bit  4)    - No custom bridge heads
+ *           - (bit  5)    - No dual rail type
  * @param text unused
  * @return the cost of this operation or an error
  */
@@ -682,16 +692,8 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 
 			if (!IsPlainRail(tile)) return DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR); // just get appropriate error message
 
-			const RailType old_rt = GetRailType(tile);
-			const RailType old_secondary_rt = GetSecondaryRailType(tile);
-			auto rt_guard = scope_guard([&]() {
-				if (flags & DC_EXEC) {
-					SetRailType(tile, old_rt);
-					SetSecondaryRailType(tile, old_secondary_rt);
-				}
-			});
-
-			ret = CheckTrackCombination(tile, trackbit, railtype, disable_dual_rail_type, flags, auto_remove_signals);
+			CheckTrackCombinationRailTypeChanges changes;
+			ret = CheckTrackCombination(tile, trackbit, railtype, disable_dual_rail_type, flags, auto_remove_signals, changes);
 			if (ret.Succeeded()) {
 				cost.AddCost(ret);
 				ret = EnsureNoTrainOnTrack(tile, track);
@@ -718,9 +720,15 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 				}
 			}
 
-			rt_guard.cancel();
-
 			if (flags & DC_EXEC) {
+				if (changes.convert_to != INVALID_RAILTYPE) {
+					/* The cost is already accounted for and a test already done in CheckTrackCombination */
+					CommandCost ret = DoCommand(tile, tile, changes.convert_to, flags, CMD_CONVERT_RAIL);
+					assert(ret.Succeeded());
+				}
+				if (changes.primary != INVALID_RAILTYPE) SetRailType(tile, changes.primary);
+				if (changes.secondary != INVALID_RAILTYPE) SetSecondaryRailType(tile, changes.secondary);
+
 				SetRailGroundType(tile, RAIL_GROUND_BARREN);
 				TrackBits bits = GetTrackBits(tile);
 				TrackBits newbits = bits | trackbit;
@@ -1264,6 +1272,8 @@ static CommandCost ValidateAutoDrag(Trackdir *trackdir, TileIndex start, TileInd
  * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
  * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
  * - p2 = (bit 10)  - 0 = build up to an obstacle, 1 = fail if an obstacle is found (used for AIs).
+ * - p2 = (bit 11)  - No custom bridge heads
+ * - p2 = (bit 12)  - No dual rail type
  * - p2 = (bit 13)  - 0 = error on signal in the way, 1 = auto remove signals when in the way
  * @param text unused
  * @return the cost of this operation or an error
@@ -1332,6 +1342,10 @@ static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint3
  * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev)
  * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
  * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
+ * - p2 = (bit 10)  - 0 = build up to an obstacle, 1 = fail if an obstacle is found (used for AIs).
+ * - p2 = (bit 11)  - No custom bridge heads
+ * - p2 = (bit 12)  - No dual rail type
+ * - p2 = (bit 13)  - 0 = error on signal in the way, 1 = auto remove signals when in the way
  * @param text unused
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
@@ -1351,6 +1365,10 @@ CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1
  * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
  * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
  * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
+ * - p2 = (bit 10)  - 0 = build up to an obstacle, 1 = fail if an obstacle is found (used for AIs).
+ * - p2 = (bit 11)  - No custom bridge heads
+ * - p2 = (bit 12)  - No dual rail type
+ * - p2 = (bit 13)  - 0 = error on signal in the way, 1 = auto remove signals when in the way
  * @param text unused
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
@@ -3294,7 +3312,7 @@ void DrawSingleSignal(TileIndex tile, const RailtypeInfo *rti, Track track, Sign
 	} else {
 		AddSortableSpriteToDraw(sprite, pal, x, y, 1, 1, BB_HEIGHT_UNDER_BRIDGE, z);
 	}
-	const Sprite *sp = GetSprite(sprite, SpriteType::Normal);
+	const Sprite *sp = GetSprite(sprite, SpriteType::Normal, 0);
 	if (sp->x_offs < -SIGNAL_DIRTY_LEFT || sp->x_offs + sp->width > SIGNAL_DIRTY_RIGHT || sp->y_offs < -SIGNAL_DIRTY_TOP || sp->y_offs + sp->height > SIGNAL_DIRTY_BOTTOM) {
 		_signal_sprite_oversized = true;
 	}

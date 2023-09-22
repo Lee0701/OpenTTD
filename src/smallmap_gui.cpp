@@ -168,7 +168,7 @@ uint _company_to_list_pos[MAX_COMPANIES];
 
 static void NotifyAllViewports(ViewportMapType map_type)
 {
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		if (w->viewport != nullptr) {
 			if (w->viewport->zoom >= ZOOM_LVL_DRAW_MAP && w->viewport->map_type == map_type) {
 				ClearViewportLandPixelCache(w->viewport);
@@ -1086,7 +1086,12 @@ SmallMapWindow::SmallMapWindow(WindowDesc *desc, int window_number) : Window(des
 SmallMapWindow::~SmallMapWindow()
 {
 	delete this->overlay;
+}
+
+/* virtual */ void SmallMapWindow::Close()
+{
 	this->BreakIndustryChainLink();
+	this->Window::Close();
 }
 
 /**
@@ -1832,7 +1837,7 @@ static const NWidgetPart _nested_smallmap_bar[] = {
 					NWidget(WWT_PUSHIMGBTN, COLOUR_BROWN, WID_SM_CENTERMAP),
 							SetDataTip(SPR_IMG_SMALLMAP, STR_SMALLMAP_CENTER), SetFill(1, 1),
 					NWidget(WWT_IMGBTN, COLOUR_BROWN, WID_SM_BLANK),
-							SetDataTip(SPR_DOT_SMALL, STR_NULL), SetFill(1, 1),
+							SetDataTip(SPR_EMPTY, STR_NULL), SetFill(1, 1),
 					NWidget(WWT_IMGBTN, COLOUR_BROWN, WID_SM_CONTOUR),
 							SetDataTip(SPR_IMG_SHOW_COUNTOURS, STR_SMALLMAP_TOOLTIP_SHOW_LAND_CONTOURS_ON_MAP), SetFill(1, 1),
 					NWidget(WWT_IMGBTN, COLOUR_BROWN, WID_SM_VEHICLES),

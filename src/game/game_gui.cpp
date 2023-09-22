@@ -111,10 +111,11 @@ struct GSConfigWindow : public Window {
 		this->RebuildVisibleSettings();
 	}
 
-	~GSConfigWindow()
+	void Close() override
 	{
 		HideDropDownMenu(this);
-		DeleteWindowByClass(WC_SCRIPT_LIST);
+		CloseWindowByClass(WC_SCRIPT_LIST);
+		this->Window::Close();
 	}
 
 	/**
@@ -200,7 +201,7 @@ struct GSConfigWindow : public Window {
 					TextColour colour;
 					uint idx = 0;
 					if (config_item.description.empty()) {
-						str = STR_JUST_STRING;
+						str = STR_JUST_STRING1;
 						colour = TC_ORANGE;
 					} else {
 						str = STR_AI_SETTINGS_SETTING;
@@ -281,7 +282,7 @@ struct GSConfigWindow : public Window {
 
 				int num = it - this->visible_settings.begin();
 				if (this->clicked_row != num) {
-					this->DeleteChildWindows(WC_QUERY_STRING);
+					this->CloseChildWindows(WC_QUERY_STRING);
 					HideDropDownMenu(this);
 					this->clicked_row = num;
 					this->clicked_dropdown = false;
@@ -317,7 +318,7 @@ struct GSConfigWindow : public Window {
 
 							DropDownList list;
 							for (int i = config_item.min_value; i <= config_item.max_value; i++) {
-								list.emplace_back(new DropDownListCharStringItem(config_item.labels.find(i)->second, i, false));
+								list.emplace_back(new DropDownListStringItem(config_item.labels.find(i)->second, i, false));
 							}
 
 							ShowDropDownListAt(this, std::move(list), old_val, -1, wi_rect, COLOUR_ORANGE);
@@ -354,7 +355,7 @@ struct GSConfigWindow : public Window {
 			}
 
 			case WID_GSC_ACCEPT:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_GSC_RESET:
@@ -419,7 +420,7 @@ struct GSConfigWindow : public Window {
 		}
 		this->RebuildVisibleSettings();
 		HideDropDownMenu(this);
-		this->DeleteChildWindows(WC_QUERY_STRING);
+		this->CloseChildWindows(WC_QUERY_STRING);
 	}
 private:
 	bool IsEditableItem(const ScriptConfigItem &config_item) const
@@ -442,6 +443,6 @@ private:
 /** Open the GS config window. */
 void ShowGSConfigWindow()
 {
-	DeleteWindowByClass(WC_GAME_OPTIONS);
+	CloseWindowByClass(WC_GAME_OPTIONS);
 	new GSConfigWindow();
 }

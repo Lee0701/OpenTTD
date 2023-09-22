@@ -112,7 +112,7 @@ static const NWidgetPart _nested_generate_landscape_widgets[] = {
 							NWidget(WWT_TEXT, COLOUR_ORANGE), SetDataTip(STR_MAPGEN_BY, STR_NULL), SetPadding(1, 0, 0, 0), SetFill(1, 1),
 							NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_MAPSIZE_Y_PULLDOWN), SetDataTip(STR_JUST_INT, STR_MAPGEN_MAPSIZE_TOOLTIP), SetFill(1, 0),
 						EndContainer(),
-						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TERRAIN_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TERRAIN_PULLDOWN), SetDataTip(STR_JUST_STRING1, STR_NULL), SetFill(1, 0),
 						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_VARIETY_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
 						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_SMOOTHNESS_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
 						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_RIVER_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
@@ -173,9 +173,9 @@ static const NWidgetPart _nested_generate_landscape_widgets[] = {
 							NWidget(WWT_IMGBTN, COLOUR_ORANGE, WID_GL_START_DATE_UP), SetDataTip(SPR_ARROW_UP, STR_SCENEDIT_TOOLBAR_TOOLTIP_MOVE_THE_STARTING_DATE_FORWARD), SetFill(0, 1),
 						EndContainer(),
 						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TOWNNAME_DROPDOWN), SetDataTip(STR_JUST_STRING, STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TOWN_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_INDUSTRY_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
-						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_WATER_PULLDOWN), SetDataTip(STR_JUST_STRING, STR_NULL), SetFill(1, 0),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_TOWN_PULLDOWN), SetDataTip(STR_JUST_STRING1, STR_NULL), SetFill(1, 0),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_INDUSTRY_PULLDOWN), SetDataTip(STR_JUST_STRING1, STR_NULL), SetFill(1, 0),
+						NWidget(WWT_DROPDOWN, COLOUR_ORANGE, WID_GL_WATER_PULLDOWN), SetDataTip(STR_JUST_STRING1, STR_NULL), SetFill(1, 0),
 					EndContainer(),
 				EndContainer(),
 			EndContainer(),
@@ -352,7 +352,7 @@ static const NWidgetPart _nested_heightmap_load_widgets[] = {
 
 static void StartGeneratingLandscape(GenerateLandscapeWindowMode mode)
 {
-	DeleteAllNonVitalWindows();
+	CloseAllNonVitalWindows();
 	ClearErrorMessages();
 
 	/* Copy all XXX_newgame to XXX when coming from outside the editor */
@@ -403,9 +403,8 @@ static DropDownList BuildMapsizeDropDown(int other_dimension)
 	DropDownList list;
 
 	for (uint i = MIN_MAP_SIZE_BITS; i <= MAX_MAP_SIZE_BITS; i++) {
-		DropDownListParamStringItem *item = new DropDownListParamStringItem((i + other_dimension > MAX_MAP_TILES_BITS) ? STR_RED_INT : STR_JUST_INT, i, false);
-		item->SetParam(0, 1LL << i);
-		list.emplace_back(item);
+		SetDParam(0, 1LL << i);
+		list.emplace_back(new DropDownListStringItem((i + other_dimension > MAX_MAP_TILES_BITS) ? STR_RED_INT : STR_JUST_INT, i, false));
 	}
 
 	return list;
@@ -1173,7 +1172,7 @@ static void _ShowGenerateLandscape(GenerateLandscapeWindowMode mode)
 	uint x = 0;
 	uint y = 0;
 
-	DeleteWindowByClass(WC_GENERATE_LANDSCAPE);
+	CloseWindowByClass(WC_GENERATE_LANDSCAPE);
 
 	/* Generate a new seed when opening the window */
 	_settings_newgame.game_creation.generation_seed = InteractiveRandom();
@@ -1480,7 +1479,7 @@ static WindowDesc _create_scenario_desc(
 /** Show the window to create a scenario. */
 void ShowCreateScenario()
 {
-	DeleteWindowByClass(WC_GENERATE_LANDSCAPE);
+	CloseWindowByClass(WC_GENERATE_LANDSCAPE);
 	new CreateScenarioWindow(&_create_scenario_desc, GLWM_SCENARIO);
 }
 
@@ -1576,7 +1575,7 @@ struct GenerateProgressWindow : public Window {
 
 			case WID_GP_PROGRESS_TEXT:
 				for (uint i = 0; i < GWP_CLASS_COUNT; i++) {
-					size->width = std::max(size->width, GetStringBoundingBox(_generation_class_table[i]).width);
+					size->width = std::max(size->width, GetStringBoundingBox(_generation_class_table[i]).width + padding.width);
 				}
 				size->height = FONT_HEIGHT_NORMAL * 2 + WidgetDimensions::scaled.vsep_normal;
 				break;

@@ -370,11 +370,12 @@ struct TimetableWindow : GeneralVehicleWindow {
 		this->owner = this->vehicle->owner;
 	}
 
-	~TimetableWindow()
+	void Close() override
 	{
 		if (!FocusWindowById(WC_VEHICLE_VIEW, this->window_number)) {
 			MarkDirtyFocusedRoutePaths(this->vehicle);
 		}
+		this->GeneralVehicleWindow::Close();
 	}
 
 	/**
@@ -451,7 +452,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 				/* Removed / replaced all orders (after deleting / sharing) */
 				if (this->sel_index == -1) break;
 
-				this->DeleteChildWindows();
+				this->CloseChildWindows();
 				this->sel_index = -1;
 				break;
 
@@ -490,7 +491,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 					/* Now we are modifying the selected order */
 					if (to == INVALID_VEH_ORDER_ID) {
 						/* Deleting selected order */
-						this->DeleteChildWindows();
+						this->CloseChildWindows();
 						this->sel_index = -1;
 						break;
 					} else {
@@ -878,7 +879,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 		const Vehicle *v = this->vehicle;
 
 		this->clicked_widget = widget;
-		this->DeleteChildWindows(WC_QUERY_STRING);
+		this->CloseChildWindows(WC_QUERY_STRING);
 
 		switch (widget) {
 			case WID_VT_ORDER_VIEW: // Order view button
@@ -900,7 +901,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 					this->sel_index = (selected == INVALID_ORDER || selected == this->sel_index) ? -1 : selected;
 				}
 
-				this->DeleteChildWindows();
+				this->CloseChildWindows();
 				break;
 			}
 
@@ -1064,12 +1065,10 @@ struct TimetableWindow : GeneralVehicleWindow {
 				for (uint i = 0; i < v->orders->GetScheduledDispatchScheduleCount(); i++) {
 					const DispatchSchedule &ds = this->vehicle->orders->GetDispatchScheduleByIndex(i);
 					if (ds.ScheduleName().empty()) {
-						DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_TIMETABLE_ASSIGN_SCHEDULE_ID, i, false);
-						item->SetParam(0, i + 1);
-						list.emplace_back(item);
+						SetDParam(0, i + 1);
+						list.emplace_back(new DropDownListStringItem(STR_TIMETABLE_ASSIGN_SCHEDULE_ID, i, false));
 					} else {
-						DropDownListCharStringItem *item = new DropDownListCharStringItem(ds.ScheduleName(), i, false);
-						list.emplace_back(item);
+						list.emplace_back(new DropDownListStringItem(ds.ScheduleName(), i, false));
 					}
 				}
 				ShowDropDownList(this, std::move(list), order->GetDispatchScheduleIndex(), WID_VT_ASSIGN_SCHEDULE);
@@ -1167,7 +1166,7 @@ struct TimetableWindow : GeneralVehicleWindow {
 		}
 	}
 
-	virtual void OnFocusLost(Window *newly_focused_window) override
+	virtual void OnFocusLost(bool closing, Window *newly_focused_window) override
 	{
 		if (HasFocusedVehicleChanged(this->window_number, newly_focused_window)) {
 			MarkDirtyFocusedRoutePaths(this->vehicle);
@@ -1250,15 +1249,21 @@ static WindowDesc _timetable_desc(
  */
 void ShowTimetableWindow(const Vehicle *v)
 {
-	DeleteWindowById(WC_VEHICLE_DETAILS, v->index, false);
-	DeleteWindowById(WC_VEHICLE_ORDERS, v->index, false);
+	CloseWindowById(WC_VEHICLE_DETAILS, v->index, false);
+	CloseWindowById(WC_VEHICLE_ORDERS, v->index, false);
 	AllocateWindowDescFront<TimetableWindow>(&_timetable_desc, v->index);
 }
 
 void SetTimetableWindowsDirty(const Vehicle *v, SetTimetableWindowsDirtyFlags flags)
 {
+	if (!(HaveWindowByClass(WC_VEHICLE_TIMETABLE) ||
+			((flags & STWDF_SCHEDULED_DISPATCH) && HaveWindowByClass(WC_SCHDISPATCH_SLOTS)) ||
+			((flags & STWDF_ORDERS) && HaveWindowByClass(WC_VEHICLE_ORDERS)))) {
+		return;
+	}
+
 	v = v->FirstShared();
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		if (w->window_class == WC_VEHICLE_TIMETABLE ||
 				((flags & STWDF_SCHEDULED_DISPATCH) && w->window_class == WC_SCHDISPATCH_SLOTS) ||
 				((flags & STWDF_ORDERS) && w->window_class == WC_VEHICLE_ORDERS)) {

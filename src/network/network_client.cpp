@@ -237,7 +237,7 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 		this->CloseConnection(res);
 		_networking = false;
 
-		DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
+		CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 		return;
 	}
 
@@ -267,8 +267,8 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 		ClientNetworkEmergencySave();
 	}
 
-	DeleteNetworkClientWindows();
-	DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
+	CloseNetworkClientWindows();
+	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	if (_game_mode != GM_MENU) _switch_mode = SM_MENU;
 	_networking = false;
@@ -309,24 +309,24 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 {
 	_frame_counter++;
 
+	const size_t total_sync_records = _network_sync_records.size();
+	_network_sync_records.push_back({ _frame_counter, _random.state[0], _state_checksum.state });
+	_record_sync_records = true;
+
 	NetworkExecuteLocalCommandQueue();
 
 	StateGameLoop();
 
+	_network_sync_records.push_back({ NSRE_FRAME_DONE, _random.state[0], _state_checksum.state });
+	_network_sync_record_counts.push_back((uint)(_network_sync_records.size() - total_sync_records));
+	_record_sync_records = false;
+
 	/* Check if we are in sync! */
 	if (_sync_frame != 0) {
 		if (_sync_frame == _frame_counter) {
-#ifdef NETWORK_SEND_DOUBLE_SEED
-			if (_sync_seed_1 != _random.state[0] || _sync_seed_2 != _random.state[1] || (_sync_state_checksum != _state_checksum.state && !HasChickenBit(DCBF_MP_NO_STATE_CSUM_CHECK))) {
-#else
 			if (_sync_seed_1 != _random.state[0] || (_sync_state_checksum != _state_checksum.state && !HasChickenBit(DCBF_MP_NO_STATE_CSUM_CHECK))) {
-#endif
 				DesyncExtraInfo info;
-				if (_sync_seed_1 != _random.state[0]) info.flags |= DesyncExtraInfo::DEIF_RAND1;
-#ifdef NETWORK_SEND_DOUBLE_SEED
-				if (_sync_seed_2 != _random.state[1]) info.flags |= DesyncExtraInfo::DEIF_RAND2;
-				info.flags |= DesyncExtraInfo::DEIF_DBL_RAND;
-#endif
+				if (_sync_seed_1 != _random.state[0]) info.flags |= DesyncExtraInfo::DEIF_RAND;
 				if (_sync_state_checksum != _state_checksum.state) info.flags |= DesyncExtraInfo::DEIF_STATE;
 
 				ShowNetworkError(STR_NETWORK_ERROR_DESYNC);
@@ -349,7 +349,8 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 			_last_sync_date_fract = _date_fract;
 			_last_sync_tick_skip_counter = _tick_skip_counter;
 			_last_sync_frame_counter = _sync_frame;
-			_network_client_sync_records.clear();
+			_network_sync_records.clear();
+			_network_sync_record_counts.clear();
 
 			/* If this is the first time we have a sync-frame, we
 			 *   need to let the server know that we are ready and at the same
@@ -366,8 +367,10 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 		}
 	}
 
-	if (_network_client_sync_records.size() <= 256) {
-		_network_client_sync_records.push_back({ _frame_counter, _random.state[0], _state_checksum.state });
+	if (_network_sync_record_counts.size() >= 128) {
+		/* Remove records from start of queue */
+		_network_sync_records.erase(_network_sync_records.begin(), _network_sync_records.begin() + _network_sync_record_counts[0]);
+		_network_sync_record_counts.pop_front();
 	}
 
 	return true;
@@ -640,14 +643,30 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::SendDesyncMessage(const char *
 /** Send an error-packet over the network */
 NetworkRecvStatus ClientNetworkGameSocketHandler::SendDesyncSyncData()
 {
-	if (_network_client_sync_records.empty()) return NETWORK_RECV_STATUS_OKAY;
+	if (_network_sync_record_counts.empty()) return NETWORK_RECV_STATUS_OKAY;
+
+	uint total = 0;
+	for (uint32 count : _network_sync_record_counts) {
+		total += count;
+	}
+
+	if ((size_t)total != _network_sync_records.size()) {
+		DEBUG(net, 0, "Network sync record error");
+		return NETWORK_RECV_STATUS_OKAY;
+	}
 
 	Packet *p = new Packet(PACKET_CLIENT_DESYNC_SYNC_DATA, SHRT_MAX);
-	p->Send_uint32(_network_client_sync_records[0].frame);
-	p->Send_uint32((uint)_network_client_sync_records.size());
-	for (uint i = 0; i < (uint)_network_client_sync_records.size(); i++) {
-		p->Send_uint32(_network_client_sync_records[i].seed_1);
-		p->Send_uint64(_network_client_sync_records[i].state_checksum);
+	p->Send_uint32((uint32)_network_sync_record_counts.size());
+	uint32 offset = 0;
+	for (uint32 count : _network_sync_record_counts) {
+		p->Send_uint32(count);
+		for (uint i = 0; i < count; i++) {
+			const NetworkSyncRecord &record = _network_sync_records[offset + i];
+			p->Send_uint32(record.frame);
+			p->Send_uint32(record.seed_1);
+			p->Send_uint64(record.state_checksum);
+		}
+		offset += count;
 	}
 	my_client->SendPacket(p);
 	return NETWORK_RECV_STATUS_OKAY;
@@ -1074,16 +1093,9 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_FRAME(Packet *p
 #ifdef ENABLE_NETWORK_SYNC_EVERY_FRAME
 	/* Test if the server supports this option
 	 *  and if we are at the frame the server is */
-#ifdef NETWORK_SEND_DOUBLE_SEED
-	if (p->CanReadFromPacket(4 + 4 + 8)) {
-#else
 	if (p->CanReadFromPacket(4 + 8)) {
-#endif
 		_sync_frame = _frame_counter_server;
 		_sync_seed_1 = p->Recv_uint32();
-#ifdef NETWORK_SEND_DOUBLE_SEED
-		_sync_seed_2 = p->Recv_uint32();
-#endif
 		_sync_state_checksum = p->Recv_uint64();
 	}
 #endif
@@ -1110,9 +1122,6 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_SYNC(Packet *p)
 
 	_sync_frame = p->Recv_uint32();
 	_sync_seed_1 = p->Recv_uint32();
-#ifdef NETWORK_SEND_DOUBLE_SEED
-	_sync_seed_2 = p->Recv_uint32();
-#endif
 	_sync_state_checksum = p->Recv_uint64();
 
 	return NETWORK_RECV_STATUS_OKAY;
@@ -1386,7 +1395,7 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_SETTINGS_ACCESS
 
 	_network_settings_access = p->Recv_bool();
 
-	DeleteWindowById(WC_CHEATS, 0);
+	CloseWindowById(WC_CHEATS, 0);
 	ReInitAllWindows(false);
 
 	return NETWORK_RECV_STATUS_OKAY;

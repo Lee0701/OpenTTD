@@ -183,7 +183,7 @@ struct ScriptListWindow : public Window {
 		}
 		InvalidateWindowData(WC_GAME_OPTIONS, slot == OWNER_DEITY ? WN_GAME_OPTIONS_GS : WN_GAME_OPTIONS_AI);
 		InvalidateWindowClassesData(WC_SCRIPT_SETTINGS);
-		DeleteWindowByClass(WC_QUERY_STRING);
+		CloseWindowByClass(WC_QUERY_STRING);
 		InvalidateWindowClassesData(WC_TEXTFILE);
 		if (_game_mode == GM_NORMAL && slot == OWNER_DEITY) {
 			InvalidateWindowData(WC_SCRIPT_DEBUG, 0, -1);
@@ -201,7 +201,7 @@ struct ScriptListWindow : public Window {
 					this->SetDirty();
 					if (click_count > 1) {
 						this->ChangeScript();
-						delete this;
+						this->Close();
 					}
 				}
 				break;
@@ -209,12 +209,12 @@ struct ScriptListWindow : public Window {
 
 			case WID_SCRL_ACCEPT: {
 				this->ChangeScript();
-				delete this;
+				this->Close();
 				break;
 			}
 
 			case WID_SCRL_CANCEL:
-				delete this;
+				this->Close();
 				break;
 		}
 	}
@@ -232,7 +232,7 @@ struct ScriptListWindow : public Window {
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (_game_mode == GM_NORMAL && Company::IsValidID(this->slot)) {
-			delete this;
+			this->Close();
 			return;
 		}
 
@@ -282,7 +282,7 @@ static WindowDesc _script_list_desc(
  */
 void ShowScriptListWindow(CompanyID slot, bool show_all)
 {
-	DeleteWindowByClass(WC_SCRIPT_LIST);
+	CloseWindowByClass(WC_SCRIPT_LIST);
 	new ScriptListWindow(&_script_list_desc, slot, show_all);
 }
 
@@ -325,9 +325,10 @@ struct ScriptSettingsWindow : public Window {
 		this->RebuildVisibleSettings();
 	}
 
-	~ScriptSettingsWindow()
+	void Close() override
 	{
 		HideDropDownMenu(this);
+		this->Window::Close();
 	}
 
 	/**
@@ -393,7 +394,7 @@ struct ScriptSettingsWindow : public Window {
 			TextColour colour;
 			uint idx = 0;
 			if (config_item.description.empty()) {
-				str = STR_JUST_STRING;
+				str = STR_JUST_STRING1;
 				colour = TC_ORANGE;
 			} else {
 				str = STR_AI_SETTINGS_SETTING;
@@ -447,7 +448,7 @@ struct ScriptSettingsWindow : public Window {
 
 				int num = it - this->visible_settings.begin();
 				if (this->clicked_row != num) {
-					this->DeleteChildWindows(WC_QUERY_STRING);
+					this->CloseChildWindows(WC_QUERY_STRING);
 					HideDropDownMenu(this);
 					this->clicked_row = num;
 					this->clicked_dropdown = false;
@@ -483,7 +484,7 @@ struct ScriptSettingsWindow : public Window {
 
 							DropDownList list;
 							for (int i = config_item.min_value; i <= config_item.max_value; i++) {
-								list.emplace_back(new DropDownListCharStringItem(config_item.labels.find(i)->second, i, false));
+								list.emplace_back(new DropDownListStringItem(config_item.labels.find(i)->second, i, false));
 							}
 
 							ShowDropDownListAt(this, std::move(list), old_val, -1, wi_rect, COLOUR_ORANGE);
@@ -520,7 +521,7 @@ struct ScriptSettingsWindow : public Window {
 			}
 
 			case WID_SCRS_ACCEPT:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_SCRS_RESET:
@@ -577,7 +578,7 @@ struct ScriptSettingsWindow : public Window {
 	{
 		this->RebuildVisibleSettings();
 		HideDropDownMenu(this);
-		this->DeleteChildWindows(WC_QUERY_STRING);
+		this->CloseChildWindows(WC_QUERY_STRING);
 	}
 
 private:
@@ -633,8 +634,8 @@ static WindowDesc _script_settings_desc(
  */
 void ShowScriptSettingsWindow(CompanyID slot)
 {
-	DeleteWindowByClass(WC_SCRIPT_LIST);
-	DeleteWindowByClass(WC_SCRIPT_SETTINGS);
+	CloseWindowByClass(WC_SCRIPT_LIST);
+	CloseWindowByClass(WC_SCRIPT_SETTINGS);
 	new ScriptSettingsWindow(&_script_settings_desc, slot);
 }
 
@@ -660,7 +661,7 @@ struct ScriptTextfileWindow : public TextfileWindow {
 	{
 		const char *textfile = GetConfig(slot)->GetTextfile(file_type, slot);
 		if (textfile == nullptr) {
-			delete this;
+			this->Close();
 		} else {
 			this->LoadTextfile(textfile, (slot == OWNER_DEITY) ? GAME_DIR : AI_DIR);
 		}
@@ -674,7 +675,7 @@ struct ScriptTextfileWindow : public TextfileWindow {
  */
 void ShowScriptTextfileWindow(TextfileType file_type, CompanyID slot)
 {
-	DeleteWindowById(WC_TEXTFILE, file_type);
+	CloseWindowById(WC_TEXTFILE, file_type);
 	new ScriptTextfileWindow(file_type, slot);
 }
 
@@ -956,7 +957,7 @@ struct ScriptDebugWindow : public Window {
 		this->highlight_row = -1; // The highlight of one Script make little sense for another Script.
 
 		/* Close AI settings window to prevent confusion */
-		DeleteWindowByClass(WC_SCRIPT_SETTINGS);
+		CloseWindowByClass(WC_SCRIPT_SETTINGS);
 
 		this->InvalidateData(-1);
 
@@ -1187,7 +1188,7 @@ static const NWidgetPart _nested_script_debug_widgets[] = {
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_SCRIPT_GAME), SetMinimalSize(100, 20), SetResize(1, 0), SetDataTip(STR_AI_GAME_SCRIPT, STR_AI_GAME_SCRIPT_TOOLTIP),
-		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_NAME_TEXT), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_JUST_STRING, STR_AI_DEBUG_NAME_TOOLTIP),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_NAME_TEXT), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_JUST_STRING2, STR_AI_DEBUG_NAME_TOOLTIP),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_SETTINGS), SetMinimalSize(100, 20), SetDataTip(STR_AI_DEBUG_SETTINGS, STR_AI_DEBUG_SETTINGS_TOOLTIP),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_RELOAD_TOGGLE), SetMinimalSize(100, 20), SetDataTip(STR_AI_DEBUG_RELOAD, STR_AI_DEBUG_RELOAD_TOOLTIP),
 	EndContainer(),

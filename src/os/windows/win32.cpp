@@ -256,16 +256,17 @@ bool FiosIsHiddenFile(const struct dirent *ent)
 	return (ent->dir->fd.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) != 0;
 }
 
-bool FiosGetDiskFreeSpace(const char *path, uint64 *tot)
+std::optional<uint64_t> FiosGetDiskFreeSpace(const std::string &path)
 {
 	UINT sem = SetErrorMode(SEM_FAILCRITICALERRORS);  // disable 'no-disk' message box
 
 	ULARGE_INTEGER bytes_free;
 	bool retval = GetDiskFreeSpaceEx(OTTD2FS(path).c_str(), &bytes_free, nullptr, nullptr);
-	if (retval && tot != nullptr) *tot = bytes_free.QuadPart;
 
 	SetErrorMode(sem); // reset previous setting
-	return retval;
+
+	if (retval) return bytes_free.QuadPart;
+	return std::nullopt;
 }
 
 static int ParseCommandLine(char *line, char **argv, int max_argc)
@@ -428,10 +429,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	PerThreadSetupInit();
 	CrashLog::InitialiseCrashLog();
 
-	/* Convert the command line to UTF-8. We need a dedicated buffer
-	 * for this because argv[] points into this buffer and this needs to
-	 * be available between subsequent calls to FS2OTTD(). */
-	char *cmdline = stredup(FS2OTTD(GetCommandLine()).c_str());
+	/* Convert the command line to UTF-8. */
+	std::string cmdline = FS2OTTD(GetCommandLine());
 
 	/* Set the console codepage to UTF-8. */
 	SetConsoleOutputCP(CP_UTF8);
@@ -445,7 +444,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	/* setup random seed to something quite random */
 	SetRandomSeed(GetTickCount());
 
-	argc = ParseCommandLine(cmdline, argv, lengthof(argv));
+	argc = ParseCommandLine(cmdline.data(), argv, lengthof(argv));
 
 	/* Make sure our arguments contain only valid UTF-8 characters. */
 	for (int i = 0; i < argc; i++) StrMakeValidInPlace(argv[i]);
@@ -455,7 +454,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	/* Restore system timer resolution. */
 	timeEndPeriod(1);
 
-	free(cmdline);
 	return 0;
 }
 
@@ -548,26 +546,19 @@ void DetermineBasePaths(const char *exe)
 }
 
 
-bool GetClipboardContents(char *buffer, const char *last)
+std::optional<std::string> GetClipboardContents()
 {
-	HGLOBAL cbuf;
-	const char *ptr;
+	if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return std::nullopt;
 
-	if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
-		OpenClipboard(nullptr);
-		cbuf = GetClipboardData(CF_UNICODETEXT);
+	OpenClipboard(nullptr);
+	HGLOBAL cbuf = GetClipboardData(CF_UNICODETEXT);
 
-		ptr = (const char*)GlobalLock(cbuf);
-		int out_len = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)ptr, -1, buffer, (last - buffer) + 1, nullptr, nullptr);
-		GlobalUnlock(cbuf);
-		CloseClipboard();
+	std::string result = FS2OTTD(static_cast<LPCWSTR>(GlobalLock(cbuf)));
+	GlobalUnlock(cbuf);
+	CloseClipboard();
 
-		if (out_len == 0) return false;
-	} else {
-		return false;
-	}
-
-	return true;
+	if (result.empty()) return std::nullopt;
+	return result;
 }
 
 
@@ -665,23 +656,21 @@ const char *GetCurrentLocale(const char *)
 
 static WCHAR _cur_iso_locale[16] = L"";
 
-void Win32SetCurrentLocaleName(const char *iso_code)
+void Win32SetCurrentLocaleName(std::string iso_code)
 {
 	/* Convert the iso code into the format that windows expects. */
-	char iso[16];
-	if (strcmp(iso_code, "zh_TW") == 0) {
-		strecpy(iso, "zh-Hant", lastof(iso));
-	} else if (strcmp(iso_code, "zh_CN") == 0) {
-		strecpy(iso, "zh-Hans", lastof(iso));
+	if (iso_code == "zh_TW") {
+		iso_code = "zh-Hant";
+	} else if (iso_code == "zh_CN") {
+		iso_code = "zh-Hans";
 	} else {
 		/* Windows expects a '-' between language and country code, but we use a '_'. */
-		strecpy(iso, iso_code, lastof(iso));
-		for (char *c = iso; *c != '\0'; c++) {
-			if (*c == '_') *c = '-';
+		for (char &c : iso_code) {
+			if (c == '_') c = '-';
 		}
 	}
 
-	MultiByteToWideChar(CP_UTF8, 0, iso, -1, _cur_iso_locale, lengthof(_cur_iso_locale));
+	MultiByteToWideChar(CP_UTF8, 0, iso_code.c_str(), -1, _cur_iso_locale, lengthof(_cur_iso_locale));
 }
 
 int OTTDStringCompare(std::string_view s1, std::string_view s2)

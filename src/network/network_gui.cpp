@@ -498,7 +498,7 @@ public:
 		this->FinishInitNested(WN_NETWORK_WINDOW_GAME);
 
 		this->querystrings[WID_NG_CLIENT] = &this->name_editbox;
-		this->name_editbox.text.Assign(_settings_client.network.client_name.c_str());
+		this->name_editbox.text.Assign(_settings_client.network.client_name);
 
 		this->querystrings[WID_NG_FILTER] = &this->filter_editbox;
 		this->filter_editbox.cancel_button = QueryString::ACTION_CLEAR;
@@ -523,9 +523,10 @@ public:
 		this->servers.ForceRebuild();
 	}
 
-	~NetworkGameWindow()
+	void Close() override
 	{
 		this->last_sorting = this->servers.GetListing();
+		this->Window::Close();
 	}
 
 	void OnInit() override
@@ -744,7 +745,7 @@ public:
 	{
 		switch (widget) {
 			case WID_NG_CANCEL: // Cancel button
-				DeleteWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_GAME);
+				CloseWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_GAME);
 				break;
 
 			case WID_NG_NAME:    // Sort by name
@@ -1035,7 +1036,7 @@ static WindowDesc _network_game_window_desc(
 void ShowNetworkGameWindow()
 {
 	static bool first = true;
-	DeleteWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_START);
+	CloseWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_START);
 
 	/* Only show once */
 	if (first) {
@@ -1058,7 +1059,7 @@ struct NetworkStartServerWindow : public Window {
 		this->InitNested(WN_NETWORK_WINDOW_START);
 
 		this->querystrings[WID_NSS_GAMENAME] = &this->name_editbox;
-		this->name_editbox.text.Assign(_settings_client.network.server_name.c_str());
+		this->name_editbox.text.Assign(_settings_client.network.server_name);
 
 		this->SetFocusedWidget(WID_NSS_GAMENAME);
 	}
@@ -1309,7 +1310,7 @@ static void ShowNetworkStartServerWindow()
 {
 	if (!NetworkValidateOurClientName()) return;
 
-	DeleteWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_GAME);
+	CloseWindowById(WC_NETWORK_WINDOW, WN_NETWORK_WINDOW_GAME);
 
 	new NetworkStartServerWindow(&_network_start_server_window_desc);
 }
@@ -2301,7 +2302,7 @@ static WindowDesc _network_join_status_window_desc(
 
 void ShowJoinStatusWindow()
 {
-	DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
+	CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 	new NetworkJoinStatusWindow(&_network_join_status_window_desc);
 }
 
@@ -2378,7 +2379,7 @@ struct NetworkCompanyPasswordWindow : public Window {
 				FALLTHROUGH;
 
 			case WID_NCP_CANCEL:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_NCP_SAVE_AS_DEFAULT_PASSWORD:
@@ -2423,7 +2424,7 @@ static WindowDesc _network_company_password_window_desc(
 
 void ShowNetworkCompanyPasswordWindow(Window *parent)
 {
-	DeleteWindowById(WC_COMPANY_PASSWORD_WINDOW, 0);
+	CloseWindowById(WC_COMPANY_PASSWORD_WINDOW, 0);
 
 	new NetworkCompanyPasswordWindow(&_network_company_password_window_desc, parent);
 }
@@ -2485,18 +2486,18 @@ struct NetworkAskRelayWindow : public Window {
 		switch (widget) {
 			case WID_NAR_NO:
 				_network_coordinator_client.ConnectFailure(this->token, 0);
-				delete this;
+				this->Close();
 				break;
 
 			case WID_NAR_YES_ONCE:
 				_network_coordinator_client.StartTurnConnection(this->token);
-				delete this;
+				this->Close();
 				break;
 
 			case WID_NAR_YES_ALWAYS:
 				_settings_client.network.use_relay_service = URS_ALLOW;
 				_network_coordinator_client.StartTurnConnection(this->token);
-				delete this;
+				this->Close();
 				break;
 		}
 	}
@@ -2532,7 +2533,7 @@ static WindowDesc _network_ask_relay_desc(
  */
 void ShowNetworkAskRelay(const std::string &server_connection_string, const std::string &relay_connection_string, const std::string &token)
 {
-	DeleteWindowByClass(WC_NETWORK_ASK_RELAY);
+	CloseWindowByClass(WC_NETWORK_ASK_RELAY);
 
 	Window *parent = GetMainWindow();
 	new NetworkAskRelayWindow(&_network_ask_relay_desc, parent, server_connection_string, relay_connection_string, token);

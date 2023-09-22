@@ -408,12 +408,13 @@ public:
 		}
 	}
 
-	virtual ~SaveLoadWindow()
+	void Close() override
 	{
 		/* pause is only used in single-player, non-editor mode, non menu mode */
 		if (!_networking && _game_mode != GM_EDITOR && _game_mode != GM_MENU) {
 			DoCommandP(0, PM_PAUSED_SAVELOAD, 0, CMD_PAUSE);
 		}
+		this->Window::Close();
 	}
 
 	void DrawWidget(const Rect &r, int widget) const override
@@ -427,19 +428,19 @@ public:
 				break;
 
 			case WID_SL_BACKGROUND: {
-				static const char *path = nullptr;
-				static StringID str = STR_ERROR_UNABLE_TO_READ_DRIVE;
-				static uint64 tot = 0;
+				static std::string path;
+				static std::optional<uint64_t> free_space = std::nullopt;
 
 				if (_fios_path_changed) {
-					str = FiosGetDescText(&path, &tot);
+					path = FiosGetCurrentPath();
+					free_space = FiosGetDiskFreeSpace(path);
 					_fios_path_changed = false;
 				}
 
 				Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
 
-				if (str != STR_ERROR_UNABLE_TO_READ_DRIVE) SetDParam(0, tot);
-				DrawString(ir.left, ir.right, ir.top + FONT_HEIGHT_NORMAL, str);
+				if (free_space.has_value()) SetDParam(0, free_space.value());
+				DrawString(ir.left, ir.right, ir.top + FONT_HEIGHT_NORMAL, free_space.has_value() ? STR_SAVELOAD_BYTES_FREE : STR_ERROR_UNABLE_TO_READ_DRIVE);
 				DrawString(ir.left, ir.right, ir.top, path, TC_BLACK);
 				break;
 			}
@@ -641,12 +642,12 @@ public:
 				_file_to_saveload.Set(*this->selected);
 
 				if (this->abstract_filetype == FT_HEIGHTMAP) {
-					delete this;
+					this->Close();
 					ShowHeightmapLoad();
 				} else if (!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()) {
 					_switch_mode = (_game_mode == GM_EDITOR) ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
 					ClearErrorMessages();
-					delete this;
+					this->Close();
 				}
 				break;
 			}
@@ -692,7 +693,7 @@ public:
 					}
 					if (this->fop == SLO_SAVE) {
 						/* Copy clicked name to editbox */
-						this->filename_editbox.text.Assign(file->title.c_str());
+						this->filename_editbox.text.Assign(file->title);
 						this->SetWidgetDirty(WID_SL_SAVE_OSK_TITLE);
 					}
 				} else if (!_load_check_data.HasErrors()) {
@@ -704,7 +705,7 @@ public:
 							assert(this->abstract_filetype == FT_HEIGHTMAP);
 							_file_to_saveload.Set(*file);
 
-							delete this;
+							this->Close();
 							ShowHeightmapLoad();
 						}
 					}
@@ -757,7 +758,7 @@ public:
 	EventState OnKeyPress(WChar key, uint16 keycode) override
 	{
 		if (keycode == WKC_ESC) {
-			delete this;
+			this->Close();
 			return ES_HANDLED;
 		}
 
@@ -953,7 +954,7 @@ static WindowDesc _save_dialog_desc(
  */
 void ShowSaveLoadDialog(AbstractFileType abstract_filetype, SaveLoadOperation fop)
 {
-	DeleteWindowById(WC_SAVELOAD, 0);
+	CloseWindowById(WC_SAVELOAD, 0);
 
 	WindowDesc *sld;
 	if (fop == SLO_SAVE) {

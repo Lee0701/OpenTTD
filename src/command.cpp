@@ -34,8 +34,9 @@
 #include "debug_settings.h"
 #include "debug_desync.h"
 #include "order_backup.h"
+#include "core/ring_buffer.hpp"
+#include "core/checksum_func.hpp"
 #include <array>
-#include <deque>
 
 #include "table/strings.h"
 
@@ -120,6 +121,7 @@ CommandProc CmdBuildIndustry;
 CommandProc CmdIndustrySetFlags;
 CommandProc CmdIndustrySetExclusivity;
 CommandProc CmdIndustrySetText;
+CommandProc CmdIndustrySetProduction;
 
 CommandProc CmdSetCompanyManagerFace;
 CommandProc CmdSetCompanyColour;
@@ -190,6 +192,7 @@ CommandProc CmdCompanyCtrl;
 CommandProc CmdCustomNewsItem;
 CommandProc CmdCreateGoal;
 CommandProc CmdRemoveGoal;
+CommandProcEx CmdSetGoalDestination;
 CommandProc CmdSetGoalText;
 CommandProc CmdSetGoalProgress;
 CommandProc CmdSetGoalCompleted;
@@ -215,7 +218,7 @@ CommandProc CmdSetAutoReplace;
 
 CommandProc CmdToggleReuseDepotVehicles;
 CommandProc CmdToggleKeepRemainingVehicles;
-CommandProc CmdToggleRefitAsTemplate;
+CommandProc CmdSetRefitAsTemplate;
 CommandProc CmdToggleTemplateReplaceOldOnly;
 CommandProc CmdRenameTemplateReplace;
 
@@ -383,6 +386,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdIndustrySetFlags,        CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_FLAGS
 	DEF_CMD(CmdIndustrySetExclusivity,  CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_EXCLUSIVITY
 	DEF_CMD(CmdIndustrySetText,         CMD_STR_CTRL | CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_TEXT
+	DEF_CMD(CmdIndustrySetProduction,                  CMD_DEITY, CMDT_OTHER_MANAGEMENT      ), // CMD_INDUSTRY_SET_PRODUCTION
 
 	DEF_CMD(CmdSetCompanyManagerFace,                          0, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_COMPANY_MANAGER_FACE
 	DEF_CMD(CmdSetCompanyColour,                               0, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_COMPANY_COLOUR
@@ -447,6 +451,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdCustomNewsItem,          CMD_STR_CTRL | CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_CUSTOM_NEWS_ITEM
 	DEF_CMD(CmdCreateGoal,              CMD_STR_CTRL | CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_CREATE_GOAL
 	DEF_CMD(CmdRemoveGoal,                             CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_REMOVE_GOAL
+	DEF_CMD(CmdSetGoalDestination,                     CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_GOAL_DESTINATION
 	DEF_CMD(CmdSetGoalText,             CMD_STR_CTRL | CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_GOAL_TEXT
 	DEF_CMD(CmdSetGoalProgress,         CMD_STR_CTRL | CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_GOAL_PROGRESS
 	DEF_CMD(CmdSetGoalCompleted,        CMD_STR_CTRL | CMD_DEITY | CMD_LOG_AUX, CMDT_OTHER_MANAGEMENT      ), // CMD_SET_GOAL_COMPLETED
@@ -477,7 +482,7 @@ static const Command _command_proc_table[] = {
 
 	DEF_CMD(CmdToggleReuseDepotVehicles,           CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_REUSE_DEPOT_VEHICLES
 	DEF_CMD(CmdToggleKeepRemainingVehicles,        CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_KEEP_REMAINING_VEHICLES
-	DEF_CMD(CmdToggleRefitAsTemplate,              CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_REFIT_AS_TEMPLATE
+	DEF_CMD(CmdSetRefitAsTemplate,                 CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_SET_REFIT_AS_TEMPLATE
 	DEF_CMD(CmdToggleTemplateReplaceOldOnly,       CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_TOGGLE_TMPL_REPLACE_OLD_ONLY
 	DEF_CMD(CmdRenameTemplateReplace,              CMD_ALL_TILES, CMDT_VEHICLE_MANAGEMENT    ), // CMD_RENAME_TMPL_REPLACE
 
@@ -638,7 +643,7 @@ struct CommandQueueItem {
 	CommandContainer cmd;
 	CompanyID company;
 };
-static std::deque<CommandQueueItem> _command_queue;
+static ring_buffer<CommandQueueItem> _command_queue;
 
 void ClearCommandLog()
 {
@@ -686,7 +691,7 @@ static void DumpSubCommandLogEntry(char *&buffer, const char *last, const Comman
 		}
 }
 
-static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog &cmd_log, const unsigned int count)
+static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog &cmd_log, const unsigned int count, std::function<char *(char *)> &flush)
 {
 	unsigned int log_index = cmd_log.next;
 	for (unsigned int i = 0 ; i < count; i++) {
@@ -702,20 +707,22 @@ static void DumpSubCommandLog(char *&buffer, const char *last, const CommandLog 
 		DumpSubCommandLogEntry(buffer, last, entry);
 
 		buffer += seprintf(buffer, last, "\n");
+		if (flush) buffer = flush(buffer);
 	}
 }
 
-char *DumpCommandLog(char *buffer, const char *last)
+char *DumpCommandLog(char *buffer, const char *last, std::function<char *(char *)> flush)
 {
 	const unsigned int count = std::min<unsigned int>(_command_log.count, 256);
 	buffer += seprintf(buffer, last, "Command Log:\n Showing most recent %u of %u commands\n", count, _command_log.count);
-	DumpSubCommandLog(buffer, last, _command_log, count);
+	DumpSubCommandLog(buffer, last, _command_log, count, flush);
 
 	if (_command_log_aux.count > 0) {
 		const unsigned int aux_count = std::min<unsigned int>(_command_log_aux.count, 32);
 		buffer += seprintf(buffer, last, "\n Showing most recent %u of %u commands (aux log)\n", aux_count, _command_log_aux.count);
-		DumpSubCommandLog(buffer, last, _command_log_aux, aux_count);
+		DumpSubCommandLog(buffer, last, _command_log_aux, aux_count, flush);
 	}
+	if (flush) buffer = flush(buffer);
 	return buffer;
 }
 
@@ -1231,7 +1238,7 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 	if (!test_and_exec_can_differ) {
 		assert_msg(res.GetCost() == res2.GetCost() && res.Failed() == res2.Failed(),
 				"Command: cmd: 0x%X (%s), Test: %s, Exec: %s", cmd, GetCommandName(cmd),
-				res.AllocSummaryMessage(GB(cmd, 16, 16)), res2.AllocSummaryMessage(GB(cmd, 16, 16))); // sanity check
+				res.SummaryMessage(GB(cmd, 16, 16)).c_str(), res2.SummaryMessage(GB(cmd, 16, 16)).c_str()); // sanity check
 	} else if (res2.Failed()) {
 		return_dcpi(res2);
 	}
@@ -1254,6 +1261,7 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 	}
 
 	SubtractMoneyFromCompany(res2);
+	if (_networking) UpdateStateChecksum(res2.GetCost());
 
 	/* update signals if needed */
 	UpdateSignalsInBuffer();
@@ -1316,11 +1324,11 @@ void CommandCost::UseTextRefStack(const GRFFile *grffile, uint num_registers)
 	}
 }
 
-char *CommandCost::AllocSummaryMessage(StringID cmd_msg) const
+std::string CommandCost::SummaryMessage(StringID cmd_msg) const
 {
 	char buf[DRAW_STRING_BUFFER];
 	this->WriteSummaryMessage(buf, lastof(buf), cmd_msg);
-	return stredup(buf, lastof(buf));
+	return buf;
 }
 
 int CommandCost::WriteSummaryMessage(char *buf, char *last, StringID cmd_msg) const

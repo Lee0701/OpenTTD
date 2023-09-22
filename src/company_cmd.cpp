@@ -131,8 +131,8 @@ void SetLocalCompany(CompanyID new_company)
 
 	if (switching_company) {
 		InvalidateWindowClassesData(WC_COMPANY);
-		/* Delete any construction windows... */
-		DeleteConstructionWindows();
+		/* Close any construction windows... */
+		CloseConstructionWindows();
 		ResetObjectToPlace();
 	}
 
@@ -636,12 +636,12 @@ TimeoutTimer<TimerGameTick> _new_competitor_timeout(0, []() {
 	if (_networking && Company::GetNumItems() >= _settings_client.network.max_companies) return;
 
 	/* count number of competitors */
-	uint n = 0;
+	uint8 n = 0;
 	for (const Company *c : Company::Iterate()) {
 		if (c->is_ai) n++;
 	}
 
-	if (n >= (uint)_settings_game.difficulty.max_no_competitors) return;
+	if (n >= _settings_game.difficulty.max_no_competitors) return;
 
 	/* Send a command to all clients to start up a new AI.
 	 * Works fine for Multiplayer and Singleplayer */
@@ -752,7 +752,7 @@ static void HandleBankruptcyTakeover(Company *c)
 	if (best_performance == -1) {
 		if (c->bankrupt_flags & CBRF_SALE_ONLY) {
 			c->bankrupt_asked = 0;
-			DeleteWindowById(WC_BUY_COMPANY, c->index);
+			CloseWindowById(WC_BUY_COMPANY, c->index);
 		} else {
 			c->bankrupt_asked = MAX_UVALUE(CompanyMask);
 		}
@@ -767,7 +767,7 @@ static void HandleBankruptcyTakeover(Company *c)
 
 	AI::NewEvent(best->index, new ScriptEventCompanyAskMerger(c->index, c->bankrupt_value));
 	if (IsInteractiveCompany(best->index)) {
-		ShowBuyCompanyDialog(c->index);
+		ShowBuyCompanyDialog(c->index, false);
 	} else if ((!_networking || (_network_server && !NetworkCompanyHasClients(best->index))) && !best->is_ai) {
 		/* This company can never accept the offer as there are no clients connected, decline the offer on the company's behalf */
 		Backup<CompanyID> cur_company(_current_company, best->index, FILE_LINE);
@@ -797,8 +797,15 @@ void OnTick_Companies(bool main_tick)
 		int32 timeout = _settings_game.difficulty.competitors_interval * 60 * TICKS_PER_SECOND;
 		/* If the interval is zero, start as many competitors as needed then check every ~10 minutes if a company went bankrupt and needs replacing. */
 		if (timeout == 0) {
+			/* count number of competitors */
+			uint8 n = 0;
+			for (const Company *cc : Company::Iterate()) {
+				if (cc->is_ai) n++;
+			}
+
 			for (auto i = 0; i < _settings_game.difficulty.max_no_competitors; i++) {
 				if (_networking && Company::GetNumItems() >= _settings_client.network.max_companies) break;
+				if (n++ >= _settings_game.difficulty.max_no_competitors) break;
 				DoCommandP(0, CCA_NEW_AI | INVALID_COMPANY << 16, 0, CMD_COMPANY_CTRL);
 			}
 			timeout = 10 * 60 * TICKS_PER_SECOND;
@@ -906,7 +913,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			NetworkClientInfo *ci = NetworkClientInfo::GetByClientID(client_id);
 
 			/* Delete multiplayer progress bar */
-			DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
+			CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 			Company *c = DoStartupNewCompany(DSNC_NONE);
 
@@ -1016,7 +1023,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			c->bankrupt_value = CalculateCompanyValue(c, false);
 			c->bankrupt_asked = 1 << c->index; // Don't ask the owner
 			c->bankrupt_timeout = 0;
-			DeleteWindowById(WC_BUY_COMPANY, c->index);
+			CloseWindowById(WC_BUY_COMPANY, c->index);
 			break;
 		}
 

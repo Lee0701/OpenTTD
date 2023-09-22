@@ -502,7 +502,7 @@ bool ClientNetworkContentSocketHandler::Receive_SERVER_CONTENT(Packet *p)
 		/* We have a file opened, thus are downloading internal content */
 		size_t toRead = p->RemainingBytesToTransfer();
 		if (toRead != 0 && (size_t)p->TransferOut(TransferOutFWrite, this->curFile) != toRead) {
-			DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD);
+			CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD);
 			ShowErrorMessage(STR_CONTENT_ERROR_COULD_NOT_DOWNLOAD, STR_CONTENT_ERROR_COULD_NOT_DOWNLOAD_FILE_NOT_WRITABLE, WL_ERROR);
 			this->CloseConnection();
 			fclose(this->curFile);
@@ -536,7 +536,7 @@ bool ClientNetworkContentSocketHandler::BeforeDownload()
 		std::string filename = GetFullFilename(this->curInfo, true);
 		if (filename.empty() || (this->curFile = fopen(filename.c_str(), "wb")) == nullptr) {
 			/* Unless that fails of course... */
-			DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD);
+			CloseWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD);
 			ShowErrorMessage(STR_CONTENT_ERROR_COULD_NOT_DOWNLOAD, STR_CONTENT_ERROR_COULD_NOT_DOWNLOAD_FILE_NOT_WRITABLE, WL_ERROR);
 			return false;
 		}
@@ -705,19 +705,19 @@ void ClientNetworkContentSocketHandler::OnReceiveData(const char *data, size_t l
 		check_not_null(p);
 		p++; // Start after the '/'
 
-		char tmp[MAX_PATH];
-		if (strecpy(tmp, p, lastof(tmp)) == lastof(tmp)) {
-			this->OnFailure();
-			return;
-		}
+		std::string filename = p;
 		/* Remove the extension from the string. */
 		for (uint i = 0; i < 2; i++) {
-			p = strrchr(tmp, '.');
-			check_and_terminate(p);
+			auto pos = filename.find_last_of('.');
+			if (pos == std::string::npos) {
+				this->OnFailure();
+				return;
+			}
+			filename.erase(pos);
 		}
 
 		/* Copy the string, without extension, to the filename. */
-		this->curInfo->filename = tmp;
+		this->curInfo->filename = std::move(filename);
 
 		/* Request the next file. */
 		if (!this->BeforeDownload()) {

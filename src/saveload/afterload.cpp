@@ -2051,7 +2051,7 @@ bool AfterLoadGame()
 		for (Station *st : Station::Iterate()) {
 			for (CargoID c = 0; c < NUM_CARGO; c++) {
 				st->goods[c].last_speed = 0;
-				if (st->goods[c].cargo.AvailableCount() != 0) SetBit(st->goods[c].status, GoodsEntry::GES_RATING);
+				if (st->goods[c].CargoAvailableCount() != 0) SetBit(st->goods[c].status, GoodsEntry::GES_RATING);
 			}
 		}
 	}
@@ -3982,9 +3982,38 @@ bool AfterLoadGame()
 
 	if (SlXvIsFeaturePresent(XSLFI_MORE_COND_ORDERS, 1, 1)) {
 		for (Order *order : Order::Iterate()) {
-			// Insertion of OCV_MAX_RELIABILITY between OCV_REMAINING_LIFETIME and OCV_CARGO_WAITING
+			/* Insertion of OCV_MAX_RELIABILITY between OCV_REMAINING_LIFETIME and OCV_CARGO_WAITING */
 			if (order->IsType(OT_CONDITIONAL) && order->GetConditionVariable() > OCV_REMAINING_LIFETIME) {
 				order->SetConditionVariable(static_cast<OrderConditionVariable>((uint)order->GetConditionVariable() + 1));
+			}
+		}
+	}
+	if (SlXvIsFeaturePresent(XSLFI_MORE_COND_ORDERS, 1, 14)) {
+		for (OrderList *order_list : OrderList::Iterate()) {
+			auto get_real_station = [&order_list](const Order *order) -> StationID {
+				const uint max = std::min<uint>(64, order_list->GetNumOrders());
+				for (uint i = 0; i < max; i++) {
+					if (order->IsType(OT_GOTO_STATION) && Station::IsValidID(order->GetDestination())) return order->GetDestination();
+
+					order = (order->next != nullptr) ? order->next : order_list->GetFirstOrder();
+				}
+				return INVALID_STATION;
+			};
+
+			for (Order *order = order_list->GetFirstOrder(); order != nullptr; order = order->next) {
+				/* Fixup station ID for OCV_CARGO_WAITING, OCV_CARGO_ACCEPTANCE, OCV_FREE_PLATFORMS, OCV_CARGO_WAITING_AMOUNT */
+				if (order->IsType(OT_CONDITIONAL) && ConditionVariableHasStationID(order->GetConditionVariable())) {
+					StationID next_id =  get_real_station(order);
+					SB(order->GetXData2Ref(), 0, 16, next_id + 1);
+					if (next_id != INVALID_STATION && GB(order->GetXData(), 16, 16) - 2 == next_id) {
+						/* Duplicate next and via, remove via */
+						SB(order->GetXDataRef(), 16, 16, 0);
+					}
+					if (GB(order->GetXData(), 16, 16) != 0 && !Station::IsValidID(GB(order->GetXData(), 16, 16) - 2)) {
+						/* Via station is invalid */
+						SB(order->GetXDataRef(), 16, 16, INVALID_STATION + 2);
+					}
+				}
 			}
 		}
 	}
@@ -4208,6 +4237,14 @@ bool AfterLoadGame()
 		_settings_game.economy.tick_rate = IsSavegameVersionUntil(SLV_MORE_CARGO_AGE) ? TRM_TRADITIONAL : TRM_MODERN;
 	}
 
+	if (SlXvIsFeatureMissing(XSLFI_ROAD_VEH_FLAGS)) {
+		for (RoadVehicle *rv : RoadVehicle::Iterate()) {
+			if (IsLevelCrossingTile(rv->tile)) {
+				SetBit(rv->First()->rvflags, RVF_ON_LEVEL_CROSSING);
+			}
+		}
+	}
+
 	if (SlXvIsFeatureMissing(XSLFI_AI_START_DATE) && IsSavegameVersionBefore(SLV_AI_START_DATE)) {
 		/* For older savegames, we don't now the actual interval; so set it to the newgame value. */
 		_settings_game.difficulty.competitors_interval = _settings_newgame.difficulty.competitors_interval;
@@ -4220,6 +4257,13 @@ bool AfterLoadGame()
 
 	if (SlXvIsFeatureMissing(XSLFI_SAVEGAME_ID) && IsSavegameVersionBefore(SLV_SAVEGAME_ID)) {
 		GenerateSavegameId();
+	}
+
+	if (IsSavegameVersionBefore(SLV_NEWGRF_LAST_SERVICE) && SlXvIsFeatureMissing(XSLFI_NEWGRF_LAST_SERVICE)) {
+		/* Set service date provided to NewGRF. */
+		for (Vehicle *v : Vehicle::Iterate()) {
+			v->date_of_last_service_newgrf = v->date_of_last_service;
+		}
 	}
 
 	InitializeRoadGUI();

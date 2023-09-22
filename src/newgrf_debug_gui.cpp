@@ -32,6 +32,7 @@
 #include "train.h"
 #include "roadveh.h"
 
+#include "newgrf_airport.h"
 #include "newgrf_airporttiles.h"
 #include "newgrf_debug.h"
 #include "newgrf_object.h"
@@ -1169,7 +1170,7 @@ void DeleteNewGRFInspectWindow(GrfSpecFeature feature, uint index)
 	if (index >= (1 << 27)) return;
 
 	WindowNumber wno = GetInspectWindowNumber(feature, index);
-	DeleteAllWindowsById(WC_NEWGRF_INSPECT, wno);
+	CloseAllWindowsById(WC_NEWGRF_INSPECT, wno);
 
 	/* Reinitialise the land information window to remove the "debug" sprite if needed.
 	 * Note: Since we might be called from a command here, it is important to not execute
@@ -1286,7 +1287,7 @@ struct SpriteAlignerWindow : Window {
 
 	void SetStringParameters(int widget) const override
 	{
-		const Sprite *spr = GetSprite(this->current_sprite, SpriteType::Normal);
+		const Sprite *spr = GetSprite(this->current_sprite, SpriteType::Normal, ZoomMask(ZOOM_LVL_GUI));
 		switch (widget) {
 			case WID_SA_CAPTION:
 				SetDParam(0, this->current_sprite);
@@ -1341,7 +1342,7 @@ struct SpriteAlignerWindow : Window {
 		switch (widget) {
 			case WID_SA_SPRITE: {
 				/* Center the sprite ourselves */
-				const Sprite *spr = GetSprite(this->current_sprite, SpriteType::Normal);
+				const Sprite *spr = GetSprite(this->current_sprite, SpriteType::Normal, ZoomMask(ZOOM_LVL_GUI));
 				Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
 				int x;
 				int y;
@@ -1437,7 +1438,7 @@ struct SpriteAlignerWindow : Window {
 				 * used by someone and the sprite cache isn't big enough for that
 				 * particular NewGRF developer.
 				 */
-				Sprite *spr = const_cast<Sprite *>(GetSprite(this->current_sprite, SpriteType::Normal));
+				Sprite *spr = const_cast<Sprite *>(GetSprite(this->current_sprite, SpriteType::Normal, 0));
 
 				/* Remember the original offsets of the current sprite, if not already in mapping. */
 				if (this->offs_start_map.count(this->current_sprite) == 0) {

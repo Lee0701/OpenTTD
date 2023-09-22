@@ -41,7 +41,7 @@ static const struct NWidgetPart _background_widgets[] = {
 static WindowDesc _background_desc(
 	WDP_MANUAL, nullptr, 0, 0,
 	WC_BOOTSTRAP, WC_NONE,
-	0,
+	WDF_NO_CLOSE,
 	_background_widgets, lengthof(_background_widgets)
 );
 
@@ -79,7 +79,7 @@ static const NWidgetPart _nested_bootstrap_errmsg_widgets[] = {
 static WindowDesc _bootstrap_errmsg_desc(
 	WDP_CENTER, nullptr, 0, 0,
 	WC_BOOTSTRAP, WC_NONE,
-	WDF_MODAL,
+	WDF_MODAL | WDF_NO_CLOSE,
 	_nested_bootstrap_errmsg_widgets, lengthof(_nested_bootstrap_errmsg_widgets)
 );
 
@@ -91,9 +91,10 @@ public:
 		this->InitNested(1);
 	}
 
-	~BootstrapErrorWindow()
+	void Close() override
 	{
 		_exit_game = true;
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -135,7 +136,7 @@ static const NWidgetPart _nested_bootstrap_download_status_window_widgets[] = {
 static WindowDesc _bootstrap_download_status_window_desc(
 	WDP_CENTER, nullptr, 0, 0,
 	WC_NETWORK_STATUS_WINDOW, WC_NONE,
-	WDF_MODAL,
+	WDF_MODAL | WDF_NO_CLOSE,
 	_nested_bootstrap_download_status_window_widgets, lengthof(_nested_bootstrap_download_status_window_widgets)
 );
 
@@ -148,12 +149,13 @@ public:
 	{
 	}
 
-	~BootstrapContentDownloadStatusWindow()
+	void Close() override
 	{
 		/* If we are not set to exit the game, it means the bootstrap failed. */
 		if (!_exit_game) {
 			new BootstrapErrorWindow();
 		}
+		this->BaseNetworkContentDownloadStatusWindow::Close();
 	}
 
 	void OnDownloadComplete(ContentID cid) override
@@ -166,7 +168,7 @@ public:
 
 		/* _exit_game is used to break out of the outer video driver's MainLoop. */
 		_exit_game = true;
-		delete this;
+		this->Close();
 	}
 };
 
@@ -188,7 +190,7 @@ static const NWidgetPart _bootstrap_query_widgets[] = {
 static WindowDesc _bootstrap_query_desc(
 	WDP_CENTER, nullptr, 0, 0,
 	WC_CONFIRM_POPUP_QUERY, WC_NONE,
-	0,
+	WDF_NO_CLOSE,
 	_bootstrap_query_widgets, lengthof(_bootstrap_query_widgets)
 );
 
@@ -205,9 +207,10 @@ public:
 	}
 
 	/** Stop listening to the content client events. */
-	~BootstrapAskForDownloadWindow()
+	void Close() override
 	{
 		_network_content_client.RemoveCallback(this);
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -268,7 +271,7 @@ public:
 		/* And once the meta data is received, start downloading it. */
 		_network_content_client.Select(ci->id);
 		new BootstrapContentDownloadStatusWindow();
-		delete this;
+		this->Close();
 	}
 };
 

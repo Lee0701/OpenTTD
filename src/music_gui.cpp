@@ -174,6 +174,7 @@ void MusicSystem::ChangePlaylist(PlaylistChoices pl)
  */
 void MusicSystem::ChangeMusicSet(const std::string &set_name)
 {
+	if (set_name != "NoMusic") InitMusicDriver(true);
 	BaseMusic::SetSet(set_name);
 	BaseMusic::ini_set = set_name;
 
@@ -584,7 +585,7 @@ struct MusicTrackSelectionWindow : public Window {
 
 			case WID_MTS_MUSICSET: {
 				int selected = 0;
-				ShowDropDownList(this, BuildMusicSetDropDownList(&selected), selected, widget);
+				ShowDropDownList(this, BuildSetDropDownList<BaseMusic>(&selected), selected, widget);
 				break;
 			}
 

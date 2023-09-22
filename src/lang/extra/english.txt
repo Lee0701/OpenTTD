@@ -12,12 +12,11 @@ STR_JUST_DATE_WALLCLOCK_SHORT                                   :{DATE_WALLCLOCK
 STR_JUST_DATE_WALLCLOCK_LONG                                    :{DATE_WALLCLOCK_LONG}
 STR_JUST_DATE_WALLCLOCK_ISO                                     :{DATE_WALLCLOCK_ISO}
 STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
-STR_JUST_STRING1                                                :{STRING1}
-STR_JUST_STRING2                                                :{STRING2}
 STR_JUST_STRING3                                                :{STRING3}
 STR_JUST_VELOCITY                                               :{VELOCITY}
 STR_JUST_TT_TICKS                                               :{TT_TICKS}
 STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
+STR_JUST_STATION                                                :{STATION}
 
 STR_RED_INT                                                     :{RED}{NUM}
 
@@ -84,6 +83,8 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_LABEL      :Custom interval
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Custom interval (real-time minutes)
 
 ##end-after
+
+STR_COMMA_SEPARATOR                                             :,{SP}
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
@@ -190,6 +191,9 @@ STR_CONFIG_SETTING_TRAIN_BRAKING_MODEL_HELPTEXT                 :Select the phys
 
 STR_CONFIG_SETTING_REALISTIC_BRAKING_ASPECT_LIMITED             :Realistic train braking is aspect limited: {STRING2}
 STR_CONFIG_SETTING_REALISTIC_BRAKING_ASPECT_LIMITED_HELPTEXT    :In the realistic train braking model, limit the look-ahead of trains to the aspect of signals (i.e. do not allow reserving and looking ahead an unlimited number of signals).{}This requires a NewGRF which provides multi-aspect signals.{}{}This is an expert setting which will likely increase gameplay difficulty and will require additional thought about signal types and placement.
+
+STR_CONFIG_SETTING_LIMIT_TRAIN_ACCELERATION                     :Limit train acceleration: {STRING2}
+STR_CONFIG_SETTING_LIMIT_TRAIN_ACCELERATION_HELPTEXT            :When using the realistic train train braking model, also limit the maximum acceleration of trains. This is to prevent passengers from spilling their drinks due to some train types otherwise accelerating excessively quickly.
 
 STR_CONFIG_SETTING_THROUGH_LOAD_SPEED_LIMIT                     :Train through load maximum speed: {STRING2}
 STR_CONFIG_SETTING_THROUGH_LOAD_SPEED_LIMIT_HELPTEXT            :The maximum permitted speed for trains when through loading at a station
@@ -702,6 +706,9 @@ STR_CONFIG_SETTING_NO_EXPIRE_OBJECTS_AFTER_ZERO                 :Off
 
 STR_CONFIG_SETTING_IGNORE_OBJECT_INTRO_DATES                    :Ignore object introduction dates: {STRING2}
 STR_CONFIG_SETTING_IGNORE_OBJECT_INTRO_DATES_HELPTEXT           :Set whether players are allowed to build objects before their introduction date.{}Does not apply to objects constructed during map generation.
+
+STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES            :Allow converting town roads to non-house types: {STRING2}
+STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES_HELPTEXT   :Whether to allow players to convert town-owned roads to a road type which does not allow houses.{}This is off by default because doing so can prevent towns from building houses at all, resulting in them shrinking.
 
 STR_PURCHASE_LAND_PERMITTED_NO                                  :No
 STR_PURCHASE_LAND_PERMITTED_SINGLE                              :Yes, 1 tile at a time
@@ -1457,8 +1464,6 @@ STR_VEHICLE_LIST_CHANGE_ORDER_ROAD_VEHICLE_DEPOT                :Move order to a
 STR_VEHICLE_LIST_CHANGE_ORDER_SHIP_DEPOT                        :Move order to another depot
 STR_VEHICLE_LIST_CHANGE_ORDER_AIRCRAFT_HANGAR                   :Move order to another hangar
 
-STR_VEHICLE_LIST_CREATE_GROUP                                   :Create group from list
-
 STR_GROUP_EXPAND_ALL                                            :{BLACK}Expand all
 STR_GROUP_COLLAPSE_ALL                                          :{BLACK}Collapse all
 
@@ -1558,13 +1563,6 @@ STR_ORDER_DROP_SELL_DEPOT                                       :Sell vehicle
 
 STR_ORDER_CONDITIONAL_VEHICLE_IN_SLOT                           :Vehicle in slot
 
-STR_ORDER_CONDITIONAL_REQUIRES_SERVICE_ORDER                    :Requires service {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_ORDER                       :Next station {STRING} {STRING} waiting
-STR_ORDER_CONDITIONAL_ACCEPTANCE                                :Next station {STRING} {STRING}
-
-STR_CONDITIONAL_FREE_PLATFORMS                                  :Jump to order {COMMA} when Next station {STRING} {COMMA} free platform{P "" s}
-STR_CONDITIONAL_PERCENT                                         :Jump to order {COMMA} {COMMA} percent of times
-
 STR_ORDER_CONDITIONAL_NEXT_STATION                              :Next station
 STR_ORDER_CONDITIONAL_CARGO_TOOLTIP                             :{BLACK}The cargo to compare the station data against
 STR_ORDER_CONDITIONAL_SLOT_TOOLTIP                              :{BLACK}The train slot to check the occupancy of
@@ -1575,6 +1573,8 @@ STR_ORDER_CONDITIONAL_SCHED_SELECT_TOOLTIP                      :{BLACK}The disp
 STR_ORDER_CONDITIONAL_SCHED_TEST_TOOLTIP                        :{BLACK}The dispatch schedule condition to test
 STR_ORDER_CONDITIONAL_VIA                                       :{BLACK}Via
 STR_ORDER_CONDITIONAL_VIA_TOOLTIP                               :{BLACK}The via station to check the waiting cargo amount for
+STR_ORDER_CONDITIONAL_STATION                                   :{BLACK}Station
+STR_ORDER_CONDITIONAL_STATION_TOOLTIP                           :{BLACK}The station to check
 
 STR_ORDER_CONDITIONAL_COMPARATOR_ACCEPTS                        :accepts
 STR_ORDER_CONDITIONAL_COMPARATOR_DOES_NOT_ACCEPT                :does not accept
@@ -1663,15 +1663,19 @@ STR_ORDER_RV_DIR_SE                                             :[south-east dir
 STR_ORDER_RV_DIR_SW                                             :[south-west direction]
 STR_ORDER_RV_DIR_NW                                             :[north-west direction]
 
-STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :Jump to order {COMMA} when Next station {STRING} {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :Jump to order {COMMA} when Next station {STRING} {STRING}
+STR_ORDER_CONDITIONAL_UNDEFINED_STATION                         :{PUSH_COLOUR}{RED}undefined station{POP_COLOUR}
+
+STR_ORDER_CONDITIONAL_FREE_PLATFORMS_DISPLAY                    :Jump to order {COMMA} when {STRING1} {STRING} {COMMA} free platform{P "" s}
+STR_ORDER_CONDITIONAL_PERCENT_DISPLAY                           :Jump to order {COMMA} {COMMA} percent of times
+STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :Jump to order {COMMA} when {STRING1} {STRING} {STRING}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :Jump to order {COMMA} when {STRING1} {STRING} {STRING}
 STR_ORDER_CONDITIONAL_SLOT                                      :Jump to order {COMMA} when {TRSLOT} {STRING}
 STR_ORDER_CONDITIONAL_INVALID_SLOT                              :Jump to order {COMMA} when {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}{STRING}
 STR_ORDER_CONDITIONAL_IN_SLOT                                   :Jump to order {COMMA} when {STRING} slot: {TRSLOT}
 STR_ORDER_CONDITIONAL_IN_INVALID_SLOT                           :Jump to order {COMMA} when {STRING} {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}
 STR_ORDER_CONDITIONAL_LOAD_PERCENTAGE_DISPLAY                   :Jump to order {COMMA} when Load percentage of {STRING} {STRING} {COMMA}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_DISPLAY              :Jump to order {COMMA} when {STRING} at next station {STRING} {CARGO_SHORT}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_VIA_DISPLAY          :Jump to order {COMMA} when {STRING} at next station via {STATION} {STRING} {CARGO_SHORT}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_DISPLAY              :Jump to order {COMMA} when {STRING} at {STRING1} {STRING} {CARGO_SHORT}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_VIA_DISPLAY          :Jump to order {COMMA} when {STRING} at {STRING1} via {STRING1} {STRING} {CARGO_SHORT}
 STR_ORDER_CONDITIONAL_COUNTER                                   :Jump to order {COMMA} when value of {TRCOUNTER} {STRING} {COMMA}
 STR_ORDER_CONDITIONAL_INVALID_COUNTER                           :Jump to order {COMMA} when value of {PUSH_COLOUR}{RED}{STRING}{POP_COLOUR} {STRING} {COMMA}
 STR_ORDER_CONDITIONAL_TIME_HHMM                                 :Jump to order {COMMA} when {STRING} {STRING} {TIME_HHMM}
@@ -1733,6 +1737,9 @@ STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION                         :{BLACK}Enable '
 STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION_2                       :{BLACK}(Alternatively, enable 'Autofill' or manually fill in all the timetable fields).
 
 STR_TIMETABLE_WARNINGS_OMITTED                                  :{BLACK}{NUM} further warnings omitted...
+
+STR_TIMETABLE_ARRIVAL_ABBREVIATION                              :A:
+STR_TIMETABLE_DEPARTURE_ABBREVIATION                            :D:
 
 STR_DATE_MINUTES_MINUTE_TOOLTIP                                 :{BLACK}Select minute
 STR_DATE_MINUTES_HOUR_TOOLTIP                                   :{BLACK}Select hour
@@ -1895,15 +1902,15 @@ STR_STATION_RATING_MAX_PERCENTAGE                               : (max {PLUS_NUM
 STR_STATION_RATING_MAX_PERCENTAGE_COMMA                         :, max {PLUS_NUM}%
 STR_STATION_RATING_PERCENTAGE_COMMA                             :, {PLUS_NUM}%
 
-STR_STATION_RATING_TOOLTIP_SPEED                                :Max speed of last vehicle{STRING1}: {SET_COLOUR}{VELOCITY}{STRING1} ({STRING})
+STR_STATION_RATING_TOOLTIP_SPEED                                :Max speed of last vehicle{STRING1}: {COLOUR}{VELOCITY}{STRING1} ({STRING})
 
-STR_STATION_RATING_TOOLTIP_AGE                                  :Age of last vehicle{STRING1}: {SET_COLOUR}{NUM} year{P "" s}{STRING1}
+STR_STATION_RATING_TOOLTIP_AGE                                  :Age of last vehicle{STRING1}: {COLOUR}{NUM} year{P "" s}{STRING1}
 
 STR_STATION_RATING_TOOLTIP_WAITTIME                             :Time since last pickup{STRING1}: {STRING4}
 STR_STATION_RATING_TOOLTIP_WAITTIME_SHIP                        :Time since last pickup{STRING1}: {STRING4} (by ship)
-STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{SET_COLOUR}{NUM} day{P "" s}{STRING1}
+STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{COLOUR}{NUM} day{P "" s}{STRING1}
 
-STR_STATION_RATING_TOOLTIP_WAITUNITS                            :Cargo waiting (on average per next stop{STRING1}): {SET_COLOUR}{NUM}{STRING1}
+STR_STATION_RATING_TOOLTIP_WAITUNITS                            :Cargo waiting (on average per next stop{STRING1}): {COLOUR}{NUM}{STRING1}
 
 STR_STATION_RATING_TOOLTIP_STATUE                               :Statue in town{STRING1}: {STRING2}
 STR_STATION_RATING_TOOLTIP_STATUE_NO                            :{GOLD}no{STRING1}
@@ -1961,21 +1968,28 @@ STR_TMPL_ADD_VEHICLE_REFIT                                      :{BLACK}Add and 
 STR_TMPL_ADD_TOOLTIP                                            :{BLACK}Add the highlighted vehicle to the template.
 STR_TMPL_ADD_REFIT_TOOLTIP                                      :{BLACK}Add and refit the highlighted vehicle to the template.
 
-STR_TMPL_SET_USEDEPOT                                           :{BLACK}Use vehicles in depot
-STR_TMPL_SET_USEDEPOT_TIP                                       :{BLACK}Use vehicles inside the depot that are in a neutral and idle state to compose trains on template replacement in order to reduce buying costs
+STR_TMPL_SET_USEDEPOT                                           :{BLACK}Use depot vehicles
+STR_TMPL_SET_USEDEPOT_TIP                                       :{BLACK}Use available vehicles in the depot during template replacement in order to reduce buying costs.{}Available vehicles must be stopped in the depot. Locomotives must have no orders, no group and not share orders with another vehicle.
 STR_TMPL_SET_KEEPREMAINDERS                                     :{BLACK}Keep remainders
-STR_TMPL_SET_KEEPREMAINDERS_TIP                                 :{BLACK}After finishing template replacement keep all remaining vehicles from the old train in a neutral and idle state for later use
-STR_TMPL_SET_REFIT                                              :{BLACK}Use Refit
-STR_TMPL_SET_REFIT_TIP                                          :{BLACK}If set, the train will use exactly the cargo refit specified by the template. If not every wagon that is to be newly bought or retrieved from the depot, will *attempt* to be refitted as the old one was. Standard refit if this is impossible.
+STR_TMPL_SET_KEEPREMAINDERS_TIP                                 :{BLACK}After finishing template replacement, leave any remaining vehicles from the old train in the depot for later use
+STR_TMPL_SET_REFIT_AS_TEMPLATE                                  :{BLACK}As template
+STR_TMPL_SET_REFIT_AS_TEMPLATE_TIP                              :{BLACK}The train will be refitted to exactly match the template
+STR_TMPL_SET_REFIT_AS_INCOMING                                  :{BLACK}As incoming
+STR_TMPL_SET_REFIT_AS_INCOMING_TIP                              :{BLACK}Each part of the new train will be refitted to the first cargo in the old train. Standard refit if this is not possible.
 STR_TMPL_SET_OLD_ONLY                                           :{BLACK}Old Only
 STR_TMPL_SET_OLD_ONLY_TIP                                       :{BLACK}If set, only vehicles which are old and due for automatic replacement will be replaced
 
+STR_TMPL_CONFIG_REFIT_AS_TEMPLATE                               :{GREEN}refit: template
+STR_TMPL_CONFIG_REFIT_AS_INCOMING                               :{GOLD}refit: incoming
 STR_TMPL_CONFIG_USEDEPOT                                        :use depot
 STR_TMPL_CONFIG_KEEPREMAINDERS                                  :keep rem
-STR_TMPL_CONFIG_REFIT                                           :refit
 STR_TMPL_CONFIG_OLD_ONLY                                        :old only
 
-STR_TMPL_NUM_TRAINS_NEED_RPL                                    :# trains to replace:
+STR_TMPL_SECTION_REFIT                                          :{BLACK}Refit
+STR_TMPL_SECTION_DEPOT_VEHICLES                                 :{BLACK}Depot vehicles
+STR_TMPL_SECTION_WHEN                                           :{BLACK}When
+
+STR_TMPL_NUM_TRAINS_NEED_RPL                                    :Trains to replace: {COLOUR}{COMMA}
 
 STR_TMPL_CARGO_SUMMARY                                          :{CARGO_LONG}
 STR_TMPL_CARGO_SUMMARY_MULTI                                    :{CARGO_LONG} (x{NUM})
@@ -2171,7 +2185,7 @@ STR_CONFIG_SETTING_CITY_IN_LABEL                                :Show city in to
 STR_CONFIG_SETTING_CITY_IN_LABEL_HELPTEXT                       :Display if a town is also a city in their label on the map
 
 ###length 4
-STR_VIEWPORT_TOWN_COLOUR                                        :{1:SET_COLOUR}{0:TOWN}
-STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {SET_COLOUR}({COMMA})
-STR_VIEWPORT_TOWN_COLOUR_CITY                                   :{1:SET_COLOUR}{0:TOWN} (City)
-STR_VIEWPORT_TOWN_COLOUR_CITY_POP                               :{WHITE}{TOWN} {SET_COLOUR}(City, {COMMA})
+STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
+STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}({COMMA})
+STR_VIEWPORT_TOWN_COLOUR_CITY                                   :{1:COLOUR}{0:TOWN} (City)
+STR_VIEWPORT_TOWN_COLOUR_CITY_POP                               :{WHITE}{TOWN} {COLOUR}(City, {COMMA})

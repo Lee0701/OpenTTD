@@ -53,6 +53,7 @@
 #include "zoom_func.h"
 #include "zoning.h"
 #include "scope.h"
+#include "3rdparty/cpp-btree/btree_map.h"
 
 #include "table/strings.h"
 #include "table/town_land.h"
@@ -112,7 +113,7 @@ Town::~Town()
 
 	/* Delete town authority window
 	 * and remove from list of sorted towns */
-	DeleteWindowById(WC_TOWN_VIEW, this->index);
+	CloseWindowById(WC_TOWN_VIEW, this->index);
 
 #ifdef WITH_ASSERT
 	/* Check no industry is related to us. */
@@ -4232,7 +4233,7 @@ Town *ClosestTownFromTile(TileIndex tile, uint threshold)
 }
 
 static bool _town_rating_test = false; ///< If \c true, town rating is in test-mode.
-static std::map<const Town *, int> _town_test_ratings; ///< Map of towns to modified ratings, while in town rating test-mode.
+static btree::btree_map<const Town *, int> _town_test_ratings; ///< Map of towns to modified ratings, while in town rating test-mode.
 
 /**
  * Switch the town rating to test-mode, to allow commands to be tested without affecting current ratings.
@@ -4451,6 +4452,8 @@ HouseSpec _house_specs[NUM_HOUSES];
 
 void ResetHouses()
 {
+	ResetHouseClassIDs();
+
 	auto insert = std::copy(std::begin(_original_house_specs), std::end(_original_house_specs), std::begin(_house_specs));
 	std::fill(insert, std::end(_house_specs), HouseSpec{});
 

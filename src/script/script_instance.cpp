@@ -378,14 +378,7 @@ ScriptLogTypes::LogData &ScriptInstance::GetLogData()
  *  - null:    No data.
  */
 
-static byte _script_sl_byte; ///< Used as source/target by the script saveload code to store/load a single byte.
-
-/** SaveLoad array that saves/loads exactly one byte. */
-static const SaveLoad _script_byte[] = {
-	SLEG_VAR(_script_sl_byte, SLE_UINT8),
-};
-
-/* static */ bool ScriptInstance::SaveObject(HSQUIRRELVM vm, SQInteger index, int max_depth, bool test)
+/* static */ bool ScriptInstance::SaveObject(HSQUIRRELVM vm, SQInteger index, int max_depth)
 {
 	if (max_depth == 0) {
 		ScriptLog::Error("Savedata can only be nested to 25 deep. No data saved."); // SQUIRREL_MAX_DEPTH = 25
@@ -394,24 +387,16 @@ static const SaveLoad _script_byte[] = {
 
 	switch (sq_gettype(vm, index)) {
 		case OT_INTEGER: {
-			if (!test) {
-				_script_sl_byte = SQSL_INT;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_INT);
 			SQInteger res;
 			sq_getinteger(vm, index, &res);
-			if (!test) {
-				int64 value = (int64)res;
-				SlArray(&value, 1, SLE_INT64);
-			}
+			int64 value = (int64)res;
+			SlArray(&value, 1, SLE_INT64);
 			return true;
 		}
 
 		case OT_STRING: {
-			if (!test) {
-				_script_sl_byte = SQSL_STRING;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_STRING);
 			const SQChar *buf;
 			sq_getstring(vm, index, &buf);
 			size_t len = strlen(buf) + 1;
@@ -419,23 +404,17 @@ static const SaveLoad _script_byte[] = {
 				ScriptLog::Error("Maximum string length is 254 chars. No data saved.");
 				return false;
 			}
-			if (!test) {
-				_script_sl_byte = (byte)len;
-				SlObject(nullptr, _script_byte);
-				SlArray(const_cast<char *>(buf), len, SLE_CHAR);
-			}
+			SlWriteByte((byte)len);
+			SlArray(const_cast<char *>(buf), len, SLE_CHAR);
 			return true;
 		}
 
 		case OT_ARRAY: {
-			if (!test) {
-				_script_sl_byte = SQSL_ARRAY;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_ARRAY);
 			sq_pushnull(vm);
 			while (SQ_SUCCEEDED(sq_next(vm, index - 1))) {
 				/* Store the value */
-				bool res = SaveObject(vm, -1, max_depth - 1, test);
+				bool res = SaveObject(vm, -1, max_depth - 1);
 				sq_pop(vm, 2);
 				if (!res) {
 					sq_pop(vm, 1);
@@ -443,22 +422,16 @@ static const SaveLoad _script_byte[] = {
 				}
 			}
 			sq_pop(vm, 1);
-			if (!test) {
-				_script_sl_byte = SQSL_ARRAY_TABLE_END;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_ARRAY_TABLE_END);
 			return true;
 		}
 
 		case OT_TABLE: {
-			if (!test) {
-				_script_sl_byte = SQSL_TABLE;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_TABLE);
 			sq_pushnull(vm);
 			while (SQ_SUCCEEDED(sq_next(vm, index - 1))) {
 				/* Store the key + value */
-				bool res = SaveObject(vm, -2, max_depth - 1, test) && SaveObject(vm, -1, max_depth - 1, test);
+				bool res = SaveObject(vm, -2, max_depth - 1) && SaveObject(vm, -1, max_depth - 1);
 				sq_pop(vm, 2);
 				if (!res) {
 					sq_pop(vm, 1);
@@ -466,32 +439,20 @@ static const SaveLoad _script_byte[] = {
 				}
 			}
 			sq_pop(vm, 1);
-			if (!test) {
-				_script_sl_byte = SQSL_ARRAY_TABLE_END;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_ARRAY_TABLE_END);
 			return true;
 		}
 
 		case OT_BOOL: {
-			if (!test) {
-				_script_sl_byte = SQSL_BOOL;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_BOOL);
 			SQBool res;
 			sq_getbool(vm, index, &res);
-			if (!test) {
-				_script_sl_byte = res ? 1 : 0;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(res ? 1 : 0);
 			return true;
 		}
 
 		case OT_NULL: {
-			if (!test) {
-				_script_sl_byte = SQSL_NULL;
-				SlObject(nullptr, _script_byte);
-			}
+			SlWriteByte(SQSL_NULL);
 			return true;
 		}
 
@@ -503,8 +464,7 @@ static const SaveLoad _script_byte[] = {
 
 /* static */ void ScriptInstance::SaveEmpty()
 {
-	_script_sl_byte = 0;
-	SlObject(nullptr, _script_byte);
+	SlWriteByte(0);
 }
 
 void ScriptInstance::Save()
@@ -519,10 +479,9 @@ void ScriptInstance::Save()
 
 	HSQUIRRELVM vm = this->engine->GetVM();
 	if (this->is_save_data_on_stack) {
-		_script_sl_byte = 1;
-		SlObject(nullptr, _script_byte);
+		SlWriteByte(1);
 		/* Save the data that was just loaded. */
-		SaveObject(vm, -1, SQUIRREL_MAX_DEPTH, false);
+		SaveObject(vm, -1, SQUIRREL_MAX_DEPTH);
 	} else if (!this->is_started) {
 		SaveEmpty();
 		return;
@@ -561,10 +520,11 @@ void ScriptInstance::Save()
 			return;
 		}
 		sq_pushobject(vm, savedata);
-		if (SaveObject(vm, -1, SQUIRREL_MAX_DEPTH, true)) {
-			_script_sl_byte = 1;
-			SlObject(nullptr, _script_byte);
-			SaveObject(vm, -1, SQUIRREL_MAX_DEPTH, false);
+		bool saved = SlConditionallySave([&]() {
+			SlWriteByte(1);
+			return SaveObject(vm, -1, SQUIRREL_MAX_DEPTH);
+		});
+		if (saved) {
 			this->is_save_data_on_stack = true;
 		} else {
 			SaveEmpty();
@@ -572,8 +532,7 @@ void ScriptInstance::Save()
 		}
 	} else {
 		ScriptLog::Warning("Save function is not implemented");
-		_script_sl_byte = 0;
-		SlObject(nullptr, _script_byte);
+		SlWriteByte(0);
 	}
 }
 
@@ -598,8 +557,8 @@ bool ScriptInstance::IsPaused()
 
 /* static */ bool ScriptInstance::LoadObjects(ScriptData *data)
 {
-	SlObject(nullptr, _script_byte);
-	switch (_script_sl_byte) {
+	byte type = SlReadByte();
+	switch (type) {
 		case SQSL_INT: {
 			int64 value;
 			SlArray(&value, 1, (IsSavegameVersionBefore(SLV_SCRIPT_INT64) && SlXvIsFeatureMissing(XSLFI_SCRIPT_INT64)) ? SLE_FILE_I32 | SLE_VAR_I64 : SLE_INT64);
@@ -608,34 +567,34 @@ bool ScriptInstance::IsPaused()
 		}
 
 		case SQSL_STRING: {
-			SlObject(nullptr, _script_byte);
-			static char buf[std::numeric_limits<decltype(_script_sl_byte)>::max()];
-			SlArray(buf, _script_sl_byte, SLE_CHAR);
-			StrMakeValidInPlace(buf, buf + _script_sl_byte);
+			byte len = SlReadByte();
+			static char buf[std::numeric_limits<decltype(len)>::max()];
+			SlArray(buf, len, SLE_CHAR);
+			StrMakeValidInPlace(buf, buf + len);
 			if (data != nullptr) data->push_back(std::string(buf));
 			return true;
 		}
 
 		case SQSL_ARRAY:
 		case SQSL_TABLE: {
-			if (data != nullptr) data->push_back((SQSaveLoadType)_script_sl_byte);
+			if (data != nullptr) data->push_back((SQSaveLoadType)type);
 			while (LoadObjects(data));
 			return true;
 		}
 
 		case SQSL_BOOL: {
-			SlObject(nullptr, _script_byte);
-			if (data != nullptr) data->push_back((SQBool)(_script_sl_byte != 0));
+			byte sl_byte = SlReadByte();
+			if (data != nullptr) data->push_back((SQBool)(sl_byte != 0));
 			return true;
 		}
 
 		case SQSL_NULL: {
-			if (data != nullptr) data->push_back((SQSaveLoadType)_script_sl_byte);
+			if (data != nullptr) data->push_back((SQSaveLoadType)type);
 			return true;
 		}
 
 		case SQSL_ARRAY_TABLE_END: {
-			if (data != nullptr) data->push_back((SQSaveLoadType)_script_sl_byte);
+			if (data != nullptr) data->push_back((SQSaveLoadType)type);
 			return false;
 		}
 
@@ -698,9 +657,9 @@ bool ScriptInstance::IsPaused()
 
 /* static */ void ScriptInstance::LoadEmpty()
 {
-	SlObject(nullptr, _script_byte);
+	byte sl_byte = SlReadByte();
 	/* Check if there was anything saved at all. */
-	if (_script_sl_byte == 0) return;
+	if (sl_byte == 0) return;
 
 	LoadObjects(nullptr);
 }
@@ -712,9 +671,9 @@ bool ScriptInstance::IsPaused()
 		return nullptr;
 	}
 
-	SlObject(nullptr, _script_byte);
+	byte sl_byte = SlReadByte();
 	/* Check if there was anything saved at all. */
-	if (_script_sl_byte == 0) return nullptr;
+	if (sl_byte == 0) return nullptr;
 
 	ScriptData *data = new ScriptData();
 	data->push_back((SQInteger)version);

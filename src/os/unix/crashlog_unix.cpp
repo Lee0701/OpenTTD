@@ -312,8 +312,21 @@ class CrashLogUnix : public CrashLog {
 #ifdef WITH_SIGACTION
 		if (this->si) {
 			buffer += seprintf(buffer, last,
-					"          si_code: %d\n",
+					"          si_code: %d",
 					this->si->si_code);
+			if (this->signum == SIGSEGV) {
+				switch (this->si->si_code) {
+					case SEGV_MAPERR:
+						buffer += seprintf(buffer, last, " (SEGV_MAPERR)");
+						break;
+					case SEGV_ACCERR:
+						buffer += seprintf(buffer, last, " (SEGV_ACCERR)");
+						break;
+					default:
+						break;
+				}
+			}
+			buffer += seprintf(buffer, last, "\n");
 			if (this->signum != SIGABRT) {
 				buffer += seprintf(buffer, last,
 						"          Fault address: %p\n",
@@ -324,8 +337,23 @@ class CrashLogUnix : public CrashLog {
 							this->signal_instruction_ptr);
 				}
 			}
+
+#if defined(WITH_UCONTEXT) && (defined(__x86_64__) || defined(__i386))
+			if (this->signal_instruction_ptr_valid && this->signum == SIGSEGV) {
+				auto err = static_cast<ucontext_t *>(this->context)->uc_mcontext.gregs[REG_ERR];
+				buffer += seprintf(buffer, last,
+						"          REG_ERR: %s%s%s%s%s\n",
+							(err & 1) ? "protection fault" : "no page",
+							(err & 2) ? ", write" : ", read",
+							(err & 4) ? "" : ", kernel",
+							(err & 8) ? ", reserved bit" : "",
+							(err & 16) ? ", instruction fetch" : ""
+						);
+			}
+#endif /* defined(WITH_UCONTEXT) && (defined(__x86_64__) || defined(__i386)) */
+
 		}
-#endif
+#endif /* WITH_SIGACTION */
 		this->CrashLogFaultSectionCheckpoint(buffer);
 		buffer += seprintf(buffer, last,
 				" Message: %s\n\n",
@@ -391,7 +419,7 @@ class CrashLogUnix : public CrashLog {
 			" rsi: %#16llx rdi: %#16llx rbp: %#16llx rsp: %#16llx\n"
 			" r8:  %#16llx r9:  %#16llx r10: %#16llx r11: %#16llx\n"
 			" r12: %#16llx r13: %#16llx r14: %#16llx r15: %#16llx\n"
-			" rip: %#16llx eflags: %#8llx\n\n",
+			" rip: %#16llx eflags: %#8llx, err: %#llx\n\n",
 			gregs[REG_RAX],
 			gregs[REG_RBX],
 			gregs[REG_RCX],
@@ -409,7 +437,8 @@ class CrashLogUnix : public CrashLog {
 			gregs[REG_R14],
 			gregs[REG_R15],
 			gregs[REG_RIP],
-			gregs[REG_EFL]
+			gregs[REG_EFL],
+			gregs[REG_ERR]
 		);
 #elif defined(__i386)
 		const gregset_t &gregs = ucontext->uc_mcontext.gregs;
@@ -417,7 +446,7 @@ class CrashLogUnix : public CrashLog {
 			"Registers:\n"
 			" eax: %#8x ebx: %#8x ecx: %#8x edx: %#8x\n"
 			" esi: %#8x edi: %#8x ebp: %#8x esp: %#8x\n"
-			" eip: %#8x eflags: %#8x\n\n",
+			" eip: %#8x eflags: %#8x, err: %#x\n\n",
 			gregs[REG_EAX],
 			gregs[REG_EBX],
 			gregs[REG_ECX],
@@ -427,7 +456,8 @@ class CrashLogUnix : public CrashLog {
 			gregs[REG_EBP],
 			gregs[REG_ESP],
 			gregs[REG_EIP],
-			gregs[REG_EFL]
+			gregs[REG_EFL],
+			gregs[REG_ERR]
 		);
 #endif
 #endif
@@ -820,9 +850,9 @@ static void CDECL HandleCrash(int signum)
 /* static */ void CrashLog::InitialiseCrashLog()
 {
 #ifdef WITH_SIGALTSTACK
-	const size_t stack_size = max<size_t>(SIGSTKSZ, 512*1024);
+	const size_t stack_size = std::max<size_t>(SIGSTKSZ, 512*1024);
 	stack_t ss;
-	ss.ss_sp = CallocT<byte>(stack_size);
+	ss.ss_sp = mmap(nullptr, stack_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	ss.ss_size = stack_size;
 	ss.ss_flags = 0;
 	sigaltstack(&ss, nullptr);

@@ -644,6 +644,9 @@ static Money  _cargo_feeder_share;
 static uint32 _cargo_loaded_at_xy;
 CargoPacketList _cpp_packets;
 std::map<VehicleID, CargoPacketList> _veh_cpp_packets;
+static std::vector<Trackdir> _path_td;
+static std::vector<TileIndex> _path_tile;
+static uint32 _path_layout_ctr;
 
 static uint32 _old_ahead_separation;
 
@@ -703,8 +706,8 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		     SLE_VAR(Vehicle, cargo_cap,             SLE_UINT16),
 		 SLE_CONDVAR(Vehicle, refit_cap,             SLE_UINT16,                 SLV_182, SL_MAX_VERSION),
 		SLEG_CONDVAR(         _cargo_count,          SLE_UINT16,                   SL_MIN_VERSION,  SLV_68),
-		SLE_CONDPTRDEQ(Vehicle, cargo.packets,         REF_CARGO_PACKET,            SLV_68, SL_MAX_VERSION),
-		SLEG_CONDPTRDEQ_X(    _cpp_packets,            REF_CARGO_PACKET,           SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP)),
+		SLE_CONDPTRRING(Vehicle, cargo.packets,      REF_CARGO_PACKET,            SLV_68, SL_MAX_VERSION),
+		SLEG_CONDPTRRING_X(    _cpp_packets,         REF_CARGO_PACKET,           SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP)),
 		 SLE_CONDARR(Vehicle, cargo.action_counts,   SLE_UINT, VehicleCargoList::NUM_MOVE_TO_ACTION, SLV_181, SL_MAX_VERSION),
 		 SLE_CONDVAR(Vehicle, cargo_age_counter,     SLE_UINT16,                 SLV_162, SL_MAX_VERSION),
 
@@ -757,6 +760,7 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		 SLE_CONDVAR(Vehicle, max_age,               SLE_INT32,                   SLV_31, SL_MAX_VERSION),
 		 SLE_CONDVAR(Vehicle, date_of_last_service,  SLE_FILE_U16 | SLE_VAR_I32,   SL_MIN_VERSION,  SLV_31),
 		 SLE_CONDVAR(Vehicle, date_of_last_service,  SLE_INT32,                   SLV_31, SL_MAX_VERSION),
+		SLE_CONDVAR_X(Vehicle, date_of_last_service_newgrf, SLE_INT32,    SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_NEWGRF_LAST_SERVICE)),
 		 SLE_CONDVAR(Vehicle, service_interval,      SLE_UINT16,                   SL_MIN_VERSION,  SLV_31),
 		 SLE_CONDVAR(Vehicle, service_interval,      SLE_FILE_U32 | SLE_VAR_U16,  SLV_31, SLV_180),
 		 SLE_CONDVAR(Vehicle, service_interval,      SLE_UINT16,                 SLV_180, SL_MAX_VERSION),
@@ -857,9 +861,9 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		      SLE_VAR(RoadVehicle, overtaking_ctr,       SLE_UINT8),
 		      SLE_VAR(RoadVehicle, crashed_ctr,          SLE_UINT16),
 		      SLE_VAR(RoadVehicle, reverse_ctr,          SLE_UINT8),
-		SLE_CONDDEQUE(RoadVehicle, path.td,              SLE_UINT8,                  SLV_ROADVEH_PATH_CACHE, SL_MAX_VERSION),
-		SLE_CONDDEQUE(RoadVehicle, path.tile,            SLE_UINT32,                 SLV_ROADVEH_PATH_CACHE, SL_MAX_VERSION),
-		SLE_CONDVAR_X(RoadVehicle, path.layout_ctr,      SLE_UINT32,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_ROAD_LAYOUT_CHANGE_CTR)),
+		SLEG_CONDVARVEC(_path_td,                        SLE_UINT8,                  SLV_ROADVEH_PATH_CACHE, SL_MAX_VERSION),
+		SLEG_CONDVARVEC(_path_tile,                      SLE_UINT32,                 SLV_ROADVEH_PATH_CACHE, SL_MAX_VERSION),
+		SLEG_CONDVAR_X(_path_layout_ctr,                 SLE_UINT32,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_ROAD_LAYOUT_CHANGE_CTR)),
 
 		 SLE_CONDNULL(2,                                                               SLV_6,  SLV_69),
 		  SLE_CONDVAR(RoadVehicle, gv_flags,             SLE_UINT16,                 SLV_139, SL_MAX_VERSION),
@@ -867,13 +871,14 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		 SLE_CONDNULL(2,                                                               SLV_6, SLV_131),
 		 SLE_CONDNULL(16,                                                              SLV_2, SLV_144), // old reserved space
 		SLE_CONDVAR_X(RoadVehicle, critical_breakdown_count, SLE_UINT8,       SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_IMPROVED_BREAKDOWNS, 6)),
+		SLE_CONDVAR_X(RoadVehicle, rvflags,                  SLE_UINT8,       SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_ROAD_VEH_FLAGS)),
 	};
 
 	static const SaveLoad _ship_desc[] = {
 		SLE_WRITEBYTE(Vehicle, type),
 		SLE_VEH_INCLUDE(),
 		      SLE_VAR(Ship, state,                     SLE_UINT8),
-		SLE_CONDDEQUE(Ship, path,                      SLE_UINT8,                  SLV_SHIP_PATH_CACHE, SL_MAX_VERSION),
+		SLEG_CONDVARVEC(_path_td,                      SLE_UINT8,                  SLV_SHIP_PATH_CACHE, SL_MAX_VERSION),
 		  SLE_CONDVAR(Ship, rotation,                  SLE_UINT8,                  SLV_SHIP_ROTATION, SL_MAX_VERSION),
 		SLE_CONDVAR_X(Ship, lost_count,                SLE_UINT8,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SHIP_LOST_COUNTER)),
 		SLE_CONDVAR_X(Ship, critical_breakdown_count,  SLE_UINT8,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_IMPROVED_BREAKDOWNS, 8)),
@@ -1024,6 +1029,33 @@ static void Save_VEHS()
 	SetupDescs_VEHS();
 	/* Write the vehicles */
 	for (Vehicle *v : Vehicle::Iterate()) {
+		if (v->type == VEH_ROAD) {
+			_path_td.clear();
+			_path_tile.clear();
+			_path_layout_ctr = 0;
+
+			RoadVehicle *rv = RoadVehicle::From(v);
+			if (rv->cached_path != nullptr && !rv->cached_path->empty()) {
+				uint idx = rv->cached_path->start;
+				for (uint i = 0; i < rv->cached_path->size(); i++) {
+					_path_td.push_back(rv->cached_path->td[idx]);
+					_path_tile.push_back(rv->cached_path->tile[idx]);
+					idx = (idx + 1) & RV_PATH_CACHE_SEGMENT_MASK;
+				}
+				_path_layout_ctr = rv->cached_path->layout_ctr;
+			}
+		} else if (v->type == VEH_SHIP) {
+			_path_td.clear();
+
+			Ship *s = Ship::From(v);
+			if (s->cached_path != nullptr && !s->cached_path->empty()) {
+				uint idx = s->cached_path->start;
+				for (uint i = 0; i < s->cached_path->size(); i++) {
+					_path_td.push_back(s->cached_path->td[idx]);
+					idx = (idx + 1) & SHIP_PATH_CACHE_MASK;
+				}
+			}
+		}
 		SlSetArrayIndex(v->index);
 		SlObjectSaveFiltered(v, GetVehicleDescriptionFiltered(v->type));
 	}
@@ -1040,6 +1072,10 @@ void Load_VEHS()
 
 	_cpp_packets.clear();
 	_veh_cpp_packets.clear();
+
+	_path_td.clear();
+	_path_tile.clear();
+	_path_layout_ctr = 0;
 
 	while ((index = SlIterateArray()) != -1) {
 		Vehicle *v;
@@ -1088,6 +1124,24 @@ void Load_VEHS()
 
 		if (SlXvIsFeaturePresent(XSLFI_AUTO_TIMETABLE, 1, 4)) {
 			SB(v->vehicle_flags, VF_SEPARATION_ACTIVE, 1, _old_ahead_separation ? 1 : 0);
+		}
+
+		if (vtype == VEH_ROAD && !_path_td.empty() && _path_td.size() <= RV_PATH_CACHE_SEGMENTS && _path_td.size() == _path_tile.size()) {
+			RoadVehicle *rv = RoadVehicle::From(v);
+			rv->cached_path.reset(new RoadVehPathCache());
+			rv->cached_path->count = (uint8)_path_td.size();
+			for (size_t i = 0; i < _path_td.size(); i++) {
+				rv->cached_path->td[i] = _path_td[i];
+				rv->cached_path->tile[i] = _path_tile[i];
+			}
+			rv->cached_path->layout_ctr = _path_layout_ctr;
+		} else if (vtype == VEH_SHIP && !_path_td.empty() && _path_td.size() <= SHIP_PATH_CACHE_LENGTH) {
+			Ship *s = Ship::From(v);
+			s->cached_path.reset(new ShipPathCache());
+			s->cached_path->count = (uint8)_path_td.size();
+			for (size_t i = 0; i < _path_td.size(); i++) {
+				s->cached_path->td[i] = _path_td[i];
+			}
 		}
 	}
 }

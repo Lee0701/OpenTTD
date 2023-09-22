@@ -1325,8 +1325,6 @@ STR_VEHICLE_LIST_CHANGE_ORDER_ROAD_VEHICLE_DEPOT                :转移调度任
 STR_VEHICLE_LIST_CHANGE_ORDER_SHIP_DEPOT                        :转移调度任务去另一个船坞
 STR_VEHICLE_LIST_CHANGE_ORDER_AIRCRAFT_HANGAR                   :转移调度任务去另一个机库
 
-STR_VEHICLE_LIST_CREATE_GROUP                                   :
-
 STR_GROUP_EXPAND_ALL                                            :{BLACK}展开全部
 STR_GROUP_COLLAPSE_ALL                                          :{BLACK}折叠全部
 
@@ -1422,13 +1420,6 @@ STR_ORDER_DROP_SELL_DEPOT                                       :卖出车辆
 
 STR_ORDER_CONDITIONAL_VEHICLE_IN_SLOT                           :条目内车辆
 
-STR_ORDER_CONDITIONAL_REQUIRES_SERVICE_ORDER                    :服务需求 {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_ORDER                       :下一站 {STRING} {STRING} 等待中
-STR_ORDER_CONDITIONAL_ACCEPTANCE                                :下一站 {STRING} {STRING}
-
-STR_CONDITIONAL_FREE_PLATFORMS                                  :跳转至调度计划 {COMMA} 当下一站 {STRING} {COMMA} 拥有自由站台
-STR_CONDITIONAL_PERCENT                                         :跳转至调度计划 {COMMA} {COMMA} 次数百分比
-
 STR_ORDER_CONDITIONAL_NEXT_STATION                              :下一站
 STR_ORDER_CONDITIONAL_CARGO_TOOLTIP                             :{BLACK}货物对比车站数据
 STR_ORDER_CONDITIONAL_SLOT_TOOLTIP                              :{BLACK}火车槽位检查占用率：
@@ -1513,15 +1504,14 @@ STR_ORDER_RV_DIR_SE                                             :[东南方]
 STR_ORDER_RV_DIR_SW                                             :[西南方]
 STR_ORDER_RV_DIR_NW                                             :[西北方]
 
-STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :跳至 {COMMA} [ 当 下一站 {STRING} {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :跳至 {COMMA} [ 当 下一站 {STRING} {STRING}
+STR_ORDER_CONDITIONAL_PERCENT_DISPLAY                           :跳转至调度计划 {COMMA} {COMMA} 次数百分比
+STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :跳至 {COMMA} [ 当 {STRING} {STRING} {STRING}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :跳至 {COMMA} [ 当 {STRING} {STRING} {STRING}
 STR_ORDER_CONDITIONAL_SLOT                                      :跳至 {COMMA} [ 当 {TRSLOT} {STRING}
 STR_ORDER_CONDITIONAL_INVALID_SLOT                              :跳至 {COMMA} [ 当 {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}{STRING}
 STR_ORDER_CONDITIONAL_IN_SLOT                                   :跳至 {COMMA} [ 当 {STRING} 条目：{TRSLOT}
 STR_ORDER_CONDITIONAL_IN_INVALID_SLOT                           :跳至 {COMMA} [ 当 {STRING} {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}
 STR_ORDER_CONDITIONAL_LOAD_PERCENTAGE_DISPLAY                   :跳至 {COMMA} [ 当 Load percentage of {STRING} {STRING} {COMMA}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_DISPLAY              :跳至 {COMMA} [ 当 {STRING} 在下一站 {STRING} {CARGO_SHORT}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_VIA_DISPLAY          :跳至 {COMMA} [ 当 {STRING} 在下一站 经由 {STATION} {STRING} {CARGO_SHORT}
 STR_ORDER_CONDITIONAL_COUNTER                                   :跳至 {COMMA} [ 当 值：{TRCOUNTER} {STRING} {COMMA}
 STR_ORDER_CONDITIONAL_INVALID_COUNTER                           :跳至 {COMMA} [ 当 值：{PUSH_COLOUR}{RED}{STRING}{POP_COLOUR} {STRING} {COMMA}
 STR_ORDER_CONDITIONAL_TIME_HHMM                                 :跳至 {COMMA} [ 当 {STRING} {STRING} {TIME_HHMM}
@@ -1582,6 +1572,9 @@ STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION                         :{BLACK}启用�
 STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION_2                       :{BLACK}（可替代地，您也可以启用“自动填充选项”或手动填充所有的时间表域）。
 
 STR_TIMETABLE_WARNINGS_OMITTED                                  :{BLACK}省略了{NUM}条警告
+
+STR_TIMETABLE_ARRIVAL_ABBREVIATION                              :A:
+STR_TIMETABLE_DEPARTURE_ABBREVIATION                            :D:
 
 STR_DATE_MINUTES_MINUTE_TOOLTIP                                 :{BLACK}选择分
 STR_DATE_MINUTES_HOUR_TOOLTIP                                   :{BLACK}选择小时
@@ -1742,15 +1735,15 @@ STR_STATION_RATING_MAX_PERCENTAGE                               :（max {PLUS_NU
 STR_STATION_RATING_MAX_PERCENTAGE_COMMA                         :, max {PLUS_NUM}%
 STR_STATION_RATING_PERCENTAGE_COMMA                             :, {PLUS_NUM}%
 
-STR_STATION_RATING_TOOLTIP_SPEED                                :全部车辆的最高速度{STRING}：{SET_COLOUR}{VELOCITY}{STRING}（{STRING}）
+STR_STATION_RATING_TOOLTIP_SPEED                                :全部车辆的最高速度{STRING}：{COLOUR}{VELOCITY}{STRING}（{STRING}）
 
-STR_STATION_RATING_TOOLTIP_AGE                                  :最大车辆年限{STRING}：{SET_COLOUR}{NUM} 年{STRING}
+STR_STATION_RATING_TOOLTIP_AGE                                  :最大车辆年限{STRING}：{COLOUR}{NUM} 年{STRING}
 
 STR_STATION_RATING_TOOLTIP_WAITTIME                             :上次结余时间距今{STRING}：{STRING}
 STR_STATION_RATING_TOOLTIP_WAITTIME_SHIP                        :上次结余时间距今{STRING}：{STRING}（航运）
-STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{SET_COLOUR}{NUM} 天{STRING}
+STR_STATION_RATING_TOOLTIP_WAITTIME_VALUE                       :{COLOUR}{NUM} 天{STRING}
 
-STR_STATION_RATING_TOOLTIP_WAITUNITS                            :货物等待（在平均每日等待时间{STRING}）：{SET_COLOUR}{NUM}{STRING}
+STR_STATION_RATING_TOOLTIP_WAITUNITS                            :货物等待（在平均每日等待时间{STRING}）：{COLOUR}{NUM}{STRING}
 
 STR_STATION_RATING_TOOLTIP_STATUE                               :公司雕像{STRING}：{STRING}
 STR_STATION_RATING_TOOLTIP_STATUE_NO                            :{GOLD}否{STRING}
@@ -1808,17 +1801,14 @@ STR_TMPL_SET_USEDEPOT                                           :{BLACK}使用�
 STR_TMPL_SET_USEDEPOT_TIP                                       :{BLACK}使用库内闲置车辆构成模板替换用列车，这能降低购买成本
 STR_TMPL_SET_KEEPREMAINDERS                                     :{BLACK}保持原样
 STR_TMPL_SET_KEEPREMAINDERS_TIP                                 :{BLACK}在完成模板更新之后保留所有剩下来的从老火车上卸下来的车厢并把它们设置成闲置状态以供之后的使用
-STR_TMPL_SET_REFIT                                              :{BLACK}使用改装
-STR_TMPL_SET_REFIT_TIP                                          :{BLACK}如果设置了，火车将完全使用模板所指定的货物改装。如果没设置，每辆新买的或从仓库取回的车厢，都将*尝试*按照旧的车厢进行改装。如果不能改装，则采用标准改装。
 STR_TMPL_SET_OLD_ONLY                                           :{BLACK}只换老的
 STR_TMPL_SET_OLD_ONLY_TIP                                       :{BLACK}如果设置了的话，只有那些老旧的、应被更换的的车厢才会被更换。
 
 STR_TMPL_CONFIG_USEDEPOT                                        :使用闲置
 STR_TMPL_CONFIG_KEEPREMAINDERS                                  :保持原样
-STR_TMPL_CONFIG_REFIT                                           :改装车厢
 STR_TMPL_CONFIG_OLD_ONLY                                        :只换老的
 
-STR_TMPL_NUM_TRAINS_NEED_RPL                                    :# 要被替换的火车:
+STR_TMPL_NUM_TRAINS_NEED_RPL                                    :要被替换的火车: {COLOUR}{COMMA}
 
 STR_TMPL_CARGO_SUMMARY                                          :{CARGO_LONG}
 STR_TMPL_CARGO_SUMMARY_MULTI                                    :{CARGO_LONG}（x{NUM}）
@@ -1928,5 +1918,5 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :关闭
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :简单
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :详细
 
-STR_VIEWPORT_TOWN_COLOUR                                        :{1:SET_COLOUR}{0:TOWN}
-STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {SET_COLOUR}（{COMMA}）
+STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
+STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}（{COMMA}）

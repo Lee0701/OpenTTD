@@ -275,19 +275,18 @@ static EngineID _last_engine[2] = { INVALID_ENGINE, INVALID_ENGINE };
  */
 static bool EngineNameSorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	static char     last_name[2][64] = { "", "" };
+	static std::string last_name[2] = { {}, {} };
 
 	if (a.engine_id != _last_engine[0]) {
 		_last_engine[0] = a.engine_id;
 		SetDParam(0, PackEngineNameDParam(a.engine_id, EngineNameContext::PurchaseList));
-
-		GetString(last_name[0], STR_ENGINE_NAME, lastof(last_name[0]));
+		last_name[0] = GetString(STR_ENGINE_NAME);
 	}
 
 	if (b.engine_id != _last_engine[1]) {
 		_last_engine[1] = b.engine_id;
 		SetDParam(0, PackEngineNameDParam(b.engine_id, EngineNameContext::PurchaseList));
-		GetString(last_name[1], STR_ENGINE_NAME, lastof(last_name[1]));
+		last_name[1] = GetString(STR_ENGINE_NAME);
 	}
 
 	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
@@ -1647,7 +1646,8 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 		/* Filter engine name */
 		this->string_filter.ResetState();
-		this->string_filter.AddLine(GetString(e->info.string_id));
+		SetDParam(0, PackEngineNameDParam(e->index, EngineNameContext::PurchaseList));
+		this->string_filter.AddLine(GetString(STR_ENGINE_NAME));
 
 		/* Filter NewGRF extra text */
 		auto text = GetNewGRFAdditionalText(e->index);
@@ -3020,7 +3020,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 			}
 
 			case WID_BV_RENAME_LOCO: {
-				*size = maxdim(*size, NWidgetLeaf::resizebox_dimension);
+				*size = maxdim(*size, NWidgetLeaf::GetResizeBoxDimension());
 				break;
 			}
 		}
@@ -3276,7 +3276,7 @@ void ShowBuildVehicleWindow(const TileIndex tile, const VehicleType type)
 
 	assert(IsCompanyBuildableVehicleType(type));
 
-	DeleteWindowById(WC_BUILD_VEHICLE, num);
+	CloseWindowById(WC_BUILD_VEHICLE, num);
 
 	if (type == VEH_TRAIN && _settings_client.gui.dual_pane_train_purchase_window) {
 		new BuildVehicleWindowTrainAdvanced(&_build_vehicle_desc_train_advanced, tile, nullptr);
@@ -3289,7 +3289,7 @@ void ShowTemplateTrainBuildVehicleWindow(Train **virtual_train)
 {
 	assert(IsCompanyBuildableVehicleType(VEH_TRAIN));
 
-	DeleteWindowById(WC_BUILD_VIRTUAL_TRAIN, 0);
+	CloseWindowById(WC_BUILD_VIRTUAL_TRAIN, 0);
 
 	if (_settings_client.gui.dual_pane_train_purchase_window) {
 		new BuildVehicleWindowTrainAdvanced(&_build_template_vehicle_desc_advanced, INVALID_TILE, virtual_train);

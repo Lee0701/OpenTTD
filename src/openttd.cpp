@@ -23,6 +23,7 @@
 #include "sl/saveload.h"
 #include "company_func.h"
 #include "command_func.h"
+#include "command_log.h"
 #include "news_func.h"
 #include "fios.h"
 #include "load_check.h"
@@ -90,12 +91,14 @@
 #include "network/network_survey.h"
 #include "timer/timer.h"
 #include "timer/timer_game_tick.h"
+#include "network/network_sync.h"
 
 #include "linkgraph/linkgraphschedule.h"
 #include "tracerestrict.h"
 
 #include "3rdparty/cpp-btree/btree_set.h"
 
+#include <atomic>
 #include <mutex>
 #if defined(__MINGW32__)
 #include "3rdparty/mingw-std-threads/mingw.mutex.h"
@@ -115,7 +118,6 @@ void CallLandscapeTick();
 void IncreaseDate();
 void DoPaletteAnimations();
 void MusicLoop();
-void ResetMusic();
 void CallWindowGameTickEvent();
 bool HandleBootstrap();
 void OnTick_Companies(bool main_tick);
@@ -133,6 +135,10 @@ bool _request_newgrf_scan = false;
 NewGRFScanCallback *_request_newgrf_scan_callback = nullptr;
 
 SimpleChecksum64 _state_checksum;
+
+std::mutex _music_driver_mutex;
+static std::string _music_driver_params;
+static std::atomic<bool> _music_inited;
 
 /**
  * Error handling for fatal user errors.
@@ -521,8 +527,8 @@ static void ShutdownGame()
 static void LoadIntroGame(bool load_newgrfs = true)
 {
 	UnshowCriticalError();
-	for (Window *w : Window::IterateFromFront()) {
-		delete w;
+	for (Window *w : Window::Iterate()) {
+		w->Close();
 	}
 
 	_game_mode = GM_MENU;
@@ -588,9 +594,9 @@ void MakeNewgameSettingsLive()
 void OpenBrowser(const char *url)
 {
 	/* Make sure we only accept urls that are sure to open a browser. */
-	if (strstr(url, "http://") != url && strstr(url, "https://") != url) return;
-
-	OSOpenBrowser(url);
+	if (StrStartsWith(url, "http://") || StrStartsWith(url, "https://")) {
+		OSOpenBrowser(url);
+	}
 }
 
 /** Callback structure of statements to be executed after the NewGRF scan. */
@@ -1009,7 +1015,13 @@ int openttd_main(int argc, char *argv[])
 	DriverFactoryBase::SelectDriver(sounddriver, Driver::DT_SOUND);
 
 	if (musicdriver.empty() && !_ini_musicdriver.empty()) musicdriver = _ini_musicdriver;
-	DriverFactoryBase::SelectDriver(musicdriver, Driver::DT_MUSIC);
+	_music_driver_params = std::move(musicdriver);
+	if (_music_driver_params.empty() && BaseMusic::GetUsedSet()->name == "NoMusic") {
+		DEBUG(driver, 1, "Deferring loading of music driver until a music set is loaded");
+		DriverFactoryBase::SelectDriver("null", Driver::DT_MUSIC);
+	} else {
+		InitMusicDriver(false);
+	}
 
 	GenerateWorld(GWM_EMPTY, 64, 64); // Make the viewport initialization happy
 	LoadIntroGame(false);
@@ -1029,7 +1041,7 @@ int openttd_main(int argc, char *argv[])
 
 	/* only save config if we have to */
 	if (_save_config) {
-		SaveToConfig();
+		SaveToConfig(STCF_ALL);
 		SaveHotkeysToConfig();
 		WindowDesc::SaveToConfig();
 		SaveToHighScore();
@@ -1038,6 +1050,22 @@ int openttd_main(int argc, char *argv[])
 	/* Reset windowing system, stop drivers, free used memory, ... */
 	ShutdownGame();
 	return ret;
+}
+
+void InitMusicDriver(bool init_volume)
+{
+	if (_music_inited.exchange(true)) return;
+
+	{
+		std::unique_lock<std::mutex> lock(_music_driver_mutex);
+
+		static std::unique_ptr<MusicDriver> old_driver;
+		old_driver = MusicDriver::ExtractDriver();
+
+		DriverFactoryBase::SelectDriver(_music_driver_params, Driver::DT_MUSIC);
+	}
+
+	if (init_volume) MusicDriver::GetInstance()->SetVolume(_settings_client.music.music_vol);
 }
 
 void HandleExitGameRequest()
@@ -1406,14 +1434,14 @@ void SwitchToMode(SwitchMode new_mode)
 				SetDParamStr(0, GetSaveLoadErrorString());
 				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_ERROR);
 			} else {
-				DeleteWindowById(WC_SAVELOAD, 0);
+				CloseWindowById(WC_SAVELOAD, 0);
 			}
 			break;
 		}
 
 		case SM_SAVE_HEIGHTMAP: // Save heightmap.
 			MakeHeightmapScreenshot(_file_to_saveload.name.c_str());
-			DeleteWindowById(WC_SAVELOAD, 0);
+			CloseWindowById(WC_SAVELOAD, 0);
 			break;
 
 		case SM_GENRANDLAND: // Generate random land within scenario editor
@@ -1888,14 +1916,16 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 
 		for (Station *st : Station::Iterate()) {
 			for (CargoID c = 0; c < NUM_CARGO; c++) {
-				uint old_count = st->goods[c].cargo.TotalCount();
-				uint64 old_cargo_days_in_transit = st->goods[c].cargo.CargoDaysInTransit();
+				if (st->goods[c].data == nullptr) continue;
 
-				st->goods[c].cargo.InvalidateCache();
+				uint old_count = st->goods[c].data->cargo.TotalCount();
+				uint64 old_cargo_days_in_transit = st->goods[c].data->cargo.CargoDaysInTransit();
+
+				st->goods[c].data->cargo.InvalidateCache();
 
 				uint changed = 0;
-				if (st->goods[c].cargo.TotalCount() != old_count) SetBit(changed, 0);
-				if (st->goods[c].cargo.CargoDaysInTransit() != old_cargo_days_in_transit) SetBit(changed, 1);
+				if (st->goods[c].data->cargo.TotalCount() != old_count) SetBit(changed, 0);
+				if (st->goods[c].data->cargo.CargoDaysInTransit() != old_cargo_days_in_transit) SetBit(changed, 1);
 				if (changed != 0) {
 					CCLOG("station cargo cache mismatch: station %i, company %i, cargo %u: %c%c",
 							st->index, (int)st->owner, c,
@@ -2103,6 +2133,7 @@ void StateGameLoop()
 		NewsLoop();
 
 		if (_networking) {
+			RecordSyncEvent(NSRE_PRE_COMPANY_STATE);
 			for (Company *c : Company::Iterate()) {
 				DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64)c->money);
 				UpdateStateChecksum(c->money);

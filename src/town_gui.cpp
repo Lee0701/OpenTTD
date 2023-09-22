@@ -37,6 +37,7 @@
 #include "date_func.h"
 #include "core/random_func.hpp"
 #include "town_kdtree.h"
+#include "zoom_func.h"
 
 #include "widgets/town_widget.h"
 #include "table/strings.h"
@@ -44,7 +45,6 @@
 #include <algorithm>
 
 #include "safeguards.h"
-#include "zoom_func.h"
 
 TownKdtree _town_local_authority_kdtree(&Kdtree_TownXYFunc);
 
@@ -365,7 +365,7 @@ public:
 				size->height = (5 + SETTING_OVERRIDE_COUNT) * FONT_HEIGHT_NORMAL + padding.height;
 				size->width = GetStringBoundingBox(STR_LOCAL_AUTHORITY_ACTIONS_TITLE).width;
 				for (uint i = 0; i < TACT_COUNT; i++ ) {
-					size->width = std::max(size->width, GetStringBoundingBox(STR_LOCAL_AUTHORITY_ACTION_SMALL_ADVERTISING_CAMPAIGN + i).width);
+					size->width = std::max(size->width, GetStringBoundingBox(STR_LOCAL_AUTHORITY_ACTION_SMALL_ADVERTISING_CAMPAIGN + i).width + padding.width);
 				}
 				size->width += padding.width;
 				break;
@@ -449,9 +449,8 @@ public:
 						dlist.emplace_back(new DropDownListStringItem(STR_COLOUR_DEFAULT, 0, false));
 						dlist.emplace_back(new DropDownListStringItem(STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO, 1, false));
 						for (int i = 1; i <= 8; i++) {
-							DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_VALUE, i + 1, false);
-							item->SetParam(0, i);
-							dlist.emplace_back(item);
+							SetDParam(0, i);
+							dlist.emplace_back(new DropDownListStringItem(STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_VALUE, i + 1, false));
 						}
 						ShowDropDownList(this, std::move(dlist), HasBit(this->town->override_flags, idx) ? this->town->max_road_slope + 1 : 0, WID_TA_SETTING);
 						break;
@@ -535,9 +534,10 @@ public:
 		nvp->InitializeViewport(this, this->town->xy, ScaleZoomGUI(ZOOM_LVL_TOWN));
 	}
 
-	~TownViewWindow()
+	void Close() override
 	{
 		SetViewportCatchmentTown(Town::Get(this->window_number), false);
+		this->Window::Close();
 	}
 
 	void SetStringParameters(int widget) const override
@@ -2117,7 +2117,7 @@ struct SelectTownWindow : Window {
 		DoCommandP(&this->cmd);
 
 		/* Close the window */
-		delete this;
+		this->Close();
 	}
 
 	virtual void OnResize()
@@ -2150,7 +2150,7 @@ static WindowDesc _select_town_desc(
 
 static void ShowSelectTownWindow(const TownList &towns, const CommandContainer &cmd)
 {
-	DeleteWindowByClass(WC_SELECT_TOWN);
+	CloseWindowByClass(WC_SELECT_TOWN);
 	new SelectTownWindow(&_select_town_desc, towns, cmd);
 }
 
@@ -2161,7 +2161,7 @@ static void PlaceProc_House(TileIndex tile)
 		return;
 	}
 
-	DeleteWindowById(WC_SELECT_TOWN, 0);
+	CloseWindowById(WC_SELECT_TOWN, 0);
 
 	if (_cur_house == INVALID_HOUSE_ID) return;
 
@@ -2211,7 +2211,7 @@ static void PlaceProc_House(TileIndex tile)
 		SB(cmd.p1, 16, 16, towns[0]); // set the town, it's alone on the list
 		DoCommandP(&cmd);
 	} else {
-		if (!_settings_client.gui.persistent_buildingtools) DeleteWindowById(WC_BUILD_HOUSE, 0);
+		if (!_settings_client.gui.persistent_buildingtools) CloseWindowById(WC_BUILD_HOUSE, 0);
 		ShowSelectTownWindow(towns, cmd);
 	}
 }

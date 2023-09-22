@@ -184,6 +184,11 @@ CommandCost CmdPause(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, 
 			if ((p2 & 1) == 0) {
 				_pause_mode = static_cast<PauseMode>(_pause_mode & (byte)~p1);
 				_pause_countdown = (p2 >> 1);
+
+				/* If the only remaining reason to be paused is that we saw a command during pause, unpause. */
+				if (_pause_mode == PM_COMMAND_DURING_PAUSE) {
+					_pause_mode = PM_UNPAUSED;
+				}
 			} else {
 				_pause_mode = static_cast<PauseMode>(_pause_mode | (byte)p1);
 			}
@@ -374,7 +379,7 @@ CommandCost CmdGiveMoney(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 	CompanyID dest_company = (CompanyID)p1;
 
 	/* You can only transfer funds that is in excess of your loan */
-	if (c->money - c->current_loan < amount.GetCost() || amount.GetCost() < 0) return CMD_ERROR;
+	if (c->money - c->current_loan < amount.GetCost() || amount.GetCost() < 0) return_cmd_error(STR_ERROR_INSUFFICIENT_FUNDS);
 	if (!Company::IsValidID(dest_company)) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {

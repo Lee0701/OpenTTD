@@ -172,7 +172,7 @@ void LinkGraphOverlay::RebuildCache(bool incremental)
 					item->to_pt = to_pt;
 				}
 				this->AddStats(c, lg.Monthly(edge.Capacity()), lg.Monthly(edge.Usage()),
-						ge.flows.GetFlowVia(to->index),
+						ge.data != nullptr ? ge.data->flows.GetFlowVia(to->index) : 0,
 						edge.TravelTime(),
 						from->owner == OWNER_NONE || to->owner == OWNER_NONE,
 						item->prop);
@@ -903,7 +903,7 @@ void LinkGraphLegendWindow::OnClick(Point pt, int widget, int click_count)
 void LinkGraphLegendWindow::OnInvalidateData(int data, bool gui_scope)
 {
 	if (this->num_cargo != _sorted_cargo_specs.size()) {
-		delete this;
+		this->Close();
 		return;
 	}
 

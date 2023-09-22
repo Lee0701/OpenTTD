@@ -78,10 +78,11 @@ struct BuildAirToolbarWindow : Window {
 		this->last_user_action = WIDGET_LIST_END;
 	}
 
-	~BuildAirToolbarWindow()
+	void Close() override
 	{
 		if (this->IsWidgetLowered(WID_AT_AIRPORT)) SetViewportCatchmentStation(nullptr, true);
-		if (_settings_client.gui.link_terraform_toolbar) DeleteWindowById(WC_SCEN_LAND_GEN, 0, false);
+		if (_settings_client.gui.link_terraform_toolbar) CloseWindowById(WC_SCEN_LAND_GEN, 0, false);
+		this->Window::Close();
 	}
 
 	/**
@@ -98,7 +99,7 @@ struct BuildAirToolbarWindow : Window {
 			WID_AT_AIRPORT,
 			WIDGET_LIST_END);
 		if (!can_build) {
-			DeleteWindowById(WC_BUILD_STATION, TRANSPORT_AIR);
+			CloseWindowById(WC_BUILD_STATION, TRANSPORT_AIR);
 
 			/* Show in the tooltip why this button is disabled. */
 			this->GetWidget<NWidgetCore>(WID_AT_AIRPORT)->SetToolTip(STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE);
@@ -160,8 +161,8 @@ struct BuildAirToolbarWindow : Window {
 
 		this->RaiseButtons();
 
-		DeleteWindowById(WC_BUILD_STATION, TRANSPORT_AIR);
-		DeleteWindowById(WC_SELECT_STATION, 0);
+		CloseWindowById(WC_BUILD_STATION, TRANSPORT_AIR);
+		CloseWindowById(WC_SELECT_STATION, 0);
 	}
 
 	static HotkeyList hotkeys;
@@ -219,7 +220,7 @@ Window *ShowBuildAirToolbar()
 {
 	if (!Company::IsValidID(_local_company)) return nullptr;
 
-	DeleteWindowByClass(WC_BUILD_TOOLBAR);
+	CloseWindowByClass(WC_BUILD_TOOLBAR);
 	return AllocateWindowDescFront<BuildAirToolbarWindow>(&_air_toolbar_desc, TRANSPORT_AIR);
 }
 
@@ -278,9 +279,10 @@ public:
 		if (selectFirstAirport) this->SelectFirstAvailableAirport(true);
 	}
 
-	virtual ~BuildAirportWindow()
+	void Close() override
 	{
-		DeleteWindowById(WC_SELECT_STATION, 0);
+		CloseWindowById(WC_SELECT_STATION, 0);
+		this->PickerWindowBase::Close();
 	}
 
 	void SetStringParameters(int widget) const override
@@ -582,7 +584,7 @@ static const NWidgetPart _nested_build_airport_widgets[] = {
 		EndContainer(),
 		NWidget(NWID_HORIZONTAL),
 			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_DECREASE), SetMinimalSize(12, 0), SetDataTip(AWV_DECREASE, STR_NULL),
-			NWidget(WWT_LABEL, COLOUR_GREY, WID_AP_LAYOUT_NUM), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING, STR_NULL),
+			NWidget(WWT_LABEL, COLOUR_GREY, WID_AP_LAYOUT_NUM), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_JUST_STRING1, STR_NULL),
 			NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_AP_LAYOUT_INCREASE), SetMinimalSize(12, 0), SetDataTip(AWV_INCREASE, STR_NULL),
 		EndContainer(),
 		NWidget(WWT_EMPTY, COLOUR_DARK_GREEN, WID_AP_EXTRA_TEXT), SetFill(1, 0), SetMinimalSize(150, 0),

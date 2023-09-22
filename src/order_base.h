@@ -71,10 +71,18 @@ void ClearOrderDestinationRefcountMap();
  * OCV_DISPATCH_SLOT: Bits 0-15: Dispatch schedule ID
  * OCV_PERCENT: Bits 0-7: Jump counter
  */
+/*
+ * xdata2 users:
+ * OCV_CARGO_WAITING: Bits 0-15: Station ID to test + 1
+ * OCV_CARGO_ACCEPTANCE: Bits 0-15: Station ID to test + 1
+ * OCV_FREE_PLATFORMS: Bits 0-15: Station ID to test + 1
+ * OCV_CARGO_WAITING_AMOUNT: Bits 0-15: Station ID to test + 1
+ */
 
 struct OrderExtraInfo {
 	uint8 cargo_type_flags[NUM_CARGO] = {}; ///< Load/unload types for each cargo type.
 	uint32 xdata = 0;                       ///< Extra arbitrary data
+	uint32 xdata2 = 0;                      ///< Extra arbitrary data
 	uint16 dispatch_index = 0;              ///< Scheduled dispatch index + 1
 	uint8 xflags = 0;                       ///< Extra flags
 	uint8 colour = 0;                       ///< Order colour + 1
@@ -148,6 +156,17 @@ public:
 	{
 		CheckExtraInfoAlloced();
 		return this->extra->xdata;
+	}
+
+	inline uint32 GetXData2() const
+	{
+		return this->extra != nullptr ? this->extra->xdata2 : 0;
+	}
+
+	inline uint32 &GetXData2Ref()
+	{
+		CheckExtraInfoAlloced();
+		return this->extra->xdata2;
 	}
 
 	Order *next;          ///< Pointer to next order. If nullptr, end of list

@@ -94,6 +94,7 @@ void DumpCargoPacketDeferredPaymentStats(char *buffer, const char *last)
 		}
 	}
 	buffer += seprintf(buffer, last, "Deferred payment count: %u\n", (uint) _cargo_packet_deferred_payments.size());
+	buffer += seprintf(buffer, last, "Total cargo packets: %u\n", (uint)CargoPacket::GetNumItems());
 }
 
 /**
@@ -117,16 +118,16 @@ CargoPacket::CargoPacket()
  * that, in contrary to all other pools, does not memset to 0.
  */
 CargoPacket::CargoPacket(StationID source, TileIndex source_xy, uint16 count, SourceType source_type, SourceID source_id) :
-	feeder_share(0),
 	count(count),
 	days_in_transit(0),
+	feeder_share(0),
 	source_id(source_id),
-	source(source),
 	source_xy(source_xy),
-	loaded_at_xy(0)
+	loaded_at_xy(0),
+	source(source),
+	source_type(source_type)
 {
 	dbg_assert(count != 0);
-	this->source_type  = source_type;
 }
 
 /**
@@ -144,16 +145,16 @@ CargoPacket::CargoPacket(StationID source, TileIndex source_xy, uint16 count, So
  * that, in contrary to all other pools, does not memset to 0.
  */
 CargoPacket::CargoPacket(uint16 count, uint16 days_in_transit, StationID source, TileIndex source_xy, TileIndex loaded_at_xy, Money feeder_share, SourceType source_type, SourceID source_id) :
-		feeder_share(feeder_share),
 		count(count),
 		days_in_transit(days_in_transit),
+		feeder_share(feeder_share),
 		source_id(source_id),
-		source(source),
 		source_xy(source_xy),
-		loaded_at_xy(loaded_at_xy)
+		loaded_at_xy(loaded_at_xy),
+		source(source),
+		source_type(source_type)
 {
 	dbg_assert(count != 0);
-	this->source_type = source_type;
 }
 
 /** Destroy the packet. */
@@ -638,6 +639,8 @@ bool VehicleCargoList::Stage(bool accepted, StationID current_station, StationID
 	CargoPacketList transfer_deliver;
 	std::vector<CargoPacket *> keep;
 
+	const FlowStatMap &flows = ge->CreateData().flows;
+
 	bool force_keep = (order_flags & OUFB_NO_UNLOAD) != 0;
 	bool force_unload = (order_flags & OUFB_UNLOAD) != 0;
 	bool force_transfer = (order_flags & (OUFB_TRANSFER | OUFB_UNLOAD)) != 0;
@@ -656,8 +659,8 @@ bool VehicleCargoList::Stage(bool accepted, StationID current_station, StationID
 			action = MTA_TRANSFER;
 			/* We cannot send the cargo to any of the possible next hops and
 			 * also not to the current station. */
-			FlowStatMap::const_iterator flow_it(ge->flows.find(cp->source));
-			if (flow_it == ge->flows.end()) {
+			FlowStatMap::const_iterator flow_it(flows.find(cp->source));
+			if (flow_it == flows.end()) {
 				cargo_next = INVALID_STATION;
 			} else {
 				FlowStat new_shares = *flow_it;
@@ -675,12 +678,12 @@ bool VehicleCargoList::Stage(bool accepted, StationID current_station, StationID
 		} else {
 			/* Rewrite an invalid source station to some random other one to
 			 * avoid keeping the cargo in the vehicle forever. */
-			if (cp->source == INVALID_STATION && !ge->flows.empty()) {
-				cp->source = ge->flows.FirstStationID();
+			if (cp->source == INVALID_STATION && !flows.empty()) {
+				cp->source = flows.FirstStationID();
 			}
 			bool restricted = false;
-			FlowStatMap::const_iterator flow_it(ge->flows.find(cp->source));
-			if (flow_it == ge->flows.end()) {
+			FlowStatMap::const_iterator flow_it(flows.find(cp->source));
+			if (flow_it == flows.end()) {
 				cargo_next = INVALID_STATION;
 			} else {
 				cargo_next = flow_it->GetViaWithRestricted(restricted);

@@ -2878,6 +2878,7 @@ static VehicleEnterTileStatus VehicleEnter_Road(Vehicle *v, TileIndex tile, int 
 		case ROAD_TILE_CROSSING: {
 			if (v->type != VEH_ROAD) break;
 			SetCrossingOccupiedByRoadVehicle(tile, true);
+			SetBit(RoadVehicle::From(v->First())->rvflags, RVF_ON_LEVEL_CROSSING);
 			break;
 		}
 
@@ -3117,8 +3118,9 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			}
 		}
 
-		/* Disallow converting town roads to types which do not allow houses */
-		if (rtt == RTT_ROAD && owner == OWNER_TOWN && HasBit(GetRoadTypeInfo(to_type)->flags, ROTF_NO_HOUSES)) {
+		/* Disallow converting town roads to types which do not allow houses, unless this is allowed */
+		if (rtt == RTT_ROAD && owner == OWNER_TOWN && HasBit(GetRoadTypeInfo(to_type)->flags, ROTF_NO_HOUSES)
+				&& !_settings_game.construction.convert_town_road_no_houses) {
 			error.MakeError(STR_ERROR_OWNED_BY);
 			GetNameOfOwner(OWNER_TOWN, tile);
 			continue;

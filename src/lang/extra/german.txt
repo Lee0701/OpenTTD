@@ -1258,8 +1258,6 @@ STR_VEHICLE_LIST_CHANGE_ORDER_ROAD_VEHICLE_DEPOT                :Verschiebe Auft
 STR_VEHICLE_LIST_CHANGE_ORDER_SHIP_DEPOT                        :Verschiebe Auftrag zu einer anderen Werft
 STR_VEHICLE_LIST_CHANGE_ORDER_AIRCRAFT_HANGAR                   :Verschiebe Auftrag zu einem anderen Hangar
 
-STR_VEHICLE_LIST_CREATE_GROUP                                   :Erstelle Gruppe aus Liste
-
 STR_GROUP_EXPAND_ALL                                            :{BLACK}Alles ausklappen
 STR_GROUP_COLLAPSE_ALL                                          :{BLACK}Alles einklappen
 
@@ -1353,13 +1351,6 @@ STR_ORDER_DROP_SELL_DEPOT                                       :Fahrzeug verkau
 
 STR_ORDER_CONDITIONAL_VEHICLE_IN_SLOT                           :Fahrzeug im Zeitfenster
 
-STR_ORDER_CONDITIONAL_REQUIRES_SERVICE_ORDER                    :Wartung erforderlich {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_ORDER                       :nächste Station {STRING} wartende{G 1 n "" s ""} {STRING}
-STR_ORDER_CONDITIONAL_ACCEPTANCE                                :nächste Station {STRING} {STRING}
-
-STR_CONDITIONAL_FREE_PLATFORMS                                  :Springe zu Auftrag {COMMA} wenn die nächste Station {STRING} {COMMA} freie{P n ""} Bahnsteig{P "" e}
-STR_CONDITIONAL_PERCENT                                         :Springe zu Auftrag {COMMA} in {COMMA} Prozent der Fälle
-
 STR_ORDER_CONDITIONAL_NEXT_STATION                              :nächste Station
 STR_ORDER_CONDITIONAL_CARGO_TOOLTIP                             :{BLACK}Frachtart, die mit der Stationsinformation verglichen wird
 STR_ORDER_CONDITIONAL_SLOT_TOOLTIP                              :{BLACK}Zugslot, dessen Auslastung geprüft wird
@@ -1432,15 +1423,16 @@ STR_ORDER_RV_DIR_SE                                             :[Südost-Richtu
 STR_ORDER_RV_DIR_SW                                             :[Südwest-Richtung]
 STR_ORDER_RV_DIR_NW                                             :[Nordwest-Richtung]
 
-STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :Springe zu Auftrag {COMMA}, wenn nächste Station {STRING} {STRING}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :Springe zu Auftrag {COMMA}, wenn nächste Station {STRING} {STRING}
+STR_ORDER_CONDITIONAL_PERCENT_DISPLAY                           :Springe zu Auftrag {COMMA} in {COMMA} Prozent der Fälle
+STR_ORDER_CONDITIONAL_CARGO_ACCEPTANCE                          :Springe zu Auftrag {COMMA}, wenn {STRING} {STRING} {STRING}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_DISPLAY                     :Springe zu Auftrag {COMMA}, wenn {STRING} {STRING} {STRING}
 STR_ORDER_CONDITIONAL_SLOT                                      :Springe zu Auftrag {COMMA}, wenn {TRSLOT} {STRING}
 STR_ORDER_CONDITIONAL_INVALID_SLOT                              :Springe zu Auftrag {COMMA}, wenn {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}{STRING}
 STR_ORDER_CONDITIONAL_IN_SLOT                                   :Springe zu Auftrag {COMMA}, wenn {STRING} Slot: {TRSLOT}
 STR_ORDER_CONDITIONAL_IN_INVALID_SLOT                           :Springe zu Auftrag {COMMA}, wenn {STRING} {PUSH_COLOUR}{RED}{STRING} {POP_COLOUR}
 STR_ORDER_CONDITIONAL_LOAD_PERCENTAGE_DISPLAY                   :Springe zu Auftrag {COMMA}, wenn Ladezustand (Prozent) gleich {STRING} {STRING} {COMMA} ist
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_DISPLAY              :Springe zu Auftrag {COMMA}, wenn {STRING} bei nächster Station {STRING} {CARGO_SHORT}
-STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_VIA_DISPLAY          :Springe zu Auftrag {COMMA}, wenn {STRING} bei nächster Station über {STATION} {STRING} {CARGO_SHORT}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_DISPLAY              :Springe zu Auftrag {COMMA}, wenn {STRING} bei {STRING} {STRING} {CARGO_SHORT}
+STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT_VIA_DISPLAY          :Springe zu Auftrag {COMMA}, wenn {STRING} bei {STRING} über {STRING} {STRING} {CARGO_SHORT}
 STR_ORDER_CONDITIONAL_COUNTER                                   :Springe zu Auftrag {COMMA}, wenn Wert von {TRCOUNTER} {STRING} {COMMA} ist
 STR_ORDER_CONDITIONAL_INVALID_COUNTER                           :Springe zu Auftrag {COMMA}, wenn Wert von {PUSH_COLOUR}{RED}{STRING}{POP_COLOUR} {STRING} {COMMA} ist
 STR_ORDER_CONDITIONAL_TIME_HHMM                                 :Springe zu Auftrag {COMMA}, wenn {STRING} {STRING} {TIME_HHMM}
@@ -1499,6 +1491,9 @@ STR_TIMETABLE_WARNING_SCHEDULED_DISPATCH_ORDER_NO_WAIT_TIME     :{BLACK}Der gepl
 STR_TIMETABLE_WARNING_SCHEDULE_ID                               :{BLACK}Zeitplan {NUM}: {STRING}
 
 STR_TIMETABLE_WARNINGS_OMITTED                                  :{BLACK}{NUM} keine weiteren Warnungen ...
+
+STR_TIMETABLE_ARRIVAL_ABBREVIATION                              :an
+STR_TIMETABLE_DEPARTURE_ABBREVIATION                            :ab
 
 STR_DATE_MINUTES_MINUTE_TOOLTIP                                 :{BLACK}Minute auswählen
 STR_DATE_MINUTES_HOUR_TOOLTIP                                   :{BLACK}Stunde auswählen
@@ -1673,17 +1668,14 @@ STR_TMPL_SET_USEDEPOT                                           :{BLACK}Benutze 
 STR_TMPL_SET_USEDEPOT_TIP                                       :{BLACK}Benutze zur Zusammenstellung Fahrzeuge, welche innerhalb des Depots in einem neutralen und unbenutzten Zustand zur Verfügung stehen, um die Anschaffungskosten zu reduzieren.
 STR_TMPL_SET_KEEPREMAINDERS                                     :{BLACK}Bereithaltung verbleibender Fahrzeuge
 STR_TMPL_SET_KEEPREMAINDERS_TIP                                 :{BLACK}Behalte nach erfolgreicher Ersetzung alle verbleibenden Fahrzeuge des alten Zugs in einem neutralen und unbenutzen Zustand für spätere eine Benutzung bereit.
-STR_TMPL_SET_REFIT                                              :{BLACK}Benutze Umrüstungen
-STR_TMPL_SET_REFIT_TIP                                          :{BLACK}Benutze die exakten Umrüstungen, die in der Vorlage angegeben sind. Wenn nicht jedes Fahrzeug, das neu angeschafft oder aus dem Depot geholt wurde, umgerüstet werden kann, wird für jedes Fahrzeug zumindest *versucht* die Umrüstung durchzuführen. Bei nicht möglicher Umrüstung eines Fahrzeugs wird dessen Standardfracht benutzt.
 STR_TMPL_SET_OLD_ONLY                                           :{BLACK}Nur alte Fahrzeuge
 STR_TMPL_SET_OLD_ONLY_TIP                                       :{BLACK}Ersetze nur Fahrzeuge, welche alt und fällig für die automatische Erneuerung sind
 
 STR_TMPL_CONFIG_USEDEPOT                                        :Depotnutzung
 STR_TMPL_CONFIG_KEEPREMAINDERS                                  :Bereithaltung
-STR_TMPL_CONFIG_REFIT                                           :Umrüstungen
 STR_TMPL_CONFIG_OLD_ONLY                                        :Nur alte
 
-STR_TMPL_NUM_TRAINS_NEED_RPL                                    :# Züge zu ersetzen:
+STR_TMPL_NUM_TRAINS_NEED_RPL                                    :Züge zu ersetzen: {COLOUR}{COMMA}
 
 STR_TMPL_CARGO_SUMMARY                                          :{CARGO_LONG}
 STR_TMPL_CARGO_SUMMARY_MULTI                                    :{CARGO_LONG} (x{NUM})
@@ -1793,5 +1785,5 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Aus
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Einfach
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailliert
 
-STR_VIEWPORT_TOWN_COLOUR                                        :{1:SET_COLOUR}{0:TOWN}
-STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {SET_COLOUR}({COMMA})
+STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
+STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}({COMMA})

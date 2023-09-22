@@ -140,6 +140,7 @@ enum SlXvFeatureIndex {
 	XSLFI_REMAIN_NEXT_ORDER_STATION,              ///< Remain in station if next order is for same station
 	XSLFI_LABEL_ORDERS,                           ///< Label orders
 	XSLFI_VARIABLE_TICK_RATE,                     ///< Variable tick rate
+	XSLFI_ROAD_VEH_FLAGS,                         ///< Road vehicle flags
 
 	XSLFI_SCRIPT_INT64,                           ///< See: SLV_SCRIPT_INT64
 	XSLFI_U64_TICK_COUNTER,                       ///< See: SLV_U64_TICK_COUNTER
@@ -153,6 +154,7 @@ enum SlXvFeatureIndex {
 	XSLFI_EXTEND_VEHICLE_RANDOM,                  ///< See: SLV_EXTEND_VEHICLE_RANDOM (PR #10701)
 	XSLFI_DISASTER_VEH_STATE,                     ///< See: SLV_DISASTER_VEH_STATE (PR #10798)
 	XSLFI_SAVEGAME_ID,                            ///< See: SLV_SAVEGAME_ID (PR #10719)
+	XSLFI_NEWGRF_LAST_SERVICE,                    ///< See: SLV_NEWGRF_LAST_SERVICE (PR #11124)
 
 	XSLFI_RIFF_HEADER_60_BIT,                     ///< Size field in RIFF chunk header is 60 bit
 	XSLFI_HEIGHT_8_BIT,                           ///< Map tile height is 8 bit instead of 4 bit, but savegame version may be before this became true in trunk

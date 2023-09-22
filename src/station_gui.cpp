@@ -334,7 +334,7 @@ protected:
 		int diff = 0;
 
 		for (CargoID j : SetCargoBitIterator(cargo_filter)) {
-			diff += a->goods[j].cargo.TotalCount() - b->goods[j].cargo.TotalCount();
+			diff += a->goods[j].CargoTotalCount() - b->goods[j].CargoTotalCount();
 		}
 
 		return diff < 0;
@@ -346,7 +346,7 @@ protected:
 		int diff = 0;
 
 		for (CargoID j : SetCargoBitIterator(cargo_filter)) {
-			diff += a->goods[j].cargo.AvailableCount() - b->goods[j].cargo.AvailableCount();
+			diff += a->goods[j].CargoAvailableCount() - b->goods[j].CargoAvailableCount();
 		}
 
 		return diff < 0;
@@ -480,9 +480,10 @@ public:
 		this->GetWidget<NWidgetCore>(WID_STL_SORTDROPBTN)->widget_data = this->sorter_names[this->stations.SortType()];
 	}
 
-	~CompanyStationsWindow()
+	void Close() override
 	{
 		this->last_sorting = this->stations.GetListing();
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -573,7 +574,7 @@ public:
 					/* show cargo waiting and station ratings */
 					for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 						CargoID cid = cs->Index();
-						if (st->goods[cid].cargo.TotalCount() > 0) {
+						if (st->goods[cid].CargoTotalCount() > 0) {
 							/* For RTL we work in exactly the opposite direction. So
 							 * decrement the space needed first, then draw to the left
 							 * instead of drawing to the left and then incrementing
@@ -582,7 +583,7 @@ public:
 								x -= rating_width + rating_spacing;
 								if (x < tr.left) break;
 							}
-							StationsWndShowStationRating(x, x + rating_width, tr.top, cid, st->goods[cid].cargo.TotalCount(), st->goods[cid].rating);
+							StationsWndShowStationRating(x, x + rating_width, tr.top, cid, st->goods[cid].CargoTotalCount(), st->goods[cid].rating);
 							if (!rtl) {
 								x += rating_width + rating_spacing;
 								if (x > tr.right) break;
@@ -1435,15 +1436,16 @@ struct StationViewWindow : public Window {
 		ZoningStationWindowOpenClose(Station::Get(window_number));
 	}
 
-	~StationViewWindow()
+	void Close() override
 	{
 		ZoningStationWindowOpenClose(Station::Get(window_number));
-		DeleteWindowById(WC_TRAINS_LIST,   VehicleListIdentifier(VL_STATION_LIST, VEH_TRAIN,    this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_ROADVEH_LIST,  VehicleListIdentifier(VL_STATION_LIST, VEH_ROAD,     this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_SHIPS_LIST,    VehicleListIdentifier(VL_STATION_LIST, VEH_SHIP,     this->owner, this->window_number).Pack(), false);
-		DeleteWindowById(WC_AIRCRAFT_LIST, VehicleListIdentifier(VL_STATION_LIST, VEH_AIRCRAFT, this->owner, this->window_number).Pack(), false);
+		CloseWindowById(WC_TRAINS_LIST,   VehicleListIdentifier(VL_STATION_LIST, VEH_TRAIN,    this->owner, this->window_number).Pack(), false);
+		CloseWindowById(WC_ROADVEH_LIST,  VehicleListIdentifier(VL_STATION_LIST, VEH_ROAD,     this->owner, this->window_number).Pack(), false);
+		CloseWindowById(WC_SHIPS_LIST,    VehicleListIdentifier(VL_STATION_LIST, VEH_SHIP,     this->owner, this->window_number).Pack(), false);
+		CloseWindowById(WC_AIRCRAFT_LIST, VehicleListIdentifier(VL_STATION_LIST, VEH_AIRCRAFT, this->owner, this->window_number).Pack(), false);
 
 		SetViewportCatchmentStation(Station::Get(this->window_number), false);
+		this->Window::Close();
 	}
 
 	void OnInit() override
@@ -1649,7 +1651,9 @@ struct StationViewWindow : public Window {
 		CargoDataEntry *cargo_entry = cached_destinations.InsertOrRetrieve(i);
 		cargo_entry->Clear();
 
-		const FlowStatMap &flows = st->goods[i].flows;
+		if (st->goods[i].data == nullptr) return;
+
+		const FlowStatMap &flows = st->goods[i].data->flows;
 		for (const auto &it : flows) {
 			StationID from = it.GetOrigin();
 			CargoDataEntry *source_entry = cargo_entry->InsertOrRetrieve(from);
@@ -1680,13 +1684,17 @@ struct StationViewWindow : public Window {
 	{
 		if (depth <= 128 && Station::IsValidID(next) && Station::IsValidID(source)) {
 			CargoDataEntry tmp;
-			const FlowStatMap &flowmap = Station::Get(next)->goods[cargo].flows;
-			FlowStatMap::const_iterator map_it = flowmap.find(source);
-			if (map_it != flowmap.end()) {
-				uint32 prev_count = 0;
-				for (FlowStat::const_iterator i = map_it->begin(); i != map_it->end(); ++i) {
-					tmp.InsertOrRetrieve(i->second)->Update(i->first - prev_count);
-					prev_count = i->first;
+			const GoodsEntry &ge = Station::Get(next)->goods[cargo];
+
+			if (ge.data != nullptr) {
+				const FlowStatMap &flowmap = ge.data->flows;
+				FlowStatMap::const_iterator map_it = flowmap.find(source);
+				if (map_it != flowmap.end()) {
+					uint32 prev_count = 0;
+					for (FlowStat::const_iterator i = map_it->begin(); i != map_it->end(); ++i) {
+						tmp.InsertOrRetrieve(i->second)->Update(i->first - prev_count);
+						prev_count = i->first;
+					}
 				}
 			}
 
@@ -1770,9 +1778,23 @@ struct StationViewWindow : public Window {
 				continue;
 			}
 
-			for (CargoDataSet::iterator dest_it = via_entry->Begin(); dest_it != via_entry->End(); ++dest_it) {
+			uint remaining = cp->Count();
+			for (CargoDataSet::iterator dest_it = via_entry->Begin(); dest_it != via_entry->End();) {
 				CargoDataEntry *dest_entry = *dest_it;
-				uint val = DivideApprox(cp->Count() * dest_entry->GetCount(), via_entry->GetCount());
+
+				/* Advance iterator here instead of in the for statement to test whether this is the last entry */
+				++dest_it;
+
+				uint val;
+				if (dest_it == via_entry->End()) {
+					/* Allocate all remaining waiting cargo to the last destination to avoid
+					 * waiting cargo being "lost", and the displayed total waiting cargo
+					 * not matching GoodsEntry::TotalCount() */
+					val = remaining;
+				} else {
+					val = std::min<uint>(remaining, DivideApprox(cp->Count() * dest_entry->GetCount(), via_entry->GetCount()));
+					remaining -= val;
+				}
 				this->ShowCargo(cargo, i, cp->SourceStation(), next, dest_entry->GetStation(), val);
 			}
 		}
@@ -1793,9 +1815,9 @@ struct StationViewWindow : public Window {
 			}
 
 			if (this->current_mode == MODE_WAITING) {
-				this->BuildCargoList(i, st->goods[i].cargo, cargo);
+				this->BuildCargoList(i, st->goods[i].ConstCargoList(), cargo);
 			} else {
-				this->BuildFlowList(i, st->goods[i].flows, cargo);
+				this->BuildFlowList(i, st->goods[i].ConstFlows(), cargo);
 			}
 		}
 	}
@@ -1957,8 +1979,8 @@ struct StationViewWindow : public Window {
 						sym = "+";
 					} else {
 						/* Only draw '+' if there is something to be shown. */
-						const StationCargoList &list = Station::Get(this->window_number)->goods[cargo].cargo;
-						if (grouping == GR_CARGO && (list.ReservedCount() > 0 || cd->HasTransfers())) {
+						const GoodsEntry &ge = Station::Get(this->window_number)->goods[cargo];
+						if (grouping == GR_CARGO && (ge.CargoReservedCount() > 0 || cd->HasTransfers())) {
 							sym = "+";
 						}
 					}
@@ -2525,11 +2547,12 @@ struct SelectStationWindow : Window {
 		_thd.freeze = true;
 	}
 
-	~SelectStationWindow()
+	void Close() override
 	{
 		SetViewportCatchmentStation(nullptr, true);
 
 		_thd.freeze = false;
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -2591,7 +2614,7 @@ struct SelectStationWindow : Window {
 		DoCommandP(&this->select_station_cmd);
 
 		/* Close Window; this might cause double frees! */
-		DeleteWindowById(WC_SELECT_STATION, 0);
+		CloseWindowById(WC_SELECT_STATION, 0);
 	}
 
 	void OnRealtimeTick(uint delta_ms) override
@@ -2664,7 +2687,7 @@ static bool StationJoinerNeeded(const CommandContainer &cmd, TileArea ta)
 	Window *selection_window = FindWindowById(WC_SELECT_STATION, 0);
 	if (selection_window != nullptr) {
 		/* Abort current distant-join and start new one */
-		delete selection_window;
+		selection_window->Close();
 		UpdateTileSelection();
 	}
 
@@ -3077,13 +3100,13 @@ public:
 	void OnMouseLoop() override
 	{
 		if (!_cursor.in_window || !(_settings_client.gui.hover_delay_ms == 0 ? _right_button_down : _mouse_hovering)) {
-			delete this;
+			this->Close();
 		}
 	}
 };
 
 void GuiShowStationRatingTooltip(Window *parent, const Station *st, const CargoSpec *cs) {
-	DeleteWindowById(WC_STATION_RATING_TOOLTIP, 0);
+	CloseWindowById(WC_STATION_RATING_TOOLTIP, 0);
 	new StationRatingTooltipWindow(parent, st, cs);
 }
 

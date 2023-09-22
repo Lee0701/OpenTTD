@@ -218,9 +218,9 @@ public:
 
 	/**
 	 * @param cmd_msg optional failure string as passed to DoCommand
-	 * @return an allocated string summarising the command result
+	 * @return a string summarising the command result
 	 */
-	char *AllocSummaryMessage(StringID cmd_msg = 0) const;
+	std::string SummaryMessage(StringID cmd_msg = 0) const;
 
 	/**
 	 * Write a string summarising the command result
@@ -351,6 +351,7 @@ enum Commands {
 	CMD_INDUSTRY_SET_FLAGS,           ///< change industry control flags
 	CMD_INDUSTRY_SET_EXCLUSIVITY,     ///< change industry exclusive consumer/supplier
 	CMD_INDUSTRY_SET_TEXT,            ///< change additional text for the industry
+	CMD_INDUSTRY_SET_PRODUCTION,      ///< change industry production
 
 	CMD_SET_COMPANY_MANAGER_FACE,     ///< set the manager's face of the company
 	CMD_SET_COMPANY_COLOUR,           ///< set the colour of the company
@@ -412,6 +413,7 @@ enum Commands {
 	CMD_CUSTOM_NEWS_ITEM,             ///< create a custom news message
 	CMD_CREATE_GOAL,                  ///< create a new goal
 	CMD_REMOVE_GOAL,                  ///< remove a goal
+	CMD_SET_GOAL_DESTINATION,         ///< update goal destination of a goal
 	CMD_SET_GOAL_TEXT,                ///< update goal text of a goal
 	CMD_SET_GOAL_PROGRESS,            ///< update goal progress text of a goal
 	CMD_SET_GOAL_COMPLETED,           ///< update goal completed status of a goal
@@ -443,7 +445,7 @@ enum Commands {
 
 	CMD_TOGGLE_REUSE_DEPOT_VEHICLES,  ///< toggle 'reuse depot vehicles' on template
 	CMD_TOGGLE_KEEP_REMAINING_VEHICLES, ///< toggle 'keep remaining vehicles' on template
-	CMD_TOGGLE_REFIT_AS_TEMPLATE,     ///< toggle 'refit as template' on template
+	CMD_SET_REFIT_AS_TEMPLATE,        ///< set/unset 'refit as template' on template
 	CMD_TOGGLE_TMPL_REPLACE_OLD_ONLY, ///< toggle 'replace old vehicles only' on template
 	CMD_RENAME_TMPL_REPLACE,          ///< rename a template
 

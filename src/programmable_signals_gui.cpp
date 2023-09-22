@@ -24,6 +24,7 @@
 #include "tile_cmd.h"
 #include "error.h"
 #include "scope.h"
+#include "zoom_func.h"
 
 #include "table/sprites.h"
 #include "table/strings.h"
@@ -236,7 +237,8 @@ static void DrawInstructionString(SignalInstruction *instruction, int y, bool se
 		default: NOT_REACHED();
 	}
 
-	DrawString(left + indent * 16, right, y, instruction_string, selected ? TC_WHITE : TC_BLACK);
+	bool rtl = _current_text_dir == TD_RTL;
+	DrawString(left + (rtl ? 0 : ScaleGUITrad(indent * 16)), right - (rtl ? ScaleGUITrad(indent * 16) : 0), y, instruction_string, selected ? TC_WHITE : TC_BLACK);
 }
 
 struct GuiInstruction {
@@ -271,7 +273,7 @@ public:
 			case PROGRAM_WIDGET_INSTRUCTION_LIST: {
 				int sel = this->GetInstructionFromPt(pt.y);
 
-				this->DeleteChildWindows();
+				this->CloseChildWindows();
 				HideDropDownMenu(this);
 
 				if (sel == -1 || this->GetOwner() != _local_company) {
@@ -299,7 +301,7 @@ public:
 				SB(p1, 0, 3, this->track);
 				SB(p1, 3, 16, ins->Id());
 
-				DoCommandP(this->tile, p1, 0, CMD_REMOVE_SIGNAL_INSTRUCTION | CMD_MSG(STR_ERROR_CAN_T_MODIFY_INSTRUCTION));
+				DoCommandP(this->tile, p1, 0, CMD_REMOVE_SIGNAL_INSTRUCTION | CMD_MSG(STR_ERROR_CAN_T_REMOVE_INSTRUCTION));
 				this->RebuildInstructionList();
 			} break;
 

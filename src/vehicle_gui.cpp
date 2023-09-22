@@ -495,7 +495,7 @@ static const uint MAX_REFIT_CYCLE = 256;
  * @param dest_cargo_type Destination cargo type.
  * @return the best sub type
  */
-byte GetBestFittingSubType(Vehicle *v_from, Vehicle *v_for, CargoID dest_cargo_type)
+byte GetBestFittingSubType(const Vehicle *v_from, Vehicle *v_for, CargoID dest_cargo_type)
 {
 	v_from = v_from->GetFirstEnginePart();
 	v_for = v_for->GetFirstEnginePart();
@@ -906,7 +906,7 @@ struct RefitWindow : public Window {
 		this->SetWidgetDisabledState(WID_VR_REFIT, this->sel[0] < 0);
 	}
 
-	~RefitWindow()
+	void Close() override
 	{
 		if (this->window_number != INVALID_VEHICLE) {
 			if (!FocusWindowById(WC_VEHICLE_VIEW, this->window_number)) {
@@ -916,6 +916,7 @@ struct RefitWindow : public Window {
 				}
 			}
 		}
+		this->Window::Close();
 	}
 
 	void OnFocus(Window *previously_focused_window) override
@@ -928,7 +929,7 @@ struct RefitWindow : public Window {
 		}
 	}
 
-	void OnFocusLost(Window *newly_focused_window) override
+	void OnFocusLost(bool closing, Window *newly_focused_window) override
 	{
 		if (HasFocusedVehicleChanged(this->window_number, newly_focused_window)) {
 			if (this->window_number != INVALID_VEHICLE) {
@@ -1350,10 +1351,10 @@ struct RefitWindow : public Window {
 						bool delete_window = this->selected_vehicle == v->index && this->num_vehicles == UINT8_MAX;
 						if (DoCommandP(v->tile, this->selected_vehicle, this->cargo->cargo | this->cargo->subtype << 8 | this->num_vehicles << 16 | this->is_virtual_train << 31,
 								GetCmdRefitVeh(v)) && delete_window) {
-							delete this;
+							this->Close();
 						}
 					} else {
-						if (DoCommandP(v->tile, v->index, this->cargo->cargo | this->cargo->subtype << 8 | this->order << 16, CMD_ORDER_REFIT)) delete this;
+						if (DoCommandP(v->tile, v->index, this->cargo->cargo | this->cargo->subtype << 8 | this->order << 16, CMD_ORDER_REFIT)) this->Close();
 					}
 				}
 				break;
@@ -1369,8 +1370,7 @@ struct RefitWindow : public Window {
 				int offset = 1;
 				for (const Vehicle *u = v; u != nullptr; u = u->Next()) {
 					if (u->index == this->selected_vehicle && this->num_vehicles == 1) selected = offset;
-					DropDownListCharStringItem *item = new DropDownListCharStringItem(this->GetShipPartName(u), offset, false);
-					dlist.emplace_back(item);
+					dlist.emplace_back(new DropDownListStringItem(this->GetShipPartName(u), offset, false));
 					offset++;
 				}
 
@@ -1457,7 +1457,7 @@ static WindowDesc _vehicle_refit_desc(
  */
 void ShowVehicleRefitWindow(const Vehicle *v, VehicleOrderID order, Window *parent, bool auto_refit, bool is_virtual_train)
 {
-	DeleteWindowById(WC_VEHICLE_REFIT, v->index);
+	CloseWindowById(WC_VEHICLE_REFIT, v->index);
 	RefitWindow *w = new RefitWindow(&_vehicle_refit_desc, v, order, auto_refit, is_virtual_train);
 	w->parent = parent;
 }
@@ -1546,18 +1546,18 @@ static bool VehicleNumberSorter(const Vehicle * const &a, const Vehicle * const 
 /** Sort vehicles by their name */
 static bool VehicleNameSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	static char last_name[2][64];
+	static std::string last_name[2] = { {}, {} };
 
 	if (a != _last_vehicle[0]) {
 		_last_vehicle[0] = a;
 		SetDParam(0, a->index);
-		GetString(last_name[0], STR_VEHICLE_NAME, lastof(last_name[0]));
+		last_name[0] = GetString(STR_VEHICLE_NAME);
 	}
 
 	if (b != _last_vehicle[1]) {
 		_last_vehicle[1] = b;
 		SetDParam(0, b->index);
-		GetString(last_name[1], STR_VEHICLE_NAME, lastof(last_name[1]));
+		last_name[1] = GetString(STR_VEHICLE_NAME);
 	}
 
 	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
@@ -2263,10 +2263,11 @@ public:
 		if (this->vli.company != OWNER_NONE) this->owner = this->vli.company;
 	}
 
-	~VehicleListWindow()
+	void Close() override
 	{
 		*this->sorting = this->vehgroups.GetListing();
 		this->RefreshRouteOverlay();
+		this->Window::Close();
 	}
 
 	virtual void OnFocus(Window *previously_focused_window) override
@@ -2274,7 +2275,7 @@ public:
 		this->RefreshRouteOverlay();
 	}
 
-	virtual void OnFocusLost(Window *newly_focused_window) override
+	virtual void OnFocusLost(bool closing, Window *newly_focused_window) override
 	{
 		this->RefreshRouteOverlay();
 	}
@@ -2672,7 +2673,7 @@ public:
 			/* This needs to be done in command-scope to enforce rebuilding before resorting invalid data */
 			this->vehgroups.ForceRebuild();
 			if (this->vli.type == VL_SHARED_ORDERS && !_settings_client.gui.enable_single_veh_shared_order_gui && this->vehicles.size() == 1) {
-				delete this;
+				this->Close();
 				return;
 			}
 		} else {
@@ -2750,7 +2751,8 @@ void DirtyVehicleListWindowForVehicle(const Vehicle *v)
 {
 	WindowClass cls = static_cast<WindowClass>(WC_TRAINS_LIST + v->type);
 	WindowClass cls2 = (v->type == VEH_TRAIN) ? WC_TRACE_RESTRICT_SLOTS : cls;
-	for (Window *w : Window::IterateFromBack()) {
+	if (!HaveWindowByClass(cls) && !HaveWindowByClass(cls2)) return;
+	for (Window *w : Window::Iterate()) {
 		if (w->window_class == cls || w->window_class == cls2) {
 			BaseVehicleListWindow *listwin = static_cast<BaseVehicleListWindow *>(w);
 			uint max = std::min<uint>(listwin->vscroll->GetPosition() + listwin->vscroll->GetCapacity(), (uint)listwin->vehgroups.size());
@@ -2886,7 +2888,7 @@ struct VehicleDetailsWindow : Window {
 		if (v->type == VEH_TRAIN && _shift_pressed) this->tab = TDW_TAB_TOTALS;
 	}
 
-	~VehicleDetailsWindow()
+	void Close() override
 	{
 		if (this->window_number != INVALID_VEHICLE) {
 			if (!FocusWindowById(WC_VEHICLE_VIEW, this->window_number)) {
@@ -2896,6 +2898,7 @@ struct VehicleDetailsWindow : Window {
 				}
 			}
 		}
+		this->Window::Close();
 	}
 
 	/**
@@ -3402,7 +3405,7 @@ struct VehicleDetailsWindow : Window {
 		}
 	}
 
-	virtual void OnFocusLost(Window *newly_focused_window) override
+	virtual void OnFocusLost(bool closing, Window *newly_focused_window) override
 	{
 		if (HasFocusedVehicleChanged(this->window_number, newly_focused_window)) {
 			if (this->window_number != INVALID_VEHICLE) {
@@ -3432,8 +3435,8 @@ static WindowDesc _nontrain_vehicle_details_desc(
 /** Shows the vehicle details window of the given vehicle. */
 static void ShowVehicleDetailsWindow(const Vehicle *v)
 {
-	DeleteWindowById(WC_VEHICLE_ORDERS, v->index, false);
-	DeleteWindowById(WC_VEHICLE_TIMETABLE, v->index, false);
+	CloseWindowById(WC_VEHICLE_ORDERS, v->index, false);
+	CloseWindowById(WC_VEHICLE_TIMETABLE, v->index, false);
 	AllocateWindowDescFront<VehicleDetailsWindow>((v->type == VEH_TRAIN) ? &_train_vehicle_details_desc : &_nontrain_vehicle_details_desc, v->index);
 }
 
@@ -3677,20 +3680,22 @@ public:
 		this->UpdateButtonStatus();
 	}
 
-	~VehicleViewWindow()
+	void Close() override
 	{
 		if (this->window_number != INVALID_VEHICLE) {
 			const Vehicle *v = Vehicle::Get(this->window_number);
 			MarkDirtyFocusedRoutePaths(v);
 		}
-		DeleteWindowById(WC_VEHICLE_ORDERS, this->window_number, false);
-		DeleteWindowById(WC_VEHICLE_REFIT, this->window_number, false);
-		DeleteWindowById(WC_VEHICLE_DETAILS, this->window_number, false);
-		DeleteWindowById(WC_VEHICLE_TIMETABLE, this->window_number, false);
+		CloseWindowById(WC_VEHICLE_ORDERS, this->window_number, false);
+		CloseWindowById(WC_VEHICLE_REFIT, this->window_number, false);
+		CloseWindowById(WC_VEHICLE_DETAILS, this->window_number, false);
+		CloseWindowById(WC_VEHICLE_TIMETABLE, this->window_number, false);
 
 		if (this->fixed_route_overlay_active) {
 			RemoveFixedViewportRoutePath(this->window_number);
 		}
+
+		this->Window::Close();
 	}
 
 	virtual void OnFocus(Window *previously_focused_window) override
@@ -3703,7 +3708,7 @@ public:
 		}
 	}
 
-	virtual void OnFocusLost(Window *newly_focused_window) override
+	virtual void OnFocusLost(bool closing, Window *newly_focused_window) override
 	{
 		if (HasFocusedVehicleChanged(this->window_number, newly_focused_window)) {
 			if (this->window_number != INVALID_VEHICLE) {

@@ -979,7 +979,7 @@ void DrawCharCentered(WChar c, const Rect &r, TextColour colour)
  */
 Dimension GetSpriteSize(SpriteID sprid, Point *offset, ZoomLevel zoom)
 {
-	const Sprite *sprite = GetSprite(sprid, SpriteType::Normal);
+	const Sprite *sprite = GetSprite(sprid, SpriteType::Normal, ZoomMask(zoom));
 
 	if (offset != nullptr) {
 		offset->x = UnScaleByZoom(sprite->x_offs, zoom);
@@ -1044,15 +1044,15 @@ void DrawSpriteViewport(const SpritePointerHolder &sprite_store, const DrawPixel
 	}
 }
 
-void PrepareDrawSpriteViewportSpriteStore(SpritePointerHolder &sprite_store, SpriteID img, PaletteID pal)
+void PrepareDrawSpriteViewportSpriteStore(SpritePointerHolder &sprite_store, const DrawPixelInfo *dpi, SpriteID img, PaletteID pal)
 {
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
-	sprite_store.CacheSprite(real_sprite, SpriteType::Normal);
+	sprite_store.CacheSprite(real_sprite, SpriteType::Normal, dpi->zoom);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
-		sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour);
+		sprite_store.CacheRecolourSprite(GB(pal, 0, PALETTE_WIDTH));
 	} else if (pal != PAL_NONE) {
 		if (!HasBit(pal, PALETTE_TEXT_RECOLOUR) && GB(pal, 0, PALETTE_WIDTH) != PAL_NONE) {
-			sprite_store.CacheSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour);
+			sprite_store.CacheRecolourSprite(GB(pal, 0, PALETTE_WIDTH));
 		}
 	}
 }
@@ -1072,16 +1072,16 @@ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub,
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
 		ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1;
-		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, BM_TRANSPARENT, sub, real_sprite, zoom);
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom)), x, y, BM_TRANSPARENT, sub, real_sprite, zoom);
 	} else if (pal != PAL_NONE) {
 		if (HasBit(pal, PALETTE_TEXT_RECOLOUR)) {
 			ctx.SetColourRemap((TextColour)GB(pal, 0, PALETTE_WIDTH));
 		} else {
 			ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1;
 		}
-		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, GetBlitterMode(pal), sub, real_sprite, zoom);
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom)), x, y, GetBlitterMode(pal), sub, real_sprite, zoom);
 	} else {
-		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal), x, y, BM_NORMAL, sub, real_sprite, zoom);
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom)), x, y, BM_NORMAL, sub, real_sprite, zoom);
 	}
 }
 
@@ -1098,7 +1098,7 @@ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub,
  * @tparam SCALED_XY Whether the X and Y are scaled or unscaled.
  */
 template <int ZOOM_BASE, bool SCALED_XY>
-static void GfxBlitter(const GfxBlitterCtx &ctx, const Sprite * const sprite, int x, int y, BlitterMode mode, const SubSprite * const sub, SpriteID sprite_id, ZoomLevel zoom)
+static void GfxBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite * const sub, SpriteID sprite_id, ZoomLevel zoom)
 {
 	const DrawPixelInfo *dpi = ctx.dpi;
 	Blitter::BlitterParams bp;
@@ -1137,6 +1137,14 @@ static void GfxBlitter(const GfxBlitterCtx &ctx, const Sprite * const sprite, in
 
 		x += ScaleByZoom(bp.skip_left, zoom);
 		y += ScaleByZoom(bp.skip_top, zoom);
+	}
+
+	while (sprite != nullptr && HasBit(sprite->missing_zoom_levels, zoom)) {
+		sprite = sprite->next;
+	}
+	if (sprite == nullptr) {
+		DEBUG(sprite, 0, "Failed to draw sprite %u at zoom level %u as required zoom level is missing", sprite_id, zoom);
+		return;
 	}
 
 	/* Copy the main data directly from the sprite */
@@ -1231,7 +1239,7 @@ std::unique_ptr<uint32[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel zo
 
 	/* Gather information about the sprite to write, reserve memory */
 	const SpriteID real_sprite = GB(spriteId, 0, SPRITE_WIDTH);
-	const Sprite *sprite = GetSprite(real_sprite, SpriteType::Normal);
+	const Sprite *sprite = GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom));
 	Dimension dim = GetSpriteSize(real_sprite, nullptr, zoom);
 	size_t dim_size = static_cast<size_t>(dim.width) * dim.height;
 	std::unique_ptr<uint32[]> result(new uint32[dim_size]);
@@ -1709,7 +1717,7 @@ void DrawDirtyBlocks()
 
 	if (_whole_screen_dirty) {
 		RedrawScreenRect(0, 0, _screen.width, _screen.height);
-		for (Window *w : Window::IterateFromBack()) {
+		for (Window *w : Window::Iterate()) {
 			w->flags &= ~(WF_DIRTY | WF_WIDGETS_DIRTY | WF_DRAG_DIRTIED);
 		}
 		_whole_screen_dirty = false;
@@ -2121,7 +2129,7 @@ void UpdateCursorSize()
 	static_assert(lengthof(_cursor.sprite_seq) == lengthof(_cursor.sprite_pos));
 	assert(_cursor.sprite_count <= lengthof(_cursor.sprite_seq));
 	for (uint i = 0; i < _cursor.sprite_count; ++i) {
-		const Sprite *p = GetSprite(GB(_cursor.sprite_seq[i].sprite, 0, SPRITE_WIDTH), SpriteType::Normal);
+		const Sprite *p = GetSprite(GB(_cursor.sprite_seq[i].sprite, 0, SPRITE_WIDTH), SpriteType::Normal, 0);
 		Point offs, size;
 		offs.x = UnScaleGUI(p->x_offs) + _cursor.sprite_pos[i].x;
 		offs.y = UnScaleGUI(p->y_offs) + _cursor.sprite_pos[i].y;
@@ -2222,77 +2230,39 @@ void SetAnimatedMouseCursor(const AnimCursor *table)
 }
 
 /**
- * Update cursor position on mouse movement for relative modes.
+ * Update cursor position based on a relative change.
+ *
  * @param delta_x How much change in the X position.
  * @param delta_y How much change in the Y position.
  */
 void CursorVars::UpdateCursorPositionRelative(int delta_x, int delta_y)
 {
-	if (this->fix_at) {
-		this->delta.x = delta_x;
-		this->delta.y = delta_y;
-	} else {
-		int last_position_x = this->pos.x;
-		int last_position_y = this->pos.y;
+	assert(this->fix_at);
 
-		this->pos.x = Clamp(this->pos.x + delta_x, 0, _cur_resolution.width - 1);
-		this->pos.y = Clamp(this->pos.y + delta_y, 0, _cur_resolution.height - 1);
-
-		this->delta.x = last_position_x - this->pos.x;
-		this->delta.y = last_position_y - this->pos.y;
-
-		this->dirty = true;
-	}
+	this->delta.x = delta_x;
+	this->delta.y = delta_y;
 }
 
 /**
  * Update cursor position on mouse movement.
  * @param x New X position.
  * @param y New Y position.
- * @param queued_warp True, if the OS queues mouse warps after pending mouse movement events.
- *                    False, if the warp applies instantaneous.
  * @return true, if the OS cursor position should be warped back to this->pos.
  */
-bool CursorVars::UpdateCursorPosition(int x, int y, bool queued_warp)
+bool CursorVars::UpdateCursorPosition(int x, int y)
 {
-	/* Detecting relative mouse movement is somewhat tricky.
-	 *  - There may be multiple mouse move events in the video driver queue (esp. when OpenTTD lags a bit).
-	 *  - When we request warping the mouse position (return true), a mouse move event is appended at the end of the queue.
-	 *
-	 * So, when this->fix_at is active, we use the following strategy:
-	 *  - The first movement triggers the warp to reset the mouse position.
-	 *  - Subsequent events have to compute movement relative to the previous event.
-	 *  - The relative movement is finished, when we receive the event matching the warp.
-	 */
+	this->delta.x = x - this->pos.x;
+	this->delta.y = y - this->pos.y;
 
-	if (x == this->pos.x && y == this->pos.y) {
-		/* Warp finished. */
-		this->queued_warp = false;
-	}
-
-	this->delta.x = x - (this->queued_warp ? this->last_position.x : this->pos.x);
-	this->delta.y = y - (this->queued_warp ? this->last_position.y : this->pos.y);
-
-	this->last_position.x = x;
-	this->last_position.y = y;
-
-	bool need_warp = false;
 	if (this->fix_at) {
-		if (this->delta.x != 0 || this->delta.y != 0) {
-			/* Trigger warp.
-			 * Note: We also trigger warping again, if there is already a pending warp.
-			 *       This makes it more tolerant about the OS or other software in between
-			 *       botchering the warp. */
-			this->queued_warp = queued_warp;
-			need_warp = true;
-		}
+		return this->delta.x != 0 || this->delta.y != 0;
 	} else if (this->pos.x != x || this->pos.y != y) {
-		this->queued_warp = false; // Cancel warping, we are no longer confining the position.
 		this->dirty = true;
 		this->pos.x = x;
 		this->pos.y = y;
 	}
-	return need_warp;
+
+	return false;
 }
 
 bool ChangeResInGame(int width, int height)
@@ -2384,7 +2354,7 @@ bool AdjustGUIZoom(AdjustGUIZoomMode mode)
 	/* Adjust all window sizes to match the new zoom level, so that they don't appear
 	   to move around when the application is moved to a screen with different DPI. */
 	auto zoom_shift = old_gui_zoom - _gui_zoom;
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		if (mode == AGZM_AUTOMATIC) {
 			w->left   = (w->left   * _gui_scale) / old_scale;
 			w->top    = (w->top    * _gui_scale) / old_scale;

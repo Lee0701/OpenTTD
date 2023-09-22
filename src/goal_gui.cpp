@@ -283,7 +283,7 @@ struct GoalListWindow : public Window {
 static const NWidgetPart _nested_goals_list_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
-		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_GOAL_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_GOAL_CAPTION), SetDataTip(STR_JUST_STRING1, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_GOAL_SELECT_BUTTONS),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_BROWN, WID_GOAL_GLOBAL_BUTTON), SetMinimalSize(50, 0), SetMinimalTextLines(1, WidgetDimensions::unscaled.captiontext.Vertical()), SetDataTip(STR_GOALS_GLOBAL_BUTTON, STR_GOALS_GLOBAL_BUTTON_HELPTEXT),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_BROWN, WID_GOAL_COMPANY_BUTTON), SetMinimalSize(50, 0), SetMinimalTextLines(1, WidgetDimensions::unscaled.captiontext.Vertical()), SetDataTip(STR_GOALS_COMPANY_BUTTON, STR_GOALS_COMPANY_BUTTON_HELPTEXT),
@@ -375,17 +375,17 @@ struct GoalQuestionWindow : public Window {
 		switch (widget) {
 			case WID_GQ_BUTTON_1:
 				DoCommandP(0, this->window_number, this->button[0], CMD_GOAL_QUESTION_ANSWER);
-				delete this;
+				this->Close();
 				break;
 
 			case WID_GQ_BUTTON_2:
 				DoCommandP(0, this->window_number, this->button[1], CMD_GOAL_QUESTION_ANSWER);
-				delete this;
+				this->Close();
 				break;
 
 			case WID_GQ_BUTTON_3:
 				DoCommandP(0, this->window_number, this->button[2], CMD_GOAL_QUESTION_ANSWER);
-				delete this;
+				this->Close();
 				break;
 		}
 	}

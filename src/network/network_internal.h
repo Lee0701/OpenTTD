@@ -11,6 +11,7 @@
 #define NETWORK_INTERNAL_H
 
 #include "network_func.h"
+#include "network_sync.h"
 #include "core/tcp_coordinator.h"
 #include "core/tcp_game.h"
 
@@ -18,8 +19,6 @@
 #include "../date_type.h"
 
 #include <vector>
-#include <array>
-#include <memory>
 
 static const uint32 FIND_SERVER_EXTENDED_TOKEN = 0x2A49582A;
 
@@ -34,12 +33,6 @@ static const uint32 FIND_SERVER_EXTENDED_TOKEN = 0x2A49582A;
  *  nothing will happen.
  */
 #define ENABLE_NETWORK_SYNC_EVERY_FRAME
-
-/**
- * In theory sending 1 of the 2 seeds is enough to check for desyncs
- *   so in theory, this next define can be left off.
- */
-#define NETWORK_SEND_DOUBLE_SEED
 #endif /* RANDOM_DEBUG */
 
 /**
@@ -80,9 +73,6 @@ extern uint32 _last_sync_frame; // Used in the server to store the last time a s
 extern NetworkAddressList _broadcast_list;
 
 extern uint32 _sync_seed_1;
-#ifdef NETWORK_SEND_DOUBLE_SEED
-extern uint32 _sync_seed_2;
-#endif
 extern uint64 _sync_state_checksum;
 extern uint32 _sync_frame;
 extern Date   _last_sync_date;
@@ -104,16 +94,6 @@ extern std::string _network_server_name;
 extern uint8 _network_reconnect;
 
 extern CompanyMask _network_company_passworded;
-
-/* Sync debugging */
-struct NetworkSyncRecord {
-	uint32 frame;
-	uint32 seed_1;
-	uint64 state_checksum;
-};
-extern std::vector<NetworkSyncRecord> _network_client_sync_records;
-extern std::unique_ptr<std::array<NetworkSyncRecord, 1024>> _network_server_sync_records;
-extern uint32 _network_server_sync_records_next;
 
 void NetworkQueryServer(const std::string &connection_string);
 

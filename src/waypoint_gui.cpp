@@ -22,13 +22,13 @@
 #include "waypoint_base.h"
 #include "departures_gui.h"
 #include "newgrf_debug.h"
+#include "zoom_func.h"
 
 #include "widgets/waypoint_widget.h"
 
 #include "table/strings.h"
 
 #include "safeguards.h"
-#include "zoom_func.h"
 
 /** GUI for accessing waypoints and buoys. */
 struct WaypointWindow : Window {
@@ -106,11 +106,11 @@ public:
 		this->OnInvalidateData(0);
 	}
 
-	~WaypointWindow()
+	void Close() override
 	{
-		DeleteWindowById(GetWindowClassForVehicleType(this->vt), VehicleListIdentifier(VL_STATION_LIST, this->vt, this->owner, this->window_number).Pack(), false);
-
+		CloseWindowById(GetWindowClassForVehicleType(this->vt), VehicleListIdentifier(VL_STATION_LIST, this->vt, this->owner, this->window_number).Pack(), false);
 		SetViewportCatchmentWaypoint(Waypoint::Get(this->window_number), false);
+		this->Window::Close();
 	}
 
 	void SetStringParameters(int widget) const override

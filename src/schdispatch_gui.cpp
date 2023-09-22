@@ -210,11 +210,12 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		this->AutoSelectSchedule();
 	}
 
-	~SchdispatchWindow()
+	void Close() override
 	{
 		if (!FocusWindowById(WC_VEHICLE_VIEW, this->window_number)) {
 			MarkDirtyFocusedRoutePaths(this->vehicle);
 		}
+		this->GeneralVehicleWindow::Close();
 	}
 
 	uint base_width;
@@ -259,7 +260,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 
 				SetDParamMaxValue(0, _settings_time.time_in_minutes ? 0 : MAX_YEAR * DAYS_IN_YEAR);
 				Dimension unumber = GetStringBoundingBox(STR_JUST_DATE_WALLCLOCK_TINY);
-				const Sprite *spr = GetSprite(SPR_FLAG_VEH_STOPPED, SpriteType::Normal);
+				const Sprite *spr = GetSprite(SPR_FLAG_VEH_STOPPED, SpriteType::Normal, ZoomMask(ZOOM_LVL_GUI));
 				this->flag_width  = UnScaleGUI(spr->width) + WidgetDimensions::scaled.framerect.right;
 				this->flag_height = UnScaleGUI(spr->height);
 
@@ -664,7 +665,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		const Vehicle *v = this->vehicle;
 
 		this->clicked_widget = widget;
-		this->DeleteChildWindows(WC_QUERY_STRING);
+		this->CloseChildWindows(WC_QUERY_STRING);
 
 		switch (widget) {
 			case WID_SCHDISPATCH_MATRIX: { /* List */
@@ -1132,9 +1133,8 @@ struct ScheduledDispatchAddSlotsWindow : Window {
 		auto handle_hours_dropdown = [&](uint current) {
 			DropDownList list;
 			for (uint i = 0; i < 24; i++) {
-				DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
-				item->SetParam(0, i);
-				list.emplace_back(item);
+				SetDParam(0, i);
+				list.emplace_back(new DropDownListStringItem(STR_JUST_INT, i, false));
 			}
 			ShowDropDownList(this, std::move(list), MINUTES_HOUR(current), widget);
 		};
@@ -1142,9 +1142,8 @@ struct ScheduledDispatchAddSlotsWindow : Window {
 		auto handle_minutes_dropdown = [&](uint current) {
 			DropDownList list;
 			for (uint i = 0; i < 60; i++) {
-				DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
-				item->SetParam(0, i);
-				list.emplace_back(item);
+				SetDParam(0, i);
+				list.emplace_back(new DropDownListStringItem(STR_JUST_INT, i, false));
 			}
 			ShowDropDownList(this, std::move(list), MINUTES_MINUTE(current), widget);
 		};
@@ -1171,7 +1170,7 @@ struct ScheduledDispatchAddSlotsWindow : Window {
 
 			case WID_SCHDISPATCH_ADD_SLOT_ADD_BUTTON:
 				static_cast<SchdispatchWindow *>(this->parent)->AddMultipleDepartureSlots(this->start, this->step, this->end);
-				delete this;
+				this->Close();
 				break;
 		}
 	}
@@ -1244,7 +1243,7 @@ static WindowDesc _scheduled_dispatch_add_desc(
 
 void ShowScheduledDispatchAddSlotsWindow(SchdispatchWindow *parent, int window_number)
 {
-	DeleteWindowByClass(WC_SET_DATE);
+	CloseWindowByClass(WC_SET_DATE);
 
 	new ScheduledDispatchAddSlotsWindow(&_scheduled_dispatch_add_desc, window_number, parent);
 }
@@ -1252,7 +1251,7 @@ void ShowScheduledDispatchAddSlotsWindow(SchdispatchWindow *parent, int window_n
 void SchdispatchInvalidateWindows(const Vehicle *v)
 {
 	v = v->FirstShared();
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		if (w->window_class == WC_VEHICLE_TIMETABLE) {
 			if (static_cast<GeneralVehicleWindow *>(w)->vehicle->FirstShared() == v) w->SetDirty();
 		}

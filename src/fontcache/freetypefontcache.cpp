@@ -143,21 +143,15 @@ void LoadFreeTypeFont(FontSize fs)
 	FT_Face face = nullptr;
 
 	/* If font is an absolute path to a ttf, try loading that first. */
-	FT_Error error = FT_New_Face(_library, font_name, 0, &face);
-
-#if defined(WITH_COCOA)
-	extern void MacOSRegisterExternalFont(const char *file_path);
-	if (error == FT_Err_Ok) MacOSRegisterExternalFont(font_name);
-#endif
+	int32_t index = 0;
+	if (settings->os_handle != nullptr) index = *static_cast<const int32_t *>(settings->os_handle);
+	FT_Error error = FT_New_Face(_library, font_name, index, &face);
 
 	if (error != FT_Err_Ok) {
 		/* Check if font is a relative filename in one of our search-paths. */
 		std::string full_font = FioFindFullPath(BASE_DIR, font_name);
 		if (!full_font.empty()) {
 			error = FT_New_Face(_library, full_font.c_str(), 0, &face);
-#if defined(WITH_COCOA)
-			if (error == FT_Err_Ok) MacOSRegisterExternalFont(full_font.c_str());
-#endif
 		}
 	}
 
@@ -319,10 +313,10 @@ void UninitFreeType()
 	_library = nullptr;
 }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(WITH_FONTCONFIG) && !defined(WITH_COCOA)
+#if !defined(WITH_FONTCONFIG)
 
 FT_Error GetFontByFaceName(const char *font_name, FT_Face *face) { return FT_Err_Cannot_Open_Resource; }
 
-#endif /* !defined(_WIN32) && !defined(__APPLE__) && !defined(WITH_FONTCONFIG) && !defined(WITH_COCOA) */
+#endif /* !defined(WITH_FONTCONFIG) */
 
 #endif /* WITH_FREETYPE */

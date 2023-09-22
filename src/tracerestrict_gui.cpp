@@ -46,6 +46,7 @@
 #include "core/geometry_func.hpp"
 #include "infrastructure_func.h"
 #include "zoom_func.h"
+#include "group_gui_list.h"
 #include "core/span_type.hpp"
 #include "3rdparty/cpp-btree/btree_map.h"
 
@@ -641,9 +642,6 @@ static const TraceRestrictDropDownListSet *GetSortedCargoTypeDropDownListSet()
  */
 static DropDownList GetGroupDropDownList(Owner owner, GroupID group_id, int &selected)
 {
-	typedef GUIList<const Group*> GUIGroupList;
-	extern bool GroupNameSorter(const Group * const &a, const Group * const &b);
-
 	GUIGroupList list;
 
 	for (const Group *g : Group::Iterate()) {
@@ -653,7 +651,7 @@ static DropDownList GetGroupDropDownList(Owner owner, GroupID group_id, int &sel
 	}
 
 	list.ForceResort();
-	list.Sort(&GroupNameSorter);
+	SortGUIGroupList(list);
 
 	DropDownList dlist;
 	selected = -1;
@@ -664,9 +662,8 @@ static DropDownList GetGroupDropDownList(Owner owner, GroupID group_id, int &sel
 	for (size_t i = 0; i < list.size(); ++i) {
 		const Group *g = list[i];
 		if (group_id == g->index) selected = group_id;
-		DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_GROUP_NAME, g->index, false);
-		item->SetParam(0, g->index | GROUP_NAME_HIERARCHY);
-		dlist.emplace_back(item);
+		SetDParam(0, g->index | GROUP_NAME_HIERARCHY);
+		dlist.emplace_back(new DropDownListStringItem(STR_GROUP_NAME, g->index, false));
 	}
 
 	return dlist;
@@ -718,14 +715,12 @@ DropDownList GetSlotDropDownList(Owner owner, TraceRestrictSlotID slot_id, int &
 		const TraceRestrictSlot *s = list[i];
 		if (slot_id == s->index) selected = slot_id;
 		if (s->vehicle_type == vehtype) {
-			DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_TRACE_RESTRICT_SLOT_NAME, s->index, false);
-			item->SetParam(0, s->index);
-			dlist.emplace_back(item);
+			SetDParam(0, s->index);
+			dlist.emplace_back(new DropDownListStringItem(STR_TRACE_RESTRICT_SLOT_NAME, s->index, false));
 		} else {
-			DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_TRACE_RESTRICT_SLOT_NAME_PREFIXED, s->index, false);
-			item->SetParam(0, STR_REPLACE_VEHICLE_TRAIN + s->vehicle_type);
-			item->SetParam(1, s->index);
-			dlist.emplace_back(item);
+			SetDParam(0, STR_REPLACE_VEHICLE_TRAIN + s->vehicle_type);
+			SetDParam(1, s->index);
+			dlist.emplace_back(new DropDownListStringItem(STR_TRACE_RESTRICT_SLOT_NAME_PREFIXED, s->index, false));
 		}
 	}
 
@@ -764,9 +759,8 @@ DropDownList GetCounterDropDownList(Owner owner, TraceRestrictCounterID ctr_id, 
 	for (size_t i = 0; i < list.size(); ++i) {
 		const TraceRestrictCounter *s = list[i];
 		if (ctr_id == s->index) selected = ctr_id;
-		DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_TRACE_RESTRICT_COUNTER_NAME, s->index, false);
-		item->SetParam(0, s->index);
-		dlist.emplace_back(item);
+		SetDParam(0, s->index);
+		dlist.emplace_back(new DropDownListStringItem(STR_TRACE_RESTRICT_COUNTER_NAME, s->index, false));
 	}
 
 	return dlist;
@@ -1749,7 +1743,8 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 		}
 	}
 
-	DrawString(left + indent * 16, right, y, instruction_string, selected ? TC_WHITE : TC_BLACK);
+	bool rtl = _current_text_dir == TD_RTL;
+	DrawString(left + (rtl ? 0 : ScaleGUITrad(indent * 16)), right - (rtl ? ScaleGUITrad(indent * 16) : 0), y, instruction_string, selected ? TC_WHITE : TC_BLACK);
 }
 
 /** Main GUI window class */
@@ -1785,7 +1780,7 @@ public:
 		this->ReloadProgramme();
 	}
 
-	~TraceRestrictWindow()
+	void Close() override
 	{
 		extern const TraceRestrictProgram *_viewport_highlight_tracerestrict_program;
 		if (_viewport_highlight_tracerestrict_program != nullptr) {
@@ -1794,6 +1789,7 @@ public:
 				SetViewportCatchmentTraceRestrictProgram(prog, false);
 			}
 		}
+		this->Window::Close();
 	}
 
 	virtual void OnClick(Point pt, int widget, int click_count) override
@@ -1837,7 +1833,7 @@ public:
 					return;
 				}
 
-				this->DeleteChildWindows();
+				this->CloseChildWindows();
 				HideDropDownMenu(this);
 
 				if (sel == -1 || this->GetOwner() != _local_company) {
@@ -2613,7 +2609,7 @@ public:
 
 		int count = this->GetItemCount(prog);
 		uint indent = 1;
-		for(int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++) {
 			TraceRestrictItem item = this->GetItem(prog, i);
 			uint this_indent = indent;
 			if (IsTraceRestrictConditional(item)) {
@@ -3678,7 +3674,7 @@ static const NWidgetPart _nested_slot_widgets[] = {
 				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), EndContainer(),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_MATRIX, COLOUR_GREY, WID_TRSL_LIST_VEHICLE), SetMinimalSize(248, 0), SetMatrixDataTip(1, 0, STR_VEHICLE_LIST_TRAIN_LIST_TOOLTIP), SetResize(1, 1), SetFill(1, 0), SetScrollbar(WID_TRSL_LIST_VEHICLE_SCROLLBAR),
+				NWidget(WWT_MATRIX, COLOUR_GREY, WID_TRSL_LIST_VEHICLE), SetMinimalSize(248, 0), SetMatrixDataTip(1, 0, STR_NULL), SetResize(1, 1), SetFill(1, 0), SetScrollbar(WID_TRSL_LIST_VEHICLE_SCROLLBAR),
 				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_TRSL_LIST_VEHICLE_SCROLLBAR),
 			EndContainer(),
 			NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(1, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),
@@ -3778,7 +3774,7 @@ private:
 		/* draw group name */
 		StringID str;
 		if (slot_id == ALL_TRAINS_TRACE_RESTRICT_SLOT_ID) {
-			str = STR_GROUP_ALL_TRAINS;
+			str = STR_GROUP_ALL_TRAINS + this->vli.vtype;
 		} else {
 			SetDParam(0, slot_id);
 			str = STR_TRACE_RESTRICT_SLOT_NAME;
@@ -3843,14 +3839,16 @@ public:
 		this->GetWidget<NWidgetCore>(WID_TRSL_CREATE_SLOT)->widget_data += this->vli.vtype;
 		this->GetWidget<NWidgetCore>(WID_TRSL_DELETE_SLOT)->widget_data += this->vli.vtype;
 		this->GetWidget<NWidgetCore>(WID_TRSL_RENAME_SLOT)->widget_data += this->vli.vtype;
+		this->GetWidget<NWidgetCore>(WID_TRSL_LIST_VEHICLE)->tool_tip = STR_VEHICLE_LIST_TRAIN_LIST_TOOLTIP + this->vli.vtype;
 
 		this->FinishInitNested(window_number);
 		this->owner = vli.company;
 	}
 
-	~TraceRestrictSlotWindow()
+	void Close() override
 	{
 		*this->sorting = this->vehgroups.GetListing();
+		this->Window::Close();
 	}
 
 	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -3914,7 +3912,7 @@ public:
 		/* Process ID-invalidation in command-scope as well */
 		if (this->slot_rename != INVALID_TRACE_RESTRICT_SLOT_ID && this->slot_rename != NEW_TRACE_RESTRICT_SLOT_ID &&
 				!TraceRestrictSlot::IsValidID(this->slot_rename)) {
-			DeleteWindowByClass(WC_QUERY_STRING);
+			CloseWindowByClass(WC_QUERY_STRING);
 			this->slot_rename = INVALID_TRACE_RESTRICT_SLOT_ID;
 		}
 
@@ -4027,7 +4025,8 @@ public:
 				break;
 
 			case WID_TRSL_SORT_BY_DROPDOWN: // Select sorting criteria dropdown menu
-				ShowDropDownMenu(this, this->vehicle_group_none_sorter_names, this->vehgroups.SortType(),  WID_TRSL_SORT_BY_DROPDOWN, 0, 0);
+				ShowDropDownMenu(this, this->vehicle_group_none_sorter_names, this->vehgroups.SortType(), WID_TRSL_SORT_BY_DROPDOWN, 0,
+						this->GetSorterDisableMask(this->vli.vtype), 0, DDSF_LOST_FOCUS);
 				return;
 
 			case WID_TRSL_FILTER_BY_CARGO: // Cargo filter dropdown
@@ -4475,7 +4474,7 @@ public:
 
 		if (this->ctr_qt_op != INVALID_TRACE_RESTRICT_COUNTER_ID && this->ctr_qt_op != NEW_TRACE_RESTRICT_COUNTER_ID &&
 				!TraceRestrictCounter::IsValidID(this->ctr_qt_op)) {
-			DeleteWindowByClass(WC_QUERY_STRING);
+			CloseWindowByClass(WC_QUERY_STRING);
 			this->ctr_qt_op = INVALID_TRACE_RESTRICT_COUNTER_ID;
 		}
 
@@ -4584,7 +4583,7 @@ public:
 					if (this->ctr_qt_op == NEW_TRACE_RESTRICT_COUNTER_ID) {
 						DoCommandP(0, 0, 0, CMD_CREATE_TRACERESTRICT_COUNTER | CMD_MSG(STR_TRACE_RESTRICT_ERROR_COUNTER_CAN_T_CREATE), nullptr, str);
 					} else {
-						DoCommandP(0, this->ctr_qt_op, 0, CMD_ALTER_TRACERESTRICT_COUNTER | CMD_MSG(STR_TRACE_RESTRICT_ERROR_COUNTER_CAN_T_MODIFY), nullptr, str);
+						DoCommandP(0, this->ctr_qt_op, 0, CMD_ALTER_TRACERESTRICT_COUNTER | CMD_MSG(STR_TRACE_RESTRICT_ERROR_COUNTER_CAN_T_RENAME), nullptr, str);
 					}
 					break;
 

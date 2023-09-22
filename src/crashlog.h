@@ -21,17 +21,14 @@ struct DesyncDeferredSaveInfo {
 struct DesyncExtraInfo {
 	enum Flags {
 		DEIF_NONE       = 0,      ///< no flags
-		DEIF_RAND1      = 1 << 0, ///< random 1 mismatch
-		DEIF_RAND2      = 1 << 1, ///< random 2 mismatch
-		DEIF_STATE      = 1 << 2, ///< state mismatch
-		DEIF_DBL_RAND   = 1 << 3, ///< double-seed sent
+		DEIF_RAND       = 1 << 0, ///< random mismatch
+		DEIF_STATE      = 1 << 1, ///< state mismatch
 	};
 
 	Flags flags = DEIF_NONE;
 	const char *client_name = nullptr;
 	int client_id = -1;
-	uint32 desync_frame_seed = 0;
-	uint32 desync_frame_state_checksum = 0;
+	std::string desync_frame_info;
 	FILE **log_file = nullptr; ///< save unclosed log file handle here
 	DesyncDeferredSaveInfo *defer_savegame_write = nullptr;
 };

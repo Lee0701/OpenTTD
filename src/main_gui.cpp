@@ -350,8 +350,8 @@ struct MainWindow : Window
 			}
 
 			case GHK_RESET_OBJECT_TO_PLACE: ResetObjectToPlace(); break;
-			case GHK_DELETE_WINDOWS: DeleteNonVitalWindows(); break;
-			case GHK_DELETE_NONVITAL_WINDOWS: DeleteAllNonVitalWindows(); break;
+			case GHK_DELETE_WINDOWS: CloseNonVitalWindows(); break;
+			case GHK_DELETE_NONVITAL_WINDOWS: CloseAllNonVitalWindows(); break;
 			case GHK_DELETE_ALL_MESSAGES: DeleteAllMessages(); break;
 			case GHK_REFRESH_SCREEN: MarkWholeScreenDirty(); break;
 
@@ -608,7 +608,7 @@ HotkeyList MainWindow::hotkeys("global", global_hotkeys);
 static WindowDesc _main_window_desc(
 	WDP_MANUAL, nullptr, 0, 0,
 	WC_MAIN_WINDOW, WC_NONE,
-	0,
+	WDF_NO_CLOSE,
 	_nested_main_window_widgets, lengthof(_nested_main_window_widgets),
 	&MainWindow::hotkeys
 );

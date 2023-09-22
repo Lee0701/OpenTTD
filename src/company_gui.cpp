@@ -37,6 +37,7 @@
 #include "station_func.h"
 #include "zoom_func.h"
 #include "sortlist_type.h"
+#include "group_gui_list.h"
 #include "core/backup_type.hpp"
 
 #include "widgets/company_widget.h"
@@ -633,14 +634,9 @@ static const LiveryClass _livery_class[LS_END] = {
 	LC_ROAD, LC_ROAD,
 };
 
-class DropDownListColourItem : public DropDownListItem {
+class DropDownListColourItem : public DropDownListStringItem {
 public:
-	DropDownListColourItem(int result, bool masked) : DropDownListItem(result, masked) {}
-
-	StringID String() const
-	{
-		return this->result >= COLOUR_END ? STR_COLOUR_DEFAULT : _colour_dropdown[this->result];
-	}
+	DropDownListColourItem(int result, bool masked) : DropDownListStringItem(result >= COLOUR_END ? STR_COLOUR_DEFAULT : _colour_dropdown[result], result, masked) {}
 
 	uint Width() const override
 	{
@@ -670,11 +666,6 @@ public:
 		DrawString(tr.left, tr.right, text_y, this->String(), sel ? TC_WHITE : TC_BLACK);
 	}
 };
-
-typedef GUIList<const Group*> GUIGroupList;
-
-/* cached values for GroupNameSorter to spare many GetString() calls */
-static const Group *_last_group[2] = { nullptr, nullptr };
 
 /** Company livery colour scheme window. */
 struct SelectCompanyLiveryWindow : public Window {
@@ -738,27 +729,6 @@ private:
 		ShowDropDownList(this, std::move(list), sel, widget);
 	}
 
-	static bool GroupNameSorter(const Group * const &a, const Group * const &b)
-	{
-		static char         last_name[2][64] = { "", "" };
-
-		if (a != _last_group[0]) {
-			_last_group[0] = a;
-			SetDParam(0, a->index);
-			GetString(last_name[0], STR_GROUP_NAME, lastof(last_name[0]));
-		}
-
-		if (b != _last_group[1]) {
-			_last_group[1] = b;
-			SetDParam(0, b->index);
-			GetString(last_name[1], STR_GROUP_NAME, lastof(last_name[1]));
-		}
-
-		int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
-		if (r == 0) return a->index < b->index;
-		return r < 0;
-	}
-
 	void AddChildren(GUIGroupList &source, GroupID parent, int indent)
 	{
 		for (const Group *g : source) {
@@ -787,11 +757,7 @@ private:
 			}
 
 			list.ForceResort();
-
-			/* invalidate cached values for name sorter - group names could change */
-			_last_group[0] = _last_group[1] = nullptr;
-
-			list.Sort(&GroupNameSorter);
+			SortGUIGroupList(list);
 
 			AddChildren(list, INVALID_GROUP, 0);
 		}
@@ -1334,82 +1300,82 @@ static const NWidgetPart _nested_select_company_manager_face_widgets[] = {
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_HAS_MOUSTACHE_EARRING_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_EYECOLOUR, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAS_MOUSTACHE_EARRING), SetDataTip(STR_JUST_STRING, STR_FACE_MOUSTACHE_EARRING_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAS_MOUSTACHE_EARRING), SetDataTip(STR_JUST_STRING1, STR_FACE_MOUSTACHE_EARRING_TOOLTIP), SetTextStyle(TC_WHITE),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_HAS_GLASSES_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_GLASSES, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAS_GLASSES), SetDataTip(STR_JUST_STRING, STR_FACE_GLASSES_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAS_GLASSES), SetDataTip(STR_JUST_STRING1, STR_FACE_GLASSES_TOOLTIP), SetTextStyle(TC_WHITE),
 						EndContainer(),
 						NWidget(NWID_SPACER), SetMinimalSize(0, 2), SetFill(1, 0),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_HAIR_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_HAIR, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_HAIR_L), SetDataTip(AWV_DECREASE, STR_FACE_HAIR_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAIR), SetDataTip(STR_JUST_STRING, STR_FACE_HAIR_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_HAIR), SetDataTip(STR_JUST_STRING1, STR_FACE_HAIR_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_HAIR_R), SetDataTip(AWV_INCREASE, STR_FACE_HAIR_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_EYEBROWS_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_EYEBROWS, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_EYEBROWS_L), SetDataTip(AWV_DECREASE, STR_FACE_EYEBROWS_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_EYEBROWS), SetDataTip(STR_JUST_STRING, STR_FACE_EYEBROWS_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_EYEBROWS), SetDataTip(STR_JUST_STRING1, STR_FACE_EYEBROWS_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_EYEBROWS_R), SetDataTip(AWV_INCREASE, STR_FACE_EYEBROWS_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_EYECOLOUR_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_EYECOLOUR, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_EYECOLOUR_L), SetDataTip(AWV_DECREASE, STR_FACE_EYECOLOUR_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_EYECOLOUR), SetDataTip(STR_JUST_STRING, STR_FACE_EYECOLOUR_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_EYECOLOUR), SetDataTip(STR_JUST_STRING1, STR_FACE_EYECOLOUR_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_EYECOLOUR_R), SetDataTip(AWV_INCREASE, STR_FACE_EYECOLOUR_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_GLASSES_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_GLASSES, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_GLASSES_L), SetDataTip(AWV_DECREASE, STR_FACE_GLASSES_TOOLTIP_2),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_GLASSES), SetDataTip(STR_JUST_STRING, STR_FACE_GLASSES_TOOLTIP_2), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_GLASSES), SetDataTip(STR_JUST_STRING1, STR_FACE_GLASSES_TOOLTIP_2), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_GLASSES_R), SetDataTip(AWV_INCREASE, STR_FACE_GLASSES_TOOLTIP_2),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_NOSE_TEXT), SetFill(1, 0),  SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_NOSE, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_NOSE_L), SetDataTip(AWV_DECREASE, STR_FACE_NOSE_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_NOSE), SetDataTip(STR_JUST_STRING, STR_FACE_NOSE_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_NOSE), SetDataTip(STR_JUST_STRING1, STR_FACE_NOSE_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_NOSE_R), SetDataTip(AWV_INCREASE, STR_FACE_NOSE_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_LIPS_MOUSTACHE_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_MOUSTACHE, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_LIPS_MOUSTACHE_L), SetDataTip(AWV_DECREASE, STR_FACE_LIPS_MOUSTACHE_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_LIPS_MOUSTACHE), SetDataTip(STR_JUST_STRING, STR_FACE_LIPS_MOUSTACHE_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_LIPS_MOUSTACHE), SetDataTip(STR_JUST_STRING1, STR_FACE_LIPS_MOUSTACHE_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_LIPS_MOUSTACHE_R), SetDataTip(AWV_INCREASE, STR_FACE_LIPS_MOUSTACHE_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_CHIN_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_CHIN, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_CHIN_L), SetDataTip(AWV_DECREASE, STR_FACE_CHIN_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_CHIN), SetDataTip(STR_JUST_STRING, STR_FACE_CHIN_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_CHIN), SetDataTip(STR_JUST_STRING1, STR_FACE_CHIN_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_CHIN_R), SetDataTip(AWV_INCREASE, STR_FACE_CHIN_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_JACKET_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_JACKET, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_JACKET_L), SetDataTip(AWV_DECREASE, STR_FACE_JACKET_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_JACKET), SetDataTip(STR_JUST_STRING, STR_FACE_JACKET_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_JACKET), SetDataTip(STR_JUST_STRING1, STR_FACE_JACKET_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_JACKET_R), SetDataTip(AWV_INCREASE, STR_FACE_JACKET_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_COLLAR_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_COLLAR, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_COLLAR_L), SetDataTip(AWV_DECREASE, STR_FACE_COLLAR_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_COLLAR), SetDataTip(STR_JUST_STRING, STR_FACE_COLLAR_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_COLLAR), SetDataTip(STR_JUST_STRING1, STR_FACE_COLLAR_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_COLLAR_R), SetDataTip(AWV_INCREASE, STR_FACE_COLLAR_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_HORIZONTAL),
 							NWidget(WWT_TEXT, INVALID_COLOUR, WID_SCMF_TIE_EARRING_TEXT), SetFill(1, 0), SetPadding(WidgetDimensions::unscaled.framerect),
 								SetDataTip(STR_FACE_EARRING, STR_NULL), SetTextStyle(TC_GOLD), SetAlignment(SA_VERT_CENTER | SA_RIGHT),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_TIE_EARRING_L), SetDataTip(AWV_DECREASE, STR_FACE_TIE_EARRING_TOOLTIP),
-							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_TIE_EARRING), SetDataTip(STR_JUST_STRING, STR_FACE_TIE_EARRING_TOOLTIP), SetTextStyle(TC_WHITE),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCMF_TIE_EARRING), SetDataTip(STR_JUST_STRING1, STR_FACE_TIE_EARRING_TOOLTIP), SetTextStyle(TC_WHITE),
 							NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_SCMF_TIE_EARRING_R), SetDataTip(AWV_INCREASE, STR_FACE_TIE_EARRING_TOOLTIP),
 						EndContainer(),
 						NWidget(NWID_SPACER), SetFill(0, 1),
@@ -1723,7 +1689,7 @@ public:
 
 			/* Cancel button */
 			case WID_SCMF_CANCEL:
-				delete this;
+				this->Close();
 				break;
 
 			/* Load button */
@@ -2004,6 +1970,8 @@ struct CompanyInfrastructureWindow : Window
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_INFRASTRUCTURE_VIEW_STATION_SECT).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_INFRASTRUCTURE_VIEW_STATIONS).width + WidgetDimensions::scaled.hsep_indent);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_INFRASTRUCTURE_VIEW_AIRPORTS).width + WidgetDimensions::scaled.hsep_indent);
+
+				size->width += padding.width;
 
 				uint total_height = ((rail_lines + road_lines + tram_lines + 2 + 3) * FONT_HEIGHT_NORMAL) + (4 * EXP_SPACING);
 
@@ -2308,6 +2276,15 @@ static const NWidgetPart _nested_company_widgets[] = {
 					EndContainer(),
 				EndContainer(),
 				NWidget(NWID_HORIZONTAL),
+					NWidget(NWID_SPACER), SetFill(1, 0),
+					NWidget(NWID_SELECTION, INVALID_COLOUR, WID_C_SELECT_HOSTILE_TAKEOVER),
+						NWidget(NWID_VERTICAL),
+							NWidget(NWID_SPACER), SetFill(0, 1), SetMinimalSize(90, 0),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_C_HOSTILE_TAKEOVER), SetDataTip(STR_COMPANY_VIEW_HOSTILE_TAKEOVER_BUTTON, STR_COMPANY_VIEW_HOSTILE_TAKEOVER_TOOLTIP),
+						EndContainer(),
+					EndContainer(),
+				EndContainer(),
+				NWidget(NWID_HORIZONTAL),
 					NWidget(NWID_SELECTION, INVALID_COLOUR, WID_C_SELECT_DESC_OWNERS),
 						NWidget(NWID_VERTICAL), SetPIP(5, 5, 4),
 							NWidget(WWT_EMPTY, INVALID_COLOUR, WID_C_DESC_OWNERS), SetMinimalTextLines(MAX_COMPANY_SHARE_OWNERS, 0),
@@ -2459,6 +2436,13 @@ struct CompanyWindow : Window
 				wi->SetDisplayedPlane(plane);
 				reinit = true;
 			}
+			/* Enable/disable 'Hostile Takeover' button. */
+			plane = ((local || _local_company == COMPANY_SPECTATOR || !c->is_ai || _networking || _settings_game.economy.allow_shares) ? SZSP_NONE : 0);
+			wi = this->GetWidget<NWidgetStacked>(WID_C_SELECT_HOSTILE_TAKEOVER);
+			if (plane != wi->shown_plane) {
+				wi->SetDisplayedPlane(plane);
+				reinit = true;
+			}
 
 			/* Multiplayer buttons. */
 			plane = ((!_networking) ? (int)SZSP_NONE : (int)(local ? CWP_MP_C_PWD : CWP_MP_C_JOIN));
@@ -2505,18 +2489,19 @@ struct CompanyWindow : Window
 			case WID_C_DESC_VEHICLE_COUNTS:
 				SetDParamMaxValue(0, 5000); // Maximum number of vehicles
 				for (uint i = 0; i < lengthof(_company_view_vehicle_count_strings); i++) {
-					size->width = std::max(size->width, GetStringBoundingBox(_company_view_vehicle_count_strings[i]).width);
+					size->width = std::max(size->width, GetStringBoundingBox(_company_view_vehicle_count_strings[i]).width + padding.width);
 				}
 				break;
 
 			case WID_C_DESC_INFRASTRUCTURE_COUNTS:
 				SetDParamMaxValue(0, UINT_MAX);
-				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL).width);
+				size->width = GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL).width;
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_WATER).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_STATION).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_NONE).width);
+				size->width += padding.width;
 				break;
 
 			case WID_C_DESC_OWNERS: {
@@ -2533,14 +2518,19 @@ struct CompanyWindow : Window
 			case WID_C_BUILD_HQ:
 			case WID_C_RELOCATE_HQ:
 			case WID_C_VIEW_INFRASTRUCTURE:
+			case WID_C_GIVE_MONEY:
+			case WID_C_HOSTILE_TAKEOVER:
 			case WID_C_COMPANY_PASSWORD:
 			case WID_C_COMPANY_JOIN:
-				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_VIEW_HQ_BUTTON).width);
+				size->width = GetStringBoundingBox(STR_COMPANY_VIEW_VIEW_HQ_BUTTON).width;
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_BUILD_HQ_BUTTON).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_RELOCATE_HQ).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON).width);
+				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_GIVE_MONEY_BUTTON).width);
+				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_HOSTILE_TAKEOVER_BUTTON).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_PASSWORD).width);
 				size->width = std::max(size->width, GetStringBoundingBox(STR_COMPANY_VIEW_JOIN).width);
+				size->width += padding.width;
 				break;
 
 
@@ -2758,6 +2748,10 @@ struct CompanyWindow : Window
 				DoCommandP(0, this->window_number, 0, CMD_SELL_SHARE_IN_COMPANY | CMD_MSG(STR_ERROR_CAN_T_SELL_25_SHARE_IN));
 				break;
 
+			case WID_C_HOSTILE_TAKEOVER:
+				ShowBuyCompanyDialog((CompanyID)this->window_number, true);
+				break;
+
 			case WID_C_COMPANY_PASSWORD:
 				if (this->window_number == _local_company) ShowNetworkCompanyPasswordWindow(this);
 				break;
@@ -2893,18 +2887,21 @@ void DirtyAllCompanyInfrastructureWindows()
 }
 
 struct BuyCompanyWindow : Window {
-	BuyCompanyWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
+	BuyCompanyWindow(WindowDesc *desc, WindowNumber window_number, bool hostile_takeover) : Window(desc), hostile_takeover(hostile_takeover)
 	{
 		this->InitNested(window_number);
 		this->owner = _local_company;
+		const Company *c = Company::Get((CompanyID)this->window_number);
+		this->company_value = hostile_takeover ? CalculateHostileTakeoverValue(c) : c->bankrupt_value;
 	}
 
-	~BuyCompanyWindow()
+	void Close() override
 	{
 		const Company *c = Company::GetIfValid((CompanyID)this->window_number);
-		if (c != nullptr && HasBit(c->bankrupt_asked, this->owner) && _current_company == this->owner) {
+		if (!this->hostile_takeover && c != nullptr && HasBit(c->bankrupt_asked, this->owner) && _current_company == this->owner) {
 			EnqueueDoCommandP(NewCommandContainerBasic(0, this->window_number, 0, CMD_DECLINE_BUY_COMPANY | CMD_NO_SHIFT_ESTIMATE));
 		}
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -2917,8 +2914,8 @@ struct BuyCompanyWindow : Window {
 			case WID_BC_QUESTION:
 				const Company *c = Company::Get((CompanyID)this->window_number);
 				SetDParam(0, c->index);
-				SetDParam(1, c->bankrupt_value);
-				size->height = GetStringHeight(STR_BUY_COMPANY_MESSAGE, size->width);
+				SetDParam(1, this->company_value);
+				size->height = GetStringHeight(this->hostile_takeover ? STR_BUY_COMPANY_HOSTILE_TAKEOVER : STR_BUY_COMPANY_MESSAGE, size->width);
 				break;
 		}
 	}
@@ -2945,8 +2942,8 @@ struct BuyCompanyWindow : Window {
 			case WID_BC_QUESTION: {
 				const Company *c = Company::Get((CompanyID)this->window_number);
 				SetDParam(0, c->index);
-				SetDParam(1, c->bankrupt_value);
-				DrawStringMultiLine(r.left, r.right, r.top, r.bottom, STR_BUY_COMPANY_MESSAGE, TC_FROMSTRING, SA_CENTER);
+				SetDParam(1, this->company_value);
+				DrawStringMultiLine(r.left, r.right, r.top, r.bottom, this->hostile_takeover ? STR_BUY_COMPANY_HOSTILE_TAKEOVER : STR_BUY_COMPANY_MESSAGE, TC_FROMSTRING, SA_CENTER);
 				break;
 			}
 		}
@@ -2956,14 +2953,34 @@ struct BuyCompanyWindow : Window {
 	{
 		switch (widget) {
 			case WID_BC_NO:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_BC_YES:
-				DoCommandP(0, this->window_number, 0, CMD_BUY_COMPANY | CMD_MSG(STR_ERROR_CAN_T_BUY_COMPANY));
+				DoCommandP(0, this->window_number, (this->hostile_takeover ? 1 : 0), CMD_BUY_COMPANY | CMD_MSG(STR_ERROR_CAN_T_BUY_COMPANY));
 				break;
 		}
 	}
+
+	/**
+	 * Check on a regular interval if the company value has changed.
+	 */
+	void OnHundredthTick() override
+	{
+		/* Value can't change when in bankruptcy. */
+		if (!this->hostile_takeover) return;
+
+		const Company *c = Company::Get((CompanyID)this->window_number);
+		auto new_value = CalculateHostileTakeoverValue(c);
+		if (new_value != this->company_value) {
+			this->company_value = new_value;
+			this->ReInit();
+		}
+	}
+
+private:
+	bool hostile_takeover; ///< Whether the window is showing a hostile takeover.
+	Money company_value; ///< The value of the company for which the user can buy it.
 };
 
 static const NWidgetPart _nested_buy_company_widgets[] = {
@@ -2995,8 +3012,12 @@ static WindowDesc _buy_company_desc(
 /**
  * Show the query to buy another company.
  * @param company The company to buy.
+ * @param hostile_takeover Whether this is a hostile takeover.
  */
-void ShowBuyCompanyDialog(CompanyID company)
+void ShowBuyCompanyDialog(CompanyID company, bool hostile_takeover)
 {
-	AllocateWindowDescFront<BuyCompanyWindow>(&_buy_company_desc, company);
+	auto window = BringWindowToFrontById(WC_BUY_COMPANY, company);
+	if (window == nullptr) {
+		new BuyCompanyWindow(&_buy_company_desc, company, hostile_takeover);
+	}
 }

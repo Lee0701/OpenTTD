@@ -29,14 +29,13 @@
 #include "gfx_func.h"
 #include "tbtr_template_gui_main.h"
 #include "newgrf_debug.h"
+#include "group_gui_list.h"
 
 #include "widgets/group_widget.h"
 
 #include "table/sprites.h"
 
 #include "safeguards.h"
-
-typedef GUIList<const Group*> GUIGroupList;
 
 static const NWidgetPart _nested_group_widgets[] = {
 	NWidget(NWID_HORIZONTAL), // Window header
@@ -79,8 +78,8 @@ static const NWidgetPart _nested_group_widgets[] = {
 		NWidget(NWID_VERTICAL),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(NWID_VERTICAL),
-					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GL_GROUP_BY_ORDER), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(STR_STATION_VIEW_GROUP, STR_TOOLTIP_GROUP_ORDER),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GL_GROUP_BY_ORDER), SetFill(1, 1), SetMinimalSize(0, 12), SetDataTip(STR_STATION_VIEW_GROUP, STR_TOOLTIP_GROUP_ORDER),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_GL_SORT_BY_ORDER), SetFill(1, 1), SetMinimalSize(0, 12), SetDataTip(STR_BUTTON_SORT_BY, STR_TOOLTIP_SORT_ORDER),
 				EndContainer(),
 				NWidget(NWID_VERTICAL),
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GL_GROUP_BY_DROPDOWN), SetFill(1, 0), SetMinimalSize(0, 12), SetDataTip(0x0, STR_TOOLTIP_GROUP_ORDER),
@@ -117,29 +116,28 @@ static const NWidgetPart _nested_group_widgets[] = {
 	EndContainer(),
 };
 
-/* cached values for GroupNameSorter to spare many GetString() calls */
-static const Group *_last_group[2] = { nullptr, nullptr };
-
-/** Sort the groups by their name */
-bool GroupNameSorter(const Group * const &a, const Group * const &b)
+void SortGUIGroupList(GUIGroupList &list)
 {
-	static char         last_name[2][64] = { "", "" };
+	/* Sort the groups by their name */
+	const Group *last_group[2] = { nullptr, nullptr };
+	std::string last_name[2] = { {}, {} };
+	list.Sort([&](const Group * const &a, const Group * const &b) {
+		if (a != last_group[0]) {
+			last_group[0] = a;
+			SetDParam(0, a->index);
+			last_name[0] = GetString(STR_GROUP_NAME);
+		}
 
-	if (a != _last_group[0]) {
-		_last_group[0] = a;
-		SetDParam(0, a->index);
-		GetString(last_name[0], STR_GROUP_NAME, lastof(last_name[0]));
-	}
+		if (b != last_group[1]) {
+			last_group[1] = b;
+			SetDParam(0, b->index);
+			last_name[1] = GetString(STR_GROUP_NAME);
+		}
 
-	if (b != _last_group[1]) {
-		_last_group[1] = b;
-		SetDParam(0, b->index);
-		GetString(last_name[1], STR_GROUP_NAME, lastof(last_name[1]));
-	}
-
-	int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
-	if (r == 0) return a->index < b->index;
-	return r < 0;
+		int r = StrNaturalCompare(last_name[0], last_name[1]); // Sort by name (natural sorting).
+		if (r == 0) return a->index < b->index;
+		return r < 0;
+	});
 }
 
 class VehicleGroupWindow : public BaseVehicleListWindow {
@@ -222,11 +220,7 @@ private:
 		this->SetWidgetDisabledState(WID_GL_COLLAPSE_ALL_GROUPS, !enable_collapse_all);
 
 		list.ForceResort();
-
-		/* invalidate cached values for name sorter - group names could change */
-		_last_group[0] = _last_group[1] = nullptr;
-
-		list.Sort(&GroupNameSorter);
+		SortGUIGroupList(list);
 
 		AddChildren(list, INVALID_GROUP, 0);
 
@@ -453,9 +447,10 @@ public:
 		this->owner = vli.company;
 	}
 
-	~VehicleGroupWindow()
+	void Close() override
 	{
 		*this->sorting = this->vehgroups.GetListing();
+		this->Window::Close();
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -529,7 +524,7 @@ public:
 
 		/* Process ID-invalidation in command-scope as well */
 		if (this->group_rename != INVALID_GROUP && !Group::IsValidID(this->group_rename)) {
-			DeleteWindowByClass(WC_QUERY_STRING);
+			CloseWindowByClass(WC_QUERY_STRING);
 			this->group_rename = INVALID_GROUP;
 		}
 

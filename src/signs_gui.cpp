@@ -96,7 +96,7 @@ struct SignList {
 		const std::string &a_name = (*a)->name.empty() ? SignList::default_name : (*a)->name;
 
 		filter.ResetState();
-		filter.AddLine(a_name.c_str());
+		filter.AddLine(a_name);
 		return filter.GetState();
 	}
 
@@ -527,7 +527,7 @@ struct SignWindow : Window, SignList {
 				FALLTHROUGH;
 
 			case WID_QES_CANCEL:
-				delete this;
+				this->Close();
 				break;
 		}
 	}
@@ -583,7 +583,7 @@ void HandleClickOnSign(const Sign *si)
 void ShowRenameSignWindow(const Sign *si)
 {
 	/* Delete all other edit windows */
-	DeleteWindowByClass(WC_QUERY_STRING);
+	CloseWindowByClass(WC_QUERY_STRING);
 
 	new SignWindow(&_query_sign_edit_desc, si);
 }
@@ -596,5 +596,5 @@ void DeleteRenameSignWindow(SignID sign)
 {
 	SignWindow *w = dynamic_cast<SignWindow *>(FindWindowById(WC_QUERY_STRING, WN_QUERY_STRING_SIGN));
 
-	if (w != nullptr && w->cur_sign == sign) delete w;
+	if (w != nullptr && w->cur_sign == sign) w->Close();
 }

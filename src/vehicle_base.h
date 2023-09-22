@@ -307,8 +307,8 @@ public:
 	Vehicle **hash_viewport_prev;       ///< NOSAVE: Previous vehicle in the visual location hash.
 
 	Vehicle *hash_tile_next;            ///< NOSAVE: Next vehicle in the tile location hash.
-	Vehicle **hash_tile_prev;           ///< NOSAVE: Previous vehicle in the tile location hash.
-	Vehicle **hash_tile_current;        ///< NOSAVE: Cache of the current hash chain.
+	Vehicle *hash_tile_prev;            ///< NOSAVE: Previous vehicle in the tile location hash.
+	TileIndex hash_tile_current = INVALID_TILE; ///< NOSAVE: current tile used for tile location hash.
 
 	byte breakdown_severity;            ///< severity of the breakdown. Note that lower means more severe
 	byte breakdown_type;                ///< Type of breakdown
@@ -320,6 +320,7 @@ public:
 	Date age;                           ///< Age in days
 	Date max_age;                       ///< Maximum age
 	Date date_of_last_service;          ///< Last date the vehicle had a service at a depot.
+	Date date_of_last_service_newgrf;   ///< Last date the vehicle had a service at a depot, unchanged by the date cheat to protect against unsafe NewGRF behavior.
 	uint16 reliability;                 ///< Reliability.
 	uint16 reliability_spd_dec;         ///< Reliability decrease speed.
 	byte breakdown_ctr;                 ///< Counter for managing breakdown events. @see Vehicle::HandleBreakdown

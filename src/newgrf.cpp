@@ -59,7 +59,6 @@
 #include "table/build_industry.h"
 
 #include "3rdparty/cpp-btree/btree_map.h"
-#include <map>
 
 #include "safeguards.h"
 
@@ -371,12 +370,11 @@ static GRFError *DisableGrf(StringID message = STR_NULL, GRFConfig *config = nul
 	if (file != nullptr) ClearTemporaryNewGRFData(file);
 	if (config == _cur.grfconfig) _cur.skip_sprites = -1;
 
-	if (message != STR_NULL) {
-		config->error = std::make_unique<GRFError>(STR_NEWGRF_ERROR_MSG_FATAL, message);
-		if (config == _cur.grfconfig) config->error->param_value[0] = _cur.nfo_line;
-	}
+	if (message == STR_NULL) return nullptr;
 
-	return config->error.get();
+	config->error = {STR_NEWGRF_ERROR_MSG_FATAL, message};
+	if (config == _cur.grfconfig) config->error->param_value[0] = _cur.nfo_line;
+	return &config->error.value();
 }
 
 /**
@@ -499,7 +497,7 @@ StringID MapGRFStringID(uint32 grfid, StringID str)
 	}
 }
 
-static std::map<uint32, uint32> _grf_id_overrides;
+static btree::btree_map<uint32, uint32> _grf_id_overrides;
 
 /**
  * Set the override for a NewGRF
@@ -2706,6 +2704,7 @@ static ChangeInfoResult GlobalVarChangeInfo(uint gvid, int numinfo, int prop, co
 
 				if ((newone != STR_UNDEFINED) && (curidx < CURRENCY_END)) {
 					_currency_specs[curidx].name = newone;
+					_currency_specs[curidx].code.clear();
 				}
 				break;
 			}
@@ -4158,7 +4157,7 @@ static ChangeInfoResult SignalsChangeInfo(uint id, int numinfo, int prop, const 
 
 			case A0RPI_SIGNALS_STYLE_LOOKAHEAD_EXTRA_ASPECTS: {
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				uint8 value = std::min<byte>(buf->ReadByte(), NEW_SIGNALS_MAX_EXTRA_ASPECT);
+				uint8 value = buf->ReadByte();
 				if (_cur.grffile->current_new_signal_style != nullptr) {
 					SetBit(_cur.grffile->current_new_signal_style->style_flags, NSSF_LOOKAHEAD_ASPECTS_SET);
 					_cur.grffile->current_new_signal_style->lookahead_extra_aspects = value;
@@ -6014,6 +6013,9 @@ static void NewSpriteGroup(ByteReader *buf)
 				/* Continue reading var adjusts while bit 5 is set. */
 			} while (HasBit(varadjust, 5));
 
+			/* shrink_to_fit will be called later */
+			group->adjusts.reserve(current_adjusts.size());
+
 			for (const DeterministicSpriteGroupAdjust &adjust : current_adjusts) {
 				group->adjusts.push_back(adjust);
 				OptimiseVarAction2Adjust(va2_opt_state, info, group, group->adjusts.back());
@@ -6303,15 +6305,6 @@ static void NewSpriteGroup(ByteReader *buf)
 
 static CargoID TranslateCargo(uint8 feature, uint8 ctype)
 {
-	if (feature == GSF_OBJECTS) {
-		switch (ctype) {
-			case 0:    return 0;
-			case 0xFF: return CT_PURCHASE_OBJECT;
-			default:
-				grfmsg(1, "TranslateCargo: Invalid cargo bitnum %d for objects, skipping.", ctype);
-				return CT_INVALID;
-		}
-	}
 	/* Special cargo types for purchase list and stations */
 	if ((feature == GSF_STATIONS || feature == GSF_ROADSTOPS) && ctype == 0xFE) return CT_DEFAULT_NA;
 	if (ctype == 0xFF) return CT_PURCHASE;
@@ -6707,8 +6700,11 @@ static void ObjectMapSpriteGroup(ByteReader *buf, uint8 idcount)
 		uint16 groupid = buf->ReadWord();
 		if (!IsValidGroupID(groupid, "ObjectMapSpriteGroup")) continue;
 
-		ctype = TranslateCargo(GSF_OBJECTS, ctype);
-		if (ctype == CT_INVALID) continue;
+		/* The only valid option here is purchase list sprite groups. */
+		if (ctype != 0xFF) {
+			grfmsg(1, "ObjectMapSpriteGroup: Invalid cargo bitnum %d for objects, skipping.", ctype);
+			continue;
+		}
 
 		for (uint i = 0; i < idcount; i++) {
 			ObjectSpec *spec = (objects[i] >= _cur.grffile->objectspec.size()) ? nullptr : _cur.grffile->objectspec[objects[i]].get();
@@ -6718,7 +6714,7 @@ static void ObjectMapSpriteGroup(ByteReader *buf, uint8 idcount)
 				continue;
 			}
 
-			spec->grf_prop.spritegroup[ctype] = GetGroupByID(groupid);
+			spec->grf_prop.spritegroup[OBJECT_SPRITE_GROUP_PURCHASE] = GetGroupByID(groupid);
 		}
 	}
 
@@ -6738,9 +6734,9 @@ static void ObjectMapSpriteGroup(ByteReader *buf, uint8 idcount)
 			continue;
 		}
 
-		spec->grf_prop.spritegroup[0] = GetGroupByID(groupid);
-		spec->grf_prop.grffile        = _cur.grffile;
-		spec->grf_prop.local_id       = objects[i];
+		spec->grf_prop.spritegroup[OBJECT_SPRITE_GROUP_DEFAULT] = GetGroupByID(groupid);
+		spec->grf_prop.grffile = _cur.grffile;
+		spec->grf_prop.local_id = objects[i];
 	}
 }
 
@@ -8071,10 +8067,10 @@ static void GRFLoadError(ByteReader *buf)
 	}
 
 	/* For now we can only show one message per newgrf file. */
-	if (_cur.grfconfig->error != nullptr) return;
+	if (_cur.grfconfig->error.has_value()) return;
 
-	_cur.grfconfig->error = std::make_unique<GRFError>(sevstr[severity]);
-	GRFError *error = _cur.grfconfig->error.get();
+	_cur.grfconfig->error = {sevstr[severity]};
+	GRFError *error = &_cur.grfconfig->error.value();
 
 	if (message_id == 0xFF) {
 		/* This is a custom error message. */
@@ -11684,7 +11680,7 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 				if (num_non_static == MAX_NON_STATIC_GRF_COUNT) {
 					DEBUG(grf, 0, "'%s' is not loaded as the maximum number of non-static GRFs has been reached", c->filename.c_str());
 					c->status = GCS_DISABLED;
-					c->error  = std::make_unique<GRFError>(STR_NEWGRF_ERROR_MSG_FATAL, STR_NEWGRF_ERROR_TOO_MANY_NEWGRFS_LOADED);
+					c->error  = {STR_NEWGRF_ERROR_MSG_FATAL, STR_NEWGRF_ERROR_TOO_MANY_NEWGRFS_LOADED};
 					continue;
 				}
 				num_non_static++;

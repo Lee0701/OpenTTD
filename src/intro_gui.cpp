@@ -251,7 +251,8 @@ struct SelectGameWindow : public Window {
 		/* Update the viewport position. */
 		mw->viewport->dest_scrollpos_x = mw->viewport->scrollpos_x = pos.x;
 		mw->viewport->dest_scrollpos_y = mw->viewport->scrollpos_y = pos.y;
-		UpdateViewportPosition(mw);
+		UpdateNextViewportPosition(mw);
+		ApplyNextViewportPosition(mw);
 		mw->SetDirty(); // Required during panning, otherwise logo graphics disappears
 
 		/* If there is only one command, we just executed it and don't need to do any more */
@@ -494,7 +495,7 @@ static const NWidgetPart _nested_select_game_widgets[] = {
 static WindowDesc _select_game_desc(
 	WDP_CENTER, nullptr, 0, 0,
 	WC_SELECT_GAME, WC_NONE,
-	0,
+	WDF_NO_CLOSE,
 	_nested_select_game_widgets, lengthof(_nested_select_game_widgets)
 );
 

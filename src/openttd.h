@@ -75,6 +75,7 @@ enum PauseMode : byte {
 	PM_PAUSED_ACTIVE_CLIENTS = 1 << 4, ///< A game paused for 'min_active_clients'
 	PM_PAUSED_GAME_SCRIPT    = 1 << 5, ///< A game paused by a game script
 	PM_PAUSED_LINK_GRAPH     = 1 << 6, ///< A game paused due to the link graph schedule lagging
+	PM_COMMAND_DURING_PAUSE  = 1 << 7, ///< A game paused, and a command executed during the pause; resets on autosave
 
 	/** Pause mode bits when paused for network reasons. */
 	PMB_PAUSED_NETWORK = PM_PAUSED_ACTIVE_CLIENTS | PM_PAUSED_JOIN,
@@ -91,6 +92,7 @@ void AskExitToGameMenu();
 int openttd_main(int argc, char *argv[]);
 void StateGameLoop();
 void HandleExitGameRequest();
+void InitMusicDriver(bool init_volume);
 
 void SwitchToMode(SwitchMode new_mode);
 
