@@ -2224,7 +2224,10 @@ CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 						break;
 
 					case OCV_TIME_DATE:
-						if (!old_var_was_time) order->GetXDataRef() = 0;
+						if (!old_var_was_time) {
+							order->SetConditionValue(0);
+							order->GetXDataRef() = 0;
+						}
 						if (occ == OCC_IS_TRUE || occ == OCC_IS_FALSE) order->SetConditionComparator(OCC_EQUALS);
 						break;
 
@@ -3287,6 +3290,7 @@ VehicleOrderID AdvanceOrderIndexDeferred(const Vehicle *v, VehicleOrderID index)
 			}
 
 			case OT_DUMMY:
+			case OT_LABEL:
 				break;
 
 			default:
