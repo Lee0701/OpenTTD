@@ -29,6 +29,9 @@ enum TownSize {
 };
 template <> struct EnumPropsT<TownSize> : MakeEnumPropsT<TownSize, byte, TSZ_SMALL, TSZ_END, TSZ_END, 2> {};
 
+#define TSZI_MEDIUM 35000
+#define TSZI_LARGE 200000
+
 enum Ratings {
 	/* These refer to the maximums, so Appalling is -1000 to -400
 	 * MAXIMUM RATINGS BOUNDARIES */

@@ -3714,7 +3714,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		IConsoleHelp("Import map and town data from a CSV file in OpenTTD's base directory to found towns at the appropriate coordinates. Usage: 'import_towns <file>'");
 		IConsoleHelp("File Format:");
 		IConsoleHelp("First line: Coordinates of map edges: north,east,south,west");
-		IConsoleHelp("Other lines: Town name,size(S, M or L),city(0 or 1),latitude,longitude");
+		IConsoleHelp("Other lines: Town name,size(target population),city(0 or 1),latitude,longitude");
 		IConsoleHelp("Lines starting with # are ignored");
 		IConsoleHelp("Coordinates are positive or negative values, with no direction suffix");
 		return true;
@@ -3739,7 +3739,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 	double long_per_tile = 0, lat_per_tile = 0;
 	bool have_edges = false;
 	int line = 0, failed = 0, founded = 0;
-	char town_size_char;
+	uint town_size_int;
 	while (fgets(buf, sizeof buf, fp)) {
 		line++;
 		/* Skip comments and empty lines. */
@@ -3772,7 +3772,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		nbuf++;
 
 		/* Scan population and coords. */
-		if (sscanf(nbuf, "%c,%c,%lg,%lg", &town_size_char, &is_city, &town_loc.latitude, &town_loc.longitude) != 4) {
+		if (sscanf(nbuf, "%d,%c,%lg,%lg", &town_size_int, &is_city, &town_loc.latitude, &town_loc.longitude) != 4) {
 			IConsolePrintF(CC_ERROR, "Syntax error at %s:%d (%s)", argv[1], line, buf);
 			return true;
 		}
@@ -3781,8 +3781,8 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		if (town_loc.latitude > bottom.latitude && town_loc.latitude < top.latitude && town_loc.longitude > bottom.longitude && town_loc.longitude < top.longitude) {
 			/* Decide town size. */
 			TownSize town_size = TSZ_SMALL;
-			if (town_size_char == 'M') town_size = TSZ_MEDIUM;
-			else if (town_size_char == 'L')  town_size = TSZ_LARGE;
+			if (town_size_int >= TSZI_MEDIUM) town_size = TSZ_MEDIUM;
+			else if (town_size_int >= TSZI_LARGE) town_size = TSZ_LARGE;
 
 			/* City and layout. */
 			bool city = (is_city=='1');
@@ -3790,12 +3790,14 @@ DEF_CONSOLE_CMD(ConImportTowns)
 
 			/* Found the town, trying tiles around it if it fails. */
 			TileIndex tile = TileXY((town_loc.longitude - top.longitude) / long_per_tile, MapSizeY() - ((town_loc.latitude - bottom.latitude) / lat_per_tile));
-			bool success = DoCommandP(tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
+			TileIndex off_tile = tile;
+			bool success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
 			if (!success) {
 				for (int x = -1; x <= 1; x++) {
 					for (int y = -1; y <= 1; y++) {
 						if (x == 0 && y == 0) continue;
-						success = DoCommandP(TILE_ADDXY(tile, x, y), town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
+						off_tile = TILE_ADDXY(tile, x, y);
+						success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
 						if (success) break;
 					}
 					if (success) break;
@@ -3803,12 +3805,17 @@ DEF_CONSOLE_CMD(ConImportTowns)
 			}
 
 			if (success) {
+				Town *town = Town::GetByTile(off_tile);
+				for(uint i = 0 ; i < town_size_int ; i++) {
+					if(town->cache.population >= town_size_int) break;
+					DoCommandP(0, town->index, DC_EXEC, CMD_EXPAND_TOWN);
+				}
 				founded++;
 			} else {
 				/* Place a sign at the tile if founding fails. */
 				if (DoCommandP(tile, 0, 0, CMD_PLACE_SIGN, NULL)) {
 					char *sign_text = (char*)MallocT<char>(strlen(buf)+8);
-					seprintf(sign_text, "%s (%c%s)", buf, town_size_char, city?",C":"");
+					seprintf(sign_text, "%s (%d%s)", buf, town_size_int, city?",C":"");
 					DoCommandP(0, _new_sign_id, 0, CMD_RENAME_SIGN, NULL, sign_text);
 					free(sign_text);
 				}
