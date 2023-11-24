@@ -3810,10 +3810,24 @@ DEF_CONSOLE_CMD(ConImportTowns)
 			}
 
 			if (success) {
-				Town *town = Town::GetByTile(off_tile);
-				for(uint i = 0 ; i < town_size_int ; i++) {
-					if(town->cache.population >= town_size_int) break;
-					DoCommandP(0, town->index, DC_EXEC, CMD_EXPAND_TOWN);
+				tile = off_tile;
+				Town *town = nullptr;
+				for (int x = -1; x <= 1; x++) {
+					for (int y = -1; y <= 1; y++) {
+						off_tile = TILE_ADDXY(tile, x, y);
+						if(!(IsTileType(off_tile, MP_HOUSE) || (IsTileType(off_tile, MP_ROAD) && !IsRoadDepot(off_tile)))) continue;
+						town = Town::GetByTile(off_tile);
+						if(town != nullptr) break;
+					}
+					if (town != nullptr) break;
+				}
+				if(town != nullptr) {
+					for(uint i = 0 ; i < town_size_int ; i++) {
+						if(town->cache.population >= town_size_int) break;
+						DoCommandP(0, town->index, DC_EXEC, CMD_EXPAND_TOWN);
+					}
+				} else {
+					IConsolePrintF(CC_ERROR, "Could not expand %s at 0x%X", buf, off_tile);
 				}
 				founded++;
 			} else {
