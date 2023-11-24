@@ -3772,7 +3772,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		nbuf++;
 
 		/* Scan population and coords. */
-		if (sscanf(nbuf, "%d,%c,%lg,%lg", &town_size_int, &is_city, &town_loc.latitude, &town_loc.longitude) != 4) {
+		if (sscanf(nbuf, "%u,%c,%lg,%lg", &town_size_int, &is_city, &town_loc.latitude, &town_loc.longitude) != 4) {
 			IConsolePrintF(CC_ERROR, "Syntax error at %s:%d (%s)", argv[1], line, buf);
 			return true;
 		}
@@ -3791,16 +3791,21 @@ DEF_CONSOLE_CMD(ConImportTowns)
 			/* Found the town, trying tiles around it if it fails. */
 			TileIndex tile = TileXY((town_loc.longitude - top.longitude) / long_per_tile, MapSizeY() - ((town_loc.latitude - bottom.latitude) / lat_per_tile));
 			TileIndex off_tile = tile;
-			bool success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
-			if (!success) {
-				for (int x = -1; x <= 1; x++) {
-					for (int y = -1; y <= 1; y++) {
-						if (x == 0 && y == 0) continue;
-						off_tile = TILE_ADDXY(tile, x, y);
-						success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
+			bool success = false;
+			if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
+				success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
+				if (!success) {
+					for (int x = -1; x <= 1; x++) {
+						for (int y = -1; y <= 1; y++) {
+							if (x == 0 && y == 0) continue;
+							off_tile = TILE_ADDXY(tile, x, y);
+							if(IsTileType(off_tile, MP_CLEAR) || !IsTileType(off_tile, MP_TREES)) {
+								success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
+							}
+							if (success) break;
+						}
 						if (success) break;
 					}
-					if (success) break;
 				}
 			}
 
