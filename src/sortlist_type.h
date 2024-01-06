@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,7 +12,6 @@
 
 #include "core/enum_type.hpp"
 #include "core/bitmath_func.hpp"
-#include "core/sort_func.hpp"
 #include "core/smallvec_type.hpp"
 #include "date_type.h"
 
@@ -24,9 +21,8 @@ enum SortListFlags {
 	VL_DESC       = 1 << 0, ///< sort descending or ascending
 	VL_RESORT     = 1 << 1, ///< instruct the code to resort the list in the next loop
 	VL_REBUILD    = 1 << 2, ///< rebuild the sort list
-	VL_FIRST_SORT = 1 << 3, ///< sort with quick sort first
-	VL_FILTER     = 1 << 4, ///< filter disabled/enabled
-	VL_END        = 1 << 5,
+	VL_FILTER     = 1 << 3, ///< filter disabled/enabled
+	VL_END        = 1 << 4,
 };
 DECLARE_ENUM_AS_BIT_SET(SortListFlags)
 
@@ -47,10 +43,10 @@ struct Filtering {
  * @tparam F Type of data fed as additional value to the filter function. @see FilterFunction
  */
 template <typename T, typename F = const char*>
-class GUIList : public SmallVector<T, 32> {
+class GUIList : public std::vector<T> {
 public:
-	typedef int CDECL SortFunction(const T*, const T*); ///< Signature of sort function.
-	typedef bool CDECL FilterFunction(const T*, F);     ///< Signature of filter function.
+	typedef bool SortFunction(const T&, const T&);  ///< Signature of sort function.
+	typedef bool CDECL FilterFunction(const T*, F); ///< Signature of filter function.
 
 protected:
 	SortFunction * const *sort_func_list;     ///< the sort criteria functions
@@ -67,7 +63,7 @@ protected:
 	 */
 	bool IsSortable() const
 	{
-		return (this->data != NULL && this->items >= 2);
+		return std::vector<T>::size() >= 2;
 	}
 
 	/**
@@ -81,9 +77,9 @@ protected:
 
 public:
 	GUIList() :
-		sort_func_list(NULL),
-		filter_func_list(NULL),
-		flags(VL_FIRST_SORT),
+		sort_func_list(nullptr),
+		filter_func_list(nullptr),
+		flags(VL_NONE),
 		sort_type(0),
 		filter_type(0),
 		resort_timer(1)
@@ -107,7 +103,7 @@ public:
 	void SetSortType(uint8 n_type)
 	{
 		if (this->sort_type != n_type) {
-			SETBITS(this->flags, VL_RESORT | VL_FIRST_SORT);
+			SETBITS(this->flags, VL_RESORT);
 			this->sort_type = n_type;
 		}
 	}
@@ -139,8 +135,6 @@ public:
 			CLRBITS(this->flags, VL_DESC);
 		}
 		this->sort_type = l.criteria;
-
-		SETBITS(this->flags, VL_FIRST_SORT);
 	}
 
 	/**
@@ -240,20 +234,17 @@ public:
 	{
 		this->flags ^= VL_DESC;
 
-		if (this->IsSortable()) MemReverseT(this->data, this->items);
+		if (this->IsSortable()) MemReverseT(std::vector<T>::data(), std::vector<T>::size());
 	}
 
 	/**
 	 * Sort the list.
-	 *  For the first sorting we use quick sort since it is
-	 *  faster for irregular sorted data. After that we
-	 *  use gsort.
-	 *
 	 * @param compare The function to compare two list items
 	 * @return true if the list sequence has been altered
 	 *
 	 */
-	bool Sort(SortFunction *compare)
+	template <typename Comp>
+	bool Sort(Comp compare)
 	{
 		/* Do not sort if the resort bit is not set */
 		if (!(this->flags & VL_RESORT)) return false;
@@ -267,14 +258,7 @@ public:
 
 		const bool desc = (this->flags & VL_DESC) != 0;
 
-		if (this->flags & VL_FIRST_SORT) {
-			CLRBITS(this->flags, VL_FIRST_SORT);
-
-			QSortT(this->data, this->items, compare, desc);
-			return true;
-		}
-
-		GSortT(this->data, this->items, compare, desc);
+		std::sort(std::vector<T>::begin(), std::vector<T>::end(), [&](const T &a, const T &b) { return desc ? compare(b, a) : compare(a, b); });
 		return true;
 	}
 
@@ -296,7 +280,7 @@ public:
 	 */
 	bool Sort()
 	{
-		assert(this->sort_func_list != NULL);
+		assert(this->sort_func_list != nullptr);
 		return this->Sort(this->sort_func_list[this->sort_type]);
 	}
 
@@ -337,13 +321,12 @@ public:
 		if (!(this->flags & VL_FILTER)) return false;
 
 		bool changed = false;
-		for (uint iter = 0; iter < this->items;) {
-			T *item = &this->data[iter];
-			if (!decide(item, filter_data)) {
-				this->Erase(item);
+		for (auto it = std::vector<T>::begin(); it != std::vector<T>::end(); /* Nothing */) {
+			if (!decide(&*it, filter_data)) {
+				it = std::vector<T>::erase(it);
 				changed = true;
 			} else {
-				iter++;
+				it++;
 			}
 		}
 
@@ -368,7 +351,7 @@ public:
 	 */
 	bool Filter(F filter_data)
 	{
-		if (this->filter_func_list == NULL) return false;
+		if (this->filter_func_list == nullptr) return false;
 		return this->Filter(this->filter_func_list[this->filter_type], filter_data);
 	}
 
@@ -397,7 +380,7 @@ public:
 	void RebuildDone()
 	{
 		CLRBITS(this->flags, VL_REBUILD);
-		SETBITS(this->flags, VL_RESORT | VL_FIRST_SORT);
+		SETBITS(this->flags, VL_RESORT);
 	}
 };
 

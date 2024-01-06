@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,6 +22,8 @@
 
 #include "table/strings.h"
 
+#include "safeguards.h"
+
 /* Since the industry IDs defined by the GRF file don't necessarily correlate
  * to those used by the game, the IDs used for overriding old industries must be
  * translated when the idustry spec is set. */
@@ -39,9 +39,9 @@ IndustryTileOverrideManager _industile_mngr(NEW_INDUSTRYTILEOFFSET, NUM_INDUSTRY
 IndustryType MapNewGRFIndustryType(IndustryType grf_type, uint32 grf_id)
 {
 	if (grf_type == IT_INVALID) return IT_INVALID;
-	if (!HasBit(grf_type, 7)) return GB(grf_type, 0, 6);
+	if (!HasBit(grf_type, 7)) return GB(grf_type, 0, 7);
 
-	return _industry_mngr.GetID(GB(grf_type, 0, 6), grf_id);
+	return _industry_mngr.GetID(GB(grf_type, 0, 7), grf_id);
 }
 
 /**
@@ -54,7 +54,7 @@ IndustryType MapNewGRFIndustryType(IndustryType grf_type, uint32 grf_id)
  */
 uint32 GetIndustryIDAtOffset(TileIndex tile, const Industry *i, uint32 cur_grfid)
 {
-	if (!IsTileType(tile, MP_INDUSTRY) || GetIndustryIndex(tile) != i->index) {
+	if (!i->TileBelongsToIndustry(tile)) {
 		/* No industry and/or the tile does not have the same industry as the one we match it with */
 		return 0xFFFF;
 	}
@@ -77,7 +77,7 @@ uint32 GetIndustryIDAtOffset(TileIndex tile, const Industry *i, uint32 cur_grfid
 		}
 	}
 	/* Not an 'old type' tile */
-	if (indtsp->grf_prop.spritegroup[0] != NULL) { // tile has a spritegroup ?
+	if (indtsp->grf_prop.spritegroup[0] != nullptr) { // tile has a spritegroup ?
 		if (indtsp->grf_prop.grffile->grfid == cur_grfid) { // same industry, same grf ?
 			return indtsp->grf_prop.local_id;
 		} else {
@@ -85,17 +85,16 @@ uint32 GetIndustryIDAtOffset(TileIndex tile, const Industry *i, uint32 cur_grfid
 		}
 	}
 	/* The tile has no spritegroup */
-	return 0xFF << 8 | indtsp->grf_prop.subst_id; // so just give him the substitute
+	return 0xFF << 8 | indtsp->grf_prop.subst_id; // so just give it the substitute
 }
 
 static uint32 GetClosestIndustry(TileIndex tile, IndustryType type, const Industry *current)
 {
 	uint32 best_dist = UINT32_MAX;
-	const Industry *i;
-	FOR_ALL_INDUSTRIES(i) {
+	for (const Industry *i : Industry::Iterate()) {
 		if (i->type != type || i == current) continue;
 
-		best_dist = min(best_dist, DistanceManhattan(tile, i->location.tile));
+		best_dist = std::min(best_dist, DistanceManhattan(tile, i->location.tile));
 	}
 
 	return best_dist;
@@ -126,7 +125,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 		case 0xFFFFFFFF: // current grf
 			GrfID = GetIndustrySpec(current->type)->grf_prop.grffile->grfid;
-			/* FALL THROUGH */
+			FALLTHROUGH;
 
 		default: // use the grfid specified in register 100h
 			SetBit(param_setID, 7); // bit 7 means it is not an old type
@@ -141,14 +140,13 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 		/* If the filter is 0, it could be because none was specified as well as being really a 0.
 		 * In either case, just do the regular var67 */
 		closest_dist = GetClosestIndustry(current->location.tile, ind_index, current);
-		count = min(Industry::GetIndustryTypeCount(ind_index), UINT8_MAX); // clamp to 8 bit
+		count = std::min<uint>(Industry::GetIndustryTypeCount(ind_index), UINT8_MAX); // clamp to 8 bit
 	} else {
 		/* Count only those who match the same industry type and layout filter
 		 * Unfortunately, we have to do it manually */
-		const Industry *i;
-		FOR_ALL_INDUSTRIES(i) {
+		for (const Industry *i : Industry::Iterate()) {
 			if (i->type == ind_index && i != current && (i->selected_layout == layout_filter || layout_filter == 0) && (!town_filter || i->town == current->town)) {
-				closest_dist = min(closest_dist, DistanceManhattan(current->location.tile, i->location.tile));
+				closest_dist = std::min(closest_dist, DistanceManhattan(current->location.tile, i->location.tile));
 				count++;
 			}
 		}
@@ -159,7 +157,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 /* virtual */ uint32 IndustriesScopeResolver::GetVariable(byte variable, uint32 parameter, bool *available) const
 {
-	if (this->ro->callback == CBID_INDUSTRY_LOCATION) {
+	if (this->ro.callback == CBID_INDUSTRY_LOCATION) {
 		/* Variables available during construction check. */
 
 		switch (variable) {
@@ -170,7 +168,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			case 0x82: return this->industry->town->index;
 			case 0x83:
 			case 0x84:
-			case 0x85: DEBUG(grf, 0, "NewGRFs shouldn't be doing pointer magic"); break; // not supported
+			case 0x85: Debug(grf, 0, "NewGRFs shouldn't be doing pointer magic"); break; // not supported
 
 			/* Number of the layout */
 			case 0x86: return this->industry->selected_layout;
@@ -182,16 +180,16 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			case 0x88: return GetTownRadiusGroup(this->industry->town, this->tile);
 
 			/* Manhattan distance of the closest town */
-			case 0x89: return min(DistanceManhattan(this->industry->town->xy, this->tile), 255);
+			case 0x89: return std::min(DistanceManhattan(this->industry->town->xy, this->tile), 255u);
 
 			/* Lowest height of the tile */
-			case 0x8A: return Clamp(GetTileZ(this->tile) * (this->ro->grffile->grf_version >= 8 ? 1 : TILE_HEIGHT), 0, 0xFF);
+			case 0x8A: return Clamp(GetTileZ(this->tile) * (this->ro.grffile->grf_version >= 8 ? 1 : TILE_HEIGHT), 0, 0xFF);
 
 			/* Distance to the nearest water/land tile */
 			case 0x8B: return GetClosestWaterDistance(this->tile, (GetIndustrySpec(this->industry->type)->behaviour & INDUSTRYBEH_BUILT_ONWATER) == 0);
 
 			/* Square of Euclidian distance from town */
-			case 0x8D: return min(DistanceSquare(this->industry->town->xy, this->tile), 65535);
+			case 0x8D: return std::min(DistanceSquare(this->industry->town->xy, this->tile), 65535u);
 
 			/* 32 random bits */
 			case 0x8F: return this->random_bits;
@@ -200,8 +198,8 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 	const IndustrySpec *indspec = GetIndustrySpec(this->type);
 
-	if (this->industry == NULL) {
-		DEBUG(grf, 1, "Unhandled variable 0x%X (no available industry) in callback 0x%x", variable, this->ro->callback);
+	if (this->industry == nullptr) {
+		Debug(grf, 1, "Unhandled variable 0x{:X} (no available industry) in callback 0x{:x}", variable, this->ro.callback);
 
 		*available = false;
 		return UINT_MAX;
@@ -215,9 +213,9 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			if (HasBit(callback, CBM_IND_PRODUCTION_CARGO_ARRIVAL) || HasBit(callback, CBM_IND_PRODUCTION_256_TICKS)) {
 				if ((indspec->behaviour & INDUSTRYBEH_PROD_MULTI_HNDLING) != 0) {
 					if (this->industry->prod_level == 0) return 0;
-					return min(this->industry->incoming_cargo_waiting[variable - 0x40] / this->industry->prod_level, (uint16)0xFFFF);
+					return std::min<uint16>(this->industry->incoming_cargo_waiting[variable - 0x40] / this->industry->prod_level, 0xFFFFu);
 				} else {
-					return min(this->industry->incoming_cargo_waiting[variable - 0x40], (uint16)0xFFFF);
+					return std::min<uint16>(this->industry->incoming_cargo_waiting[variable - 0x40], 0xFFFFu);
 				}
 			} else {
 				return 0;
@@ -238,7 +236,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			bool is_ai = false;
 
 			const Company *c = Company::GetIfValid(this->industry->founder);
-			if (c != NULL) {
+			if (c != nullptr) {
 				const Livery *l = &c->livery[LS_DEFAULT];
 
 				is_ai = c->is_ai;
@@ -250,8 +248,11 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 		case 0x46: return this->industry->construction_date; // Date when built - long format - (in days)
 
+		/* Override flags from GS */
+		case 0x47: return this->industry->ctlflags;
+
 		/* Get industry ID at offset param */
-		case 0x60: return GetIndustryIDAtOffset(GetNearbyTile(parameter, this->industry->location.tile, false), this->industry, this->ro->grffile->grfid);
+		case 0x60: return GetIndustryIDAtOffset(GetNearbyTile(parameter, this->industry->location.tile, false), this->industry, this->ro.grffile->grfid);
 
 		/* Get random tile bits at offset param */
 		case 0x61: {
@@ -263,7 +264,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 		/* Land info of nearby tiles */
 		case 0x62:
 			if (this->tile == INVALID_TILE) break;
-			return GetNearbyIndustryTileInformation(parameter, this->tile, INVALID_INDUSTRY, false, this->ro->grffile->grf_version >= 8);
+			return GetNearbyIndustryTileInformation(parameter, this->tile, INVALID_INDUSTRY, false, this->ro.grffile->grf_version >= 8);
 
 		/* Animation stage of nearby tiles */
 		case 0x63: {
@@ -280,13 +281,17 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			if (this->tile == INVALID_TILE) break;
 			return GetClosestIndustry(this->tile, MapNewGRFIndustryType(parameter, indspec->grf_prop.grffile->grfid), this->industry);
 		/* Get town zone and Manhattan distance of closest town */
-		case 0x65:
+		case 0x65: {
 			if (this->tile == INVALID_TILE) break;
-			return GetTownRadiusGroup(this->industry->town, this->tile) << 16 | min(DistanceManhattan(this->tile, this->industry->town->xy), 0xFFFF);
-		/* Get square of Euclidian distance of closes town */
-		case 0x66:
+			TileIndex tile = GetNearbyTile(parameter, this->tile, true);
+			return GetTownRadiusGroup(this->industry->town, tile) << 16 | std::min(DistanceManhattan(tile, this->industry->town->xy), 0xFFFFu);
+		}
+		/* Get square of Euclidian distance of closest town */
+		case 0x66: {
 			if (this->tile == INVALID_TILE) break;
-			return GetTownRadiusGroup(this->industry->town, this->tile) << 16 | min(DistanceSquare(this->tile, this->industry->town->xy), 0xFFFF);
+			TileIndex tile = GetNearbyTile(parameter, this->tile, true);
+			return DistanceSquare(tile, this->industry->town->xy);
+		}
 
 		/* Count of industry, distance of closest instance
 		 * 68 is the same as 67, but with a filtering on selected layout */
@@ -302,8 +307,43 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 			return GetCountAndDistanceOfClosestInstance(parameter, layout_filter, town_filter, this->industry);
 		}
 
+		case 0x69:
+		case 0x6A:
+		case 0x6B:
+		case 0x6C:
+		case 0x6D:
+		case 0x70:
+		case 0x71: {
+			CargoID cargo = GetCargoTranslation(parameter, this->ro.grffile);
+			if (cargo == CT_INVALID) return 0;
+			int index = this->industry->GetCargoProducedIndex(cargo);
+			if (index < 0) return 0; // invalid cargo
+			switch (variable) {
+				case 0x69: return this->industry->produced_cargo_waiting[index];
+				case 0x6A: return this->industry->this_month_production[index];
+				case 0x6B: return this->industry->this_month_transported[index];
+				case 0x6C: return this->industry->last_month_production[index];
+				case 0x6D: return this->industry->last_month_transported[index];
+				case 0x70: return this->industry->production_rate[index];
+				case 0x71: return this->industry->last_month_pct_transported[index];
+				default: NOT_REACHED();
+			}
+		}
+
+
+		case 0x6E:
+		case 0x6F: {
+			CargoID cargo = GetCargoTranslation(parameter, this->ro.grffile);
+			if (cargo == CT_INVALID) return 0;
+			int index = this->industry->GetCargoAcceptedIndex(cargo);
+			if (index < 0) return 0; // invalid cargo
+			if (variable == 0x6E) return this->industry->last_cargo_accepted_at[index];
+			if (variable == 0x6F) return this->industry->incoming_cargo_waiting[index];
+			NOT_REACHED();
+		}
+
 		/* Get a variable from the persistent storage */
-		case 0x7C: return (this->industry->psa != NULL) ? this->industry->psa->GetValue(parameter) : 0;
+		case 0x7C: return (this->industry->psa != nullptr) ? this->industry->psa->GetValue(parameter) : 0;
 
 		/* Industry structure access*/
 		case 0x80: return this->industry->location.tile;
@@ -312,7 +352,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 		case 0x82: return this->industry->town->index;
 		case 0x83:
 		case 0x84:
-		case 0x85: DEBUG(grf, 0, "NewGRFs shouldn't be doing pointer magic"); break; // not supported
+		case 0x85: Debug(grf, 0, "NewGRFs shouldn't be doing pointer magic"); break; // not supported
 		case 0x86: return this->industry->location.w;
 		case 0x87: return this->industry->location.h;// xy dimensions
 
@@ -352,7 +392,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 		case 0xA4: return this->industry->last_month_transported[1];
 		case 0xA5: return GB(this->industry->last_month_transported[1], 8, 8);
 
-		case 0xA6: return this->industry->type;
+		case 0xA6: return indspec->grf_prop.local_id;
 		case 0xA7: return this->industry->founder;
 		case 0xA8: return this->industry->random_colour;
 		case 0xA9: return Clamp(this->industry->last_prod_year - ORIGINAL_BASE_YEAR, 0, 255);
@@ -362,10 +402,13 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 		case 0xB0: return Clamp(this->industry->construction_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 65535); // Date when built since 1920 (in days)
 		case 0xB3: return this->industry->construction_type; // Construction type
-		case 0xB4: return Clamp(this->industry->last_cargo_accepted_at - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 65535); // Date last cargo accepted since 1920 (in days)
+		case 0xB4: {
+			Date *latest = std::max_element(this->industry->last_cargo_accepted_at, endof(this->industry->last_cargo_accepted_at));
+			return Clamp((*latest) - DAYS_TILL_ORIGINAL_BASE_YEAR, 0, 65535); // Date last cargo accepted since 1920 (in days)
+		}
 	}
 
-	DEBUG(grf, 1, "Unhandled industry variable 0x%X", variable);
+	Debug(grf, 1, "Unhandled industry variable 0x{:X}", variable);
 
 	*available = false;
 	return UINT_MAX;
@@ -373,33 +416,27 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 
 /* virtual */ uint32 IndustriesScopeResolver::GetRandomBits() const
 {
-	return this->industry != NULL ? this->industry->random : 0;
+	return this->industry != nullptr ? this->industry->random : 0;
 }
 
 /* virtual */ uint32 IndustriesScopeResolver::GetTriggers() const
 {
-	return this->industry != NULL ? this->industry->random_triggers : 0;
-}
-
-/* virtual */ void IndustriesScopeResolver::SetTriggers(int triggers) const
-{
-	assert(this->industry != NULL && this->industry->index != INVALID_INDUSTRY);
-	this->industry->random_triggers = triggers;
+	return 0;
 }
 
 /* virtual */ void IndustriesScopeResolver::StorePSA(uint pos, int32 value)
 {
 	if (this->industry->index == INVALID_INDUSTRY) return;
 
-	if (this->industry->psa == NULL) {
+	if (this->industry->psa == nullptr) {
 		/* There is no need to create a storage if the value is zero. */
 		if (value == 0) return;
 
 		/* Create storage on first modification. */
 		const IndustrySpec *indsp = GetIndustrySpec(this->industry->type);
-		uint32 grfid = (indsp->grf_prop.grffile != NULL) ? indsp->grf_prop.grffile->grfid : 0;
+		uint32 grfid = (indsp->grf_prop.grffile != nullptr) ? indsp->grf_prop.grffile->grfid : 0;
 		assert(PersistentStorage::CanAllocateItem());
-		this->industry->psa = new PersistentStorage(grfid);
+		this->industry->psa = new PersistentStorage(grfid, GSF_INDUSTRIES, this->industry->location.tile);
 	}
 
 	this->industry->psa->StoreValue(pos, value);
@@ -413,13 +450,13 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 static const GRFFile *GetGrffile(IndustryType type)
 {
 	const IndustrySpec *indspec = GetIndustrySpec(type);
-	return (indspec != NULL) ? indspec->grf_prop.grffile : NULL;
+	return (indspec != nullptr) ? indspec->grf_prop.grffile : nullptr;
 }
 
 /**
  * Constructor of the industries resolver.
  * @param tile %Tile owned by the industry.
- * @param industry %Industry being resolved.
+ * @param indus %Industry being resolved.
  * @param type Type of the industry.
  * @param random_bits Random bits of the new industry.
  * @param callback Callback ID.
@@ -429,9 +466,10 @@ static const GRFFile *GetGrffile(IndustryType type)
 IndustriesResolverObject::IndustriesResolverObject(TileIndex tile, Industry *indus, IndustryType type, uint32 random_bits,
 		CallbackID callback, uint32 callback_param1, uint32 callback_param2)
 	: ResolverObject(GetGrffile(type), callback, callback_param1, callback_param2),
-	industries_scope(this, tile, indus, type, random_bits),
-	town_scope(NULL)
+	industries_scope(*this, tile, indus, type, random_bits),
+	town_scope(nullptr)
 {
+	this->root_spritegroup = GetIndustrySpec(type)->grf_prop.spritegroup[0];
 }
 
 IndustriesResolverObject::~IndustriesResolverObject()
@@ -445,34 +483,29 @@ IndustriesResolverObject::~IndustriesResolverObject()
  */
 TownScopeResolver *IndustriesResolverObject::GetTown()
 {
-	if (this->town_scope == NULL) {
-		Town *t = NULL;
-		if (this->industries_scope.industry != NULL) {
+	if (this->town_scope == nullptr) {
+		Town *t = nullptr;
+		bool readonly = true;
+		if (this->industries_scope.industry != nullptr) {
 			t = this->industries_scope.industry->town;
+			readonly = this->industries_scope.industry->index == INVALID_INDUSTRY;
 		} else if (this->industries_scope.tile != INVALID_TILE) {
 			t = ClosestTownFromTile(this->industries_scope.tile, UINT_MAX);
 		}
-		if (t == NULL) return NULL;
-		this->town_scope = new TownScopeResolver(this, t, this->industries_scope.industry->index == INVALID_INDUSTRY);
+		if (t == nullptr) return nullptr;
+		this->town_scope = new TownScopeResolver(*this, t, readonly);
 	}
 	return this->town_scope;
 }
 
-/**
- * Scope resolver for industries.
- * @param ro Surrounding resolver.
- * @param tile %Tile owned by the industry.
- * @param industry %Industry being resolved.
- * @param type Type of the industry.
- * @param random_bits Random bits of the new industry.
- */
-IndustriesScopeResolver::IndustriesScopeResolver(ResolverObject *ro, TileIndex tile, Industry *industry, IndustryType type, uint32 random_bits)
-	: ScopeResolver(ro)
+GrfSpecFeature IndustriesResolverObject::GetFeature() const
 {
-	this->tile = tile;
-	this->industry = industry;
-	this->type = type;
-	this->random_bits = random_bits;
+	return GSF_INDUSTRIES;
+}
+
+uint32 IndustriesResolverObject::GetDebugID() const
+{
+	return GetIndustrySpec(this->industries_scope.type)->grf_prop.local_id;
 }
 
 /**
@@ -488,10 +521,7 @@ IndustriesScopeResolver::IndustriesScopeResolver(ResolverObject *ro, TileIndex t
 uint16 GetIndustryCallback(CallbackID callback, uint32 param1, uint32 param2, Industry *industry, IndustryType type, TileIndex tile)
 {
 	IndustriesResolverObject object(tile, industry, type, 0, callback, param1, param2);
-	const SpriteGroup *group = SpriteGroup::Resolve(GetIndustrySpec(type)->grf_prop.spritegroup[0], &object);
-	if (group == NULL) return CALLBACK_FAILED;
-
-	return group->GetCallbackResult();
+	return object.ResolveCallback();
 }
 
 /**
@@ -505,7 +535,7 @@ uint16 GetIndustryCallback(CallbackID callback, uint32 param1, uint32 param2, In
  * @param creation_type The circumstances the industry is created under.
  * @return Succeeded or failed command.
  */
-CommandCost CheckIfCallBackAllowsCreation(TileIndex tile, IndustryType type, uint layout, uint32 seed, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type)
+CommandCost CheckIfCallBackAllowsCreation(TileIndex tile, IndustryType type, size_t layout, uint32 seed, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type)
 {
 	const IndustrySpec *indspec = GetIndustrySpec(type);
 
@@ -514,22 +544,20 @@ CommandCost CheckIfCallBackAllowsCreation(TileIndex tile, IndustryType type, uin
 	ind.location.tile = tile;
 	ind.location.w = 0; // important to mark the industry invalid
 	ind.type = type;
-	ind.selected_layout = layout;
+	ind.selected_layout = (byte)layout;
 	ind.town = ClosestTownFromTile(tile, UINT_MAX);
 	ind.random = initial_random_bits;
 	ind.founder = founder;
-	ind.psa = NULL;
+	ind.psa = nullptr;
 
 	IndustriesResolverObject object(tile, &ind, type, seed, CBID_INDUSTRY_LOCATION, 0, creation_type);
-	const SpriteGroup *group = SpriteGroup::Resolve(GetIndustrySpec(type)->grf_prop.spritegroup[0], &object);
+	uint16 result = object.ResolveCallback();
 
 	/* Unlike the "normal" cases, not having a valid result means we allow
 	 * the building of the industry, as that's how it's done in TTDP. */
-	if (group == NULL) return CommandCost();
-	uint16 result = group->GetCallbackResult();
 	if (result == CALLBACK_FAILED) return CommandCost();
 
-	return GetErrorMessageFromLocationCallbackResult(result, indspec->grf_prop.grffile->grfid, STR_ERROR_SITE_UNSUITABLE);
+	return GetErrorMessageFromLocationCallbackResult(result, indspec->grf_prop.grffile, STR_ERROR_SITE_UNSUITABLE);
 }
 
 /**
@@ -543,7 +571,7 @@ uint32 GetIndustryProbabilityCallback(IndustryType type, IndustryAvailabilityCal
 	const IndustrySpec *indspec = GetIndustrySpec(type);
 
 	if (HasBit(indspec->callback_mask, CBM_IND_PROBABILITY)) {
-		uint16 res = GetIndustryCallback(CBID_INDUSTRY_PROBABILITY, 0, creation_type, NULL, type, INVALID_TILE);
+		uint16 res = GetIndustryCallback(CBID_INDUSTRY_PROBABILITY, 0, creation_type, nullptr, type, INVALID_TILE);
 		if (res != CALLBACK_FAILED) {
 			if (indspec->grf_prop.grffile->grf_version < 8) {
 				/* Disallow if result != 0 */
@@ -594,17 +622,43 @@ void IndustryProductionCallback(Industry *ind, int reason)
 		}
 
 		SB(object.callback_param2, 8, 16, loop);
-		const SpriteGroup *tgroup = SpriteGroup::Resolve(spec->grf_prop.spritegroup[0], &object);
-		if (tgroup == NULL || tgroup->type != SGT_INDUSTRY_PRODUCTION) break;
+		const SpriteGroup *tgroup = object.Resolve();
+		if (tgroup == nullptr || tgroup->type != SGT_INDUSTRY_PRODUCTION) break;
 		const IndustryProductionSpriteGroup *group = (const IndustryProductionSpriteGroup *)tgroup;
 
-		bool deref = (group->version == 1);
+		if (group->version == 0xFF) {
+			/* Result was marked invalid on load, display error message */
+			SetDParamStr(0, spec->grf_prop.grffile->filename);
+			SetDParam(1, spec->name);
+			SetDParam(2, ind->location.tile);
+			ShowErrorMessage(STR_NEWGRF_BUGGY, STR_NEWGRF_BUGGY_INVALID_CARGO_PRODUCTION_CALLBACK, WL_WARNING);
 
-		for (uint i = 0; i < 3; i++) {
-			ind->incoming_cargo_waiting[i] = Clamp(ind->incoming_cargo_waiting[i] - DerefIndProd(group->subtract_input[i], deref) * multiplier, 0, 0xFFFF);
+			/* abort the function early, this error isn't critical and will allow the game to continue to run */
+			break;
 		}
-		for (uint i = 0; i < 2; i++) {
-			ind->produced_cargo_waiting[i] = Clamp(ind->produced_cargo_waiting[i] + max(DerefIndProd(group->add_output[i], deref), 0) * multiplier, 0, 0xFFFF);
+
+		bool deref = (group->version >= 1);
+
+		if (group->version < 2) {
+			/* Callback parameters map directly to industry cargo slot indices */
+			for (uint i = 0; i < group->num_input; i++) {
+				ind->incoming_cargo_waiting[i] = Clamp(ind->incoming_cargo_waiting[i] - DerefIndProd(group->subtract_input[i], deref) * multiplier, 0, 0xFFFF);
+			}
+			for (uint i = 0; i < group->num_output; i++) {
+				ind->produced_cargo_waiting[i] = Clamp(ind->produced_cargo_waiting[i] + std::max(DerefIndProd(group->add_output[i], deref), 0) * multiplier, 0, 0xFFFF);
+			}
+		} else {
+			/* Callback receives list of cargos to apply for, which need to have their cargo slots in industry looked up */
+			for (uint i = 0; i < group->num_input; i++) {
+				int cargo_index = ind->GetCargoAcceptedIndex(group->cargo_input[i]);
+				if (cargo_index < 0) continue;
+				ind->incoming_cargo_waiting[cargo_index] = Clamp(ind->incoming_cargo_waiting[cargo_index] - DerefIndProd(group->subtract_input[i], deref) * multiplier, 0, 0xFFFF);
+			}
+			for (uint i = 0; i < group->num_output; i++) {
+				int cargo_index = ind->GetCargoProducedIndex(group->cargo_output[i]);
+				if (cargo_index < 0) continue;
+				ind->produced_cargo_waiting[cargo_index] = Clamp(ind->produced_cargo_waiting[cargo_index] + std::max(DerefIndProd(group->add_output[i], deref), 0) * multiplier, 0, 0xFFFF);
+			}
 		}
 
 		int32 again = DerefIndProd(group->again, deref);
@@ -625,7 +679,7 @@ void IndustryProductionCallback(Industry *ind, int reason)
  */
 bool IndustryTemporarilyRefusesCargo(Industry *ind, CargoID cargo_type)
 {
-	assert(cargo_type == ind->accepts_cargo[0] || cargo_type == ind->accepts_cargo[1] || cargo_type == ind->accepts_cargo[2]);
+	assert(std::find(ind->accepts_cargo, endof(ind->accepts_cargo), cargo_type) != endof(ind->accepts_cargo));
 
 	const IndustrySpec *indspec = GetIndustrySpec(ind->type);
 	if (HasBit(indspec->callback_mask, CBM_IND_REFUSE_CARGO)) {

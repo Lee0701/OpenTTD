@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,11 +13,54 @@
 #include "strings_type.h"
 #include "string_type.h"
 #include "gfx_type.h"
+#include "core/bitmath_func.hpp"
+
+/**
+ * Extract the StringTab from a StringID.
+ * @param str String identifier
+ * @return StringTab from \a str
+ */
+static inline StringTab GetStringTab(StringID str)
+{
+	StringTab result = (StringTab)(str >> TAB_SIZE_BITS);
+	if (result >= TEXT_TAB_NEWGRF_START) return TEXT_TAB_NEWGRF_START;
+	if (result >= TEXT_TAB_GAMESCRIPT_START) return TEXT_TAB_GAMESCRIPT_START;
+	return result;
+}
+
+/**
+ * Extract the StringIndex from a StringID.
+ * @param str String identifier
+ * @return StringIndex from \a str
+ */
+static inline uint GetStringIndex(StringID str)
+{
+	return str - (GetStringTab(str) << TAB_SIZE_BITS);
+}
+
+/**
+ * Create a StringID
+ * @param tab StringTab
+ * @param index StringIndex
+ * @return StringID composed from \a tab and \a index
+ */
+static inline StringID MakeStringID(StringTab tab, uint index)
+{
+	if (tab == TEXT_TAB_NEWGRF_START) {
+		assert(index < TAB_SIZE_NEWGRF);
+	} else if (tab == TEXT_TAB_GAMESCRIPT_START) {
+		assert(index < TAB_SIZE_GAMESCRIPT);
+	} else {
+		assert(tab < TEXT_TAB_END);
+		assert(index < TAB_SIZE);
+	}
+	return (tab << TAB_SIZE_BITS) + index;
+}
 
 class StringParameters {
-	StringParameters *parent; ///< If not NULL, this instance references data from this parent instance.
+	StringParameters *parent; ///< If not nullptr, this instance references data from this parent instance.
 	uint64 *data;             ///< Array with the actual data.
-	WChar *type;              ///< Array with type information about the data. Can be NULL when no type information is needed. See #StringControlCode.
+	WChar *type;              ///< Array with type information about the data. Can be nullptr when no type information is needed. See #StringControlCode.
 
 public:
 	uint offset;              ///< Current offset in the data/type arrays.
@@ -27,7 +68,7 @@ public:
 
 	/** Create a new StringParameters instance. */
 	StringParameters(uint64 *data, uint num_param, WChar *type) :
-		parent(NULL),
+		parent(nullptr),
 		data(data),
 		type(type),
 		offset(0),
@@ -37,13 +78,13 @@ public:
 	/** Create a new StringParameters instance. */
 	template <size_t Tnum_param>
 	StringParameters(int64 (&data)[Tnum_param]) :
-		parent(NULL),
+		parent(nullptr),
 		data((uint64 *)data),
-		type(NULL),
+		type(nullptr),
 		offset(0),
 		num_param(Tnum_param)
 	{
-		assert_compile(sizeof(data[0]) == sizeof(uint64));
+		static_assert(sizeof(data[0]) == sizeof(uint64));
 	}
 
 	/**
@@ -56,9 +97,9 @@ public:
 		offset(0),
 		num_param(size)
 	{
-		assert(size <= parent.num_param - parent.offset);
-		if (parent.type == NULL) {
-			this->type = NULL;
+		assert(size <= parent.GetDataLeft());
+		if (parent.type == nullptr) {
+			this->type = nullptr;
 		} else {
 			this->type = parent.type + parent.offset;
 		}
@@ -66,7 +107,7 @@ public:
 
 	~StringParameters()
 	{
-		if (this->parent != NULL) {
+		if (this->parent != nullptr) {
 			this->parent->offset += this->num_param;
 		}
 	}
@@ -81,12 +122,16 @@ public:
 		return (int32)this->GetInt64(type);
 	}
 
-	void ShiftParameters(uint amount);
-
 	/** Get a pointer to the current element in the data array. */
 	uint64 *GetDataPointer() const
 	{
 		return &this->data[this->offset];
+	}
+
+	/** Return the amount of elements which can still be read. */
+	uint GetDataLeft() const
+	{
+		return this->num_param - this->offset;
 	}
 
 	/** Get a pointer to a specific element in the data array. */
@@ -99,7 +144,7 @@ public:
 	/** Does this instance store information about the type of the parameters. */
 	bool HasTypeInformation() const
 	{
-		return this->type != NULL;
+		return this->type != nullptr;
 	}
 
 	/** Get the type of a specific element. */
@@ -124,15 +169,13 @@ public:
 };
 extern StringParameters _global_string_params;
 
-char *InlineString(char *buf, StringID string);
 char *GetString(char *buffr, StringID string, const char *last);
+std::string GetString(StringID string);
 char *GetStringWithArgs(char *buffr, StringID string, StringParameters *args, const char *last, uint case_index = 0, bool game_script = false);
 const char *GetStringPtr(StringID string);
 
 uint ConvertKmhishSpeedToDisplaySpeed(uint speed);
 uint ConvertDisplaySpeedToKmhishSpeed(uint speed);
-
-void InjectDParam(uint amount);
 
 /**
  * Set a string parameter \a v at index \a n in a given array \a s.
@@ -159,6 +202,8 @@ void SetDParamMaxValue(uint n, uint64 max_value, uint min_count = 0, FontSize si
 void SetDParamMaxDigits(uint n, uint count, FontSize size = FS_NORMAL);
 
 void SetDParamStr(uint n, const char *str);
+void SetDParamStr(uint n, const std::string &str);
+void SetDParamStr(uint n, std::string &&str) = delete; // block passing temporaries to SetDParamStr
 
 void CopyInDParam(int offs, const uint64 *src, int num);
 void CopyOutDParam(uint64 *dst, int offs, int num);
@@ -190,7 +235,7 @@ extern TextDirection _current_text_dir; ///< Text direction of the currently sel
 void InitializeLanguagePacks();
 const char *GetCurrentLanguageIsoCode();
 
-int CDECL StringIDSorter(const StringID *a, const StringID *b);
+bool StringIDSorter(const StringID &a, const StringID &b);
 
 /**
  * A searcher for missing glyphs.
@@ -202,7 +247,7 @@ public:
 
 	/**
 	 * Get the next string to search through.
-	 * @return The next string or NULL if there is none.
+	 * @return The next string or nullptr if there is none.
 	 */
 	virtual const char *NextString() = 0;
 
@@ -227,12 +272,13 @@ public:
 	 * Set the right font names.
 	 * @param settings  The settings to modify.
 	 * @param font_name The new font name.
+	 * @param os_data Opaque pointer to OS-specific data.
 	 */
-	virtual void SetFontNames(struct FreeTypeSettings *settings, const char *font_name) = 0;
+	virtual void SetFontNames(struct FontCacheSettings *settings, const char *font_name, const void *os_data = nullptr) = 0;
 
-	bool FindMissingGlyphs(const char **str);
+	bool FindMissingGlyphs();
 };
 
-void CheckForMissingGlyphs(bool base_font = true, MissingGlyphSearcher *search = NULL);
+void CheckForMissingGlyphs(bool base_font = true, MissingGlyphSearcher *search = nullptr);
 
 #endif /* STRINGS_FUNC_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,8 @@
 #include "core/alloc_func.hpp"
 #include "core/mem_func.hpp"
 
+#include "safeguards.h"
+
 void BmpInitializeBuffer(BmpBuffer *buffer, FILE *file)
 {
 	buffer->pos      = -1;
@@ -25,18 +25,24 @@ void BmpInitializeBuffer(BmpBuffer *buffer, FILE *file)
 
 static inline void AdvanceBuffer(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return;
+
 	buffer->read = (int)fread(buffer->data, 1, BMP_BUFFER_SIZE, buffer->file);
 	buffer->pos  = 0;
 }
 
 static inline bool EndOfBuffer(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return false;
+
 	if (buffer->pos == buffer->read || buffer->pos < 0) AdvanceBuffer(buffer);
 	return buffer->pos == buffer->read;
 }
 
 static inline byte ReadByte(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return 0;
+
 	if (buffer->pos == buffer->read || buffer->pos < 0) AdvanceBuffer(buffer);
 	buffer->real_pos++;
 	return buffer->data[buffer->pos++];
@@ -62,7 +68,9 @@ static inline void SkipBytes(BmpBuffer *buffer, int bytes)
 
 static inline void SetStreamOffset(BmpBuffer *buffer, int offset)
 {
-	fseek(buffer->file, offset, SEEK_SET);
+	if (fseek(buffer->file, offset, SEEK_SET) < 0) {
+		buffer->read = -1;
+	}
 	buffer->pos = -1;
 	buffer->real_pos = offset;
 	AdvanceBuffer(buffer);
@@ -309,7 +317,7 @@ static inline bool BmpRead24(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
 bool BmpReadHeader(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
 {
 	uint32 header_size;
-	assert(info != NULL);
+	assert(info != nullptr);
 	MemSetT(info, 0);
 
 	/* Reading BMP header */
@@ -359,7 +367,12 @@ bool BmpReadHeader(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
 			info->palette_size = ReadDword(buffer); // number of colours in palette
 			SkipBytes(buffer, header_size - 16);    // skip the end of info header
 		}
-		if (info->palette_size == 0) info->palette_size = 1 << info->bpp;
+
+		uint maximum_palette_size = 1U << info->bpp;
+		if (info->palette_size == 0) info->palette_size = maximum_palette_size;
+
+		/* More palette colours than palette indices is not supported. */
+		if (info->palette_size > maximum_palette_size) return false;
 
 		data->palette = CallocT<Colour>(info->palette_size);
 
@@ -380,7 +393,7 @@ bool BmpReadHeader(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
  */
 bool BmpReadBitmap(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
 {
-	assert(info != NULL && data != NULL);
+	assert(info != nullptr && data != nullptr);
 
 	data->bitmap = CallocT<byte>(info->width * info->height * ((info->bpp == 24) ? 3 : 1));
 
@@ -403,7 +416,7 @@ bool BmpReadBitmap(BmpBuffer *buffer, BmpInfo *info, BmpData *data)
 
 void BmpDestroyData(BmpData *data)
 {
-	assert(data != NULL);
+	assert(data != nullptr);
 	free(data->palette);
 	free(data->bitmap);
 }

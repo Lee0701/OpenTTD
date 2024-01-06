@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -22,13 +20,13 @@ extern SubsidyPool _subsidy_pool;
 
 /** Struct about subsidies, offered and awarded */
 struct Subsidy : SubsidyPool::PoolItem<&_subsidy_pool> {
-	CargoID cargo_type;      ///< Cargo type involved in this subsidy, CT_INVALID for invalid subsidy
-	byte remaining;          ///< Remaining months when this subsidy is valid
-	CompanyByte awarded;     ///< Subsidy is awarded to this company; INVALID_COMPANY if it's not awarded to anyone
-	SourceTypeByte src_type; ///< Source of subsidised path (ST_INDUSTRY or ST_TOWN)
-	SourceTypeByte dst_type; ///< Destination of subsidised path (ST_INDUSTRY or ST_TOWN)
-	SourceID src;            ///< Index of source. Either TownID or IndustryID
-	SourceID dst;            ///< Index of destination. Either TownID or IndustryID
+	CargoID cargo_type;  ///< Cargo type involved in this subsidy, CT_INVALID for invalid subsidy
+	uint16 remaining;    ///< Remaining months when this subsidy is valid
+	CompanyID awarded;   ///< Subsidy is awarded to this company; INVALID_COMPANY if it's not awarded to anyone
+	SourceType src_type; ///< Source of subsidised path (ST_INDUSTRY or ST_TOWN)
+	SourceType dst_type; ///< Destination of subsidised path (ST_INDUSTRY or ST_TOWN)
+	SourceID src;        ///< Index of source. Either TownID or IndustryID
+	SourceID dst;        ///< Index of destination. Either TownID or IndustryID
 
 	/**
 	 * We need an (empty) constructor so struct isn't zeroed (as C++ standard states)
@@ -36,7 +34,7 @@ struct Subsidy : SubsidyPool::PoolItem<&_subsidy_pool> {
 	inline Subsidy() { }
 
 	/**
-	 * (Empty) destructor has to be defined else operator delete might be called with NULL parameter
+	 * (Empty) destructor has to be defined else operator delete might be called with nullptr parameter
 	 */
 	inline ~Subsidy() { }
 
@@ -54,13 +52,18 @@ struct Subsidy : SubsidyPool::PoolItem<&_subsidy_pool> {
 
 /** Constants related to subsidies */
 static const uint SUBSIDY_OFFER_MONTHS         =  12; ///< Duration of subsidy offer
-static const uint SUBSIDY_CONTRACT_MONTHS      =  12; ///< Duration of subsidy after awarding
 static const uint SUBSIDY_PAX_MIN_POPULATION   = 400; ///< Min. population of towns for subsidised pax route
 static const uint SUBSIDY_CARGO_MIN_POPULATION = 900; ///< Min. population of destination town for cargo route
 static const uint SUBSIDY_MAX_PCT_TRANSPORTED  =  42; ///< Subsidy will be created only for towns/industries with less % transported
 static const uint SUBSIDY_MAX_DISTANCE         =  70; ///< Max. length of subsidised route (DistanceManhattan)
+static const uint SUBSIDY_TOWN_CARGO_RADIUS    =   6; ///< Extent of a tile area around town center when scanning for town cargo acceptance and production (6 ~= min catchmement + min station / 2)
 
-#define FOR_ALL_SUBSIDIES_FROM(var, start) FOR_ALL_ITEMS_FROM(Subsidy, subsidy_index, var, start)
-#define FOR_ALL_SUBSIDIES(var) FOR_ALL_SUBSIDIES_FROM(var, 0)
+/** Types of subsidy news messages, which determine how the date is printed and whether to use singular or plural cargo names */
+enum class SubsidyDecodeParamType {
+	NewsOffered   = 0, ///< News item for an offered subsidy
+	NewsAwarded   = 1, ///< News item for an awarded subsidy
+	NewsWithdrawn = 2, ///< News item for a subsidy offer withdrawn, or expired subsidy
+	Gui           = 3, ///< Subsidies listed in the Subsidy GUI
+};
 
 #endif /* SUBSIDY_BASE_H */

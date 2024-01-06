@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,20 +12,18 @@
 
 #include "sound_driver.hpp"
 
-class SoundDriver_Cocoa: public SoundDriver {
+class SoundDriver_Cocoa : public SoundDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
-	/* virtual */ const char *GetName() const { return "cocoa"; }
+	void Stop() override;
+	const char *GetName() const override { return "cocoa"; }
 };
 
-class FSoundDriver_Cocoa: public SoundDriverFactory<FSoundDriver_Cocoa> {
+class FSoundDriver_Cocoa : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "cocoa"; }
-	/* virtual */ const char *GetDescription() { return "Cocoa Sound Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_Cocoa(); }
+	FSoundDriver_Cocoa() : DriverFactoryBase(Driver::DT_SOUND, 10, "cocoa", "Cocoa Sound Driver (param hz)") {}
+	Driver *CreateInstance() const override { return new SoundDriver_Cocoa(); }
 };
 
 #endif /* SOUND_COCOA_H */

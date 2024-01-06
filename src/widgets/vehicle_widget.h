@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,7 +15,9 @@ enum VehicleViewWidgets {
 	WID_VV_CAPTION,            ///< Caption of window.
 	WID_VV_VIEWPORT,           ///< Viewport widget.
 	WID_VV_START_STOP,         ///< Start or stop this vehicle, and show information about the current state.
-	WID_VV_CENTER_MAIN_VIEW,   ///< Center the main view on this vehicle.
+	WID_VV_RENAME,             ///< Rename vehicle
+	WID_VV_LOCATION,           ///< Center the main view on this vehicle.
+	WID_VV_ORDER_LOCATION,     ///< Center the main view on the order's target location.
 	WID_VV_GOTO_DEPOT,         ///< Order this vehicle to go to the depot.
 	WID_VV_REFIT,              ///< Open the refit window.
 	WID_VV_SHOW_ORDERS,        ///< Show the orders of this vehicle.
@@ -27,6 +27,7 @@ enum VehicleViewWidgets {
 	WID_VV_SELECT_REFIT_TURN,  ///< Selection widget between 'refit' and 'turn around' buttons.
 	WID_VV_TURN_AROUND,        ///< Turn this vehicle around.
 	WID_VV_FORCE_PROCEED,      ///< Force this vehicle to pass a signal at danger.
+	WID_VV_HONK_HORN,          ///< Honk the vehicles horn (not drawn on UI, only used for hotkey).
 };
 
 /** Widgets of the #RefitWindow class. */
@@ -45,7 +46,6 @@ enum VehicleRefitWidgets {
 /** Widgets of the #VehicleDetailsWindow class. */
 enum VehicleDetailsWidgets {
 	WID_VD_CAPTION,                     ///< Caption of window.
-	WID_VD_RENAME_VEHICLE,              ///< Rename this vehicle.
 	WID_VD_TOP_DETAILS,                 ///< Panel with generic details.
 	WID_VD_INCREASE_SERVICING_INTERVAL, ///< Increase the servicing interval.
 	WID_VD_DECREASE_SERVICING_INTERVAL, ///< Decrease the servicing interval.
@@ -62,9 +62,16 @@ enum VehicleDetailsWidgets {
 
 /** Widgets of the #VehicleListWindow class. */
 enum VehicleListWidgets {
-	WID_VL_CAPTION,                  ///< Caption of window.
+	WID_VL_CAPTION,                  ///< Caption of window (for non shared orders windows).
+	WID_VL_CAPTION_SHARED_ORDERS,    ///< Caption of window (for shared orders windows).
+	WID_VL_CAPTION_SELECTION,        ///< Selection for caption.
+	WID_VL_ORDER_VIEW,               ///< Button to open order window (for shared orders windows).
+	WID_VL_GROUP_ORDER,              ///< Group order.
+	WID_VL_GROUP_BY_PULLDOWN,        ///< Group by dropdown list.
 	WID_VL_SORT_ORDER,               ///< Sort order.
 	WID_VL_SORT_BY_PULLDOWN,         ///< Sort by dropdown list.
+	WID_VL_FILTER_BY_CARGO,          ///< Cargo filter dropdown list.
+	WID_VL_FILTER_BY_CARGO_SEL,      ///< Cargo filter dropdown list panel selector.
 	WID_VL_LIST,                     ///< List of the vehicles.
 	WID_VL_SCROLLBAR,                ///< Scrollbar for the list.
 	WID_VL_HIDE_BUTTONS,             ///< Selection to hide the buttons.

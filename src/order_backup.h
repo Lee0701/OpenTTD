@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,7 @@
 #include "tile_type.h"
 #include "vehicle_type.h"
 #include "base_consist.h"
+#include "saveload/saveload.h"
 
 /** Unique identifier for an order backup. */
 typedef uint8 OrderBackupID;
@@ -36,8 +35,8 @@ static const uint32 MAKE_ORDER_BACKUP_FLAG = 1U << 31;
  */
 struct OrderBackup : OrderBackupPool::PoolItem<&_order_backup_pool>, BaseConsist {
 private:
-	friend const struct SaveLoad *GetOrderBackupDescription(); ///< Saving and loading of order backups.
-	friend void Load_BKOR();   ///< Creating empty orders upon savegame loading.
+	friend SaveLoadTable GetOrderBackupDescription(); ///< Saving and loading of order backups.
+	friend struct BKORChunkHandler; ///< Creating empty orders upon savegame loading.
 	uint32 user;               ///< The user that requested the backup.
 	TileIndex tile;            ///< Tile of the depot where the order was changed.
 	GroupID group;             ///< The group the vehicle was part of.
@@ -63,20 +62,7 @@ public:
 
 	static void ClearGroup(GroupID group);
 	static void ClearVehicle(const Vehicle *v);
-	static void RemoveOrder(OrderType type, DestinationID destination);
+	static void RemoveOrder(OrderType type, DestinationID destination, bool hangar);
 };
-
-/**
- * Iterator over all order backups from a given ID.
- * @param var The variable to iterate with.
- * @param start The start of the iteration.
- */
-#define FOR_ALL_ORDER_BACKUPS_FROM(var, start) FOR_ALL_ITEMS_FROM(OrderBackup, order_backup_index, var, start)
-
-/**
- * Iterator over all order backups.
- * @param var The variable to iterate with.
- */
-#define FOR_ALL_ORDER_BACKUPS(var) FOR_ALL_ORDER_BACKUPS_FROM(var, 0)
 
 #endif /* ORDER_BACKUP_H */

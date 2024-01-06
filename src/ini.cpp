@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,21 +12,27 @@
 #include "ini_type.h"
 #include "string_func.h"
 #include "fileio_func.h"
-
-#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500)
-# define WITH_FDATASYNC
-# include <unistd.h>
+#include <fstream>
+#ifdef __EMSCRIPTEN__
+#	include <emscripten.h>
 #endif
 
-#ifdef WIN32
+#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500)
+# include <unistd.h>
+# include <fcntl.h>
+#endif
+
+#ifdef _WIN32
 # include <windows.h>
 # include <shellapi.h>
 # include "core/mem_func.hpp"
 #endif
 
+#include "safeguards.h"
+
 /**
  * Create a new ini file with given group names.
- * @param list_group_names A \c NULL terminated list with group names that should be loaded as lists instead of variables. @see IGT_LIST
+ * @param list_group_names A \c nullptr terminated list with group names that should be loaded as lists instead of variables. @see IGT_LIST
  */
 IniFile::IniFile(const char * const *list_group_names) : IniLoadFile(list_group_names)
 {
@@ -39,38 +43,40 @@ IniFile::IniFile(const char * const *list_group_names) : IniLoadFile(list_group_
  * @param filename the file to save to.
  * @return true if saving succeeded.
  */
-bool IniFile::SaveToDisk(const char *filename)
+bool IniFile::SaveToDisk(const std::string &filename)
 {
 	/*
 	 * First write the configuration to a (temporary) file and then rename
 	 * that file. This to prevent that when OpenTTD crashes during the save
 	 * you end up with a truncated configuration file.
 	 */
-	char file_new[MAX_PATH];
+	std::string file_new{ filename };
+	file_new.append(".new");
 
-	strecpy(file_new, filename, lastof(file_new));
-	strecat(file_new, ".new", lastof(file_new));
-	FILE *f = fopen(file_new, "w");
-	if (f == NULL) return false;
+	std::ofstream os(OTTD2FS(file_new).c_str());
+	if (os.fail()) return false;
 
-	for (const IniGroup *group = this->group; group != NULL; group = group->next) {
-		if (group->comment) fputs(group->comment, f);
-		fprintf(f, "[%s]\n", group->name);
-		for (const IniItem *item = group->item; item != NULL; item = item->next) {
-			if (item->comment != NULL) fputs(item->comment, f);
+	for (const IniGroup *group = this->group; group != nullptr; group = group->next) {
+		os << group->comment << "[" << group->name << "]\n";
+		for (const IniItem *item = group->item; item != nullptr; item = item->next) {
+			os << item->comment;
 
 			/* protect item->name with quotes if needed */
-			if (strchr(item->name, ' ') != NULL ||
-					item->name[0] == '[') {
-				fprintf(f, "\"%s\"", item->name);
+			if (item->name.find(' ') != std::string::npos ||
+				item->name[0] == '[') {
+				os << "\"" << item->name << "\"";
 			} else {
-				fprintf(f, "%s", item->name);
+				os << item->name;
 			}
 
-			fprintf(f, " = %s\n", item->value == NULL ? "" : item->value);
+			os << " = " << item->value.value_or("") << "\n";
 		}
 	}
-	if (this->comment) fputs(this->comment, f);
+	os << this->comment;
+
+	os.flush();
+	os.close();
+	if (os.fail()) return false;
 
 /*
  * POSIX (and friends) do not guarantee that when a file is closed it is
@@ -78,24 +84,23 @@ bool IniFile::SaveToDisk(const char *filename)
  * APIs to do so. We only need to flush the data as the metadata itself
  * (modification date etc.) is not important to us; only the real data is.
  */
-#ifdef WITH_FDATASYNC
-	int ret = fdatasync(fileno(f));
-	fclose(f);
+#if defined(_POSIX_SYNCHRONIZED_IO) && _POSIX_SYNCHRONIZED_IO > 0
+	int f = open(file_new.c_str(), O_RDWR);
+	int ret = fdatasync(f);
+	close(f);
 	if (ret != 0) return false;
-#else
-	fclose(f);
 #endif
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32)
 	/* Allocate space for one more \0 character. */
-	TCHAR tfilename[MAX_PATH + 1], tfile_new[MAX_PATH + 1];
-	_tcsncpy(tfilename, OTTD2FS(filename), MAX_PATH);
-	_tcsncpy(tfile_new, OTTD2FS(file_new), MAX_PATH);
+	wchar_t tfilename[MAX_PATH + 1], tfile_new[MAX_PATH + 1];
+	wcsncpy(tfilename, OTTD2FS(filename).c_str(), MAX_PATH);
+	wcsncpy(tfile_new, OTTD2FS(file_new).c_str(), MAX_PATH);
 	/* SHFileOperation wants a double '\0' terminated string. */
 	tfilename[MAX_PATH - 1] = '\0';
 	tfile_new[MAX_PATH - 1] = '\0';
-	tfilename[_tcslen(tfilename) + 1] = '\0';
-	tfile_new[_tcslen(tfile_new) + 1] = '\0';
+	tfilename[wcslen(tfilename) + 1] = '\0';
+	tfile_new[wcslen(tfile_new) + 1] = '\0';
 
 	/* Rename file without any user confirmation. */
 	SHFILEOPSTRUCT shfopt;
@@ -106,13 +111,19 @@ bool IniFile::SaveToDisk(const char *filename)
 	shfopt.pTo    = tfilename;
 	SHFileOperation(&shfopt);
 #else
-	rename(file_new, filename);
+	if (rename(file_new.c_str(), filename.c_str()) < 0) {
+		Debug(misc, 0, "Renaming {} to {} failed; configuration not saved", file_new, filename);
+	}
+#endif
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM(if (window["openttd_syncfs"]) openttd_syncfs());
 #endif
 
 	return true;
 }
 
-/* virtual */ FILE *IniFile::OpenFile(const char *filename, Subdirectory subdir, size_t *size)
+/* virtual */ FILE *IniFile::OpenFile(const std::string &filename, Subdirectory subdir, size_t *size)
 {
 	/* Open the text file in binary mode to prevent end-of-line translations
 	 * done by ftell() and friends, as defined by K&R. */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -7,7 +5,7 @@
  * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file pool_type.hpp Defintion of Pool, structure used to access PoolItems, and PoolItem, base structure for Vehicle, Town, and other indexed items. */
+/** @file pool_type.hpp Definition of Pool, structure used to access PoolItems, and PoolItem, base structure for Vehicle, Town, and other indexed items. */
 
 #ifndef POOL_TYPE_HPP
 #define POOL_TYPE_HPP
@@ -26,7 +24,7 @@ enum PoolType {
 };
 DECLARE_ENUM_AS_BIT_SET(PoolType)
 
-typedef SmallVector<struct PoolBase *, 4> PoolVector; ///< Vector of pointers to PoolBase
+typedef std::vector<struct PoolBase *> PoolVector; ///< Vector of pointers to PoolBase
 
 /** Base class for base of all pools. */
 struct PoolBase {
@@ -50,7 +48,7 @@ struct PoolBase {
 	 */
 	PoolBase(PoolType pt) : type(pt)
 	{
-		*PoolBase::GetPools()->Append() = this;
+		PoolBase::GetPools()->push_back(this);
 	}
 
 	virtual ~PoolBase();
@@ -59,6 +57,13 @@ struct PoolBase {
 	 * Virtual method that deletes all items in the pool.
 	 */
 	virtual void CleanPool() = 0;
+
+private:
+	/**
+	 * Dummy private copy constructor to prevent compilers from
+	 * copying the structure, which fails due to GetPools().
+	 */
+	PoolBase(const PoolBase &other);
 };
 
 /**
@@ -74,17 +79,20 @@ struct PoolBase {
  */
 template <class Titem, typename Tindex, size_t Tgrowth_step, size_t Tmax_size, PoolType Tpool_type = PT_NORMAL, bool Tcache = false, bool Tzero = true>
 struct Pool : PoolBase {
-	static const size_t MAX_SIZE = Tmax_size; ///< Make template parameter accessible from outside
+	/* Ensure Tmax_size is within the bounds of Tindex. */
+	static_assert((uint64)(Tmax_size - 1) >> 8 * sizeof(Tindex) == 0);
+
+	static constexpr size_t MAX_SIZE = Tmax_size; ///< Make template parameter accessible from outside
 
 	const char * const name; ///< Name of this pool
 
 	size_t size;         ///< Current allocated size
 	size_t first_free;   ///< No item with index lower than this is free (doesn't say anything about this one!)
 	size_t first_unused; ///< This and all higher indexes are free (doesn't say anything about first_unused-1 !)
-	size_t items;        ///< Number of used indexes (non-NULL)
-#ifdef OTTD_ASSERT
+	size_t items;        ///< Number of used indexes (non-nullptr)
+#ifdef WITH_ASSERT
 	size_t checked;      ///< Number of items we checked for
-#endif /* OTTD_ASSERT */
+#endif /* WITH_ASSERT */
 	bool cleaning;       ///< True if cleaning pool (deleting all items)
 
 	Titem **data;        ///< Pointer to array of pointers to Titem
@@ -93,7 +101,7 @@ struct Pool : PoolBase {
 	virtual void CleanPool();
 
 	/**
-	 * Returs Titem with given index
+	 * Returns Titem with given index
 	 * @param index of item to get
 	 * @return pointer to Titem
 	 * @pre index < this->first_unused
@@ -105,13 +113,13 @@ struct Pool : PoolBase {
 	}
 
 	/**
-	 * Tests whether given index can be used to get valid (non-NULL) Titem
+	 * Tests whether given index can be used to get valid (non-nullptr) Titem
 	 * @param index index to examine
-	 * @return true if PoolItem::Get(index) will return non-NULL pointer
+	 * @return true if PoolItem::Get(index) will return non-nullptr pointer
 	 */
 	inline bool IsValidID(size_t index)
 	{
-		return index < this->first_unused && this->Get(index) != NULL;
+		return index < this->first_unused && this->Get(index) != nullptr;
 	}
 
 	/**
@@ -122,11 +130,101 @@ struct Pool : PoolBase {
 	inline bool CanAllocate(size_t n = 1)
 	{
 		bool ret = this->items <= Tmax_size - n;
-#ifdef OTTD_ASSERT
+#ifdef WITH_ASSERT
 		this->checked = ret ? n : 0;
-#endif /* OTTD_ASSERT */
+#endif /* WITH_ASSERT */
 		return ret;
 	}
+
+	/**
+	 * Iterator to iterate all valid T of a pool
+	 * @tparam T Type of the class/struct that is going to be iterated
+	 */
+	template <class T>
+	struct PoolIterator {
+		typedef T value_type;
+		typedef T* pointer;
+		typedef T& reference;
+		typedef size_t difference_type;
+		typedef std::forward_iterator_tag iterator_category;
+
+		explicit PoolIterator(size_t index) : index(index)
+		{
+			this->ValidateIndex();
+		};
+
+		bool operator==(const PoolIterator &other) const { return this->index == other.index; }
+		bool operator!=(const PoolIterator &other) const { return !(*this == other); }
+		T * operator*() const { return T::Get(this->index); }
+		PoolIterator & operator++() { this->index++; this->ValidateIndex(); return *this; }
+
+	private:
+		size_t index;
+		void ValidateIndex()
+		{
+			while (this->index < T::GetPoolSize() && !(T::IsValidID(this->index))) this->index++;
+			if (this->index >= T::GetPoolSize()) this->index = T::Pool::MAX_SIZE;
+		}
+	};
+
+	/*
+	 * Iterable ensemble of all valid T
+	 * @tparam T Type of the class/struct that is going to be iterated
+	 */
+	template <class T>
+	struct IterateWrapper {
+		size_t from;
+		IterateWrapper(size_t from = 0) : from(from) {}
+		PoolIterator<T> begin() { return PoolIterator<T>(this->from); }
+		PoolIterator<T> end() { return PoolIterator<T>(T::Pool::MAX_SIZE); }
+		bool empty() { return this->begin() == this->end(); }
+	};
+
+	/**
+	 * Iterator to iterate all valid T of a pool
+	 * @tparam T Type of the class/struct that is going to be iterated
+	 */
+	template <class T, class F>
+	struct PoolIteratorFiltered {
+		typedef T value_type;
+		typedef T* pointer;
+		typedef T& reference;
+		typedef size_t difference_type;
+		typedef std::forward_iterator_tag iterator_category;
+
+		explicit PoolIteratorFiltered(size_t index, F filter) : index(index), filter(filter)
+		{
+			this->ValidateIndex();
+		};
+
+		bool operator==(const PoolIteratorFiltered &other) const { return this->index == other.index; }
+		bool operator!=(const PoolIteratorFiltered &other) const { return !(*this == other); }
+		T * operator*() const { return T::Get(this->index); }
+		PoolIteratorFiltered & operator++() { this->index++; this->ValidateIndex(); return *this; }
+
+	private:
+		size_t index;
+		F filter;
+		void ValidateIndex()
+		{
+			while (this->index < T::GetPoolSize() && !(T::IsValidID(this->index) && this->filter(this->index))) this->index++;
+			if (this->index >= T::GetPoolSize()) this->index = T::Pool::MAX_SIZE;
+		}
+	};
+
+	/*
+	 * Iterable ensemble of all valid T
+	 * @tparam T Type of the class/struct that is going to be iterated
+	 */
+	template <class T, class F>
+	struct IterateWrapperFiltered {
+		size_t from;
+		F filter;
+		IterateWrapperFiltered(size_t from, F filter) : from(from), filter(filter) {}
+		PoolIteratorFiltered<T, F> begin() { return PoolIteratorFiltered<T, F>(this->from, this->filter); }
+		PoolIteratorFiltered<T, F> end() { return PoolIteratorFiltered<T, F>(T::Pool::MAX_SIZE, this->filter); }
+		bool empty() { return this->begin() == this->end(); }
+	};
 
 	/**
 	 * Base class for all PoolItems
@@ -136,11 +234,14 @@ struct Pool : PoolBase {
 	struct PoolItem {
 		Tindex index; ///< Index of this pool item
 
+		/** Type of the pool this item is going to be part of */
+		typedef struct Pool<Titem, Tindex, Tgrowth_step, Tmax_size, Tpool_type, Tcache, Tzero> Pool;
+
 		/**
 		 * Allocates space for new Titem
 		 * @param size size of Titem
 		 * @return pointer to allocated memory
-		 * @note can never fail (return NULL), use CanAllocate() to check first!
+		 * @note can never fail (return nullptr), use CanAllocate() to check first!
 		 */
 		inline void *operator new(size_t size)
 		{
@@ -154,6 +255,7 @@ struct Pool : PoolBase {
 		 */
 		inline void operator delete(void *p)
 		{
+			if (p == nullptr) return;
 			Titem *pn = (Titem *)p;
 			assert(pn == Tpool->Get(pn->index));
 			Tpool->FreeItem(pn->index);
@@ -164,7 +266,7 @@ struct Pool : PoolBase {
 		 * @param size size of Titem
 		 * @param index index of item
 		 * @return pointer to allocated memory
-		 * @note can never fail (return NULL), use CanAllocate() to check first!
+		 * @note can never fail (return nullptr), use CanAllocate() to check first!
 		 * @pre index has to be unused! Else it will crash
 		 */
 		inline void *operator new(size_t size, size_t index)
@@ -217,9 +319,9 @@ struct Pool : PoolBase {
 		}
 
 		/**
-		 * Tests whether given index can be used to get valid (non-NULL) Titem
+		 * Tests whether given index can be used to get valid (non-nullptr) Titem
 		 * @param index index to examine
-		 * @return true if PoolItem::Get(index) will return non-NULL pointer
+		 * @return true if PoolItem::Get(index) will return non-nullptr pointer
 		 */
 		static inline bool IsValidID(size_t index)
 		{
@@ -227,7 +329,7 @@ struct Pool : PoolBase {
 		}
 
 		/**
-		 * Returs Titem with given index
+		 * Returns Titem with given index
 		 * @param index of item to get
 		 * @return pointer to Titem
 		 * @pre index < this->first_unused
@@ -238,14 +340,14 @@ struct Pool : PoolBase {
 		}
 
 		/**
-		 * Returs Titem with given index
+		 * Returns Titem with given index
 		 * @param index of item to get
 		 * @return pointer to Titem
-		 * @note returns NULL for invalid index
+		 * @note returns nullptr for invalid index
 		 */
 		static inline Titem *GetIfValid(size_t index)
 		{
-			return index < Tpool->first_unused ? Tpool->Get(index) : NULL;
+			return index < Tpool->first_unused ? Tpool->Get(index) : nullptr;
 		}
 
 		/**
@@ -271,10 +373,17 @@ struct Pool : PoolBase {
 		 * Dummy function called after destructor of each member.
 		 * If you want to use it, override it in PoolItem's subclass.
 		 * @param index index of deleted item
-		 * @note when this function is called, PoolItem::Get(index) == NULL.
+		 * @note when this function is called, PoolItem::Get(index) == nullptr.
 		 * @note it's called only when !CleaningPool()
 		 */
 		static inline void PostDestructor(size_t index) { }
+
+		/**
+		 * Returns an iterable ensemble of all valid Titem
+		 * @param from index of the first Titem to consider
+		 * @return an iterable ensemble of all valid Titem
+		 */
+		static Pool::IterateWrapper<Titem> Iterate(size_t from = 0) { return Pool::IterateWrapper<Titem>(from); }
 	};
 
 private:
@@ -301,11 +410,5 @@ private:
 
 	void FreeItem(size_t index);
 };
-
-#define FOR_ALL_ITEMS_FROM(type, iter, var, start) \
-	for (size_t iter = start; var = NULL, iter < type::GetPoolSize(); iter++) \
-		if ((var = type::Get(iter)) != NULL)
-
-#define FOR_ALL_ITEMS(type, iter, var) FOR_ALL_ITEMS_FROM(type, iter, var, 0)
 
 #endif /* POOL_TYPE_HPP */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -126,7 +124,7 @@ static inline void HaltLift(TileIndex t)
  */
 static inline byte GetLiftPosition(TileIndex t)
 {
-	return GB(_m[t].m6, 2, 6);
+	return GB(_me[t].m6, 2, 6);
 }
 
 /**
@@ -136,7 +134,7 @@ static inline byte GetLiftPosition(TileIndex t)
  */
 static inline void SetLiftPosition(TileIndex t, byte pos)
 {
-	SB(_m[t].m6, 2, 6, pos);
+	SB(_me[t].m6, 2, 6, pos);
 }
 
 /**
@@ -315,7 +313,7 @@ static inline byte GetHouseTriggers(TileIndex t)
 static inline byte GetHouseProcessingTime(TileIndex t)
 {
 	assert(IsTileType(t, MP_HOUSE));
-	return GB(_m[t].m6, 2, 6);
+	return GB(_me[t].m6, 2, 6);
 }
 
 /**
@@ -327,7 +325,7 @@ static inline byte GetHouseProcessingTime(TileIndex t)
 static inline void SetHouseProcessingTime(TileIndex t, byte time)
 {
 	assert(IsTileType(t, MP_HOUSE));
-	SB(_m[t].m6, 2, 6, time);
+	SB(_me[t].m6, 2, 6, time);
 }
 
 /**
@@ -338,7 +336,7 @@ static inline void SetHouseProcessingTime(TileIndex t, byte time)
 static inline void DecHouseProcessingTime(TileIndex t)
 {
 	assert(IsTileType(t, MP_HOUSE));
-	_m[t].m6 -= 1 << 2;
+	_me[t].m6 -= 1 << 2;
 }
 
 /**

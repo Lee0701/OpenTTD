@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,8 +14,11 @@
 #include "strings_func.h"
 #include "core/random_func.hpp"
 #include "genworld.h"
+#include "gfx_layout.h"
 
 #include "table/townname.h"
+
+#include "safeguards.h"
 
 
 /**
@@ -28,7 +29,7 @@ TownNameParams::TownNameParams(const Town *t) :
 		grfid(t->townnamegrfid), // by default, use supplied data
 		type(t->townnametype)
 {
-	if (t->townnamegrfid != 0 && GetGRFTownName(t->townnamegrfid) == NULL) {
+	if (t->townnamegrfid != 0 && GetGRFTownName(t->townnamegrfid) == nullptr) {
 		/* Fallback to english original */
 		this->grfid = 0;
 		this->type = SPECSTR_TOWNNAME_ENGLISH;
@@ -75,9 +76,10 @@ char *GetTownName(char *buff, const Town *t, const char *last)
  * Verifies the town name is valid and unique.
  * @param r random bits
  * @param par town name parameters
+ * @param town_names if a name is generated, check its uniqueness with the set
  * @return true iff name is valid and unique
  */
-bool VerifyTownName(uint32 r, const TownNameParams *par)
+bool VerifyTownName(uint32 r, const TownNameParams *par, TownNames *town_names)
 {
 	/* reserve space for extra unicode character and terminating '\0' */
 	char buf1[(MAX_LENGTH_TOWN_NAME_CHARS + 1) * MAX_CHAR_LENGTH];
@@ -88,16 +90,20 @@ bool VerifyTownName(uint32 r, const TownNameParams *par)
 	/* Check size and width */
 	if (Utf8StringLength(buf1) >= MAX_LENGTH_TOWN_NAME_CHARS) return false;
 
-	const Town *t;
-	FOR_ALL_TOWNS(t) {
-		/* We can't just compare the numbers since
-		 * several numbers may map to a single name. */
-		const char *buf = t->name;
-		if (buf == NULL) {
-			GetTownName(buf2, t, lastof(buf2));
-			buf = buf2;
+	if (town_names != nullptr) {
+		if (town_names->find(buf1) != town_names->end()) return false;
+		town_names->insert(buf1);
+	} else {
+		for (const Town *t : Town::Iterate()) {
+			/* We can't just compare the numbers since
+			 * several numbers may map to a single name. */
+			const char *buf = t->name.empty() ? nullptr : t->name.c_str();
+			if (buf == nullptr) {
+				GetTownName(buf2, t, lastof(buf2));
+				buf = buf2;
+			}
+			if (strcmp(buf1, buf) == 0) return false;
 		}
-		if (strcmp(buf1, buf) == 0) return false;
 	}
 
 	return true;
@@ -107,20 +113,25 @@ bool VerifyTownName(uint32 r, const TownNameParams *par)
 /**
  * Generates valid town name.
  * @param townnameparts if a name is generated, it's stored there
+ * @param town_names if a name is generated, check its uniqueness with the set
  * @return true iff a name was generated
  */
-bool GenerateTownName(uint32 *townnameparts)
+bool GenerateTownName(uint32 *townnameparts, TownNames *town_names)
 {
-	/* Do not set too low tries, since when we run out of names, we loop
-	 * for #tries only one time anyway - then we stop generating more
-	 * towns. Do not show it too high neither, since looping through all
-	 * the other towns may take considerable amount of time (10000 is
-	 * too much). */
 	TownNameParams par(_settings_game.game_creation.town_name);
 
+	/* This function is called very often without entering the gameloop
+	 * in between. So reset layout cache to prevent it from growing too big. */
+	Layouter::ReduceLineCache();
+
+	/* Do not set i too low, since when we run out of names, we loop
+	 * for #tries only one time anyway - then we stop generating more
+	 * towns. Do not set it too high either, since looping through all
+	 * the other towns may take considerable amount of time (10000 is
+	 * too much). */
 	for (int i = 1000; i != 0; i--) {
 		uint32 r = _generating_world ? Random() : InteractiveRandom();
-		if (!VerifyTownName(r, &par)) continue;
+		if (!VerifyTownName(r, &par, town_names)) continue;
 
 		*townnameparts = r;
 		return true;
@@ -188,7 +199,8 @@ static inline int32 SeedChanceBias(byte shift_by, int max, uint32 seed, int bias
  */
 static void ReplaceWords(const char *org, const char *rep, char *buf)
 {
-	if (strncmp(buf, org, 4) == 0) strncpy(buf, rep, 4); // Safe as the string in buf is always more than 4 characters long.
+	assert(strlen(org) == 4 && strlen(rep) == 4 && strlen(buf) >= 4);
+	if (strncmp(buf, org, 4) == 0) memcpy(buf, rep, 4); // Safe as the string in buf is always more than 4 characters long.
 }
 
 
@@ -489,11 +501,11 @@ static char *MakeFinnishTownName(char *buf, const char *last, uint32 seed)
 		char *end = buf - 1;
 		assert(end >= orig);
 		if (*end == 'i') *end = 'e';
-		if (strstr(orig, "a") != NULL || strstr(orig, "o") != NULL || strstr(orig, "u") != NULL ||
-				strstr(orig, "A") != NULL || strstr(orig, "O") != NULL || strstr(orig, "U")  != NULL) {
+		if (strstr(orig, "a") != nullptr || strstr(orig, "o") != nullptr || strstr(orig, "u") != nullptr ||
+				strstr(orig, "A") != nullptr || strstr(orig, "O") != nullptr || strstr(orig, "U")  != nullptr) {
 			buf = strecpy(buf, "la", last);
 		} else {
-			buf = strecpy(buf, "l\xC3\xA4", last);
+			buf = strecpy(buf, u8"l\u00e4", last);
 		}
 		return buf;
 	}
@@ -588,7 +600,7 @@ static char *MakeCzechTownName(char *buf, const char *last, uint32 seed)
 		return strecpy(buf, _name_czech_real[SeedModChance(4, lengthof(_name_czech_real), seed)], last);
 	}
 
-	const char *orig = buf;
+	[[maybe_unused]] const char *orig = buf;
 
 	/* Probability of prefixes/suffixes
 	 * 0..11 prefix, 12..13 prefix+suffix, 14..17 suffix, 18..31 nothing */
@@ -620,7 +632,7 @@ static char *MakeCzechTownName(char *buf, const char *last, uint32 seed)
 		choose = _name_czech_subst_full[stem].choose;
 		allow = _name_czech_subst_full[stem].allow;
 	} else {
-		unsigned int map[lengthof(_name_czech_subst_ending)];
+		uint map[lengthof(_name_czech_subst_ending)];
 		int ending_start = -1, ending_stop = -1;
 
 		/* Load the substantive */
@@ -1030,7 +1042,7 @@ static const TownNameGeneratorParams _town_name_generators[] = {
 
 
 /**
- * Generates town name from given seed. a language.
+ * Generates town name from given seed.
  * @param buf output buffer
  * @param last end of buffer
  * @param lang town name language

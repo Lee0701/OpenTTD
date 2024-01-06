@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,10 +10,6 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
 
-#include "thread/thread.h"
-
-static const uint MODAL_PROGRESS_REDRAW_TIMEOUT = 200; ///< Timeout between redraws
-
 /**
  * Check if we are currently in a modal progress state.
  * @return Are we in the modal state?
@@ -26,10 +20,6 @@ static inline bool HasModalProgress()
 	return _in_modal_progress;
 }
 
-bool IsFirstModalProgressLoop();
 void SetModalProgress(bool state);
-
-extern class ThreadMutex *_modal_progress_work_mutex;
-extern class ThreadMutex *_modal_progress_paint_mutex;
 
 #endif /* PROGRESS_H */

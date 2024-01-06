@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,8 +15,10 @@
 /** The type all our vehicle IDs have. */
 typedef uint32 VehicleID;
 
-/** Available vehicle types. */
-enum VehicleType {
+static const int GROUND_ACCELERATION = 9800; ///< Acceleration due to gravity, 9.8 m/s^2
+
+/** Available vehicle types. It needs to be 8bits, because we save and load it as such */
+enum VehicleType : byte {
 	VEH_BEGIN,
 
 	VEH_TRAIN = VEH_BEGIN,        ///< %Train vehicle type.
@@ -37,8 +37,6 @@ enum VehicleType {
 DECLARE_POSTFIX_INCREMENT(VehicleType)
 /** Helper information for extract tool. */
 template <> struct EnumPropsT<VehicleType> : MakeEnumPropsT<VehicleType, byte, VEH_TRAIN, VEH_END, VEH_INVALID, 3> {};
-/** It needs to be 8bits, because we save and load it as such */
-typedef SimpleTinyEnumT<VehicleType, byte> VehicleTypeByte;
 
 struct Vehicle;
 struct Train;
@@ -51,26 +49,27 @@ struct DisasterVehicle;
 /** Base vehicle class. */
 struct BaseVehicle
 {
-	VehicleTypeByte type;    ///< Type of vehicle
+	VehicleType type; ///< Type of vehicle
 };
 
 static const VehicleID INVALID_VEHICLE = 0xFFFFF; ///< Constant representing a non-existing vehicle.
 
 /** Pathfinding option states */
 enum VehiclePathFinders {
-	VPF_OPF  = 0, ///< The Original PathFinder (only for ships)
+	// Original PathFinder (OPF) used to be 0
 	VPF_NPF  = 1, ///< New PathFinder
 	VPF_YAPF = 2, ///< Yet Another PathFinder
 };
 
-/** Flags to add to p1 for goto depot commands. */
-enum DepotCommand {
-	DEPOT_SERVICE       = (1U << 28), ///< The vehicle will leave the depot right after arrival (serivce only)
-	DEPOT_MASS_SEND     = (1U << 29), ///< Tells that it's a mass send to depot command (type in VLW flag)
-	DEPOT_DONT_CANCEL   = (1U << 30), ///< Don't cancel current goto depot command if any
-	DEPOT_LOCATE_HANGAR = (1U << 31), ///< Find another airport if the target one lacks a hangar
-	DEPOT_COMMAND_MASK  = 0xFU << 28,
+/** Flags for goto depot commands. */
+enum class DepotCommand : byte {
+	None         = 0,         ///< No special flags.
+	Service      = (1U << 0), ///< The vehicle will leave the depot right after arrival (service only)
+	MassSend     = (1U << 1), ///< Tells that it's a mass send to depot command (type in VLW flag)
+	DontCancel   = (1U << 2), ///< Don't cancel current goto depot command if any
+	LocateHangar = (1U << 3), ///< Find another airport if the target one lacks a hangar
 };
+DECLARE_ENUM_AS_BIT_SET(DepotCommand)
 
 static const uint MAX_LENGTH_VEHICLE_NAME_CHARS = 32; ///< The maximum length of a vehicle name in characters including '\0'
 

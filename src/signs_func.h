@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,10 +14,10 @@
 #include "tile_type.h"
 
 struct Window;
-extern SignID _new_sign_id;
 
 void UpdateAllSignVirtCoords();
 void PlaceProc_Sign(TileIndex tile);
+bool CompanyCanRenameSign(const Sign *si);
 
 /* signs_gui.cpp */
 void ShowRenameSignWindow(const Sign *si);

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,10 @@
 #include "../../stdafx.h"
 #include "script_error.hpp"
 #include "../../core/bitmath_func.hpp"
+#include "../../string_func.h"
+#include "../../strings_func.h"
+
+#include "../../safeguards.h"
 
 ScriptError::ScriptErrorMap ScriptError::error_map = ScriptError::ScriptErrorMap();
 ScriptError::ScriptErrorMapString ScriptError::error_map_string = ScriptError::ScriptErrorMapString();
@@ -23,22 +25,23 @@ ScriptError::ScriptErrorMapString ScriptError::error_map_string = ScriptError::S
 
 /* static */ char *ScriptError::GetLastErrorString()
 {
-	return strdup((*error_map_string.find(ScriptError::GetLastError())).second);
+	return stredup((*error_map_string.find(ScriptError::GetLastError())).second);
 }
 
 /* static */ ScriptErrorType ScriptError::StringToError(StringID internal_string_id)
 {
-	uint index = GB(internal_string_id, 11, 5);
-	switch (GB(internal_string_id, 11, 5)) {
-		case 26: case 28: case 29: case 30: // NewGRF strings.
-			return ERR_NEWGRF_SUPPLIED_ERROR;
+	uint index = GetStringIndex(internal_string_id);
+	switch (GetStringTab(internal_string_id)) {
+		case TEXT_TAB_NEWGRF_START:
+		case TEXT_TAB_GAMESCRIPT_START:
+			return ERR_NEWGRF_SUPPLIED_ERROR; // NewGRF strings.
 
-		/* DO NOT SWAP case 14 and 4 because that will break StringToError due
-		 * to the index dependency that relies on FALL THROUGHs. */
-		case 14: if (index < 0xE4) break; // Player name
-		case 4:  if (index < 0xC0) break; // Town name
-		case 15: // Custom name
-		case 31: // Dynamic strings
+		case TEXT_TAB_SPECIAL:
+			if (index < 0xE4) break; // Player name
+			FALLTHROUGH;
+
+		case TEXT_TAB_TOWN:
+			if (index < 0xC0) break; // Town name
 			/* These strings are 'random' and have no meaning.
 			 * They actually shouldn't even be returned as error messages. */
 			return ERR_UNKNOWN;

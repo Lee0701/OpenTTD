@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -42,11 +40,12 @@ public:
 	/**
 	 * Create a new group.
 	 * @param vehicle_type The type of vehicle to create a group for.
+	 * @param parent_group_id The parent group id to create this group under, INVALID_GROUP for top-level.
 	 * @return The GroupID of the new group, or an invalid GroupID when
 	 *  it failed. Check the return value using IsValidGroup(). In test-mode
 	 *  0 is returned if it was successful; any other value indicates failure.
 	 */
-	static GroupID CreateGroup(ScriptVehicle::VehicleType vehicle_type);
+	static GroupID CreateGroup(ScriptVehicle::VehicleType vehicle_type, GroupID parent_group_id);
 
 	/**
 	 * Delete the given group. When the deletion succeeds all vehicles in the
@@ -70,7 +69,7 @@ public:
 	 * @param group_id The group to set the name for.
 	 * @param name The name for the group (can be either a raw string, or a ScriptText object).
 	 * @pre IsValidGroup(group_id).
-	 * @pre name != NULL && len(name) != 0
+	 * @pre name != null && len(name) != 0
 	 * @exception ScriptError::ERR_NAME_IS_NOT_UNIQUE
 	 * @return True if and only if the name was changed.
 	 */
@@ -83,6 +82,24 @@ public:
 	 * @return The name the group has.
 	 */
 	static char *GetName(GroupID group_id);
+
+	/**
+	 * Set parent group of a group.
+	 * @param group_id The group to set the parent for.
+	 * @param parent_group_id The parent group to set.
+	 * @pre IsValidGroup(group_id).
+	 * @pre IsValidGroup(parent_group_id).
+	 * @return True if and only if the parent group was changed.
+	 */
+	static bool SetParent(GroupID group_id, GroupID parent_group_id);
+
+	/**
+	 * Get parent group of a group.
+	 * @param group_id The group to get the parent of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The group id of the parent group.
+	 */
+	static GroupID GetParent(GroupID group_id);
 
 	/**
 	 * Enable or disable autoreplace protected. If the protection is
@@ -110,6 +127,20 @@ public:
 	 * @return The number of engines with id engine_id in the group with id group_id.
 	 */
 	static int32 GetNumEngines(GroupID group_id, EngineID engine_id);
+
+	/**
+	 * Get the total number of vehicles in a given group and its sub-groups.
+	 * @param group_id The group to get the number of vehicles in.
+	 * @param vehicle_type The type of vehicle of the group.
+	 * @pre IsValidGroup(group_id) || group_id == GROUP_ALL || group_id == GROUP_DEFAULT.
+	 * @pre IsValidGroup(group_id) || vehicle_type == ScriptVehicle::VT_ROAD || vehicle_type == ScriptVehicle::VT_RAIL ||
+	 *   vehicle_type == ScriptVehicle::VT_WATER || vehicle_type == ScriptVehicle::VT_AIR
+	 * @return The total number of vehicles in the group with id group_id and it's sub-groups.
+	 * @note If the group is valid (neither GROUP_ALL nor GROUP_DEFAULT), the value of
+	 *  vehicle_type is retrieved from the group itself and not from the input value.
+	 *  But if the group is GROUP_ALL or GROUP_DEFAULT, then vehicle_type must be valid.
+	 */
+	static int32 GetNumVehicles(GroupID group_id, ScriptVehicle::VehicleType vehicle_type);
 
 	/**
 	 * Move a vehicle to a group.
@@ -171,6 +202,64 @@ public:
 	 * @return True if and if the replacing was successfully stopped.
 	 */
 	static bool StopAutoReplace(GroupID group_id, EngineID engine_id);
+
+	/**
+	 * Get the current profit of a group.
+	 * @param group_id The group to get the profit of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The current profit the group has.
+	 */
+	static Money GetProfitThisYear(GroupID group_id);
+
+	/**
+	 * Get the profit of last year of a group.
+	 * @param group_id The group to get the profit of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The current profit the group had last year.
+	 */
+	static Money GetProfitLastYear(GroupID group_id);
+
+	/**
+	 * Get the current vehicle usage of a group.
+	 * @param group_id The group to get the current usage of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The current usage of the group.
+	 */
+	static uint32 GetCurrentUsage(GroupID group_id);
+
+	/**
+	 * Set primary colour for a group.
+	 * @param group_id The group id to set the colour of.
+	 * @param colour Colour to set.
+	 * @pre IsValidGroup(group_id).
+	 * @return True iff the colour was set successfully.
+	 */
+	static bool SetPrimaryColour(GroupID group_id, ScriptCompany::Colours colour);
+
+	/**
+	 * Set secondary colour for a group.
+	 * @param group_id The group id to set the colour of.
+	 * @param colour Colour to set.
+	 * @pre IsValidGroup(group_id).
+	 * @return True iff the colour was set successfully.
+	 */
+	static bool SetSecondaryColour(GroupID group_id, ScriptCompany::Colours colour);
+
+	/**
+	 * Get primary colour of a group.
+	 * @param group_id The group id to get the colour of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The primary colour of the group.
+	 */
+	static ScriptCompany::Colours GetPrimaryColour(GroupID group_id);
+
+	/**
+	 * Get secondary colour for a group.
+	 * @param group_id The group id to get the colour of.
+	 * @pre IsValidGroup(group_id).
+	 * @return The secondary colour of the group.
+	 */
+	static ScriptCompany::Colours GetSecondaryColour(GroupID group_id);
 };
 
 #endif /* SCRIPT_GROUP_HPP */

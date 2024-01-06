@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,21 +13,19 @@
 #include "sound_driver.hpp"
 
 /** Implementation of the sound driver for Windows. */
-class SoundDriver_Win32: public SoundDriver {
+class SoundDriver_Win32 : public SoundDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
-	/* virtual */ const char *GetName() const { return "win32"; }
+	void Stop() override;
+	const char *GetName() const override { return "win32"; }
 };
 
 /** Factory for the sound driver for Windows. */
-class FSoundDriver_Win32: public SoundDriverFactory<FSoundDriver_Win32> {
+class FSoundDriver_Win32 : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "win32"; }
-	/* virtual */ const char *GetDescription() { return "Win32 WaveOut Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_Win32(); }
+	FSoundDriver_Win32() : DriverFactoryBase(Driver::DT_SOUND, 9, "win32", "Win32 WaveOut Sound Driver (param bufsize,hz)") {}
+	Driver *CreateInstance() const override { return new SoundDriver_Win32(); }
 };
 
 #endif /* SOUND_WIN32_H */

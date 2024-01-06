@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,9 @@
 #include "../../rev.h"
 #include "macos.h"
 #include "../../string_func.h"
+#include "../../fileio_func.h"
+#include <pthread.h>
+#include <array>
 
 #define Rect  OTTDRect
 #define Point OTTDPoint
@@ -21,11 +22,29 @@
 #undef Rect
 #undef Point
 
+#ifndef __clang__
+#define __bridge
+#endif
+
 /*
  * This file contains objective C
  * Apple uses objective C instead of plain C to interact with OS specific/native functions
  */
 
+
+#if (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
+typedef struct {
+	NSInteger majorVersion;
+	NSInteger minorVersion;
+	NSInteger patchVersion;
+} OTTDOperatingSystemVersion;
+
+#define NSOperatingSystemVersion OTTDOperatingSystemVersion
+#endif
+
+#ifdef WITH_COCOA
+static NSAutoreleasePool *_ottd_autorelease_pool;
+#endif
 
 /**
  * Get the version of the MacOS we are running under. Code adopted
@@ -40,6 +59,23 @@ void GetMacOSVersion(int *return_major, int *return_minor, int *return_bugfix)
 	*return_major = -1;
 	*return_minor = -1;
 	*return_bugfix = -1;
+
+	if ([[ NSProcessInfo processInfo] respondsToSelector:@selector(operatingSystemVersion) ]) {
+		IMP sel = [ [ NSProcessInfo processInfo] methodForSelector:@selector(operatingSystemVersion) ];
+		NSOperatingSystemVersion ver = ((NSOperatingSystemVersion (*)(id, SEL))sel)([ NSProcessInfo processInfo], @selector(operatingSystemVersion));
+
+		*return_major = (int)ver.majorVersion;
+		*return_minor = (int)ver.minorVersion;
+		*return_bugfix = (int)ver.patchVersion;
+
+		return;
+	}
+
+#if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_10)
+#ifdef __clang__
+#	pragma clang diagnostic push
+#	pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 	SInt32 systemVersion, version_major, version_minor, version_bugfix;
 	if (Gestalt(gestaltSystemVersion, &systemVersion) == noErr) {
 		if (systemVersion >= 0x1040) {
@@ -52,6 +88,10 @@ void GetMacOSVersion(int *return_major, int *return_minor, int *return_bugfix)
 			*return_bugfix = (int)GB(systemVersion, 0, 4);
 		}
 	}
+#ifdef __clang__
+#	pragma clang diagnostic pop
+#endif
+#endif
 }
 
 #ifdef WITH_SDL
@@ -134,19 +174,8 @@ const char *GetCurrentLocale(const char *)
 	NSString *preferredLang = [ languages objectAtIndex:0 ];
 	/* preferredLang is either 2 or 5 characters long ("xx" or "xx_YY"). */
 
-	/* Since Apple introduced encoding to CString in OSX 10.4 we have to make a few conditions
-	 * to get the right code for the used version of OSX. */
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
-	if (MacOSVersionIsAtLeast(10, 4, 0)) {
-		[ preferredLang getCString:retbuf maxLength:32 encoding:NSASCIIStringEncoding ];
-	} else
-#endif
-	{
-#if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4)
-		/* maxLength does not include the \0 char in contrast to the call above. */
-		[ preferredLang getCString:retbuf maxLength:31 ];
-#endif
-	}
+	[ preferredLang getCString:retbuf maxLength:32 encoding:NSASCIIStringEncoding ];
+
 	return retbuf;
 }
 
@@ -155,41 +184,91 @@ const char *GetCurrentLocale(const char *)
 /**
  * Return the contents of the clipboard (COCOA).
  *
- * @param buffer Clipboard content..
- * @param buff_len Length of the clipboard content..
+ * @param buffer Clipboard content.
+ * @param last The pointer to the last element of the destination buffer
  * @return Whether clipboard is empty or not.
  */
-bool GetClipboardContents(char *buffer, size_t buff_len)
+bool GetClipboardContents(char *buffer, const char *last)
 {
 	NSPasteboard *pb = [ NSPasteboard generalPasteboard ];
-	NSArray *types = [ NSArray arrayWithObject:NSStringPboardType ];
+	NSArray *types = [ NSArray arrayWithObject:NSPasteboardTypeString ];
 	NSString *bestType = [ pb availableTypeFromArray:types ];
 
 	/* Clipboard has no text data available. */
 	if (bestType == nil) return false;
 
-	NSString *string = [ pb stringForType:NSStringPboardType ];
+	NSString *string = [ pb stringForType:NSPasteboardTypeString ];
 	if (string == nil || [ string length ] == 0) return false;
 
-	ttd_strlcpy(buffer, [ string UTF8String ], buff_len);
+	strecpy(buffer, [ string UTF8String ], last);
 
 	return true;
 }
+
+/** Set the application's bundle directory.
+ *
+ * This is needed since OS X application bundles do not have a
+ * current directory and the data files are 'somewhere' in the bundle.
+ */
+void CocoaSetApplicationBundleDir()
+{
+	extern std::array<std::string, NUM_SEARCHPATHS> _searchpaths;
+
+	char tmp[MAXPATHLEN];
+	CFAutoRelease<CFURLRef> url(CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle()));
+	if (CFURLGetFileSystemRepresentation(url.get(), true, (unsigned char *)tmp, MAXPATHLEN)) {
+		_searchpaths[SP_APPLICATION_BUNDLE_DIR] = tmp;
+		AppendPathSeparator(_searchpaths[SP_APPLICATION_BUNDLE_DIR]);
+	} else {
+		_searchpaths[SP_APPLICATION_BUNDLE_DIR].clear();
+	}
+}
+
+/**
+ * Setup autorelease for the application pool.
+ *
+ * These are called from main() to prevent a _NSAutoreleaseNoPool error when
+ * exiting before the cocoa video driver has been loaded
+ */
+void CocoaSetupAutoreleasePool()
+{
+	_ottd_autorelease_pool = [ [ NSAutoreleasePool alloc ] init ];
+}
+
+/**
+ * Autorelease the application pool.
+ */
+void CocoaReleaseAutoreleasePool()
+{
+	[ _ottd_autorelease_pool release ];
+}
+
 #endif
 
-uint GetCPUCoreCount()
+/**
+ * Check if a font is a monospace font.
+ * @param name Name of the font.
+ * @return True if the font is a monospace font.
+ */
+bool IsMonospaceFont(CFStringRef name)
 {
-	uint count = 1;
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-	if (MacOSVersionIsAtLeast(10, 5, 0)) {
-		count = [ [ NSProcessInfo processInfo ] activeProcessorCount ];
-	} else
-#endif
-	{
-#if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5)
-		count = MPProcessorsScheduled();
-#endif
+	NSFont *font = [ NSFont fontWithName:(__bridge NSString *)name size:0.0f ];
+
+	return font != nil ? [ font isFixedPitch ] : false;
+}
+
+/**
+ * Set the name of the current thread for the debugger.
+ * @param name The new name of the current thread.
+ */
+void MacOSSetThreadName(const char *name)
+{
+	if (MacOSVersionIsAtLeast(10, 6, 0)) {
+		pthread_setname_np(name);
 	}
 
-	return count;
+	NSThread *cur = [ NSThread currentThread ];
+	if (cur != nil && [ cur respondsToSelector:@selector(setName:) ]) {
+		[ cur performSelector:@selector(setName:) withObject:[ NSString stringWithUTF8String:name ] ];
+	}
 }

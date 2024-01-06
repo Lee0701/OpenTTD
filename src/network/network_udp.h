@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,19 +10,12 @@
 #ifndef NETWORK_UDP_H
 #define NETWORK_UDP_H
 
-#ifdef ENABLE_NETWORK
-
 #include "core/address.h"
 
 void NetworkUDPInitialize();
 void NetworkUDPSearchGame();
-void NetworkUDPQueryMasterServer();
-void NetworkUDPQueryServer(NetworkAddress address, bool manually = false);
-void NetworkUDPAdvertise();
-void NetworkUDPRemoveAdvertise(bool blocking);
 void NetworkUDPClose();
+void NetworkUDPServerListen();
 void NetworkBackgroundUDPLoop();
-
-#endif /* ENABLE_NETWORK */
 
 #endif /* NETWORK_UDP_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -23,20 +21,23 @@ public:
 		byte data[];                      ///< Data, all zoomlevels.
 	};
 
-	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
+	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
+	Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator) override;
 
-	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
+	const char *GetName() override { return "32bpp-optimized"; }
 
-	template <BlitterMode mode> void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom);
+	template <BlitterMode mode, bool Tpal_to_rgb = false> void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom);
+
+protected:
+	template <bool Tpal_to_rgb> void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
+	template <bool Tpal_to_rgb> Sprite *EncodeInternal(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
 };
 
 /** Factory for the optimised 32 bpp blitter (without palette animation). */
-class FBlitter_32bppOptimized: public BlitterFactory<FBlitter_32bppOptimized> {
+class FBlitter_32bppOptimized : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
-	/* virtual */ const char *GetDescription() { return "32bpp Optimized Blitter (no palette animation)"; }
-	/* virtual */ Blitter *CreateInstance() { return new Blitter_32bppOptimized(); }
+	FBlitter_32bppOptimized() : BlitterFactory("32bpp-optimized", "32bpp Optimized Blitter (no palette animation)") {}
+	Blitter *CreateInstance() override { return new Blitter_32bppOptimized(); }
 };
 
 #endif /* BLITTER_32BPP_OPTIMIZED_HPP */

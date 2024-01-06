@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,14 +13,14 @@
 #include "core/enum_type.hpp"
 
 /** Variant of the signal, i.e. how does the signal look? */
-enum SignalVariant {
+enum SignalVariant : byte {
 	SIG_ELECTRIC  = 0, ///< Light signal
 	SIG_SEMAPHORE = 1, ///< Old-fashioned semaphore signal
 };
 
 
 /** Type of signal, i.e. how does the signal behave? */
-enum SignalType {
+enum SignalType : byte {
 	SIGTYPE_NORMAL     = 0, ///< normal signal
 	SIGTYPE_ENTRY      = 1, ///< presignal block entry
 	SIGTYPE_EXIT       = 2, ///< presignal block exit

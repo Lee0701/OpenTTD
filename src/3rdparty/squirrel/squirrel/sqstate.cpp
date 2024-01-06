@@ -1,6 +1,9 @@
 /*
-	see copyright notice in squirrel.h
-*/
+ * see copyright notice in squirrel.h
+ */
+
+#include "../../../stdafx.h"
+
 #include "sqpcheader.h"
 #include "sqopcodes.h"
 #include "sqvm.h"
@@ -12,19 +15,13 @@
 #include "squserdata.h"
 #include "sqclass.h"
 
+#include "../../../safeguards.h"
+
 SQObjectPtr _null_;
 SQObjectPtr _true_(true);
 SQObjectPtr _false_(false);
 SQObjectPtr _one_((SQInteger)1);
 SQObjectPtr _minusone_((SQInteger)-1);
-
-SQSharedState::SQSharedState()
-{
-	_compilererrorhandler = NULL;
-	_printfunc = NULL;
-	_debuginfo = false;
-	_notifyallexceptions = false;
-}
 
 #define newsysstring(s) {	\
 	_systemstrings->push_back(SQString::Create(this,s));	\
@@ -82,24 +79,29 @@ SQTable *CreateDefaultDelegate(SQSharedState *ss,SQRegFunction *funcz)
 {
 	SQInteger i=0;
 	SQTable *t=SQTable::Create(ss,0);
-	while(funcz[i].name!=0){
+	while(funcz[i].name!=nullptr){
 		SQNativeClosure *nc = SQNativeClosure::Create(ss,funcz[i].f);
 		nc->_nparamscheck = funcz[i].nparamscheck;
 		nc->_name = SQString::Create(ss,funcz[i].name);
 		if(funcz[i].typemask && !CompileTypemask(nc->_typecheck,funcz[i].typemask))
-			return NULL;
+			return nullptr;
 		t->NewSlot(SQString::Create(ss,funcz[i].name),nc);
 		i++;
 	}
 	return t;
 }
 
-void SQSharedState::Init()
+SQSharedState::SQSharedState()
 {
-	_scratchpad=NULL;
+	_compilererrorhandler = nullptr;
+	_printfunc = nullptr;
+	_debuginfo = false;
+	_notifyallexceptions = false;
+	_scratchpad=nullptr;
 	_scratchpadsize=0;
+	_collectable_free_processing = false;
 #ifndef NO_GARBAGE_COLLECTOR
-	_gc_chain=NULL;
+	_gc_chain=nullptr;
 #endif
 	sq_new(_stringtable,SQStringTable);
 	sq_new(_metamethods,SQObjectPtrVec);
@@ -108,21 +110,21 @@ void SQSharedState::Init()
 	_metamethodsmap = SQTable::Create(this,MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
-	newsysstring(_SC("null"));
-	newsysstring(_SC("table"));
-	newsysstring(_SC("array"));
-	newsysstring(_SC("closure"));
-	newsysstring(_SC("string"));
-	newsysstring(_SC("userdata"));
-	newsysstring(_SC("integer"));
-	newsysstring(_SC("float"));
-	newsysstring(_SC("userpointer"));
-	newsysstring(_SC("function"));
-	newsysstring(_SC("generator"));
-	newsysstring(_SC("thread"));
-	newsysstring(_SC("class"));
-	newsysstring(_SC("instance"));
-	newsysstring(_SC("bool"));
+	newsysstring("null");
+	newsysstring("table");
+	newsysstring("array");
+	newsysstring("closure");
+	newsysstring("string");
+	newsysstring("userdata");
+	newsysstring("integer");
+	newsysstring("float");
+	newsysstring("userpointer");
+	newsysstring("function");
+	newsysstring("generator");
+	newsysstring("thread");
+	newsysstring("class");
+	newsysstring("instance");
+	newsysstring("bool");
 	//meta methods
 	newmetamethod(MM_ADD);
 	newmetamethod(MM_SUB);
@@ -143,7 +145,7 @@ void SQSharedState::Init()
 	newmetamethod(MM_NEWMEMBER);
 	newmetamethod(MM_INHERITED);
 
-	_constructoridx = SQString::Create(this,_SC("constructor"));
+	_constructoridx = SQString::Create(this,"constructor");
 	_registry = SQTable::Create(this,0);
 	_consts = SQTable::Create(this,0);
 	_table_default_delegate = CreateDefaultDelegate(this,_table_default_delegate_funcz);
@@ -187,7 +189,7 @@ SQSharedState::~SQSharedState()
 	_refs_table.Finalize();
 #ifndef NO_GARBAGE_COLLECTOR
 	SQCollectable *t = _gc_chain;
-	SQCollectable *nx = NULL;
+	SQCollectable *nx = nullptr;
 	if(t) {
 		t->_uiRef++;
 		while(t) {
@@ -225,20 +227,48 @@ SQInteger SQSharedState::GetMetaMethodIdxByName(const SQObjectPtr &name)
 	return -1;
 }
 
+/**
+ * Helper function that is to be used instead of calling FinalFree directly on the instance,
+ * so the frees can happen iteratively. This as in the FinalFree the references to any other
+ * objects are released, which can cause those object to be freed yielding a potentially
+ * very deep stack in case of for example a link list.
+ *
+ * This is done internally by a vector onto which the to be freed instances are pushed. When
+ * this is called when not already processing, this method will actually call the FinalFree
+ * function which might cause more elements to end up in the queue which this method then
+ * picks up continueing until it has processed all instances in that queue.
+ * @param collectable The collectable to (eventually) free.
+ */
+void SQSharedState::DelayFinalFree(SQCollectable *collectable)
+{
+	this->_collectable_free_queue.push_back(collectable);
+
+	if (!this->_collectable_free_processing) {
+		this->_collectable_free_processing = true;
+		while (!this->_collectable_free_queue.empty()) {
+			SQCollectable *collectable = this->_collectable_free_queue.back();
+			this->_collectable_free_queue.pop_back();
+			collectable->FinalFree();
+		}
+		this->_collectable_free_processing = false;
+	}
+}
+
+
 #ifndef NO_GARBAGE_COLLECTOR
 
-void SQSharedState::MarkObject(SQObjectPtr &o,SQCollectable **chain)
+void SQSharedState::EnqueueMarkObject(SQObjectPtr &o,SQGCMarkerQueue &queue)
 {
 	switch(type(o)){
-	case OT_TABLE:_table(o)->Mark(chain);break;
-	case OT_ARRAY:_array(o)->Mark(chain);break;
-	case OT_USERDATA:_userdata(o)->Mark(chain);break;
-	case OT_CLOSURE:_closure(o)->Mark(chain);break;
-	case OT_NATIVECLOSURE:_nativeclosure(o)->Mark(chain);break;
-	case OT_GENERATOR:_generator(o)->Mark(chain);break;
-	case OT_THREAD:_thread(o)->Mark(chain);break;
-	case OT_CLASS:_class(o)->Mark(chain);break;
-	case OT_INSTANCE:_instance(o)->Mark(chain);break;
+	case OT_TABLE:queue.Enqueue(_table(o));break;
+	case OT_ARRAY:queue.Enqueue(_array(o));break;
+	case OT_USERDATA:queue.Enqueue(_userdata(o));break;
+	case OT_CLOSURE:queue.Enqueue(_closure(o));break;
+	case OT_NATIVECLOSURE:queue.Enqueue(_nativeclosure(o));break;
+	case OT_GENERATOR:queue.Enqueue(_generator(o));break;
+	case OT_THREAD:queue.Enqueue(_thread(o));break;
+	case OT_CLASS:queue.Enqueue(_class(o));break;
+	case OT_INSTANCE:queue.Enqueue(_instance(o));break;
 	default: break; //shutup compiler
 	}
 }
@@ -247,28 +277,39 @@ void SQSharedState::MarkObject(SQObjectPtr &o,SQCollectable **chain)
 SQInteger SQSharedState::CollectGarbage(SQVM *vm)
 {
 	SQInteger n=0;
-	SQCollectable *tchain=NULL;
 	SQVM *vms = _thread(_root_vm);
 
-	vms->Mark(&tchain);
+	SQGCMarkerQueue queue;
+	queue.Enqueue(vms);
+#ifdef WITH_ASSERT
 	SQInteger x = _table(_thread(_root_vm)->_roottable)->CountUsed();
-	_refs_table.Mark(&tchain);
-	MarkObject(_registry,&tchain);
-	MarkObject(_consts,&tchain);
-	MarkObject(_metamethodsmap,&tchain);
-	MarkObject(_table_default_delegate,&tchain);
-	MarkObject(_array_default_delegate,&tchain);
-	MarkObject(_string_default_delegate,&tchain);
-	MarkObject(_number_default_delegate,&tchain);
-	MarkObject(_generator_default_delegate,&tchain);
-	MarkObject(_thread_default_delegate,&tchain);
-	MarkObject(_closure_default_delegate,&tchain);
-	MarkObject(_class_default_delegate,&tchain);
-	MarkObject(_instance_default_delegate,&tchain);
-	MarkObject(_weakref_default_delegate,&tchain);
+#endif
+	_refs_table.EnqueueMarkObject(queue);
+	EnqueueMarkObject(_registry,queue);
+	EnqueueMarkObject(_consts,queue);
+	EnqueueMarkObject(_metamethodsmap,queue);
+	EnqueueMarkObject(_table_default_delegate,queue);
+	EnqueueMarkObject(_array_default_delegate,queue);
+	EnqueueMarkObject(_string_default_delegate,queue);
+	EnqueueMarkObject(_number_default_delegate,queue);
+	EnqueueMarkObject(_generator_default_delegate,queue);
+	EnqueueMarkObject(_thread_default_delegate,queue);
+	EnqueueMarkObject(_closure_default_delegate,queue);
+	EnqueueMarkObject(_class_default_delegate,queue);
+	EnqueueMarkObject(_instance_default_delegate,queue);
+	EnqueueMarkObject(_weakref_default_delegate,queue);
+
+	SQCollectable *tchain=nullptr;
+
+	while (!queue.IsEmpty()) {
+		SQCollectable *q = queue.Pop();
+		q->EnqueueMarkObjectForChildren(queue);
+		SQCollectable::RemoveFromChain(&_gc_chain, q);
+		SQCollectable::AddToChain(&tchain, q);
+	}
 
 	SQCollectable *t = _gc_chain;
-	SQCollectable *nx = NULL;
+	SQCollectable *nx = nullptr;
 	if(t) {
 		t->_uiRef++;
 		while(t) {
@@ -288,8 +329,10 @@ SQInteger SQSharedState::CollectGarbage(SQVM *vm)
 		t = t->_next;
 	}
 	_gc_chain = tchain;
+#ifdef WITH_ASSERT
 	SQInteger z = _table(_thread(_root_vm)->_roottable)->CountUsed();
 	assert(z == x);
+#endif
 	return n;
 }
 #endif
@@ -297,7 +340,7 @@ SQInteger SQSharedState::CollectGarbage(SQVM *vm)
 #ifndef NO_GARBAGE_COLLECTOR
 void SQCollectable::AddToChain(SQCollectable **chain,SQCollectable *c)
 {
-    c->_prev = NULL;
+    c->_prev = nullptr;
 	c->_next = *chain;
 	if(*chain) (*chain)->_prev = c;
 	*chain = c;
@@ -309,8 +352,8 @@ void SQCollectable::RemoveFromChain(SQCollectable **chain,SQCollectable *c)
 	else *chain = c->_next;
 	if(c->_next)
 		c->_next->_prev = c->_prev;
-	c->_next = NULL;
-	c->_prev = NULL;
+	c->_next = nullptr;
+	c->_prev = nullptr;
 }
 #endif
 
@@ -352,12 +395,12 @@ RefTable::~RefTable()
 }
 
 #ifndef NO_GARBAGE_COLLECTOR
-void RefTable::Mark(SQCollectable **chain)
+void RefTable::EnqueueMarkObject(SQGCMarkerQueue &queue)
 {
 	RefNode *nodes = (RefNode *)_nodes;
 	for(SQUnsignedInteger n = 0; n < _numofslots; n++) {
 		if(type(nodes->obj) != OT_NULL) {
-			SQSharedState::MarkObject(nodes->obj,chain);
+			SQSharedState::EnqueueMarkObject(nodes->obj,queue);
 		}
 		nodes++;
 	}
@@ -407,7 +450,7 @@ void RefTable::Resize(SQUnsignedInteger size)
 	SQUnsignedInteger oldnumofslots = _numofslots;
 	AllocNodes(size);
 	//rehash
-	SQUnsignedInteger nfound = 0;
+	[[maybe_unused]] SQUnsignedInteger nfound = 0;
 	for(SQUnsignedInteger n = 0; n < oldnumofslots; n++) {
 		if(type(t->obj) != OT_NULL) {
 			//add back;
@@ -440,16 +483,16 @@ RefTable::RefNode *RefTable::Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bo
 {
 	RefNode *ref;
 	mainpos = ::HashObj(obj)&(_numofslots-1);
-	*prev = NULL;
+	*prev = nullptr;
 	for (ref = _buckets[mainpos]; ref; ) {
 		if(_rawval(ref->obj) == _rawval(obj) && type(ref->obj) == type(obj))
 			break;
 		*prev = ref;
 		ref = ref->next;
 	}
-	if(ref == NULL && add) {
+	if(ref == nullptr && add) {
 		if(_numofslots == _slotused) {
-			assert(_freelist == 0);
+			assert(_freelist == nullptr);
 			Resize(_numofslots*2);
 			mainpos = ::HashObj(obj)&(_numofslots-1);
 		}
@@ -467,16 +510,16 @@ void RefTable::AllocNodes(SQUnsignedInteger size)
 	RefNode *temp = nodes;
 	SQUnsignedInteger n;
 	for(n = 0; n < size - 1; n++) {
-		bucks[n] = NULL;
+		bucks[n] = nullptr;
 		temp->refs = 0;
 		new (&temp->obj) SQObjectPtr;
 		temp->next = temp+1;
 		temp++;
 	}
-	bucks[n] = NULL;
+	bucks[n] = nullptr;
 	temp->refs = 0;
 	new (&temp->obj) SQObjectPtr;
-	temp->next = NULL;
+	temp->next = nullptr;
 	_freelist = nodes;
 	_nodes = nodes;
 	_buckets = bucks;
@@ -486,10 +529,10 @@ void RefTable::AllocNodes(SQUnsignedInteger size)
 //////////////////////////////////////////////////////////////////////////
 //SQStringTable
 /*
-* The following code is based on Lua 4.0 (Copyright 1994-2002 Tecgraf, PUC-Rio.)
-* http://www.lua.org/copyright.html#4
-* http://www.lua.org/source/4.0.1/src_lstring.c.html
-*/
+ * The following code is based on Lua 4.0 (Copyright 1994-2002 Tecgraf, PUC-Rio.)
+ * http://www.lua.org/copyright.html#4
+ * http://www.lua.org/source/4.0.1/src_lstring.c.html
+ */
 
 SQStringTable::SQStringTable()
 {
@@ -500,39 +543,45 @@ SQStringTable::SQStringTable()
 SQStringTable::~SQStringTable()
 {
 	SQ_FREE(_strings,sizeof(SQString*)*_numofslots);
-	_strings = NULL;
+	_strings = nullptr;
 }
 
 void SQStringTable::AllocNodes(SQInteger size)
 {
 	_numofslots = size;
 	_strings = (SQString**)SQ_MALLOC(sizeof(SQString*)*_numofslots);
-	memset(_strings,0,sizeof(SQString*)*_numofslots);
+	memset(_strings,0,sizeof(SQString*)*(size_t)_numofslots);
 }
 
 SQString *SQStringTable::Add(const SQChar *news,SQInteger len)
 {
 	if(len<0)
-		len = (SQInteger)scstrlen(news);
-	SQHash h = ::_hashstr(news,len)&(_numofslots-1);
+		len = (SQInteger)strlen(news);
+	SQHash h = ::_hashstr(news,(size_t)len)&(_numofslots-1);
 	SQString *s;
 	for (s = _strings[h]; s; s = s->_next){
-		if(s->_len == len && (!memcmp(news,s->_val,rsl(len))))
+		if(s->_len == len && (!memcmp(news,s->_val,(size_t)len)))
 			return s; //found
 	}
 
-	SQString *t=(SQString *)SQ_MALLOC(rsl(len)+sizeof(SQString));
-	new (t) SQString;
-	memcpy(t->_val,news,rsl(len));
-	t->_val[len] = _SC('\0');
-	t->_len = len;
-	t->_hash = ::_hashstr(news,len);
+	SQString *t=(SQString *)SQ_MALLOC(len+sizeof(SQString));
+	new (t) SQString(news, len);
 	t->_next = _strings[h];
 	_strings[h] = t;
 	_slotused++;
 	if (_slotused > _numofslots)  /* too crowded? */
 		Resize(_numofslots*2);
 	return t;
+}
+
+SQString::SQString(const SQChar *news, SQInteger len)
+{
+	memcpy(_val,news,(size_t)len);
+	_val[len] = '\0';
+	_len = len;
+	_hash = ::_hashstr(news,(size_t)len);
+	_next = nullptr;
+	_sharedstate = nullptr;
 }
 
 void SQStringTable::Resize(SQInteger size)
@@ -556,7 +605,7 @@ void SQStringTable::Resize(SQInteger size)
 void SQStringTable::Remove(SQString *bs)
 {
 	SQString *s;
-	SQString *prev=NULL;
+	SQString *prev=nullptr;
 	SQHash h = bs->_hash&(_numofslots - 1);
 
 	for (s = _strings[h]; s; ){
@@ -568,7 +617,7 @@ void SQStringTable::Remove(SQString *bs)
 			_slotused--;
 			SQInteger slen = s->_len;
 			s->~SQString();
-			SQ_FREE(s,sizeof(SQString) + rsl(slen));
+			SQ_FREE(s,sizeof(SQString) + slen);
 			return;
 		}
 		prev = s;

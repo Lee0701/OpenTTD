@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,6 +16,7 @@
 #ifdef WITH_COCOA
 
 #include "../stdafx.h"
+#include "../os/macosx/macos.h"
 #include "../debug.h"
 #include "../driver.h"
 #include "../mixer.h"
@@ -29,6 +28,8 @@
 #include <AudioUnit/AudioUnit.h>
 #undef Rect
 #undef Point
+
+#include "../safeguards.h"
 
 static FSoundDriver_Cocoa iFSoundDriver_Cocoa;
 
@@ -43,10 +44,8 @@ static OSStatus audioCallback(void *inRefCon, AudioUnitRenderActionFlags *inActi
 }
 
 
-const char *SoundDriver_Cocoa::Start(const char * const *parm)
+const char *SoundDriver_Cocoa::Start(const StringList &parm)
 {
-	Component comp;
-	ComponentDescription desc;
 	struct AURenderCallbackStruct callback;
 	AudioStreamBasicDescription requestedDesc;
 
@@ -67,23 +66,24 @@ const char *SoundDriver_Cocoa::Start(const char * const *parm)
 	requestedDesc.mBytesPerFrame = requestedDesc.mBitsPerChannel * requestedDesc.mChannelsPerFrame / 8;
 	requestedDesc.mBytesPerPacket = requestedDesc.mBytesPerFrame * requestedDesc.mFramesPerPacket;
 
-	MxInitialize(requestedDesc.mSampleRate);
+	MxInitialize((uint)requestedDesc.mSampleRate);
 
 	/* Locate the default output audio unit */
+	AudioComponentDescription desc;
 	desc.componentType = kAudioUnitType_Output;
 	desc.componentSubType = kAudioUnitSubType_HALOutput;
 	desc.componentManufacturer = kAudioUnitManufacturer_Apple;
 	desc.componentFlags = 0;
 	desc.componentFlagsMask = 0;
 
-	comp = FindNextComponent (NULL, &desc);
-	if (comp == NULL) {
-		return "cocoa_s: Failed to start CoreAudio: FindNextComponent returned NULL";
+	AudioComponent comp = AudioComponentFindNext (nullptr, &desc);
+	if (comp == nullptr) {
+		return "cocoa_s: Failed to start CoreAudio: AudioComponentFindNext returned nullptr";
 	}
 
 	/* Open & initialize the default output audio unit */
-	if (OpenAComponent(comp, &_outputAudioUnit) != noErr) {
-		return "cocoa_s: Failed to start CoreAudio: OpenAComponent";
+	if (AudioComponentInstanceNew(comp, &_outputAudioUnit) != noErr) {
+		return "cocoa_s: Failed to start CoreAudio: AudioComponentInstanceNew";
 	}
 
 	if (AudioUnitInitialize(_outputAudioUnit) != noErr) {
@@ -97,7 +97,7 @@ const char *SoundDriver_Cocoa::Start(const char * const *parm)
 
 	/* Set the audio callback */
 	callback.inputProc = audioCallback;
-	callback.inputProcRefCon = NULL;
+	callback.inputProcRefCon = nullptr;
 	if (AudioUnitSetProperty(_outputAudioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &callback, sizeof(callback)) != noErr) {
 		return "cocoa_s: Failed to start CoreAudio: AudioUnitSetProperty (kAudioUnitProperty_SetRenderCallback)";
 	}
@@ -108,7 +108,7 @@ const char *SoundDriver_Cocoa::Start(const char * const *parm)
 	}
 
 	/* We're running! */
-	return NULL;
+	return nullptr;
 }
 
 
@@ -118,7 +118,7 @@ void SoundDriver_Cocoa::Stop()
 
 	/* stop processing the audio unit */
 	if (AudioOutputUnitStop(_outputAudioUnit) != noErr) {
-		DEBUG(driver, 0, "cocoa_s: Core_CloseAudio: AudioOutputUnitStop failed");
+		Debug(driver, 0, "cocoa_s: Core_CloseAudio: AudioOutputUnitStop failed");
 		return;
 	}
 
@@ -126,12 +126,12 @@ void SoundDriver_Cocoa::Stop()
 	callback.inputProc = 0;
 	callback.inputProcRefCon = 0;
 	if (AudioUnitSetProperty(_outputAudioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &callback, sizeof(callback)) != noErr) {
-		DEBUG(driver, 0, "cocoa_s: Core_CloseAudio: AudioUnitSetProperty (kAudioUnitProperty_SetRenderCallback) failed");
+		Debug(driver, 0, "cocoa_s: Core_CloseAudio: AudioUnitSetProperty (kAudioUnitProperty_SetRenderCallback) failed");
 		return;
 	}
 
-	if (CloseComponent(_outputAudioUnit) != noErr) {
-		DEBUG(driver, 0, "cocoa_s: Core_CloseAudio: CloseComponent failed");
+	if (AudioComponentInstanceDispose(_outputAudioUnit) != noErr) {
+		Debug(driver, 0, "cocoa_s: Core_CloseAudio: AudioComponentInstanceDispose failed");
 		return;
 	}
 }

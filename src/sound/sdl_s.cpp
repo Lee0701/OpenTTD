@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,9 +12,10 @@
 #include "../stdafx.h"
 
 #include "../mixer.h"
-#include "../sdl.h"
 #include "sdl_s.h"
 #include <SDL.h>
+
+#include "../safeguards.h"
 
 /** Factory for the SDL sound driver. */
 static FSoundDriver_SDL iFSoundDriver_SDL;
@@ -32,12 +31,18 @@ static void CDECL fill_sound_buffer(void *userdata, Uint8 *stream, int len)
 	MxMixSamples(stream, len / 4);
 }
 
-const char *SoundDriver_SDL::Start(const char * const *parm)
+const char *SoundDriver_SDL::Start(const StringList &parm)
 {
 	SDL_AudioSpec spec;
 
-	const char *s = SdlOpen(SDL_INIT_AUDIO);
-	if (s != NULL) return s;
+	/* Only initialise SDL if the video driver hasn't done it already */
+	int ret_code = 0;
+	if (SDL_WasInit(SDL_INIT_EVERYTHING) == 0) {
+		ret_code = SDL_Init(SDL_INIT_AUDIO | SDL_INIT_NOPARACHUTE);
+	} else if (SDL_WasInit(SDL_INIT_AUDIO) == 0) {
+		ret_code = SDL_InitSubSystem(SDL_INIT_AUDIO);
+	}
+	if (ret_code == -1) return SDL_GetError();
 
 	spec.freq = GetDriverParamInt(parm, "hz", 44100);
 	spec.format = AUDIO_S16SYS;
@@ -45,15 +50,18 @@ const char *SoundDriver_SDL::Start(const char * const *parm)
 	spec.samples = GetDriverParamInt(parm, "samples", 1024);
 	spec.callback = fill_sound_buffer;
 	MxInitialize(spec.freq);
-	SDL_CALL SDL_OpenAudio(&spec, &spec);
-	SDL_CALL SDL_PauseAudio(0);
-	return NULL;
+	SDL_OpenAudio(&spec, &spec);
+	SDL_PauseAudio(0);
+	return nullptr;
 }
 
 void SoundDriver_SDL::Stop()
 {
-	SDL_CALL SDL_CloseAudio();
-	SdlClose(SDL_INIT_AUDIO);
+	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	if (SDL_WasInit(SDL_INIT_EVERYTHING) == 0) {
+		SDL_Quit(); // If there's nothing left, quit SDL
+	}
 }
 
 #endif /* WITH_SDL */

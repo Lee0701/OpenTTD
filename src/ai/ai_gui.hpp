@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,8 +12,10 @@
 
 #include "../company_type.h"
 
+void ShowAIListWindow(CompanyID slot);
 Window* ShowAIDebugWindow(CompanyID show_company = INVALID_COMPANY);
 void ShowAIConfigWindow();
+void ShowScriptTextfileWindow(TextfileType file_type, CompanyID slot);
 void ShowAIDebugWindowIfAIError();
 void InitializeAIGui();
 

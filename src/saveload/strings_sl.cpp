@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,9 +9,13 @@
 
 #include "../stdafx.h"
 #include "../string_func.h"
+#include "../strings_func.h"
 #include "saveload_internal.h"
+#include <sstream>
 
 #include "table/strings.h"
+
+#include "../safeguards.h"
 
 static const int NUM_OLD_STRINGS     = 512; ///< The number of custom strings stored in old savegames.
 static const int LEN_OLD_STRINGS     =  32; ///< The number of characters per string.
@@ -46,7 +48,7 @@ StringID RemapOldStringID(StringID s)
 }
 
 /** Location to load the old names to. */
-char *_old_name_array = NULL;
+char *_old_name_array = nullptr;
 
 /**
  * Copy and convert old custom names to UTF-8.
@@ -55,18 +57,17 @@ char *_old_name_array = NULL;
  * @param id the StringID of the custom name to clone.
  * @return the clones custom name.
  */
-char *CopyFromOldName(StringID id)
+std::string CopyFromOldName(StringID id)
 {
 	/* Is this name an (old) custom name? */
-	if (GB(id, 11, 5) != 15) return NULL;
+	if (GetStringTab(id) != TEXT_TAB_OLD_CUSTOM) return std::string();
 
-	if (IsSavegameVersionBefore(37)) {
-		/* Allow for expansion when converted to UTF-8. */
-		char tmp[LEN_OLD_STRINGS * MAX_CHAR_LENGTH];
+	if (IsSavegameVersionBefore(SLV_37)) {
 		uint offs = _savegame_type == SGT_TTO ? LEN_OLD_STRINGS_TTO * GB(id, 0, 8) : LEN_OLD_STRINGS * GB(id, 0, 9);
 		const char *strfrom = &_old_name_array[offs];
-		char *strto = tmp;
 
+		std::ostringstream tmp;
+		std::ostreambuf_iterator<char> strto(tmp);
 		for (; *strfrom != '\0'; strfrom++) {
 			WChar c = (byte)*strfrom;
 
@@ -79,23 +80,17 @@ char *CopyFromOldName(StringID id)
 				case 0xB8: c = 0x017E; break; // z with caron
 				case 0xBC: c = 0x0152; break; // OE ligature
 				case 0xBD: c = 0x0153; break; // oe ligature
-				case 0xBE: c = 0x0178; break; // Y with diaresis
+				case 0xBE: c = 0x0178; break; // Y with diaeresis
 				default: break;
 			}
 
-			/* Check character will fit into our buffer. */
-			if (strto + Utf8CharLen(c) > lastof(tmp)) break;
-
-			strto += Utf8Encode(strto, c);
+			Utf8Encode(strto, c);
 		}
 
-		/* Terminate the new string and copy it back to the name array */
-		*strto = '\0';
-
-		return strdup(tmp);
+		return tmp.str();
 	} else {
 		/* Name will already be in UTF-8. */
-		return strdup(&_old_name_array[LEN_OLD_STRINGS * GB(id, 0, 9)]);
+		return std::string(&_old_name_array[LEN_OLD_STRINGS * GB(id, 0, 9)]);
 	}
 }
 
@@ -106,7 +101,7 @@ char *CopyFromOldName(StringID id)
 void ResetOldNames()
 {
 	free(_old_name_array);
-	_old_name_array = NULL;
+	_old_name_array = nullptr;
 }
 
 /**
@@ -118,24 +113,27 @@ void InitializeOldNames()
 	_old_name_array = CallocT<char>(NUM_OLD_STRINGS * LEN_OLD_STRINGS); // 200 * 24 would be enough for TTO savegames
 }
 
-/**
- * Load the NAME chunk.
- */
-static void Load_NAME()
-{
-	int index;
+struct NAMEChunkHandler : ChunkHandler {
+	NAMEChunkHandler() : ChunkHandler('NAME', CH_READONLY) {}
 
-	while ((index = SlIterateArray()) != -1) {
-		if (index >= NUM_OLD_STRINGS) SlErrorCorrupt("Invalid old name index");
-		if (SlGetFieldLength() > (uint)LEN_OLD_STRINGS) SlErrorCorrupt("Invalid old name length");
+	void Load() const override
+	{
+		int index;
 
-		SlArray(&_old_name_array[LEN_OLD_STRINGS * index], SlGetFieldLength(), SLE_UINT8);
-		/* Make sure the old name is null terminated */
-		_old_name_array[LEN_OLD_STRINGS * index + LEN_OLD_STRINGS - 1] = '\0';
+		while ((index = SlIterateArray()) != -1) {
+			if (index >= NUM_OLD_STRINGS) SlErrorCorrupt("Invalid old name index");
+			if (SlGetFieldLength() > (uint)LEN_OLD_STRINGS) SlErrorCorrupt("Invalid old name length");
+
+			SlCopy(&_old_name_array[LEN_OLD_STRINGS * index], SlGetFieldLength(), SLE_UINT8);
+			/* Make sure the old name is null terminated */
+			_old_name_array[LEN_OLD_STRINGS * index + LEN_OLD_STRINGS - 1] = '\0';
+		}
 	}
-}
-
-/** Chunk handlers related to strings. */
-extern const ChunkHandler _name_chunk_handlers[] = {
-	{ 'NAME', NULL, Load_NAME, NULL, NULL, CH_ARRAY | CH_LAST},
 };
+
+static const NAMEChunkHandler NAME;
+static const ChunkHandlerRef name_chunk_handlers[] = {
+	NAME,
+};
+
+extern const ChunkHandlerTable _name_chunk_handlers(name_chunk_handlers);

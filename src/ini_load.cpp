@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,17 +13,17 @@
 #include "ini_type.h"
 #include "string_func.h"
 
+#include "safeguards.h"
+
 /**
  * Construct a new in-memory item of an Ini file.
  * @param parent the group we belong to
  * @param name   the name of the item
- * @param len    the length of the name of the item
  */
-IniItem::IniItem(IniGroup *parent, const char *name, size_t len) : next(NULL), value(NULL), comment(NULL)
+IniItem::IniItem(IniGroup *parent, const std::string &name) : next(nullptr)
 {
-	if (len == 0) len = strlen(name);
+	this->name = StrMakeValid(name);
 
-	this->name = strndup(name, len);
 	*parent->last_item = this;
 	parent->last_item = &this->next;
 }
@@ -33,10 +31,6 @@ IniItem::IniItem(IniGroup *parent, const char *name, size_t len) : next(NULL), v
 /** Free everything we loaded. */
 IniItem::~IniItem()
 {
-	free(this->name);
-	free(this->value);
-	free(this->comment);
-
 	delete this->next;
 }
 
@@ -44,38 +38,35 @@ IniItem::~IniItem()
  * Replace the current value with another value.
  * @param value the value to replace with.
  */
-void IniItem::SetValue(const char *value)
+void IniItem::SetValue(const std::string_view value)
 {
-	free(this->value);
-	this->value = strdup(value);
+	this->value.emplace(value);
 }
 
 /**
  * Construct a new in-memory group of an Ini file.
  * @param parent the file we belong to
  * @param name   the name of the group
- * @param len    the length of the name of the group
  */
-IniGroup::IniGroup(IniLoadFile *parent, const char *name, size_t len) : next(NULL), type(IGT_VARIABLES), item(NULL), comment(NULL)
+IniGroup::IniGroup(IniLoadFile *parent, const std::string &name) : next(nullptr), type(IGT_VARIABLES), item(nullptr)
 {
-	if (len == 0) len = strlen(name);
+	this->name = StrMakeValid(name);
 
-	this->name = strndup(name, len);
 	this->last_item = &this->item;
 	*parent->last_group = this;
 	parent->last_group = &this->next;
 
-	if (parent->list_group_names != NULL) {
-		for (uint i = 0; parent->list_group_names[i] != NULL; i++) {
-			if (strcmp(this->name, parent->list_group_names[i]) == 0) {
+	if (parent->list_group_names != nullptr) {
+		for (uint i = 0; parent->list_group_names[i] != nullptr; i++) {
+			if (this->name == parent->list_group_names[i]) {
 				this->type = IGT_LIST;
 				return;
 			}
 		}
 	}
-	if (parent->seq_group_names != NULL) {
-		for (uint i = 0; parent->seq_group_names[i] != NULL; i++) {
-			if (strcmp(this->name, parent->seq_group_names[i]) == 0) {
+	if (parent->seq_group_names != nullptr) {
+		for (uint i = 0; parent->seq_group_names[i] != nullptr; i++) {
+			if (this->name == parent->seq_group_names[i]) {
 				this->type = IGT_SEQUENCE;
 				return;
 			}
@@ -86,9 +77,6 @@ IniGroup::IniGroup(IniLoadFile *parent, const char *name, size_t len) : next(NUL
 /** Free everything we loaded. */
 IniGroup::~IniGroup()
 {
-	free(this->name);
-	free(this->comment);
-
 	delete this->item;
 	delete this->next;
 }
@@ -98,18 +86,42 @@ IniGroup::~IniGroup()
  * and create is true it creates a new item.
  * @param name   name of the item to find.
  * @param create whether to create an item when not found or not.
- * @return the requested item or NULL if not found.
+ * @return the requested item or nullptr if not found.
  */
-IniItem *IniGroup::GetItem(const char *name, bool create)
+IniItem *IniGroup::GetItem(const std::string &name, bool create)
 {
-	for (IniItem *item = this->item; item != NULL; item = item->next) {
-		if (strcmp(item->name, name) == 0) return item;
+	for (IniItem *item = this->item; item != nullptr; item = item->next) {
+		if (item->name == name) return item;
 	}
 
-	if (!create) return NULL;
+	if (!create) return nullptr;
 
 	/* otherwise make a new one */
-	return new IniItem(this, name, strlen(name));
+	return new IniItem(this, name);
+}
+
+/**
+ * Remove the item with the given name.
+ * @param name Name of the item to remove.
+ */
+void IniGroup::RemoveItem(const std::string &name)
+{
+	IniItem **prev = &this->item;
+
+	for (IniItem *item = this->item; item != nullptr; prev = &item->next, item = item->next) {
+		if (item->name != name) continue;
+
+		*prev = item->next;
+		/* "last_item" is a pointer to the "real-last-item"->next. */
+		if (this->last_item == &item->next) {
+			this->last_item = prev;
+		}
+
+		item->next = nullptr;
+		delete item;
+
+		return;
+	}
 }
 
 /**
@@ -118,18 +130,17 @@ IniItem *IniGroup::GetItem(const char *name, bool create)
 void IniGroup::Clear()
 {
 	delete this->item;
-	this->item = NULL;
+	this->item = nullptr;
 	this->last_item = &this->item;
 }
 
 /**
  * Construct a new in-memory Ini file representation.
- * @param list_group_names A \c NULL terminated list with group names that should be loaded as lists instead of variables. @see IGT_LIST
- * @param seq_group_names  A \c NULL terminated list with group names that should be loaded as lists of names. @see IGT_SEQUENCE
+ * @param list_group_names A \c nullptr terminated list with group names that should be loaded as lists instead of variables. @see IGT_LIST
+ * @param seq_group_names  A \c nullptr terminated list with group names that should be loaded as lists of names. @see IGT_SEQUENCE
  */
 IniLoadFile::IniLoadFile(const char * const *list_group_names, const char * const *seq_group_names) :
-		group(NULL),
-		comment(NULL),
+		group(nullptr),
 		list_group_names(list_group_names),
 		seq_group_names(seq_group_names)
 {
@@ -139,7 +150,6 @@ IniLoadFile::IniLoadFile(const char * const *list_group_names, const char * cons
 /** Free everything we loaded. */
 IniLoadFile::~IniLoadFile()
 {
-	free(this->comment);
 	delete this->group;
 }
 
@@ -147,26 +157,21 @@ IniLoadFile::~IniLoadFile()
  * Get the group with the given name. If it doesn't exist
  * and \a create_new is \c true create a new group.
  * @param name name of the group to find.
- * @param len  the maximum length of said name (\c 0 means length of the string).
  * @param create_new Allow creation of group if it does not exist.
- * @return The requested group if it exists or was created, else \c NULL.
+ * @return The requested group if it exists or was created, else \c nullptr.
  */
-IniGroup *IniLoadFile::GetGroup(const char *name, size_t len, bool create_new)
+IniGroup *IniLoadFile::GetGroup(const std::string &name, bool create_new)
 {
-	if (len == 0) len = strlen(name);
-
 	/* does it exist already? */
-	for (IniGroup *group = this->group; group != NULL; group = group->next) {
-		if (!strncmp(group->name, name, len) && group->name[len] == 0) {
-			return group;
-		}
+	for (IniGroup *group = this->group; group != nullptr; group = group->next) {
+		if (group->name == name) return group;
 	}
 
-	if (!create_new) return NULL;
+	if (!create_new) return nullptr;
 
 	/* otherwise make a new one */
-	IniGroup *group = new IniGroup(this, name, len);
-	group->comment = strdup("\n");
+	IniGroup *group = new IniGroup(this, name);
+	group->comment = "\n";
 	return group;
 }
 
@@ -177,19 +182,19 @@ IniGroup *IniLoadFile::GetGroup(const char *name, size_t len, bool create_new)
 void IniLoadFile::RemoveGroup(const char *name)
 {
 	size_t len = strlen(name);
-	IniGroup *prev = NULL;
+	IniGroup *prev = nullptr;
 	IniGroup *group;
 
 	/* does it exist already? */
-	for (group = this->group; group != NULL; prev = group, group = group->next) {
-		if (strncmp(group->name, name, len) == 0) {
+	for (group = this->group; group != nullptr; prev = group, group = group->next) {
+		if (group->name.compare(0, len, name) == 0) {
 			break;
 		}
 	}
 
-	if (group == NULL) return;
+	if (group == nullptr) return;
 
-	if (prev != NULL) {
+	if (prev != nullptr) {
 		prev->next = prev->next->next;
 		if (this->last_group == &group->next) this->last_group = &prev->next;
 	} else {
@@ -197,7 +202,7 @@ void IniLoadFile::RemoveGroup(const char *name)
 		if (this->last_group == &group->next) this->last_group = &this->group;
 	}
 
-	group->next = NULL;
+	group->next = nullptr;
 	delete group;
 }
 
@@ -207,20 +212,20 @@ void IniLoadFile::RemoveGroup(const char *name)
  * @param subdir the sub directory to load the file from.
  * @pre nothing has been loaded yet.
  */
-void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
+void IniLoadFile::LoadFromDisk(const std::string &filename, Subdirectory subdir)
 {
 	assert(this->last_group == &this->group);
 
 	char buffer[1024];
-	IniGroup *group = NULL;
+	IniGroup *group = nullptr;
 
-	char *comment = NULL;
+	char *comment = nullptr;
 	uint comment_size = 0;
 	uint comment_alloc = 0;
 
 	size_t end;
 	FILE *in = this->OpenFile(filename, subdir, &end);
-	if (in == NULL) return;
+	if (in == nullptr) return;
 
 	end += ftell(in);
 
@@ -236,12 +241,12 @@ void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
 		*e = '\0';
 
 		/* Skip comments and empty lines outside IGT_SEQUENCE groups. */
-		if ((group == NULL || group->type != IGT_SEQUENCE) && (*s == '#' || *s == ';' || *s == '\0')) {
+		if ((group == nullptr || group->type != IGT_SEQUENCE) && (*s == '#' || *s == ';' || *s == '\0')) {
 			uint ns = comment_size + (e - s + 1);
 			uint a = comment_alloc;
 			/* add to comment */
 			if (ns > a) {
-				a = max(a, 128U);
+				a = std::max(a, 128U);
 				do a *= 2; while (a < ns);
 				comment = ReallocT(comment, comment_alloc = a);
 			}
@@ -260,17 +265,17 @@ void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
 				e--;
 			}
 			s++; // skip [
-			group = new IniGroup(this, s, e - s);
+			group = new IniGroup(this, std::string(s, e - s));
 			if (comment_size != 0) {
-				group->comment = strndup(comment, comment_size);
+				group->comment.assign(comment, comment_size);
 				comment_size = 0;
 			}
-		} else if (group != NULL) {
+		} else if (group != nullptr) {
 			if (group->type == IGT_SEQUENCE) {
 				/* A sequence group, use the line as item name without further interpretation. */
-				IniItem *item = new IniItem(group, buffer, e - buffer);
+				IniItem *item = new IniItem(group, std::string(buffer, e - buffer));
 				if (comment_size) {
-					item->comment = strndup(comment, comment_size);
+					item->comment.assign(comment, comment_size);
 					comment_size = 0;
 				}
 				continue;
@@ -286,9 +291,9 @@ void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
 			}
 
 			/* it's an item in an existing group */
-			IniItem *item = new IniItem(group, s, t - s);
+			IniItem *item = new IniItem(group, std::string(s, t - s));
 			if (comment_size != 0) {
-				item->comment = strndup(comment, comment_size);
+				item->comment.assign(comment, comment_size);
 				comment_size = 0;
 			}
 
@@ -303,8 +308,12 @@ void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
 			if (e > t && e[-1] == '\"') e--;
 			*e = '\0';
 
-			/* If the value was not quoted and empty, it must be NULL */
-			item->value = (!quoted && e == t) ? NULL : strndup(t, e - t);
+			/* If the value was not quoted and empty, it must be nullptr */
+			if (!quoted && e == t) {
+				item->value.reset();
+			} else {
+				item->value = StrMakeValid(std::string(t));
+			}
 		} else {
 			/* it's an orphan item */
 			this->ReportFileError("ini: '", buffer, "' outside of group");
@@ -312,7 +321,7 @@ void IniLoadFile::LoadFromDisk(const char *filename, Subdirectory subdir)
 	}
 
 	if (comment_size > 0) {
-		this->comment = strndup(comment, comment_size);
+		this->comment.assign(comment, comment_size);
 		comment_size = 0;
 	}
 

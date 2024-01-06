@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,9 +12,6 @@
 
 void InitializeScreenshotFormats();
 
-const char *GetScreenshotFormatDesc(int i);
-bool GetScreenshotFormatSupports_32bpp(int i);
-void SetScreenshotFormat(uint i);
 const char *GetCurrentScreenshotExtension();
 
 /** Type of requested screenshot */
@@ -27,13 +22,16 @@ enum ScreenshotType {
 	SC_DEFAULTZOOM, ///< Zoomed to default zoom level screenshot of the visible area.
 	SC_WORLD,       ///< World screenshot.
 	SC_HEIGHTMAP,   ///< Heightmap of the world.
+	SC_MINIMAP,     ///< Minimap screenshot.
 };
 
-void SetupScreenshotViewport(ScreenshotType t, struct ViewPort *vp);
+void SetupScreenshotViewport(ScreenshotType t, struct Viewport *vp, uint32 width = 0, uint32 height = 0);
 bool MakeHeightmapScreenshot(const char *filename);
-bool MakeScreenshot(ScreenshotType t, const char *name);
+void MakeScreenshotWithConfirm(ScreenshotType t);
+bool MakeScreenshot(ScreenshotType t, std::string name, uint32 width = 0, uint32 height = 0);
+bool MakeMinimapWorldScreenshot();
 
-extern char _screenshot_format_name[8];
+extern std::string _screenshot_format_name;
 extern uint _num_screenshot_formats;
 extern uint _cur_screenshot_format;
 extern char _full_screenshot_name[MAX_PATH];

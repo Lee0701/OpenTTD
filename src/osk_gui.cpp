@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,13 +14,17 @@
 #include "window_func.h"
 #include "gfx_func.h"
 #include "querystring_gui.h"
+#include "video/video_driver.hpp"
+#include "zoom_func.h"
 
 #include "widgets/osk_widget.h"
 
 #include "table/sprites.h"
 #include "table/strings.h"
 
-char _keyboard_opt[2][OSK_KEYBOARD_ENTRIES * 4 + 1];
+#include "safeguards.h"
+
+std::string _keyboard_opt[2];
 static WChar _keyboard[2][OSK_KEYBOARD_ENTRIES];
 
 enum KeyStateBits {
@@ -40,13 +42,13 @@ struct OskWindow : public Window {
 	char *orig_str_buf;    ///< Original string.
 	bool shift;            ///< Is the shift effectively pressed?
 
-	OskWindow(const WindowDesc *desc, Window *parent, int button) : Window()
+	OskWindow(WindowDesc *desc, Window *parent, int button) : Window(desc)
 	{
 		this->parent = parent;
-		assert(parent != NULL);
+		assert(parent != nullptr);
 
 		NWidgetCore *par_wid = parent->GetWidget<NWidgetCore>(button);
-		assert(par_wid != NULL);
+		assert(par_wid != nullptr);
 
 		assert(parent->querystrings.Contains(button));
 		this->qs         = parent->querystrings.Find(button)->second;
@@ -56,9 +58,9 @@ struct OskWindow : public Window {
 		this->querystrings[WID_OSK_TEXT] = this->qs;
 
 		/* make a copy in case we need to reset later */
-		this->orig_str_buf = strdup(this->qs->text.buf);
+		this->orig_str_buf = stredup(this->qs->text.buf);
 
-		this->InitNested(desc, 0);
+		this->InitNested(0);
 		this->SetFocusedWidget(WID_OSK_TEXT);
 
 		/* Not needed by default. */
@@ -91,23 +93,20 @@ struct OskWindow : public Window {
 		this->SetWidgetLoweredState(WID_OSK_CAPS, HasBit(_keystate, KEYS_CAPS));
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		if (widget == WID_OSK_CAPTION) SetDParam(0, this->caption);
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget < WID_OSK_LETTERS) return;
 
 		widget -= WID_OSK_LETTERS;
-		DrawCharCentered(_keyboard[this->shift][widget],
-			r.left + 8,
-			r.top + 3,
-			TC_BLACK);
+		DrawCharCentered(_keyboard[this->shift][widget], r, TC_BLACK);
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		/* clicked a letter */
 		if (widget >= WID_OSK_LETTERS) {
@@ -163,7 +162,7 @@ struct OskWindow : public Window {
 				break;
 
 			case WID_OSK_OK:
-				if (this->qs->orig == NULL || strcmp(this->qs->text.buf, this->qs->orig) != 0) {
+				if (this->qs->orig == nullptr || strcmp(this->qs->text.buf, this->qs->orig) != 0) {
 					/* pass information by simulating a button press on parent window */
 					if (this->qs->ok_button >= 0) {
 						this->parent->OnClick(pt, this->qs->ok_button, 1);
@@ -171,7 +170,7 @@ struct OskWindow : public Window {
 						return;
 					}
 				}
-				delete this;
+				this->Close();
 				break;
 
 			case WID_OSK_CANCEL:
@@ -183,39 +182,43 @@ struct OskWindow : public Window {
 					qs->text.Assign(this->orig_str_buf);
 					qs->text.MovePos(WKC_END);
 					this->OnEditboxChanged(WID_OSK_TEXT);
-					delete this;
+					this->Close();
 				}
 				break;
 		}
 	}
 
-	virtual void OnEditboxChanged(int widget)
+	void OnEditboxChanged(int widget) override
 	{
 		this->SetWidgetDirty(WID_OSK_TEXT);
 		this->parent->OnEditboxChanged(this->text_btn);
 		this->parent->SetWidgetDirty(this->text_btn);
 	}
 
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		this->SetWidgetDirty(WID_OSK_TEXT);
 		this->parent->SetWidgetDirty(this->text_btn);
 	}
 
-	virtual void OnFocusLost()
+	void OnFocusLost(bool closing) override
 	{
-		delete this;
+		VideoDriver::GetInstance()->EditBoxLostFocus();
+		if (!closing) this->Close();
 	}
 };
 
 static const int HALF_KEY_WIDTH = 7;  // Width of 1/2 key in pixels.
 static const int INTER_KEY_SPACE = 2; // Number of pixels between two keys.
 
+static const int TOP_KEY_PADDING = 2; // Vertical padding for the top row of keys.
+static const int KEY_PADDING = 6;     // Vertical padding for remaining key rows.
+
 /**
  * Add a key widget to a row of the keyboard.
  * @param hor     Row container to add key widget to.
- * @param height  Height of the key (all keys in a row should have equal height).
+ * @param pad_y   Vertical padding of the key (all keys in a row should have equal padding).
  * @param num_half Number of 1/2 key widths that this key has.
  * @param widtype Widget type of the key. Must be either \c NWID_SPACER for an invisible key, or a \c WWT_* widget.
  * @param widnum  Widget number of the key.
@@ -223,36 +226,38 @@ static const int INTER_KEY_SPACE = 2; // Number of pixels between two keys.
  * @param biggest_index Collected biggest widget index so far.
  * @note Key width is measured in 1/2 keys to allow for 1/2 key shifting between rows.
  */
-static void AddKey(NWidgetHorizontal *hor, int height, int num_half, WidgetType widtype, int widnum, uint16 widdata, int *biggest_index)
+static void AddKey(NWidgetHorizontal *hor, int pad_y, int num_half, WidgetType widtype, int widnum, uint16 widdata, int *biggest_index)
 {
 	int key_width = HALF_KEY_WIDTH + (INTER_KEY_SPACE + HALF_KEY_WIDTH) * (num_half - 1);
 
 	if (widtype == NWID_SPACER) {
 		if (!hor->IsEmpty()) key_width += INTER_KEY_SPACE;
-		NWidgetSpacer *spc = new NWidgetSpacer(key_width, height);
+		NWidgetSpacer *spc = new NWidgetSpacer(key_width, 0);
+		spc->SetMinimalTextLines(1, pad_y, FS_NORMAL);
 		hor->Add(spc);
 	} else {
 		if (!hor->IsEmpty()) {
-			NWidgetSpacer *spc = new NWidgetSpacer(INTER_KEY_SPACE, height);
+			NWidgetSpacer *spc = new NWidgetSpacer(INTER_KEY_SPACE, 0);
+			spc->SetMinimalTextLines(1, pad_y, FS_NORMAL);
 			hor->Add(spc);
 		}
 		NWidgetLeaf *leaf = new NWidgetLeaf(widtype, COLOUR_GREY, widnum, widdata, STR_NULL);
-		leaf->SetMinimalSize(key_width, height);
+		leaf->SetMinimalSize(key_width, 0);
+		leaf->SetMinimalTextLines(1, pad_y, FS_NORMAL);
 		hor->Add(leaf);
 	}
 
-	*biggest_index = max(*biggest_index, widnum);
+	*biggest_index = std::max(*biggest_index, widnum);
 }
 
 /** Construct the top row keys (cancel, ok, backspace). */
 static NWidgetBase *MakeTopKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontal();
-	int key_height = FONT_HEIGHT_NORMAL + 2;
 
-	AddKey(hor, key_height, 6 * 2, WWT_TEXTBTN,    WID_OSK_CANCEL,    STR_BUTTON_CANCEL,  biggest_index);
-	AddKey(hor, key_height, 6 * 2, WWT_TEXTBTN,    WID_OSK_OK,        STR_BUTTON_OK,      biggest_index);
-	AddKey(hor, key_height, 2 * 2, WWT_PUSHIMGBTN, WID_OSK_BACKSPACE, SPR_OSK_BACKSPACE, biggest_index);
+	AddKey(hor, TOP_KEY_PADDING, 6 * 2, WWT_TEXTBTN,    WID_OSK_CANCEL,    STR_BUTTON_CANCEL, biggest_index);
+	AddKey(hor, TOP_KEY_PADDING, 6 * 2, WWT_TEXTBTN,    WID_OSK_OK,        STR_BUTTON_OK,     biggest_index);
+	AddKey(hor, TOP_KEY_PADDING, 2 * 2, WWT_PUSHIMGBTN, WID_OSK_BACKSPACE, SPR_OSK_BACKSPACE, biggest_index);
 	return hor;
 }
 
@@ -260,10 +265,9 @@ static NWidgetBase *MakeTopKeys(int *biggest_index)
 static NWidgetBase *MakeNumberKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
-	int key_height = FONT_HEIGHT_NORMAL + 6;
 
 	for (int widnum = WID_OSK_NUMBERS_FIRST; widnum <= WID_OSK_NUMBERS_LAST; widnum++) {
-		AddKey(hor, key_height, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
+		AddKey(hor, KEY_PADDING, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
 	}
 	return hor;
 }
@@ -272,13 +276,12 @@ static NWidgetBase *MakeNumberKeys(int *biggest_index)
 static NWidgetBase *MakeQwertyKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
-	int key_height = FONT_HEIGHT_NORMAL + 6;
 
-	AddKey(hor, key_height, 3, WWT_PUSHIMGBTN, WID_OSK_SPECIAL, SPR_OSK_SPECIAL, biggest_index);
+	AddKey(hor, KEY_PADDING, 3, WWT_PUSHIMGBTN, WID_OSK_SPECIAL, SPR_OSK_SPECIAL, biggest_index);
 	for (int widnum = WID_OSK_QWERTY_FIRST; widnum <= WID_OSK_QWERTY_LAST; widnum++) {
-		AddKey(hor, key_height, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
+		AddKey(hor, KEY_PADDING, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
 	}
-	AddKey(hor, key_height, 1, NWID_SPACER, 0, 0, biggest_index);
+	AddKey(hor, KEY_PADDING, 1, NWID_SPACER, 0, 0, biggest_index);
 	return hor;
 }
 
@@ -286,11 +289,10 @@ static NWidgetBase *MakeQwertyKeys(int *biggest_index)
 static NWidgetBase *MakeAsdfgKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
-	int key_height = FONT_HEIGHT_NORMAL + 6;
 
-	AddKey(hor, key_height, 4, WWT_IMGBTN, WID_OSK_CAPS, SPR_OSK_CAPS, biggest_index);
+	AddKey(hor, KEY_PADDING, 4, WWT_IMGBTN, WID_OSK_CAPS, SPR_OSK_CAPS, biggest_index);
 	for (int widnum = WID_OSK_ASDFG_FIRST; widnum <= WID_OSK_ASDFG_LAST; widnum++) {
-		AddKey(hor, key_height, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
+		AddKey(hor, KEY_PADDING, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
 	}
 	return hor;
 }
@@ -299,13 +301,12 @@ static NWidgetBase *MakeAsdfgKeys(int *biggest_index)
 static NWidgetBase *MakeZxcvbKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontalLTR();
-	int key_height = FONT_HEIGHT_NORMAL + 6;
 
-	AddKey(hor, key_height, 3, WWT_IMGBTN, WID_OSK_SHIFT, SPR_OSK_SHIFT, biggest_index);
+	AddKey(hor, KEY_PADDING, 3, WWT_IMGBTN, WID_OSK_SHIFT, SPR_OSK_SHIFT, biggest_index);
 	for (int widnum = WID_OSK_ZXCVB_FIRST; widnum <= WID_OSK_ZXCVB_LAST; widnum++) {
-		AddKey(hor, key_height, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
+		AddKey(hor, KEY_PADDING, 2, WWT_PUSHBTN, widnum, 0x0, biggest_index);
 	}
-	AddKey(hor, key_height, 1, NWID_SPACER, 0, 0, biggest_index);
+	AddKey(hor, KEY_PADDING, 1, NWID_SPACER, 0, 0, biggest_index);
 	return hor;
 }
 
@@ -313,13 +314,12 @@ static NWidgetBase *MakeZxcvbKeys(int *biggest_index)
 static NWidgetBase *MakeSpacebarKeys(int *biggest_index)
 {
 	NWidgetHorizontal *hor = new NWidgetHorizontal();
-	int key_height = FONT_HEIGHT_NORMAL + 6;
 
-	AddKey(hor, key_height,  8, NWID_SPACER, 0, 0, biggest_index);
-	AddKey(hor, key_height, 13, WWT_PUSHTXTBTN, WID_OSK_SPACE, STR_EMPTY, biggest_index);
-	AddKey(hor, key_height,  3, NWID_SPACER, 0, 0, biggest_index);
-	AddKey(hor, key_height,  2, WWT_PUSHIMGBTN, WID_OSK_LEFT,  SPR_OSK_LEFT, biggest_index);
-	AddKey(hor, key_height,  2, WWT_PUSHIMGBTN, WID_OSK_RIGHT, SPR_OSK_RIGHT, biggest_index);
+	AddKey(hor, KEY_PADDING,  8, NWID_SPACER, 0, 0, biggest_index);
+	AddKey(hor, KEY_PADDING, 13, WWT_PUSHTXTBTN, WID_OSK_SPACE, STR_EMPTY, biggest_index);
+	AddKey(hor, KEY_PADDING,  3, NWID_SPACER, 0, 0, biggest_index);
+	AddKey(hor, KEY_PADDING,  2, WWT_PUSHIMGBTN, WID_OSK_LEFT,  SPR_OSK_LEFT, biggest_index);
+	AddKey(hor, KEY_PADDING,  2, WWT_PUSHIMGBTN, WID_OSK_RIGHT, SPR_OSK_RIGHT, biggest_index);
 	return hor;
 }
 
@@ -339,8 +339,8 @@ static const NWidgetPart _nested_osk_widgets[] = {
 	EndContainer(),
 };
 
-static const WindowDesc _osk_desc(
-	WDP_CENTER, 0, 0,
+static WindowDesc _osk_desc(
+	WDP_CENTER, "query_osk", 0, 0,
 	WC_OSK, WC_NONE,
 	0,
 	_nested_osk_widgets, lengthof(_nested_osk_widgets)
@@ -356,16 +356,16 @@ void GetKeyboardLayout()
 	char errormark[2][OSK_KEYBOARD_ENTRIES + 1]; // used for marking invalid chars
 	bool has_error = false; // true when an invalid char is detected
 
-	if (StrEmpty(_keyboard_opt[0])) {
+	if (_keyboard_opt[0].empty()) {
 		GetString(keyboard[0], STR_OSK_KEYBOARD_LAYOUT, lastof(keyboard[0]));
 	} else {
-		strecpy(keyboard[0], _keyboard_opt[0], lastof(keyboard[0]));
+		strecpy(keyboard[0], _keyboard_opt[0].c_str(), lastof(keyboard[0]));
 	}
 
-	if (StrEmpty(_keyboard_opt[1])) {
+	if (_keyboard_opt[1].empty()) {
 		GetString(keyboard[1], STR_OSK_KEYBOARD_LAYOUT_CAPS, lastof(keyboard[1]));
 	} else {
-		strecpy(keyboard[1], _keyboard_opt[1], lastof(keyboard[1]));
+		strecpy(keyboard[1], _keyboard_opt[1].c_str(), lastof(keyboard[1]));
 	}
 
 	for (uint j = 0; j < 2; j++) {
@@ -407,7 +407,7 @@ void GetKeyboardLayout()
  */
 void ShowOnScreenKeyboard(Window *parent, int button)
 {
-	DeleteWindowById(WC_OSK, 0);
+	CloseWindowById(WC_OSK, 0);
 
 	GetKeyboardLayout();
 	new OskWindow(&_osk_desc, parent, button);
@@ -417,28 +417,28 @@ void ShowOnScreenKeyboard(Window *parent, int button)
  * Updates the original text of the OSK so when the 'parent' changes the
  * original and you press on cancel you won't get the 'old' original text
  * but the updated one.
- * @param parent window that just updated its orignal text
+ * @param parent window that just updated its original text
  * @param button widget number of parent's textbox to update
  */
 void UpdateOSKOriginalText(const Window *parent, int button)
 {
 	OskWindow *osk = dynamic_cast<OskWindow *>(FindWindowById(WC_OSK, 0));
-	if (osk == NULL || osk->parent != parent || osk->text_btn != button) return;
+	if (osk == nullptr || osk->parent != parent || osk->text_btn != button) return;
 
 	free(osk->orig_str_buf);
-	osk->orig_str_buf = strdup(osk->qs->text.buf);
+	osk->orig_str_buf = stredup(osk->qs->text.buf);
 
 	osk->SetDirty();
 }
 
 /**
  * Check whether the OSK is opened for a specific editbox.
- * @parent w Window to check for
+ * @param w Window to check for
  * @param button Editbox of \a w to check for
- * @return true if the OSK is oppened for \a button.
+ * @return true if the OSK is opened for \a button.
  */
 bool IsOSKOpenedFor(const Window *w, int button)
 {
 	OskWindow *osk = dynamic_cast<OskWindow *>(FindWindowById(WC_OSK, 0));
-	return osk != NULL && osk->parent == w && osk->text_btn == button;
+	return osk != nullptr && osk->parent == w && osk->text_btn == button;
 }

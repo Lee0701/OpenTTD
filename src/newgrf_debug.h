@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -28,14 +26,14 @@ enum NewGrfDebugSpritePickerMode {
 struct NewGrfDebugSpritePicker {
 	NewGrfDebugSpritePickerMode mode;   ///< Current state
 	void *clicked_pixel;                ///< Clicked pixel (pointer to blitter buffer)
-	uint32 click_time;                  ///< Realtime tick when clicked to detect next frame
-	SmallVector<SpriteID, 256> sprites; ///< Sprites found
+	std::vector<SpriteID> sprites;       ///< Sprites found
 };
 
 extern NewGrfDebugSpritePicker _newgrf_debug_sprite_picker;
 
 bool IsNewGRFInspectable(GrfSpecFeature feature, uint index);
 void ShowNewGRFInspectWindow(GrfSpecFeature feature, uint index, const uint32 grfid = 0);
+void InvalidateNewGRFInspectWindow(GrfSpecFeature feature, uint index);
 void DeleteNewGRFInspectWindow(GrfSpecFeature feature, uint index);
 
 GrfSpecFeature GetGrfSpecFeature(TileIndex tile);

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,9 @@
 #include "../../industry.h"
 #include "../../newgrf_industries.h"
 #include "../../core/random_func.hpp"
+#include "../../industry_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptIndustryType::IsValidIndustryType(IndustryType industry_type)
 {
@@ -57,14 +58,14 @@
 
 /* static */ char *ScriptIndustryType::GetName(IndustryType industry_type)
 {
-	if (!IsValidIndustryType(industry_type)) return NULL;
+	if (!IsValidIndustryType(industry_type)) return nullptr;
 
 	return GetString(::GetIndustrySpec(industry_type)->name);
 }
 
 /* static */ ScriptList *ScriptIndustryType::GetProducedCargo(IndustryType industry_type)
 {
-	if (!IsValidIndustryType(industry_type)) return NULL;
+	if (!IsValidIndustryType(industry_type)) return nullptr;
 
 	const IndustrySpec *ins = ::GetIndustrySpec(industry_type);
 
@@ -78,7 +79,7 @@
 
 /* static */ ScriptList *ScriptIndustryType::GetAcceptedCargo(IndustryType industry_type)
 {
-	if (!IsValidIndustryType(industry_type)) return NULL;
+	if (!IsValidIndustryType(industry_type)) return nullptr;
 
 	const IndustrySpec *ins = ::GetIndustrySpec(industry_type);
 
@@ -121,7 +122,8 @@
 	EnforcePrecondition(false, ScriptMap::IsValidTile(tile));
 
 	uint32 seed = ::InteractiveRandom();
-	return ScriptObject::DoCommand(tile, (1 << 16) | (::InteractiveRandomRange(::GetIndustrySpec(industry_type)->num_table) << 8) | industry_type, seed, CMD_BUILD_INDUSTRY);
+	uint32 layout_index = ::InteractiveRandomRange((uint32)::GetIndustrySpec(industry_type)->layouts.size());
+	return ScriptObject::Command<CMD_BUILD_INDUSTRY>::Do(tile, industry_type, layout_index, true, seed);
 }
 
 /* static */ bool ScriptIndustryType::ProspectIndustry(IndustryType industry_type)
@@ -129,7 +131,7 @@
 	EnforcePrecondition(false, CanProspectIndustry(industry_type));
 
 	uint32 seed = ::InteractiveRandom();
-	return ScriptObject::DoCommand(0, industry_type, seed, CMD_BUILD_INDUSTRY);
+	return ScriptObject::Command<CMD_BUILD_INDUSTRY>::Do(0, industry_type, 0, false, seed);
 }
 
 /* static */ bool ScriptIndustryType::IsBuiltOnWater(IndustryType industry_type)
@@ -151,4 +153,12 @@
 	if (!IsValidIndustryType(industry_type)) return false;
 
 	return (::GetIndustrySpec(industry_type)->behaviour & INDUSTRYBEH_AI_AIRSHIP_ROUTES) != 0;
+}
+
+/* static */ IndustryType ScriptIndustryType::ResolveNewGRFID(uint32 grfid, uint16 grf_local_id)
+{
+	EnforcePrecondition(INVALID_INDUSTRYTYPE, IsInsideBS(grf_local_id, 0x00, NUM_INDUSTRYTYPES_PER_GRF));
+
+	grfid = BSWAP32(grfid); // Match people's expectations.
+	return _industry_mngr.GetID(grf_local_id, grfid);
 }

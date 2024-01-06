@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,13 +11,18 @@
 
 #include "tilearea_type.h"
 
+#include "safeguards.h"
+
 /**
  * Construct this tile area based on two points.
  * @param start the start of the area
  * @param end   the end of the area
  */
-TileArea::TileArea(TileIndex start, TileIndex end)
+OrthogonalTileArea::OrthogonalTileArea(TileIndex start, TileIndex end)
 {
+	assert(start < MapSize());
+	assert(end < MapSize());
+
 	uint sx = TileX(start);
 	uint sy = TileY(start);
 	uint ex = TileX(end);
@@ -37,7 +40,7 @@ TileArea::TileArea(TileIndex start, TileIndex end)
  * Add a single tile to a tile area; enlarge if needed.
  * @param to_add The tile to add
  */
-void TileArea::Add(TileIndex to_add)
+void OrthogonalTileArea::Add(TileIndex to_add)
 {
 	if (this->tile == INVALID_TILE) {
 		this->tile = to_add;
@@ -54,10 +57,10 @@ void TileArea::Add(TileIndex to_add)
 	uint ax = TileX(to_add);
 	uint ay = TileY(to_add);
 
-	sx = min(ax, sx);
-	sy = min(ay, sy);
-	ex = max(ax, ex);
-	ey = max(ay, ey);
+	sx = std::min(ax, sx);
+	sy = std::min(ay, sy);
+	ex = std::max(ax, ex);
+	ey = std::max(ay, ey);
 
 	this->tile = TileXY(sx, sy);
 	this->w    = ex - sx + 1;
@@ -69,7 +72,7 @@ void TileArea::Add(TileIndex to_add)
  * @param ta the other tile area to check against.
  * @return true if they intersect.
  */
-bool TileArea::Intersects(const TileArea &ta) const
+bool OrthogonalTileArea::Intersects(const OrthogonalTileArea &ta) const
 {
 	if (ta.w == 0 || this->w == 0) return false;
 
@@ -98,7 +101,7 @@ bool TileArea::Intersects(const TileArea &ta) const
  * @param tile Tile to test for.
  * @return True if the tile is inside the area.
  */
-bool TileArea::Contains(TileIndex tile) const
+bool OrthogonalTileArea::Contains(TileIndex tile) const
 {
 	if (this->w == 0) return false;
 
@@ -113,49 +116,116 @@ bool TileArea::Contains(TileIndex tile) const
 }
 
 /**
- * Clamp the tile area to map borders.
+ * Expand a tile area by rad tiles in each direction, keeping within map bounds.
+ * @param rad Number of tiles to expand
+ * @return The OrthogonalTileArea.
  */
-void TileArea::ClampToMap()
+OrthogonalTileArea &OrthogonalTileArea::Expand(int rad)
 {
-	assert(this->tile < MapSize());
-	this->w = min(this->w, MapSizeX() - TileX(this->tile));
-	this->h = min(this->h, MapSizeY() - TileY(this->tile));
+	int x = TileX(this->tile);
+	int y = TileY(this->tile);
+
+	int sx = std::max<int>(x - rad, 0);
+	int sy = std::max<int>(y - rad, 0);
+	int ex = std::min<int>(x + this->w + rad, MapSizeX());
+	int ey = std::min<int>(y + this->h + rad, MapSizeY());
+
+	this->tile = TileXY(sx, sy);
+	this->w    = ex - sx;
+	this->h    = ey - sy;
+	return *this;
 }
 
 /**
- * Construct the iterator.
- * @param corner1 Tile from where to begin iterating.
- * @param corner2 Tile where to end the iterating.
+ * Clamp the tile area to map borders.
  */
-DiagonalTileIterator::DiagonalTileIterator(TileIndex corner1, TileIndex corner2) : TileIterator(corner2), base_x(TileX(corner2)), base_y(TileY(corner2)), a_cur(0), b_cur(0)
+void OrthogonalTileArea::ClampToMap()
 {
-	assert(corner1 < MapSize());
-	assert(corner2 < MapSize());
+	assert(this->tile < MapSize());
+	this->w = std::min<int>(this->w, MapSizeX() - TileX(this->tile));
+	this->h = std::min<int>(this->h, MapSizeY() - TileY(this->tile));
+}
 
-	int dist_x = TileX(corner1) - TileX(corner2);
-	int dist_y = TileY(corner1) - TileY(corner2);
-	this->a_max = dist_x + dist_y;
-	this->b_max = dist_y - dist_x;
+/**
+ * Returns an iterator to the beginning of the tile area.
+ * @return The OrthogonalTileIterator.
+ */
+OrthogonalTileIterator OrthogonalTileArea::begin() const
+{
+	return OrthogonalTileIterator(*this);
+}
+
+/**
+ * Returns an iterator to the end of the tile area.
+ * @return The OrthogonalTileIterator.
+ */
+OrthogonalTileIterator OrthogonalTileArea::end() const
+{
+	return OrthogonalTileIterator(OrthogonalTileArea());
+}
+
+/**
+ * Create a diagonal tile area from two corners.
+ * @param start First corner of the area.
+ * @param end Second corner of the area.
+ */
+DiagonalTileArea::DiagonalTileArea(TileIndex start, TileIndex end) : tile(start)
+{
+	assert(start < MapSize());
+	assert(end < MapSize());
 
 	/* Unfortunately we can't find a new base and make all a and b positive because
 	 * the new base might be a "flattened" corner where there actually is no single
 	 * tile. If we try anyway the result is either inaccurate ("one off" half of the
 	 * time) or the code gets much more complex;
 	 *
-	 * We also need to increment here to have equality as marker for the end of a row or
-	 * column. Like that it's shorter than having another if/else in operator++
-	 */
-	if (this->a_max > 0) {
-		this->a_max++;
+	 * We also need to increment/decrement a and b here to have one-past-end semantics
+	 * for a and b, just the way the orthogonal tile area does it for w and h. */
+
+	this->a = TileY(end) + TileX(end) - TileY(start) - TileX(start);
+	this->b = TileY(end) - TileX(end) - TileY(start) + TileX(start);
+	if (this->a > 0) {
+		this->a++;
 	} else {
-		this->a_max--;
+		this->a--;
 	}
 
-	if (this->b_max > 0) {
-		this->b_max++;
+	if (this->b > 0) {
+		this->b++;
 	} else {
-		this->b_max--;
+		this->b--;
 	}
+}
+
+/**
+ * Does this tile area contain a tile?
+ * @param tile Tile to test for.
+ * @return True if the tile is inside the area.
+ */
+bool DiagonalTileArea::Contains(TileIndex tile) const
+{
+	int a = TileY(tile) + TileX(tile);
+	int b = TileY(tile) - TileX(tile);
+
+	int start_a = TileY(this->tile) + TileX(this->tile);
+	int start_b = TileY(this->tile) - TileX(this->tile);
+
+	int end_a = start_a + this->a;
+	int end_b = start_b + this->b;
+
+	/* Swap if necessary, preserving the "one past end" semantics. */
+	if (start_a > end_a) {
+		int tmp = start_a;
+		start_a = end_a + 1;
+		end_a = tmp + 1;
+	}
+	if (start_b > end_b) {
+		int tmp = start_b;
+		start_b = end_b + 1;
+		end_b = tmp + 1;
+	}
+
+	return (a >= start_a && a < end_a && b >= start_b && b < end_b);
 }
 
 /**
@@ -173,9 +243,9 @@ TileIterator &DiagonalTileIterator::operator++()
 			/* Special case: Every second column has zero length, skip them completely */
 			this->a_cur = 0;
 			if (this->b_max > 0) {
-				this->b_cur = min(this->b_cur + 2, this->b_max);
+				this->b_cur = std::min(this->b_cur + 2, this->b_max);
 			} else {
-				this->b_cur = max(this->b_cur - 2, this->b_max);
+				this->b_cur = std::max(this->b_cur - 2, this->b_max);
 			}
 		} else {
 			/* Every column has at least one tile to process */

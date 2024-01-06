@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -22,7 +20,7 @@
 typedef byte CargoID;
 
 /** Available types of cargo */
-enum CargoTypes {
+enum CargoType {
 	/* Temperate */
 	CT_PASSENGERS   =  0,
 	CT_COAL         =  1,
@@ -63,12 +61,22 @@ enum CargoTypes {
 	CT_PLASTIC      = 10,
 	CT_FIZZY_DRINKS = 11,
 
-	NUM_CARGO       = 32,   ///< Maximal number of cargo types in a game.
+	NUM_ORIGINAL_CARGO = 12,
+	NUM_CARGO       = 64,   ///< Maximal number of cargo types in a game.
 
 	CT_AUTO_REFIT   = 0xFD, ///< Automatically choose cargo type when doing auto refitting.
 	CT_NO_REFIT     = 0xFE, ///< Do not refit cargo of a vehicle (used in vehicle orders and auto-replace/auto-new).
 	CT_INVALID      = 0xFF, ///< Invalid cargo type.
 };
+
+/** Test whether cargo type is not CT_INVALID */
+inline bool IsCargoTypeValid(CargoType t) { return t != CT_INVALID; }
+/** Test whether cargo type is not CT_INVALID */
+inline bool IsCargoIDValid(CargoID t) { return t != CT_INVALID; }
+
+typedef uint64 CargoTypes;
+
+static const CargoTypes ALL_CARGOTYPES = (CargoTypes)UINT64_MAX;
 
 /** Class for storing amounts of cargo */
 struct CargoArray {
@@ -136,12 +144,11 @@ public:
 
 
 /** Types of cargo source and destination */
-enum SourceType {
+enum SourceType : byte {
 	ST_INDUSTRY,     ///< Source/destination is an industry
 	ST_TOWN,         ///< Source/destination is a town
 	ST_HEADQUARTERS, ///< Source/destination are company headquarters
 };
-typedef SimpleTinyEnumT<SourceType, byte> SourceTypeByte; ///< The SourceType packed into a byte for savegame purposes.
 
 typedef uint16 SourceID; ///< Contains either industry ID, town ID or company ID (or INVALID_SOURCE)
 static const SourceID INVALID_SOURCE = 0xFFFF; ///< Invalid/unknown index of source

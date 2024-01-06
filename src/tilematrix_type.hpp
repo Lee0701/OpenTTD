@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -69,7 +67,7 @@ public:
 
 	T *data; ///< Pointer to data array.
 
-	TileMatrix() : area(INVALID_TILE, 0, 0), data(NULL) {}
+	TileMatrix() : area(INVALID_TILE, 0, 0), data(nullptr) {}
 
 	~TileMatrix()
 	{
@@ -87,7 +85,7 @@ public:
 
 	/**
 	 * Get the area of the matrix square that contains a specific tile.
-	 * @param The tile to get the map area for.
+	 * @param tile The tile to get the map area for.
 	 * @param extend Extend the area by this many squares on all sides.
 	 * @return Tile area containing the tile.
 	 */
@@ -97,14 +95,14 @@ public:
 		uint tile_y = (TileY(tile) / N) * N;
 		uint w = N, h = N;
 
-		w += min(extend * N, tile_x);
-		h += min(extend * N, tile_y);
+		w += std::min(extend * N, tile_x);
+		h += std::min(extend * N, tile_y);
 
-		tile_x -= min(extend * N, tile_x);
-		tile_y -= min(extend * N, tile_y);
+		tile_x -= std::min(extend * N, tile_x);
+		tile_y -= std::min(extend * N, tile_y);
 
-		w += min(extend * N, MapSizeX() - tile_x - w);
-		h += min(extend * N, MapSizeY() - tile_y - h);
+		w += std::min(extend * N, MapSizeX() - tile_x - w);
+		h += std::min(extend * N, MapSizeY() - tile_y - h);
 
 		return TileArea(TileXY(tile_x, tile_y), w, h);
 	}

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,7 @@
 #include "script_vehicle.hpp"
 #include "script_rail.hpp"
 #include "script_airport.hpp"
+#include "script_date.hpp"
 
 /**
  * Class that handles all engine related functions.
@@ -107,7 +106,6 @@ public:
 	 * Get the maximum speed of an engine.
 	 * @param engine_id The engine to get the maximum speed of.
 	 * @pre IsValidEngine(engine_id).
-	 * @pre GetVehicleType(engine_id) != ScriptVehicle::VT_TRAIN || !IsWagon(engine_id).
 	 * @return The maximum speed the engine has.
 	 * @note The speed is in OpenTTD's internal speed unit.
 	 *       This is mph / 1.6, which is roughly km/h.
@@ -174,7 +172,7 @@ public:
 	 * @pre IsValidEngine(engine_id).
 	 * @return The date this engine was designed.
 	 */
-	static int32 GetDesignDate(EngineID engine_id);
+	static ScriptDate::Date GetDesignDate(EngineID engine_id);
 
 	/**
 	 * Get the type of an engine.
@@ -216,6 +214,28 @@ public:
 	 * @return Whether an engine of type 'engine_id' has power on 'track_rail_type'.
 	 */
 	static bool HasPowerOnRail(EngineID engine_id, ScriptRail::RailType track_rail_type);
+
+	/**
+	 * Check if a road vehicle can run on a RoadType.
+	 * @param engine_id The engine to check.
+	 * @param road_type Another RoadType.
+	 * @pre IsValidEngine(engine_id).
+	 * @pre GetVehicleType(engine_id) == ScriptVehicle::VT_ROAD.
+	 * @pre ScriptRoad::IsRoadTypeAvailable(road_type).
+	 * @return Whether an engine of type 'engine_id' can run on 'road_type'.
+	 */
+	static bool CanRunOnRoad(EngineID engine_id, ScriptRoad::RoadType road_type);
+
+	/**
+	 * Check if a road vehicle has power on a RoadType.
+	 * @param engine_id The engine to check.
+	 * @param road_type Another RoadType.
+	 * @pre IsValidEngine(engine_id).
+	 * @pre GetVehicleType(engine_id) == ScriptVehicle::VT_ROAD.
+	 * @pre ScriptRoad::IsRoadTypeAvailable(road_type).
+	 * @return Whether an engine of type 'engine_id' has power on 'road_type'.
+	 */
+	static bool HasPowerOnRoad(EngineID engine_id, ScriptRoad::RoadType road_type);
 
 	/**
 	 * Get the RoadType of the engine.
@@ -267,6 +287,29 @@ public:
 	 * @see ScriptOrder::GetOrderDistance
 	 */
 	static uint GetMaximumOrderDistance(EngineID engine_id);
+
+	/**
+	 * Allows a company to use an engine before its intro date or after retirement.
+	 * @param engine_id The engine to enable.
+	 * @param company_id The company to allow using the engine.
+	 * @pre IsValidEngine(engine_id).
+	 * @pre ScriptCompany.ResolveCompanyID(company_id) != ScriptCompany::COMPANY_INVALID.
+	 * @return True if the action succeeded.
+	 * @api -ai
+	 */
+	static bool EnableForCompany(EngineID engine_id, ScriptCompany::CompanyID company_id);
+
+	/**
+	 * Forbids a company to use an engine before its natural retirement.
+	 * @param engine_id The engine to disable.
+	 * @param company_id The company to forbid using the engine.
+	 * @pre IsValidEngine(engine_id).
+	 * @pre ScriptCompany.ResolveCompanyID(company_id) != ScriptCompany::COMPANY_INVALID.
+	 * @return True if the action succeeded.
+	 * @api -ai
+	 */
+	static bool DisableForCompany(EngineID engine_id, ScriptCompany::CompanyID company_id);
+
 };
 
 #endif /* SCRIPT_ENGINE_HPP */

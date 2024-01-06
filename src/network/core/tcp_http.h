@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,8 +14,6 @@
 
 #include "tcp.h"
 
-#ifdef ENABLE_NETWORK
-
 /** Callback for when the HTTP handler has something to tell us. */
 struct HTTPCallback {
 	/**
@@ -28,9 +24,9 @@ struct HTTPCallback {
 
 	/**
 	 * We're receiving data.
-	 * @param data   the received data, NULL when all data has been received.
+	 * @param data   the received data, nullptr when all data has been received.
 	 * @param length the amount of received data, 0 when all data has been received.
-	 * @note When NULL is sent the HTTP socket handler is closed/freed.
+	 * @note When nullptr is sent the HTTP socket handler is closed/freed.
 	 */
 	virtual void OnReceiveData(const char *data, size_t length) = 0;
 
@@ -62,21 +58,22 @@ public:
 		return this->sock != INVALID_SOCKET;
 	}
 
-	virtual NetworkRecvStatus CloseConnection(bool error = true);
+	void CloseSocket();
 
 	NetworkHTTPSocketHandler(SOCKET sock, HTTPCallback *callback,
-			const char *host, const char *url, const char *data, int depth);
+			const std::string &host, const char *url, const char *data, int depth);
 
 	~NetworkHTTPSocketHandler();
 
 	static int Connect(char *uri, HTTPCallback *callback,
-			const char *data = NULL, int depth = 0);
+			const char *data = nullptr, int depth = 0);
 
 	static void HTTPReceive();
 };
 
 /** Connect with a HTTP server and do ONE query. */
 class NetworkHTTPContentConnecter : TCPConnecter {
+	std::string hostname;   ///< Hostname we are connecting to.
 	HTTPCallback *callback; ///< Callback to tell that we received some data (or won't).
 	const char *url;        ///< The URL we want to get at the server.
 	const char *data;       ///< The data to send
@@ -85,18 +82,17 @@ class NetworkHTTPContentConnecter : TCPConnecter {
 public:
 	/**
 	 * Start the connecting.
-	 * @param address  the address to connect to
-	 * @param callback the callback for HTTP retrieval
-	 * @param url      the url at the server
-	 * @param data     the data to send
-	 * @param depth    the depth (redirect recursion) of the queries
+	 * @param hostname The hostname to connect to.
+	 * @param callback The callback for HTTP retrieval.
+	 * @param url The url at the server.
+	 * @param data The data to send.
+	 * @param depth The depth (redirect recursion) of the queries.
 	 */
-	NetworkHTTPContentConnecter(const NetworkAddress &address,
-			HTTPCallback *callback, const char *url,
-			const char *data = NULL, int depth = 0) :
-		TCPConnecter(address),
+	NetworkHTTPContentConnecter(const std::string &hostname, HTTPCallback *callback, const char *url, const char *data = nullptr, int depth = 0) :
+		TCPConnecter(hostname, 80),
+		hostname(hostname),
 		callback(callback),
-		url(strdup(url)),
+		url(stredup(url)),
 		data(data),
 		depth(depth)
 	{
@@ -108,20 +104,18 @@ public:
 		free(this->url);
 	}
 
-	virtual void OnFailure()
+	void OnFailure() override
 	{
 		this->callback->OnFailure();
 		free(this->data);
 	}
 
-	virtual void OnConnect(SOCKET s)
+	void OnConnect(SOCKET s) override
 	{
-		new NetworkHTTPSocketHandler(s, this->callback, this->address.GetHostname(), this->url, this->data, this->depth);
+		new NetworkHTTPSocketHandler(s, this->callback, this->hostname, this->url, this->data, this->depth);
 		/* We've relinquished control of data now. */
-		this->data = NULL;
+		this->data = nullptr;
 	}
 };
-
-#endif /* ENABLE_NETWORK */
 
 #endif /* NETWORK_CORE_TCP_HTTP_H */

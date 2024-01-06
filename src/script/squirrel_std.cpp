@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -9,13 +7,16 @@
 
 /** @file squirrel_std.cpp Implements the Squirrel Standard Function class */
 
+#include "../stdafx.h"
 #include <squirrel.h>
 #include <sqstdmath.h>
-#include "../stdafx.h"
 #include "../debug.h"
 #include "squirrel_std.hpp"
 #include "../core/alloc_func.hpp"
 #include "../core/math_func.hpp"
+#include "../string_func.h"
+
+#include "../safeguards.h"
 
 
 SQInteger SquirrelStd::min(HSQUIRRELVM vm)
@@ -24,7 +25,7 @@ SQInteger SquirrelStd::min(HSQUIRRELVM vm)
 
 	sq_getinteger(vm, 2, &tmp1);
 	sq_getinteger(vm, 3, &tmp2);
-	sq_pushinteger(vm, ::min(tmp1, tmp2));
+	sq_pushinteger(vm, std::min(tmp1, tmp2));
 	return 1;
 }
 
@@ -34,7 +35,7 @@ SQInteger SquirrelStd::max(HSQUIRRELVM vm)
 
 	sq_getinteger(vm, 2, &tmp1);
 	sq_getinteger(vm, 3, &tmp2);
-	sq_pushinteger(vm, ::max(tmp1, tmp2));
+	sq_pushinteger(vm, std::max(tmp1, tmp2));
 	return 1;
 }
 
@@ -42,42 +43,36 @@ SQInteger SquirrelStd::require(HSQUIRRELVM vm)
 {
 	SQInteger top = sq_gettop(vm);
 	const SQChar *filename;
-	SQChar *real_filename;
 
 	sq_getstring(vm, 2, &filename);
 
 	/* Get the script-name of the current file, so we can work relative from it */
 	SQStackInfos si;
 	sq_stackinfos(vm, 1, &si);
-	if (si.source == NULL) {
-		DEBUG(misc, 0, "[squirrel] Couldn't detect the script-name of the 'require'-caller; this should never happen!");
+	if (si.source == nullptr) {
+		Debug(misc, 0, "[squirrel] Couldn't detect the script-name of the 'require'-caller; this should never happen!");
 		return SQ_ERROR;
 	}
-	real_filename = scstrdup(si.source);
+
+	char path[MAX_PATH];
+	strecpy(path, si.source, lastof(path));
 	/* Keep the dir, remove the rest */
-	SQChar *s = scstrrchr(real_filename, PATHSEPCHAR);
-	if (s != NULL) {
+	SQChar *s = strrchr(path, PATHSEPCHAR);
+	if (s != nullptr) {
 		/* Keep the PATHSEPCHAR there, remove the rest */
 		s++;
 		*s = '\0';
 	}
-	/* And now we concat, so we are relative from the current script
-	 * First, we have to make sure we have enough space for the full path */
-	real_filename = ReallocT(real_filename, scstrlen(real_filename) + scstrlen(filename) + 1);
-	scstrcat(real_filename, filename);
-	/* Tars dislike opening files with '/' on Windows.. so convert it to '\\' ;) */
-	char *filen = strdup(SQ2OTTD(real_filename));
+	strecat(path, filename, lastof(path));
 #if (PATHSEPCHAR != '/')
-	for (char *n = filen; *n != '\0'; n++) if (*n == '/') *n = PATHSEPCHAR;
+	for (char *n = path; *n != '\0'; n++) if (*n == '/') *n = PATHSEPCHAR;
 #endif
 
 	Squirrel *engine = (Squirrel *)sq_getforeignptr(vm);
-	bool ret = engine->LoadScript(vm, filen);
+	bool ret = engine->LoadScript(vm, path);
 
 	/* Reset the top, so the stack stays correct */
 	sq_settop(vm, top);
-	free(real_filename);
-	free(filen);
 
 	return ret ? 0 : SQ_ERROR;
 }

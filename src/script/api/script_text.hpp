@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -23,14 +21,14 @@ class Text : public ScriptObject {
 public:
 	/**
 	 * Convert a ScriptText to a normal string.
-	 * @return A string (in a static buffer), or NULL.
+	 * @return A string (in a static buffer), or nullptr.
 	 * @api -all
 	 */
 	virtual const char *GetEncodedText() = 0;
 
 	/**
 	 * Convert a #ScriptText into a decoded normal string.
-	 * @return A string (in a static buffer), or NULL.
+	 * @return A string (in a static buffer), or nullptr.
 	 * @api -all
 	 */
 	const char *GetDecodedText();
@@ -42,11 +40,10 @@ public:
  */
 class RawText : public Text {
 public:
-	RawText(const char *text) :
-	  text(strdup(text)) {}
-	~RawText() { free(this->text); }
+	RawText(const char *text);
+	~RawText();
 
-	/* virtual */ const char *GetEncodedText() { return this->text; }
+	const char *GetEncodedText() override { return this->text; }
 private:
 	const char *text;
 };
@@ -91,7 +88,7 @@ public:
 	 * @param ... Optional arguments for this string.
 	 */
 	ScriptText(StringID string, ...);
-#endif
+#endif /* DOXYGEN_API */
 	~ScriptText();
 
 #ifndef DOXYGEN_API
@@ -125,12 +122,15 @@ public:
 	ScriptText *AddParam(Object value);
 #endif /* DOXYGEN_API */
 
-	/* virtual */ const char *GetEncodedText();
+	/**
+	 * @api -all
+	 */
+	virtual const char *GetEncodedText();
 
 private:
 	StringID string;
 	char *params[SCRIPT_TEXT_MAX_PARAMETERS];
-	int parami[SCRIPT_TEXT_MAX_PARAMETERS];
+	int64 parami[SCRIPT_TEXT_MAX_PARAMETERS];
 	ScriptText *paramt[SCRIPT_TEXT_MAX_PARAMETERS];
 	int paramc;
 

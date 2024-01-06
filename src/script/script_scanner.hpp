@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -34,12 +32,12 @@ public:
 	/**
 	 * Get the current main script the ScanDir is currently tracking.
 	 */
-	const char *GetMainScript() { return this->main_script; }
+	std::string GetMainScript() { return this->main_script; }
 
 	/**
 	 * Get the current tar file the ScanDir is currently tracking.
 	 */
-	const char *GetTarFile() { return this->tar_file; }
+	std::string GetTarFile() { return this->tar_file; }
 
 	/**
 	 * Get the list of all registered scripts.
@@ -59,7 +57,7 @@ public:
 	/**
 	 * Get the list of registered scripts to print on the console.
 	 */
-	char *GetConsoleList(char *p, const char *last, bool newest_only) const;
+	std::string GetConsoleList(bool newest_only) const;
 
 	/**
 	 * Check whether we have a script with the exact characteristics as ci.
@@ -73,11 +71,11 @@ public:
 	 * Find a script of a #ContentInfo
 	 * @param ci The information to compare to.
 	 * @param md5sum Whether to check the MD5 checksum.
-	 * @return A filename of a file of the content, else \c NULL.
+	 * @return A filename of a file of the content, else \c nullptr.
 	 */
 	const char *FindMainScript(const ContentInfo *ci, bool md5sum);
 
-	/* virtual */ bool AddFile(const char *filename, size_t basepath_length, const char *tar_filename);
+	bool AddFile(const std::string &filename, size_t basepath_length, const std::string &tar_filename) override;
 
 	/**
 	 * Rescan the script dir.
@@ -85,9 +83,9 @@ public:
 	void RescanDir();
 
 protected:
-	class Squirrel *engine; ///< The engine we're scanning with.
-	char *main_script;      ///< The full path of the script.
-	char *tar_file;         ///< If, which tar file the script was in.
+	class Squirrel *engine;  ///< The engine we're scanning with.
+	std::string main_script; ///< The full path of the script.
+	std::string tar_file;    ///< If, which tar file the script was in.
 
 	ScriptInfoList info_list;        ///< The list of all script.
 	ScriptInfoList info_single_list; ///< The list of all unique script. The best script (highest version) is shown.
@@ -101,7 +99,7 @@ protected:
 	/**
 	 * Get the script name how to store the script in memory.
 	 */
-	virtual void GetScriptName(ScriptInfo *info, char *name, int len) = 0;
+	virtual void GetScriptName(ScriptInfo *info, char *name, const char *last) = 0;
 
 	/**
 	 * Get the filename to scan for this type of script.
@@ -128,6 +126,10 @@ protected:
 	 */
 	void Reset();
 
+	/**
+	 * Reset the engine to ensure a clean environment for further steps.
+	 */
+	void ResetEngine();
 };
 
 #endif /* SCRIPT_SCANNER_HPP */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -32,7 +30,7 @@ public:
 		START_NEXT_EASY   = DAYS_IN_YEAR * 2,
 		START_NEXT_MEDIUM = DAYS_IN_YEAR,
 		START_NEXT_HARD   = DAYS_IN_YEAR / 2,
-		START_NEXT_MIN    = 1,
+		START_NEXT_MIN    = 0,
 		START_NEXT_MAX    = 3600,
 		START_NEXT_DEVIATION = 60,
 	};
@@ -131,19 +129,14 @@ public:
 	static void Save(CompanyID company);
 
 	/**
-	 * Load data for an AI from a savegame.
-	 */
-	static void Load(CompanyID company, int version);
-
-	/**
 	 * Get the number of days before the next AI should start.
 	 */
 	static int GetStartNextTime();
 
 	/** Wrapper function for AIScanner::GetAIConsoleList */
-	static char *GetConsoleList(char *p, const char *last, bool newest_only = false);
+	static std::string GetConsoleList(bool newest_only = false);
 	/** Wrapper function for AIScanner::GetAIConsoleLibraryList */
-	static char *GetConsoleLibraryList(char *p, const char *last);
+	static std::string GetConsoleLibraryList();
 	/** Wrapper function for AIScanner::GetAIInfoList */
 	static const ScriptInfoList *GetInfoList();
 	/** Wrapper function for AIScanner::GetUniqueAIInfoList */
@@ -164,11 +157,9 @@ public:
 	/** Gets the ScriptScanner instance that is used to find AI Libraries */
 	static AIScannerLibrary *GetScannerLibrary();
 
-#if defined(ENABLE_NETWORK)
 	/** Wrapper function for AIScanner::HasAI */
 	static bool HasAI(const struct ContentInfo *ci, bool md5sum);
 	static bool HasAILibrary(const ContentInfo *ci, bool md5sum);
-#endif
 private:
 	static uint frame_counter;                      ///< Tick counter for the AI code
 	static class AIScannerInfo *scanner_info;       ///< ScriptScanner instance that is used to find AIs

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,9 +12,9 @@
 
 #include "music_driver.hpp"
 
-class MusicDriver_ExtMidi: public MusicDriver {
+class MusicDriver_ExtMidi : public MusicDriver {
 private:
-	char *command;
+	char **params;
 	char song[MAX_PATH];
 	pid_t pid;
 
@@ -24,26 +22,24 @@ private:
 	void DoStop();
 
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
+	void Stop() override;
 
-	/* virtual */ void PlaySong(const char *filename);
+	void PlaySong(const MusicSongInfo &song) override;
 
-	/* virtual */ void StopSong();
+	void StopSong() override;
 
-	/* virtual */ bool IsSongPlaying();
+	bool IsSongPlaying() override;
 
-	/* virtual */ void SetVolume(byte vol);
-	/* virtual */ const char *GetName() const { return "extmidi"; }
+	void SetVolume(byte vol) override;
+	const char *GetName() const override { return "extmidi"; }
 };
 
-class FMusicDriver_ExtMidi: public MusicDriverFactory<FMusicDriver_ExtMidi> {
+class FMusicDriver_ExtMidi : public DriverFactoryBase {
 public:
-	static const int priority = 3;
-	/* virtual */ const char *GetName() { return "extmidi"; }
-	/* virtual */ const char *GetDescription() { return "External MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_ExtMidi(); }
+	FMusicDriver_ExtMidi() : DriverFactoryBase(Driver::DT_MUSIC, 3, "extmidi", "External MIDI Driver") {}
+	Driver *CreateInstance() const override { return new MusicDriver_ExtMidi(); }
 };
 
 #endif /* MUSIC_EXTERNAL_H */

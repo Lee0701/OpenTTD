@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,15 +19,24 @@
 #include "strings_type.h"
 #include "date_type.h"
 #include "signal_type.h"
+#include "settings_type.h"
 
 /** Railtype flags. */
 enum RailTypeFlags {
 	RTF_CATENARY          = 0,                           ///< Bit number for drawing a catenary.
 	RTF_NO_LEVEL_CROSSING = 1,                           ///< Bit number for disallowing level crossings.
+	RTF_HIDDEN            = 2,                           ///< Bit number for hiding from selection.
+	RTF_NO_SPRITE_COMBINE = 3,                           ///< Bit number for using non-combined junctions.
+	RTF_ALLOW_90DEG       = 4,                           ///< Bit number for always allowed 90 degree turns, regardless of setting.
+	RTF_DISALLOW_90DEG    = 5,                           ///< Bit number for never allowed 90 degree turns, regardless of setting.
 
 	RTFB_NONE              = 0,                          ///< All flags cleared.
 	RTFB_CATENARY          = 1 << RTF_CATENARY,          ///< Value for drawing a catenary.
 	RTFB_NO_LEVEL_CROSSING = 1 << RTF_NO_LEVEL_CROSSING, ///< Value for disallowing level crossings.
+	RTFB_HIDDEN            = 1 << RTF_HIDDEN,            ///< Value for hiding from selection.
+	RTFB_NO_SPRITE_COMBINE = 1 << RTF_NO_SPRITE_COMBINE, ///< Value for using non-combined junctions.
+	RTFB_ALLOW_90DEG       = 1 << RTF_ALLOW_90DEG,       ///< Value for always allowed 90 degree turns, regardless of setting.
+	RTFB_DISALLOW_90DEG    = 1 << RTF_DISALLOW_90DEG,    ///< Value for never allowed 90 degree turns, regardless of setting.
 };
 DECLARE_ENUM_AS_BIT_SET(RailTypeFlags)
 
@@ -49,6 +56,7 @@ enum RailTypeSpriteGroup {
 	RTSG_FENCES,      ///< Fence images
 	RTSG_TUNNEL_PORTAL, ///< Tunnel portal overlay
 	RTSG_SIGNALS,     ///< Signal images
+	RTSG_GROUND_COMPLETE, ///< Complete ground images
 	RTSG_END,
 };
 
@@ -89,23 +97,32 @@ enum RailTrackBridgeOffset {
  *  the sprites in the original data files.
  */
 enum RailFenceOffset {
-	RFO_FLAT_X,
-	RFO_FLAT_Y,
-	RFO_FLAT_VERT,
-	RFO_FLAT_HORZ,
-	RFO_SLOPE_SW,
-	RFO_SLOPE_SE,
-	RFO_SLOPE_NE,
-	RFO_SLOPE_NW,
+	RFO_FLAT_X_NW,     //!< Slope FLAT, Track X,     Fence NW
+	RFO_FLAT_Y_NE,     //!< Slope FLAT, Track Y,     Fence NE
+	RFO_FLAT_LEFT,     //!< Slope FLAT, Track LEFT,  Fence E
+	RFO_FLAT_UPPER,    //!< Slope FLAT, Track UPPER, Fence S
+	RFO_SLOPE_SW_NW,   //!< Slope SW,   Track X,     Fence NW
+	RFO_SLOPE_SE_NE,   //!< Slope SE,   Track Y,     Fence NE
+	RFO_SLOPE_NE_NW,   //!< Slope NE,   Track X,     Fence NW
+	RFO_SLOPE_NW_NE,   //!< Slope NW,   Track Y,     Fence NE
+	RFO_FLAT_X_SE,     //!< Slope FLAT, Track X,     Fence SE
+	RFO_FLAT_Y_SW,     //!< Slope FLAT, Track Y,     Fence SW
+	RFO_FLAT_RIGHT,    //!< Slope FLAT, Track RIGHT, Fence W
+	RFO_FLAT_LOWER,    //!< Slope FLAT, Track LOWER, Fence N
+	RFO_SLOPE_SW_SE,   //!< Slope SW,   Track X,     Fence SE
+	RFO_SLOPE_SE_SW,   //!< Slope SE,   Track Y,     Fence SW
+	RFO_SLOPE_NE_SE,   //!< Slope NE,   Track X,     Fence SE
+	RFO_SLOPE_NW_SW,   //!< Slope NW,   Track Y,     Fence SW
 };
 
 /** List of rail type labels. */
-typedef SmallVector<RailTypeLabel, 4> RailTypeLabelList;
+typedef std::vector<RailTypeLabel> RailTypeLabelList;
 
 /**
  * This struct contains all the info that is needed to draw and construct tracks.
  */
-struct RailtypeInfo {
+class RailtypeInfo {
+public:
 	/**
 	 * Struct containing the main sprites. @note not all sprites are listed, but only
 	 *  the ones used directly in the code
@@ -150,16 +167,16 @@ struct RailtypeInfo {
 		CursorID depot;      ///< Cursor for building a depot
 		CursorID tunnel;     ///< Cursor for building a tunnel
 		CursorID convert;    ///< Cursor for converting track
-	} cursor;
+	} cursor;                    ///< Cursors associated with the rail type.
 
 	struct {
-		StringID name;
-		StringID toolbar_caption;
-		StringID menu_text;
-		StringID build_caption;
-		StringID replace_text;
-		StringID new_loco;
-	} strings;
+		StringID name;            ///< Name of this rail type.
+		StringID toolbar_caption; ///< Caption in the construction toolbar GUI for this rail type.
+		StringID menu_text;       ///< Name of this rail type in the main toolbar dropdown.
+		StringID build_caption;   ///< Caption of the build vehicle GUI for this rail type.
+		StringID replace_text;    ///< Text used in the autoreplace GUI.
+		StringID new_loco;        ///< Name of an engine for this type of rail in the engine preview GUI.
+	} strings;                        ///< Strings associated with the rail type.
 
 	/** sprite number difference between a piece of track on a snowy ground and the corresponding one on normal ground */
 	SpriteID snow_offset;
@@ -230,7 +247,7 @@ struct RailtypeInfo {
 	 * When #INVALID_DATE or a vehicle using this railtype gets introduced earlier,
 	 * the vehicle's introduction date will be used instead for this railtype.
 	 * The introduction at this date is furthermore limited by the
-	 * #introduction_required_types.
+	 * #introduction_required_railtypes.
 	 */
 	Date introduction_date;
 
@@ -251,7 +268,7 @@ struct RailtypeInfo {
 	byte sorting_order;
 
 	/**
-	 * NewGRF providing the Action3 for the railtype. NULL if not available.
+	 * NewGRF providing the Action3 for the railtype. nullptr if not available.
 	 */
 	const GRFFile *grffile[RTSG_END];
 
@@ -262,7 +279,7 @@ struct RailtypeInfo {
 
 	inline bool UsesOverlay() const
 	{
-		return this->group[RTSG_GROUND] != NULL;
+		return this->group[RTSG_GROUND] != nullptr;
 	}
 
 	/**
@@ -328,6 +345,26 @@ static inline bool RailNoLevelCrossings(RailType rt)
 }
 
 /**
+ * Test if 90 degree turns are disallowed between two railtypes.
+ * @param rt1 First railtype to test for.
+ * @param rt2 Second railtype to test for.
+ * @param def Default value to use if the rail type doesn't specify anything.
+ * @return True if 90 degree turns are disallowed between the two rail types.
+ */
+static inline bool Rail90DegTurnDisallowed(RailType rt1, RailType rt2, bool def = _settings_game.pf.forbid_90_deg)
+{
+	if (rt1 == INVALID_RAILTYPE || rt2 == INVALID_RAILTYPE) return def;
+
+	const RailtypeInfo *rti1 = GetRailTypeInfo(rt1);
+	const RailtypeInfo *rti2 = GetRailTypeInfo(rt2);
+
+	bool rt1_90deg = HasBit(rti1->flags, RTF_DISALLOW_90DEG) || (!HasBit(rti1->flags, RTF_ALLOW_90DEG) && def);
+	bool rt2_90deg = HasBit(rti2->flags, RTF_DISALLOW_90DEG) || (!HasBit(rti2->flags, RTF_ALLOW_90DEG) && def);
+
+	return rt1_90deg || rt2_90deg;
+}
+
+/**
  * Returns the cost of building the specified railtype.
  * @param railtype The railtype being built.
  * @return The cost multiplier.
@@ -351,7 +388,7 @@ static inline Money RailClearCost(RailType railtype)
 	 * cost.
 	 */
 	assert(railtype < RAILTYPE_END);
-	return max(_price[PR_CLEAR_RAIL], -RailBuildCost(railtype) * 3 / 4);
+	return std::max(_price[PR_CLEAR_RAIL], -RailBuildCost(railtype) * 3 / 4);
 }
 
 /**
@@ -371,8 +408,8 @@ static inline Money RailConvertCost(RailType from, RailType to)
 	 * build costs, if the target type is more expensive (material upgrade costs).
 	 * Upgrade can never be more expensive than re-building. */
 	if (HasPowerOnRail(from, to) || HasPowerOnRail(to, from)) {
-		Money upgradecost = RailBuildCost(to) / 8 + max((Money)0, RailBuildCost(to) - RailBuildCost(from));
-		return min(upgradecost, rebuildcost);
+		Money upgradecost = RailBuildCost(to) / 8 + std::max((Money)0, RailBuildCost(to) - RailBuildCost(from));
+		return std::min(upgradecost, rebuildcost);
 	}
 
 	/* make the price the same as remove + build new type for rail types
@@ -410,17 +447,21 @@ Foundation GetRailFoundation(Slope tileh, TrackBits bits);
 
 
 bool HasRailtypeAvail(const CompanyID company, const RailType railtype);
+bool HasAnyRailtypesAvail(const CompanyID company);
 bool ValParamRailtype(const RailType rail);
 
 RailTypes AddDateIntroducedRailTypes(RailTypes current, Date date);
 
-RailType GetBestRailtype(const CompanyID company);
-RailTypes GetCompanyRailtypes(const CompanyID c);
+RailTypes GetCompanyRailtypes(CompanyID company, bool introduces = true);
+RailTypes GetRailTypes(bool introduces);
 
 RailType GetRailTypeByLabel(RailTypeLabel label, bool allow_alternate_labels = true);
 
 void ResetRailTypes();
 void InitRailTypes();
 RailType AllocateRailType(RailTypeLabel label);
+
+extern std::vector<RailType> _sorted_railtypes;
+extern RailTypes _railtypes_hidden_mask;
 
 #endif /* RAIL_H */

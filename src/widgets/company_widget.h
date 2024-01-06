@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -48,6 +46,9 @@ enum CompanyWidgets {
 
 	WID_C_VIEW_INFRASTRUCTURE,        ///< Panel about infrastructure.
 
+	WID_C_SELECT_GIVE_MONEY,          ///< Selection widget for the give money button.
+	WID_C_GIVE_MONEY,                 ///< Button to give money.
+
 	WID_C_HAS_PASSWORD,               ///< Has company password lock.
 	WID_C_SELECT_MULTIPLAYER,         ///< Multiplayer selection panel.
 	WID_C_COMPANY_PASSWORD,           ///< Button to set company password.
@@ -67,9 +68,9 @@ enum CompanyFinancesWidgets {
 	WID_CF_SEL_MAXLOAN,    ///< Selection of maxloan column.
 	WID_CF_BALANCE_VALUE,  ///< Bank balance value.
 	WID_CF_LOAN_VALUE,     ///< Loan.
-	WID_CF_LOAN_LINE,      ///< Line for summing bank balance and loan.
-	WID_CF_TOTAL_VALUE,    ///< Total.
-	WID_CF_MAXLOAN_GAP,    ///< Gap above max loan widget.
+	WID_CF_BALANCE_LINE,   ///< Available cash.
+	WID_CF_OWN_VALUE,      ///< Own funds, not including loan.
+	WID_CF_INTEREST_RATE,  ///< Loan interest rate.
 	WID_CF_MAXLOAN_VALUE,  ///< Max loan widget.
 	WID_CF_SEL_BUTTONS,    ///< Selection of buttons.
 	WID_CF_INCREASE_LOAN,  ///< Increase loan.
@@ -86,10 +87,15 @@ enum SelectCompanyLiveryWidgets {
 	WID_SCL_CLASS_ROAD,       ///< Class road.
 	WID_SCL_CLASS_SHIP,       ///< Class ship.
 	WID_SCL_CLASS_AIRCRAFT,   ///< Class aircraft.
+	WID_SCL_GROUPS_RAIL,      ///< Rail groups.
+	WID_SCL_GROUPS_ROAD,      ///< Road groups.
+	WID_SCL_GROUPS_SHIP,      ///< Ship groups.
+	WID_SCL_GROUPS_AIRCRAFT,  ///< Aircraft groups.
 	WID_SCL_SPACER_DROPDOWN,  ///< Spacer for dropdown.
 	WID_SCL_PRI_COL_DROPDOWN, ///< Dropdown for primary colour.
 	WID_SCL_SEC_COL_DROPDOWN, ///< Dropdown for secondary colour.
 	WID_SCL_MATRIX,           ///< Matrix.
+	WID_SCL_MATRIX_SCROLLBAR, ///< Matrix scrollbar.
 };
 
 
@@ -172,6 +178,8 @@ enum CompanyInfrastructureWidgets {
 	WID_CI_RAIL_COUNT,    ///< Count of rail.
 	WID_CI_ROAD_DESC,     ///< Description of road.
 	WID_CI_ROAD_COUNT,    ///< Count of road.
+	WID_CI_TRAM_DESC,     ///< Description of tram.
+	WID_CI_TRAM_COUNT,    ///< Count of tram.
 	WID_CI_WATER_DESC,    ///< Description of water.
 	WID_CI_WATER_COUNT,   ///< Count of water.
 	WID_CI_STATION_DESC,  ///< Description of station.

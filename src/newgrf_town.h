@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -25,7 +23,16 @@ struct TownScopeResolver : public ScopeResolver {
 	Town *t;       ///< %Town of the scope.
 	bool readonly; ///< When set, persistent storage of the town is read-only,
 
-	TownScopeResolver(ResolverObject *ro, Town *t, bool readonly);
+	/**
+	 * Resolver of a town scope.
+	 * @param ro Surrounding resolver.
+	 * @param t %Town of the scope.
+	 * @param readonly Scope may change persistent storage of the town.
+	 */
+	TownScopeResolver(ResolverObject &ro, Town *t, bool readonly)
+		: ScopeResolver(ro), t(t), readonly(readonly)
+	{
+	}
 
 	virtual uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
 	virtual void StorePSA(uint reg, int32 value);
@@ -37,7 +44,7 @@ struct TownResolverObject : public ResolverObject {
 
 	TownResolverObject(const struct GRFFile *grffile, Town *t, bool readonly);
 
-	/* virtual */ ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0)
+	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0) override
 	{
 		switch (scope) {
 			case VSG_SCOPE_SELF: return &town_scope;

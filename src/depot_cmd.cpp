@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,20 +16,21 @@
 #include "vehicle_gui.h"
 #include "vehiclelist.h"
 #include "window_func.h"
+#include "depot_cmd.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /**
  * Check whether the given name is globally unique amongst depots.
  * @param name The name to check.
  * @return True if there is no depot with the given name.
  */
-static bool IsUniqueDepotName(const char *name)
+static bool IsUniqueDepotName(const std::string &name)
 {
-	const Depot *d;
-
-	FOR_ALL_DEPOTS(d) {
-		if (d->name != NULL && strcmp(d->name, name) == 0) return false;
+	for (const Depot *d : Depot::Iterate()) {
+		if (!d->name.empty() && d->name == name) return false;
 	}
 
 	return true;
@@ -39,22 +38,20 @@ static bool IsUniqueDepotName(const char *name)
 
 /**
  * Rename a depot.
- * @param tile unused
  * @param flags type of operation
- * @param p1 id of depot
- * @param p2 unused
+ * @param depot_id id of depot
  * @param text the new name or an empty string when resetting to the default
  * @return the cost of this operation or an error
  */
-CommandCost CmdRenameDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRenameDepot(DoCommandFlag flags, DepotID depot_id, const std::string &text)
 {
-	Depot *d = Depot::GetIfValid(p1);
-	if (d == NULL) return CMD_ERROR;
+	Depot *d = Depot::GetIfValid(depot_id);
+	if (d == nullptr) return CMD_ERROR;
 
 	CommandCost ret = CheckTileOwnership(d->xy);
 	if (ret.Failed()) return ret;
 
-	bool reset = StrEmpty(text);
+	bool reset = text.empty();
 
 	if (!reset) {
 		if (Utf8StringLength(text) >= MAX_LENGTH_DEPOT_NAME_CHARS) return CMD_ERROR;
@@ -62,13 +59,11 @@ CommandCost CmdRenameDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 	}
 
 	if (flags & DC_EXEC) {
-		free(d->name);
-
 		if (reset) {
-			d->name = NULL;
+			d->name.clear();
 			MakeDefaultName(d);
 		} else {
-			d->name = strdup(text);
+			d->name = text;
 		}
 
 		/* Update the orders and depot */
@@ -76,13 +71,7 @@ CommandCost CmdRenameDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		SetWindowDirty(WC_VEHICLE_DEPOT, d->xy);
 
 		/* Update the depot list */
-		VehicleType vt;
-		switch (GetTileType(d->xy)) {
-			default: NOT_REACHED();
-			case MP_RAILWAY: vt = VEH_TRAIN; break;
-			case MP_ROAD:    vt = VEH_ROAD;  break;
-			case MP_WATER:   vt = VEH_SHIP;  break;
-		}
+		VehicleType vt = GetDepotVehicleType(d->xy);
 		SetWindowDirty(GetWindowClassForVehicleType(vt), VehicleListIdentifier(VL_DEPOT_LIST, vt, GetTileOwner(d->xy), d->index).Pack());
 	}
 	return CommandCost();

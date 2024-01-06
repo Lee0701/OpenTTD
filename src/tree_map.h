@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,7 @@
 #define TREE_MAP_H
 
 #include "tile_map.h"
+#include "water_map.h"
 
 /**
  * List of tree types along all landscape types.
@@ -99,8 +98,8 @@ static inline TreeGround GetTreeGround(TileIndex t)
  * that this value doesn't count the number of trees on a tile, use
  * #GetTreeCount instead. This function instead returns some kind of
  * groundtype of the tile. As the map-array is finite in size and
- * the informations about the trees must be saved somehow other
- * informations about a tile must be saved somewhere encoded in the
+ * the information about the trees must be saved somehow other
+ * information about a tile must be saved somewhere encoded in the
  * tile. So this function returns the density of a tile for sub arctic
  * and sub tropical games. This means for sub arctic the type of snowline
  * (0 to 3 for all 4 types of snowtiles) and for sub tropical the value
@@ -133,6 +132,7 @@ static inline void SetTreeGroundDensity(TileIndex t, TreeGround g, uint d)
 	assert(IsTileType(t, MP_TREES)); // XXX incomplete
 	SB(_m[t].m2, 4, 2, d);
 	SB(_m[t].m2, 6, 3, g);
+	SetWaterClass(t, g == TREE_GROUND_SHORE ? WATER_CLASS_SEA : WATER_CLASS_INVALID);
 }
 
 /**
@@ -262,7 +262,7 @@ static inline void SetTreeCounter(TileIndex t, uint c)
 /**
  * Make a tree-tile.
  *
- * This functions change the tile to a tile with trees and all informations which belongs to it.
+ * This functions change the tile to a tile with trees and all information which belongs to it.
  *
  * @param t The tile to make a tree-tile from
  * @param type The type of the tree
@@ -275,11 +275,12 @@ static inline void MakeTree(TileIndex t, TreeType type, uint count, uint growth,
 {
 	SetTileType(t, MP_TREES);
 	SetTileOwner(t, OWNER_NONE);
+	SetWaterClass(t, ground == TREE_GROUND_SHORE ? WATER_CLASS_SEA : WATER_CLASS_INVALID);
 	_m[t].m2 = ground << 6 | density << 4 | 0;
 	_m[t].m3 = type;
 	_m[t].m4 = 0 << 5 | 0 << 2;
 	_m[t].m5 = count << 6 | growth;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
 

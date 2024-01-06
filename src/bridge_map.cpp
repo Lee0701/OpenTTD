@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,8 @@
 #include "stdafx.h"
 #include "landscape.h"
 #include "tunnelbridge_map.h"
+
+#include "safeguards.h"
 
 
 /**
@@ -54,7 +54,7 @@ TileIndex GetSouthernBridgeEnd(TileIndex t)
 
 /**
  * Starting at one bridge end finds the other bridge end
- * @param t the bridge ramp tile to find the other bridge ramp for
+ * @param tile the bridge ramp tile to find the other bridge ramp for
  */
 TileIndex GetOtherBridgeEnd(TileIndex tile)
 {
@@ -64,7 +64,7 @@ TileIndex GetOtherBridgeEnd(TileIndex tile)
 
 /**
  * Get the height ('z') of a bridge.
- * @param tile the bridge ramp tile to get the bridge height from
+ * @param t the bridge ramp tile to get the bridge height from
  * @return the height of the bridge.
  */
 int GetBridgeHeight(TileIndex t)

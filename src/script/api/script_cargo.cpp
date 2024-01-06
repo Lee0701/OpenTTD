@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,11 @@
 #include "script_cargo.hpp"
 #include "../../economy_func.h"
 #include "../../core/bitmath_func.hpp"
+#include "../../strings_func.h"
+#include "../../settings_type.h"
+#include "table/strings.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptCargo::IsValidCargo(CargoID cargo_type)
 {
@@ -24,9 +27,17 @@
 	return (towneffect_type >= (TownEffect)TE_BEGIN && towneffect_type < (TownEffect)TE_END);
 }
 
+/* static */ char *ScriptCargo::GetName(CargoID cargo_type)
+{
+	if (!IsValidCargo(cargo_type)) return nullptr;
+
+	::SetDParam(0, 1ULL << cargo_type);
+	return GetString(STR_JUST_CARGO_LIST);
+}
+
 /* static */ char *ScriptCargo::GetCargoLabel(CargoID cargo_type)
 {
-	if (!IsValidCargo(cargo_type)) return NULL;
+	if (!IsValidCargo(cargo_type)) return nullptr;
 	const CargoSpec *cargo = ::CargoSpec::Get(cargo_type);
 
 	/* cargo->label is a uint32 packing a 4 character non-terminated string,
@@ -63,4 +74,16 @@
 {
 	if (!IsValidCargo(cargo_type)) return -1;
 	return ::GetTransportedGoodsIncome(1, distance, Clamp(days_in_transit * 2 / 5, 0, 255), cargo_type);
+}
+
+/* static */ ScriptCargo::DistributionType ScriptCargo::GetDistributionType(CargoID cargo_type)
+{
+	if (!ScriptCargo::IsValidCargo(cargo_type)) return INVALID_DISTRIBUTION_TYPE;
+	return (ScriptCargo::DistributionType)_settings_game.linkgraph.GetDistributionType(cargo_type);
+}
+
+/* static */ int64 ScriptCargo::GetWeight(CargoID cargo_type, uint32 amount)
+{
+	if (!IsValidCargo(cargo_type)) return -1;
+	return ::CargoSpec::Get(cargo_type)->WeightOfNUnits(amount);
 }

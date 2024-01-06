@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,10 @@
 #include "script_station.hpp"
 #include "../../station_base.h"
 #include "../../town.h"
+#include "../../landscape_cmd.h"
+#include "../../station_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptAirport::IsValidAirportType(AirportType type)
 {
@@ -75,9 +77,7 @@
 	EnforcePrecondition(false, IsValidAirportType(type));
 	EnforcePrecondition(false, station_id == ScriptStation::STATION_NEW || station_id == ScriptStation::STATION_JOIN_ADJACENT || ScriptStation::IsValidStation(station_id));
 
-	uint p2 = station_id == ScriptStation::STATION_JOIN_ADJACENT ? 0 : 1;
-	p2 |= (ScriptStation::IsValidStation(station_id) ? station_id : INVALID_STATION) << 16;
-	return ScriptObject::DoCommand(tile, type, p2, CMD_BUILD_AIRPORT);
+	return ScriptObject::Command<CMD_BUILD_AIRPORT>::Do(tile, type, 0, (ScriptStation::IsValidStation(station_id) ? station_id : INVALID_STATION), station_id != ScriptStation::STATION_JOIN_ADJACENT);
 }
 
 /* static */ bool ScriptAirport::RemoveAirport(TileIndex tile)
@@ -86,7 +86,7 @@
 	EnforcePrecondition(false, ::IsValidTile(tile))
 	EnforcePrecondition(false, IsAirportTile(tile) || IsHangarTile(tile));
 
-	return ScriptObject::DoCommand(tile, 0, 0, CMD_LANDSCAPE_CLEAR);
+	return ScriptObject::Command<CMD_LANDSCAPE_CLEAR>::Do(tile);
 }
 
 /* static */ int32 ScriptAirport::GetNumHangars(TileIndex tile)
@@ -128,17 +128,20 @@
 
 /* static */ int ScriptAirport::GetNoiseLevelIncrease(TileIndex tile, AirportType type)
 {
-	extern Town *AirportGetNearestTown(const AirportSpec *as, const TileIterator &it);
-	extern uint8 GetAirportNoiseLevelForTown(const AirportSpec *as, TileIterator &it, TileIndex town_tile);
+	extern Town *AirportGetNearestTown(const AirportSpec *as, const TileIterator &it, uint &mindist);
+	extern uint8 GetAirportNoiseLevelForDistance(const AirportSpec *as, uint distance);
 
 	if (!::IsValidTile(tile)) return -1;
 	if (!IsAirportInformationAvailable(type)) return -1;
 
+	const AirportSpec *as = ::AirportSpec::Get(type);
+	if (!as->IsWithinMapBounds(0, tile)) return -1;
+
 	if (_settings_game.economy.station_noise_level) {
-		const AirportSpec *as = ::AirportSpec::Get(type);
 		AirportTileTableIterator it(as->table[0], tile);
-		const Town *t = AirportGetNearestTown(as, it);
-		return GetAirportNoiseLevelForTown(as, it, t->xy);
+		uint dist;
+		AirportGetNearestTown(as, it, dist);
+		return GetAirportNoiseLevelForDistance(as, dist);
 	}
 
 	return 1;
@@ -146,13 +149,16 @@
 
 /* static */ TownID ScriptAirport::GetNearestTown(TileIndex tile, AirportType type)
 {
-	extern Town *AirportGetNearestTown(const AirportSpec *as, const TileIterator &it);
+	extern Town *AirportGetNearestTown(const AirportSpec *as, const TileIterator &it, uint &mindist);
 
 	if (!::IsValidTile(tile)) return INVALID_TOWN;
 	if (!IsAirportInformationAvailable(type)) return INVALID_TOWN;
 
 	const AirportSpec *as = AirportSpec::Get(type);
-	return AirportGetNearestTown(as, AirportTileTableIterator(as->table[0], tile))->index;
+	if (!as->IsWithinMapBounds(0, tile)) return INVALID_TOWN;
+
+	uint dist;
+	return AirportGetNearestTown(as, AirportTileTableIterator(as->table[0], tile), dist)->index;
 }
 
 /* static */ uint16 ScriptAirport::GetMaintenanceCostFactor(AirportType type)
@@ -160,4 +166,11 @@
 	if (!IsAirportInformationAvailable(type)) return INVALID_TOWN;
 
 	return AirportSpec::Get(type)->maintenance_cost;
+}
+
+/* static */ Money ScriptAirport::GetMonthlyMaintenanceCost(AirportType type)
+{
+	if (!IsAirportInformationAvailable(type)) return -1;
+
+	return (int64)GetMaintenanceCostFactor(type) * _price[PR_INFRASTRUCTURE_AIRPORT] >> 3;
 }

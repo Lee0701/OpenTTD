@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,11 +19,16 @@
 #include "../gfx_func.h"
 #include "../rev.h"
 #include "../blitter/factory.hpp"
-#include "../network/network.h"
 #include "../core/random_func.hpp"
 #include "../core/math_func.hpp"
+#include "../framerate_type.h"
+#include "../progress.h"
+#include "../thread.h"
+#include "../window_func.h"
 #include "allegro_v.h"
 #include <allegro.h>
+
+#include "../safeguards.h"
 
 #ifdef _DEBUG
 /* Allegro replaces SEGV/ABRT signals meaning that the debugger will never
@@ -40,6 +43,7 @@ static BITMAP *_allegro_screen;
 #define MAX_DIRTY_RECTS 100
 static PointDimension _dirty_rects[MAX_DIRTY_RECTS];
 static int _num_dirty_rects;
+static Palette _local_palette; ///< Current palette to use for drawing.
 
 void VideoDriver_Allegro::MakeDirty(int left, int top, int width, int height)
 {
@@ -52,8 +56,10 @@ void VideoDriver_Allegro::MakeDirty(int left, int top, int width, int height)
 	_num_dirty_rects++;
 }
 
-static void DrawSurfaceToScreen()
+void VideoDriver_Allegro::Paint()
 {
+	PerformanceMeasurer framerate(PFE_VIDEO);
+
 	int n = _num_dirty_rects;
 	if (n == 0) return;
 
@@ -75,9 +81,9 @@ static void UpdatePalette(uint start, uint count)
 
 	uint end = start + count;
 	for (uint i = start; i != end; i++) {
-		pal[i].r = _cur_palette.palette[i].r / 4;
-		pal[i].g = _cur_palette.palette[i].g / 4;
-		pal[i].b = _cur_palette.palette[i].b / 4;
+		pal[i].r = _local_palette.palette[i].r / 4;
+		pal[i].g = _local_palette.palette[i].g / 4;
+		pal[i].b = _local_palette.palette[i].b / 4;
 		pal[i].filler = 0;
 	}
 
@@ -89,27 +95,26 @@ static void InitPalette()
 	UpdatePalette(0, 256);
 }
 
-static void CheckPaletteAnim()
+void VideoDriver_Allegro::CheckPaletteAnim()
 {
-	if (_cur_palette.count_dirty != 0) {
-		Blitter *blitter = BlitterFactoryBase::GetCurrentBlitter();
+	if (!CopyPalette(_local_palette)) return;
 
-		switch (blitter->UsePaletteAnimation()) {
-			case Blitter::PALETTE_ANIMATION_VIDEO_BACKEND:
-				UpdatePalette(_cur_palette.first_dirty, _cur_palette.count_dirty);
-				break;
+	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 
-			case Blitter::PALETTE_ANIMATION_BLITTER:
-				blitter->PaletteAnimate(_cur_palette);
-				break;
+	switch (blitter->UsePaletteAnimation()) {
+		case Blitter::PALETTE_ANIMATION_VIDEO_BACKEND:
+			UpdatePalette(_local_palette.first_dirty, _local_palette.count_dirty);
+			break;
 
-			case Blitter::PALETTE_ANIMATION_NONE:
-				break;
+		case Blitter::PALETTE_ANIMATION_BLITTER:
+			blitter->PaletteAnimate(_local_palette);
+			break;
 
-			default:
-				NOT_REACHED();
-		}
-		_cur_palette.count_dirty = 0;
+		case Blitter::PALETTE_ANIMATION_NONE:
+			break;
+
+		default:
+			NOT_REACHED();
 	}
 }
 
@@ -133,34 +138,25 @@ static void GetVideoModes()
 	 * cards ourselves... and we need a card to get the modes. */
 	set_gfx_mode(_fullscreen ? GFX_AUTODETECT_FULLSCREEN : GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
 
+	_resolutions.clear();
+
 	GFX_MODE_LIST *mode_list = get_gfx_mode_list(gfx_driver->id);
-	if (mode_list == NULL) {
-		memcpy(_resolutions, default_resolutions, sizeof(default_resolutions));
-		_num_resolutions = lengthof(default_resolutions);
+	if (mode_list == nullptr) {
+		_resolutions.assign(std::begin(default_resolutions), std::end(default_resolutions));
 		return;
 	}
 
 	GFX_MODE *modes = mode_list->mode;
 
-	int n = 0;
 	for (int i = 0; modes[i].bpp != 0; i++) {
 		uint w = modes[i].width;
 		uint h = modes[i].height;
-		if (w >= 640 && h >= 480) {
-			int j;
-			for (j = 0; j < n; j++) {
-				if (_resolutions[j].width == w && _resolutions[j].height == h) break;
-			}
-
-			if (j == n) {
-				_resolutions[j].width  = w;
-				_resolutions[j].height = h;
-				if (++n == lengthof(_resolutions)) break;
-			}
-		}
+		if (w < 640 || h < 480) continue;
+		if (std::find(_resolutions.begin(), _resolutions.end(), Dimension(w, h)) != _resolutions.end()) continue;
+		_resolutions.emplace_back(w, h);
 	}
-	_num_resolutions = n;
-	SortResolutions(_num_resolutions);
+
+	SortResolutions();
 
 	destroy_gfx_mode_list(mode_list);
 }
@@ -168,17 +164,15 @@ static void GetVideoModes()
 static void GetAvailableVideoMode(uint *w, uint *h)
 {
 	/* No video modes, so just try it and see where it ends */
-	if (_num_resolutions == 0) return;
+	if (_resolutions.empty()) return;
 
 	/* is the wanted mode among the available modes? */
-	for (int i = 0; i != _num_resolutions; i++) {
-		if (*w == _resolutions[i].width && *h == _resolutions[i].height) return;
-	}
+	if (std::find(_resolutions.begin(), _resolutions.end(), Dimension(*w, *h)) != _resolutions.end()) return;
 
 	/* use the closest possible resolution */
-	int best = 0;
+	uint best = 0;
 	uint delta = Delta(_resolutions[0].width, *w) * Delta(_resolutions[0].height, *h);
-	for (int i = 1; i != _num_resolutions; ++i) {
+	for (uint i = 1; i != _resolutions.size(); ++i) {
 		uint newdelta = Delta(_resolutions[i].width, *w) * Delta(_resolutions[i].height, *h);
 		if (newdelta < delta) {
 			best = i;
@@ -191,13 +185,13 @@ static void GetAvailableVideoMode(uint *w, uint *h)
 
 static bool CreateMainSurface(uint w, uint h)
 {
-	int bpp = BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth();
+	int bpp = BlitterFactory::GetCurrentBlitter()->GetScreenDepth();
 	if (bpp == 0) usererror("Can't use a blitter that blits 0 bpp for normal visuals");
 	set_color_depth(bpp);
 
 	GetAvailableVideoMode(&w, &h);
 	if (set_gfx_mode(_fullscreen ? GFX_AUTODETECT_FULLSCREEN : GFX_AUTODETECT_WINDOWED, w, h, 0, 0) != 0) {
-		DEBUG(driver, 0, "Allegro: Couldn't allocate a window to draw on '%s'", allegro_error);
+		Debug(driver, 0, "Allegro: Couldn't allocate a window to draw on '{}'", allegro_error);
 		return false;
 	}
 
@@ -217,12 +211,12 @@ static bool CreateMainSurface(uint w, uint h)
 	_cursor.pos.x = mouse_x;
 	_cursor.pos.y = mouse_y;
 
-	BlitterFactoryBase::GetCurrentBlitter()->PostResize();
+	BlitterFactory::GetCurrentBlitter()->PostResize();
 
 	InitPalette();
 
 	char caption[32];
-	snprintf(caption, sizeof(caption), "OpenTTD %s", _openttd_revision);
+	seprintf(caption, lastof(caption), "OpenTTD %s", _openttd_revision);
 	set_window_title(caption);
 
 	enable_hardware_cursor();
@@ -237,12 +231,22 @@ static bool CreateMainSurface(uint w, uint h)
 bool VideoDriver_Allegro::ClaimMousePointer()
 {
 	select_mouse_cursor(MOUSE_CURSOR_NONE);
-	show_mouse(NULL);
+	show_mouse(nullptr);
 	disable_hardware_cursor();
 	return true;
 }
 
-struct VkMapping {
+std::vector<int> VideoDriver_Allegro::GetListOfMonitorRefreshRates()
+{
+	std::vector<int> rates = {};
+
+	int refresh_rate = get_refresh_rate();
+	if (refresh_rate != 0) rates.push_back(refresh_rate);
+
+	return rates;
+}
+
+struct AllegroVkMapping {
 	uint16 vk_from;
 	byte vk_count;
 	byte map_to;
@@ -251,7 +255,7 @@ struct VkMapping {
 #define AS(x, z) {x, 0, z}
 #define AM(x, y, z, w) {x, y - x, z}
 
-static const VkMapping _vk_mapping[] = {
+static const AllegroVkMapping _vk_mapping[] = {
 	/* Pageup stuff + up/down */
 	AM(KEY_PGUP, KEY_PGDN, WKC_PAGEUP, WKC_PAGEDOWN),
 	AS(KEY_UP,     WKC_UP),
@@ -304,12 +308,12 @@ static const VkMapping _vk_mapping[] = {
 	AS(KEY_TILDE,   WKC_BACKQUOTE),
 };
 
-static uint32 ConvertAllegroKeyIntoMy()
+static uint32 ConvertAllegroKeyIntoMy(WChar *character)
 {
 	int scancode;
 	int unicode = ureadkey(&scancode);
 
-	const VkMapping *map;
+	const AllegroVkMapping *map;
 	uint key = 0;
 
 	for (map = _vk_mapping; map != endof(_vk_mapping); ++map) {
@@ -323,16 +327,18 @@ static uint32 ConvertAllegroKeyIntoMy()
 	if (key_shifts & KB_CTRL_FLAG)  key |= WKC_CTRL;
 	if (key_shifts & KB_ALT_FLAG)   key |= WKC_ALT;
 #if 0
-	DEBUG(driver, 0, "Scancode character pressed %u", scancode);
-	DEBUG(driver, 0, "Unicode character pressed %u", unicode);
+	Debug(driver, 0, "Scancode character pressed {}", scancode);
+	Debug(driver, 0, "Unicode character pressed {}", unicode);
 #endif
-	return (key << 16) + unicode;
+
+	*character = unicode;
+	return key;
 }
 
 static const uint LEFT_BUTTON  = 0;
 static const uint RIGHT_BUTTON = 1;
 
-static void PollEvent()
+bool VideoDriver_Allegro::PollEvent()
 {
 	poll_mouse();
 
@@ -384,22 +390,10 @@ static void PollEvent()
 	}
 
 	/* Mouse movement */
-	int dx = mouse_x - _cursor.pos.x;
-	int dy = mouse_y - _cursor.pos.y;
-	if (dx != 0 || dy != 0) {
-		if (_cursor.fix_at) {
-			_cursor.delta.x = dx;
-			_cursor.delta.y = dy;
-			position_mouse(_cursor.pos.x, _cursor.pos.y);
-		} else {
-			_cursor.delta.x = dx;
-			_cursor.delta.y = dy;
-			_cursor.pos.x = mouse_x;
-			_cursor.pos.y = mouse_y;
-			_cursor.dirty = true;
-		}
-		mouse_action = true;
+	if (_cursor.UpdateCursorPosition(mouse_x, mouse_y)) {
+		position_mouse(_cursor.pos.x, _cursor.pos.y);
 	}
+	if (_cursor.delta.x != 0 || _cursor.delta.y) mouse_action = true;
 
 	static int prev_mouse_z = 0;
 	if (prev_mouse_z != mouse_z) {
@@ -414,8 +408,12 @@ static void PollEvent()
 	if ((key_shifts & KB_ALT_FLAG) && (key[KEY_ENTER] || key[KEY_F])) {
 		ToggleFullScreen(!_fullscreen);
 	} else if (keypressed()) {
-		HandleKeypress(ConvertAllegroKeyIntoMy());
+		WChar character;
+		uint keycode = ConvertAllegroKeyIntoMy(&character);
+		HandleKeypress(keycode, character);
 	}
+
+	return false;
 }
 
 /**
@@ -424,13 +422,15 @@ static void PollEvent()
  */
 int _allegro_instance_count = 0;
 
-const char *VideoDriver_Allegro::Start(const char * const *parm)
+const char *VideoDriver_Allegro::Start(const StringList &param)
 {
-	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, NULL)) {
-		DEBUG(driver, 0, "allegro: install_allegro failed '%s'", allegro_error);
+	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, nullptr)) {
+		Debug(driver, 0, "allegro: install_allegro failed '{}'", allegro_error);
 		return "Failed to set up Allegro";
 	}
 	_allegro_instance_count++;
+
+	this->UpdateAutoResolution();
 
 	install_timer();
 	install_mouse();
@@ -439,14 +439,8 @@ const char *VideoDriver_Allegro::Start(const char * const *parm)
 #if defined _DEBUG
 /* Allegro replaces SEGV/ABRT signals meaning that the debugger will never
  * be triggered, so rereplace the signals and make the debugger useful. */
-	signal(SIGABRT, NULL);
-	signal(SIGSEGV, NULL);
-#endif
-
-#if defined(DOS)
-	/* Force DOS builds to ALWAYS use full screen as
-	 * it can't do windowed. */
-	_fullscreen = true;
+	signal(SIGABRT, nullptr);
+	signal(SIGSEGV, nullptr);
 #endif
 
 	GetVideoModes();
@@ -456,7 +450,9 @@ const char *VideoDriver_Allegro::Start(const char * const *parm)
 	MarkWholeScreenDirty();
 	set_close_button_callback(HandleExitGameRequest);
 
-	return NULL;
+	this->is_game_threaded = !GetDriverParamBool(param, "no_threads") && !GetDriverParamBool(param, "no_thread");
+
+	return nullptr;
 }
 
 void VideoDriver_Allegro::Stop()
@@ -464,84 +460,43 @@ void VideoDriver_Allegro::Stop()
 	if (--_allegro_instance_count == 0) allegro_exit();
 }
 
-#if defined(UNIX) || defined(__OS2__) || defined(PSP) || defined(DOS)
-# include <sys/time.h> /* gettimeofday */
-
-static uint32 GetTime()
+void VideoDriver_Allegro::InputLoop()
 {
-	struct timeval tim;
+	bool old_ctrl_pressed = _ctrl_pressed;
 
-	gettimeofday(&tim, NULL);
-	return tim.tv_usec / 1000 + tim.tv_sec * 1000;
-}
+	_ctrl_pressed  = !!(key_shifts & KB_CTRL_FLAG);
+	_shift_pressed = !!(key_shifts & KB_SHIFT_FLAG);
+
+#if defined(_DEBUG)
+	this->fast_forward_key_pressed = _shift_pressed;
 #else
-static uint32 GetTime()
-{
-	return GetTickCount();
-}
+	/* Speedup when pressing tab, except when using ALT+TAB
+	 * to switch to another application. */
+	this->fast_forward_key_pressed = key[KEY_TAB] && (key_shifts & KB_ALT_FLAG) == 0;
 #endif
 
+	/* Determine which directional keys are down. */
+	_dirkeys =
+		(key[KEY_LEFT]  ? 1 : 0) |
+		(key[KEY_UP]    ? 2 : 0) |
+		(key[KEY_RIGHT] ? 4 : 0) |
+		(key[KEY_DOWN]  ? 8 : 0);
+
+	if (old_ctrl_pressed != _ctrl_pressed) HandleCtrlChanged();
+}
 
 void VideoDriver_Allegro::MainLoop()
 {
-	uint32 cur_ticks = GetTime();
-	uint32 last_cur_ticks = cur_ticks;
-	uint32 next_tick = cur_ticks + MILLISECONDS_PER_TICK;
-
-	CheckPaletteAnim();
+	this->StartGameThread();
 
 	for (;;) {
-		uint32 prev_cur_ticks = cur_ticks; // to check for wrapping
-		InteractiveRandom(); // randomness
+		if (_exit_game) break;
 
-		PollEvent();
-		if (_exit_game) return;
-
-#if defined(_DEBUG)
-		if (_shift_pressed)
-#else
-		/* Speedup when pressing tab, except when using ALT+TAB
-		 * to switch to another application */
-		if (key[KEY_TAB] && (key_shifts & KB_ALT_FLAG) == 0)
-#endif
-		{
-			if (!_networking && _game_mode != GM_MENU) _fast_forward |= 2;
-		} else if (_fast_forward & 2) {
-			_fast_forward = 0;
-		}
-
-		cur_ticks = GetTime();
-		if (cur_ticks >= next_tick || (_fast_forward && !_pause_mode) || cur_ticks < prev_cur_ticks) {
-			_realtime_tick += cur_ticks - last_cur_ticks;
-			last_cur_ticks = cur_ticks;
-			next_tick = cur_ticks + MILLISECONDS_PER_TICK;
-
-			bool old_ctrl_pressed = _ctrl_pressed;
-
-			_ctrl_pressed  = !!(key_shifts & KB_CTRL_FLAG);
-			_shift_pressed = !!(key_shifts & KB_SHIFT_FLAG);
-
-			/* determine which directional keys are down */
-			_dirkeys =
-				(key[KEY_LEFT]  ? 1 : 0) |
-				(key[KEY_UP]    ? 2 : 0) |
-				(key[KEY_RIGHT] ? 4 : 0) |
-				(key[KEY_DOWN]  ? 8 : 0);
-
-			if (old_ctrl_pressed != _ctrl_pressed) HandleCtrlChanged();
-
-			GameLoop();
-
-			UpdateWindows();
-			CheckPaletteAnim();
-			DrawSurfaceToScreen();
-		} else {
-			CSleep(1);
-			NetworkDrawChatMessage();
-			DrawMouseCursor();
-			DrawSurfaceToScreen();
-		}
+		this->Tick();
+		this->SleepTillNextTick();
 	}
+
+	this->StopGameThread();
 }
 
 bool VideoDriver_Allegro::ChangeResolution(int w, int h)
@@ -551,18 +506,14 @@ bool VideoDriver_Allegro::ChangeResolution(int w, int h)
 
 bool VideoDriver_Allegro::ToggleFullscreen(bool fullscreen)
 {
-#ifdef DOS
-	return false;
-#else
 	_fullscreen = fullscreen;
 	GetVideoModes(); // get the list of available video modes
-	if (_num_resolutions == 0 || !this->ChangeResolution(_cur_resolution.width, _cur_resolution.height)) {
+	if (_resolutions.empty() || !this->ChangeResolution(_cur_resolution.width, _cur_resolution.height)) {
 		/* switching resolution failed, put back full_screen to original status */
 		_fullscreen ^= true;
 		return false;
 	}
 	return true;
-#endif
 }
 
 bool VideoDriver_Allegro::AfterBlitterChange()

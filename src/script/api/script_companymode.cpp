@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -10,11 +8,15 @@
 /** @file script_companymode.cpp Implementation of ScriptCompanyMode. */
 
 #include "../../stdafx.h"
+#include "../../company_base.h"
 #include "script_companymode.hpp"
+
+#include "../../safeguards.h"
 
 ScriptCompanyMode::ScriptCompanyMode(int company)
 {
 	if (company < OWNER_BEGIN || company >= MAX_COMPANIES) company = INVALID_COMPANY;
+	if (!::Company::IsValidID(company)) company = INVALID_COMPANY;
 
 	this->last_company = ScriptObject::GetCompany();
 	ScriptObject::SetCompany((CompanyID)company);

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -62,7 +60,12 @@ struct TileDesc {
 	StringID airport_tile_name; ///< Name of the airport tile
 	const char *grf;            ///< newGRF used for the tile contents
 	uint64 dparam[2];           ///< Parameters of the \a str string
-	uint16 rail_speed;          ///< Speed limit of rail
+	StringID railtype;          ///< Type of rail on the tile.
+	uint16 rail_speed;          ///< Speed limit of rail (bridges and track)
+	StringID roadtype;          ///< Type of road on the tile.
+	uint16 road_speed;          ///< Speed limit of road (bridges and track)
+	StringID tramtype;          ///< Type of tram on the tile.
+	uint16 tram_speed;          ///< Speed limit of tram (bridges and track)
 };
 
 /**
@@ -79,7 +82,7 @@ typedef CommandCost ClearTileProc(TileIndex tile, DoCommandFlag flags);
  * @param acceptance      Storage destination of the cargo acceptance in 1/8
  * @param always_accepted Bitmask of always accepted cargo types
  */
-typedef void AddAcceptedCargoProc(TileIndex tile, CargoArray &acceptance, uint32 *always_accepted);
+typedef void AddAcceptedCargoProc(TileIndex tile, CargoArray &acceptance, CargoTypes *always_accepted);
 
 /**
  * Tile callback function signature for obtaining a tile description
@@ -163,32 +166,32 @@ VehicleEnterTileStatus VehicleEnterTile(Vehicle *v, TileIndex tile, int x, int y
 void ChangeTileOwner(TileIndex tile, Owner old_owner, Owner new_owner);
 void GetTileDesc(TileIndex tile, TileDesc *td);
 
-static inline void AddAcceptedCargo(TileIndex tile, CargoArray &acceptance, uint32 *always_accepted)
+static inline void AddAcceptedCargo(TileIndex tile, CargoArray &acceptance, CargoTypes *always_accepted)
 {
 	AddAcceptedCargoProc *proc = _tile_type_procs[GetTileType(tile)]->add_accepted_cargo_proc;
-	if (proc == NULL) return;
-	uint32 dummy = 0; // use dummy bitmask so there don't need to be several 'always_accepted != NULL' checks
-	proc(tile, acceptance, always_accepted == NULL ? &dummy : always_accepted);
+	if (proc == nullptr) return;
+	CargoTypes dummy = 0; // use dummy bitmask so there don't need to be several 'always_accepted != nullptr' checks
+	proc(tile, acceptance, always_accepted == nullptr ? &dummy : always_accepted);
 }
 
 static inline void AddProducedCargo(TileIndex tile, CargoArray &produced)
 {
 	AddProducedCargoProc *proc = _tile_type_procs[GetTileType(tile)]->add_produced_cargo_proc;
-	if (proc == NULL) return;
+	if (proc == nullptr) return;
 	proc(tile, produced);
 }
 
 static inline void AnimateTile(TileIndex tile)
 {
 	AnimateTileProc *proc = _tile_type_procs[GetTileType(tile)]->animate_tile_proc;
-	assert(proc != NULL);
+	assert(proc != nullptr);
 	proc(tile);
 }
 
 static inline bool ClickTile(TileIndex tile)
 {
 	ClickTileProc *proc = _tile_type_procs[GetTileType(tile)]->click_tile_proc;
-	if (proc == NULL) return false;
+	if (proc == nullptr) return false;
 	return proc(tile);
 }
 

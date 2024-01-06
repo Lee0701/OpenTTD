@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,8 +16,7 @@
 #include "tcp.h"
 #include "../network_type.h"
 #include "../../core/pool_type.hpp"
-
-#ifdef ENABLE_NETWORK
+#include <chrono>
 
 /**
  * Enum with all types of TCP packets.
@@ -27,7 +24,7 @@
  */
 enum PacketGameType {
 	/*
-	 * These first three pair of packets (thus six in
+	 * These first four pair of packets (thus eight in
 	 * total) must remain in this order for backward
 	 * and forward compatibility between clients that
 	 * are trying to join directly.
@@ -41,9 +38,13 @@ enum PacketGameType {
 	PACKET_CLIENT_JOIN,                  ///< The client telling the server it wants to join.
 	PACKET_SERVER_ERROR,                 ///< Server sending an error message to the client.
 
-	/* Packets used for the pre-game lobby. */
-	PACKET_CLIENT_COMPANY_INFO,          ///< Request information about all companies.
-	PACKET_SERVER_COMPANY_INFO,          ///< Information about a single company.
+	/* Unused packet types, formerly used for the pre-game lobby. */
+	PACKET_CLIENT_UNUSED,                ///< Unused.
+	PACKET_SERVER_UNUSED,                ///< Unused.
+
+	/* Packets used to get the game info. */
+	PACKET_SERVER_GAME_INFO,             ///< Information about the server.
+	PACKET_CLIENT_GAME_INFO,             ///< Request information about the server.
 
 	/*
 	 * Packets after here assume that the client
@@ -98,6 +99,7 @@ enum PacketGameType {
 	/* Human communication! */
 	PACKET_CLIENT_CHAT,                  ///< Client said something that should be distributed.
 	PACKET_SERVER_CHAT,                  ///< Server distributing the message of a client (or itself).
+	PACKET_SERVER_EXTERNAL_CHAT,         ///< Server distributing the message from external source.
 
 	/* Remote console. */
 	PACKET_CLIENT_RCON,                  ///< Client asks the server to execute some command.
@@ -132,12 +134,12 @@ struct CommandPacket;
 /** A queue of CommandPackets. */
 class CommandQueue {
 	CommandPacket *first; ///< The first packet in the queue.
-	CommandPacket *last;  ///< The last packet in the queue; only valid when first != NULL.
+	CommandPacket *last;  ///< The last packet in the queue; only valid when first != nullptr.
 	uint count;           ///< The number of items in the queue.
 
 public:
 	/** Initialise the command queue. */
-	CommandQueue() : first(NULL), last(NULL) {}
+	CommandQueue() : first(nullptr), last(nullptr), count(0) {}
 	/** Clear the command queue. */
 	~CommandQueue() { this->Free(); }
 	void Append(CommandPacket *p);
@@ -152,7 +154,8 @@ public:
 class NetworkGameSocketHandler : public NetworkTCPSocketHandler {
 /* TODO: rewrite into a proper class */
 private:
-	NetworkClientInfo *info;  ///< Client info related to this socket
+	NetworkClientInfo *info;          ///< Client info related to this socket
+	bool is_pending_deletion = false; ///< Whether this socket is pending deletion
 
 protected:
 	NetworkRecvStatus ReceiveInvalidPacket(PacketGameType type);
@@ -187,38 +190,17 @@ protected:
 	virtual NetworkRecvStatus Receive_SERVER_ERROR(Packet *p);
 
 	/**
-	 * Request company information (in detail).
+	 * Request game information.
 	 * @param p The packet that was just received.
 	 */
-	virtual NetworkRecvStatus Receive_CLIENT_COMPANY_INFO(Packet *p);
+	virtual NetworkRecvStatus Receive_CLIENT_GAME_INFO(Packet *p);
 
 	/**
-	 * Sends information about the companies (one packet per company):
-	 * uint8   Version of the structure of this packet (NETWORK_COMPANY_INFO_VERSION).
-	 * bool    Contains data (false marks the end of updates).
-	 * uint8   ID of the company.
-	 * string  Name of the company.
-	 * uint32  Year the company was inaugurated.
-	 * uint64  Value.
-	 * uint64  Money.
-	 * uint64  Income.
-	 * uint16  Performance (last quarter).
-	 * bool    Company is password protected.
-	 * uint16  Number of trains.
-	 * uint16  Number of lorries.
-	 * uint16  Number of busses.
-	 * uint16  Number of planes.
-	 * uint16  Number of ships.
-	 * uint16  Number of train stations.
-	 * uint16  Number of lorry stations.
-	 * uint16  Number of bus stops.
-	 * uint16  Number of airports and heliports.
-	 * uint16  Number of harbours.
-	 * bool    Company is an AI.
-	 * string  Client names (comma separated list)
+	 * Sends information about the game.
+	 * Serialized NetworkGameInfo. See game_info.h for details.
 	 * @param p The packet that was just received.
 	 */
-	virtual NetworkRecvStatus Receive_SERVER_COMPANY_INFO(Packet *p);
+	virtual NetworkRecvStatus Receive_SERVER_GAME_INFO(Packet *p);
 
 	/**
 	 * Send information about a client:
@@ -260,7 +242,7 @@ protected:
 	virtual NetworkRecvStatus Receive_CLIENT_COMPANY_PASSWORD(Packet *p);
 
 	/**
-	 * The client is joined and ready to receive his map:
+	 * The client is joined and ready to receive their map:
 	 * uint32  Own client ID.
 	 * uint32  Generation seed.
 	 * string  Network ID of the server.
@@ -354,10 +336,8 @@ protected:
 	 * Send a DoCommand to the Server:
 	 * uint8   ID of the company (0..MAX_COMPANIES-1).
 	 * uint32  ID of the command (see command.h).
-	 * uint32  P1 (free variables used in DoCommand).
-	 * uint32  P2
-	 * uint32  Tile where this is taking place.
-	 * string  Text.
+	 * <var>   Command specific buffer with encoded parameters of variable length.
+	 *         The content differs per command and can change without notification.
 	 * uint8   ID of the callback.
 	 * @param p The packet that was just received.
 	 */
@@ -367,10 +347,8 @@ protected:
 	 * Sends a DoCommand to the client:
 	 * uint8   ID of the company (0..MAX_COMPANIES-1).
 	 * uint32  ID of the command (see command.h).
-	 * uint32  P1 (free variable used in DoCommand).
-	 * uint32  P2.
-	 * uint32  Tile where this is taking place.
-	 * string  Text.
+	 * <var>   Command specific buffer with encoded parameters of variable length.
+	 *         The content differs per command and can change without notification.
 	 * uint8   ID of the callback.
 	 * uint32  Frame of execution.
 	 * @param p The packet that was just received.
@@ -397,6 +375,16 @@ protected:
 	 * @param p The packet that was just received.
 	 */
 	virtual NetworkRecvStatus Receive_SERVER_CHAT(Packet *p);
+
+	/**
+	 * Sends a chat-packet for external source to the client:
+	 * string  Name of the source this message came from.
+	 * uint16  TextColour to use for the message.
+	 * string  Name of the user who sent the messsage.
+	 * string  Message (max NETWORK_CHAT_LENGTH).
+	 * @param p The packet that was just received.
+	 */
+	virtual NetworkRecvStatus Receive_SERVER_EXTERNAL_CHAT(Packet *p);
 
 	/**
 	 * Set the password for the clients current company:
@@ -522,9 +510,9 @@ public:
 	uint32 last_frame;           ///< Last frame we have executed
 	uint32 last_frame_server;    ///< Last frame the server has executed
 	CommandQueue incoming_queue; ///< The command-queue awaiting handling
-	uint last_packet;            ///< Time we received the last frame.
+	std::chrono::steady_clock::time_point last_packet; ///< Time we received the last frame.
 
-	NetworkRecvStatus CloseConnection(bool error = true);
+	NetworkRecvStatus CloseConnection(bool error = true) override;
 
 	/**
 	 * Close the network connection due to the given status.
@@ -539,7 +527,7 @@ public:
 	 */
 	inline void SetInfo(NetworkClientInfo *info)
 	{
-		assert(info != NULL && this->info == NULL);
+		assert(info != nullptr && this->info == nullptr);
 		this->info = info;
 	}
 
@@ -556,8 +544,11 @@ public:
 
 	const char *ReceiveCommand(Packet *p, CommandPacket *cp);
 	void SendCommand(Packet *p, const CommandPacket *cp);
-};
 
-#endif /* ENABLE_NETWORK */
+	bool IsPendingDeletion() const { return this->is_pending_deletion; }
+
+	void DeferDeletion();
+	static void ProcessDeferredDeletions();
+};
 
 #endif /* NETWORK_CORE_TCP_GAME_H */

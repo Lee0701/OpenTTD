@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,38 +13,42 @@
 #include "video_driver.hpp"
 
 /** The SDL video driver. */
-class VideoDriver_SDL: public VideoDriver {
+class VideoDriver_SDL : public VideoDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
+	void Stop() override;
 
-	/* virtual */ void MakeDirty(int left, int top, int width, int height);
+	void MakeDirty(int left, int top, int width, int height) override;
 
-	/* virtual */ void MainLoop();
+	void MainLoop() override;
 
-	/* virtual */ bool ChangeResolution(int w, int h);
+	bool ChangeResolution(int w, int h) override;
 
-	/* virtual */ bool ToggleFullscreen(bool fullscreen);
+	bool ToggleFullscreen(bool fullscreen) override;
 
-	/* virtual */ bool AfterBlitterChange();
+	bool AfterBlitterChange() override;
 
-	/* virtual */ bool ClaimMousePointer();
+	bool ClaimMousePointer() override;
 
-	/* virtual */ const char *GetName() const { return "sdl"; }
+	const char *GetName() const override { return "sdl"; }
+
+protected:
+	void InputLoop() override;
+	void Paint() override;
+	void CheckPaletteAnim() override;
+	bool PollEvent() override;
+
 private:
-	int PollEvent();
 	bool CreateMainSurface(uint w, uint h);
 	void SetupKeyboard();
 };
 
 /** Factory for the SDL video driver. */
-class FVideoDriver_SDL: public VideoDriverFactory<FVideoDriver_SDL> {
+class FVideoDriver_SDL : public DriverFactoryBase {
 public:
-	static const int priority = 5;
-	/* virtual */ const char *GetName() { return "sdl"; }
-	/* virtual */ const char *GetDescription() { return "SDL Video Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new VideoDriver_SDL(); }
+	FVideoDriver_SDL() : DriverFactoryBase(Driver::DT_VIDEO, 5, "sdl", "SDL Video Driver") {}
+	Driver *CreateInstance() const override { return new VideoDriver_SDL(); }
 };
 
 #endif /* VIDEO_SDL_H */

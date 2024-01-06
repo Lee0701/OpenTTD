@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -85,8 +83,8 @@ public:
 	 * @param start Where to start the tunnel.
 	 * @param vehicle_type The vehicle-type of tunnel to build.
 	 * @pre ScriptMap::IsValidTile(start).
-	 * @pre vehicle_type == ScriptVehicle::VT_ROAD || (vehicle_type == ScriptVehicle::VT_RAIL &&
-	 *   ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
+	 * @pre (vehicle_type == ScriptVehicle::VT_ROAD && ScriptRoad::IsRoadTypeAvailable(ScriptRoad::GetCurrentRoadType())) ||
+	 *      (vehicle_type == ScriptVehicle::VT_RAIL && ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
 	 * @game @pre Outside CompanyMode: vehicle_type == ScriptVehicle::VT_ROAD.
 	 * @exception ScriptError::ERR_AREA_NOT_CLEAR
 	 * @exception ScriptTunnel::ERR_TUNNEL_CANNOT_BUILD_ON_WATER

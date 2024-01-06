@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,10 +11,11 @@
 #include "script_townlist.hpp"
 #include "../../town.h"
 
+#include "../../safeguards.h"
+
 ScriptTownList::ScriptTownList()
 {
-	Town *t;
-	FOR_ALL_TOWNS(t) {
+	for (const Town *t : Town::Iterate()) {
 		this->AddItem(t->index);
 	}
 }

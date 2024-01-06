@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,26 +15,14 @@
 #include "strings_type.h"
 #include "sound_type.h"
 
-/** Constants in the message options window. */
-enum MessageOptionsSpace {
-	MOS_WIDG_PER_SETTING      = 4,  ///< Number of widgets needed for each news category, starting at widget #WID_MO_START_OPTION.
-
-	MOS_LEFT_EDGE             = 6,  ///< Number of pixels between left edge of the window and the options buttons column.
-	MOS_COLUMN_SPACING        = 4,  ///< Number of pixels between the buttons and the description columns.
-	MOS_RIGHT_EDGE            = 6,  ///< Number of pixels between right edge of the window and the options descriptions column.
-	MOS_BUTTON_SPACE          = 10, ///< Additional space in the button with the option value (for better looks).
-
-	MOS_ABOVE_GLOBAL_SETTINGS = 6,  ///< Number of vertical pixels between the categories and the global options.
-	MOS_BOTTOM_EDGE           = 6,  ///< Number of pixels between bottom edge of the window and bottom of the global options.
-};
-
 /**
  * Type of news.
  */
-enum NewsType {
+enum NewsType : byte {
 	NT_ARRIVAL_COMPANY, ///< First vehicle arrived for company
 	NT_ARRIVAL_OTHER,   ///< First vehicle arrived for competitor
 	NT_ACCIDENT,        ///< An accident or disaster has occurred
+	NT_ACCIDENT_OTHER,  ///< An accident or disaster has occurred
 	NT_COMPANY_INFO,    ///< Company info (new companies, bankruptcy messages)
 	NT_INDUSTRY_OPEN,   ///< Opening of industries
 	NT_INDUSTRY_CLOSE,  ///< Closing of industries
@@ -61,7 +47,7 @@ enum NewsType {
  * You have to make sure, #ChangeVehicleNews catches the DParams of your message.
  * This is NOT ensured by the references.
  */
-enum NewsReferenceType {
+enum NewsReferenceType : byte {
 	NR_NONE,      ///< Empty reference
 	NR_TILE,      ///< Reference tile.     Scroll to tile when clicking on the news.
 	NR_VEHICLE,   ///< Reference vehicle.  Scroll to vehicle when clicking on the news. Delete news when vehicle is deleted.
@@ -130,6 +116,12 @@ struct NewsTypeData {
 	NewsDisplay GetDisplay() const;
 };
 
+/** Container for any custom data that must be deleted after the news item has reached end-of-life. */
+struct NewsAllocatedData {
+	virtual ~NewsAllocatedData() {}
+};
+
+
 /** Information about a single item of news. */
 struct NewsItem {
 	NewsItem *prev;              ///< Previous news item
@@ -141,17 +133,20 @@ struct NewsItem {
 
 	NewsReferenceType reftype1;  ///< Type of ref1
 	NewsReferenceType reftype2;  ///< Type of ref2
-	uint32 ref1;                 ///< Reference 1 to some object: Used for a possible viewport, scrolling after clicking on the news, and for deleteing the news when the object is deleted.
-	uint32 ref2;                 ///< Reference 2 to some object: Used for scrolling after clicking on the news, and for deleteing the news when the object is deleted.
+	uint32 ref1;                 ///< Reference 1 to some object: Used for a possible viewport, scrolling after clicking on the news, and for deleting the news when the object is deleted.
+	uint32 ref2;                 ///< Reference 2 to some object: Used for scrolling after clicking on the news, and for deleting the news when the object is deleted.
 
-	void *free_data;             ///< Data to be freed when the news item has reached its end.
-
-	~NewsItem()
-	{
-		free(this->free_data);
-	}
+	std::unique_ptr<const NewsAllocatedData> data; ///< Custom data for the news item that will be deallocated (deleted) when the news item has reached its end.
 
 	uint64 params[10]; ///< Parameters for string resolving.
+
+	NewsItem(StringID string_id, NewsType type, NewsFlag flags, NewsReferenceType reftype1, uint32 ref1, NewsReferenceType reftype2, uint32 ref2, const NewsAllocatedData *data);
+};
+
+/** Container for a single string to be passed as NewsAllocatedData. */
+struct NewsStringData : NewsAllocatedData {
+	std::string string; ///< The string to retain.
+	NewsStringData(const std::string &str) : string(str) {}
 };
 
 /**
@@ -160,15 +155,15 @@ struct NewsItem {
  * of the companies and the fact that the company data is reset,
  * resulting in wrong names and such.
  */
-struct CompanyNewsInformation {
-	char company_name[64];       ///< The name of the company
-	char president_name[64];     ///< The name of the president
-	char other_company_name[64]; ///< The name of the company taking over this one
+struct CompanyNewsInformation : NewsAllocatedData {
+	std::string company_name;       ///< The name of the company
+	std::string president_name;     ///< The name of the president
+	std::string other_company_name; ///< The name of the company taking over this one
 
 	uint32 face; ///< The face of the president
 	byte colour; ///< The colour related to the company
 
-	void FillData(const struct Company *c, const struct Company *other = NULL);
+	CompanyNewsInformation(const struct Company *c, const struct Company *other = nullptr);
 };
 
 #endif /* NEWS_TYPE_H */

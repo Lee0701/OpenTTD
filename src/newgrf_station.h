@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -30,13 +28,22 @@ struct StationScopeResolver : public ScopeResolver {
 	CargoID cargo_type;                 ///< Type of cargo of the station.
 	Axis axis;                          ///< Station axis, used only for the slope check callback.
 
-	StationScopeResolver(ResolverObject *ro, const StationSpec *statspec, BaseStation *st, TileIndex tile);
+	/**
+	 * Constructor for station scopes.
+	 * @param ro Surrounding resolver.
+	 * @param statspec Station (type) specification.
+	 * @param st Instance of the station.
+	 * @param tile %Tile of the station.
+	 */
+	StationScopeResolver(ResolverObject &ro, const StationSpec *statspec, BaseStation *st, TileIndex tile)
+		: ScopeResolver(ro), tile(tile), st(st), statspec(statspec), cargo_type(CT_INVALID), axis(INVALID_AXIS)
+	{
+	}
 
-	/* virtual */ uint32 GetRandomBits() const;
-	/* virtual */ uint32 GetTriggers() const;
-	/* virtual */ void SetTriggers(int triggers) const;
+	uint32 GetRandomBits() const override;
+	uint32 GetTriggers() const override;
 
-	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
+	uint32 GetVariable(byte variable, uint32 parameter, bool *available) const override;
 };
 
 /** Station resolver. */
@@ -50,7 +57,7 @@ struct StationResolverObject : public ResolverObject {
 
 	TownScopeResolver *GetTown();
 
-	/* virtual */ ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0)
+	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0) override
 	{
 		switch (scope) {
 			case VSG_SCOPE_SELF:
@@ -58,8 +65,8 @@ struct StationResolverObject : public ResolverObject {
 
 			case VSG_SCOPE_PARENT: {
 				TownScopeResolver *tsr = this->GetTown();
-				if (tsr != NULL) return tsr;
-				/* FALL-THROUGH */
+				if (tsr != nullptr) return tsr;
+				FALLTHROUGH;
 			}
 
 			default:
@@ -67,16 +74,18 @@ struct StationResolverObject : public ResolverObject {
 		}
 	}
 
-	/* virtual */ const SpriteGroup *ResolveReal(const RealSpriteGroup *group) const;
+	const SpriteGroup *ResolveReal(const RealSpriteGroup *group) const override;
+
+	GrfSpecFeature GetFeature() const override;
+	uint32 GetDebugID() const override;
 };
 
-enum StationClassID {
+enum StationClassID : byte {
 	STAT_CLASS_BEGIN = 0,    ///< the lowest valid value
 	STAT_CLASS_DFLT = 0,     ///< Default station class.
 	STAT_CLASS_WAYP,         ///< Waypoint class.
-	STAT_CLASS_MAX = 256,    ///< Maximum number of classes.
+	STAT_CLASS_MAX = 255,    ///< Maximum number of classes.
 };
-typedef SimpleTinyEnumT<StationClassID, byte> StationClassIDByte;
 template <> struct EnumPropsT<StationClassID> : MakeEnumPropsT<StationClassID, byte, STAT_CLASS_BEGIN, STAT_CLASS_MAX, STAT_CLASS_MAX, 8> {};
 
 /** Allow incrementing of StationClassID variables */
@@ -100,12 +109,13 @@ enum StationRandomTrigger {
 	SRT_PATH_RESERVATION, ///< Trigger platform when train reserves path.
 };
 
-/* Station layout for given dimensions - it is a two-dimensional array
- * where index is computed as (x * platforms) + platform. */
-typedef byte *StationLayout;
-
 /** Station specification. */
 struct StationSpec {
+	StationSpec() : cls_id(STAT_CLASS_DFLT), name(0),
+		disallowed_platforms(0), disallowed_lengths(0),
+		cargo_threshold(0), cargo_triggers(0),
+		callback_mask(0), flags(0), pylons(0), wires(0), blocked(0),
+		animation({0, 0, 0, 0}) {}
 	/**
 	 * Properties related the the grf file.
 	 * NUM_CARGO real cargo plus three pseudo cargo sprite groups.
@@ -135,8 +145,7 @@ struct StationSpec {
 	 * 4-5 = platform with roof, left side
 	 * 6-7 = platform with roof, right side
 	 */
-	uint tiles;
-	NewGRFSpriteLayout *renderdata; ///< Array of tile layouts.
+	std::vector<NewGRFSpriteLayout> renderdata; ///< Array of tile layouts.
 
 	/**
 	 * Cargo threshold for choosing between little and lots of cargo
@@ -144,7 +153,7 @@ struct StationSpec {
 	 */
 	uint16 cargo_threshold;
 
-	uint32 cargo_triggers; ///< Bitmask of cargo types which cause trigger re-randomizing
+	CargoTypes cargo_triggers; ///< Bitmask of cargo types which cause trigger re-randomizing
 
 	byte callback_mask; ///< Bitmask of station callbacks that have to be called
 
@@ -156,10 +165,15 @@ struct StationSpec {
 
 	AnimationInfo animation;
 
-	byte lengths;
-	byte *platforms;
-	StationLayout **layouts;
-	bool copied_layouts;
+	/**
+	 * Custom platform layouts.
+	 * This is a 2D array containing an array of tiles.
+	 * 1st layer is platform lengths.
+	 * 2nd layer is tracks (width).
+	 * These can be sparsely populated, and the upper limit is not defined but
+	 * limited to 255.
+	 */
+	std::vector<std::vector<std::vector<byte>>> layouts;
 };
 
 /** Struct containing information relating to station classes. */

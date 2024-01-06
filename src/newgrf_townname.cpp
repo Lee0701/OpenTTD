@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -19,21 +17,26 @@
 #include "core/alloc_func.hpp"
 #include "string_func.h"
 
-static GRFTownName *_grf_townnames = NULL;
+#include "table/strings.h"
+
+#include "safeguards.h"
+
+static GRFTownName *_grf_townnames = nullptr;
+static std::vector<StringID> _grf_townname_names;
 
 GRFTownName *GetGRFTownName(uint32 grfid)
 {
 	GRFTownName *t = _grf_townnames;
-	for (; t != NULL; t = t->next) {
+	for (; t != nullptr; t = t->next) {
 		if (t->grfid == grfid) return t;
 	}
-	return NULL;
+	return nullptr;
 }
 
 GRFTownName *AddGRFTownName(uint32 grfid)
 {
 	GRFTownName *t = GetGRFTownName(grfid);
-	if (t == NULL) {
+	if (t == nullptr) {
 		t = CallocT<GRFTownName>(1);
 		t->grfid = grfid;
 		t->next = _grf_townnames;
@@ -45,9 +48,9 @@ GRFTownName *AddGRFTownName(uint32 grfid)
 void DelGRFTownName(uint32 grfid)
 {
 	GRFTownName *t = _grf_townnames;
-	GRFTownName *p = NULL;
-	for (;t != NULL; p = t, t = t->next) if (t->grfid == grfid) break;
-	if (t != NULL) {
+	GRFTownName *p = nullptr;
+	for (;t != nullptr; p = t, t = t->next) if (t->grfid == grfid) break;
+	if (t != nullptr) {
 		for (int i = 0; i < 128; i++) {
 			for (int j = 0; j < t->nbparts[i]; j++) {
 				for (int k = 0; k < t->partlist[i][j].partcount; k++) {
@@ -57,7 +60,7 @@ void DelGRFTownName(uint32 grfid)
 			}
 			free(t->partlist[i]);
 		}
-		if (p != NULL) {
+		if (p != nullptr) {
 			p->next = t->next;
 		} else {
 			_grf_townnames = t->next;
@@ -68,7 +71,7 @@ void DelGRFTownName(uint32 grfid)
 
 static char *RandomPart(char *buf, GRFTownName *t, uint32 seed, byte id, const char *last)
 {
-	assert(t != NULL);
+	assert(t != nullptr);
 	for (int i = 0; i < t->nbparts[id]; i++) {
 		byte count = t->partlist[id][i].bitcount;
 		uint16 maxprob = t->partlist[id][i].maxprob;
@@ -91,7 +94,7 @@ static char *RandomPart(char *buf, GRFTownName *t, uint32 seed, byte id, const c
 char *GRFTownNameGenerate(char *buf, uint32 grfid, uint16 gen, uint32 seed, const char *last)
 {
 	strecpy(buf, "", last);
-	for (GRFTownName *t = _grf_townnames; t != NULL; t = t->next) {
+	for (GRFTownName *t = _grf_townnames; t != nullptr; t = t->next) {
 		if (t->grfid == grfid) {
 			assert(gen < t->nb_gen);
 			buf = RandomPart(buf, t, seed, t->id[gen], last);
@@ -101,26 +104,34 @@ char *GRFTownNameGenerate(char *buf, uint32 grfid, uint16 gen, uint32 seed, cons
 	return buf;
 }
 
-StringID *GetGRFTownNameList()
+
+/** Allocate memory for the NewGRF town names. */
+void InitGRFTownGeneratorNames()
 {
-	int nb_names = 0, n = 0;
-	for (GRFTownName *t = _grf_townnames; t != NULL; t = t->next) nb_names += t->nb_gen;
-	StringID *list = MallocT<StringID>(nb_names + 1);
-	for (GRFTownName *t = _grf_townnames; t != NULL; t = t->next) {
-		for (int j = 0; j < t->nb_gen; j++) list[n++] = t->name[j];
+	_grf_townname_names.clear();
+	for (GRFTownName *t = _grf_townnames; t != nullptr; t = t->next) {
+		for (int j = 0; j < t->nb_gen; j++) _grf_townname_names.push_back(t->name[j]);
 	}
-	list[n] = INVALID_STRING_ID;
-	return list;
+}
+
+const std::vector<StringID>& GetGRFTownNameList()
+{
+	return _grf_townname_names;
+}
+
+StringID GetGRFTownNameName(uint gen)
+{
+	return gen < _grf_townname_names.size() ? _grf_townname_names[gen] : STR_UNDEFINED;
 }
 
 void CleanUpGRFTownNames()
 {
-	while (_grf_townnames != NULL) DelGRFTownName(_grf_townnames->grfid);
+	while (_grf_townnames != nullptr) DelGRFTownName(_grf_townnames->grfid);
 }
 
 uint32 GetGRFTownNameId(int gen)
 {
-	for (GRFTownName *t = _grf_townnames; t != NULL; t = t->next) {
+	for (GRFTownName *t = _grf_townnames; t != nullptr; t = t->next) {
 		if (gen < t->nb_gen) return t->grfid;
 		gen -= t->nb_gen;
 	}
@@ -130,7 +141,7 @@ uint32 GetGRFTownNameId(int gen)
 
 uint16 GetGRFTownNameType(int gen)
 {
-	for (GRFTownName *t = _grf_townnames; t != NULL; t = t->next) {
+	for (GRFTownName *t = _grf_townnames; t != nullptr; t = t->next) {
 		if (gen < t->nb_gen) return gen;
 		gen -= t->nb_gen;
 	}

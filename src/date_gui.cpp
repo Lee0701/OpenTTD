@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,10 +18,13 @@
 #include "widgets/dropdown_type.h"
 #include "widgets/date_widget.h"
 
+#include "safeguards.h"
+
 
 /** Window to select a date graphically by using dropdowns */
 struct SetDateWindow : Window {
 	SetDateCallback *callback; ///< Callback to call when a date has been selected
+	void *callback_data;       ///< Callback data pointer.
 	YearMonthDay date; ///< The currently selected date
 	Year min_year;     ///< The minimum year in the year dropdown
 	Year max_year;     ///< The maximum year (inclusive) in the year dropdown
@@ -38,22 +39,23 @@ struct SetDateWindow : Window {
 	 * @param max_year the maximum year (inclusive) to show in the year dropdown
 	 * @param callback the callback to call once a date has been selected
 	 */
-	SetDateWindow(const WindowDesc *desc, WindowNumber window_number, Window *parent, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback) :
-			Window(),
+	SetDateWindow(WindowDesc *desc, WindowNumber window_number, Window *parent, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback, void *callback_data) :
+			Window(desc),
 			callback(callback),
-			min_year(max(MIN_YEAR, min_year)),
-			max_year(min(MAX_YEAR, max_year))
+			callback_data(callback_data),
+			min_year(std::max(MIN_YEAR, min_year)),
+			max_year(std::min(MAX_YEAR, max_year))
 	{
 		assert(this->min_year <= this->max_year);
 		this->parent = parent;
-		this->InitNested(desc, window_number);
+		this->InitNested(window_number);
 
 		if (initial_date == 0) initial_date = _date;
 		ConvertDateToYMD(initial_date, &this->date);
 		this->date.year = Clamp(this->date.year, min_year, max_year);
 	}
 
-	virtual Point OnInitialPosition(const WindowDesc *desc, int16 sm_width, int16 sm_height, int window_number)
+	Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number) override
 	{
 		Point pt = { this->parent->left + this->parent->width / 2 - sm_width / 2, this->parent->top + this->parent->height / 2 - sm_height / 2 };
 		return pt;
@@ -66,21 +68,21 @@ struct SetDateWindow : Window {
 	void ShowDateDropDown(int widget)
 	{
 		int selected;
-		DropDownList *list = new DropDownList();
+		DropDownList list;
 
 		switch (widget) {
 			default: NOT_REACHED();
 
 			case WID_SD_DAY:
 				for (uint i = 0; i < 31; i++) {
-					list->push_back(new DropDownListStringItem(STR_ORDINAL_NUMBER_1ST + i, i + 1, false));
+					list.emplace_back(new DropDownListStringItem(STR_DAY_NUMBER_1ST + i, i + 1, false));
 				}
 				selected = this->date.day;
 				break;
 
 			case WID_SD_MONTH:
 				for (uint i = 0; i < 12; i++) {
-					list->push_back(new DropDownListStringItem(STR_MONTH_JAN + i, i, false));
+					list.emplace_back(new DropDownListStringItem(STR_MONTH_JAN + i, i, false));
 				}
 				selected = this->date.month;
 				break;
@@ -89,16 +91,16 @@ struct SetDateWindow : Window {
 				for (Year i = this->min_year; i <= this->max_year; i++) {
 					DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
 					item->SetParam(0, i);
-					list->push_back(item);
+					list.emplace_back(item);
 				}
 				selected = this->date.year;
 				break;
 		}
 
-		ShowDropDownList(this, list, selected, widget);
+		ShowDropDownList(this, std::move(list), selected, widget);
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		Dimension d = {0, 0};
 		switch (widget) {
@@ -106,7 +108,7 @@ struct SetDateWindow : Window {
 
 			case WID_SD_DAY:
 				for (uint i = 0; i < 31; i++) {
-					d = maxdim(d, GetStringBoundingBox(STR_ORDINAL_NUMBER_1ST + i));
+					d = maxdim(d, GetStringBoundingBox(STR_DAY_NUMBER_1ST + i));
 				}
 				break;
 
@@ -127,16 +129,16 @@ struct SetDateWindow : Window {
 		*size = d;
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
-			case WID_SD_DAY:   SetDParam(0, this->date.day - 1 + STR_ORDINAL_NUMBER_1ST); break;
+			case WID_SD_DAY:   SetDParam(0, this->date.day - 1 + STR_DAY_NUMBER_1ST); break;
 			case WID_SD_MONTH: SetDParam(0, this->date.month + STR_MONTH_JAN); break;
 			case WID_SD_YEAR:  SetDParam(0, this->date.year); break;
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_SD_DAY:
@@ -146,13 +148,13 @@ struct SetDateWindow : Window {
 				break;
 
 			case WID_SD_SET_DATE:
-				if (this->callback != NULL) this->callback(this->parent, ConvertYMDToDate(this->date.year, this->date.month, this->date.day));
-				delete this;
+				if (this->callback != nullptr) this->callback(this, ConvertYMDToDate(this->date.year, this->date.month, this->date.day), this->callback_data);
+				this->Close();
 				break;
 		}
 	}
 
-	virtual void OnDropdownSelect(int widget, int index)
+	void OnDropdownSelect(int widget, int index) override
 	{
 		switch (widget) {
 			case WID_SD_DAY:
@@ -194,8 +196,8 @@ static const NWidgetPart _nested_set_date_widgets[] = {
 };
 
 /** Description of the date setting window. */
-static const WindowDesc _set_date_desc(
-	WDP_CENTER, 0, 0,
+static WindowDesc _set_date_desc(
+	WDP_CENTER, nullptr, 0, 0,
 	WC_SET_DATE, WC_NONE,
 	0,
 	_nested_set_date_widgets, lengthof(_nested_set_date_widgets)
@@ -209,9 +211,10 @@ static const WindowDesc _set_date_desc(
  * @param min_year the minimum year to show in the year dropdown
  * @param max_year the maximum year (inclusive) to show in the year dropdown
  * @param callback the callback to call once a date has been selected
+ * @param callback_data extra callback data
  */
-void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback)
+void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback, void *callback_data)
 {
-	DeleteWindowByClass(WC_SET_DATE);
-	new SetDateWindow(&_set_date_desc, window_number, parent, initial_date, min_year, max_year, callback);
+	CloseWindowByClass(WC_SET_DATE);
+	new SetDateWindow(&_set_date_desc, window_number, parent, initial_date, min_year, max_year, callback, callback_data);
 }

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,16 +22,20 @@
  */
 static const byte TOWN_HOUSE_COMPLETED = 3;
 
+static const HouseID NUM_HOUSES_PER_GRF = 255;    ///< Number of supported houses per NewGRF; limited to 255 to allow extending Action3 with an extended byte later on.
+
 static const uint HOUSE_NO_CLASS      = 0;
-static const HouseID NEW_HOUSE_OFFSET = 110;
-static const HouseID HOUSE_MAX        = 512;
+static const HouseID NEW_HOUSE_OFFSET = 110;    ///< Offset for new houses.
+static const HouseID NUM_HOUSES       = 512;    ///< Total number of houses.
 static const HouseID INVALID_HOUSE_ID = 0xFFFF;
+
+static const uint HOUSE_NUM_ACCEPTS = 16; ///< Max number of cargoes accepted by a tile
 
 /**
  * There can only be as many classes as there are new houses, plus one for
  * NO_CLASS, as the original houses don't have classes.
  */
-static const uint HOUSE_CLASS_MAX  = HOUSE_MAX - NEW_HOUSE_OFFSET + 1;
+static const uint HOUSE_CLASS_MAX  = NUM_HOUSES - NEW_HOUSE_OFFSET + 1;
 
 enum BuildingFlags {
 	TILE_NO_FLAG         =       0,
@@ -62,7 +64,7 @@ enum HouseZonesBits {
 	HZB_TOWN_CENTRE,
 	HZB_END,
 };
-assert_compile(HZB_END == 5);
+static_assert(HZB_END == 5);
 
 DECLARE_POSTFIX_INCREMENT(HouseZonesBits)
 
@@ -95,36 +97,36 @@ DECLARE_ENUM_AS_BIT_SET(HouseExtraFlags)
 
 struct HouseSpec {
 	/* Standard properties */
-	Year min_year;                     ///< introduction year of the house
-	Year max_year;                     ///< last year it can be built
-	byte population;                   ///< population (Zero on other tiles in multi tile house.)
-	byte removal_cost;                 ///< cost multiplier for removing it
-	StringID building_name;            ///< building name
-	uint16 remove_rating_decrease;     ///< rating decrease if removed
-	byte mail_generation;              ///< mail generation multiplier (tile based, as the acceptances below)
-	byte cargo_acceptance[3];          ///< acceptance level for the cargo slots
-	CargoID accepts_cargo[3];          ///< 3 input cargo slots
-	BuildingFlags building_flags;      ///< some flags that describe the house (size, stadium etc...)
-	HouseZones building_availability;  ///< where can it be built (climates, zones)
-	bool enabled;                      ///< the house is available to build (true by default, but can be disabled by newgrf)
+	Year min_year;                            ///< introduction year of the house
+	Year max_year;                            ///< last year it can be built
+	byte population;                          ///< population (Zero on other tiles in multi tile house.)
+	byte removal_cost;                        ///< cost multiplier for removing it
+	StringID building_name;                   ///< building name
+	uint16 remove_rating_decrease;            ///< rating decrease if removed
+	byte mail_generation;                     ///< mail generation multiplier (tile based, as the acceptances below)
+	byte cargo_acceptance[HOUSE_NUM_ACCEPTS]; ///< acceptance level for the cargo slots
+	CargoID accepts_cargo[HOUSE_NUM_ACCEPTS]; ///< input cargo slots
+	BuildingFlags building_flags;             ///< some flags that describe the house (size, stadium etc...)
+	HouseZones building_availability;         ///< where can it be built (climates, zones)
+	bool enabled;                             ///< the house is available to build (true by default, but can be disabled by newgrf)
 
 	/* NewHouses properties */
-	GRFFileProps grf_prop;             ///< Properties related the the grf file
-	uint16 callback_mask;              ///< Bitmask of house callbacks that have to be called
-	byte random_colour[4];             ///< 4 "random" colours
-	byte probability;                  ///< Relative probability of appearing (16 is the standard value)
-	HouseExtraFlags extra_flags;       ///< some more flags
-	HouseClassID class_id;             ///< defines the class this house has (not grf file based)
-	AnimationInfo animation;           ///< information about the animation.
-	byte processing_time;              ///< Periodic refresh multiplier
-	byte minimum_life;                 ///< The minimum number of years this house will survive before the town rebuilds it
-	uint32 watched_cargoes;            ///< Cargo types watched for acceptance.
+	GRFFileProps grf_prop;                    ///< Properties related the the grf file
+	uint16 callback_mask;                     ///< Bitmask of house callbacks that have to be called
+	byte random_colour[4];                    ///< 4 "random" colours
+	byte probability;                         ///< Relative probability of appearing (16 is the standard value)
+	HouseExtraFlags extra_flags;              ///< some more flags
+	HouseClassID class_id;                    ///< defines the class this house has (not grf file based)
+	AnimationInfo animation;                  ///< information about the animation.
+	byte processing_time;                     ///< Periodic refresh multiplier
+	byte minimum_life;                        ///< The minimum number of years this house will survive before the town rebuilds it
+	CargoTypes watched_cargoes;               ///< Cargo types watched for acceptance.
 
 	Money GetRemovalCost() const;
 
 	static inline HouseSpec *Get(size_t house_id)
 	{
-		assert(house_id < HOUSE_MAX);
+		assert(house_id < NUM_HOUSES);
 		extern HouseSpec _house_specs[];
 		return &_house_specs[house_id];
 	}

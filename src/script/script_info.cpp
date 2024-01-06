@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,17 +15,19 @@
 #include "script_info.hpp"
 #include "script_scanner.hpp"
 
+#include "../safeguards.h"
+
 ScriptInfo::~ScriptInfo()
 {
 	/* Free all allocated strings */
-	for (ScriptConfigItemList::iterator it = this->config_list.begin(); it != this->config_list.end(); it++) {
-		free((*it).name);
-		free((*it).description);
-		if (it->labels != NULL) {
-			for (LabelMapping::iterator it2 = (*it).labels->Begin(); it2 != (*it).labels->End(); it2++) {
-				free(it2->second);
+	for (const auto &item : this->config_list) {
+		free(item.name);
+		free(item.description);
+		if (item.labels != nullptr) {
+			for (auto &lbl_map : *item.labels) {
+				free(lbl_map.second);
 			}
-			delete it->labels;
+			delete item.labels;
 		}
 	}
 	this->config_list.clear();
@@ -39,8 +39,6 @@ ScriptInfo::~ScriptInfo()
 	free(this->date);
 	free(this->instance_name);
 	free(this->url);
-	free(this->main_script);
-	free(this->tar_file);
 	free(this->SQ_instance);
 }
 
@@ -48,7 +46,7 @@ bool ScriptInfo::CheckMethod(const char *name) const
 {
 	if (!this->engine->MethodExists(*this->SQ_instance, name)) {
 		char error[1024];
-		snprintf(error, sizeof(error), "your info.nut/library.nut doesn't have the method '%s'", name);
+		seprintf(error, lastof(error), "your info.nut/library.nut doesn't have the method '%s'", name);
 		this->engine->ThrowError(error);
 		return false;
 	}
@@ -81,9 +79,8 @@ bool ScriptInfo::CheckMethod(const char *name) const
 	}
 
 	/* Get location information of the scanner */
-	info->main_script = strdup(info->scanner->GetMainScript());
-	const char *tar_name = info->scanner->GetTarFile();
-	if (tar_name != NULL) info->tar_file = strdup(tar_name);
+	info->main_script = info->scanner->GetMainScript();
+	info->tar_file = info->scanner->GetTarFile();
 
 	/* Cache the data the info file gives us. */
 	if (!info->engine->CallStringMethodStrdup(*info->SQ_instance, "GetAuthor", &info->author, MAX_GET_OPS)) return SQ_ERROR;
@@ -109,7 +106,7 @@ bool ScriptInfo::CheckMethod(const char *name) const
 
 bool ScriptInfo::GetSettings()
 {
-	return this->engine->CallMethod(*this->SQ_instance, "GetSettings", NULL, MAX_GET_SETTING_OPS);
+	return this->engine->CallMethod(*this->SQ_instance, "GetSettings", nullptr, MAX_GET_SETTING_OPS);
 }
 
 SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
@@ -123,69 +120,68 @@ SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
 	/* Read the table, and find all properties we care about */
 	sq_pushnull(vm);
 	while (SQ_SUCCEEDED(sq_next(vm, -2))) {
-		const SQChar *sqkey;
-		if (SQ_FAILED(sq_getstring(vm, -2, &sqkey))) return SQ_ERROR;
-		const char *key = SQ2OTTD(sqkey);
-		ValidateString(key);
+		const SQChar *key;
+		if (SQ_FAILED(sq_getstring(vm, -2, &key))) return SQ_ERROR;
+		StrMakeValidInPlace(const_cast<char *>(key));
 
 		if (strcmp(key, "name") == 0) {
 			const SQChar *sqvalue;
 			if (SQ_FAILED(sq_getstring(vm, -1, &sqvalue))) return SQ_ERROR;
-			char *name = strdup(SQ2OTTD(sqvalue));
+			char *name = stredup(sqvalue);
 			char *s;
-			ValidateString(name);
+			StrMakeValidInPlace(name);
 
 			/* Don't allow '=' and ',' in configure setting names, as we need those
 			 *  2 chars to nicely store the settings as a string. */
-			while ((s = strchr(name, '=')) != NULL) *s = '_';
-			while ((s = strchr(name, ',')) != NULL) *s = '_';
+			while ((s = strchr(name, '=')) != nullptr) *s = '_';
+			while ((s = strchr(name, ',')) != nullptr) *s = '_';
 			config.name = name;
 			items |= 0x001;
 		} else if (strcmp(key, "description") == 0) {
 			const SQChar *sqdescription;
 			if (SQ_FAILED(sq_getstring(vm, -1, &sqdescription))) return SQ_ERROR;
-			config.description = strdup(SQ2OTTD(sqdescription));
-			ValidateString(config.description);
+			config.description = stredup(sqdescription);
+			StrMakeValidInPlace(const_cast<char *>(config.description));
 			items |= 0x002;
 		} else if (strcmp(key, "min_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.min_value = res;
+			config.min_value = ClampToI32(res);
 			items |= 0x004;
 		} else if (strcmp(key, "max_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.max_value = res;
+			config.max_value = ClampToI32(res);
 			items |= 0x008;
 		} else if (strcmp(key, "easy_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.easy_value = res;
+			config.easy_value = ClampToI32(res);
 			items |= 0x010;
 		} else if (strcmp(key, "medium_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.medium_value = res;
+			config.medium_value = ClampToI32(res);
 			items |= 0x020;
 		} else if (strcmp(key, "hard_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.hard_value = res;
+			config.hard_value = ClampToI32(res);
 			items |= 0x040;
 		} else if (strcmp(key, "random_deviation") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.random_deviation = res;
+			config.random_deviation = ClampToI32(abs(res));
 			items |= 0x200;
 		} else if (strcmp(key, "custom_value") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.custom_value = res;
+			config.custom_value = ClampToI32(res);
 			items |= 0x080;
 		} else if (strcmp(key, "step_size") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
-			config.step_size = res;
+			config.step_size = ClampToI32(res);
 		} else if (strcmp(key, "flags") == 0) {
 			SQInteger res;
 			if (SQ_FAILED(sq_getinteger(vm, -1, &res))) return SQ_ERROR;
@@ -193,7 +189,7 @@ SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
 			items |= 0x100;
 		} else {
 			char error[1024];
-			snprintf(error, sizeof(error), "unknown setting property '%s'", key);
+			seprintf(error, lastof(error), "unknown setting property '%s'", key);
 			this->engine->ThrowError(error);
 			return SQ_ERROR;
 		}
@@ -206,7 +202,7 @@ SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
 	 * be set for the same config item. */
 	if ((items & 0x200) != 0 && (config.flags & SCRIPTCONFIG_RANDOM) != 0) {
 		char error[1024];
-		snprintf(error, sizeof(error), "Setting both random_deviation and SCRIPTCONFIG_RANDOM is not allowed");
+		seprintf(error, lastof(error), "Setting both random_deviation and SCRIPTCONFIG_RANDOM is not allowed");
 		this->engine->ThrowError(error);
 		return SQ_ERROR;
 	}
@@ -217,7 +213,7 @@ SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
 	uint mask = (config.flags & SCRIPTCONFIG_BOOLEAN) ? 0x1F3 : 0x1FF;
 	if (items != mask) {
 		char error[1024];
-		snprintf(error, sizeof(error), "please define all properties of a setting (min/max not allowed for booleans)");
+		seprintf(error, lastof(error), "please define all properties of a setting (min/max not allowed for booleans)");
 		this->engine->ThrowError(error);
 		return SQ_ERROR;
 	}
@@ -228,42 +224,46 @@ SQInteger ScriptInfo::AddSetting(HSQUIRRELVM vm)
 
 SQInteger ScriptInfo::AddLabels(HSQUIRRELVM vm)
 {
-	const SQChar *sq_setting_name;
-	if (SQ_FAILED(sq_getstring(vm, -2, &sq_setting_name))) return SQ_ERROR;
-	const char *setting_name = SQ2OTTD(sq_setting_name);
-	ValidateString(setting_name);
+	const SQChar *setting_name;
+	if (SQ_FAILED(sq_getstring(vm, -2, &setting_name))) return SQ_ERROR;
+	StrMakeValidInPlace(const_cast<char *>(setting_name));
 
-	ScriptConfigItem *config = NULL;
-	for (ScriptConfigItemList::iterator it = this->config_list.begin(); it != this->config_list.end(); it++) {
-		if (strcmp((*it).name, setting_name) == 0) config = &(*it);
+	ScriptConfigItem *config = nullptr;
+	for (auto &item : this->config_list) {
+		if (strcmp(item.name, setting_name) == 0) config = &item;
 	}
 
-	if (config == NULL) {
+	if (config == nullptr) {
 		char error[1024];
-		snprintf(error, sizeof(error), "Trying to add labels for non-defined setting '%s'", setting_name);
+		seprintf(error, lastof(error), "Trying to add labels for non-defined setting '%s'", setting_name);
 		this->engine->ThrowError(error);
 		return SQ_ERROR;
 	}
-	if (config->labels != NULL) return SQ_ERROR;
+	if (config->labels != nullptr) return SQ_ERROR;
 
 	config->labels = new LabelMapping;
 
 	/* Read the table and find all labels */
 	sq_pushnull(vm);
 	while (SQ_SUCCEEDED(sq_next(vm, -2))) {
-		const SQChar *sq_key;
-		const SQChar *sq_label;
-		if (SQ_FAILED(sq_getstring(vm, -2, &sq_key))) return SQ_ERROR;
-		if (SQ_FAILED(sq_getstring(vm, -1, &sq_label))) return SQ_ERROR;
+		const SQChar *key_string;
+		const SQChar *label;
+		if (SQ_FAILED(sq_getstring(vm, -2, &key_string))) return SQ_ERROR;
+		if (SQ_FAILED(sq_getstring(vm, -1, &label))) return SQ_ERROR;
 		/* Because squirrel doesn't support identifiers starting with a digit,
 		 * we skip the first character. */
-		const char *key_string = SQ2OTTD(sq_key);
-		int key = atoi(key_string + 1);
-		const char *label = SQ2OTTD(sq_label);
-		ValidateString(label);
+		key_string++;
+		int sign = 1;
+		if (*key_string == '_') {
+			/* When the second character is '_', it indicates the value is negative. */
+			sign = -1;
+			key_string++;
+		}
+		int key = atoi(key_string) * sign;
+		StrMakeValidInPlace(const_cast<char *>(label));
 
-		/* !Contains() prevents strdup from leaking. */
-		if (!config->labels->Contains(key)) config->labels->Insert(key, strdup(label));
+		/* !Contains() prevents stredup from leaking. */
+		if (!config->labels->Contains(key)) config->labels->Insert(key, stredup(label));
 
 		sq_pop(vm, 2);
 	}
@@ -288,22 +288,22 @@ const ScriptConfigItemList *ScriptInfo::GetConfigList() const
 
 const ScriptConfigItem *ScriptInfo::GetConfigItem(const char *name) const
 {
-	for (ScriptConfigItemList::const_iterator it = this->config_list.begin(); it != this->config_list.end(); it++) {
-		if (strcmp((*it).name, name) == 0) return &(*it);
+	for (const auto &item : this->config_list) {
+		if (strcmp(item.name, name) == 0) return &item;
 	}
-	return NULL;
+	return nullptr;
 }
 
 int ScriptInfo::GetSettingDefaultValue(const char *name) const
 {
-	for (ScriptConfigItemList::const_iterator it = this->config_list.begin(); it != this->config_list.end(); it++) {
-		if (strcmp((*it).name, name) != 0) continue;
+	for (const auto &item : this->config_list) {
+		if (strcmp(item.name, name) != 0) continue;
 		/* The default value depends on the difficulty level */
 		switch (GetGameSettings().script.settings_profile) {
-			case SP_EASY:   return (*it).easy_value;
-			case SP_MEDIUM: return (*it).medium_value;
-			case SP_HARD:   return (*it).hard_value;
-			case SP_CUSTOM: return (*it).custom_value;
+			case SP_EASY:   return item.easy_value;
+			case SP_MEDIUM: return item.medium_value;
+			case SP_HARD:   return item.hard_value;
+			case SP_CUSTOM: return item.custom_value;
 			default: NOT_REACHED();
 		}
 	}

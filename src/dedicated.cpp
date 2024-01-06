@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -10,19 +8,21 @@
 /** @file dedicated.cpp Forking support for dedicated servers. */
 
 #include "stdafx.h"
+#include "fileio_func.h"
+#include <string>
 
-#ifdef ENABLE_NETWORK
+std::string _log_file; ///< File to reroute output of a forked OpenTTD to
+std::unique_ptr<FILE, FileDeleter> _log_fd; ///< File to reroute output of a forked OpenTTD to
 
-char *_log_file; ///< File to reroute output of a forked OpenTTD to
-
-#if defined(UNIX) && !defined(__MORPHOS__)
+#if defined(UNIX)
 
 #include <unistd.h>
 
-#if (defined(SUNOS) && !defined(_LP64) && !defined(_I32LPx)) || defined(__HAIKU__)
+#include "safeguards.h"
+
+#if defined(SUNOS) && !defined(_LP64) && !defined(_I32LPx)
 /* Solaris has, in certain situation, pid_t defined as long, while in other
  *  cases it has it defined as int... this handles all cases nicely.
- * Haiku has also defined pid_t as a long.
  */
 # define PRINTF_PID_T "%ld"
 #else
@@ -39,20 +39,18 @@ void DedicatedFork()
 			exit(1);
 
 		case 0: { // We're the child
-			FILE *f;
-
 			/* Open the log-file to log all stuff too */
-			f = fopen(_log_file, "a");
-			if (f == NULL) {
+			_log_fd.reset(fopen(_log_file.c_str(), "a"));
+			if (!_log_fd) {
 				perror("Unable to open logfile");
 				exit(1);
 			}
 			/* Redirect stdout and stderr to log-file */
-			if (dup2(fileno(f), fileno(stdout)) == -1) {
+			if (dup2(fileno(_log_fd.get()), fileno(stdout)) == -1) {
 				perror("Rerouting stdout");
 				exit(1);
 			}
-			if (dup2(fileno(f), fileno(stderr)) == -1) {
+			if (dup2(fileno(_log_fd.get()), fileno(stderr)) == -1) {
 				perror("Rerouting stderr");
 				exit(1);
 			}
@@ -67,10 +65,3 @@ void DedicatedFork()
 	}
 }
 #endif
-
-#else
-
-/** Empty helper function call for NOT(UNIX and not MORPHOS) systems */
-void DedicatedFork() {}
-
-#endif /* ENABLE_NETWORK */

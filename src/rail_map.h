@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,7 @@
 #include "signal_func.h"
 #include "track_func.h"
 #include "tile_map.h"
+#include "water_map.h"
 #include "signal_type.h"
 
 
@@ -115,7 +114,7 @@ static inline bool IsRailDepotTile(TileIndex t)
  */
 static inline RailType GetRailType(TileIndex t)
 {
-	return (RailType)GB(_m[t].m3, 0, 4);
+	return (RailType)GB(_me[t].m8, 0, 6);
 }
 
 /**
@@ -125,7 +124,7 @@ static inline RailType GetRailType(TileIndex t)
  */
 static inline void SetRailType(TileIndex t, RailType r)
 {
-	SB(_m[t].m3, 0, 4, r);
+	SB(_me[t].m8, 0, 6, r);
 }
 
 
@@ -521,12 +520,14 @@ static inline void MakeRailNormal(TileIndex t, Owner o, TrackBits b, RailType r)
 {
 	SetTileType(t, MP_RAILWAY);
 	SetTileOwner(t, o);
+	SetDockingTile(t, false);
 	_m[t].m2 = 0;
-	_m[t].m3 = r;
+	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = RAIL_TILE_NORMAL << 6 | b;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
+	_me[t].m8 = r;
 }
 
 
@@ -534,12 +535,14 @@ static inline void MakeRailDepot(TileIndex t, Owner o, DepotID did, DiagDirectio
 {
 	SetTileType(t, MP_RAILWAY);
 	SetTileOwner(t, o);
+	SetDockingTile(t, false);
 	_m[t].m2 = did;
-	_m[t].m3 = r;
+	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = RAIL_TILE_DEPOT << 6 | d;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
+	_me[t].m8 = r;
 }
 
 #endif /* RAIL_MAP_H */

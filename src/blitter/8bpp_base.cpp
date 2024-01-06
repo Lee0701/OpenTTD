@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,9 @@
 #include "../stdafx.h"
 #include "../gfx_func.h"
 #include "8bpp_base.hpp"
+#include "common.hpp"
+
+#include "../safeguards.h"
 
 void Blitter_8bppBase::DrawColourMappingRect(void *dst, int width, int height, PaletteID pal)
 {
@@ -31,6 +32,13 @@ void *Blitter_8bppBase::MoveTo(void *video, int x, int y)
 void Blitter_8bppBase::SetPixel(void *video, int x, int y, uint8 colour)
 {
 	*((uint8 *)video + x + y * _screen.pitch) = colour;
+}
+
+void Blitter_8bppBase::DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width, int dash)
+{
+	this->DrawLineGeneric(x, y, x2, y2, screen_width, screen_height, width, dash, [=](int x, int y) {
+		*((uint8 *)video + x + y * _screen.pitch) = colour;
+	});
 }
 
 void Blitter_8bppBase::DrawRect(void *video, int width, int height, uint8 colour)

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,8 @@
 #include "../stdafx.h"
 #include "../openttd.h"
 #include "os2_m.h"
+#include "midifile.hpp"
+#include "../base_media_base.h"
 
 #define INCL_DOS
 #define INCL_OS2MM
@@ -20,6 +20,8 @@
 #include <stdarg.h>
 #include <os2.h>
 #include <os2me.h>
+
+#include "../safeguards.h"
 
 /**********************
  * OS/2 MIDI PLAYER
@@ -41,17 +43,20 @@ static long CDECL MidiSendCommand(const char *cmd, ...)
 	va_start(va, cmd);
 	vseprintf(buf, lastof(buf), cmd, va);
 	va_end(va);
-	return mciSendString(buf, NULL, 0, NULL, 0);
+	return mciSendString(buf, nullptr, 0, nullptr, 0);
 }
 
 /** OS/2's music player's factory. */
 static FMusicDriver_OS2 iFMusicDriver_OS2;
 
-void MusicDriver_OS2::PlaySong(const char *filename)
+void MusicDriver_OS2::PlaySong(const MusicSongInfo &song)
 {
-	MidiSendCommand("close all");
+	std::string filename = MidiFile::GetSMFFile(song);
 
-	if (MidiSendCommand("open %s type sequencer alias song", filename) != 0) {
+	MidiSendCommand("close all");
+	if (filename.empty()) return;
+
+	if (MidiSendCommand("open %s type sequencer alias song", filename.c_str()) != 0) {
 		return;
 	}
 
@@ -71,11 +76,11 @@ void MusicDriver_OS2::SetVolume(byte vol)
 bool MusicDriver_OS2::IsSongPlaying()
 {
 	char buf[16];
-	mciSendString("status song mode", buf, sizeof(buf), NULL, 0);
+	mciSendString("status song mode", buf, sizeof(buf), nullptr, 0);
 	return strcmp(buf, "playing") == 0 || strcmp(buf, "seeking") == 0;
 }
 
-const char *MusicDriver_OS2::Start(const char * const *parm)
+const char *MusicDriver_OS2::Start(const StringList &parm)
 {
 	return 0;
 }

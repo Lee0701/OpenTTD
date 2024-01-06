@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,45 +22,71 @@
 struct VehicleScopeResolver : public ScopeResolver {
 	const struct Vehicle *v; ///< The vehicle being resolved.
 	EngineID self_type;      ///< Type of the vehicle.
-	bool info_view;          ///< Indicates if the item is being drawn in an info window.
+	bool rotor_in_gui;       ///< Helicopter rotor is drawn in GUI.
 
-	VehicleScopeResolver(ResolverObject *ro, EngineID engine_type, const Vehicle *v, bool info_view);
+	/**
+	 * Scope resolver of a single vehicle.
+	 * @param ro Surrounding resolver.
+	 * @param engine_type Engine type
+	 * @param v %Vehicle being resolved.
+	 * @param rotor_in_gui Helicopter rotor is drawn in GUI.
+	 */
+	VehicleScopeResolver(ResolverObject &ro, EngineID engine_type, const Vehicle *v, bool rotor_in_gui)
+		: ScopeResolver(ro), v(v), self_type(engine_type), rotor_in_gui(rotor_in_gui)
+	{
+	}
 
 	void SetVehicle(const Vehicle *v) { this->v = v; }
 
-	/* virtual */ uint32 GetRandomBits() const;
-	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
-	/* virtual */ uint32 GetTriggers() const;
-	/* virtual */ void SetTriggers(int triggers) const;
+	uint32 GetRandomBits() const override;
+	uint32 GetVariable(byte variable, uint32 parameter, bool *available) const override;
+	uint32 GetTriggers() const override;
 };
 
 /** Resolver for a vehicle (chain) */
 struct VehicleResolverObject : public ResolverObject {
+	/** Application of 'wagon overrides'. */
+	enum WagonOverride {
+		WO_NONE,     //!< Resolve no wagon overrides.
+		WO_UNCACHED, //!< Resolve wagon overrides.
+		WO_CACHED,   //!< Resolve wagon overrides using TrainCache::cached_override.
+		WO_SELF,     //!< Resolve self-override (helicopter rotors and such).
+	};
+
 	VehicleScopeResolver self_scope;     ///< Scope resolver for the indicated vehicle.
 	VehicleScopeResolver parent_scope;   ///< Scope resolver for its parent vehicle.
 
 	VehicleScopeResolver relative_scope; ///< Scope resolver for an other vehicle in the chain.
 	byte cached_relative_count;          ///< Relative position of the other vehicle.
 
-	VehicleResolverObject(EngineID engine_type, const Vehicle *v, bool info_view = false,
+	VehicleResolverObject(EngineID engine_type, const Vehicle *v, WagonOverride wagon_override, bool rotor_in_gui = false,
 			CallbackID callback = CBID_NO_CALLBACK, uint32 callback_param1 = 0, uint32 callback_param2 = 0);
 
-	/* virtual */ ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0);
+	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0) override;
 
-	/* virtual */ const SpriteGroup *ResolveReal(const RealSpriteGroup *group) const;
+	const SpriteGroup *ResolveReal(const RealSpriteGroup *group) const override;
+
+	GrfSpecFeature GetFeature() const override;
+	uint32 GetDebugID() const override;
 };
 
 static const uint TRAININFO_DEFAULT_VEHICLE_WIDTH   = 29;
 static const uint ROADVEHINFO_DEFAULT_VEHICLE_WIDTH = 32;
 static const uint VEHICLEINFO_FULL_VEHICLE_WIDTH    = 32;
 
+struct VehicleSpriteSeq;
+
 void SetWagonOverrideSprites(EngineID engine, CargoID cargo, const struct SpriteGroup *group, EngineID *train_id, uint trains);
 const SpriteGroup *GetWagonOverrideSpriteSet(EngineID engine, CargoID cargo, EngineID overriding_engine);
 void SetCustomEngineSprites(EngineID engine, byte cargo, const struct SpriteGroup *group);
-SpriteID GetCustomEngineSprite(EngineID engine, const Vehicle *v, Direction direction, EngineImageType image_type);
-SpriteID GetRotorOverrideSprite(EngineID engine, const struct Aircraft *v, bool info_view, EngineImageType image_type);
-#define GetCustomRotorSprite(v, i, image_type) GetRotorOverrideSprite(v->engine_type, v, i, image_type)
-#define GetCustomRotorIcon(et, image_type) GetRotorOverrideSprite(et, NULL, true, image_type)
+
+void GetCustomEngineSprite(EngineID engine, const Vehicle *v, Direction direction, EngineImageType image_type, VehicleSpriteSeq *result);
+#define GetCustomVehicleSprite(v, direction, image_type, result) GetCustomEngineSprite(v->engine_type, v, direction, image_type, result)
+#define GetCustomVehicleIcon(et, direction, image_type, result) GetCustomEngineSprite(et, nullptr, direction, image_type, result)
+
+void GetRotorOverrideSprite(EngineID engine, const struct Aircraft *v, EngineImageType image_type, VehicleSpriteSeq *result);
+#define GetCustomRotorSprite(v, image_type, result) GetRotorOverrideSprite(v->engine_type, v, image_type, result)
+#define GetCustomRotorIcon(et, image_type, result) GetRotorOverrideSprite(et, nullptr, image_type, result)
 
 /* Forward declaration of GRFFile, to avoid unnecessary inclusion of newgrf.h
  * elsewhere... */
@@ -73,13 +97,11 @@ void SetEngineGRF(EngineID engine, const struct GRFFile *file);
 uint16 GetVehicleCallback(CallbackID callback, uint32 param1, uint32 param2, EngineID engine, const Vehicle *v);
 uint16 GetVehicleCallbackParent(CallbackID callback, uint32 param1, uint32 param2, EngineID engine, const Vehicle *v, const Vehicle *parent);
 bool UsesWagonOverride(const Vehicle *v);
-#define GetCustomVehicleSprite(v, direction, image_type) GetCustomEngineSprite(v->engine_type, v, direction, image_type)
-#define GetCustomVehicleIcon(et, direction, image_type) GetCustomEngineSprite(et, NULL, direction, image_type)
 
 /* Handler to Evaluate callback 36. If the callback fails (i.e. most of the
  * time) orig_value is returned */
-uint GetVehicleProperty(const Vehicle *v, PropertyID property, uint orig_value);
-uint GetEngineProperty(EngineID engine, PropertyID property, uint orig_value, const Vehicle *v = NULL);
+int GetVehicleProperty(const Vehicle *v, PropertyID property, int orig_value, bool is_signed = false);
+int GetEngineProperty(EngineID engine, PropertyID property, int orig_value, const Vehicle *v = nullptr, bool is_signed = false);
 
 enum VehicleTrigger {
 	VEHICLE_TRIGGER_NEW_CARGO     = 0x01,
@@ -93,8 +115,6 @@ enum VehicleTrigger {
 	VEHICLE_TRIGGER_CALLBACK_32   = 0x10,
 };
 void TriggerVehicle(Vehicle *veh, VehicleTrigger trigger);
-
-void UnloadWagonOverrides(Engine *e);
 
 void AlterVehicleListOrder(EngineID engine, uint target);
 void CommitVehicleListOrderChanges();

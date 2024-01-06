@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,6 +14,7 @@
 #include "company_func.h"
 #include "industry.h"
 #include "town.h"
+#include "core/overflowsafe_type.hpp"
 #include <map>
 
 struct Station;
@@ -31,7 +30,7 @@ struct Station;
 typedef uint32 CargoMonitorID; ///< Type of the cargo monitor number.
 
 /** Map type for storing and updating active cargo monitor numbers and their amounts. */
-typedef std::map<CargoMonitorID, uint32> CargoMonitorMap;
+typedef std::map<CargoMonitorID, OverflowSafeInt32> CargoMonitorMap;
 
 extern CargoMonitorMap _cargo_pickups;
 extern CargoMonitorMap _cargo_deliveries;
@@ -44,10 +43,13 @@ enum CargoCompanyBits {
 	CCB_IS_INDUSTRY_BIT        = 16, ///< Bit indicating the town/industry number is an industry.
 	CCB_IS_INDUSTRY_BIT_VALUE  = 1ul << CCB_IS_INDUSTRY_BIT, ///< Value of the #CCB_IS_INDUSTRY_BIT bit.
 	CCB_CARGO_TYPE_START       = 19, ///< Start bit of the cargo type field.
-	CCB_CARGO_TYPE_LENGTH      = 5,  ///< Number of bits of the cargo type field.
-	CCB_COMPANY_START          = 24, ///< Start bit of the company field.
-	CCB_COMPANY_LENGTH         = 8,  ///< Number of bits of the company field.
+	CCB_CARGO_TYPE_LENGTH      = 6,  ///< Number of bits of the cargo type field.
+	CCB_COMPANY_START          = 25, ///< Start bit of the company field.
+	CCB_COMPANY_LENGTH         = 4,  ///< Number of bits of the company field.
 };
+
+static_assert(NUM_CARGO     <= (1 << CCB_CARGO_TYPE_LENGTH));
+static_assert(MAX_COMPANIES <= (1 << CCB_COMPANY_LENGTH));
 
 
 /**
@@ -60,6 +62,7 @@ enum CargoCompanyBits {
 static inline CargoMonitorID EncodeCargoIndustryMonitor(CompanyID company, CargoID ctype, IndustryID ind)
 {
 	assert(ctype < (1 << CCB_CARGO_TYPE_LENGTH));
+	assert(company < (1 << CCB_COMPANY_LENGTH));
 
 	uint32 ret = 0;
 	SB(ret, CCB_TOWN_IND_NUMBER_START, CCB_TOWN_IND_NUMBER_LENGTH, ind);
@@ -79,6 +82,7 @@ static inline CargoMonitorID EncodeCargoIndustryMonitor(CompanyID company, Cargo
 static inline CargoMonitorID EncodeCargoTownMonitor(CompanyID company, CargoID ctype, TownID town)
 {
 	assert(ctype < (1 << CCB_CARGO_TYPE_LENGTH));
+	assert(company < (1 << CCB_COMPANY_LENGTH));
 
 	uint32 ret = 0;
 	SB(ret, CCB_TOWN_IND_NUMBER_START, CCB_TOWN_IND_NUMBER_LENGTH, town);
@@ -141,8 +145,8 @@ static inline TownID DecodeMonitorTown(CargoMonitorID num)
 
 void ClearCargoPickupMonitoring(CompanyID company = INVALID_OWNER);
 void ClearCargoDeliveryMonitoring(CompanyID company = INVALID_OWNER);
-uint32 GetDeliveryAmount(CargoMonitorID monitor, bool keep_monitoring);
-uint32 GetPickupAmount(CargoMonitorID monitor, bool keep_monitoring);
-void AddCargoDelivery(CargoID cargo_type, CompanyID company, uint32 amount, SourceType src_type, SourceID src, const Station *st);
+int32 GetDeliveryAmount(CargoMonitorID monitor, bool keep_monitoring);
+int32 GetPickupAmount(CargoMonitorID monitor, bool keep_monitoring);
+void AddCargoDelivery(CargoID cargo_type, CompanyID company, uint32 amount, SourceType src_type, SourceID src, const Station *st, IndustryID dest = INVALID_INDUSTRY);
 
 #endif /* CARGOMONITOR_H */

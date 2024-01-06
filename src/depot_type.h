@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,8 +10,12 @@
 #ifndef DEPOT_TYPE_H
 #define DEPOT_TYPE_H
 
+#include "station_type.h"
+
 typedef uint16 DepotID; ///< Type for the unique identifier of depots.
 struct Depot;
+
+static const DepotID INVALID_DEPOT = (DepotID)INVALID_STATION;
 
 static const uint MAX_LENGTH_DEPOT_NAME_CHARS = 32; ///< The maximum length of a depot name in characters including '\0'
 

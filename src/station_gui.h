@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,8 @@
 #include "command_type.h"
 #include "tilearea_type.h"
 #include "window_type.h"
+#include "station_type.h"
+#include <functional>
 
 
 /** Types of cargo to display for station coverage. */
@@ -27,7 +27,9 @@ enum StationCoverageType {
 int DrawStationCoverageAreaText(int left, int right, int top, StationCoverageType sct, int rad, bool supplies);
 void CheckRedrawStationCoverage(const Window *w);
 
-void ShowSelectStationIfNeeded(CommandContainer cmd, TileArea ta);
-void ShowSelectWaypointIfNeeded(CommandContainer cmd, TileArea ta);
+using StationPickerCmdProc = std::function<bool(bool test, StationID to_join)>;
+
+void ShowSelectStationIfNeeded(TileArea ta, StationPickerCmdProc proc);
+void ShowSelectWaypointIfNeeded(TileArea ta, StationPickerCmdProc proc);
 
 #endif /* STATION_GUI_H */

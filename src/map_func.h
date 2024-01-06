@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -144,11 +142,11 @@ static inline uint ScaleByMapSize1D(uint n)
 }
 
 /**
- * An offset value between to tiles.
+ * An offset value between two tiles.
  *
  * This value is used for the difference between
- * to tiles. It can be added to a tileindex to get
- * the resulting tileindex of the start tile applied
+ * two tiles. It can be added to a TileIndex to get
+ * the resulting TileIndex of the start tile applied
  * with this saved difference.
  *
  * @see TileDiffXY(int, int)
@@ -170,7 +168,7 @@ static inline TileIndex TileXY(uint x, uint y)
 /**
  * Calculates an offset for the given coordinate(-offset).
  *
- * This function calculate an offset value which can be added to an
+ * This function calculate an offset value which can be added to a
  * #TileIndex. The coordinates can be negative.
  *
  * @param x The offset in x direction
@@ -206,7 +204,7 @@ static inline TileIndex TileVirtXY(uint x, uint y)
  */
 static inline uint TileX(TileIndex tile)
 {
-	return tile & MapMaxX();
+	return tile.value & MapMaxX();
 }
 
 /**
@@ -216,11 +214,11 @@ static inline uint TileX(TileIndex tile)
  */
 static inline uint TileY(TileIndex tile)
 {
-	return tile >> MapLogX();
+	return tile.value >> MapLogX();
 }
 
 /**
- * Return the offset between to tiles from a TileIndexDiffC struct.
+ * Return the offset between two tiles from a TileIndexDiffC struct.
  *
  * This function works like #TileDiffXY(int, int) and returns the
  * difference between two tiles.
@@ -237,17 +235,17 @@ static inline TileIndexDiff ToTileIndexDiff(TileIndexDiffC tidc)
 
 #ifndef _DEBUG
 	/**
-	 * Adds to tiles together.
+	 * Adds two tiles together.
 	 *
 	 * @param x One tile
 	 * @param y Another tile to add
 	 * @return The resulting tile(index)
 	 */
-	#define TILE_ADD(x, y) ((x) + (y))
+#	define TILE_ADD(x, y) ((x) + (y))
 #else
 	extern TileIndex TileAdd(TileIndex tile, TileIndexDiff add,
 		const char *exp, const char *file, int line);
-	#define TILE_ADD(x, y) (TileAdd((x), (y), #x " + " #y, __FILE__, __LINE__))
+#	define TILE_ADD(x, y) (TileAdd((x), (y), #x " + " #y, __FILE__, __LINE__))
 #endif
 
 /**
@@ -360,6 +358,18 @@ static inline TileIndexDiff TileOffsByDir(Direction dir)
 
 	assert(IsValidDirection(dir));
 	return ToTileIndexDiff(_tileoffs_by_dir[dir]);
+}
+
+/**
+ * Adds a Direction to a tile.
+ *
+ * @param tile The current tile
+ * @param dir The direction in which we want to step
+ * @return the moved tile
+ */
+static inline TileIndex TileAddByDir(TileIndex tile, Direction dir)
+{
+	return TILE_ADD(tile, TileOffsByDir(dir));
 }
 
 /**

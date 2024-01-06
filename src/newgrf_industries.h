@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,19 +19,29 @@ struct IndustriesScopeResolver : public ScopeResolver {
 	IndustryType type;  ///< Type of the industry.
 	uint32 random_bits; ///< Random bits of the new industry.
 
-	IndustriesScopeResolver(ResolverObject *ro, TileIndex tile, Industry *industry, IndustryType type, uint32 random_bits = 0);
+	/**
+	 * Scope resolver for industries.
+	 * @param ro Surrounding resolver.
+	 * @param tile %Tile owned by the industry.
+	 * @param industry %Industry being resolved.
+	 * @param type Type of the industry.
+	 * @param random_bits Random bits of the new industry.
+	 */
+	IndustriesScopeResolver(ResolverObject &ro, TileIndex tile, Industry *industry, IndustryType type, uint32 random_bits = 0)
+		: ScopeResolver(ro), tile(tile), industry(industry), type(type), random_bits(random_bits)
+	{
+	}
 
-	/* virtual */ uint32 GetRandomBits() const;
-	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
-	/* virtual */ uint32 GetTriggers() const;
-	/* virtual */ void SetTriggers(int triggers) const;
-	/* virtual */ void StorePSA(uint pos, int32 value);
+	uint32 GetRandomBits() const override;
+	uint32 GetVariable(byte variable, uint32 parameter, bool *available) const override;
+	uint32 GetTriggers() const override;
+	void StorePSA(uint pos, int32 value) override;
 };
 
 /** Resolver for industries. */
 struct IndustriesResolverObject : public ResolverObject {
 	IndustriesScopeResolver industries_scope; ///< Scope resolver for the industry.
-	TownScopeResolver *town_scope;            ///< Scope resolver for the associated town (if needed and available, else \c NULL).
+	TownScopeResolver *town_scope;            ///< Scope resolver for the associated town (if needed and available, else \c nullptr).
 
 	IndustriesResolverObject(TileIndex tile, Industry *indus, IndustryType type, uint32 random_bits = 0,
 			CallbackID callback = CBID_NO_CALLBACK, uint32 callback_param1 = 0, uint32 callback_param2 = 0);
@@ -41,18 +49,23 @@ struct IndustriesResolverObject : public ResolverObject {
 
 	TownScopeResolver *GetTown();
 
-	/* virtual */ ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0)
+	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0) override
 	{
 		switch (scope) {
 			case VSG_SCOPE_SELF: return &industries_scope;
 			case VSG_SCOPE_PARENT: {
 				TownScopeResolver *tsr = this->GetTown();
-				if (tsr != NULL) return tsr;
-				/* FALL-THROUGH */
+				if (tsr != nullptr) return tsr;
 			}
-			default: return ResolverObject::GetScope(scope, relative);
+			FALLTHROUGH;
+
+			default:
+				return ResolverObject::GetScope(scope, relative);
 		}
 	}
+
+	GrfSpecFeature GetFeature() const override;
+	uint32 GetDebugID() const override;
 };
 
 /** When should the industry(tile) be triggered for random bits? */
@@ -77,7 +90,7 @@ enum IndustryAvailabilityCallType {
 uint16 GetIndustryCallback(CallbackID callback, uint32 param1, uint32 param2, Industry *industry, IndustryType type, TileIndex tile);
 uint32 GetIndustryIDAtOffset(TileIndex new_tile, const Industry *i, uint32 cur_grfid);
 void IndustryProductionCallback(Industry *ind, int reason);
-CommandCost CheckIfCallBackAllowsCreation(TileIndex tile, IndustryType type, uint layout, uint32 seed, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type);
+CommandCost CheckIfCallBackAllowsCreation(TileIndex tile, IndustryType type, size_t layout, uint32 seed, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type);
 uint32 GetIndustryProbabilityCallback(IndustryType type, IndustryAvailabilityCallType creation_type, uint32 default_prob);
 bool IndustryTemporarilyRefusesCargo(Industry *ind, CargoID cargo_type);
 

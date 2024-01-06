@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -31,7 +29,19 @@
 static inline uint TileHeight(TileIndex tile)
 {
 	assert(tile < MapSize());
-	return GB(_m[tile].type_height, 0, 4);
+	return _m[tile].height;
+}
+
+/**
+ * Returns the height of a tile, also for tiles outside the map (virtual "black" tiles).
+ *
+ * @param x X coordinate of the tile, may be outside the map.
+ * @param y Y coordinate of the tile, may be outside the map.
+ * @return The height in the same unit as TileHeight.
+ */
+static inline uint TileHeightOutsideMap(int x, int y)
+{
+	return TileHeight(TileXY(Clamp(x, 0, MapMaxX()), Clamp(y, 0, MapMaxY())));
 }
 
 /**
@@ -42,13 +52,13 @@ static inline uint TileHeight(TileIndex tile)
  * @param tile The tile to change the height
  * @param height The new height value of the tile
  * @pre tile < MapSize()
- * @pre heigth <= MAX_TILE_HEIGHT
+ * @pre height <= MAX_TILE_HEIGHT
  */
 static inline void SetTileHeight(TileIndex tile, uint height)
 {
 	assert(tile < MapSize());
 	assert(height <= MAX_TILE_HEIGHT);
-	SB(_m[tile].type_height, 0, 4, height);
+	_m[tile].height = height;
 }
 
 /**
@@ -65,6 +75,18 @@ static inline uint TilePixelHeight(TileIndex tile)
 }
 
 /**
+ * Returns the height of a tile in pixels, also for tiles outside the map (virtual "black" tiles).
+ *
+ * @param x X coordinate of the tile, may be outside the map.
+ * @param y Y coordinate of the tile, may be outside the map.
+ * @return The height in pixels in the same unit as TilePixelHeight.
+ */
+static inline uint TilePixelHeightOutsideMap(int x, int y)
+{
+	return TileHeightOutsideMap(x, y) * TILE_HEIGHT;
+}
+
+/**
  * Get the tiletype of a given tile.
  *
  * @param tile The tile to get the TileType
@@ -74,7 +96,24 @@ static inline uint TilePixelHeight(TileIndex tile)
 static inline TileType GetTileType(TileIndex tile)
 {
 	assert(tile < MapSize());
-	return (TileType)GB(_m[tile].type_height, 4, 4);
+	return (TileType)GB(_m[tile].type, 4, 4);
+}
+
+/**
+ * Check if a tile is within the map (not a border)
+ *
+ * @param tile The tile to check
+ * @return Whether the tile is in the interior of the map
+ * @pre tile < MapSize()
+ */
+static inline bool IsInnerTile(TileIndex tile)
+{
+	assert(tile < MapSize());
+
+	uint x = TileX(tile);
+	uint y = TileY(tile);
+
+	return x < MapMaxX() && y < MapMaxY() && ((x > 0 && y > 0) || !_settings_game.construction.freeform_edges);
 }
 
 /**
@@ -95,14 +134,14 @@ static inline void SetTileType(TileIndex tile, TileType type)
 	/* VOID tiles (and no others) are exactly allowed at the lower left and right
 	 * edges of the map. If _settings_game.construction.freeform_edges is true,
 	 * the upper edges of the map are also VOID tiles. */
-	assert((TileX(tile) == MapMaxX() || TileY(tile) == MapMaxY() || (_settings_game.construction.freeform_edges && (TileX(tile) == 0 || TileY(tile) == 0))) == (type == MP_VOID));
-	SB(_m[tile].type_height, 4, 4, type);
+	assert(IsInnerTile(tile) == (type != MP_VOID));
+	SB(_m[tile].type, 4, 4, type);
 }
 
 /**
- * Checks if a tile is a give tiletype.
+ * Checks if a tile is a given tiletype.
  *
- * This function checks if a tile got the given tiletype.
+ * This function checks if a tile has the given tiletype.
  *
  * @param tile The tile to check
  * @param type The type to check against
@@ -187,7 +226,7 @@ static inline void SetTropicZone(TileIndex tile, TropicZone type)
 {
 	assert(tile < MapSize());
 	assert(!IsTileType(tile, MP_VOID) || type == TROPICZONE_NORMAL);
-	SB(_m[tile].m6, 0, 2, type);
+	SB(_m[tile].type, 0, 2, type);
 }
 
 /**
@@ -199,7 +238,7 @@ static inline void SetTropicZone(TileIndex tile, TropicZone type)
 static inline TropicZone GetTropicZone(TileIndex tile)
 {
 	assert(tile < MapSize());
-	return (TropicZone)GB(_m[tile].m6, 0, 2);
+	return (TropicZone)GB(_m[tile].type, 0, 2);
 }
 
 /**
@@ -226,22 +265,26 @@ static inline void SetAnimationFrame(TileIndex t, byte frame)
 	_me[t].m7 = frame;
 }
 
-Slope GetTileSlope(TileIndex tile, int *h = NULL);
+Slope GetTileSlope(TileIndex tile, int *h = nullptr);
 int GetTileZ(TileIndex tile);
 int GetTileMaxZ(TileIndex tile);
+
+bool IsTileFlat(TileIndex tile, int *h = nullptr);
 
 /**
  * Return the slope of a given tile
  * @param tile Tile to compute slope of
- * @param h    If not \c NULL, pointer to storage of z height
+ * @param h    If not \c nullptr, pointer to storage of z height
  * @return Slope of the tile, except for the HALFTILE part
  */
 static inline Slope GetTilePixelSlope(TileIndex tile, int *h)
 {
 	Slope s = GetTileSlope(tile, h);
-	if (h != NULL) *h *= TILE_HEIGHT;
+	if (h != nullptr) *h *= TILE_HEIGHT;
 	return s;
 }
+
+Slope GetTilePixelSlopeOutsideMap(int x, int y, int *h);
 
 /**
  * Get bottom height of the tile
@@ -255,14 +298,13 @@ static inline int GetTilePixelZ(TileIndex tile)
 
 /**
  * Get top height of the tile
- * @param t Tile to compute height of
+ * @param tile Tile to compute height of
  * @return Maximum height of the tile
  */
 static inline int GetTileMaxPixelZ(TileIndex tile)
 {
 	return GetTileMaxZ(tile) * TILE_HEIGHT;
 }
-
 
 /**
  * Calculate a hash value from a tile position

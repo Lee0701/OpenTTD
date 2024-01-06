@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,16 +13,18 @@
 #include "../../window_func.h"
 #include "../../window_gui.h"
 
+#include "../../safeguards.h"
+
 /* static */ void ScriptWindow::Close(WindowClass window, uint32 number)
 {
 	if (ScriptGame::IsMultiplayer()) return;
 
 	if (number == NUMBER_ALL) {
-		DeleteWindowByClass((::WindowClass)window);
+		CloseWindowByClass((::WindowClass)window);
 		return;
 	}
 
-	DeleteWindowById((::WindowClass)window, number);
+	CloseWindowById((::WindowClass)window, number);
 }
 
 /* static */ bool ScriptWindow::IsOpen(WindowClass window, uint32 number)
@@ -32,10 +32,10 @@
 	if (ScriptGame::IsMultiplayer()) return false;
 
 	if (number == NUMBER_ALL) {
-		return (FindWindowByClass((::WindowClass)window) != NULL);
+		return (FindWindowByClass((::WindowClass)window) != nullptr);
 	}
 
-	return FindWindowById((::WindowClass)window, number) != NULL;
+	return FindWindowById((::WindowClass)window, number) != nullptr;
 }
 
 /* static */ void ScriptWindow::Highlight(WindowClass window, uint32 number, uint8 widget, TextColour colour)
@@ -54,6 +54,6 @@
 	}
 
 	const NWidgetBase *wid = w->GetWidget<NWidgetBase>(widget);
-	if (wid == NULL) return;
+	if (wid == nullptr) return;
 	w->SetWidgetHighlight(widget, (::TextColour)colour);
 }

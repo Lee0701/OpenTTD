@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -30,6 +28,7 @@ enum PropertyID {
 	PROP_TRAIN_SHORTEN_FACTOR                   = 0x21, ///< Shorter vehicles
 	PROP_TRAIN_USER_DATA                        = 0x25, ///< User defined data for vehicle variable 0x42
 	PROP_TRAIN_CARGO_AGE_PERIOD                 = 0x2B, ///< Number of ticks before carried cargo is aged
+	PROP_TRAIN_CURVE_SPEED_MOD                  = 0x2E, ///< Modifier to maximum speed in curves
 
 	PROP_ROADVEH_RUNNING_COST_FACTOR            = 0x09, ///< Yearly runningcost
 	PROP_ROADVEH_CARGO_CAPACITY                 = 0x0F, ///< Capacity

@@ -1,17 +1,22 @@
 /*
-	see copyright notice in squirrel.h
-*/
+ * see copyright notice in squirrel.h
+ */
+
+#include "../../../stdafx.h"
+
 #include "sqpcheader.h"
 #include "sqvm.h"
 #include "sqtable.h"
 #include "sqclass.h"
 #include "sqclosure.h"
 
+#include "../../../safeguards.h"
+
 SQClass::SQClass(SQSharedState *ss,SQClass *base)
 {
 	_base = base;
-	_typetag = 0;
-	_hook = NULL;
+	_typetag = nullptr;
+	_hook = nullptr;
 	_udsize = 0;
 	_metamethods.resize(MT_LAST); //size it to max size
 	if(_base) {
@@ -29,7 +34,13 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 
 void SQClass::Finalize() {
 	_attributes = _null_;
-	_defaultvalues.resize(0);
+	/* SQInstance's Finalize depends on the size of this sqvector, so instead of
+	 * resizing, all SQObjectPtrs are set to "null" so it holds no references to
+	 * other objects anymore. That way everything gets released properly. */
+	for (SQUnsignedInteger i = 0; i < _defaultvalues.size(); i++) {
+		_defaultvalues[i].val = _null_;
+		_defaultvalues[i].attrs = _null_;
+	}
 	_methods.resize(0);
 	_metamethods.resize(0);
 	__ObjRelease(_members);
@@ -53,6 +64,9 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	{
 		_defaultvalues[_member_idx(temp)].val = val;
 		return true;
+	}
+	if (_members->CountUsed() >= MEMBER_MAX_COUNT) {
+		return false;
 	}
 	if(type(val) == OT_CLOSURE || type(val) == OT_NATIVECLOSURE || bstatic) {
 		SQInteger mmidx;
@@ -128,8 +142,8 @@ bool SQClass::GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval)
 ///////////////////////////////////////////////////////////////////////
 void SQInstance::Init(SQSharedState *ss)
 {
-	_userpointer = NULL;
-	_hook = NULL;
+	_userpointer = nullptr;
+	_hook = nullptr;
 	__ObjAddRef(_class);
 	_delegate = _class->_members;
 	INIT_CHAIN();
@@ -185,7 +199,7 @@ bool SQInstance::GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res)
 bool SQInstance::InstanceOf(SQClass *trg)
 {
 	SQClass *parent = _class;
-	while(parent != NULL) {
+	while(parent != nullptr) {
 		if(parent == trg)
 			return true;
 		parent = parent->_base;

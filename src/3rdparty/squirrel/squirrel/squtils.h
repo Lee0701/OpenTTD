@@ -2,6 +2,9 @@
 #ifndef _SQUTILS_H_
 #define _SQUTILS_H_
 
+#include "../../fmt/format.h"
+#include "../../../script/script_fatalerror.hpp"
+
 void *sq_vm_malloc(SQUnsignedInteger size);
 void *sq_vm_realloc(void *p,SQUnsignedInteger oldsize,SQUnsignedInteger size);
 void sq_vm_free(void *p,SQUnsignedInteger size);
@@ -18,7 +21,7 @@ template<typename T> class sqvector
 public:
 	sqvector()
 	{
-		_vals = NULL;
+		_vals = nullptr;
 		_size = 0;
 		_allocated = 0;
 	}
@@ -41,7 +44,7 @@ public:
 		        size_t allocated_size = _allocated * sizeof(T);
 		        _allocated = 0;
 
-			for(SQUnsignedInteger i = 0; i < _size; i++)
+			for(size_t i = 0; i < _size; i++)
 				_vals[i].~T();
 			SQ_FREE(_vals, allocated_size);
 		}
@@ -61,7 +64,7 @@ public:
 			for(SQUnsignedInteger i = newsize; i < _size; i++) {
 				_vals[i].~T();
 			}
-			_size = newsize;
+			_size = (size_t)newsize;
 		}
 	}
 	void shrinktofit() { if(_size > 4) { _realloc(_size); } }
@@ -90,7 +93,7 @@ public:
 	{
 		_vals[idx].~T();
 		if(idx < (_size - 1)) {
-			memmove(&_vals[idx], &_vals[idx+1], sizeof(T) * (_size - idx - 1));
+			memmove(static_cast<void *>(&_vals[idx]), &_vals[idx+1], sizeof(T) * (_size - (size_t)idx - 1));
 		}
 		_size--;
 	}
@@ -102,11 +105,15 @@ private:
 	void _realloc(SQUnsignedInteger newsize)
 	{
 		newsize = (newsize > 0)?newsize:4;
+		if (newsize > SIZE_MAX / sizeof(T)) {
+			std::string msg = fmt::format("cannot resize to {}", newsize);
+			throw Script_FatalError(msg);
+		}
 		_vals = (T*)SQ_REALLOC(_vals, _allocated * sizeof(T), newsize * sizeof(T));
-		_allocated = newsize;
+		_allocated = (size_t)newsize;
 	}
-	SQUnsignedInteger _size;
-	SQUnsignedInteger _allocated;
+	size_t _size;
+	size_t _allocated;
 };
 
 #endif //_SQUTILS_H_

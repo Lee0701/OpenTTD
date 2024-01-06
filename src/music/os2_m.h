@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,29 +13,27 @@
 #include "music_driver.hpp"
 
 /** OS/2's music player. */
-class MusicDriver_OS2: public MusicDriver {
+class MusicDriver_OS2 : public MusicDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
+	void Stop() override;
 
-	/* virtual */ void PlaySong(const char *filename);
+	void PlaySong(const MusicSongInfo &song) override;
 
-	/* virtual */ void StopSong();
+	void StopSong() override;
 
-	/* virtual */ bool IsSongPlaying();
+	bool IsSongPlaying() override;
 
-	/* virtual */ void SetVolume(byte vol);
-	/* virtual */ const char *GetName() const { return "os2"; }
+	void SetVolume(byte vol) override;
+	const char *GetName() const override { return "os2"; }
 };
 
 /** Factory for OS/2's music player. */
-class FMusicDriver_OS2: public MusicDriverFactory<FMusicDriver_OS2> {
+class FMusicDriver_OS2 : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "os2"; }
-	/* virtual */ const char *GetDescription() { return "OS/2 Music Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_OS2(); }
+	FMusicDriver_OS2() : DriverFactoryBase(Driver::DT_MUSIC, 10, "os2", "OS/2 Music Driver") {}
+	Driver *CreateInstance() const override { return new MusicDriver_OS2(); }
 };
 
 #endif /* MUSIC_OS2_H */

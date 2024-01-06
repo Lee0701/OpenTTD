@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,66 +15,60 @@
 #include "../script/squirrel.hpp"
 #include "script_scanner.hpp"
 #include "script_info.hpp"
+#include "script_fatalerror.hpp"
 
-bool ScriptScanner::AddFile(const char *filename, size_t basepath_length, const char *tar_filename)
+#include "../network/network_content.h"
+#include "../3rdparty/md5/md5.h"
+#include "../tar_type.h"
+
+#include "../safeguards.h"
+
+bool ScriptScanner::AddFile(const std::string &filename, size_t basepath_length, const std::string &tar_filename)
 {
-	free(this->main_script);
-	this->main_script = strdup(filename);
-	if (this->main_script == NULL) return false;
+	this->main_script = filename;
+	this->tar_file = tar_filename;
 
-	free(this->tar_file);
-	if (tar_filename != NULL) {
-		this->tar_file = strdup(tar_filename);
-		if (this->tar_file == NULL) return false;
-	} else {
-		this->tar_file = NULL;
-	}
-
-	const char *end = this->main_script + strlen(this->main_script) + 1;
-	char *p = strrchr(this->main_script, PATHSEPCHAR);
-	if (p == NULL) {
-		p = this->main_script;
-	} else {
-		/* Skip over the path separator character. We don't need that. */
-		p++;
-	}
-
-	strecpy(p, "main.nut", end);
+	auto p = this->main_script.rfind(PATHSEPCHAR);
+	this->main_script.erase(p != std::string::npos ? p + 1 : 0);
+	this->main_script += "main.nut";
 
 	if (!FioCheckFileExists(filename, this->subdir) || !FioCheckFileExists(this->main_script, this->subdir)) return false;
 
-	/* We don't care if one of the other scripts failed to load. */
-	this->engine->ResetCrashed();
-	this->engine->LoadScript(filename);
+	this->ResetEngine();
+	try {
+		this->engine->LoadScript(filename.c_str());
+	} catch (Script_FatalError &e) {
+		Debug(script, 0, "Fatal error '{}' when trying to load the script '{}'.", e.GetErrorMessage(), filename);
+		return false;
+	}
 	return true;
 }
 
 ScriptScanner::ScriptScanner() :
-	engine(NULL),
-	main_script(NULL),
-	tar_file(NULL)
+	engine(nullptr)
 {
+}
+
+void ScriptScanner::ResetEngine()
+{
+	this->engine->Reset();
+	this->engine->SetGlobalPointer(this);
+	this->RegisterAPI(this->engine);
 }
 
 void ScriptScanner::Initialize(const char *name)
 {
 	this->engine = new Squirrel(name);
 
-	/* Mark this class as global pointer */
-	this->engine->SetGlobalPointer(this);
-
-	this->RegisterAPI(this->engine);
 	this->RescanDir();
 
-	this->engine->ResetCrashed();
+	this->ResetEngine();
 }
 
 ScriptScanner::~ScriptScanner()
 {
 	this->Reset();
 
-	free(this->main_script);
-	free(this->tar_file);
 	delete this->engine;
 }
 
@@ -91,14 +83,12 @@ void ScriptScanner::RescanDir()
 
 void ScriptScanner::Reset()
 {
-	ScriptInfoList::iterator it = this->info_list.begin();
-	for (; it != this->info_list.end(); it++) {
-		free((*it).first);
-		delete (*it).second;
+	for (const auto &item : this->info_list) {
+		free(item.first);
+		delete item.second;
 	}
-	it = this->info_single_list.begin();
-	for (; it != this->info_single_list.end(); it++) {
-		free((*it).first);
+	for (const auto &item : this->info_single_list) {
+		free(item.first);
 	}
 
 	this->info_list.clear();
@@ -108,22 +98,22 @@ void ScriptScanner::Reset()
 void ScriptScanner::RegisterScript(ScriptInfo *info)
 {
 	char script_original_name[1024];
-	this->GetScriptName(info, script_original_name, sizeof(script_original_name));
+	this->GetScriptName(info, script_original_name, lastof(script_original_name));
 	strtolower(script_original_name);
 
 	char script_name[1024];
-	snprintf(script_name, sizeof(script_name), "%s.%d", script_original_name, info->GetVersion());
+	seprintf(script_name, lastof(script_name), "%s.%d", script_original_name, info->GetVersion());
 
 	/* Check if GetShortName follows the rules */
 	if (strlen(info->GetShortName()) != 4) {
-		DEBUG(script, 0, "The script '%s' returned a string from GetShortName() which is not four characaters. Unable to load the script.", info->GetName());
+		Debug(script, 0, "The script '{}' returned a string from GetShortName() which is not four characaters. Unable to load the script.", info->GetName());
 		delete info;
 		return;
 	}
 
 	if (this->info_list.find(script_name) != this->info_list.end()) {
 		/* This script was already registered */
-#ifdef WIN32
+#ifdef _WIN32
 		/* Windows doesn't care about the case */
 		if (strcasecmp(this->info_list[script_name]->GetMainScript(), info->GetMainScript()) == 0) {
 #else
@@ -133,46 +123,41 @@ void ScriptScanner::RegisterScript(ScriptInfo *info)
 			return;
 		}
 
-		DEBUG(script, 1, "Registering two scripts with the same name and version");
-		DEBUG(script, 1, "  1: %s", this->info_list[script_name]->GetMainScript());
-		DEBUG(script, 1, "  2: %s", info->GetMainScript());
-		DEBUG(script, 1, "The first is taking precedence.");
+		Debug(script, 1, "Registering two scripts with the same name and version");
+		Debug(script, 1, "  1: {}", this->info_list[script_name]->GetMainScript());
+		Debug(script, 1, "  2: {}", info->GetMainScript());
+		Debug(script, 1, "The first is taking precedence.");
 
 		delete info;
 		return;
 	}
 
-	this->info_list[strdup(script_name)] = info;
+	this->info_list[stredup(script_name)] = info;
 
 	if (!info->IsDeveloperOnly() || _settings_client.gui.ai_developer_tools) {
 		/* Add the script to the 'unique' script list, where only the highest version
 		 *  of the script is registered. */
 		if (this->info_single_list.find(script_original_name) == this->info_single_list.end()) {
-			this->info_single_list[strdup(script_original_name)] = info;
+			this->info_single_list[stredup(script_original_name)] = info;
 		} else if (this->info_single_list[script_original_name]->GetVersion() < info->GetVersion()) {
 			this->info_single_list[script_original_name] = info;
 		}
 	}
 }
 
-char *ScriptScanner::GetConsoleList(char *p, const char *last, bool newest_only) const
+std::string ScriptScanner::GetConsoleList(bool newest_only) const
 {
-	p += seprintf(p, last, "List of %s:\n", this->GetScannerName());
+	std::string p;
+	p += fmt::format("List of {}:\n", this->GetScannerName());
 	const ScriptInfoList &list = newest_only ? this->info_single_list : this->info_list;
-	ScriptInfoList::const_iterator it = list.begin();
-	for (; it != list.end(); it++) {
-		ScriptInfo *i = (*it).second;
-		p += seprintf(p, last, "%10s (v%d): %s\n", i->GetName(), i->GetVersion(), i->GetDescription());
+	for (const auto &item : list) {
+		ScriptInfo *i = item.second;
+		p += fmt::format("{:>10} (v{:d}): {}\n", i->GetName(), i->GetVersion(), i->GetDescription());
 	}
-	p += seprintf(p, last, "\n");
+	p += "\n";
 
 	return p;
 }
-
-#if defined(ENABLE_NETWORK)
-#include "../network/network_content.h"
-#include "../3rdparty/md5/md5.h"
-#include "../tar_type.h"
 
 /** Helper for creating a MD5sum of all files within of a script. */
 struct ScriptFileChecksumCreator : FileScanner {
@@ -190,7 +175,7 @@ struct ScriptFileChecksumCreator : FileScanner {
 	}
 
 	/* Add the file and calculate the md5 sum. */
-	virtual bool AddFile(const char *filename, size_t basepath_length, const char *tar_filename)
+	virtual bool AddFile(const std::string &filename, size_t basepath_length, const std::string &tar_filename)
 	{
 		Md5 checksum;
 		uint8 buffer[1024];
@@ -199,7 +184,7 @@ struct ScriptFileChecksumCreator : FileScanner {
 
 		/* Open the file ... */
 		FILE *f = FioFOpenFile(filename, "rb", this->dir, &size);
-		if (f == NULL) return false;
+		if (f == nullptr) return false;
 
 		/* ... calculate md5sum... */
 		while ((len = fread(buffer, 1, (size > sizeof(buffer)) ? sizeof(buffer) : size, f)) != 0 && size != 0) {
@@ -235,21 +220,20 @@ static bool IsSameScript(const ContentInfo *ci, bool md5sum, ScriptInfo *info, S
 	if (!md5sum) return true;
 
 	ScriptFileChecksumCreator checksum(dir);
-	const char *tar_filename = info->GetTarFile();
+	auto tar_filename = info->GetTarFile();
 	TarList::iterator iter;
-	if (tar_filename != NULL && (iter = _tar_list[dir].find(tar_filename)) != _tar_list[dir].end()) {
+	if (!tar_filename.empty() && (iter = _tar_list[dir].find(tar_filename)) != _tar_list[dir].end()) {
 		/* The main script is in a tar file, so find all files that
 		 * are in the same tar and add them to the MD5 checksumming. */
-		TarFileList::iterator tar;
-		FOR_ALL_TARS(tar, dir) {
+		for (const auto &tar : _tar_filelist[dir]) {
 			/* Not in the same tar. */
-			if (tar->second.tar_filename != iter->first) continue;
+			if (tar.second.tar_filename != iter->first) continue;
 
 			/* Check the extension. */
-			const char *ext = strrchr(tar->first.c_str(), '.');
-			if (ext == NULL || strcasecmp(ext, ".nut") != 0) continue;
+			const char *ext = strrchr(tar.first.c_str(), '.');
+			if (ext == nullptr || strcasecmp(ext, ".nut") != 0) continue;
 
-			checksum.AddFile(tar->first.c_str(), 0, tar_filename);
+			checksum.AddFile(tar.first, 0, tar_filename);
 		}
 	} else {
 		char path[MAX_PATH];
@@ -266,18 +250,16 @@ static bool IsSameScript(const ContentInfo *ci, bool md5sum, ScriptInfo *info, S
 
 bool ScriptScanner::HasScript(const ContentInfo *ci, bool md5sum)
 {
-	for (ScriptInfoList::iterator it = this->info_list.begin(); it != this->info_list.end(); it++) {
-		if (IsSameScript(ci, md5sum, (*it).second, this->GetDirectory())) return true;
+	for (const auto &item : this->info_list) {
+		if (IsSameScript(ci, md5sum, item.second, this->GetDirectory())) return true;
 	}
 	return false;
 }
 
 const char *ScriptScanner::FindMainScript(const ContentInfo *ci, bool md5sum)
 {
-	for (ScriptInfoList::iterator it = this->info_list.begin(); it != this->info_list.end(); it++) {
-		if (IsSameScript(ci, md5sum, (*it).second, this->GetDirectory())) return (*it).second->GetMainScript();
+	for (const auto &item : this->info_list) {
+		if (IsSameScript(ci, md5sum, item.second, this->GetDirectory())) return item.second->GetMainScript();
 	}
-	return NULL;
+	return nullptr;
 }
-
-#endif /* ENABLE_NETWORK */

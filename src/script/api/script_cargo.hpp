@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,7 @@
 
 #include "script_object.hpp"
 #include "../../cargotype.h"
+#include "../../linkgraph/linkgraph_type.h"
 
 /**
  * Class that handles all cargo related functions.
@@ -35,7 +34,7 @@ public:
 		CC_LIQUID       = ::CC_LIQUID,       ///< Liquids (Oil, Water, Rubber)
 		CC_REFRIGERATED = ::CC_REFRIGERATED, ///< Refrigerated cargo (Food, Fruit)
 		CC_HAZARDOUS    = ::CC_HAZARDOUS,    ///< Hazardous cargo (Nuclear Fuel, Explosives, etc.)
-		CC_COVERED      = ::CC_COVERED,      ///< Covered/Sheltered Freight (Transporation in Box Vans, Silo Wagons, etc.)
+		CC_COVERED      = ::CC_COVERED,      ///< Covered/Sheltered Freight (Transportation in Box Vans, Silo Wagons, etc.)
 	};
 
 	/**
@@ -58,6 +57,17 @@ public:
 		/* Note: these values represent part of the in-game CargoTypes enum */
 		CT_AUTO_REFIT = ::CT_AUTO_REFIT, ///< Automatically choose cargo type when doing auto-refitting.
 		CT_NO_REFIT   = ::CT_NO_REFIT,   ///< Do not refit cargo of a vehicle.
+		CT_INVALID    = ::CT_INVALID,    ///< An invalid cargo type.
+	};
+
+	/**
+	 * Type of cargo distribution.
+	 */
+	enum DistributionType {
+		DT_MANUAL = ::DT_MANUAL,         ///< Manual distribution.
+		DT_ASYMMETRIC = ::DT_ASYMMETRIC, ///< Asymmetric distribution. Usually cargo will only travel in one direction.
+		DT_SYMMETRIC = ::DT_SYMMETRIC,   ///< Symmetric distribution. The same amount of cargo travels in each direction between each pair of nodes.
+		INVALID_DISTRIBUTION_TYPE = 0xFFFF, ///< Invalid distribution type.
 	};
 
 	/**
@@ -75,12 +85,27 @@ public:
 	static bool IsValidTownEffect(TownEffect towneffect_type);
 
 	/**
+	 * Get the name of the cargo type.
+	 * @param cargo_type The cargo type to get the name of.
+	 * @pre IsValidCargo(cargo_type).
+	 * @return The name of the cargo type.
+	 */
+	static char *GetName(CargoID cargo_type);
+
+	/**
 	 * Gets the string representation of the cargo label.
 	 * @param cargo_type The cargo to get the string representation of.
 	 * @pre ScriptCargo::IsValidCargo(cargo_type).
 	 * @return The cargo label.
-	 * @note Never use this to check if it is a certain cargo. NewGRF can
-	 *  redefine all of the names.
+	 * @note
+	 *  - The label uniquely identifies a specific cargo. Use this if you want to
+	 *    detect special cargos from specific industry set (like production booster cargos, supplies, ...).
+	 *  - For more generic cargo support, rather check cargo properties though. For example:
+	 *     - Use ScriptCargo::HasCargoClass(..., CC_PASSENGER) to decide bus vs. truck requirements.
+	 *     - Use ScriptCargo::GetTownEffect(...) paired with ScriptTown::GetCargoGoal(...) to determine
+	 *       town growth requirements.
+	 *  - In other words: Only use the cargo label, if you know more about the behaviour
+	 *    of a specific cargo from a specific industry set, than the API methods can tell you.
 	 */
 	static char *GetCargoLabel(CargoID cargo_type);
 
@@ -121,6 +146,23 @@ public:
 	 * @return The amount of money that would be earned by this trip.
 	 */
 	static Money GetCargoIncome(CargoID cargo_type, uint32 distance, uint32 days_in_transit);
+
+	/**
+	 * Get the cargo distribution type for a cargo.
+	 * @param cargo_type The cargo to check on.
+	 * @return The cargo distribution type for the given cargo.
+	 */
+	static DistributionType GetDistributionType(CargoID cargo_type);
+
+	/**
+	 * Get the weight in tonnes for the given amount of
+	 *   cargo for the specified type.
+	 * @param cargo_type The cargo to check on.
+	 * @param amount The quantity of cargo.
+	 * @pre ScriptCargo::IsValidCargo(cargo_type).
+	 * @return The weight in tonnes for that quantity of cargo.
+	 */
+	static int64 GetWeight(CargoID cargo_type, uint32 amount);
 };
 
 #endif /* SCRIPT_CARGO_HPP */

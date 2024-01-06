@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,23 +19,32 @@ struct IndustryTileScopeResolver : public ScopeResolver {
 	Industry *industry; ///< Industry owning the tiles.
 	TileIndex tile;     ///< %Tile being resolved.
 
-	IndustryTileScopeResolver(ResolverObject *ro, Industry *industry, TileIndex tile);
+	/**
+	 * Constructor of the scope resolver for the industry tile.
+	 * @param ro Surrounding resolver.
+	 * @param industry %Industry owning the tile.
+	 * @param tile %Tile of the industry.
+	 */
+	IndustryTileScopeResolver(ResolverObject &ro, Industry *industry, TileIndex tile)
+		: ScopeResolver(ro), industry(industry), tile(tile)
+	{
+	}
 
-	/* virtual */ uint32 GetRandomBits() const;
-	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
-	/* virtual */ uint32 GetTriggers() const;
-	/* virtual */ void SetTriggers(int triggers) const;
+	uint32 GetRandomBits() const override;
+	uint32 GetVariable(byte variable, uint32 parameter, bool *available) const override;
+	uint32 GetTriggers() const override;
 };
 
 /** Resolver for industry tiles. */
 struct IndustryTileResolverObject : public ResolverObject {
 	IndustryTileScopeResolver indtile_scope; ///< Scope resolver for the industry tile.
 	IndustriesScopeResolver ind_scope;       ///< Scope resolver for the industry owning the tile.
+	IndustryGfx gfx;
 
 	IndustryTileResolverObject(IndustryGfx gfx, TileIndex tile, Industry *indus,
 			CallbackID callback = CBID_NO_CALLBACK, uint32 callback_param1 = 0, uint32 callback_param2 = 0);
 
-	/* virtual */ ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0)
+	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0) override
 	{
 		switch (scope) {
 			case VSG_SCOPE_SELF: return &indtile_scope;
@@ -45,11 +52,14 @@ struct IndustryTileResolverObject : public ResolverObject {
 			default: return ResolverObject::GetScope(scope, relative);
 		}
 	}
+
+	GrfSpecFeature GetFeature() const override;
+	uint32 GetDebugID() const override;
 };
 
 bool DrawNewIndustryTile(TileInfo *ti, Industry *i, IndustryGfx gfx, const IndustryTileSpec *inds);
 uint16 GetIndustryTileCallback(CallbackID callback, uint32 param1, uint32 param2, IndustryGfx gfx_id, Industry *industry, TileIndex tile);
-CommandCost PerformIndustryTileSlopeCheck(TileIndex ind_base_tile, TileIndex ind_tile, const IndustryTileSpec *its, IndustryType type, IndustryGfx gfx, uint itspec_index, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type);
+CommandCost PerformIndustryTileSlopeCheck(TileIndex ind_base_tile, TileIndex ind_tile, const IndustryTileSpec *its, IndustryType type, IndustryGfx gfx, size_t layout_index, uint16 initial_random_bits, Owner founder, IndustryAvailabilityCallType creation_type);
 
 void AnimateNewIndustryTile(TileIndex tile);
 bool StartStopIndustryTileAnimation(TileIndex tile, IndustryAnimationTrigger iat, uint32 random = Random());

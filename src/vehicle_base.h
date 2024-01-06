@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,7 @@
 #ifndef VEHICLE_BASE_H
 #define VEHICLE_BASE_H
 
+#include "core/smallmap_type.hpp"
 #include "track_type.h"
 #include "command_type.h"
 #include "order_base.h"
@@ -22,6 +21,13 @@
 #include "transport_type.h"
 #include "group_type.h"
 #include "base_consist.h"
+#include "network/network.h"
+#include "saveload/saveload.h"
+#include <list>
+#include <map>
+
+const uint TILE_AXIAL_DISTANCE = 192;  // Logical length of the tile in any DiagDirection used in vehicle movement.
+const uint TILE_CORNER_DISTANCE = 128;  // Logical length of the tile corner crossing in any non-diagonal direction used in vehicle movement.
 
 /** Vehicle status bits in #Vehicle::vehstatus. */
 enum VehStatus {
@@ -55,6 +61,7 @@ enum NewGRFCacheValidValues {
 	NCVV_POSITION_SAME_ID_LENGTH   = 1, ///< This bit will be set if the NewGRF var 41 currently stored is valid.
 	NCVV_CONSIST_CARGO_INFORMATION = 2, ///< This bit will be set if the NewGRF var 42 currently stored is valid.
 	NCVV_COMPANY_INFORMATION       = 3, ///< This bit will be set if the NewGRF var 43 currently stored is valid.
+	NCVV_POSITION_IN_VEHICLE       = 4, ///< This bit will be set if the NewGRF var 4D currently stored is valid.
 	NCVV_END,                           ///< End of the bits.
 };
 
@@ -65,6 +72,7 @@ struct NewGRFCache {
 	uint32 position_same_id_length;   ///< Cache for NewGRF var 41.
 	uint32 consist_cargo_information; ///< Cache for NewGRF var 42. (Note: The cargotype is untranslated in the cache because the accessing GRF is yet unknown.)
 	uint32 company_information;       ///< Cache for NewGRF var 43.
+	uint32 position_in_vehicle;       ///< Cache for NewGRF var 4D.
 	uint8  cache_valid;               ///< Bitset that indicates which cache values are valid.
 };
 
@@ -82,9 +90,20 @@ enum VisualEffect {
 	VE_TYPE_ELECTRIC       = 3, ///< Electric sparks
 
 	VE_DISABLE_EFFECT      = 6, ///< Flag to disable visual effect
+	VE_ADVANCED_EFFECT     = VE_DISABLE_EFFECT, ///< Flag for advanced effects
 	VE_DISABLE_WAGON_POWER = 7, ///< Flag to disable wagon power
 
 	VE_DEFAULT = 0xFF,          ///< Default value to indicate that visual effect should be based on engine class
+};
+
+/** Models for spawning visual effects. */
+enum VisualEffectSpawnModel {
+	VESM_NONE              = 0, ///< No visual effect
+	VESM_STEAM,                 ///< Steam model
+	VESM_DIESEL,                ///< Diesel model
+	VESM_ELECTRIC,              ///< Electric model
+
+	VESM_END
 };
 
 /**
@@ -109,34 +128,119 @@ struct VehicleCache {
 	byte cached_vis_effect;  ///< Visual effect to show (see #VisualEffect)
 };
 
+/** Sprite sequence for a vehicle part. */
+struct VehicleSpriteSeq {
+	PalSpriteID seq[8];
+	uint count;
+
+	bool operator==(const VehicleSpriteSeq &other) const
+	{
+		return this->count == other.count && MemCmpT<PalSpriteID>(this->seq, other.seq, this->count) == 0;
+	}
+
+	bool operator!=(const VehicleSpriteSeq &other) const
+	{
+		return !this->operator==(other);
+	}
+
+	/**
+	 * Check whether the sequence contains any sprites.
+	 */
+	bool IsValid() const
+	{
+		return this->count != 0;
+	}
+
+	/**
+	 * Clear all information.
+	 */
+	void Clear()
+	{
+		this->count = 0;
+	}
+
+	/**
+	 * Assign a single sprite to the sequence.
+	 */
+	void Set(SpriteID sprite)
+	{
+		this->count = 1;
+		this->seq[0].sprite = sprite;
+		this->seq[0].pal = 0;
+	}
+
+	/**
+	 * Copy data from another sprite sequence, while dropping all recolouring information.
+	 */
+	void CopyWithoutPalette(const VehicleSpriteSeq &src)
+	{
+		this->count = src.count;
+		for (uint i = 0; i < src.count; ++i) {
+			this->seq[i].sprite = src.seq[i].sprite;
+			this->seq[i].pal = 0;
+		}
+	}
+
+	void GetBounds(Rect *bounds) const;
+	void Draw(int x, int y, PaletteID default_pal, bool force_pal) const;
+};
+
+/**
+ * Cache for vehicle sprites and values relating to whether they should be updated before drawing,
+ * or calculating the viewport.
+ */
+struct MutableSpriteCache {
+	Direction last_direction;     ///< Last direction we obtained sprites for
+	bool revalidate_before_draw;  ///< We need to do a GetImage() and check bounds before drawing this sprite
+	Rect old_coord;               ///< Co-ordinates from the last valid bounding box
+	bool is_viewport_candidate;   ///< This vehicle can potentially be drawn on a viewport
+	VehicleSpriteSeq sprite_seq;  ///< Vehicle appearance.
+};
+
 /** A vehicle pool for a little over 1 million vehicles. */
 typedef Pool<Vehicle, VehicleID, 512, 0xFF000> VehiclePool;
 extern VehiclePool _vehicle_pool;
 
 /* Some declarations of functions, so we can make them friendly */
-struct SaveLoad;
 struct GroundVehicleCache;
-extern const SaveLoad *GetVehicleDescription(VehicleType vt);
 struct LoadgameState;
 extern bool LoadOldVehicle(LoadgameState *ls, int num);
 extern void FixOldVehicles();
 
 struct GRFFile;
 
+/**
+ * Simulated cargo type and capacity for prediction of future links.
+ */
+struct RefitDesc {
+	CargoID cargo;    ///< Cargo type the vehicle will be carrying.
+	uint16 capacity;  ///< Capacity the vehicle will have.
+	uint16 remaining; ///< Capacity remaining from before the previous refit.
+	RefitDesc(CargoID cargo, uint16 capacity, uint16 remaining) :
+			cargo(cargo), capacity(capacity), remaining(remaining) {}
+};
+
 /** %Vehicle data structure. */
 struct Vehicle : VehiclePool::PoolItem<&_vehicle_pool>, BaseVehicle, BaseConsist {
 private:
+	typedef std::list<RefitDesc> RefitList;
+	typedef std::map<CargoID, uint> CapacitiesMap;
+
 	Vehicle *next;                      ///< pointer to the next vehicle in the chain
 	Vehicle *previous;                  ///< NOSAVE: pointer to the previous vehicle in the chain
 	Vehicle *first;                     ///< NOSAVE: pointer to the first vehicle in the chain
 
 	Vehicle *next_shared;               ///< pointer to the next vehicle that shares the order
 	Vehicle *previous_shared;           ///< NOSAVE: pointer to the previous vehicle in the shared order chain
+
 public:
-	friend const SaveLoad *GetVehicleDescription(VehicleType vt); ///< So we can use private/protected variables in the saveload code
 	friend void FixOldVehicles();
 	friend void AfterLoadVehicles(bool part_of_load);             ///< So we can set the #previous and #first pointers while loading
 	friend bool LoadOldVehicle(LoadgameState *ls, int num);       ///< So we can set the proper next pointer while loading
+	/* So we can use private/protected variables in the saveload code */
+	friend class SlVehicleCommon;
+	friend class SlVehicleDisaster;
+	friend void Ptrs_VEHS();
 
 	TileIndex tile;                     ///< Current tile index
 
@@ -153,7 +257,7 @@ public:
 
 	CargoPayment *cargo_payment;        ///< The cargo payment we're currently in
 
-	Rect coord;                         ///< NOSAVE: Graphical bounding box of the vehicle, i.e. what to redraw on moves.
+	mutable Rect coord;                 ///< NOSAVE: Graphical bounding box of the vehicle, i.e. what to redraw on moves.
 
 	Vehicle *hash_viewport_next;        ///< NOSAVE: Next vehicle in the visual location hash.
 	Vehicle **hash_viewport_prev;       ///< NOSAVE: Previous vehicle in the visual location hash.
@@ -179,16 +283,15 @@ public:
 	int32 x_pos;                        ///< x coordinate.
 	int32 y_pos;                        ///< y coordinate.
 	int32 z_pos;                        ///< z coordinate.
-	DirectionByte direction;            ///< facing
+	Direction direction;                ///< facing
 
-	OwnerByte owner;                    ///< Which company owns the vehicle?
+	Owner owner;                        ///< Which company owns the vehicle?
 	/**
 	 * currently displayed sprite index
 	 * 0xfd == custom sprite, 0xfe == custom second head sprite
 	 * 0xff == reserved for another custom sprite
 	 */
 	byte spritenum;
-	SpriteID cur_image;                 ///< sprite number for this vehicle
 	byte x_extent;                      ///< x-extent of vehicle bounding box
 	byte y_extent;                      ///< y-extent of vehicle bounding box
 	byte z_extent;                      ///< z-extent of vehicle bounding box
@@ -211,12 +314,16 @@ public:
 	byte waiting_triggers;              ///< Triggers to be yet matched before rerandomizing the random bits.
 
 	StationID last_station_visited;     ///< The last station we stopped at.
+	StationID last_loading_station;     ///< Last station the vehicle has stopped at and could possibly leave from with any cargo loaded.
+	uint64_t last_loading_tick;         ///< Last time (relative to _tick_counter) the vehicle has stopped at a station and could possibly leave with any cargo loaded.
 
 	CargoID cargo_type;                 ///< type of cargo this vehicle is carrying
 	byte cargo_subtype;                 ///< Used for livery refits (NewGRF variations)
 	uint16 cargo_cap;                   ///< total capacity
+	uint16 refit_cap;                   ///< Capacity left over from before last refit.
 	VehicleCargoList cargo;             ///< The cargo this vehicle is carrying
 	uint16 cargo_age_counter;           ///< Ticks till cargo is aged next.
+	int8 trip_occupancy;                ///< NOSAVE: Occupancy of vehicle of the current trip (updated after leaving a station).
 
 	byte day_counter;                   ///< Increased by one for each day
 	byte tick_counter;                  ///< Increased by one for each tick
@@ -226,16 +333,27 @@ public:
 	Order current_order;                ///< The current order (+ status, like: loading)
 
 	union {
-		OrderList *list;            ///< Pointer to the order list for this vehicle
-		Order     *old;             ///< Only used during conversion of old save games
-	} orders;                           ///< The orders currently assigned to the vehicle.
+		OrderList *orders;              ///< Pointer to the order list for this vehicle
+		Order *old_orders;              ///< Only used during conversion of old save games
+	};
 
 	uint16 load_unload_ticks;           ///< Ticks to wait before starting next cycle.
 	GroupID group_id;                   ///< Index of group Pool array
-	byte subtype;                       ///< subtype (Filled with values from #EffectVehicles/#TrainSubTypes/#AircraftSubTypes)
+	byte subtype;                       ///< subtype (Filled with values from #AircraftSubType/#DisasterSubType/#EffectVehicleType/#GroundVehicleSubtypeFlags)
 
 	NewGRFCache grf_cache;              ///< Cache of often used calculated NewGRF values
 	VehicleCache vcache;                ///< Cache of often used vehicle values.
+
+	mutable MutableSpriteCache sprite_cache; ///< Cache of sprites and values related to recalculating them, see #MutableSpriteCache
+
+	/**
+	 * Calculates the weight value that this vehicle will have when fully loaded with its current cargo.
+	 * @return Weight value in tonnes.
+	 */
+	virtual uint16 GetMaxWeight() const
+	{
+		return 0;
+	}
 
 	Vehicle(VehicleType type = VEH_INVALID);
 
@@ -244,6 +362,7 @@ public:
 	virtual ~Vehicle();
 
 	void BeginLoading();
+	void CancelReservation(StationID next, Station *st);
 	void LeaveStation();
 
 	GroundVehicleCache *GetGroundVehicleCache();
@@ -255,6 +374,10 @@ public:
 	void DeleteUnreachedImplicitOrders();
 
 	void HandleLoading(bool mode = false);
+
+	void GetConsistFreeCapacities(SmallMap<CargoID, uint> &capacities) const;
+
+	uint GetConsistTotalCapacity() const;
 
 	/**
 	 * Marks the vehicles to be redrawn and updates cached variables
@@ -269,9 +392,8 @@ public:
 	/**
 	 * Updates the x and y offsets and the size of the sprite used
 	 * for this vehicle.
-	 * @param direction the direction the vehicle is facing
 	 */
-	virtual void UpdateDeltaXY(Direction direction) {}
+	virtual void UpdateDeltaXY() {}
 
 	/**
 	 * Determines the effective direction-specific vehicle movement speed.
@@ -317,7 +439,7 @@ public:
 	 */
 	inline uint GetAdvanceDistance()
 	{
-		return (this->direction & 1) ? 192 : 256;
+		return (this->direction & 1) ? TILE_AXIAL_DISTANCE : TILE_CORNER_DISTANCE * 2;
 	}
 
 	/**
@@ -328,8 +450,9 @@ public:
 
 	/**
 	 * Play the sound associated with leaving the station
+	 * @param force Should we play the sound even if sound effects are muted? (horn hotkey)
 	 */
-	virtual void PlayLeaveStationSound() const {}
+	virtual void PlayLeaveStationSound(bool force = false) const {}
 
 	/**
 	 * Whether this is the primary vehicle in the chain.
@@ -341,9 +464,9 @@ public:
 	/**
 	 * Gets the sprite to show for the given direction
 	 * @param direction the direction the vehicle is facing
-	 * @return the sprite for the given vehicle in the given direction
+	 * @param[out] result Vehicle sprite sequence.
 	 */
-	virtual SpriteID GetImage(Direction direction, EngineImageType image_type) const { return 0; }
+	virtual void GetImage(Direction direction, EngineImageType image_type, VehicleSpriteSeq *result) const { result->Clear(); }
 
 	const GRFFile *GetGRF() const;
 	uint32 GetGRFID() const;
@@ -363,7 +486,7 @@ public:
 	 */
 	inline void InvalidateNewGRFCacheOfChain()
 	{
-		for (Vehicle *u = this; u != NULL; u = u->Next()) {
+		for (Vehicle *u = this; u != nullptr; u = u->Next()) {
 			u->InvalidateNewGRFCache();
 		}
 	}
@@ -436,6 +559,8 @@ public:
 	 */
 	virtual void OnNewDay() {};
 
+	void ShiftDates(int interval);
+
 	/**
 	 * Crash the (whole) vehicle chain.
 	 * @param flooded whether the cause of the crash is flooding or not.
@@ -480,14 +605,14 @@ public:
 	/**
 	 * Get the next vehicle of this vehicle.
 	 * @note articulated parts are also counted as vehicles.
-	 * @return the next vehicle or NULL when there isn't a next vehicle.
+	 * @return the next vehicle or nullptr when there isn't a next vehicle.
 	 */
 	inline Vehicle *Next() const { return this->next; }
 
 	/**
 	 * Get the previous vehicle of this vehicle.
 	 * @note articulated parts are also counted as vehicles.
-	 * @return the previous vehicle or NULL when there isn't a previous vehicle.
+	 * @return the previous vehicle or nullptr when there isn't a previous vehicle.
 	 */
 	inline Vehicle *Previous() const { return this->previous; }
 
@@ -504,7 +629,7 @@ public:
 	inline Vehicle *Last()
 	{
 		Vehicle *v = this;
-		while (v->Next() != NULL) v = v->Next();
+		while (v->Next() != nullptr) v = v->Next();
 		return v;
 	}
 
@@ -515,22 +640,22 @@ public:
 	inline const Vehicle *Last() const
 	{
 		const Vehicle *v = this;
-		while (v->Next() != NULL) v = v->Next();
+		while (v->Next() != nullptr) v = v->Next();
 		return v;
 	}
 
 	/**
 	 * Get the vehicle at offset \a n of this vehicle chain.
 	 * @param n Offset from the current vehicle.
-	 * @return The new vehicle or NULL if the offset is out-of-bounds.
+	 * @return The new vehicle or nullptr if the offset is out-of-bounds.
 	 */
 	inline Vehicle *Move(int n)
 	{
 		Vehicle *v = this;
 		if (n < 0) {
-			for (int i = 0; i != n && v != NULL; i--) v = v->Previous();
+			for (int i = 0; i != n && v != nullptr; i--) v = v->Previous();
 		} else {
-			for (int i = 0; i != n && v != NULL; i++) v = v->Next();
+			for (int i = 0; i != n && v != nullptr; i++) v = v->Next();
 		}
 		return v;
 	}
@@ -538,15 +663,15 @@ public:
 	/**
 	 * Get the vehicle at offset \a n of this vehicle chain.
 	 * @param n Offset from the current vehicle.
-	 * @return The new vehicle or NULL if the offset is out-of-bounds.
+	 * @return The new vehicle or nullptr if the offset is out-of-bounds.
 	 */
 	inline const Vehicle *Move(int n) const
 	{
 		const Vehicle *v = this;
 		if (n < 0) {
-			for (int i = 0; i != n && v != NULL; i--) v = v->Previous();
+			for (int i = 0; i != n && v != nullptr; i--) v = v->Previous();
 		} else {
-			for (int i = 0; i != n && v != NULL; i++) v = v->Next();
+			for (int i = 0; i != n && v != nullptr; i++) v = v->Next();
 		}
 		return v;
 	}
@@ -555,20 +680,20 @@ public:
 	 * Get the first order of the vehicles order list.
 	 * @return first order of order list.
 	 */
-	inline Order *GetFirstOrder() const { return (this->orders.list == NULL) ? NULL : this->orders.list->GetFirstOrder(); }
+	inline Order *GetFirstOrder() const { return (this->orders == nullptr) ? nullptr : this->orders->GetFirstOrder(); }
 
 	void AddToShared(Vehicle *shared_chain);
 	void RemoveFromShared();
 
 	/**
 	 * Get the next vehicle of the shared vehicle chain.
-	 * @return the next shared vehicle or NULL when there isn't a next vehicle.
+	 * @return the next shared vehicle or nullptr when there isn't a next vehicle.
 	 */
 	inline Vehicle *NextShared() const { return this->next_shared; }
 
 	/**
 	 * Get the previous vehicle of the shared vehicle chain
-	 * @return the previous shared vehicle or NULL when there isn't a previous vehicle.
+	 * @return the previous shared vehicle or nullptr when there isn't a previous vehicle.
 	 */
 	inline Vehicle *PreviousShared() const { return this->previous_shared; }
 
@@ -576,25 +701,36 @@ public:
 	 * Get the first vehicle of this vehicle chain.
 	 * @return the first vehicle of the chain.
 	 */
-	inline Vehicle *FirstShared() const { return (this->orders.list == NULL) ? this->First() : this->orders.list->GetFirstSharedVehicle(); }
+	inline Vehicle *FirstShared() const { return (this->orders == nullptr) ? this->First() : this->orders->GetFirstSharedVehicle(); }
 
 	/**
 	 * Check if we share our orders with another vehicle.
 	 * @return true if there are other vehicles sharing the same order
 	 */
-	inline bool IsOrderListShared() const { return this->orders.list != NULL && this->orders.list->IsShared(); }
+	inline bool IsOrderListShared() const { return this->orders != nullptr && this->orders->IsShared(); }
 
 	/**
 	 * Get the number of orders this vehicle has.
 	 * @return the number of orders this vehicle has.
 	 */
-	inline VehicleOrderID GetNumOrders() const { return (this->orders.list == NULL) ? 0 : this->orders.list->GetNumOrders(); }
+	inline VehicleOrderID GetNumOrders() const { return (this->orders == nullptr) ? 0 : this->orders->GetNumOrders(); }
 
 	/**
 	 * Get the number of manually added orders this vehicle has.
 	 * @return the number of manually added orders this vehicle has.
 	 */
-	inline VehicleOrderID GetNumManualOrders() const { return (this->orders.list == NULL) ? 0 : this->orders.list->GetNumManualOrders(); }
+	inline VehicleOrderID GetNumManualOrders() const { return (this->orders == nullptr) ? 0 : this->orders->GetNumManualOrders(); }
+
+	/**
+	 * Get the next station the vehicle will stop at.
+	 * @return ID of the next station the vehicle will stop at or INVALID_STATION.
+	 */
+	inline StationIDStack GetNextStoppingStation() const
+	{
+		return (this->orders == nullptr) ? INVALID_STATION : this->orders->GetNextStoppingStation(this);
+	}
+
+	void ResetRefitCaps();
 
 	/**
 	 * Copy certain configurations and statistics of a vehicle after successful autoreplace/renew
@@ -642,10 +778,18 @@ public:
 	 */
 	virtual bool FindClosestDepot(TileIndex *location, DestinationID *destination, bool *reverse) { return false; }
 
+	virtual void SetDestTile(TileIndex tile) { this->dest_tile = tile; }
+
 	CommandCost SendToDepot(DoCommandFlag flags, DepotCommand command);
 
 	void UpdateVisualEffect(bool allow_power_change = true);
 	void ShowVisualEffect() const;
+
+	void UpdatePosition();
+	void UpdateViewport(bool dirty);
+	void UpdateBoundingBoxCoordinates(bool update_cache) const;
+	void UpdatePositionAndViewport();
+	bool MarkAllViewportsDirty() const;
 
 	inline uint16 GetServiceInterval() const { return this->service_interval; }
 
@@ -739,22 +883,22 @@ public:
 	}
 
 	/**
-	 * Returns order 'index' of a vehicle or NULL when it doesn't exists
+	 * Returns order 'index' of a vehicle or nullptr when it doesn't exists
 	 * @param index the order to fetch
 	 * @return the found (or not) order
 	 */
 	inline Order *GetOrder(int index) const
 	{
-		return (this->orders.list == NULL) ? NULL : this->orders.list->GetOrderAt(index);
+		return (this->orders == nullptr) ? nullptr : this->orders->GetOrderAt(index);
 	}
 
 	/**
-	 * Returns the last order of a vehicle, or NULL if it doesn't exists
+	 * Returns the last order of a vehicle, or nullptr if it doesn't exists
 	 * @return last order of a vehicle, if available
 	 */
 	inline Order *GetLastOrder() const
 	{
-		return (this->orders.list == NULL) ? NULL : this->orders.list->GetLastOrder();
+		return (this->orders == nullptr) ? nullptr : this->orders->GetLastOrder();
 	}
 
 	bool IsEngineCountable() const;
@@ -786,7 +930,7 @@ public:
 	 */
 	inline bool HasArticulatedPart() const
 	{
-		return this->Next() != NULL && this->Next()->IsArticulatedPart();
+		return this->Next() != nullptr && this->Next()->IsArticulatedPart();
 	}
 
 	/**
@@ -853,24 +997,63 @@ public:
 	inline Vehicle *GetPrevVehicle() const
 	{
 		Vehicle *v = this->Previous();
-		while (v != NULL && v->IsArticulatedPart()) v = v->Previous();
+		while (v != nullptr && v->IsArticulatedPart()) v = v->Previous();
 
 		return v;
 	}
+
+	/**
+	 * Iterator to iterate orders
+	 * Supports deletion of current order
+	 */
+	struct OrderIterator {
+		typedef Order value_type;
+		typedef Order* pointer;
+		typedef Order& reference;
+		typedef size_t difference_type;
+		typedef std::forward_iterator_tag iterator_category;
+
+		explicit OrderIterator(OrderList *list) : list(list), prev(nullptr)
+		{
+			this->order = (this->list == nullptr) ? nullptr : this->list->GetFirstOrder();
+		}
+
+		bool operator==(const OrderIterator &other) const { return this->order == other.order; }
+		bool operator!=(const OrderIterator &other) const { return !(*this == other); }
+		Order * operator*() const { return this->order; }
+		OrderIterator & operator++()
+		{
+			this->prev = (this->prev == nullptr) ? this->list->GetFirstOrder() : this->prev->next;
+			this->order = (this->prev == nullptr) ? nullptr : this->prev->next;
+			return *this;
+		}
+
+	private:
+		OrderList *list;
+		Order *order;
+		Order *prev;
+	};
+
+	/**
+	 * Iterable ensemble of orders
+	 */
+	struct IterateWrapper {
+		OrderList *list;
+		IterateWrapper(OrderList *list = nullptr) : list(list) {}
+		OrderIterator begin() { return OrderIterator(this->list); }
+		OrderIterator end() { return OrderIterator(nullptr); }
+		bool empty() { return this->begin() == this->end(); }
+	};
+
+	/**
+	 * Returns an iterable ensemble of orders of a vehicle
+	 * @return an iterable ensemble of orders of a vehicle
+	 */
+	IterateWrapper Orders() const { return IterateWrapper(this->orders); }
+
+	uint32 GetDisplayMaxWeight() const;
+	uint32 GetDisplayMinPowerToWeight() const;
 };
-
-/**
- * Iterate over all vehicles from a given point.
- * @param var   The variable used to iterate over.
- * @param start The vehicle to start the iteration at.
- */
-#define FOR_ALL_VEHICLES_FROM(var, start) FOR_ALL_ITEMS_FROM(Vehicle, vehicle_index, var, start)
-
-/**
- * Iterate over all vehicles.
- * @param var The variable used to iterate over.
- */
-#define FOR_ALL_VEHICLES(var) FOR_ALL_VEHICLES_FROM(var, 0)
 
 /**
  * Class defining several overloaded accessors so we don't
@@ -885,7 +1068,10 @@ struct SpecializedVehicle : public Vehicle {
 	/**
 	 * Set vehicle type correctly
 	 */
-	inline SpecializedVehicle<T, Type>() : Vehicle(Type) { }
+	inline SpecializedVehicle<T, Type>() : Vehicle(Type)
+	{
+		this->sprite_cache.sprite_seq.count = 1;
+	}
 
 	/**
 	 * Get the first vehicle in the chain
@@ -986,7 +1172,7 @@ struct SpecializedVehicle : public Vehicle {
 	 */
 	static inline T *GetIfValid(size_t index)
 	{
-		return IsValidID(index) ? Get(index) : NULL;
+		return IsValidID(index) ? Get(index) : nullptr;
 	}
 
 	/**
@@ -1018,45 +1204,53 @@ struct SpecializedVehicle : public Vehicle {
 	 */
 	inline void UpdateViewport(bool force_update, bool update_delta)
 	{
-		extern void VehicleUpdateViewport(Vehicle *v, bool dirty);
+		bool sprite_has_changed = false;
+
+		/* Skip updating sprites on dedicated servers without screen */
+		if (_network_dedicated) return;
 
 		/* Explicitly choose method to call to prevent vtable dereference -
 		 * it gives ~3% runtime improvements in games with many vehicles */
-		if (update_delta) ((T *)this)->T::UpdateDeltaXY(this->direction);
-		SpriteID old_image = this->cur_image;
-		this->cur_image = ((T *)this)->T::GetImage(this->direction, EIT_ON_MAP);
-		if (force_update || this->cur_image != old_image) VehicleUpdateViewport(this, true);
+		if (update_delta) ((T *)this)->T::UpdateDeltaXY();
+
+		/*
+		 * Only check for a new sprite sequence if the vehicle direction
+		 * has changed since we last checked it, assuming that otherwise
+		 * there won't be enough change in bounding box or offsets to need
+		 * to resolve a new sprite.
+		 */
+		if (this->direction != this->sprite_cache.last_direction || this->sprite_cache.is_viewport_candidate) {
+			VehicleSpriteSeq seq;
+
+			((T*)this)->T::GetImage(this->direction, EIT_ON_MAP, &seq);
+			if (this->sprite_cache.sprite_seq != seq) {
+				sprite_has_changed = true;
+				this->sprite_cache.sprite_seq = seq;
+			}
+
+			this->sprite_cache.last_direction = this->direction;
+			this->sprite_cache.revalidate_before_draw = false;
+		} else {
+			/*
+			 * A change that could potentially invalidate the sprite has been
+			 * made, signal that we should still resolve it before drawing on a
+			 * viewport.
+			 */
+			this->sprite_cache.revalidate_before_draw = true;
+		}
+
+		if (force_update || sprite_has_changed) {
+			this->Vehicle::UpdateViewport(true);
+		}
 	}
+
+	/**
+	 * Returns an iterable ensemble of all valid vehicles of type T
+	 * @param from index of the first vehicle to consider
+	 * @return an iterable ensemble of all valid vehicles of type T
+	 */
+	static Pool::IterateWrapper<T> Iterate(size_t from = 0) { return Pool::IterateWrapper<T>(from); }
 };
-
-/**
- * Iterate over all vehicles of a particular type.
- * @param name The type of vehicle to iterate over.
- * @param var  The variable used to iterate over.
- */
-#define FOR_ALL_VEHICLES_OF_TYPE(name, var) FOR_ALL_ITEMS_FROM(name, vehicle_index, var, 0) if (var->type == name::EXPECTED_TYPE)
-
-/**
- * Disasters, like submarines, skyrangers and their shadows, belong to this class.
- */
-struct DisasterVehicle FINAL : public SpecializedVehicle<DisasterVehicle, VEH_DISASTER> {
-	SpriteID image_override;            ///< Override for the default disaster vehicle sprite.
-	VehicleID big_ufo_destroyer_target; ///< The big UFO that this destroyer is supposed to bomb.
-
-	/** We don't want GCC to zero our struct! It already is zeroed and has an index! */
-	DisasterVehicle() : SpecializedVehicleBase() {}
-	/** We want to 'destruct' the right class. */
-	virtual ~DisasterVehicle() {}
-
-	void UpdateDeltaXY(Direction direction);
-	bool Tick();
-};
-
-/**
- * Iterate over disaster vehicles.
- * @param var The variable used to iterate over.
- */
-#define FOR_ALL_DISASTERVEHICLES(var) FOR_ALL_VEHICLES_OF_TYPE(DisasterVehicle, var)
 
 /** Generates sequence of free UnitID numbers */
 struct FreeUnitIDGenerator {

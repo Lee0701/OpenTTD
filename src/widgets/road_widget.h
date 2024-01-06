@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,7 @@
 /** Widgets of the #BuildRoadToolbarWindow class. */
 enum RoadToolbarWidgets {
 	/* Name starts with RO instead of R, because of collision with RailToolbarWidgets */
+	WID_ROT_CAPTION,        ///< Caption of the window
 	WID_ROT_ROAD_X,         ///< Build road in x-direction.
 	WID_ROT_ROAD_Y,         ///< Build road in y-direction.
 	WID_ROT_AUTOROAD,       ///< Autorail.
@@ -26,6 +25,7 @@ enum RoadToolbarWidgets {
 	WID_ROT_BUILD_BRIDGE,   ///< Build bridge.
 	WID_ROT_BUILD_TUNNEL,   ///< Build tunnel.
 	WID_ROT_REMOVE,         ///< Remove road.
+	WID_ROT_CONVERT_ROAD,   ///< Convert road.
 };
 
 /** Widgets of the #BuildRoadDepotWindow class. */
@@ -51,7 +51,8 @@ enum BuildRoadStationWidgets {
 	WID_BROS_STATION_Y,     ///< Drive-through station in y-direction.
 	WID_BROS_LT_OFF,        ///< Turn off area highlight.
 	WID_BROS_LT_ON,         ///< Turn on area highlight.
-	WID_BROS_INFO,          ///< Station acceptance info.
+	WID_BROS_INFO,          ///< Station acceptance toggle.
+	WID_BROS_ACCEPTANCE,    ///< Station acceptance.
 };
 
 #endif /* WIDGETS_ROAD_WIDGET_H */

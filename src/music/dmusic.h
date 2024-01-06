@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,29 +13,29 @@
 #include "music_driver.hpp"
 
 /** Music player making use of DirectX. */
-class MusicDriver_DMusic: public MusicDriver {
+class MusicDriver_DMusic : public MusicDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	virtual ~MusicDriver_DMusic();
 
-	/* virtual */ void Stop();
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void PlaySong(const char *filename);
+	void Stop() override;
 
-	/* virtual */ void StopSong();
+	void PlaySong(const MusicSongInfo &song) override;
 
-	/* virtual */ bool IsSongPlaying();
+	void StopSong() override;
 
-	/* virtual */ void SetVolume(byte vol);
-	/* virtual */ const char *GetName() const { return "dmusic"; }
+	bool IsSongPlaying() override;
+
+	void SetVolume(byte vol) override;
+	const char *GetName() const override { return "dmusic"; }
 };
 
 /** Factory for the DirectX music player. */
-class FMusicDriver_DMusic: public MusicDriverFactory<FMusicDriver_DMusic> {
+class FMusicDriver_DMusic : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "dmusic"; }
-	/* virtual */ const char *GetDescription() { return "DirectMusic MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_DMusic(); }
+	FMusicDriver_DMusic() : DriverFactoryBase(Driver::DT_MUSIC, 10, "dmusic", "DirectMusic MIDI Driver") {}
+	Driver *CreateInstance() const override { return new MusicDriver_DMusic(); }
 };
 
 #endif /* MUSIC_DMUSIC_H */

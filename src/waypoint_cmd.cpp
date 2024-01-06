@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,7 +9,6 @@
 
 #include "stdafx.h"
 
-#include "cmd_helper.h"
 #include "command_func.h"
 #include "landscape.h"
 #include "bridge_map.h"
@@ -20,6 +17,7 @@
 #include "pathfinder/yapf/yapf_cache.h"
 #include "strings_func.h"
 #include "viewport_func.h"
+#include "viewport_kdtree.h"
 #include "window_func.h"
 #include "date_func.h"
 #include "vehicle_func.h"
@@ -29,8 +27,12 @@
 #include "company_base.h"
 #include "water.h"
 #include "company_gui.h"
+#include "waypoint_cmd.h"
+#include "landscape_cmd.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /**
  * Update the virtual coords needed to draw the waypoint sign.
@@ -38,10 +40,26 @@
 void Waypoint::UpdateVirtCoord()
 {
 	Point pt = RemapCoords2(TileX(this->xy) * TILE_SIZE, TileY(this->xy) * TILE_SIZE);
+	if (this->sign.kdtree_valid) _viewport_sign_kdtree.Remove(ViewportSignKdtreeItem::MakeWaypoint(this->index));
+
 	SetDParam(0, this->index);
 	this->sign.UpdatePosition(pt.x, pt.y - 32 * ZOOM_LVL_BASE, STR_VIEWPORT_WAYPOINT);
+
+	_viewport_sign_kdtree.Insert(ViewportSignKdtreeItem::MakeWaypoint(this->index));
+
 	/* Recenter viewport */
 	InvalidateWindowData(WC_WAYPOINT_VIEW, this->index);
+}
+
+/**
+ * Move the waypoint main coordinate somewhere else.
+ * @param new_xy new tile location of the sign
+ */
+void Waypoint::MoveSign(TileIndex new_xy)
+{
+	if (this->xy == new_xy) return;
+
+	this->BaseStation::MoveSign(new_xy);
 }
 
 /**
@@ -53,10 +71,10 @@ void Waypoint::UpdateVirtCoord()
  */
 static Waypoint *FindDeletedWaypointCloseTo(TileIndex tile, StringID str, CompanyID cid)
 {
-	Waypoint *wp, *best = NULL;
+	Waypoint *best = nullptr;
 	uint thres = 8;
 
-	FOR_ALL_WAYPOINTS(wp) {
+	for (Waypoint *wp : Waypoint::Iterate()) {
 		if (!wp->IsInUse() && wp->string_id == str && wp->owner == cid) {
 			uint cur_dist = DistanceManhattan(tile, wp->xy);
 
@@ -105,7 +123,7 @@ static CommandCost IsValidTileForWaypoint(TileIndex tile, Axis axis, StationID *
 	/* if waypoint is set, then we have special handling to allow building on top of already existing waypoints.
 	 * so waypoint points to INVALID_STATION if we can build on any waypoint.
 	 * Or it points to a waypoint if we're only allowed to build on exactly that waypoint. */
-	if (waypoint != NULL && IsTileType(tile, MP_STATION)) {
+	if (waypoint != nullptr && IsTileType(tile, MP_STATION)) {
 		if (!IsRailWaypoint(tile)) {
 			return ClearTile_Station(tile, DC_AUTO); // get error message
 		} else {
@@ -131,43 +149,32 @@ static CommandCost IsValidTileForWaypoint(TileIndex tile, Axis axis, StationID *
 		return_cmd_error(STR_ERROR_FLAT_LAND_REQUIRED);
 	}
 
-	if (MayHaveBridgeAbove(tile) && IsBridgeAbove(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+	if (IsBridgeAbove(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
 
 	return CommandCost();
 }
 
-extern void GetStationLayout(byte *layout, int numtracks, int plat_len, const StationSpec *statspec);
+extern void GetStationLayout(byte *layout, uint numtracks, uint plat_len, const StationSpec *statspec);
 extern CommandCost FindJoiningWaypoint(StationID existing_station, StationID station_to_join, bool adjacent, TileArea ta, Waypoint **wp);
 extern CommandCost CanExpandRailStation(const BaseStation *st, TileArea &new_ta, Axis axis);
 
 /**
  * Convert existing rail to waypoint. Eg build a waypoint station over
  * piece of rail
- * @param start_tile northern most tile where waypoint will be built
  * @param flags type of operation
- * @param p1 various bitstuffed elements
- * - p1 = (bit  4)    - orientation (Axis)
- * - p1 = (bit  8-15) - width of waypoint
- * - p1 = (bit 16-23) - height of waypoint
- * - p1 = (bit 24)    - allow waypoints directly adjacent to other waypoints.
- * @param p2 various bitstuffed elements
- * - p2 = (bit  0- 7) - custom station class
- * - p2 = (bit  8-15) - custom station id
- * @param text unused
+ * @param start_tile northern most tile where waypoint will be built
+ * @param axis orientation (Axis)
+ * @param width width of waypoint
+ * @param height height of waypoint
+ * @param spec_class custom station class
+ * @param spec_index custom station id
+ * @param station_to_join station ID to join (NEW_STATION if build new one)
+ * @param adjacent allow waypoints directly adjacent to other waypoints.
  * @return the cost of this operation or an error
  */
-CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildRailWaypoint(DoCommandFlag flags, TileIndex start_tile, Axis axis, byte width, byte height, StationClassID spec_class, byte spec_index, StationID station_to_join, bool adjacent)
 {
-	/* Unpack parameters */
-	Axis axis      = Extract<Axis, 4, 1>(p1);
-	byte width     = GB(p1,  8, 8);
-	byte height    = GB(p1, 16, 8);
-	bool adjacent  = HasBit(p1, 24);
-
-	StationClassID spec_class = Extract<StationClassID, 0, 8>(p2);
-	byte spec_index           = GB(p2, 8, 8);
-	StationID station_to_join = GB(p2, 16, 16);
-
+	if (!IsValidAxis(axis)) return CMD_ERROR;
 	/* Check if the given station class is valid */
 	if (spec_class != STAT_CLASS_WAYP) return CMD_ERROR;
 	if (spec_index >= StationClass::Get(spec_class)->GetSpecCount()) return CMD_ERROR;
@@ -195,16 +202,16 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 		if (ret.Failed()) return ret;
 	}
 
-	Waypoint *wp = NULL;
-	TileArea new_location(TileArea(start_tile, width, height));
+	Waypoint *wp = nullptr;
+	TileArea new_location(start_tile, width, height);
 	CommandCost ret = FindJoiningWaypoint(est, station_to_join, adjacent, new_location, &wp);
 	if (ret.Failed()) return ret;
 
 	/* Check if there is an already existing, deleted, waypoint close to us that we can reuse. */
 	TileIndex center_tile = start_tile + (count / 2) * offset;
-	if (wp == NULL && reuse) wp = FindDeletedWaypointCloseTo(center_tile, STR_SV_STNAME_WAYPOINT, _current_company);
+	if (wp == nullptr && reuse) wp = FindDeletedWaypointCloseTo(center_tile, STR_SV_STNAME_WAYPOINT, _current_company);
 
-	if (wp != NULL) {
+	if (wp != nullptr) {
 		/* Reuse an existing waypoint. */
 		if (wp->owner != _current_company) return_cmd_error(STR_ERROR_TOO_CLOSE_TO_ANOTHER_WAYPOINT);
 
@@ -222,7 +229,7 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 	}
 
 	if (flags & DC_EXEC) {
-		if (wp == NULL) {
+		if (wp == nullptr) {
 			wp = new Waypoint(start_tile);
 		} else if (!wp->IsInUse()) {
 			/* Move existing (recently deleted) waypoint to the new location */
@@ -238,13 +245,13 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 		wp->string_id = STR_SV_STNAME_WAYPOINT;
 		wp->train_station = new_location;
 
-		if (wp->town == NULL) MakeDefaultName(wp);
+		if (wp->town == nullptr) MakeDefaultName(wp);
 
 		wp->UpdateVirtCoord();
 
 		const StationSpec *spec = StationClass::Get(spec_class)->GetSpec(spec_index);
 		byte *layout_ptr = AllocaM(byte, count);
-		if (spec == NULL) {
+		if (spec == nullptr) {
 			/* The layout must be 0 for the 'normal' waypoints by design. */
 			memset(layout_ptr, 0, count);
 		} else {
@@ -277,33 +284,30 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 
 /**
  * Build a buoy.
- * @param tile tile where to place the buoy
  * @param flags operation to perform
- * @param p1 unused
- * @param p2 unused
- * @param text unused
+ * @param tile tile where to place the buoy
  * @return the cost of this operation or an error
  */
-CommandCost CmdBuildBuoy(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildBuoy(DoCommandFlag flags, TileIndex tile)
 {
 	if (tile == 0 || !HasTileWaterGround(tile)) return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
-	if (MayHaveBridgeAbove(tile) && IsBridgeAbove(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+	if (IsBridgeAbove(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
 
-	if (GetTileSlope(tile) != SLOPE_FLAT) return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
+	if (!IsTileFlat(tile)) return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
 
 	/* Check if there is an already existing, deleted, waypoint close to us that we can reuse. */
 	Waypoint *wp = FindDeletedWaypointCloseTo(tile, STR_SV_STNAME_BUOY, OWNER_NONE);
-	if (wp == NULL && !Waypoint::CanAllocateItem()) return_cmd_error(STR_ERROR_TOO_MANY_STATIONS_LOADING);
+	if (wp == nullptr && !Waypoint::CanAllocateItem()) return_cmd_error(STR_ERROR_TOO_MANY_STATIONS_LOADING);
 
 	CommandCost cost(EXPENSES_CONSTRUCTION, _price[PR_BUILD_WAYPOINT_BUOY]);
 	if (!IsWaterTile(tile)) {
-		CommandCost ret = DoCommand(tile, 0, 0, flags | DC_AUTO, CMD_LANDSCAPE_CLEAR);
+		CommandCost ret = Command<CMD_LANDSCAPE_CLEAR>::Do(flags | DC_AUTO, tile);
 		if (ret.Failed()) return ret;
 		cost.AddCost(ret);
 	}
 
 	if (flags & DC_EXEC) {
-		if (wp == NULL) {
+		if (wp == nullptr) {
 			wp = new Waypoint(tile);
 		} else {
 			/* Move existing (recently deleted) buoy to the new location */
@@ -319,9 +323,11 @@ CommandCost CmdBuildBuoy(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 
 		wp->build_date = _date;
 
-		if (wp->town == NULL) MakeDefaultName(wp);
+		if (wp->town == nullptr) MakeDefaultName(wp);
 
 		MakeBuoy(tile, wp->index, GetWaterClass(tile));
+		CheckForDockingTile(tile);
+		MarkTileDirtyByTile(tile);
 
 		wp->UpdateVirtCoord();
 		InvalidateWindowData(WC_WAYPOINT_VIEW, wp->index);
@@ -375,12 +381,10 @@ CommandCost RemoveBuoy(TileIndex tile, DoCommandFlag flags)
  * @param name The name to check.
  * @return True iff the name is unique.
  */
-static bool IsUniqueWaypointName(const char *name)
+static bool IsUniqueWaypointName(const std::string &name)
 {
-	const Waypoint *wp;
-
-	FOR_ALL_WAYPOINTS(wp) {
-		if (wp->name != NULL && strcmp(wp->name, name) == 0) return false;
+	for (const Waypoint *wp : Waypoint::Iterate()) {
+		if (!wp->name.empty() && wp->name == name) return false;
 	}
 
 	return true;
@@ -388,24 +392,22 @@ static bool IsUniqueWaypointName(const char *name)
 
 /**
  * Rename a waypoint.
- * @param tile unused
  * @param flags type of operation
- * @param p1 id of waypoint
- * @param p2 unused
+ * @param waypoint_id id of waypoint
  * @param text the new name or an empty string when resetting to the default
  * @return the cost of this operation or an error
  */
-CommandCost CmdRenameWaypoint(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRenameWaypoint(DoCommandFlag flags, StationID waypoint_id, const std::string &text)
 {
-	Waypoint *wp = Waypoint::GetIfValid(p1);
-	if (wp == NULL) return CMD_ERROR;
+	Waypoint *wp = Waypoint::GetIfValid(waypoint_id);
+	if (wp == nullptr) return CMD_ERROR;
 
 	if (wp->owner != OWNER_NONE) {
 		CommandCost ret = CheckOwnership(wp->owner);
 		if (ret.Failed()) return ret;
 	}
 
-	bool reset = StrEmpty(text);
+	bool reset = text.empty();
 
 	if (!reset) {
 		if (Utf8StringLength(text) >= MAX_LENGTH_STATION_NAME_CHARS) return CMD_ERROR;
@@ -413,8 +415,11 @@ CommandCost CmdRenameWaypoint(TileIndex tile, DoCommandFlag flags, uint32 p1, ui
 	}
 
 	if (flags & DC_EXEC) {
-		free(wp->name);
-		wp->name = reset ? NULL : strdup(text);
+		if (reset) {
+			wp->name.clear();
+		} else {
+			wp->name = text;
+		}
 
 		wp->UpdateVirtCoord();
 	}

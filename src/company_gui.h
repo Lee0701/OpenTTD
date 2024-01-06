@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,17 +11,19 @@
 #define COMPANY_GUI_H
 
 #include "company_type.h"
+#include "group.h"
 #include "gfx_type.h"
 
 TextColour GetDrawStringCompanyColour(CompanyID company);
 void DrawCompanyIcon(CompanyID c, int x, int y);
 
+void ShowCompanyLiveryWindow(CompanyID company, GroupID group);
 void ShowCompanyStations(CompanyID company);
 void ShowCompanyFinances(CompanyID company);
 void ShowCompany(CompanyID company);
 
 void InvalidateCompanyWindows(const Company *c);
-void DeleteCompanyWindows(CompanyID company);
+void CloseCompanyWindows(CompanyID company);
 void DirtyCompanyInfrastructureWindows(CompanyID company);
 
 #endif /* COMPANY_GUI_H */

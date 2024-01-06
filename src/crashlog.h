@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -48,7 +46,7 @@ protected:
 	 * Writes actually encountered error to the buffer.
 	 * @param buffer  The begin where to write at.
 	 * @param last    The last position in the buffer to write to.
-	 * @param message Message passed to use for possible errors. Can be NULL.
+	 * @param message Message passed to use for possible errors. Can be nullptr.
 	 * @return the position of the \c '\0' character after the buffer.
 	 */
 	virtual char *LogError(char *buffer, const char *last, const char *message) const = 0;
@@ -85,6 +83,9 @@ protected:
 	char *LogConfiguration(char *buffer, const char *last) const;
 	char *LogLibraries(char *buffer, const char *last) const;
 	char *LogGamelog(char *buffer, const char *last) const;
+	char *LogRecentNews(char *buffer, const char *list) const;
+
+	int CreateFileName(char *filename, const char *filename_last, const char *ext, bool with_dir = true) const;
 
 public:
 	/** Stub destructor to silence some compilers. */
@@ -114,6 +115,12 @@ public:
 	 * @note must be implemented by all implementers of CrashLog.
 	 */
 	static void InitialiseCrashLog();
+
+	/**
+	 * Prepare crash log handler for a newly started thread.
+	 * @note must be implemented by all implementers of CrashLog.
+	 */
+	static void InitThread();
 
 	static void SetErrorMessage(const char *message);
 	static void AfterCrashLogCleanup();

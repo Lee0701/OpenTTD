@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -27,7 +25,7 @@ static inline void MakeVoid(TileIndex t)
 	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = 0;
-	_m[t].m6 = 0;
+	_me[t].m6 = 0;
 	_me[t].m7 = 0;
 }
 

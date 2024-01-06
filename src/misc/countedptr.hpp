@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -34,61 +32,119 @@ protected:
 	Tcls *m_pT;
 
 public:
-	/** default (NULL) construct or construct from a raw pointer */
-	inline CCountedPtr(Tcls *pObj = NULL) : m_pT(pObj) {AddRef();}
+	/** default (nullptr) construct or construct from a raw pointer */
+	inline CCountedPtr(Tcls *pObj = nullptr) : m_pT(pObj)
+	{
+		AddRef();
+	}
 
 	/** copy constructor (invoked also when initializing from another smart ptr) */
-	inline CCountedPtr(const CCountedPtr& src) : m_pT(src.m_pT) {AddRef();}
+	inline CCountedPtr(const CCountedPtr &src) : m_pT(src.m_pT)
+	{
+		AddRef();
+	}
 
 	/** destructor releasing the reference */
-	inline ~CCountedPtr() {Release();}
+	inline ~CCountedPtr()
+	{
+		Release();
+	}
 
 protected:
-	/** add one ref to the underlaying object */
-	inline void AddRef() {if (m_pT != NULL) m_pT->AddRef();}
+	/** add one ref to the underlying object */
+	inline void AddRef()
+	{
+		if (m_pT != nullptr) m_pT->AddRef();
+	}
 
 public:
 	/** release smart pointer (and decrement ref count) if not null */
-	inline void Release() {if (m_pT != NULL) {Tcls *pT = m_pT; m_pT = NULL; pT->Release();}}
+	inline void Release()
+	{
+		if (m_pT != nullptr) {
+			Tcls *pT = m_pT;
+			m_pT = nullptr;
+			pT->Release();
+		}
+	}
 
 	/** dereference of smart pointer - const way */
-	inline const Tcls *operator -> () const {assert(m_pT != NULL); return m_pT;}
+	inline const Tcls *operator->() const
+	{
+		assert(m_pT != nullptr);
+		return m_pT;
+	}
 
 	/** dereference of smart pointer - non const way */
-	inline Tcls *operator -> () {assert(m_pT != NULL); return m_pT;}
+	inline Tcls *operator->()
+	{
+		assert(m_pT != nullptr);
+		return m_pT;
+	}
 
 	/** raw pointer casting operator - const way */
-	inline operator const Tcls*() const {assert(m_pT == NULL); return m_pT;}
+	inline operator const Tcls*() const
+	{
+		assert(m_pT == nullptr);
+		return m_pT;
+	}
 
 	/** raw pointer casting operator - non-const way */
-	inline operator Tcls*() {return m_pT;}
+	inline operator Tcls*()
+	{
+		return m_pT;
+	}
 
 	/** operator & to support output arguments */
-	inline Tcls** operator &() {assert(m_pT == NULL); return &m_pT;}
+	inline Tcls** operator&()
+	{
+		assert(m_pT == nullptr);
+		return &m_pT;
+	}
 
 	/** assignment operator from raw ptr */
-	inline CCountedPtr& operator = (Tcls *pT) {Assign(pT); return *this;}
+	inline CCountedPtr& operator=(Tcls *pT)
+	{
+		Assign(pT);
+		return *this;
+	}
 
 	/** assignment operator from another smart ptr */
-	inline CCountedPtr& operator = (const CCountedPtr& src) {Assign(src.m_pT); return *this;}
+	inline CCountedPtr& operator=(const CCountedPtr &src)
+	{
+		Assign(src.m_pT);
+		return *this;
+	}
 
 	/** assignment operator helper */
 	inline void Assign(Tcls *pT);
 
-	/** one way how to test for NULL value */
-	inline bool IsNull() const {return m_pT == NULL;}
+	/** one way how to test for nullptr value */
+	inline bool IsNull() const
+	{
+		return m_pT == nullptr;
+	}
 
-	/** another way how to test for NULL value */
-	//inline bool operator == (const CCountedPtr& sp) const {return m_pT == sp.m_pT;}
+	/** another way how to test for nullptr value */
+	//inline bool operator == (const CCountedPtr &sp) const {return m_pT == sp.m_pT;}
 
-	/** yet another way how to test for NULL value */
-	//inline bool operator != (const CCountedPtr& sp) const {return m_pT != sp.m_pT;}
+	/** yet another way how to test for nullptr value */
+	//inline bool operator != (const CCountedPtr &sp) const {return m_pT != sp.m_pT;}
 
 	/** assign pointer w/o incrementing ref count */
-	inline void Attach(Tcls *pT) {Release(); m_pT = pT;}
+	inline void Attach(Tcls *pT)
+	{
+		Release();
+		m_pT = pT;
+	}
 
 	/** detach pointer w/o decrementing ref count */
-	inline Tcls *Detach() {Tcls *pT = m_pT; m_pT = NULL; return pT;}
+	inline Tcls *Detach()
+	{
+		Tcls *pT = m_pT;
+		m_pT = nullptr;
+		return pT;
+	}
 };
 
 template <class Tcls_>
@@ -96,10 +152,10 @@ inline void CCountedPtr<Tcls_>::Assign(Tcls *pT)
 {
 	/* if they are the same, we do nothing */
 	if (pT != m_pT) {
-		if (pT != NULL) pT->AddRef();        // AddRef new pointer if any
+		if (pT != nullptr) pT->AddRef();        // AddRef new pointer if any
 		Tcls *pTold = m_pT;                  // save original ptr
 		m_pT = pT;                           // update m_pT to new value
-		if (pTold != NULL) pTold->Release(); // release old ptr if any
+		if (pTold != nullptr) pTold->Release(); // release old ptr if any
 	}
 }
 
@@ -136,7 +192,6 @@ template <class T> struct AdaptT {
 	}
 };
 
-
 /**
  * Simple counted object. Use it as base of your struct/class if you want to use
  *  basic reference counting. Your struct/class will destroy and free itself when
@@ -160,8 +215,5 @@ struct SimpleCountedObject {
 	virtual int32 Release();
 	virtual void FinalRelease() {};
 };
-
-
-
 
 #endif /* COUNTEDPTR_HPP */

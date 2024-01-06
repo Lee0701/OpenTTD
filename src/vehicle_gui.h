@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,8 @@
 
 #include "window_type.h"
 #include "vehicle_type.h"
+#include "vehicle_gui_base.h"
+#include "vehiclelist.h"
 #include "order_type.h"
 #include "station_type.h"
 #include "engine_type.h"
@@ -37,12 +37,23 @@ enum VehicleInvalidateWindowData {
 	VIWD_AUTOREPLACE       = -4, ///< Autoreplace replaced the vehicle.
 };
 
-int DrawVehiclePurchaseInfo(int left, int right, int y, EngineID engine_number);
+/** Extra information about refitted cargo and capacity */
+struct TestedEngineDetails {
+	Money cost;           ///< Refit cost
+	CargoID cargo;        ///< Cargo type
+	uint capacity;        ///< Cargo capacity
+	uint16 mail_capacity; ///< Mail capacity if available
+	CargoArray all_capacities; ///< Capacities for all cargoes
 
-void DrawTrainImage(const Train *v, int left, int right, int y, VehicleID selection, EngineImageType image_type, int skip, VehicleID drag_dest = INVALID_VEHICLE);
-void DrawRoadVehImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type, int skip = 0);
-void DrawShipImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type);
-void DrawAircraftImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type);
+	void FillDefaultCapacities(const Engine *e);
+};
+
+int DrawVehiclePurchaseInfo(int left, int right, int y, EngineID engine_number, TestedEngineDetails &te);
+
+void DrawTrainImage(const Train *v, const Rect &r, VehicleID selection, EngineImageType image_type, int skip, VehicleID drag_dest = INVALID_VEHICLE);
+void DrawRoadVehImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type, int skip = 0);
+void DrawShipImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type);
+void DrawAircraftImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type);
 
 void ShowBuildVehicleWindow(TileIndex tile, VehicleType type);
 
@@ -64,7 +75,8 @@ static inline uint GetVehicleHeight(VehicleType type)
 	return (type == VEH_TRAIN || type == VEH_ROAD) ? 14 : 24;
 }
 
-int GetVehicleWidth(Vehicle *v, EngineImageType image_type);
+int GetSingleVehicleWidth(const Vehicle *v, EngineImageType image_type);
+int GetVehicleWidth(const Vehicle *v, EngineImageType image_type);
 
 /** Dimensions of a cell in the purchase/depot windows. */
 struct VehicleCellSize {
@@ -95,10 +107,13 @@ static inline WindowClass GetWindowClassForVehicleType(VehicleType vt)
 /* Unified window procedure */
 void ShowVehicleViewWindow(const Vehicle *v);
 bool VehicleClicked(const Vehicle *v);
+bool VehicleClicked(VehicleList::const_iterator begin, VehicleList::const_iterator end);
+bool VehicleClicked(const GUIVehicleGroup &vehgroup);
 void StartStopVehicle(const Vehicle *v, bool texteffect);
 
-Vehicle *CheckClickOnVehicle(const struct ViewPort *vp, int x, int y);
+Vehicle *CheckClickOnVehicle(const struct Viewport *vp, int x, int y);
 
-void DrawVehicleImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type, int skip);
+void DrawVehicleImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type, int skip);
+void SetMouseCursorVehicle(const Vehicle *v, EngineImageType image_type);
 
 #endif /* VEHICLE_GUI_H */

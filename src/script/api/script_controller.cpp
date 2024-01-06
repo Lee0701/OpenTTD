@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -23,6 +21,9 @@
 #include "../../ai/ai_gui.hpp"
 #include "../../settings_type.h"
 #include "../../network/network.h"
+#include "../../misc_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ void ScriptController::SetCommandDelay(int ticks)
 {
@@ -41,7 +42,7 @@
 		ticks = 1;
 	}
 
-	throw Script_Suspend(ticks, NULL);
+	throw Script_Suspend(ticks, nullptr);
 }
 
 /* static */ void ScriptController::Break(const char* message)
@@ -51,15 +52,15 @@
 	ScriptObject::GetActiveInstance()->Pause();
 
 	char log_message[1024];
-	snprintf(log_message, sizeof(log_message), "Break: %s", message);
+	seprintf(log_message, lastof(log_message), "Break: %s", message);
 	ScriptLog::Log(ScriptLog::LOG_SQ_ERROR, log_message);
 
-	/* Inform script developer that his script has been paused and
+	/* Inform script developer that their script has been paused and
 	 * needs manual action to continue. */
 	ShowAIDebugWindow(ScriptObject::GetRootCompany());
 
 	if ((_pause_mode & PM_PAUSED_NORMAL) == PM_UNPAUSED) {
-		ScriptObject::DoCommand(0, PM_PAUSED_NORMAL, 1, CMD_PAUSE);
+		ScriptObject::Command<CMD_PAUSE>::Do(PM_PAUSED_NORMAL, true);
 	}
 }
 
@@ -77,9 +78,9 @@ ScriptController::ScriptController(CompanyID company) :
 
 ScriptController::~ScriptController()
 {
-	for (LoadedLibraryList::iterator iter = this->loaded_library.begin(); iter != this->loaded_library.end(); iter++) {
-		free((*iter).second);
-		free((*iter).first);
+	for (const auto &item : this->loaded_library) {
+		free(item.second);
+		free(item.first);
 	}
 
 	this->loaded_library.clear();
@@ -111,17 +112,17 @@ ScriptController::~ScriptController()
 	Squirrel *engine = ScriptObject::GetActiveInstance()->engine;
 	HSQUIRRELVM vm = engine->GetVM();
 
+	ScriptInfo *lib = ScriptObject::GetActiveInstance()->FindLibrary(library, version);
+	if (lib == nullptr) {
+		char error[1024];
+		seprintf(error, lastof(error), "couldn't find library '%s' with version %d", library, version);
+		throw sq_throwerror(vm, error);
+	}
+
 	/* Internally we store libraries as 'library.version' */
 	char library_name[1024];
-	snprintf(library_name, sizeof(library_name), "%s.%d", library, version);
+	seprintf(library_name, lastof(library_name), "%s.%d", library, version);
 	strtolower(library_name);
-
-	ScriptInfo *lib = ScriptObject::GetActiveInstance()->FindLibrary(library, version);
-	if (lib == NULL) {
-		char error[1024];
-		snprintf(error, sizeof(error), "couldn't find library '%s' with version %d", library, version);
-		throw sq_throwerror(vm, OTTD2SQ(error));
-	}
 
 	/* Get the current table/class we belong to */
 	HSQOBJECT parent;
@@ -129,43 +130,43 @@ ScriptController::~ScriptController()
 
 	char fake_class[1024];
 
-	LoadedLibraryList::iterator iter = controller->loaded_library.find(library_name);
-	if (iter != controller->loaded_library.end()) {
-		ttd_strlcpy(fake_class, (*iter).second, sizeof(fake_class));
+	LoadedLibraryList::iterator it = controller->loaded_library.find(library_name);
+	if (it != controller->loaded_library.end()) {
+		strecpy(fake_class, (*it).second, lastof(fake_class));
 	} else {
 		int next_number = ++controller->loaded_library_count;
 
 		/* Create a new fake internal name */
-		snprintf(fake_class, sizeof(fake_class), "_internalNA%d", next_number);
+		seprintf(fake_class, lastof(fake_class), "_internalNA%d", next_number);
 
 		/* Load the library in a 'fake' namespace, so we can link it to the name the user requested */
 		sq_pushroottable(vm);
-		sq_pushstring(vm, OTTD2SQ(fake_class), -1);
+		sq_pushstring(vm, fake_class, -1);
 		sq_newclass(vm, SQFalse);
 		/* Load the library */
 		if (!engine->LoadScript(vm, lib->GetMainScript(), false)) {
 			char error[1024];
-			snprintf(error, sizeof(error), "there was a compile error when importing '%s' version %d", library, version);
-			throw sq_throwerror(vm, OTTD2SQ(error));
+			seprintf(error, lastof(error), "there was a compile error when importing '%s' version %d", library, version);
+			throw sq_throwerror(vm, error);
 		}
 		/* Create the fake class */
 		sq_newslot(vm, -3, SQFalse);
 		sq_pop(vm, 1);
 
-		controller->loaded_library[strdup(library_name)] = strdup(fake_class);
+		controller->loaded_library[stredup(library_name)] = stredup(fake_class);
 	}
 
 	/* Find the real class inside the fake class (like 'sets.Vector') */
 	sq_pushroottable(vm);
-	sq_pushstring(vm, OTTD2SQ(fake_class), -1);
+	sq_pushstring(vm, fake_class, -1);
 	if (SQ_FAILED(sq_get(vm, -2))) {
-		throw sq_throwerror(vm, _SC("internal error assigning library class"));
+		throw sq_throwerror(vm, "internal error assigning library class");
 	}
-	sq_pushstring(vm, OTTD2SQ(lib->GetInstanceName()), -1);
+	sq_pushstring(vm, lib->GetInstanceName(), -1);
 	if (SQ_FAILED(sq_get(vm, -2))) {
 		char error[1024];
-		snprintf(error, sizeof(error), "unable to find class '%s' in the library '%s' version %d", lib->GetInstanceName(), library, version);
-		throw sq_throwerror(vm, OTTD2SQ(error));
+		seprintf(error, lastof(error), "unable to find class '%s' in the library '%s' version %d", lib->GetInstanceName(), library, version);
+		throw sq_throwerror(vm, error);
 	}
 	HSQOBJECT obj;
 	sq_getstackobj(vm, -1, &obj);
@@ -175,7 +176,7 @@ ScriptController::~ScriptController()
 
 	/* Now link the name the user wanted to our 'fake' class */
 	sq_pushobject(vm, parent);
-	sq_pushstring(vm, OTTD2SQ(class_name), -1);
+	sq_pushstring(vm, class_name, -1);
 	sq_pushobject(vm, obj);
 	sq_newclass(vm, SQTrue);
 	sq_newslot(vm, -3, SQFalse);

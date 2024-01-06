@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -7,7 +5,7 @@
  * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <http://www.gnu.org/licenses/>.
  */
 
-AILog.Info("0.7 API compatability in effect:");
+AILog.Info("0.7 API compatibility in effect:");
 AILog.Info(" - AITown::GetLastMonthProduction's behaviour has slightly changed.");
 AILog.Info(" - AISubsidy::GetDestination returns STATION_INVALID for awarded subsidies.");
 AILog.Info(" - AISubsidy::GetSource returns STATION_INVALID for awarded subsidies.");
@@ -367,3 +365,30 @@ AIOrder.AIOF_UNLOAD_FLAGS <- AIOrder.OF_UNLOAD_FLAGS
 AIOrder.AIOF_LOAD_FLAGS <- AIOrder.OF_LOAD_FLAGS
 AIOrder.AIOF_DEPOT_FLAGS <- AIOrder.OF_DEPOT_FLAGS
 AIOrder.AIOF_INVALID <- AIOrder.OF_INVALID
+
+/* 1.9 adds a vehicle type parameter. */
+AIBridge._GetName <- AIBridge.GetName;
+AIBridge.GetName <- function(bridge_id)
+{
+	return AIBridge._GetName(bridge_id, AIVehicle.VT_RAIL);
+}
+
+/* 1.9 adds parent_group_id to CreateGroup function */
+AIGroup._CreateGroup <- AIGroup.CreateGroup;
+AIGroup.CreateGroup <- function(vehicle_type)
+{
+	return AIGroup._CreateGroup(vehicle_type, AIGroup.GROUP_INVALID);
+}
+
+/* 13 really checks RoadType against RoadType */
+AIRoad._HasRoadType <- AIRoad.HasRoadType;
+AIRoad.HasRoadType <- function(tile, road_type)
+{
+	local list = AIRoadTypeList(AIRoad.GetRoadTramType(road_type));
+	foreach (rt, _ in list) {
+		if (AIRoad._HasRoadType(tile, rt)) {
+			return true;
+		}
+	}
+	return false;
+}

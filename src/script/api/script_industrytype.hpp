@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -112,7 +110,9 @@ public:
 	 * @param industry_type The type of the industry.
 	 * @pre IsValidIndustryType(industry_type).
 	 * @return True if you can build this type of industry at locations of your choice.
-	 * @note Returns false if you can only prospect this type of industry, or not build it at all.
+	 * @ai @note Returns false if you can only prospect this type of industry, or not build it at all.
+	 * @game @note If no valid ScriptCompanyMode active in scope, this method returns false if you can
+	 * @game only prospect this type of industry, or not build it at all.
 	 * @game @note If no valid ScriptCompanyMode active in scope, the script can
 	 * @game build as long as the industry type can be built. (a NewGRF can for example
 	 * @game reject construction based on current year)
@@ -124,8 +124,11 @@ public:
 	 * @param industry_type The type of the industry.
 	 * @pre IsValidIndustryType(industry_type).
 	 * @return True if you can prospect this type of industry.
-	 * @note If the setting "Manual primary industry construction method" is set
-	 * to either "None" or "as other industries" this function always returns false.
+	 * @ai @note If the setting "Manual primary industry construction method" is set
+	 * @ai to either "None" or "as other industries" this function always returns false.
+	 * @game @note If no valid ScriptCompanyMode is active in scope, and if the setting
+	 * @game "Manual primary industry construction method" is set to either "None" or
+	 * @game "as other industries" this function always returns false.
 	 * @game @note If no valid ScriptCompanyMode active in scope, the script can
 	 * @game prospect as long as the industry type can be built. (a NewGRF can for
 	 * @game example reject construction based on current year)
@@ -178,6 +181,15 @@ public:
 	 * @return True when this type has a dock.
 	 */
 	static bool HasDock(IndustryType industry_type);
+
+	/**
+	 * Get a specific industry-type from a grf.
+	 * @param grfid The ID of the NewGRF.
+	 * @param grf_local_id The ID of the industry, local to the NewGRF.
+	 * @pre 0x00 <= grf_local_id < NUM_INDUSTRYTYPES_PER_GRF.
+	 * @return the industry-type ID, local to the current game (this diverges from the grf_local_id).
+	 */
+	static IndustryType ResolveNewGRFID(uint32 grfid, uint16 grf_local_id);
 };
 
 #endif /* SCRIPT_INDUSTRYTYPE_HPP */

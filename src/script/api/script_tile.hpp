@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -40,8 +38,11 @@ public:
 		/** The area was already flat */
 		ERR_AREA_ALREADY_FLAT,                 // [STR_ERROR_ALREADY_LEVELLED]
 
-		/** There is a tunnel underneed */
+		/** There is a tunnel underneath */
 		ERR_EXCAVATION_WOULD_DAMAGE,           // [STR_ERROR_EXCAVATION_WOULD_DAMAGE]
+
+		/** Reached the limit for terraforming/clearing/planting */
+		ERR_LIMIT_REACHED,                     // [STR_ERROR_TERRAFORM_LIMIT_REACHED, STR_ERROR_CLEARING_LIMIT_REACHED, STR_ERROR_TREE_PLANT_LIMIT_REACHED]
 	};
 
 	/**
@@ -118,6 +119,7 @@ public:
 		BT_CLEAR_ROCKY,  ///< Clear a tile with rocks
 		BT_CLEAR_FIELDS, ///< Clear a tile with farm fields
 		BT_CLEAR_HOUSE,  ///< Clear a tile with a house
+		BT_CLEAR_WATER,  ///< Clear a tile with either river or sea
 	};
 
 	/**
@@ -158,10 +160,27 @@ public:
 	static bool IsBuildableRectangle(TileIndex tile, uint width, uint height);
 
 	/**
+	 * Checks whether the given tile is actually a sea tile.
+	 * @param tile The tile to check on.
+	 * @pre ScriptMap::IsValidTile(tile).
+	 * @return True if and only if the tile is a sea tile.
+	 */
+	static bool IsSeaTile(TileIndex tile);
+
+	/**
+	 * Checks whether the given tile is actually a river tile.
+	 * @param tile The tile to check on.
+	 * @pre ScriptMap::IsValidTile(tile).
+	 * @return True if and only if the tile is a river tile.
+	 */
+	static bool IsRiverTile(TileIndex tile);
+
+	/**
 	 * Checks whether the given tile is actually a water tile.
 	 * @param tile The tile to check on.
 	 * @pre ScriptMap::IsValidTile(tile).
 	 * @return True if and only if the tile is a water tile.
+	 * @note Returns false when a buoy is on the tile.
 	 */
 	static bool IsWaterTile(TileIndex tile);
 
@@ -351,7 +370,7 @@ public:
 	 * @pre width > 0.
 	 * @pre height > 0.
 	 * @pre radius >= 0.
-	 * @return Value below 8 means no acceptance; the more the better.
+	 * @return Values below 8 mean no acceptance; the more the better.
 	 */
 	static int32 GetCargoAcceptance(TileIndex tile, CargoID cargo_type, int width, int height, int radius);
 
@@ -445,7 +464,6 @@ public:
 	 * Destroy everything on the given tile.
 	 * @param tile The tile to demolish.
 	 * @pre ScriptMap::IsValidTile(tile).
-	 * @game @pre Valid ScriptCompanyMode active in scope.
 	 * @exception ScriptError::ERR_AREA_NOT_CLEAR
 	 * @return True if and only if the tile was demolished.
 	 */

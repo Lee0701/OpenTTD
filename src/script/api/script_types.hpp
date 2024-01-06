@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -84,6 +82,7 @@
 
 #include "../../core/overflowsafe_type.hpp"
 #include "../../company_type.h"
+#include "../../tile_type.h"
 #include <squirrel.h>
 
 /* Define all types here, so we don't have to include the whole _type.h maze */
@@ -98,9 +97,10 @@ typedef uint8 IndustryType;  ///< The ID of an industry-type.
 typedef OverflowSafeInt64 Money; ///< Money, stored in a 32bit/64bit safe way. For scripts money is always in pounds.
 typedef uint16 SignID;       ///< The ID of a sign.
 typedef uint16 StationID;    ///< The ID of a station.
-typedef uint16 StringID;     ///< The ID of a string.
+typedef uint32 StringID;     ///< The ID of a string.
 typedef uint16 SubsidyID;    ///< The ID of a subsidy.
-typedef uint32 TileIndex;    ///< The ID of a tile (just named differently).
+typedef uint16 StoryPageID;  ///< The ID of a story page.
+typedef uint16 StoryPageElementID; ///< The ID of a story page element.
 typedef uint16 TownID;       ///< The ID of a town.
 typedef uint32 VehicleID;    ///< The ID of a vehicle.
 

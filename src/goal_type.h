@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,24 +13,30 @@
 #include "core/enum_type.hpp"
 
 static const uint32 GOAL_QUESTION_BUTTON_COUNT = 18; ///< Amount of buttons available.
-static const byte   GOAL_QUESTION_TYPE_COUNT   =  4; ///< Amount of question types.
+
+enum GoalQuestionType : byte {
+	GQT_QUESTION = 0,
+	GQT_INFORMATION = 1,
+	GQT_WARNING = 2,
+	GQT_ERROR = 3,
+	GQT_END = 4,
+};
 
 /** Types of goal destinations */
-enum GoalType {
+enum GoalType : byte {
 	GT_NONE,         ///< Destination is not linked
 	GT_TILE,         ///< Destination is a tile
 	GT_INDUSTRY,     ///< Destination is an industry
 	GT_TOWN,         ///< Destination is a town
 	GT_COMPANY,      ///< Destination is a company
+	GT_STORY_PAGE,   ///< Destination is a story page
 };
-typedef SimpleTinyEnumT<GoalType, byte> GoalTypeByte; ///< The GoalType packed into a byte for savegame purposes.
 
 typedef uint32 GoalTypeID; ///< Contains either tile, industry ID, town ID or company ID (or INVALID_GOALTYPE)
 static const GoalTypeID INVALID_GOALTYPE = 0xFFFFFFFF; ///< Invalid/unknown index of GoalType
 
 typedef uint16 GoalID; ///< ID of a goal
 struct Goal;
-
-extern GoalID _new_goal_id;
+static const GoalID INVALID_GOAL = 0xFFFF; ///< Constant representing a non-existing goal.
 
 #endif /* GOAL_TYPE_H */

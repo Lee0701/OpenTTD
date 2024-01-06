@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,7 +18,9 @@ static const uint MAX_TERMINALS =   8;                       ///< maximum number
 static const uint MAX_HELIPADS  =   3;                       ///< maximum number of helipads per airport
 static const uint MAX_ELEMENTS  = 255;                       ///< maximum number of aircraft positions at airport
 
-static const uint NUM_AIRPORTTILES       = 256;              ///< total number of airport tiles
+static const uint NUM_AIRPORTTILES_PER_GRF = 255;            ///< Number of airport tiles per NewGRF; limited to 255 to allow extending Action3 with an extended byte later on.
+
+static const uint NUM_AIRPORTTILES       = 256;              ///< Total number of airport tiles.
 static const uint NEW_AIRPORTTILE_OFFSET = 74;               ///< offset of first newgrf airport tile
 static const uint INVALID_AIRPORTTILE    = NUM_AIRPORTTILES; ///< id for an invalid airport tile
 
@@ -37,7 +37,8 @@ enum AirportTypes {
 	AT_HELISTATION     =   8, ///< Heli station airport.
 	AT_OILRIG          =   9, ///< Oilrig airport.
 	NEW_AIRPORT_OFFSET =  10, ///< Number of the first newgrf airport.
-	NUM_AIRPORTS       = 128, ///< Maximal number of airports.
+	NUM_AIRPORTS_PER_GRF = 128, ///< Maximal number of airports per NewGRF.
+	NUM_AIRPORTS       = 128, ///< Maximal number of airports in total.
 	AT_INVALID         = 254, ///< Invalid airport.
 	AT_DUMMY           = 255, ///< Dummy airport.
 };
@@ -57,29 +58,30 @@ enum AirportMovingDataFlags {
 
 /** Movement States on Airports (headings target) */
 enum AirportMovementStates {
-	TO_ALL         =  0, ///< Go in this direction for every target.
-	HANGAR         =  1, ///< Heading for hangar.
-	TERM1          =  2, ///< Heading for terminal 1.
-	TERM2          =  3, ///< Heading for terminal 2.
-	TERM3          =  4, ///< Heading for terminal 3.
-	TERM4          =  5, ///< Heading for terminal 4.
-	TERM5          =  6, ///< Heading for terminal 5.
-	TERM6          =  7, ///< Heading for terminal 6.
-	HELIPAD1       =  8, ///< Heading for helipad 1.
-	HELIPAD2       =  9, ///< Heading for helipad 2.
-	TAKEOFF        = 10, ///< Airplane wants to leave the airport.
-	STARTTAKEOFF   = 11, ///< Airplane has arrived at a runway for take-off.
-	ENDTAKEOFF     = 12, ///< Airplane has reached end-point of the take-off runway.
-	HELITAKEOFF    = 13, ///< Helicopter wants to leave the airport.
-	FLYING         = 14, ///< %Vehicle is flying in the air.
-	LANDING        = 15, ///< Airplane wants to land.
-	ENDLANDING     = 16, ///< Airplane wants to finish landing.
-	HELILANDING    = 17, ///< Helicopter wants to land.
-	HELIENDLANDING = 18, ///< Helicopter wants to finish landing.
-	TERM7          = 19, ///< Heading for terminal 7.
-	TERM8          = 20, ///< Heading for terminal 8.
-	HELIPAD3       = 21, ///< Heading for helipad 3.
-	MAX_HEADINGS   = 21, ///< Last valid target to head for.
+	TO_ALL         =   0, ///< Go in this direction for every target.
+	HANGAR         =   1, ///< Heading for hangar.
+	TERM1          =   2, ///< Heading for terminal 1.
+	TERM2          =   3, ///< Heading for terminal 2.
+	TERM3          =   4, ///< Heading for terminal 3.
+	TERM4          =   5, ///< Heading for terminal 4.
+	TERM5          =   6, ///< Heading for terminal 5.
+	TERM6          =   7, ///< Heading for terminal 6.
+	HELIPAD1       =   8, ///< Heading for helipad 1.
+	HELIPAD2       =   9, ///< Heading for helipad 2.
+	TAKEOFF        =  10, ///< Airplane wants to leave the airport.
+	STARTTAKEOFF   =  11, ///< Airplane has arrived at a runway for take-off.
+	ENDTAKEOFF     =  12, ///< Airplane has reached end-point of the take-off runway.
+	HELITAKEOFF    =  13, ///< Helicopter wants to leave the airport.
+	FLYING         =  14, ///< %Vehicle is flying in the air.
+	LANDING        =  15, ///< Airplane wants to land.
+	ENDLANDING     =  16, ///< Airplane wants to finish landing.
+	HELILANDING    =  17, ///< Helicopter wants to land.
+	HELIENDLANDING =  18, ///< Helicopter wants to finish landing.
+	TERM7          =  19, ///< Heading for terminal 7.
+	TERM8          =  20, ///< Heading for terminal 8.
+	HELIPAD3       =  21, ///< Heading for helipad 3.
+	MAX_HEADINGS   =  21, ///< Last valid target to head for.
+	TERMGROUP      = 255, ///< Aircraft is looking for a free terminal in a terminalgroup.
 };
 
 /** Movement Blocks on Airports blocks (eg_airport_flags). */
@@ -127,10 +129,10 @@ static const uint64
 
 /** A single location on an airport where aircraft can move to. */
 struct AirportMovingData {
-	int16 x;                 ///< x-coordinate of the destination.
-	int16 y;                 ///< y-coordinate of the destination.
-	uint16 flag;             ///< special flags when moving towards the destination.
-	DirectionByte direction; ///< Direction to turn the aircraft after reaching the destination.
+	int16 x;             ///< x-coordinate of the destination.
+	int16 y;             ///< y-coordinate of the destination.
+	uint16 flag;         ///< special flags when moving towards the destination.
+	Direction direction; ///< Direction to turn the aircraft after reaching the destination.
 };
 
 AirportMovingData RotateAirportMovingData(const AirportMovingData *orig, Direction rotation, uint num_tiles_x, uint num_tiles_y);

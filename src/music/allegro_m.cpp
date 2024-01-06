@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,10 +12,13 @@
 #include "../stdafx.h"
 #include "../debug.h"
 #include "allegro_m.h"
+#include "midifile.hpp"
 #include <allegro.h>
 
+#include "../safeguards.h"
+
 static FMusicDriver_Allegro iFMusicDriver_Allegro;
-static MIDI *_midi = NULL;
+static MIDI *_midi = nullptr;
 
 /**
  * There are multiple modules that might be using Allegro and
@@ -25,42 +26,48 @@ static MIDI *_midi = NULL;
  */
 extern int _allegro_instance_count;
 
-const char *MusicDriver_Allegro::Start(const char * const *param)
+const char *MusicDriver_Allegro::Start(const StringList &param)
 {
-	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, NULL)) {
-		DEBUG(driver, 0, "allegro: install_allegro failed '%s'", allegro_error);
+	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, nullptr)) {
+		Debug(driver, 0, "allegro: install_allegro failed '{}'", allegro_error);
 		return "Failed to set up Allegro";
 	}
 	_allegro_instance_count++;
 
 	/* Initialise the sound */
-	if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL) != 0) {
-		DEBUG(driver, 0, "allegro: install_sound failed '%s'", allegro_error);
+	if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, nullptr) != 0) {
+		Debug(driver, 0, "allegro: install_sound failed '{}'", allegro_error);
 		return "Failed to set up Allegro sound";
 	}
 
 	/* Okay, there's no soundcard */
 	if (midi_card == MIDI_NONE) {
-		DEBUG(driver, 0, "allegro: no midi card found");
+		Debug(driver, 0, "allegro: no midi card found");
 		return "No sound card found";
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void MusicDriver_Allegro::Stop()
 {
-	if (_midi != NULL) destroy_midi(_midi);
-	_midi = NULL;
+	if (_midi != nullptr) destroy_midi(_midi);
+	_midi = nullptr;
 
 	if (--_allegro_instance_count == 0) allegro_exit();
 }
 
-void MusicDriver_Allegro::PlaySong(const char *filename)
+void MusicDriver_Allegro::PlaySong(const MusicSongInfo &song)
 {
-	if (_midi != NULL) destroy_midi(_midi);
-	_midi = load_midi(filename);
-	play_midi(_midi, false);
+	std::string filename = MidiFile::GetSMFFile(song);
+
+	if (_midi != nullptr) destroy_midi(_midi);
+	if (!filename.empty()) {
+		_midi = load_midi(filename.c_str());
+		play_midi(_midi, false);
+	} else {
+		_midi = nullptr;
+	}
 }
 
 void MusicDriver_Allegro::StopSong()

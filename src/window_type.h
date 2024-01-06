@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,7 @@
 /** %Window numbers. */
 enum WindowNumberEnum {
 	WN_GAME_OPTIONS_AI = 0,          ///< AI settings.
+	WN_GAME_OPTIONS_GS,              ///< GS settings.
 	WN_GAME_OPTIONS_ABOUT,           ///< About window.
 	WN_GAME_OPTIONS_NEWGRF_STATE,    ///< NewGRF settings.
 	WN_GAME_OPTIONS_GAME_OPTIONS,    ///< Game options.
@@ -27,7 +26,6 @@ enum WindowNumberEnum {
 	WN_CONFIRM_POPUP_QUERY_BOOTSTRAP, ///< Query popup confirm for bootstrap.
 
 	WN_NETWORK_WINDOW_GAME = 0,     ///< Network game window.
-	WN_NETWORK_WINDOW_LOBBY,        ///< Network lobby window.
 	WN_NETWORK_WINDOW_CONTENT_LIST, ///< Network content list.
 	WN_NETWORK_WINDOW_START,        ///< Network start server.
 
@@ -284,6 +282,11 @@ enum WindowClass {
 	 */
 	WC_GOALS_LIST,
 
+	/**
+	 * Story book; %Window numbers:
+	 *   - CompanyID = #StoryBookWidgets
+	 */
+	WC_STORY_BOOK,
 
 	/**
 	 * Station list; %Window numbers:
@@ -441,7 +444,7 @@ enum WindowClass {
 	/**
 	 * Generate landscape (newgame); %Window numbers:
 	 *   - GLWM_SCENARIO = #CreateScenarioWidgets
-	 *   - #GenenerateLandscapeWindowMode = #GenerateLandscapeWidgets
+	 *   - #GenerateLandscapeWindowMode = #GenerateLandscapeWidgets
 	 */
 	WC_GENERATE_LANDSCAPE,
 
@@ -456,7 +459,6 @@ enum WindowClass {
 	/**
 	 * Network window; %Window numbers:
 	 *   - #WN_NETWORK_WINDOW_GAME = #NetworkGameWidgets
-	 *   - #WN_NETWORK_WINDOW_LOBBY = #NetworkLobbyWidgets
 	 *   - #WN_NETWORK_WINDOW_CONTENT_LIST = #NetworkContentListWidgets
 	 *   - #WN_NETWORK_WINDOW_START = #NetworkStartServerWidgets
 	 */
@@ -469,17 +471,17 @@ enum WindowClass {
 	WC_CLIENT_LIST,
 
 	/**
-	 * Popup for the client list; %Window numbers:
-	 *   - #ClientID = #ClientListPopupWidgets
-	 */
-	WC_CLIENT_LIST_POPUP,
-
-	/**
 	 * Network status window; %Window numbers:
 	 *   - #WN_NETWORK_STATUS_WINDOW_JOIN = #NetworkJoinStatusWidgets
 	 *   - #WN_NETWORK_STATUS_WINDOW_CONTENT_DOWNLOAD = #NetworkContentDownloadStatusWidgets
 	 */
 	WC_NETWORK_STATUS_WINDOW,
+
+	/**
+	 * Network ask relay window; %Window numbers:
+	 *   - 0 - #NetworkAskRelayWidgets
+	 */
+	WC_NETWORK_ASK_RELAY,
 
 	/**
 	 * Chatbox; %Window numbers:
@@ -595,6 +597,7 @@ enum WindowClass {
 	/**
 	 * Game options window; %Window numbers:
 	 *   - #WN_GAME_OPTIONS_AI = #AIConfigWidgets
+	 *   - #WN_GAME_OPTIONS_GS = #GSConfigWidgets
 	 *   - #WN_GAME_OPTIONS_ABOUT = #AboutWidgets
 	 *   - #WN_GAME_OPTIONS_NEWGRF_STATE = #NewGRFStateWidgets
 	 *   - #WN_GAME_OPTIONS_GAME_OPTIONS = #GameOptionsWidgets
@@ -618,7 +621,7 @@ enum WindowClass {
 	 * Extra viewport; %Window numbers:
 	 *   - Ascending value = #ExtraViewportWidgets
 	 */
-	WC_EXTRA_VIEW_PORT,
+	WC_EXTRA_VIEWPORT,
 
 
 	/**
@@ -664,20 +667,58 @@ enum WindowClass {
 	 */
 	WC_SPRITE_ALIGNER,
 
+	/**
+	 * Linkgraph legend; %Window numbers:
+	 *   - 0 = #LinkGraphWidgets
+	 */
+	WC_LINKGRAPH_LEGEND,
+
+	/**
+	 * Save preset; %Window numbers:
+	 *   - 0 = #SavePresetWidgets
+	 */
+	WC_SAVE_PRESET,
+
+	/**
+	 * Framerate display; %Window numbers:
+	 *   - 0 = #FramerateDisplayWidgets
+	 */
+	WC_FRAMERATE_DISPLAY,
+
+	/**
+	 * Frame time graph; %Window numbers:
+	 *   - 0 = #FrametimeGraphWindowWidgets
+	 */
+	WC_FRAMETIME_GRAPH,
+
+	/**
+	 * Screenshot window; %Window numbers:
+	 *   - 0 = #ScreenshotWidgets
+	 */
+	WC_SCREENSHOT,
+
 	WC_INVALID = 0xFFFF, ///< Invalid window.
 };
 
 /** Data value for #Window::OnInvalidateData() of windows with class #WC_GAME_OPTIONS. */
 enum GameOptionsInvalidationData {
 	GOID_DEFAULT = 0,
-	GOID_NEWGRF_RESCANNED,     ///< NewGRFs were just rescanned.
-	GOID_NEWGRF_LIST_EDITED,   ///< List of active NewGRFs is being edited.
-	GOID_NEWGRF_PRESET_LOADED, ///< A NewGRF preset was picked.
+	GOID_NEWGRF_RESCANNED,       ///< NewGRFs were just rescanned.
+	GOID_NEWGRF_CURRENT_LOADED,  ///< The current list of active NewGRF has been loaded.
+	GOID_NEWGRF_LIST_EDITED,     ///< List of active NewGRFs is being edited.
+	GOID_NEWGRF_CHANGES_MADE,    ///< Changes have been made to a given NewGRF either through the palette or its parameters.
+	GOID_NEWGRF_CHANGES_APPLIED, ///< The active NewGRF list changes have been applied.
 };
 
 struct Window;
 
 /** Number to differentiate different windows of the same class */
 typedef int32 WindowNumber;
+
+/** State of handling an event. */
+enum EventState {
+	ES_HANDLED,     ///< The passed event is handled.
+	ES_NOT_HANDLED, ///< The passed event is not handled.
+};
 
 #endif /* WINDOW_TYPE_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,20 +11,14 @@
 #define LANGUAGE_H
 
 #include "core/smallvec_type.hpp"
-#ifdef WITH_ICU
+#ifdef WITH_ICU_I18N
 #include <unicode/coll.h>
-#endif /* WITH_ICU */
+#endif /* WITH_ICU_I18N */
+#include "strings_type.h"
 
 static const uint8 CASE_GENDER_LEN = 16; ///< The (maximum) length of a case/gender string.
 static const uint8 MAX_NUM_GENDERS =  8; ///< Maximum number of supported genders.
 static const uint8 MAX_NUM_CASES   = 16; ///< Maximum number of supported cases.
-
-static const uint TAB_SIZE_OFFSET  = 0;                   ///< The offset for the tab size.
-static const uint TAB_SIZE_BITS    = 11;                  ///< The number of bits used for the tab size.
-static const uint TAB_SIZE         = 1 << TAB_SIZE_BITS;  ///< The number of values in a tab.
-static const uint TAB_COUNT_OFFSET = TAB_SIZE_BITS;       ///< The offset for the tab count.
-static const uint TAB_COUNT_BITS   = 5;                   ///< The number of bits used for the amount of tabs.
-static const uint TAB_COUNT        = 1 << TAB_COUNT_BITS; ///< The amount of tabs.
 
 /** Header of a language file. */
 struct LanguagePackHeader {
@@ -37,7 +29,7 @@ struct LanguagePackHeader {
 	char name[32];      ///< the international name of this language
 	char own_name[32];  ///< the localized name of this language
 	char isocode[16];   ///< the ISO code for the language (not country code)
-	uint16 offsets[TAB_COUNT]; ///< the offsets
+	uint16 offsets[TEXT_TAB_END]; ///< the offsets
 
 	/** Thousand separator used for anything not currencies */
 	char digit_group_separator[8];
@@ -66,6 +58,7 @@ struct LanguagePackHeader {
 	char cases[MAX_NUM_CASES][CASE_GENDER_LEN];     ///< the cases used by this translation
 
 	bool IsValid() const;
+	bool IsReasonablyFinished() const;
 
 	/**
 	 * Get the index for the given gender.
@@ -94,7 +87,7 @@ struct LanguagePackHeader {
 	}
 };
 /** Make sure the size is right. */
-assert_compile(sizeof(LanguagePackHeader) % 4 == 0);
+static_assert(sizeof(LanguagePackHeader) % 4 == 0);
 
 /** Metadata about a single language. */
 struct LanguageMetadata : public LanguagePackHeader {
@@ -102,7 +95,7 @@ struct LanguageMetadata : public LanguagePackHeader {
 };
 
 /** Type for the list of language meta data. */
-typedef SmallVector<LanguageMetadata, 4> LanguageList;
+typedef std::vector<LanguageMetadata> LanguageList;
 
 /** The actual list of language meta data. */
 extern LanguageList _languages;
@@ -110,9 +103,9 @@ extern LanguageList _languages;
 /** The currently loaded language. */
 extern const LanguageMetadata *_current_language;
 
-#ifdef WITH_ICU
-extern Collator *_current_collator;
-#endif /* WITH_ICU */
+#ifdef WITH_ICU_I18N
+extern std::unique_ptr<icu::Collator> _current_collator;
+#endif /* WITH_ICU_I18N */
 
 bool ReadLanguagePack(const LanguageMetadata *lang);
 const LanguageMetadata *GetLanguage(byte newgrflangid);

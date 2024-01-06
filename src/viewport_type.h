@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,12 +12,15 @@
 
 #include "zoom_type.h"
 #include "strings_type.h"
+#include "table/strings.h"
+
+class LinkGraphOverlay;
 
 /**
  * Data structure for viewport, display of a part of the world
  */
-struct ViewPort {
-	int left;    ///< Screen coordinate left egde of the viewport
+struct Viewport {
+	int left;    ///< Screen coordinate left edge of the viewport
 	int top;     ///< Screen coordinate top edge of the viewport
 	int width;   ///< Screen width of the viewport
 	int height;  ///< Screen height of the viewport
@@ -30,14 +31,7 @@ struct ViewPort {
 	int virtual_height;  ///< height << zoom
 
 	ZoomLevel zoom; ///< The zoom level of the viewport.
-};
-
-/** Margins for the viewport sign */
-enum ViewportSignMargin {
-	VPSM_LEFT   = 1, ///< Left margin
-	VPSM_RIGHT  = 1, ///< Right margin
-	VPSM_TOP    = 1, ///< Top margin
-	VPSM_BOTTOM = 1, ///< Bottom margin
+	LinkGraphOverlay *overlay;
 };
 
 /** Location information about a sign as seen on the viewport */
@@ -47,8 +41,28 @@ struct ViewportSign {
 	uint16 width_normal; ///< The width when not zoomed out (normal font)
 	uint16 width_small;  ///< The width when zoomed out (small font)
 
-	void UpdatePosition(int center, int top, StringID str);
+	void UpdatePosition(int center, int top, StringID str, StringID str_small = STR_NULL);
 	void MarkDirty(ZoomLevel maxzoom = ZOOM_LVL_MAX) const;
+};
+
+/** Specialised ViewportSign that tracks whether it is valid for entering into a Kdtree */
+struct TrackedViewportSign : ViewportSign {
+	bool kdtree_valid; ///< Are the sign data valid for use with the _viewport_sign_kdtree?
+
+	/**
+	 * Update the position of the viewport sign.
+	 * Note that this function hides the base class function.
+	 */
+	void UpdatePosition(int center, int top, StringID str, StringID str_small = STR_NULL)
+	{
+		this->kdtree_valid = true;
+		this->ViewportSign::UpdatePosition(center, top, str, str_small);
+	}
+
+
+	TrackedViewportSign() : kdtree_valid{ false }
+	{
+	}
 };
 
 /**
@@ -101,6 +115,7 @@ enum ViewportDragDropSelectionProcess {
 	DDSP_CREATE_RIVER,         ///< Create rivers
 	DDSP_PLANT_TREES,          ///< Plant trees
 	DDSP_BUILD_BRIDGE,         ///< Bridge placement
+	DDSP_BUILD_OBJECT,         ///< Build an object
 
 	/* Rail specific actions */
 	DDSP_PLACE_RAIL,           ///< Rail placement
@@ -117,6 +132,17 @@ enum ViewportDragDropSelectionProcess {
 	DDSP_BUILD_TRUCKSTOP,      ///< Road stop placement (trucks)
 	DDSP_REMOVE_BUSSTOP,       ///< Road stop removal (buses)
 	DDSP_REMOVE_TRUCKSTOP,     ///< Road stop removal (trucks)
+	DDSP_CONVERT_ROAD,         ///< Road conversion
+};
+
+
+/**
+ * Target of the viewport scrolling GS method
+ */
+enum ViewportScrollTarget : byte {
+	VST_EVERYONE, ///< All players
+	VST_COMPANY,  ///< All players in specific company
+	VST_CLIENT,   ///< Single player
 };
 
 #endif /* VIEWPORT_TYPE_H */

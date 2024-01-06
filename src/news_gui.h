@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,7 +10,12 @@
 #ifndef NEWS_GUI_H
 #define NEWS_GUI_H
 
+#include "news_type.h"
+
 void ShowLastNewsMessage();
 void ShowMessageHistory();
+bool HideActiveNewsMessage();
+
+extern NewsItem *_latest_news;
 
 #endif /* NEWS_GUI_H */

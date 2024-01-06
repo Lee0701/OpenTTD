@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -31,7 +29,7 @@ public:
 		/** No more space for orders */
 		ERR_ORDER_TOO_MANY,                                  // [STR_ERROR_NO_MORE_SPACE_FOR_ORDERS]
 
-		/** Destination of new order is to far away from the previous order */
+		/** Destination of new order is too far away from the previous order */
 		ERR_ORDER_TOO_FAR_AWAY_FROM_PREVIOUS_DESTINATION,    // [STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION]
 
 		/** Aircraft has not enough range to copy/share orders. */
@@ -91,6 +89,7 @@ public:
 		/* Note: these values represent part of the in-game OrderConditionVariable enum */
 		OC_LOAD_PERCENTAGE     = ::OCV_LOAD_PERCENTAGE,    ///< Skip based on the amount of load, value is in tons.
 		OC_RELIABILITY         = ::OCV_RELIABILITY,        ///< Skip based on the reliability, value is percent (0..100).
+		OC_MAX_RELIABILITY     = ::OCV_MAX_RELIABILITY,    ///< Skip based on the maximum reliability.  Value in percent
 		OC_MAX_SPEED           = ::OCV_MAX_SPEED,          ///< Skip based on the maximum speed, value is in OpenTTD's internal speed unit, see ScriptEngine::GetMaxSpeed.
 		OC_AGE                 = ::OCV_AGE,                ///< Skip based on the age, value is in years.
 		OC_REQUIRES_SERVICE    = ::OCV_REQUIRES_SERVICE,   ///< Skip when the vehicle requires service, no value.
@@ -524,6 +523,7 @@ public:
 	 * @param order_position_target The target order
 	 * @pre IsValidVehicleOrder(vehicle_id, order_position_move).
 	 * @pre IsValidVehicleOrder(vehicle_id, order_position_target).
+	 * @pre order_position_move != order_position_target.
 	 * @exception ScriptError::ERR_OWNED_BY_ANOTHER_COMPANY
 	 * @return True if and only if the order was moved.
 	 * @note If the order is moved to a lower place (e.g. from 7 to 2)
@@ -576,6 +576,7 @@ public:
 
 	/**
 	 * Removes the given vehicle from a shared orders list.
+	 * After unsharing orders, the orders list of the vehicle is empty.
 	 * @param vehicle_id The vehicle to remove from the shared order list.
 	 * @pre ScriptVehicle::IsValidVehicle(vehicle_id).
 	 * @return True if and only if the unsharing succeeded.

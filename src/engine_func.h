@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -27,7 +25,8 @@ extern const uint8 _engine_offsets[4];
 bool IsEngineBuildable(EngineID engine, VehicleType type, CompanyID company);
 bool IsEngineRefittable(EngineID engine);
 void SetYearEngineAgingStops();
-void StartupOneEngine(Engine *e, Date aging_date);
+void CalcEngineReliability(Engine *e, bool new_month);
+void StartupOneEngine(Engine *e, Date aging_date, uint32 seed);
 
 uint GetTotalCapacityOfArticulatedParts(EngineID engine);
 

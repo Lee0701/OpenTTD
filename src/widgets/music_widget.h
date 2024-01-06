@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,9 +12,11 @@
 
 /** Widgets of the #MusicTrackSelectionWindow class. */
 enum MusicTrackSelectionWidgets {
+	WID_MTS_CAPTION,    ///< Window caption.
 	WID_MTS_LIST_LEFT,  ///< Left button.
 	WID_MTS_PLAYLIST,   ///< Playlist.
 	WID_MTS_LIST_RIGHT, ///< Right button.
+	WID_MTS_MUSICSET,   ///< Music set selection.
 	WID_MTS_ALL,        ///< All button.
 	WID_MTS_OLD,        ///< Old button.
 	WID_MTS_NEW,        ///< New button.

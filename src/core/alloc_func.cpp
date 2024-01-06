@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -10,6 +8,8 @@
 /** @file alloc_func.cpp Functions to 'handle' memory allocation errors */
 
 #include "../stdafx.h"
+
+#include "../safeguards.h"
 
 /**
  * Function to exit with an error message after malloc() or calloc() have failed

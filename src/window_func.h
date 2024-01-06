@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,7 @@
 
 #include "window_type.h"
 #include "company_type.h"
+#include "core/geometry_type.hpp"
 
 Window *FindWindowById(WindowClass cls, WindowNumber number);
 Window *FindWindowByClass(WindowClass cls);
@@ -37,19 +36,28 @@ void InputLoop();
 void InvalidateWindowData(WindowClass cls, WindowNumber number, int data = 0, bool gui_scope = false);
 void InvalidateWindowClassesData(WindowClass cls, int data = 0, bool gui_scope = false);
 
-void DeleteNonVitalWindows();
-void DeleteAllNonVitalWindows();
-void DeleteConstructionWindows();
+void CloseNonVitalWindows();
+void CloseAllNonVitalWindows();
+void DeleteAllMessages();
+void CloseConstructionWindows();
 void HideVitalWindows();
 void ShowVitalWindows();
 
-void ReInitAllWindows();
+/**
+ * Re-initialize all windows.
+ * @param zoom_changed Set if windows are being re-initialized due to a zoom level changed.
+ */
+void ReInitAllWindows(bool zoom_changed);
 
 void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_index);
 void SetWindowDirty(WindowClass cls, WindowNumber number);
 void SetWindowClassesDirty(WindowClass cls);
 
-void DeleteWindowById(WindowClass cls, WindowNumber number, bool force = true);
-void DeleteWindowByClass(WindowClass cls);
+void CloseWindowById(WindowClass cls, WindowNumber number, bool force = true);
+void CloseWindowByClass(WindowClass cls);
+
+bool EditBoxInGlobalFocus();
+bool FocusedWindowIsConsole();
+Point GetCaretPosition();
 
 #endif /* WINDOW_FUNC_H */

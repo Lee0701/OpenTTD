@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,8 +14,6 @@
 enum NetworkGameWidgets {
 	WID_NG_MAIN,               ///< Main panel.
 
-	WID_NG_CONNECTION,         ///< Label in front of connection droplist.
-	WID_NG_CONN_BTN,           ///< 'Connection' droplist button.
 	WID_NG_CLIENT_LABEL,       ///< Label in front of client name edit box.
 	WID_NG_CLIENT,             ///< Panel with editbox to set client name.
 	WID_NG_FILTER_LABEL,       ///< Label in front of the filter/search edit box.
@@ -47,7 +43,8 @@ enum NetworkGameWidgets {
 	WID_NG_NEWGRF_MISSING,     ///< 'Find missing NewGRF online' button.
 	WID_NG_NEWGRF_MISSING_SEL, ///< Selection widget for the above button.
 
-	WID_NG_FIND,               ///< 'Find server' button.
+	WID_NG_SEARCH_INTERNET,    ///< 'Search internet server' button.
+	WID_NG_SEARCH_LAN,         ///< 'Search LAN server' button.
 	WID_NG_ADD,                ///< 'Add server' button.
 	WID_NG_START,              ///< 'Start server' button.
 	WID_NG_CANCEL,             ///< 'Cancel' button.
@@ -69,13 +66,6 @@ enum NetworkStartServerWidgets {
 	WID_NSS_COMPANIES_BTND,    ///< 'Max companies' downarrow.
 	WID_NSS_COMPANIES_TXT,     ///< 'Max companies' text.
 	WID_NSS_COMPANIES_BTNU,    ///< 'Max companies' uparrow.
-	WID_NSS_SPECTATORS_LABEL,  ///< Label for 'max spectators'.
-	WID_NSS_SPECTATORS_BTND,   ///< 'Max spectators' downarrow.
-	WID_NSS_SPECTATORS_TXT,    ///< 'Max spectators' text.
-	WID_NSS_SPECTATORS_BTNU,   ///< 'Max spectators' uparrow.
-
-	WID_NSS_LANGUAGE_LABEL,    ///< Label for 'language spoken'.
-	WID_NSS_LANGUAGE_BTN,      ///< 'Language spoken' droplist button.
 
 	WID_NSS_GENERATE_GAME,     ///< New game button.
 	WID_NSS_LOAD_GAME,         ///< Load game button.
@@ -85,35 +75,28 @@ enum NetworkStartServerWidgets {
 	WID_NSS_CANCEL,            ///< 'Cancel' button.
 };
 
-/** Widgets of the #NetworkLobbyWindow class. */
-enum NetworkLobbyWidgets {
-	WID_NL_BACKGROUND, ///< Background of the window.
-	WID_NL_TEXT,       ///< Heading text.
-	WID_NL_HEADER,     ///< Header above list of companies.
-	WID_NL_MATRIX,     ///< List of companies.
-	WID_NL_SCROLLBAR,  ///< Scroll bar.
-	WID_NL_DETAILS,    ///< Company details.
-	WID_NL_JOIN,       ///< 'Join company' button.
-	WID_NL_NEW,        ///< 'New company' button.
-	WID_NL_SPECTATE,   ///< 'Spectate game' button.
-	WID_NL_REFRESH,    ///< 'Refresh server' button.
-	WID_NL_CANCEL,     ///< 'Cancel' button.
-};
-
 /** Widgets of the #NetworkClientListWindow class. */
 enum ClientListWidgets {
-	WID_CL_PANEL, ///< Panel of the window.
-};
-
-/** Widgets of the #NetworkClientListPopupWindow class. */
-enum ClientListPopupWidgets {
-	WID_CLP_PANEL, ///< Panel of the window.
+	WID_CL_PANEL,                      ///< Panel of the window.
+	WID_CL_SERVER_SELECTOR,            ///< Selector to hide the server frame.
+	WID_CL_SERVER_NAME,                ///< Server name.
+	WID_CL_SERVER_NAME_EDIT,           ///< Edit button for server name.
+	WID_CL_SERVER_VISIBILITY,          ///< Server visibility.
+	WID_CL_SERVER_INVITE_CODE,         ///< Invite code for this server.
+	WID_CL_SERVER_CONNECTION_TYPE,     ///< The type of connection the Game Coordinator detected for this server.
+	WID_CL_CLIENT_NAME,                ///< Client name.
+	WID_CL_CLIENT_NAME_EDIT,           ///< Edit button for client name.
+	WID_CL_MATRIX,                     ///< Company/client list.
+	WID_CL_SCROLLBAR,                  ///< Scrollbar for company/client list.
+	WID_CL_COMPANY_JOIN,               ///< Used for QueryWindow when a company has a password.
+	WID_CL_CLIENT_COMPANY_COUNT,       ///< Count of clients and companies.
 };
 
 /** Widgets of the #NetworkJoinStatusWindow class. */
 enum NetworkJoinStatusWidgets {
-	WID_NJS_BACKGROUND, ///< Background of the window.
-	WID_NJS_CANCELOK,   ///< Cancel / OK button.
+	WID_NJS_PROGRESS_BAR,  ///< Simple progress bar.
+	WID_NJS_PROGRESS_TEXT, ///< Text explaining what is happening.
+	WID_NJS_CANCELOK,      ///< Cancel / OK button.
 };
 
 /** Widgets of the #NetworkCompanyPasswordWindow class. */
@@ -122,8 +105,18 @@ enum NetworkCompanyPasswordWidgets {
 	WID_NCP_LABEL,                    ///< Label in front of the password field.
 	WID_NCP_PASSWORD,                 ///< Input field for the password.
 	WID_NCP_SAVE_AS_DEFAULT_PASSWORD, ///< Toggle 'button' for saving the current password as default password.
+	WID_NCP_WARNING,                  ///< Warning text about password security
 	WID_NCP_CANCEL,                   ///< Close the window without changing anything.
 	WID_NCP_OK,                       ///< Safe the password etc.
+};
+
+/** Widgets of the #NetworkAskRelayWindow class. */
+enum NetworkAskRelayWidgets {
+	WID_NAR_CAPTION,    ///< Caption of the window.
+	WID_NAR_TEXT,       ///< Text in the window.
+	WID_NAR_NO,         ///< "No" button.
+	WID_NAR_YES_ONCE,   ///< "Yes, once" button.
+	WID_NAR_YES_ALWAYS, ///< "Yes, always" button.
 };
 
 #endif /* WIDGETS_NETWORK_WIDGET_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,16 +10,156 @@
 #ifndef STATION_BASE_H
 #define STATION_BASE_H
 
+#include "core/random_func.hpp"
 #include "base_station_base.h"
 #include "newgrf_airport.h"
 #include "cargopacket.h"
 #include "industry_type.h"
+#include "linkgraph/linkgraph_type.h"
 #include "newgrf_storage.h"
-
-typedef Pool<BaseStation, StationID, 32, 64000> StationPool;
-extern StationPool _station_pool;
+#include "bitmap_type.h"
+#include <map>
+#include <set>
 
 static const byte INITIAL_STATION_RATING = 175;
+
+/**
+ * Flow statistics telling how much flow should be sent along a link. This is
+ * done by creating "flow shares" and using std::map's upper_bound() method to
+ * look them up with a random number. A flow share is the difference between a
+ * key in a map and the previous key. So one key in the map doesn't actually
+ * mean anything by itself.
+ */
+class FlowStat {
+public:
+	typedef std::map<uint32, StationID> SharesMap;
+
+	static const SharesMap empty_sharesmap;
+
+	/**
+	 * Invalid constructor. This can't be called as a FlowStat must not be
+	 * empty. However, the constructor must be defined and reachable for
+	 * FlowStat to be used in a std::map.
+	 */
+	inline FlowStat() {NOT_REACHED();}
+
+	/**
+	 * Create a FlowStat with an initial entry.
+	 * @param st Station the initial entry refers to.
+	 * @param flow Amount of flow for the initial entry.
+	 * @param restricted If the flow to be added is restricted.
+	 */
+	inline FlowStat(StationID st, uint flow, bool restricted = false)
+	{
+		assert(flow > 0);
+		this->shares[flow] = st;
+		this->unrestricted = restricted ? 0 : flow;
+	}
+
+	/**
+	 * Add some flow to the end of the shares map. Only do that if you know
+	 * that the station isn't in the map yet. Anything else may lead to
+	 * inconsistencies.
+	 * @param st Remote station.
+	 * @param flow Amount of flow to be added.
+	 * @param restricted If the flow to be added is restricted.
+	 */
+	inline void AppendShare(StationID st, uint flow, bool restricted = false)
+	{
+		assert(flow > 0);
+		this->shares[(--this->shares.end())->first + flow] = st;
+		if (!restricted) this->unrestricted += flow;
+	}
+
+	uint GetShare(StationID st) const;
+
+	void ChangeShare(StationID st, int flow);
+
+	void RestrictShare(StationID st);
+
+	void ReleaseShare(StationID st);
+
+	void ScaleToMonthly(uint runtime);
+
+	/**
+	 * Get the actual shares as a const pointer so that they can be iterated
+	 * over.
+	 * @return Actual shares.
+	 */
+	inline const SharesMap *GetShares() const { return &this->shares; }
+
+	/**
+	 * Return total amount of unrestricted shares.
+	 * @return Amount of unrestricted shares.
+	 */
+	inline uint GetUnrestricted() const { return this->unrestricted; }
+
+	/**
+	 * Swap the shares maps, and thus the content of this FlowStat with the
+	 * other one.
+	 * @param other FlowStat to swap with.
+	 */
+	inline void SwapShares(FlowStat &other)
+	{
+		this->shares.swap(other.shares);
+		Swap(this->unrestricted, other.unrestricted);
+	}
+
+	/**
+	 * Get a station a package can be routed to. This done by drawing a
+	 * random number between 0 and sum_shares and then looking that up in
+	 * the map with lower_bound. So each share gets selected with a
+	 * probability dependent on its flow. Do include restricted flows here.
+	 * @param is_restricted Output if a restricted flow was chosen.
+	 * @return A station ID from the shares map.
+	 */
+	inline StationID GetViaWithRestricted(bool &is_restricted) const
+	{
+		assert(!this->shares.empty());
+		uint rand = RandomRange((--this->shares.end())->first);
+		is_restricted = rand >= this->unrestricted;
+		return this->shares.upper_bound(rand)->second;
+	}
+
+	/**
+	 * Get a station a package can be routed to. This done by drawing a
+	 * random number between 0 and sum_shares and then looking that up in
+	 * the map with lower_bound. So each share gets selected with a
+	 * probability dependent on its flow. Don't include restricted flows.
+	 * @return A station ID from the shares map.
+	 */
+	inline StationID GetVia() const
+	{
+		assert(!this->shares.empty());
+		return this->unrestricted > 0 ?
+				this->shares.upper_bound(RandomRange(this->unrestricted))->second :
+				INVALID_STATION;
+	}
+
+	StationID GetVia(StationID excluded, StationID excluded2 = INVALID_STATION) const;
+
+	void Invalidate();
+
+private:
+	SharesMap shares;  ///< Shares of flow to be sent via specified station (or consumed locally).
+	uint unrestricted; ///< Limit for unrestricted shares.
+};
+
+/** Flow descriptions by origin stations. */
+class FlowStatMap : public std::map<StationID, FlowStat> {
+public:
+	uint GetFlow() const;
+	uint GetFlowVia(StationID via) const;
+	uint GetFlowFrom(StationID from) const;
+	uint GetFlowFromVia(StationID from, StationID via) const;
+
+	void AddFlow(StationID origin, StationID via, uint amount);
+	void PassOnFlow(StationID origin, StationID via, uint amount);
+	StationIDStack DeleteFlows(StationID via);
+	void RestrictFlows(StationID via);
+	void ReleaseFlows(StationID via);
+	void FinalizeLocalConsumption(StationID self);
+};
 
 /**
  * Stores station stats for a single cargo.
@@ -36,13 +174,14 @@ struct GoodsEntry {
 		GES_ACCEPTANCE,
 
 		/**
-		 * Set when the cargo was ever waiting at the station.
+		 * This indicates whether a cargo has a rating at the station.
+		 * Set when cargo was ever waiting at the station.
 		 * It is set when cargo supplied by surrounding tiles is moved to the station, or when
 		 * arriving vehicles unload/transfer cargo without it being a final delivery.
-		 * This also indicates, whether a cargo has a rating at the station.
-		 * This flag is never cleared.
+		 *
+		 * This flag is cleared after 255 * STATION_RATING_TICKS of not having seen a pickup.
 		 */
-		GES_PICKUP,
+		GES_RATING,
 
 		/**
 		 * Set when a vehicle ever delivered cargo to the station for final delivery.
@@ -70,14 +209,18 @@ struct GoodsEntry {
 	};
 
 	GoodsEntry() :
-		acceptance_pickup(0),
+		status(0),
 		time_since_pickup(255),
 		rating(INITIAL_STATION_RATING),
 		last_speed(0),
-		last_age(255)
+		last_age(255),
+		amount_fract(0),
+		link_graph(INVALID_LINK_GRAPH),
+		node(INVALID_NODE),
+		max_waiting_cargo(0)
 	{}
 
-	byte acceptance_pickup; ///< Status of this cargo, see #GoodsEntryStatus.
+	byte status; ///< Status of this cargo, see #GoodsEntryStatus.
 
 	/**
 	 * Number of rating-intervals (up to 255) since the last vehicle tried to load this cargo.
@@ -108,12 +251,51 @@ struct GoodsEntry {
 	byte amount_fract;      ///< Fractional part of the amount in the cargo list
 	StationCargoList cargo; ///< The cargo packets of cargo waiting in this station
 
+	LinkGraphID link_graph; ///< Link graph this station belongs to.
+	NodeID node;            ///< ID of node in link graph referring to this goods entry.
+	FlowStatMap flows;      ///< Planned flows through this station.
+	uint max_waiting_cargo; ///< Max cargo from this station waiting at any station.
+
 	/**
 	 * Reports whether a vehicle has ever tried to load the cargo at this station.
-	 * This does not imply that there was cargo available for loading. Refer to GES_PICKUP for that.
+	 * This does not imply that there was cargo available for loading. Refer to GES_RATING for that.
 	 * @return true if vehicle tried to load.
 	 */
 	bool HasVehicleEverTriedLoading() const { return this->last_speed != 0; }
+
+	/**
+	 * Does this cargo have a rating at this station?
+	 * @return true if the cargo has a rating, i.e. cargo has been moved to the station.
+	 */
+	inline bool HasRating() const
+	{
+		return HasBit(this->status, GES_RATING);
+	}
+
+	/**
+	 * Get the best next hop for a cargo packet from station source.
+	 * @param source Source of the packet.
+	 * @return The chosen next hop or INVALID_STATION if none was found.
+	 */
+	inline StationID GetVia(StationID source) const
+	{
+		FlowStatMap::const_iterator flow_it(this->flows.find(source));
+		return flow_it != this->flows.end() ? flow_it->second.GetVia() : INVALID_STATION;
+	}
+
+	/**
+	 * Get the best next hop for a cargo packet from station source, optionally
+	 * excluding one or two stations.
+	 * @param source Source of the packet.
+	 * @param excluded If this station would be chosen choose the second best one instead.
+	 * @param excluded2 Second station to be excluded, if != INVALID_STATION.
+	 * @return The chosen next hop or INVALID_STATION if none was found.
+	 */
+	inline StationID GetVia(StationID source, StationID excluded, StationID excluded2 = INVALID_STATION) const
+	{
+		FlowStatMap::const_iterator flow_it(this->flows.find(source));
+		return flow_it != this->flows.end() ? flow_it->second.GetVia(excluded, excluded2) : INVALID_STATION;
+	}
 };
 
 /** All airport-related information. Only valid if tile != INVALID_TILE. */
@@ -255,7 +437,18 @@ private:
 	}
 };
 
-typedef SmallVector<Industry *, 2> IndustryVector;
+struct IndustryListEntry {
+	uint distance;
+	Industry *industry;
+
+	bool operator== (const IndustryListEntry &other) const { return this->distance == other.distance && this->industry == other.industry; };
+};
+
+struct IndustryCompare {
+	bool operator() (const IndustryListEntry &lhs, const IndustryListEntry &rhs) const;
+};
+
+typedef std::set<IndustryListEntry, IndustryCompare> IndustryList;
 
 /** Station data structure */
 struct Station FINAL : SpecializedStation<Station, false> {
@@ -272,12 +465,15 @@ public:
 	RoadStop *truck_stops;  ///< All the truck stops
 	TileArea truck_station; ///< Tile area the truck 'station' part covers
 
-	Airport airport;        ///< Tile area the airport covers
-	TileIndex dock_tile;    ///< The location of the dock
+	Airport airport;          ///< Tile area the airport covers
+	TileArea ship_station;    ///< Tile area the ship 'station' part covers
+	TileArea docking_station; ///< Tile area the docking tiles cover
 
 	IndustryType indtype;   ///< Industry type to get the name from
 
-	StationHadVehicleOfTypeByte had_vehicle_of_type;
+	BitmapTileArea catchment_tiles; ///< NOSAVE: Set of individual tiles covered by catchment area
+
+	StationHadVehicleOfType had_vehicle_of_type;
 
 	byte time_since_load;
 	byte time_since_unload;
@@ -285,9 +481,10 @@ public:
 	byte last_vehicle_type;
 	std::list<Vehicle *> loading_vehicles;
 	GoodsEntry goods[NUM_CARGO];  ///< Goods at this station
-	uint32 always_accepted;       ///< Bitmask of always accepted cargo types (by houses, HQs, industry tiles when industry doesn't accept cargo)
+	CargoTypes always_accepted;       ///< Bitmask of always accepted cargo types (by houses, HQs, industry tiles when industry doesn't accept cargo)
 
-	IndustryVector industries_near; ///< Cached list of industries near the station that can accept cargo, @see DeliverGoodsToIndustry()
+	IndustryList industries_near; ///< Cached list of industries near the station that can accept cargo, @see DeliverGoodsToIndustry()
+	Industry *industry;           ///< NOSAVE: Associated industry for neutral stations. (Rebuilt on load from Industry->st)
 
 	Station(TileIndex tile = INVALID_TILE);
 	~Station();
@@ -296,17 +493,30 @@ public:
 
 	void MarkTilesDirty(bool cargo_change) const;
 
-	void UpdateVirtCoord();
+	void UpdateVirtCoord() override;
 
-	/* virtual */ uint GetPlatformLength(TileIndex tile, DiagDirection dir) const;
-	/* virtual */ uint GetPlatformLength(TileIndex tile) const;
-	void RecomputeIndustriesNear();
-	static void RecomputeIndustriesNearForAll();
+	void MoveSign(TileIndex new_xy) override;
+
+	void AfterStationTileSetChange(bool adding, StationType type);
+
+	uint GetPlatformLength(TileIndex tile, DiagDirection dir) const override;
+	uint GetPlatformLength(TileIndex tile) const override;
+	void RecomputeCatchment();
+	static void RecomputeCatchmentForAll();
 
 	uint GetCatchmentRadius() const;
 	Rect GetCatchmentRect() const;
+	bool CatchmentCoversTown(TownID t) const;
+	void AddIndustryToDeliver(Industry *ind, TileIndex tile);
+	void RemoveIndustryToDeliver(Industry *ind);
+	void RemoveFromAllNearbyLists();
 
-	/* virtual */ inline bool TileBelongsToRailStation(TileIndex tile) const
+	inline bool TileIsInCatchment(TileIndex tile) const
+	{
+		return this->catchment_tiles.HasTile(tile);
+	}
+
+	inline bool TileBelongsToRailStation(TileIndex tile) const override
 	{
 		return IsRailStationTile(tile) && GetStationIndex(tile) == this->index;
 	}
@@ -316,12 +526,10 @@ public:
 		return IsAirportTile(tile) && GetStationIndex(tile) == this->index;
 	}
 
-	/* virtual */ uint32 GetNewGRFVariable(const ResolverObject *object, byte variable, byte parameter, bool *available) const;
+	uint32 GetNewGRFVariable(const ResolverObject &object, byte variable, byte parameter, bool *available) const override;
 
-	/* virtual */ void GetTileArea(TileArea *ta, StationType type) const;
+	void GetTileArea(TileArea *ta, StationType type) const override;
 };
-
-#define FOR_ALL_STATIONS(var) FOR_ALL_BASE_STATIONS_OF_TYPE(Station, var)
 
 /** Iterator to iterate over all tiles belonging to an airport. */
 class AirportTileIterator : public OrthogonalTileIterator {
@@ -331,7 +539,7 @@ private:
 public:
 	/**
 	 * Construct the iterator.
-	 * @param ta Area, i.e. begin point and width/height of to-be-iterated area.
+	 * @param st Station the airport is part of.
 	 */
 	AirportTileIterator(const Station *st) : OrthogonalTileIterator(st->airport), st(st)
 	{
@@ -352,5 +560,47 @@ public:
 		return new AirportTileIterator(*this);
 	}
 };
+
+void RebuildStationKdtree();
+
+/**
+ * Call a function on all stations that have any part of the requested area within their catchment.
+ * @tparam Func The type of funcion to call
+ * @param area The TileArea to check
+ * @param func The function to call, must take two parameters: Station* and TileIndex and return true
+ *             if coverage of that tile is acceptable for a given station or false if search should continue
+ */
+template<typename Func>
+void ForAllStationsAroundTiles(const TileArea &ta, Func func)
+{
+	/* There are no stations, so we will never find anything. */
+	if (Station::GetNumItems() == 0) return;
+
+	/* Not using, or don't have a nearby stations list, so we need to scan. */
+	std::set<StationID> seen_stations;
+
+	/* Scan an area around the building covering the maximum possible station
+	 * to find the possible nearby stations. */
+	uint max_c = _settings_game.station.modified_catchment ? MAX_CATCHMENT : CA_UNMODIFIED;
+	TileArea ta_ext = TileArea(ta).Expand(max_c);
+	for (TileIndex tile : ta_ext) {
+		if (IsTileType(tile, MP_STATION)) seen_stations.insert(GetStationIndex(tile));
+	}
+
+	for (StationID stationid : seen_stations) {
+		Station *st = Station::GetIfValid(stationid);
+		if (st == nullptr) continue; /* Waypoint */
+
+		/* Check if station is attached to an industry */
+		if (!_settings_game.station.serve_neutral_industries && st->industry != nullptr) continue;
+
+		/* Test if the tile is within the station's catchment */
+		for (TileIndex tile : ta) {
+			if (st->TileIsInCatchment(tile)) {
+				if (func(st, tile)) break;
+			}
+		}
+	}
+}
 
 #endif /* STATION_BASE_H */

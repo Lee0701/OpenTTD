@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,18 +22,17 @@ public:
 		byte data[];                   ///< Data, all zoomlevels.
 	};
 
-	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
+	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
+	Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator) override;
 
-	/* virtual */ const char *GetName() { return "8bpp-optimized"; }
+	const char *GetName() override { return "8bpp-optimized"; }
 };
 
 /** Factory for the 8bpp blitter optimised for speed. */
-class FBlitter_8bppOptimized: public BlitterFactory<FBlitter_8bppOptimized> {
+class FBlitter_8bppOptimized : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "8bpp-optimized"; }
-	/* virtual */ const char *GetDescription() { return "8bpp Optimized Blitter (compression + all-ZoomLevel cache)"; }
-	/* virtual */ Blitter *CreateInstance() { return new Blitter_8bppOptimized(); }
+	FBlitter_8bppOptimized() : BlitterFactory("8bpp-optimized", "8bpp Optimized Blitter (compression + all-ZoomLevel cache)") {}
+	Blitter *CreateInstance() override { return new Blitter_8bppOptimized(); }
 };
 
 #endif /* BLITTER_8BPP_OPTIMIZED_HPP */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,29 +13,27 @@
 #include "music_driver.hpp"
 
 /** The Windows music player. */
-class MusicDriver_Win32: public MusicDriver {
+class MusicDriver_Win32 : public MusicDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
+	void Stop() override;
 
-	/* virtual */ void PlaySong(const char *filename);
+	void PlaySong(const MusicSongInfo &song) override;
 
-	/* virtual */ void StopSong();
+	void StopSong() override;
 
-	/* virtual */ bool IsSongPlaying();
+	bool IsSongPlaying() override;
 
-	/* virtual */ void SetVolume(byte vol);
-	/* virtual */ const char *GetName() const { return "win32"; }
+	void SetVolume(byte vol) override;
+	const char *GetName() const override { return "win32"; }
 };
 
 /** Factory for Windows' music player. */
-class FMusicDriver_Win32: public MusicDriverFactory<FMusicDriver_Win32> {
+class FMusicDriver_Win32 : public DriverFactoryBase {
 public:
-	static const int priority = 5;
-	/* virtual */ const char *GetName() { return "win32"; }
-	/* virtual */ const char *GetDescription() { return "Win32 Music Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_Win32(); }
+	FMusicDriver_Win32() : DriverFactoryBase(Driver::DT_MUSIC, 5, "win32", "Win32 Music Driver") {}
+	Driver *CreateInstance() const override { return new MusicDriver_Win32(); }
 };
 
 #endif /* MUSIC_WIN32_H */

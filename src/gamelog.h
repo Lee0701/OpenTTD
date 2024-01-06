@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,7 +13,7 @@
 #include "newgrf_config.h"
 
 /** The actions we log. */
-enum GamelogActionType {
+enum GamelogActionType : uint8 {
 	GLAT_START,        ///< Game created
 	GLAT_LOAD,         ///< Game loaded
 	GLAT_GRF,          ///< GRF changed
@@ -29,6 +27,7 @@ enum GamelogActionType {
 
 void GamelogStartAction(GamelogActionType at);
 void GamelogStopAction();
+void GamelogStopAnyAction();
 
 void GamelogFree(struct LoggedAction *gamelog_action, uint gamelog_actions);
 void GamelogReset();
@@ -38,7 +37,7 @@ void GamelogReset();
  * @param s The string to print.
  */
 typedef void GamelogPrintProc(const char *s);
-void GamelogPrint(GamelogPrintProc *proc); // needed for WIN32 / WINCE crash.log
+void GamelogPrint(GamelogPrintProc *proc); // needed for WIN32 crash.log
 
 void GamelogPrintDebug(int level);
 void GamelogPrintConsole();
@@ -49,7 +48,7 @@ bool GamelogTestEmergency();
 void GamelogRevision();
 void GamelogMode();
 void GamelogOldver();
-void GamelogSetting(const char *name, int32 oldval, int32 newval);
+void GamelogSetting(const std::string &name, int32 oldval, int32 newval);
 
 void GamelogGRFUpdate(const GRFConfig *oldg, const GRFConfig *newg);
 void GamelogGRFAddList(const GRFConfig *newg);

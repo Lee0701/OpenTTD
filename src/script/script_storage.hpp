@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,7 @@
 #include "../road_type.h"
 #include "../group.h"
 #include "../goal_type.h"
+#include "../story_type.h"
 
 #include "table/strings.h"
 #include <vector>
@@ -45,10 +44,9 @@ private:
 	uint last_error;                 ///< The last error of the command.
 	bool last_command_res;           ///< The last result of the command.
 
-	VehicleID new_vehicle_id;        ///< The ID of the new Vehicle.
-	SignID new_sign_id;              ///< The ID of the new Sign.
-	GroupID new_group_id;            ///< The ID of the new Group.
-	GoalID new_goal_id;              ///< The ID of the new Goal.
+	CommandDataBuffer last_data;     ///< The last data passed to a command.
+	Commands last_cmd;               ///< The last cmd passed to a command.
+	CommandDataBuffer last_cmd_ret;  ///< The extra data returned by the last command.
 
 	std::vector<int> callback_value; ///< The values which need to survive a callback.
 
@@ -60,8 +58,8 @@ private:
 
 public:
 	ScriptStorage() :
-		mode              (NULL),
-		mode_instance     (NULL),
+		mode              (nullptr),
+		mode_instance     (nullptr),
 		root_company      (INVALID_OWNER),
 		company           (INVALID_OWNER),
 		delay             (1),
@@ -70,14 +68,12 @@ public:
 		last_cost         (0),
 		last_error        (STR_NULL),
 		last_command_res  (true),
-		new_vehicle_id    (0),
-		new_sign_id       (0),
-		new_group_id      (0),
+		last_cmd          (CMD_END),
 		/* calback_value (can't be set) */
 		road_type         (INVALID_ROADTYPE),
 		rail_type         (INVALID_RAILTYPE),
-		event_data        (NULL),
-		log_data          (NULL)
+		event_data        (nullptr),
+		log_data          (nullptr)
 	{ }
 
 	~ScriptStorage();

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -310,10 +308,10 @@ enum WireSpriteOffset {
 	WSO_X_NE_UP,
 	WSO_Y_NW_DOWN,
 
-	WSO_ENTRANCE_NE,
-	WSO_ENTRANCE_SE,
 	WSO_ENTRANCE_SW,
 	WSO_ENTRANCE_NW,
+	WSO_ENTRANCE_NE,
+	WSO_ENTRANCE_SE,
 };
 
 struct SortableSpriteStruct {
@@ -329,9 +327,11 @@ struct SortableSpriteStruct {
 /** Distance between wire and rail */
 static const uint ELRAIL_ELEVATION = 10;
 /** Wires that a draw one level higher than the north corner. */
-static const uint ELRAIL_ELEVRAISE = ELRAIL_ELEVATION + TILE_HEIGHT;
+static const uint ELRAIL_ELEVRAISE = ELRAIL_ELEVATION + TILE_HEIGHT + 1;
+/** Wires that a draw one level lower than the north corner. */
+static const uint ELRAIL_ELEVLOWER = ELRAIL_ELEVATION - 1;
 
-static const SortableSpriteStruct CatenarySpriteData[] = {
+static const SortableSpriteStruct RailCatenarySpriteData[] = {
 /* X direction
 	 * Flat tiles:
 		 * Wires */
@@ -347,9 +347,9 @@ static const SortableSpriteStruct CatenarySpriteData[] = {
 
 	/* "down" tiles
 		 * Wires */
-	{ WSO_X_SW_DOWN,     0,  7, 15,  8,  1, ELRAIL_ELEVATION }, //! 6: Wire in X pitch down, pylon on the SW end
-	{ WSO_X_NE_DOWN,     0,  7, 15,  8,  1, ELRAIL_ELEVATION }, //! 7: Wire in X pitch down, pylon on the NE end
-	{ WSO_X_SHORT_DOWN,  0,  7, 15,  8,  1, ELRAIL_ELEVATION }, //! 8: Wire in X pitch down, pylon on both ends
+	{ WSO_X_SW_DOWN,     0,  7, 15,  8,  1, ELRAIL_ELEVLOWER }, //! 6: Wire in X pitch down, pylon on the SW end
+	{ WSO_X_NE_DOWN,     0,  7, 15,  8,  1, ELRAIL_ELEVLOWER }, //! 7: Wire in X pitch down, pylon on the NE end
+	{ WSO_X_SHORT_DOWN,  0,  7, 15,  8,  1, ELRAIL_ELEVLOWER }, //! 8: Wire in X pitch down, pylon on both ends
 
 
 /* Y direction
@@ -367,9 +367,9 @@ static const SortableSpriteStruct CatenarySpriteData[] = {
 
 	/* "down" tiles
 		 * Wires */
-	{ WSO_Y_SE_DOWN,     7,  0,  8, 15,  1, ELRAIL_ELEVATION }, //!15: Wire in Y pitch down, pylon on the SE end
-	{ WSO_Y_NW_DOWN,     7,  0,  8, 15,  1, ELRAIL_ELEVATION }, //!16: Wire in Y pitch down, pylon on the NW end
-	{ WSO_Y_SHORT_DOWN,  7,  0,  8, 15,  1, ELRAIL_ELEVATION }, //!17: Wire in Y pitch down, pylon on both ends
+	{ WSO_Y_SE_DOWN,     7,  0,  8, 15,  1, ELRAIL_ELEVLOWER }, //!15: Wire in Y pitch down, pylon on the SE end
+	{ WSO_Y_NW_DOWN,     7,  0,  8, 15,  1, ELRAIL_ELEVLOWER }, //!16: Wire in Y pitch down, pylon on the NW end
+	{ WSO_Y_SHORT_DOWN,  7,  0,  8, 15,  1, ELRAIL_ELEVLOWER }, //!17: Wire in Y pitch down, pylon on both ends
 
 /* NS Direction */
 	{ WSO_NS_SHORT,      8,  0,  8,  8,  1, ELRAIL_ELEVATION }, //!18: LEFT  trackbit wire, pylon on both ends
@@ -392,18 +392,18 @@ static const SortableSpriteStruct CatenarySpriteData[] = {
 	{ WSO_EW_E,         15,  8,  3,  3,  1, ELRAIL_ELEVATION }  //!33: LOWER trackbit wire, pylon on both ends
 };
 
-static const SortableSpriteStruct CatenarySpriteData_Depot[] = {
+static const SortableSpriteStruct RailCatenarySpriteData_Depot[] = {
 	{ WSO_ENTRANCE_NE,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for NE depot exit
 	{ WSO_ENTRANCE_SE,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }, //! Wire for SE depot exit
 	{ WSO_ENTRANCE_SW,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for SW depot exit
 	{ WSO_ENTRANCE_NW,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }  //! Wire for NW depot exit
 };
 
-static const SortableSpriteStruct CatenarySpriteData_Tunnel[] = {
-	{ WSO_ENTRANCE_NE,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for NE tunnel exit
-	{ WSO_ENTRANCE_SE,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }, //! Wire for SE tunnel exit
-	{ WSO_ENTRANCE_SW,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for SW tunnel exit
-	{ WSO_ENTRANCE_NW,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }  //! Wire for NW tunnel exit
+static const SortableSpriteStruct RailCatenarySpriteData_Tunnel[] = {
+	{ WSO_ENTRANCE_SW,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for NE tunnel (SW facing exit)
+	{ WSO_ENTRANCE_NW,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }, //! Wire for SE tunnel (NW facing exit)
+	{ WSO_ENTRANCE_NE,   0,  7, 15,  1,  1, ELRAIL_ELEVATION }, //! Wire for SW tunnel (NE facing exit)
+	{ WSO_ENTRANCE_SE,   7,  0,  1, 15,  1, ELRAIL_ELEVATION }  //! Wire for NW tunnel (SE facing exit)
 };
 
 
@@ -412,14 +412,14 @@ static const SortableSpriteStruct CatenarySpriteData_Tunnel[] = {
  * Identifiers for Wires:
  * <ol><li>Direction of the wire</li>
  * <li>Slope of the tile for diagonals, placement inside the track for horiz/vertical pieces</li>
- * <li>Place where a pylon shoule be</li></ol>
+ * <li>Place where a pylon should be</li></ol>
  * Identifiers for Pylons:
  * <ol><li>Direction of the wire</li>
  * <li>Slope of the tile</li>
  * <li>Position of the Pylon relative to the track</li>
  * <li>Position of the Pylon inside the tile</li></ol>
  */
-enum CatenarySprite {
+enum RailCatenarySprite {
 	WIRE_X_FLAT_SW,
 	WIRE_X_FLAT_NE,
 	WIRE_X_FLAT_BOTH,
@@ -471,7 +471,7 @@ enum CatenarySprite {
  * c) the second
  * d) both
  * PCP exists.*/
-static const CatenarySprite Wires[5][TRACK_END][4] = {
+static const RailCatenarySprite Wires[5][TRACK_END][4] = {
 	{ // Tileh == 0
 		{INVALID_CATENARY, WIRE_X_FLAT_NE,   WIRE_X_FLAT_SW,   WIRE_X_FLAT_BOTH},
 		{INVALID_CATENARY, WIRE_Y_FLAT_SE,   WIRE_Y_FLAT_NW,   WIRE_Y_FLAT_BOTH},

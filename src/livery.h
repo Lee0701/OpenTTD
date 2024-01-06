@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -19,7 +17,7 @@ static const byte LIT_COMPANY = 1; ///< Show the liveries of your own company
 static const byte LIT_ALL     = 2; ///< Show the liveries of all companies
 
 /** List of different livery schemes. */
-enum LiveryScheme {
+enum LiveryScheme : byte {
 	LS_BEGIN = 0,
 	LS_DEFAULT = 0,
 
@@ -69,12 +67,16 @@ enum LiveryClass {
 	LC_ROAD,
 	LC_SHIP,
 	LC_AIRCRAFT,
+	LC_GROUP_RAIL,
+	LC_GROUP_ROAD,
+	LC_GROUP_SHIP,
+	LC_GROUP_AIRCRAFT,
 	LC_END
 };
 
 /** Information about a particular livery. */
 struct Livery {
-	bool in_use;  ///< Set if this livery should be used instead of the default livery.
+	byte in_use;  ///< Bit 0 set if this livery should override the default livery first colour, Bit 1 for the second colour.
 	byte colour1; ///< First colour, for all vehicles.
 	byte colour2; ///< Second colour, for vehicles with 2CC support.
 };

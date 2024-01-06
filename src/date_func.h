@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,7 +16,7 @@ extern Year      _cur_year;
 extern Month     _cur_month;
 extern Date      _date;
 extern DateFract _date_fract;
-extern uint16 _tick_counter;
+extern uint64 _tick_counter;
 
 void SetDate(Date date, DateFract fract);
 void ConvertDateToYMD(Date date, YearMonthDay *ymd);

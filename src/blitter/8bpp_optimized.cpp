@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,7 +11,10 @@
 #include "../zoom_func.h"
 #include "../settings_type.h"
 #include "../core/math_func.hpp"
+#include "../core/mem_func.hpp"
 #include "8bpp_optimized.hpp"
+
+#include "../safeguards.h"
 
 /** Instantiation of the 8bpp optimised blitter factory. */
 static FBlitter_8bppOptimized iFBlitter_8bppOptimized;
@@ -79,11 +80,12 @@ void Blitter_8bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Z
 			dst += trans;
 			width -= trans;
 			if (width <= 0 || pixels == 0) continue;
-			pixels = min<uint>(pixels, (uint)width);
+			pixels = std::min<uint>(pixels, width);
 			width -= pixels;
 
 			switch (mode) {
-				case BM_COLOUR_REMAP: {
+				case BM_COLOUR_REMAP:
+				case BM_CRASH_REMAP: {
 					const uint8 *remap = bp->remap;
 					do {
 						uint m = remap[*src];
@@ -92,6 +94,11 @@ void Blitter_8bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Z
 					} while (--pixels != 0);
 					break;
 				}
+
+				case BM_BLACK_REMAP:
+					MemSetT(dst, 0, pixels);
+					dst += pixels;
+					break;
 
 				case BM_TRANSPARENT: {
 					const uint8 *remap = bp->remap;
@@ -104,7 +111,7 @@ void Blitter_8bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Z
 				}
 
 				default:
-					memcpy(dst, src, pixels);
+					MemCpyT(dst, src, pixels);
 					dst += pixels; src += pixels;
 					break;
 			}
@@ -112,7 +119,7 @@ void Blitter_8bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Z
 	}
 }
 
-Sprite *Blitter_8bppOptimized::Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
+Sprite *Blitter_8bppOptimized::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
 {
 	/* Make memory for all zoom-levels */
 	uint memory = sizeof(SpriteData);
@@ -158,7 +165,7 @@ Sprite *Blitter_8bppOptimized::Encode(SpriteLoader::Sprite *sprite, AllocatorPro
 			uint trans = 0;
 			uint pixels = 0;
 			uint last_colour = 0;
-			byte *count_dst = NULL;
+			byte *count_dst = nullptr;
 
 			/* Store the scaled image */
 			const SpriteLoader::CommonPixel *src = &sprite[i].data[y * sprite[i].width];
@@ -167,11 +174,11 @@ Sprite *Blitter_8bppOptimized::Encode(SpriteLoader::Sprite *sprite, AllocatorPro
 				uint colour = src++->m;
 
 				if (last_colour == 0 || colour == 0 || pixels == 255) {
-					if (count_dst != NULL) {
+					if (count_dst != nullptr) {
 						/* Write how many non-transparent bytes we get */
 						*count_dst = pixels;
 						pixels = 0;
-						count_dst = NULL;
+						count_dst = nullptr;
 					}
 					/* As long as we find transparency bytes, keep counting */
 					if (colour == 0 && trans != 255) {
@@ -197,7 +204,7 @@ Sprite *Blitter_8bppOptimized::Encode(SpriteLoader::Sprite *sprite, AllocatorPro
 				}
 			}
 
-			if (count_dst != NULL) *count_dst = pixels;
+			if (count_dst != nullptr) *count_dst = pixels;
 
 			/* Write line-ending */
 			*dst = 0; dst++;

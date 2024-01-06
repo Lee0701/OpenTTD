@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,8 +13,8 @@
 /**
  * Numeric value that represents a string, independent of the selected language.
  */
-typedef uint16 StringID;
-static const StringID INVALID_STRING_ID = 0xFFFF; ///< Constant representing an invalid string
+typedef uint32 StringID;
+static const StringID INVALID_STRING_ID = 0xFFFF; ///< Constant representing an invalid string (16bit in case it is used in savegames)
 static const int MAX_CHAR_LENGTH        = 4;      ///< Max. length of UTF-8 encoded unicode character
 static const uint MAX_LANG              = 0x7F;   ///< Maximum number of languages supported by the game, and the NewGRF specs
 
@@ -25,6 +23,33 @@ enum TextDirection {
 	TD_LTR, ///< Text is written left-to-right by default
 	TD_RTL, ///< Text is written right-to-left by default
 };
+
+/** StringTabs to group StringIDs */
+enum StringTab {
+	/* Tabs 0..1 for regular strings */
+	TEXT_TAB_TOWN             =  4,
+	TEXT_TAB_INDUSTRY         =  9,
+	TEXT_TAB_STATION          = 12,
+	TEXT_TAB_SPECIAL          = 14,
+	TEXT_TAB_OLD_CUSTOM       = 15,
+	TEXT_TAB_VEHICLE          = 16,
+	/* Tab 17 for regular strings */
+	TEXT_TAB_OLD_NEWGRF       = 26,
+	TEXT_TAB_END              = 32, ///< End of language files.
+	TEXT_TAB_GAMESCRIPT_START = 32, ///< Start of GameScript supplied strings.
+	TEXT_TAB_NEWGRF_START     = 64, ///< Start of NewGRF supplied strings.
+};
+
+/** Number of bits for the StringIndex within a StringTab */
+static const uint TAB_SIZE_BITS       = 11;
+/** Number of strings per StringTab */
+static const uint TAB_SIZE            = 1 << TAB_SIZE_BITS;
+
+/** Number of strings for GameScripts */
+static const uint TAB_SIZE_GAMESCRIPT = TAB_SIZE * 32;
+
+/** Number of strings for NewGRFs */
+static const uint TAB_SIZE_NEWGRF     = TAB_SIZE * 256;
 
 /** Special string constants */
 enum SpecialStrings {
@@ -61,18 +86,6 @@ enum SpecialStrings {
 	SPECSTR_SILLY_NAME         = 0x70E5,
 	SPECSTR_ANDCO_NAME         = 0x70E6,
 	SPECSTR_PRESIDENT_NAME     = 0x70E7,
-
-	/* reserve MAX_LANG strings for the *.lng files */
-	SPECSTR_LANGUAGE_START     = 0x7100,
-	SPECSTR_LANGUAGE_END       = SPECSTR_LANGUAGE_START + MAX_LANG - 1,
-
-	/* reserve 32 strings for various screen resolutions */
-	SPECSTR_RESOLUTION_START   = SPECSTR_LANGUAGE_END + 1,
-	SPECSTR_RESOLUTION_END     = SPECSTR_RESOLUTION_START + 0x1F,
-
-	/* reserve 32 strings for screenshot formats */
-	SPECSTR_SCREENSHOT_START   = SPECSTR_RESOLUTION_END + 1,
-	SPECSTR_SCREENSHOT_END     = SPECSTR_SCREENSHOT_START + 0x1F,
 };
 
 #endif /* STRINGS_TYPE_H */

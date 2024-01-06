@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,21 +13,20 @@
 #include "sound_driver.hpp"
 
 /** Implementation of the null sound driver. */
-class SoundDriver_Null: public SoundDriver {
+class SoundDriver_Null : public SoundDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param) { return NULL; }
+	const char *Start(const StringList &param) override { return nullptr; }
 
-	/* virtual */ void Stop() { }
-	/* virtual */ const char *GetName() const { return "null"; }
+	void Stop() override { }
+	const char *GetName() const override { return "null"; }
+	bool HasOutput() const override { return false; }
 };
 
 /** Factory for the null sound driver. */
-class FSoundDriver_Null: public SoundDriverFactory<FSoundDriver_Null> {
+class FSoundDriver_Null : public DriverFactoryBase {
 public:
-	static const int priority = 1;
-	/* virtual */ const char *GetName() { return "null"; }
-	/* virtual */ const char *GetDescription() { return "Null Sound Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_Null(); }
+	FSoundDriver_Null() : DriverFactoryBase(Driver::DT_SOUND, 1, "null", "Null Sound Driver") {}
+	Driver *CreateInstance() const override { return new SoundDriver_Null(); }
 };
 
 #endif /* SOUND_NULL_H */

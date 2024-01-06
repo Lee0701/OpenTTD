@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,7 +13,135 @@
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
  *
- * \b 1.3.2
+ * \b 13.0
+ *
+ * API additions:
+ * \li AICargo::GetWeight
+ * \li AIIndustryType::ResolveNewGRFID
+ * \li AIObjectType::ResolveNewGRFID
+ *
+ * Other changes:
+ * \li AIRoad::HasRoadType now correctly checks RoadType against RoadType
+ *
+ * \b 12.0
+ *
+ * API additions:
+ * \li AINewGRF
+ * \li AINewGRFList
+ * \li AIGroup::GetNumVehicles
+ * \li AIMarine::BT_LOCK
+ * \li AIMarine::BT_CANAL
+ * \li AITile::IsSeaTile
+ * \li AITile::IsRiverTile
+ * \li AITile::BT_CLEAR_WATER
+ * \li AIObjectTypeList
+ * \li AIObjectType
+ *
+ * \b 1.11.0
+ *
+ * API additions:
+ * \li AICargo::GetName
+ * \li AIPriorityQueue
+ *
+ * Other changes:
+ * \li AIVehicle::CloneVehicle now correctly returns estimate when short on cash
+ *
+ * \b 1.10.0
+ *
+ * API additions:
+ * \li AIGroup::SetPrimaryColour
+ * \li AIGroup::SetSecondaryColour
+ * \li AIGroup::GetPrimaryColour
+ * \li AIGroup::GetSecondaryColour
+ * \li AIVehicle::BuildVehicleWithRefit
+ * \li AIVehicle::GetBuildWithRefitCapacity
+ * \li AIRoad::GetName
+ * \li AIRoad::RoadVehCanRunOnRoad
+ * \li AIRoad::RoadVehHasPowerOnRoad
+ * \li AIRoad::ConvertRoadType
+ * \li AIRoad::GetMaxSpeed
+ * \li AIEngine::CanRunOnRoad
+ * \li AIEngine::HasPowerOnRoad
+ * \li AIRoadTypeList::RoadTypeList
+ * \li AIEventVehicleAutoReplaced
+ *
+ * Other changes:
+ * \li AITile::DemolishTile works without a selected company
+ *
+ * \b 1.9.0
+ *
+ * API additions:
+ * \li AIAirport::GetMonthlyMaintenanceCost
+ * \li AIGroup::SetParent
+ * \li AIGroup::GetParent
+ * \li AICompany::SetPrimaryLiveryColour
+ * \li AICompany::SetSecondaryLiveryColour
+ * \li AICompany::GetPrimaryLiveryColour
+ * \li AICompany::GetSecondaryLiveryColour
+ *
+ * Other changes:
+ * \li AIBridge::GetName takes one extra parameter to refer the vehicle type
+ * \li AIGroup::CreateGroup gains parent_group_id parameter
+ *
+ * \b 1.8.0
+ *
+ * No changes
+ *
+ * API additions:
+ * \li AIRoad::ERR_ROADTYPE_DISALLOWS_CROSSING
+ *
+ * \b 1.7.0 - 1.7.2
+ *
+ * No changes
+ *
+ * \b 1.6.1 - 1.6.0
+ *
+ * No changes
+ *
+ * \b 1.5.3 - 1.5.1
+ *
+ * No changes
+ *
+ * \b 1.5.0
+ *
+ * API additions:
+ * \li AIList::SwapList
+ * \li AIStation::GetCargoPlanned
+ * \li AIStation::GetCargoPlannedFrom
+ * \li AIStation::GetCargoPlannedFromVia
+ * \li AIStation::GetCargoPlannedVia
+ * \li AIStation::GetCargoWaitingFromVia
+ * \li AIStationList_CargoPlannedByFrom
+ * \li AIStationList_CargoPlannedByVia
+ * \li AIStationList_CargoPlannedFromByVia
+ * \li AIStationList_CargoPlannedViaByFrom
+ * \li AIStationList_CargoWaitingByFrom
+ * \li AIStationList_CargoWaitingByVia
+ * \li AIStationList_CargoWaitingFromByVia
+ * \li AIStationList_CargoWaitingViaByFrom
+ *
+ * \b 1.4.4 - 1.4.1
+ * No changes
+ *
+ * \b 1.4.0
+ *
+ * API additions:
+ * \li AICargo::GetDistributionType
+ * \li AIDate::DATE_INVALID
+ * \li AIDate::IsValidDate
+ * \li AIStation::HasCargoRating
+ * \li AIStation::GetCargoWaitingFrom
+ * \li AIStation::GetCargoWaitingVia
+ * \li AITile::GetTerrainType
+ * \li AITown::FoundTown
+ * \li AITown::GetFundBuildingsDuration
+ * \li AITown::TOWN_GROWTH_NONE
+ *
+ * Other changes:
+ * \li AIStation::GetCargoRating does return -1 for cargo-station combinations that
+ *     do not have a rating yet instead of returning 69.
+ *
+ * \b 1.3.3 - 1.3.2
  *
  * No changes
  *
@@ -34,15 +160,7 @@
  * \li AIStation::OpenCloseAirport
  * \li AIController::Break
  *
- * \b 1.2.3
- *
- * No changes
- *
- * \b 1.2.2
- *
- * No changes
- *
- * \b 1.2.1
+ * \b 1.2.3 - 1.2.1
  *
  * No changes
  *
@@ -72,10 +190,10 @@
  * \li AIOrder::SetOrderRefit
  * \li AIRail::GetMaintenanceCostFactor
  * \li AIRoad::GetMaintenanceCostFactor
+ * \li AITile::GetTownAuthority
  * \li AITown::GetCargoGoal
  * \li AITown::GetGrowthRate
  * \li AITown::GetLastMonthReceived
- * \li AITown::GetTownAuthority
  * \li AITownEffectList (to walk over all available town effects)
  * \li AIVehicle::ERR_VEHICLE_TOO_LONG in case vehicle length limit is reached
  * \li AIVehicle::GetMaximumOrderDistance
@@ -95,7 +213,7 @@
  * Other changes:
  * \li AITown::GetLastMonthProduction no longer has prerequisites based on town
  *     effects.
- * \li AITown::GetLastMonthTransported no longer has prerequisites based on
+ * \li AITown::GetLastMonthTransported resp. AITown::GetLastMonthSupplied no longer has prerequisites based on
  *     town effects.
  * \li AITown::GetLastMonthTransportedPercentage no longer has prerequisites
  *     based on town effects.
@@ -109,15 +227,7 @@
  * API additions:
  * \li AIVehicle::ERR_VEHICLE_TOO_LONG in case vehicle length limit is reached.
  *
- * \b 1.1.3
- *
- * No changes
- *
- * \b 1.1.2
- *
- * No changes
- *
- * \b 1.1.1
+ * \b 1.1.3 - 1.1.1
  *
  * No changes
  *
@@ -148,11 +258,7 @@
  * \li AIRoad::BuildDriveThroughRoadStation now allows overbuilding.
  * \li AIRoad::BuildRoadStation now allows overbuilding.
  *
- * \b 1.0.5
- *
- * No changes
- *
- * \b 1.0.4
+ * \b 1.0.5 - 1.0.4
  *
  * No changes
  *
@@ -237,7 +343,7 @@
  *     destination it its catchment area. One industry tile or one town house
  *     is enough as long as station accepts the cargo. Awarded subsidies are no
  *     longer bound to stations used for first delivery, any station can be
- *     used for loading and unloading as long as cargo is transfered from
+ *     used for loading and unloading as long as cargo is transferred from
  *     source to destination.
  * \li Make AIEngine:CanRefitCargo() not report refittability to mail by
  *     default for aircraft. It is not necessarily true. This means that even
@@ -266,11 +372,7 @@
  *     station orders for buoys one has to use waypoint orders.
  * \li Autoreplaces can now also be set for the default group via AIGroup.
  *
- * \b 0.7.5
- *
- * No changes
- *
- * \b 0.7.4
+ * \b 0.7.5 - 0.7.4
  *
  * No changes
  *

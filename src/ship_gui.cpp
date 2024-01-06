@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,31 +19,37 @@
 
 #include "table/strings.h"
 
+#include "safeguards.h"
+
 /**
  * Draws an image of a ship
  * @param v         Front vehicle
- * @param left      The minimum horizontal position
- * @param right     The maximum horizontal position
- * @param y         Vertical position to draw at
+ * @param r         Rect to draw at
  * @param selection Selected vehicle to draw a frame around
  */
-void DrawShipImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type)
+void DrawShipImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type)
 {
 	bool rtl = _current_text_dir == TD_RTL;
 
-	SpriteID sprite = v->GetImage(rtl ? DIR_E : DIR_W, image_type);
-	const Sprite *real_sprite = GetSprite(sprite, ST_NORMAL);
+	VehicleSpriteSeq seq;
+	v->GetImage(rtl ? DIR_E : DIR_W, image_type, &seq);
 
-	int width = UnScaleByZoom(real_sprite->width, ZOOM_LVL_GUI);
-	int x_offs = UnScaleByZoom(real_sprite->x_offs, ZOOM_LVL_GUI);
-	int x = rtl ? right - width - x_offs : left - x_offs;
+	Rect rect;
+	seq.GetBounds(&rect);
 
-	DrawSprite(sprite, GetVehiclePalette(v), x, y + 10);
+	int width = UnScaleGUI(rect.Width());
+	int x_offs = UnScaleGUI(rect.left);
+	int x = rtl ? r.right - width - x_offs : r.left - x_offs;
+	/* This magic -1 offset is related to the sprite_y_offsets in build_vehicle_gui.cpp */
+	int y = ScaleSpriteTrad(-1) + CenterBounds(r.top, r.bottom, 0);
+
+	seq.Draw(x, y, GetVehiclePalette(v), false);
 
 	if (v->index == selection) {
 		x += x_offs;
-		y += UnScaleByZoom(real_sprite->y_offs, ZOOM_LVL_GUI) + 10;
-		DrawFrameRect(x - 1, y - 1, x + width + 1, y + UnScaleByZoom(real_sprite->height, ZOOM_LVL_GUI) + 1, COLOUR_WHITE, FR_BORDERONLY);
+		y += UnScaleGUI(rect.top);
+		Rect hr = {x, y, x + width - 1, y + UnScaleGUI(rect.Height()) - 1};
+		DrawFrameRect(hr.Expand(WidgetDimensions::scaled.bevel), COLOUR_WHITE, FR_BORDERONLY);
 	}
 }
 
@@ -53,32 +57,35 @@ void DrawShipImage(const Vehicle *v, int left, int right, int y, VehicleID selec
  * Draw the details for the given vehicle at the given position
  *
  * @param v     current vehicle
- * @param left  The left most coordinate to draw
- * @param right The right most coordinate to draw
- * @param y     The y coordinate
+ * @param r     the Rect to draw within
  */
-void DrawShipDetails(const Vehicle *v, int left, int right, int y)
+void DrawShipDetails(const Vehicle *v, const Rect &r)
 {
-	SetDParam(0, v->engine_type);
+	int y = r.top;
+
+	SetDParam(0, PackEngineNameDParam(v->engine_type, EngineNameContext::VehicleDetails));
 	SetDParam(1, v->build_year);
 	SetDParam(2, v->value);
-	DrawString(left, right, y, STR_VEHICLE_INFO_BUILT_VALUE);
+	DrawString(r.left, r.right, y, STR_VEHICLE_INFO_BUILT_VALUE);
+	y += FONT_HEIGHT_NORMAL;
 
 	SetDParam(0, v->cargo_type);
 	SetDParam(1, v->cargo_cap);
 	SetDParam(4, GetCargoSubtypeText(v));
-	DrawString(left, right, y + FONT_HEIGHT_NORMAL, STR_VEHICLE_INFO_CAPACITY);
+	DrawString(r.left, r.right, y, STR_VEHICLE_INFO_CAPACITY);
+	y += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
 
 	StringID str = STR_VEHICLE_DETAILS_CARGO_EMPTY;
-	if (!v->cargo.Empty()) {
+	if (v->cargo.StoredCount() > 0) {
 		SetDParam(0, v->cargo_type);
-		SetDParam(1, v->cargo.Count());
+		SetDParam(1, v->cargo.StoredCount());
 		SetDParam(2, v->cargo.Source());
 		str = STR_VEHICLE_DETAILS_CARGO_FROM;
 	}
-	DrawString(left, right, y + 2 * FONT_HEIGHT_NORMAL + 1, str);
+	DrawString(r.left, r.right, y, str);
+	y += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
 
 	/* Draw Transfer credits text */
 	SetDParam(0, v->cargo.FeederShare());
-	DrawString(left, right, y + 3 * FONT_HEIGHT_NORMAL + 3, STR_VEHICLE_INFO_FEEDER_CARGO_VALUE);
+	DrawString(r.left, r.right, y, STR_VEHICLE_INFO_FEEDER_CARGO_VALUE);
 }

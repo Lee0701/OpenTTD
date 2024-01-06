@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -16,8 +14,9 @@
 
 /** Widgets of the #NetworkContentDownloadStatusWindow class. */
 enum NetworkContentDownloadStatusWidgets {
-	WID_NCDS_BACKGROUND, ///< Background of the window.
-	WID_NCDS_CANCELOK,   ///< (Optional) Cancel/OK button.
+	WID_NCDS_PROGRESS_BAR,  ///< Simple progress bar.
+	WID_NCDS_PROGRESS_TEXT, ///< Text explaining what is happening.
+	WID_NCDS_CANCELOK,      ///< (Optional) Cancel/OK button.
 };
 
 /** Widgets of the #NetworkContentListWindow class. */

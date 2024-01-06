@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,9 +22,10 @@ extern CargoPaymentPool _cargo_payment_pool;
  * Helper class to perform the cargo payment.
  */
 struct CargoPayment : CargoPaymentPool::PoolItem<&_cargo_payment_pool> {
-	Vehicle *front;      ///< The front vehicle to do the payment of
-	Money route_profit;  ///< The amount of money to add/remove from the bank account
-	Money visual_profit; ///< The visual profit to show
+	Vehicle *front;        ///< The front vehicle to do the payment of
+	Money route_profit;    ///< The amount of money to add/remove from the bank account
+	Money visual_profit;   ///< The visual profit to show
+	Money visual_transfer; ///< The transfer credits to be shown
 
 	/* Unsaved variables */
 	Company *owner;            ///< The owner of the vehicle
@@ -47,18 +46,5 @@ struct CargoPayment : CargoPaymentPool::PoolItem<&_cargo_payment_pool> {
 	 */
 	void SetCargo(CargoID ct) { this->ct = ct; }
 };
-
-/**
- * Iterate over all cargo payments from a given start position.
- * @param var The variable used for iterating.
- * @param start The start of the iteration.
- */
-#define FOR_ALL_CARGO_PAYMENTS_FROM(var, start) FOR_ALL_ITEMS_FROM(CargoPayment, cargo_payment_index, var, start)
-
-/**
- * Iterate over all cargo payments.
- * @param var The variable used for iterating.
- */
-#define FOR_ALL_CARGO_PAYMENTS(var) FOR_ALL_CARGO_PAYMENTS_FROM(var, 0)
 
 #endif /* ECONOMY_BASE_H */

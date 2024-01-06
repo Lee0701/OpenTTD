@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,11 +12,12 @@
 
 #include "core/enum_type.hpp"
 #include "core/string_compare_type.hpp"
+#include "string_type.h"
 #include <map>
 
-const char *GetDriverParam(const char * const *parm, const char *name);
-bool GetDriverParamBool(const char * const *parm, const char *name);
-int GetDriverParamInt(const char * const *parm, const char *name, int def);
+const char *GetDriverParam(const StringList &parm, const char *name);
+bool GetDriverParamBool(const StringList &parm, const char *name);
+int GetDriverParamInt(const StringList &parm, const char *name, int def);
 
 /** A driver for communicating with the user. */
 class Driver {
@@ -26,9 +25,9 @@ public:
 	/**
 	 * Start this driver.
 	 * @param parm Parameters passed to the driver.
-	 * @return NULL if everything went okay, otherwise an error message.
+	 * @return nullptr if everything went okay, otherwise an error message.
 	 */
-	virtual const char *Start(const char * const *parm) = 0;
+	virtual const char *Start(const StringList &parm) = 0;
 
 	/**
 	 * Stop this driver.
@@ -59,11 +58,16 @@ DECLARE_POSTFIX_INCREMENT(Driver::Type)
 /** Base for all driver factories. */
 class DriverFactoryBase {
 private:
-	Driver::Type type; ///< The type of driver.
-	const char *name;  ///< The name of the drivers of this factory.
-	int priority;      ///< The priority of this factory.
+	friend class MusicDriver;
+	friend class SoundDriver;
+	friend class VideoDriver;
 
-	typedef std::map<const char *, DriverFactoryBase *, StringCompare> Drivers; ///< Type for a map of drivers.
+	Driver::Type type;       ///< The type of driver.
+	int priority;            ///< The priority of this factory.
+	const char *name;        ///< The name of the drivers of this factory.
+	const char *description; ///< The description of this driver.
+
+	typedef std::map<std::string, DriverFactoryBase *> Drivers; ///< Type for a map of drivers.
 
 	/**
 	 * Get the map with drivers.
@@ -81,7 +85,7 @@ private:
 	 */
 	static Driver **GetActiveDriver(Driver::Type type)
 	{
-		static Driver *s_driver[3] = { NULL, NULL, NULL };
+		static Driver *s_driver[3] = { nullptr, nullptr, nullptr };
 		return &s_driver[type];
 	}
 
@@ -96,16 +100,25 @@ private:
 		return driver_type_name[type];
 	}
 
-protected:
-	void RegisterDriver(const char *name, Driver::Type type, int priority);
+	static bool SelectDriverImpl(const std::string &name, Driver::Type type);
 
-public:
-	DriverFactoryBase() :
-		name(NULL)
-	{}
+	static void MarkVideoDriverOperational();
+
+protected:
+	DriverFactoryBase(Driver::Type type, int priority, const char *name, const char *description);
 
 	virtual ~DriverFactoryBase();
 
+	/**
+	 * Does the driver use hardware acceleration (video-drivers only).
+	 * @return True if the driver uses hardware acceleration.
+	 */
+	virtual bool UsesHardwareAcceleration() const
+	{
+		return false;
+	}
+
+public:
 	/**
 	 * Shuts down all active drivers
 	 */
@@ -113,24 +126,27 @@ public:
 	{
 		for (Driver::Type dt = Driver::DT_BEGIN; dt < Driver::DT_END; dt++) {
 			Driver *driver = *GetActiveDriver(dt);
-			if (driver != NULL) driver->Stop();
+			if (driver != nullptr) driver->Stop();
 		}
 	}
 
-	static Driver *SelectDriver(const char *name, Driver::Type type);
+	static void SelectDriver(const std::string &name, Driver::Type type);
 	static char *GetDriversInfo(char *p, const char *last);
 
 	/**
 	 * Get a nice description of the driver-class.
 	 * @return The description.
 	 */
-	virtual const char *GetDescription() = 0;
+	const char *GetDescription() const
+	{
+		return this->description;
+	}
 
 	/**
 	 * Create an instance of this driver-class.
 	 * @return The instance.
 	 */
-	virtual Driver *CreateInstance() = 0;
+	virtual Driver *CreateInstance() const = 0;
 };
 
 #endif /* DRIVER_H */

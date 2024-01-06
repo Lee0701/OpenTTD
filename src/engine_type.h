@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,7 @@
 
 #include "economy_type.h"
 #include "rail_type.h"
+#include "road_type.h"
 #include "cargo_type.h"
 #include "date_type.h"
 #include "sound_type.h"
@@ -44,7 +43,8 @@ struct RailVehicleInfo {
 	byte image_index;
 	RailVehicleTypes railveh_type;
 	byte cost_factor;               ///< Purchase cost factor;      For multiheaded engines the sum of both engine prices.
-	RailTypeByte railtype;
+	RailType railtype;              ///< Railtype, mangled if elrail is disabled.
+	RailType intended_railtype;     ///< Intended railtype, regardless of elrail being enabled or disabled.
 	uint16 max_speed;               ///< Maximum speed (1 unit = 1/1.6 mph = 1 km-ish/h)
 	uint16 power;                   ///< Power of engine (hp);      For multiheaded engines the sum of both engine powers.
 	uint16 weight;                  ///< Weight of vehicle (tons);  For multiheaded engines the weight of each single engine.
@@ -60,6 +60,7 @@ struct RailVehicleInfo {
 	byte tractive_effort;           ///< Tractive effort coefficient
 	byte air_drag;                  ///< Coefficient of air drag
 	byte user_def_data;             ///< Property 0x25: "User-defined bit mask" Used only for (very few) NewGRF vehicles
+	int16 curve_speed_mod;          ///< Modifier to maximum speed in curves (fixed-point binary with 8 fractional bits)
 };
 
 /** Information about a ship vehicle. */
@@ -123,7 +124,17 @@ struct RoadVehicleInfo {
 	uint8 air_drag;          ///< Coefficient of air drag
 	byte visual_effect;      ///< Bitstuffed NewGRF visual effect data
 	byte shorten_factor;     ///< length on main map for this type is 8 - shorten_factor
+	RoadType roadtype;       ///< Road type
 };
+
+enum class ExtraEngineFlags : uint32 {
+	None = 0,
+	NoNews          = (1U << 0), ///< No 'new vehicle' news will be generated.
+	NoPreview       = (1U << 1), ///< No exclusive preview will be offered.
+	JoinPreview     = (1U << 2), ///< Engine will join exclusive preview with variant parent.
+	SyncReliability = (1U << 3), ///< Engine reliability will be synced with variant parent.
+};
+DECLARE_ENUM_AS_BIT_SET(ExtraEngineFlags);
 
 /**
  * Information about a vehicle
@@ -137,13 +148,15 @@ struct EngineInfo {
 	byte load_amount;
 	byte climates;      ///< Climates supported by the engine.
 	CargoID cargo_type;
-	uint32 refit_mask;
+	CargoTypes refit_mask;
 	byte refit_cost;
-	byte misc_flags;    ///< Miscellaneous flags. @see EngineMiscFlags
-	byte callback_mask; ///< Bitmask of vehicle callbacks that have to be called
-	int8 retire_early;  ///< Number of years early to retire vehicle
-	StringID string_id; ///< Default name of engine
+	byte misc_flags;         ///< Miscellaneous flags. @see EngineMiscFlags
+	uint16 callback_mask;    ///< Bitmask of vehicle callbacks that have to be called
+	int8 retire_early;       ///< Number of years early to retire vehicle
+	StringID string_id;      ///< Default name of engine
 	uint16 cargo_age_period; ///< Number of ticks before carried cargo is aged.
+	EngineID variant_id;     ///< Engine variant ID. If set, will be treated specially in purchase lists.
+	ExtraEngineFlags extra_flags;
 };
 
 /**
@@ -154,10 +167,11 @@ enum EngineMiscFlags {
 	EF_ROAD_TRAM  = 0, ///< Road vehicle is a tram/light rail vehicle
 	EF_USES_2CC   = 1, ///< Vehicle uses two company colours
 	EF_RAIL_IS_MU = 2, ///< Rail vehicle is a multiple-unit (DMU/EMU)
-	EF_RAIL_FLIPS = 3, ///< Rail vehicle can be flipped in the depot
+	EF_RAIL_FLIPS = 3, ///< Rail vehicle has old depot-flip handling
 	EF_AUTO_REFIT = 4, ///< Automatic refitting is allowed
 	EF_NO_DEFAULT_CARGO_MULTIPLIER = 5, ///< Use the new capacity algorithm. The default cargotype of the vehicle does not affect capacity multipliers. CB 15 is also called in purchase list.
 	EF_NO_BREAKDOWN_SMOKE          = 6, ///< Do not show black smoke during a breakdown.
+	EF_SPRITE_STACK                = 7, ///< Draw vehicle by stacking multiple sprites.
 };
 
 /**
@@ -167,6 +181,22 @@ enum EngineFlags {
 	ENGINE_AVAILABLE         = 1, ///< This vehicle is available to everyone.
 	ENGINE_EXCLUSIVE_PREVIEW = 2, ///< This vehicle is in the exclusive preview stage, either being used or being offered to a company.
 };
+
+/**
+ * Contexts an engine name can be shown in.
+ */
+enum EngineNameContext : uint8 {
+	Generic        = 0x00, ///< No specific context available.
+	VehicleDetails = 0x11, ///< Name is shown in the vehicle details GUI.
+	PurchaseList   = 0x20, ///< Name is shown in the purchase list (including autoreplace window).
+	PreviewNews    = 0x21, ///< Name is shown in exclusive preview or newspaper.
+};
+
+/** Combine an engine ID and a name context to an engine name dparam. */
+inline uint64 PackEngineNameDParam(EngineID engine_id, EngineNameContext context, uint32 extra_data = 0)
+{
+	return engine_id | (static_cast<uint64>(context) << 32) | (static_cast<uint64>(extra_data) << 40);
+}
 
 static const uint MAX_LENGTH_ENGINE_NAME_CHARS = 32; ///< The maximum length of an engine name in characters including '\0'
 

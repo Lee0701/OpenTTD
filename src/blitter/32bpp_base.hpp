@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,18 +18,19 @@
 /** Base for all 32bpp blitters. */
 class Blitter_32bppBase : public Blitter {
 public:
-	/* virtual */ uint8 GetScreenDepth() { return 32; }
-	/* virtual */ void *MoveTo(void *video, int x, int y);
-	/* virtual */ void SetPixel(void *video, int x, int y, uint8 colour);
-	/* virtual */ void DrawRect(void *video, int width, int height, uint8 colour);
-	/* virtual */ void CopyFromBuffer(void *video, const void *src, int width, int height);
-	/* virtual */ void CopyToBuffer(const void *video, void *dst, int width, int height);
-	/* virtual */ void CopyImageToBuffer(const void *video, void *dst, int width, int height, int dst_pitch);
-	/* virtual */ void ScrollBuffer(void *video, int &left, int &top, int &width, int &height, int scroll_x, int scroll_y);
-	/* virtual */ int BufferSize(int width, int height);
-	/* virtual */ void PaletteAnimate(const Palette &palette);
-	/* virtual */ Blitter::PaletteAnimation UsePaletteAnimation();
-	/* virtual */ int GetBytesPerPixel() { return 4; }
+	uint8 GetScreenDepth() override { return 32; }
+	void *MoveTo(void *video, int x, int y) override;
+	void SetPixel(void *video, int x, int y, uint8 colour) override;
+	void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width, int dash) override;
+	void DrawRect(void *video, int width, int height, uint8 colour) override;
+	void CopyFromBuffer(void *video, const void *src, int width, int height) override;
+	void CopyToBuffer(const void *video, void *dst, int width, int height) override;
+	void CopyImageToBuffer(const void *video, void *dst, int width, int height, int dst_pitch) override;
+	void ScrollBuffer(void *video, int &left, int &top, int &width, int &height, int scroll_x, int scroll_y) override;
+	int BufferSize(int width, int height) override;
+	void PaletteAnimate(const Palette &palette) override;
+	Blitter::PaletteAnimation UsePaletteAnimation() override;
+	int GetBytesPerPixel() override { return 4; }
 
 	/**
 	 * Look up the colour in the current palette.
@@ -113,6 +112,31 @@ public:
 	}
 
 	/**
+	 * Make a colour dark grey, for specialized 32bpp remapping.
+	 * @param r red component
+	 * @param g green component
+	 * @param b blue component
+	 * @return the brightness value of the new colour, now dark grey.
+	 */
+	static inline uint8 MakeDark(uint8 r, uint8 g, uint8 b)
+	{
+		/* Magic-numbers are ~66% of those used in MakeGrey() */
+		return ((r * 13063) + (g * 25647) + (b * 4981)) / 65536;
+	}
+
+	/**
+	 * Make a colour dark grey, for specialized 32bpp remapping.
+	 * @param colour the colour to make dark.
+	 * @return the new colour, now darker.
+	 */
+	static inline Colour MakeDark(Colour colour)
+	{
+		uint8 d = MakeDark(colour.r, colour.g, colour.b);
+
+		return Colour(d, d, d);
+	}
+
+	/**
 	 * Make a colour grey - based.
 	 * @param colour the colour to make grey.
 	 * @return the new colour, now grey.
@@ -133,30 +157,24 @@ public:
 
 	static const int DEFAULT_BRIGHTNESS = 128;
 
+	static Colour ReallyAdjustBrightness(Colour colour, uint8 brightness);
+
 	static inline Colour AdjustBrightness(Colour colour, uint8 brightness)
 	{
 		/* Shortcut for normal brightness */
 		if (brightness == DEFAULT_BRIGHTNESS) return colour;
 
-		uint16 ob = 0;
-		uint16 r = colour.r * brightness / DEFAULT_BRIGHTNESS;
-		uint16 g = colour.g * brightness / DEFAULT_BRIGHTNESS;
-		uint16 b = colour.b * brightness / DEFAULT_BRIGHTNESS;
+		return ReallyAdjustBrightness(colour, brightness);
+	}
 
-		/* Sum overbright */
-		if (r > 255) ob += r - 255;
-		if (g > 255) ob += g - 255;
-		if (b > 255) ob += b - 255;
+	static inline uint8 GetColourBrightness(Colour colour)
+	{
+		uint8 rgb_max = std::max(colour.r, std::max(colour.g, colour.b));
 
-		if (ob == 0) return Colour(r, g, b, colour.a);
+		/* Black pixel (8bpp or old 32bpp image), so use default value */
+		if (rgb_max == 0) rgb_max = DEFAULT_BRIGHTNESS;
 
-		/* Reduce overbright strength */
-		ob /= 2;
-		return Colour(
-		                     r >= 255 ? 255 : min(r + ob * (255 - r) / 256, 255),
-		                     g >= 255 ? 255 : min(g + ob * (255 - g) / 256, 255),
-		                     b >= 255 ? 255 : min(b + ob * (255 - b) / 256, 255),
-		                     colour.a);
+		return rgb_max;
 	}
 };
 

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -33,9 +31,10 @@ enum VehicleSoundEvent {
 SoundEntry *AllocateSound(uint num);
 void InitializeSoundPool();
 bool LoadNewGRFSound(SoundEntry *sound);
+SoundID GetNewGRFSoundID(const struct GRFFile *file, SoundID sound_id);
 SoundEntry *GetSound(SoundID sound_id);
 uint GetNumSounds();
-bool PlayVehicleSound(const Vehicle *v, VehicleSoundEvent event);
+bool PlayVehicleSound(const Vehicle *v, VehicleSoundEvent event, bool force  = false);
 void PlayTileSound(const struct GRFFile *file, SoundID sound_id, TileIndex tile);
 
 #endif /* NEWGRF_SOUND_H */

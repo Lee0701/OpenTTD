@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -115,29 +113,38 @@ struct AnimCursor {
 
 /** Collection of variables for cursor-display and -animation */
 struct CursorVars {
-	Point pos, size, offs, delta; ///< position, size, offset from top-left, and movement
-	Point draw_pos, draw_size;    ///< position and size bounding-box for drawing
-	int short_vehicle_offset;     ///< offset of the X for short vehicles
-	CursorID sprite; ///< current image of cursor
-	PaletteID pal;
-
-	int wheel;       ///< mouse wheel movement
+	/* Logical mouse position */
+	Point pos;                    ///< logical mouse position
+	Point delta;                  ///< relative mouse movement in this tick
+	int wheel;                    ///< mouse wheel movement
+	bool fix_at;                  ///< mouse is moving, but cursor is not (used for scrolling)
 
 	/* We need two different vars to keep track of how far the scrollwheel moved.
 	 * OSX uses this for scrolling around the map. */
 	int v_wheel;
 	int h_wheel;
 
+	/* Mouse appearance */
+	PalSpriteID sprite_seq[16];   ///< current image of cursor
+	Point sprite_pos[16];         ///< relative position of individual sprites
+	uint sprite_count;            ///< number of sprites to draw
+	Point total_offs, total_size; ///< union of sprite properties
+
+	Point draw_pos, draw_size;    ///< position and size bounding-box for drawing
+
 	const AnimCursor *animate_list; ///< in case of animated cursor, list of frames
 	const AnimCursor *animate_cur;  ///< in case of animated cursor, current frame
 	uint animate_timeout;           ///< in case of animated cursor, number of ticks to show the current cursor
 
-	bool visible;    ///< cursor is visible
-	bool dirty;      ///< the rect occupied by the mouse is dirty (redraw)
-	bool fix_at;     ///< mouse is moving, but cursor is not (used for scrolling)
-	bool in_window;  ///< mouse inside this window, determines drawing logic
+	bool visible;                 ///< cursor is visible
+	bool dirty;                   ///< the rect occupied by the mouse is dirty (redraw)
+	bool in_window;               ///< mouse inside this window, determines drawing logic
 
-	bool vehchain;   ///< vehicle chain is dragged
+	/* Drag data */
+	bool vehchain;                ///< vehicle chain is dragged
+
+	void UpdateCursorPositionRelative(int delta_x, int delta_y);
+	bool UpdateCursorPosition(int x, int y);
 };
 
 /** Data about how and where to blit pixels. */
@@ -152,7 +159,9 @@ struct DrawPixelInfo {
 union Colour {
 	uint32 data; ///< Conversion of the channel information to a 32 bit number.
 	struct {
-#if TTD_ENDIAN == TTD_BIG_ENDIAN
+#if defined(__EMSCRIPTEN__)
+		uint8 r, g, b, a;  ///< colour channels as used in browsers
+#elif TTD_ENDIAN == TTD_BIG_ENDIAN
 		uint8 a, r, g, b; ///< colour channels in BE order
 #else
 		uint8 b, g, r, a; ///< colour channels in LE order
@@ -167,7 +176,9 @@ union Colour {
 	 * @param a The channel for the alpha/transparency.
 	 */
 	Colour(uint8 r, uint8 g, uint8 b, uint8 a = 0xFF) :
-#if TTD_ENDIAN == TTD_BIG_ENDIAN
+#if defined(__EMSCRIPTEN__)
+		r(r), g(g), b(b), a(a)
+#elif TTD_ENDIAN == TTD_BIG_ENDIAN
 		a(a), r(r), g(g), b(b)
 #else
 		b(b), g(g), r(r), a(a)
@@ -177,14 +188,14 @@ union Colour {
 
 	/**
 	 * Create a new colour.
-	 * @param The colour in the correct packed format.
+	 * @param data The colour in the correct packed format.
 	 */
 	Colour(uint data = 0) : data(data)
 	{
 	}
 };
 
-assert_compile(sizeof(Colour) == sizeof(uint32));
+static_assert(sizeof(Colour) == sizeof(uint32));
 
 
 /** Available font sizes */
@@ -199,6 +210,13 @@ enum FontSize {
 };
 DECLARE_POSTFIX_INCREMENT(FontSize)
 
+static inline const char *FontSizeToName(FontSize fs)
+{
+	static const char *SIZE_TO_NAME[] = { "medium", "small", "large", "mono" };
+	assert(fs < FS_END);
+	return SIZE_TO_NAME[fs];
+}
+
 /**
  * Used to only draw a part of the sprite.
  * Draw the subsprite in the rect (sprite_x_offset + left, sprite_y_offset + top) to (sprite_x_offset + right, sprite_y_offset + bottom).
@@ -208,7 +226,7 @@ struct SubSprite {
 	int left, top, right, bottom;
 };
 
-enum Colours {
+enum Colours : byte {
 	COLOUR_BEGIN,
 	COLOUR_DARK_BLUE = COLOUR_BEGIN,
 	COLOUR_PALE_GREEN,
@@ -229,9 +247,9 @@ enum Colours {
 	COLOUR_END,
 	INVALID_COLOUR = 0xFF,
 };
-template <> struct EnumPropsT<Colours> : MakeEnumPropsT<Colours, byte, COLOUR_BEGIN, COLOUR_END, INVALID_COLOUR, 4> {};
+template <> struct EnumPropsT<Colours> : MakeEnumPropsT<Colours, byte, COLOUR_BEGIN, COLOUR_END, INVALID_COLOUR, 8> {};
 
-/** Colour of the strings, see _string_colourmap in table/palettes.h or docs/ottd-colourtext-palette.png */
+/** Colour of the strings, see _string_colourmap in table/string_colours.h or docs/ottd-colourtext-palette.png */
 enum TextColour {
 	TC_BEGIN       = 0x00,
 	TC_FROMSTRING  = 0x00,
@@ -257,6 +275,10 @@ enum TextColour {
 
 	TC_IS_PALETTE_COLOUR = 0x100, ///< Colour value is already a real palette colour index, not an index of a StringColour.
 	TC_NO_SHADE          = 0x200, ///< Do not add shading to this text colour.
+	TC_FORCED            = 0x400, ///< Ignore colour changes from strings.
+
+	TC_COLOUR_MASK = 0xFF, ///< Mask to test if TextColour (without flags) is within limits.
+	TC_FLAGS_MASK = 0x700, ///< Mask to test if TextColour (with flags) is within limits.
 };
 DECLARE_ENUM_AS_BIT_SET(TextColour)
 
@@ -282,7 +304,7 @@ enum PaletteType {
 };
 
 /** Types of sprites that might be loaded */
-enum SpriteType {
+enum SpriteType : byte {
 	ST_NORMAL   = 0,      ///< The most basic (normal) sprite
 	ST_MAPGEN   = 1,      ///< Special sprite for the map generator
 	ST_FONT     = 2,      ///< A sprite used for fonts
@@ -299,5 +321,30 @@ struct Palette {
 	int first_dirty;     ///< The first dirty element.
 	int count_dirty;     ///< The number of dirty elements.
 };
+
+/** Modes for 8bpp support */
+enum Support8bpp {
+	S8BPP_NONE = 0, ///< No support for 8bpp by OS or hardware, force 32bpp blitters.
+	S8BPP_SYSTEM,   ///< No 8bpp support by hardware, do not try to use 8bpp video modes or hardware palettes.
+	S8BPP_HARDWARE, ///< Full 8bpp support by OS and hardware.
+};
+
+	/** How to align the to-be drawn text. */
+enum StringAlignment {
+	SA_LEFT        = 0 << 0, ///< Left align the text.
+	SA_HOR_CENTER  = 1 << 0, ///< Horizontally center the text.
+	SA_RIGHT       = 2 << 0, ///< Right align the text (must be a single bit).
+	SA_HOR_MASK    = 3 << 0, ///< Mask for horizontal alignment.
+
+	SA_TOP         = 0 << 2, ///< Top align the text.
+	SA_VERT_CENTER = 1 << 2, ///< Vertically center the text.
+	SA_BOTTOM      = 2 << 2, ///< Bottom align the text.
+	SA_VERT_MASK   = 3 << 2, ///< Mask for vertical alignment.
+
+	SA_CENTER      = SA_HOR_CENTER | SA_VERT_CENTER, ///< Center both horizontally and vertically.
+
+	SA_FORCE       = 1 << 4, ///< Force the alignment, i.e. don't swap for RTL languages.
+};
+DECLARE_ENUM_AS_BIT_SET(StringAlignment)
 
 #endif /* GFX_TYPE_H */

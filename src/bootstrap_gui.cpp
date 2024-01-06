@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,9 +11,10 @@
 #include "base_media_base.h"
 #include "blitter/factory.hpp"
 
-#if defined(ENABLE_NETWORK) && defined(WITH_FREETYPE)
+#if defined(WITH_FREETYPE) || defined(WITH_UNISCRIBE) || defined(WITH_COCOA)
 
 #include "core/geometry_func.hpp"
+#include "error.h"
 #include "fontcache.h"
 #include "gfx_func.h"
 #include "network/network.h"
@@ -29,6 +28,8 @@
 
 #include "table/strings.h"
 
+#include "safeguards.h"
+
 /** Widgets for the background window to prevent smearing. */
 static const struct NWidgetPart _background_widgets[] = {
 	NWidget(WWT_PANEL, COLOUR_DARK_BLUE, WID_BB_BACKGROUND), SetResize(1, 1),
@@ -37,8 +38,8 @@ static const struct NWidgetPart _background_widgets[] = {
 /**
  * Window description for the background window to prevent smearing.
  */
-static const WindowDesc _background_desc(
-	WDP_MANUAL, 0, 0,
+static WindowDesc _background_desc(
+	WDP_MANUAL, nullptr, 0, 0,
 	WC_BOOTSTRAP, WC_NONE,
 	0,
 	_background_widgets, lengthof(_background_widgets)
@@ -47,34 +48,95 @@ static const WindowDesc _background_desc(
 /** The background for the game. */
 class BootstrapBackground : public Window {
 public:
-	BootstrapBackground() : Window()
+	BootstrapBackground() : Window(&_background_desc)
 	{
-		this->InitNested(&_background_desc, 0);
+		this->InitNested(0);
 		CLRBITS(this->flags, WF_WHITE_BORDER);
 		ResizeWindow(this, _screen.width, _screen.height);
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		GfxFillRect(r.left, r.top, r.right, r.bottom, 4, FILLRECT_OPAQUE);
 		GfxFillRect(r.left, r.top, r.right, r.bottom, 0, FILLRECT_CHECKER);
 	}
 };
 
+/** Nested widgets for the error window. */
+static const NWidgetPart _nested_bootstrap_errmsg_widgets[] = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BEM_CAPTION), SetDataTip(STR_MISSING_GRAPHICS_ERROR_TITLE, STR_NULL),
+	EndContainer(),
+	NWidget(WWT_PANEL, COLOUR_GREY),
+		NWidget(WWT_PANEL, COLOUR_GREY, WID_BEM_MESSAGE), EndContainer(),
+		NWidget(NWID_HORIZONTAL),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_BEM_QUIT), SetDataTip(STR_MISSING_GRAPHICS_ERROR_QUIT, STR_NULL), SetFill(1, 0),
+		EndContainer(),
+	EndContainer(),
+};
+
+/** Window description for the error window. */
+static WindowDesc _bootstrap_errmsg_desc(
+	WDP_CENTER, nullptr, 0, 0,
+	WC_BOOTSTRAP, WC_NONE,
+	WDF_MODAL,
+	_nested_bootstrap_errmsg_widgets, lengthof(_nested_bootstrap_errmsg_widgets)
+);
+
+/** The window for a failed bootstrap. */
+class BootstrapErrorWindow : public Window {
+public:
+	BootstrapErrorWindow() : Window(&_bootstrap_errmsg_desc)
+	{
+		this->InitNested(1);
+	}
+
+	void Close() override
+	{
+		_exit_game = true;
+		this->Window::Close();
+	}
+
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	{
+		if (widget == WID_BEM_MESSAGE) {
+			*size = GetStringBoundingBox(STR_MISSING_GRAPHICS_ERROR);
+			size->height = GetStringHeight(STR_MISSING_GRAPHICS_ERROR, size->width - WidgetDimensions::scaled.frametext.Horizontal()) + WidgetDimensions::scaled.frametext.Vertical();
+		}
+	}
+
+	void DrawWidget(const Rect &r, int widget) const override
+	{
+		if (widget == WID_BEM_MESSAGE) {
+			DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.frametext), STR_MISSING_GRAPHICS_ERROR, TC_FROMSTRING, SA_CENTER);
+		}
+	}
+
+	void OnClick(Point pt, int widget, int click_count) override
+	{
+		if (widget == WID_BEM_QUIT) {
+			_exit_game = true;
+		}
+	}
+};
+
 /** Nested widgets for the download window. */
-static const NWidgetPart _nested_boostrap_download_status_window_widgets[] = {
+static const NWidgetPart _nested_bootstrap_download_status_window_widgets[] = {
 	NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_CONTENT_DOWNLOAD_TITLE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
-	NWidget(WWT_PANEL, COLOUR_GREY, WID_NCDS_BACKGROUND),
-		NWidget(NWID_SPACER), SetMinimalSize(350, 0), SetMinimalTextLines(3, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM + 30),
+	NWidget(WWT_PANEL, COLOUR_GREY),
+		NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0), SetPadding(WidgetDimensions::unscaled.modalpopup),
+			NWidget(WWT_EMPTY, INVALID_COLOUR, WID_NCDS_PROGRESS_BAR), SetFill(1, 0),
+			NWidget(WWT_EMPTY, INVALID_COLOUR, WID_NCDS_PROGRESS_TEXT), SetFill(1, 0), SetMinimalSize(350, 0),
+		EndContainer(),
 	EndContainer(),
 };
 
 /** Window description for the download window */
-static const WindowDesc _bootstrap_download_status_window_desc(
-	WDP_CENTER, 0, 0,
+static WindowDesc _bootstrap_download_status_window_desc(
+	WDP_CENTER, nullptr, 0, 0,
 	WC_NETWORK_STATUS_WINDOW, WC_NONE,
 	WDF_MODAL,
-	_nested_boostrap_download_status_window_widgets, lengthof(_nested_boostrap_download_status_window_widgets)
+	_nested_bootstrap_download_status_window_widgets, lengthof(_nested_bootstrap_download_status_window_widgets)
 );
 
 
@@ -86,7 +148,16 @@ public:
 	{
 	}
 
-	virtual void OnDownloadComplete(ContentID cid)
+	void Close() override
+	{
+		/* If we are not set to exit the game, it means the bootstrap failed. */
+		if (!_exit_game) {
+			new BootstrapErrorWindow();
+		}
+		this->BaseNetworkContentDownloadStatusWindow::Close();
+	}
+
+	void OnDownloadComplete(ContentID cid) override
 	{
 		/* We have completed downloading. We can trigger finding the right set now. */
 		BaseGraphics::FindSets();
@@ -96,7 +167,7 @@ public:
 
 		/* _exit_game is used to break out of the outer video driver's MainLoop. */
 		_exit_game = true;
-		delete this;
+		this->Close();
 	}
 };
 
@@ -115,8 +186,8 @@ static const NWidgetPart _bootstrap_query_widgets[] = {
 };
 
 /** The window description for the query. */
-static const WindowDesc _bootstrap_query_desc(
-	WDP_CENTER, 0, 0,
+static WindowDesc _bootstrap_query_desc(
+	WDP_CENTER, nullptr, 0, 0,
 	WC_CONFIRM_POPUP_QUERY, WC_NONE,
 	0,
 	_bootstrap_query_widgets, lengthof(_bootstrap_query_widgets)
@@ -128,32 +199,33 @@ class BootstrapAskForDownloadWindow : public Window, ContentCallback {
 
 public:
 	/** Start listening to the content client events. */
-	BootstrapAskForDownloadWindow() : Window()
+	BootstrapAskForDownloadWindow() : Window(&_bootstrap_query_desc)
 	{
-		this->InitNested(&_bootstrap_query_desc, WN_CONFIRM_POPUP_QUERY_BOOTSTRAP);
+		this->InitNested(WN_CONFIRM_POPUP_QUERY_BOOTSTRAP);
 		_network_content_client.AddCallback(this);
 	}
 
 	/** Stop listening to the content client events. */
-	~BootstrapAskForDownloadWindow()
+	void Close() override
 	{
 		_network_content_client.RemoveCallback(this);
+		this->Window::Close();
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		/* We cache the button size. This is safe as no reinit can happen here. */
 		if (this->button_size.width == 0) {
 			this->button_size = maxdim(GetStringBoundingBox(STR_MISSING_GRAPHICS_YES_DOWNLOAD), GetStringBoundingBox(STR_MISSING_GRAPHICS_NO_QUIT));
-			this->button_size.width += WD_FRAMETEXT_LEFT + WD_FRAMETEXT_RIGHT;
-			this->button_size.height += WD_FRAMETEXT_TOP + WD_FRAMETEXT_BOTTOM;
+			this->button_size.width += WidgetDimensions::scaled.frametext.Horizontal();
+			this->button_size.height += WidgetDimensions::scaled.frametext.Vertical();
 		}
 
 		switch (widget) {
 			case WID_BAFD_QUESTION:
 				/* The question is twice as wide as the buttons, and determine the height based on the width. */
 				size->width = this->button_size.width * 2;
-				size->height = GetStringHeight(STR_MISSING_GRAPHICS_SET_MESSAGE, size->width - WD_FRAMETEXT_LEFT - WD_FRAMETEXT_RIGHT) + WD_FRAMETEXT_BOTTOM + WD_FRAMETEXT_TOP;
+				size->height = GetStringHeight(STR_MISSING_GRAPHICS_SET_MESSAGE, size->width - WidgetDimensions::scaled.frametext.Horizontal()) + WidgetDimensions::scaled.frametext.Vertical();
 				break;
 
 			case WID_BAFD_YES:
@@ -163,14 +235,14 @@ public:
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget != 0) return;
 
-		DrawStringMultiLine(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, r.top + WD_FRAMETEXT_TOP, r.bottom - WD_FRAMETEXT_BOTTOM, STR_MISSING_GRAPHICS_SET_MESSAGE, TC_FROMSTRING, SA_CENTER);
+		DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.frametext), STR_MISSING_GRAPHICS_SET_MESSAGE, TC_FROMSTRING, SA_CENTER);
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_BAFD_YES:
@@ -187,22 +259,22 @@ public:
 		}
 	}
 
-	virtual void OnConnect(bool success)
+	void OnConnect(bool success) override
 	{
 		/* Once connected, request the metadata. */
 		_network_content_client.RequestContentList(CONTENT_TYPE_BASE_GRAPHICS);
 	}
 
-	virtual void OnReceiveContentInfo(const ContentInfo *ci)
+	void OnReceiveContentInfo(const ContentInfo *ci) override
 	{
 		/* And once the meta data is received, start downloading it. */
 		_network_content_client.Select(ci->id);
 		new BootstrapContentDownloadStatusWindow();
-		delete this;
+		this->Close();
 	}
 };
 
-#endif /* defined(ENABLE_NETWORK) && defined(WITH_FREETYPE) */
+#endif /* defined(WITH_FREETYPE) */
 
 /**
  * Handle all procedures for bootstrapping OpenTTD without a base graphics set.
@@ -212,21 +284,21 @@ public:
  */
 bool HandleBootstrap()
 {
-	if (BaseGraphics::GetUsedSet() != NULL) return true;
+	if (BaseGraphics::GetUsedSet() != nullptr) return true;
 
 	/* No user interface, bail out with an error. */
-	if (BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth() == 0) goto failure;
+	if (BlitterFactory::GetCurrentBlitter()->GetScreenDepth() == 0) goto failure;
 
-	/* If there is no network or no freetype, then there is nothing we can do. Go straight to failure. */
-#if defined(ENABLE_NETWORK) && defined(WITH_FREETYPE) && !defined(__APPLE__) && (defined(WITH_FONTCONFIG) || defined(WIN32))
+	/* If there is no network or no non-sprite font, then there is nothing we can do. Go straight to failure. */
+#if (defined(_WIN32) && defined(WITH_UNISCRIBE)) || (defined(WITH_FREETYPE) && (defined(WITH_FONTCONFIG) || defined(__APPLE__))) || defined(WITH_COCOA)
 	if (!_network_available) goto failure;
 
 	/* First tell the game we're bootstrapping. */
 	_game_mode = GM_BOOTSTRAP;
 
-	/* Initialise the freetype font code. */
+	/* Initialise the font cache. */
 	InitializeUnicodeGlyphMap();
-	/* Next "force" finding a suitable freetype font as the local font is missing. */
+	/* Next "force" finding a suitable non-sprite font as the local font is missing. */
 	CheckForMissingGlyphs(false);
 
 	/* Initialise the palette. The biggest step is 'faking' some recolour sprites.
@@ -244,7 +316,7 @@ bool HandleBootstrap()
 	new BootstrapAskForDownloadWindow();
 
 	/* Process the user events. */
-	_video_driver->MainLoop();
+	VideoDriver::GetInstance()->MainLoop();
 
 	/* _exit_game is used to get out of the video driver's main loop.
 	 * In case GM_BOOTSTRAP is still set we did not exit it via the
@@ -253,7 +325,7 @@ bool HandleBootstrap()
 	if (_exit_game) return false;
 
 	/* Try to probe the graphics. Should work this time. */
-	if (!BaseGraphics::SetSet(NULL)) goto failure;
+	if (!BaseGraphics::SetSet({})) goto failure;
 
 	/* Finally we can continue heading for the menu. */
 	_game_mode = GM_MENU;
@@ -262,6 +334,6 @@ bool HandleBootstrap()
 
 	/* Failure to get enough working to get a graphics set. */
 failure:
-	usererror("Failed to find a graphics set. Please acquire a graphics set for OpenTTD. See section 4.1 of readme.txt.");
+	usererror("Failed to find a graphics set. Please acquire a graphics set for OpenTTD. See section 1.4 of README.md.");
 	return false;
 }

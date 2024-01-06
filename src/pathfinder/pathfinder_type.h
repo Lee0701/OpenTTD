@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,8 +18,8 @@ static const int NPF_TILE_LENGTH = 100;
 /**
  * This penalty is the equivalent of "infinite", which means that paths that
  * get this penalty will be chosen, but only if there is no other route
- * without it. Be careful with not applying this penalty to often, or the
- * total path cost might overflow..
+ * without it. Be careful with not applying this penalty too often, or the
+ * total path cost might overflow.
  */
 static const int NPF_INFINITE_PENALTY = 1000 * NPF_TILE_LENGTH;
 
@@ -35,10 +33,19 @@ static const int YAPF_TILE_CORNER_LENGTH = 71;
 /**
  * This penalty is the equivalent of "infinite", which means that paths that
  * get this penalty will be chosen, but only if there is no other route
- * without it. Be careful with not applying this penalty to often, or the
- * total path cost might overflow..
+ * without it. Be careful with not applying this penalty too often, or the
+ * total path cost might overflow.
  */
 static const int YAPF_INFINITE_PENALTY = 1000 * YAPF_TILE_LENGTH;
+
+/** Maximum length of ship path cache */
+static const int YAPF_SHIP_PATH_CACHE_LENGTH = 32;
+
+/** Maximum segments of road vehicle path cache */
+static const int YAPF_ROADVEH_PATH_CACHE_SEGMENTS = 8;
+
+/** Distance from destination road stops to not cache any further */
+static const int YAPF_ROADVEH_PATH_CACHE_DESTINATION_LIMIT = 8;
 
 /**
  * Helper container to find a depot

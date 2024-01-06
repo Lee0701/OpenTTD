@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,17 +12,7 @@
 #include "town.h"
 #include "newgrf_town.h"
 
-/**
- * Resolver of a town scope.
- * @param ro Surrounding resolver.
- * @param t %Town of the scope.
- * @param readonly Scope may change persistent storage of the town.
- */
-TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly) : ScopeResolver(ro)
-{
-	this->t = t;
-	this->readonly = readonly;
-}
+#include "safeguards.h"
 
 /* virtual */ uint32 TownScopeResolver::GetVariable(byte variable, uint32 parameter, bool *available) const
 {
@@ -43,8 +31,8 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 			/* Check the persistent storage for the GrfID stored in register 100h. */
 			uint32 grfid = GetRegister(0x100);
 			if (grfid == 0xFFFFFFFF) {
-				if (this->ro->grffile == NULL) return 0;
-				grfid = this->ro->grffile->grfid;
+				if (this->ro.grffile == nullptr) return 0;
+				grfid = this->ro.grffile->grfid;
 			}
 
 			std::list<PersistentStorage *>::iterator iter;
@@ -60,7 +48,7 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 		case 0x81: return GB(this->t->xy, 8, 8);
 		case 0x82: return ClampToU16(this->t->cache.population);
 		case 0x83: return GB(ClampToU16(this->t->cache.population), 8, 8);
-		case 0x8A: return this->t->grow_counter;
+		case 0x8A: return this->t->grow_counter / TOWN_GROWTH_TICKS;
 		case 0x92: return this->t->flags;  // In original game, 0x92 and 0x93 are really one word. Since flags is a byte, this is to adjust
 		case 0x93: return 0;
 		case 0x94: return ClampToU16(this->t->cache.squared_town_zone_radius[0]);
@@ -92,7 +80,7 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 		case 0xAE: return this->t->have_ratings;
 		case 0xB2: return this->t->statues;
 		case 0xB6: return ClampToU16(this->t->cache.num_houses);
-		case 0xB9: return this->t->growth_rate & (~TOWN_GROW_RATE_CUSTOM);
+		case 0xB9: return this->t->growth_rate / TOWN_GROWTH_TICKS;
 		case 0xBA: return ClampToU16(this->t->supplied[CT_PASSENGERS].new_max);
 		case 0xBB: return GB(ClampToU16(this->t->supplied[CT_PASSENGERS].new_max), 8, 8);
 		case 0xBC: return ClampToU16(this->t->supplied[CT_MAIL].new_max);
@@ -123,7 +111,7 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 		case 0xD5: return this->t->fund_buildings_months;
 	}
 
-	DEBUG(grf, 1, "Unhandled town variable 0x%X", variable);
+	Debug(grf, 1, "Unhandled town variable 0x{:X}", variable);
 
 	*available = false;
 	return UINT_MAX;
@@ -133,16 +121,16 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 {
 	if (this->readonly) return;
 
-	assert(this->t != NULL);
+	assert(this->t != nullptr);
 	/* We can't store anything if the caller has no #GRFFile. */
-	if (this->ro->grffile == NULL) return;
+	if (this->ro.grffile == nullptr) return;
 
 	/* Check the persistent storage for the GrfID stored in register 100h. */
 	uint32 grfid = GetRegister(0x100);
 
 	/* A NewGRF can only write in the persistent storage associated to its own GRFID. */
-	if (grfid == 0xFFFFFFFF) grfid = this->ro->grffile->grfid;
-	if (grfid != this->ro->grffile->grfid) return;
+	if (grfid == 0xFFFFFFFF) grfid = this->ro.grffile->grfid;
+	if (grfid != this->ro.grffile->grfid) return;
 
 	/* Check if the storage exists. */
 	std::list<PersistentStorage *>::iterator iter;
@@ -155,7 +143,7 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
 
 	/* Create a new storage. */
 	assert(PersistentStorage::CanAllocateItem());
-	PersistentStorage *psa = new PersistentStorage(grfid);
+	PersistentStorage *psa = new PersistentStorage(grfid, GSF_FAKE_TOWNS, this->t->xy);
 	psa->StoreValue(pos, value);
 	t->psa_list.push_back(psa);
 }
@@ -167,7 +155,7 @@ TownScopeResolver::TownScopeResolver(ResolverObject *ro, Town *t, bool readonly)
  * @param readonly Scope may change persistent storage of the town.
  */
 TownResolverObject::TownResolverObject(const struct GRFFile *grffile, Town *t, bool readonly)
-		: ResolverObject(grffile), town_scope(this, t, readonly)
+		: ResolverObject(grffile), town_scope(*this, t, readonly)
 {
 }
 

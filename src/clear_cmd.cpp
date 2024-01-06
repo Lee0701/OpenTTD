@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,10 +16,13 @@
 #include "water.h"
 #include "core/random_func.hpp"
 #include "newgrf_generic.h"
+#include "landscape_cmd.h"
 
 #include "table/strings.h"
 #include "table/sprites.h"
 #include "table/clear_land.h"
+
+#include "safeguards.h"
 
 static CommandCost ClearTile_Clear(TileIndex tile, DoCommandFlag flags)
 {
@@ -54,7 +55,7 @@ void DrawHillyLandTile(const TileInfo *ti)
 	if (ti->tileh != SLOPE_FLAT) {
 		DrawGroundSprite(SPR_FLAT_ROUGH_LAND + SlopeToSpriteOffset(ti->tileh), PAL_NONE);
 	} else {
-		DrawGroundSprite(_landscape_clear_sprites_rough[GB(ti->x ^ ti->y, 4, 3)], PAL_NONE);
+		DrawGroundSprite(_landscape_clear_sprites_rough[GB(TileHash(ti->x, ti->y), 0, 3)], PAL_NONE);
 	}
 }
 
@@ -65,33 +66,33 @@ static void DrawClearLandFence(const TileInfo *ti)
 
 	int maxz = GetSlopeMaxPixelZ(ti->tileh);
 
-	bool fence_nw = GetFenceNW(ti->tile) != 0;
-	if (fence_nw) {
+	uint fence_nw = GetFence(ti->tile, DIAGDIR_NW);
+	if (fence_nw != 0) {
 		int z = GetSlopePixelZInCorner(ti->tileh, CORNER_W);
-		SpriteID sprite = _clear_land_fence_sprites[GetFenceNW(ti->tile) - 1] + _fence_mod_by_tileh_nw[ti->tileh];
+		SpriteID sprite = _clear_land_fence_sprites[fence_nw - 1] + _fence_mod_by_tileh_nw[ti->tileh];
 		AddSortableSpriteToDraw(sprite, PAL_NONE, ti->x, ti->y - 15, 16, 31, maxz - z + 4, ti->z + z, false, 0, 15, -z);
 	}
 
-	bool fence_ne = GetFenceNE(ti->tile) != 0;
-	if (fence_ne) {
+	uint fence_ne = GetFence(ti->tile, DIAGDIR_NE);
+	if (fence_ne != 0) {
 		int z = GetSlopePixelZInCorner(ti->tileh, CORNER_E);
-		SpriteID sprite = _clear_land_fence_sprites[GetFenceNE(ti->tile) - 1] + _fence_mod_by_tileh_ne[ti->tileh];
+		SpriteID sprite = _clear_land_fence_sprites[fence_ne - 1] + _fence_mod_by_tileh_ne[ti->tileh];
 		AddSortableSpriteToDraw(sprite, PAL_NONE, ti->x - 15, ti->y, 31, 16, maxz - z + 4, ti->z + z, false, 15, 0, -z);
 	}
 
-	bool fence_sw = GetFenceSW(ti->tile) != 0;
-	bool fence_se = GetFenceSE(ti->tile) != 0;
+	uint fence_sw = GetFence(ti->tile, DIAGDIR_SW);
+	uint fence_se = GetFence(ti->tile, DIAGDIR_SE);
 
-	if (fence_sw || fence_se) {
+	if (fence_sw != 0 || fence_se != 0) {
 		int z = GetSlopePixelZInCorner(ti->tileh, CORNER_S);
 
-		if (fence_sw) {
-			SpriteID sprite = _clear_land_fence_sprites[GetFenceSW(ti->tile) - 1] + _fence_mod_by_tileh_sw[ti->tileh];
+		if (fence_sw != 0) {
+			SpriteID sprite = _clear_land_fence_sprites[fence_sw - 1] + _fence_mod_by_tileh_sw[ti->tileh];
 			AddSortableSpriteToDraw(sprite, PAL_NONE, ti->x, ti->y, 16, 16, maxz - z + 4, ti->z + z, false, 0, 0, -z);
 		}
 
-		if (fence_se) {
-			SpriteID sprite = _clear_land_fence_sprites[GetFenceSE(ti->tile) - 1] + _fence_mod_by_tileh_se[ti->tileh];
+		if (fence_se != 0) {
+			SpriteID sprite = _clear_land_fence_sprites[fence_se - 1] + _fence_mod_by_tileh_se[ti->tileh];
 			AddSortableSpriteToDraw(sprite, PAL_NONE, ti->x, ti->y, 16, 16, maxz - z + 4, ti->z + z, false, 0, 0, -z);
 		}
 	}
@@ -110,7 +111,7 @@ static void DrawTile_Clear(TileInfo *ti)
 			break;
 
 		case CLEAR_ROCKS:
-			DrawGroundSprite(SPR_FLAT_ROCKY_LAND_1 + SlopeToSpriteOffset(ti->tileh), PAL_NONE);
+			DrawGroundSprite((HasGrfMiscBit(GMB_SECOND_ROCKY_TILE_SET) && (TileHash(ti->x, ti->y) & 1) ? SPR_FLAT_ROCKY_LAND_2 : SPR_FLAT_ROCKY_LAND_1) + SlopeToSpriteOffset(ti->tileh), PAL_NONE);
 			break;
 
 		case CLEAR_FIELDS:
@@ -146,26 +147,26 @@ static void UpdateFences(TileIndex tile)
 	bool dirty = false;
 
 	bool neighbour = (IsTileType(TILE_ADDXY(tile, 1, 0), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 1, 0), CLEAR_FIELDS));
-	if (!neighbour && GetFenceSW(tile) == 0) {
-		SetFenceSW(tile, 3);
+	if (!neighbour && GetFence(tile, DIAGDIR_SW) == 0) {
+		SetFence(tile, DIAGDIR_SW, 3);
 		dirty = true;
 	}
 
 	neighbour = (IsTileType(TILE_ADDXY(tile, 0, 1), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 0, 1), CLEAR_FIELDS));
-	if (!neighbour && GetFenceSE(tile) == 0) {
-		SetFenceSE(tile, 3);
+	if (!neighbour && GetFence(tile, DIAGDIR_SE) == 0) {
+		SetFence(tile, DIAGDIR_SE, 3);
 		dirty = true;
 	}
 
 	neighbour = (IsTileType(TILE_ADDXY(tile, -1, 0), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, -1, 0), CLEAR_FIELDS));
-	if (!neighbour && GetFenceNE(tile) == 0) {
-		SetFenceNE(tile, 3);
+	if (!neighbour && GetFence(tile, DIAGDIR_NE) == 0) {
+		SetFence(tile, DIAGDIR_NE, 3);
 		dirty = true;
 	}
 
 	neighbour = (IsTileType(TILE_ADDXY(tile, 0, -1), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 0, -1), CLEAR_FIELDS));
-	if (!neighbour && GetFenceNW(tile) == 0) {
-		SetFenceNW(tile, 3);
+	if (!neighbour && GetFence(tile, DIAGDIR_NW) == 0) {
+		SetFence(tile, DIAGDIR_NW, 3);
 		dirty = true;
 	}
 
@@ -191,7 +192,7 @@ static void TileLoopClearAlps(TileIndex tile)
 	}
 	/* Update snow density. */
 	uint current_density = GetClearDensity(tile);
-	uint req_density = (k < 0) ? 0u : min((uint)k, 3);
+	uint req_density = (k < 0) ? 0u : std::min<uint>(k, 3u);
 
 	if (current_density < req_density) {
 		AddClearDensity(tile, 1);
@@ -206,16 +207,19 @@ static void TileLoopClearAlps(TileIndex tile)
 }
 
 /**
- * Tests if at least one surrounding tile is desert
+ * Tests if at least one surrounding tile is non-desert
  * @param tile tile to check
- * @return does this tile have at least one desert tile around?
+ * @return does this tile have at least one non-desert tile around?
  */
-static inline bool NeighbourIsDesert(TileIndex tile)
+static inline bool NeighbourIsNormal(TileIndex tile)
 {
-	return GetTropicZone(tile + TileDiffXY(  1,  0)) == TROPICZONE_DESERT ||
-			GetTropicZone(tile + TileDiffXY( -1,  0)) == TROPICZONE_DESERT ||
-			GetTropicZone(tile + TileDiffXY(  0,  1)) == TROPICZONE_DESERT ||
-			GetTropicZone(tile + TileDiffXY(  0, -1)) == TROPICZONE_DESERT;
+	for (DiagDirection dir = DIAGDIR_BEGIN; dir < DIAGDIR_END; dir++) {
+		TileIndex t = tile + TileOffsByDiagDir(dir);
+		if (!IsValidTile(t)) continue;
+		if (GetTropicZone(t) != TROPICZONE_DESERT) return true;
+		if (HasTileWaterClass(t) && GetWaterClass(t) == WATER_CLASS_SEA) return true;
+	}
+	return false;
 }
 
 static void TileLoopClearDesert(TileIndex tile)
@@ -227,9 +231,7 @@ static void TileLoopClearDesert(TileIndex tile)
 	/* Expected desert level - 0 if it shouldn't be desert */
 	uint expected = 0;
 	if (GetTropicZone(tile) == TROPICZONE_DESERT) {
-		expected = 3;
-	} else if (NeighbourIsDesert(tile)) {
-		expected = 1;
+		expected = NeighbourIsNormal(tile) ? 1 : 3;
 	}
 
 	if (current == expected) return;
@@ -249,8 +251,7 @@ static void TileLoop_Clear(TileIndex tile)
 	/* If the tile is at any edge flood it to prevent maps without water. */
 	if (_settings_game.construction.freeform_edges && DistanceFromEdge(tile) == 1) {
 		int z;
-		Slope slope = GetTileSlope(tile, &z);
-		if (z == 0 && slope == SLOPE_FLAT) {
+		if (IsTileFlat(tile, &z) && z == 0) {
 			DoFloodTile(tile);
 			MarkTileDirtyByTile(tile);
 			return;
@@ -338,6 +339,7 @@ void GenerateClearTile()
 				TileIndex tile_new;
 
 				SetClearGroundDensity(tile, CLEAR_ROCKS, 3);
+				MarkTileDirtyByTile(tile);
 				do {
 					if (--j == 0) goto get_out;
 					tile_new = tile + TileOffsByDiagDir((DiagDirection)GB(Random(), 0, 2));
@@ -380,22 +382,22 @@ static void ChangeTileOwner_Clear(TileIndex tile, Owner old_owner, Owner new_own
 
 static CommandCost TerraformTile_Clear(TileIndex tile, DoCommandFlag flags, int z_new, Slope tileh_new)
 {
-	return DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR);
+	return Command<CMD_LANDSCAPE_CLEAR>::Do(flags, tile);
 }
 
 extern const TileTypeProcs _tile_type_clear_procs = {
 	DrawTile_Clear,           ///< draw_tile_proc
 	GetSlopePixelZ_Clear,     ///< get_slope_z_proc
 	ClearTile_Clear,          ///< clear_tile_proc
-	NULL,                     ///< add_accepted_cargo_proc
+	nullptr,                     ///< add_accepted_cargo_proc
 	GetTileDesc_Clear,        ///< get_tile_desc_proc
 	GetTileTrackStatus_Clear, ///< get_tile_track_status_proc
-	NULL,                     ///< click_tile_proc
-	NULL,                     ///< animate_tile_proc
+	nullptr,                     ///< click_tile_proc
+	nullptr,                     ///< animate_tile_proc
 	TileLoop_Clear,           ///< tile_loop_proc
 	ChangeTileOwner_Clear,    ///< change_tile_owner_proc
-	NULL,                     ///< add_produced_cargo_proc
-	NULL,                     ///< vehicle_enter_tile_proc
+	nullptr,                     ///< add_produced_cargo_proc
+	nullptr,                     ///< vehicle_enter_tile_proc
 	GetFoundation_Clear,      ///< get_foundation_proc
 	TerraformTile_Clear,      ///< terraform_tile_proc
 };

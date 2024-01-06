@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,8 +10,7 @@
 #ifndef YAPF_DESTRAIL_HPP
 #define YAPF_DESTRAIL_HPP
 
-class CYapfDestinationRailBase
-{
+class CYapfDestinationRailBase {
 protected:
 	RailTypes m_compatible_railtypes;
 
@@ -36,9 +33,7 @@ public:
 };
 
 template <class Types>
-class CYapfDestinationAnyDepotRailT
-	: public CYapfDestinationRailBase
-{
+class CYapfDestinationAnyDepotRailT : public CYapfDestinationRailBase {
 public:
 	typedef typename Types::Tpf Tpf;              ///< the pathfinder class (derived from THIS class)
 	typedef typename Types::NodeList::Titem Node; ///< this will be our node type
@@ -47,11 +42,11 @@ public:
 	/** to access inherited path finder */
 	Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 	/** Called by YAPF to detect if node ends in the desired destination */
-	inline bool PfDetectDestination(Node& n)
+	inline bool PfDetectDestination(Node &n)
 	{
 		return PfDetectDestination(n.GetLastTile(), n.GetLastTrackdir());
 	}
@@ -67,7 +62,7 @@ public:
 	 * Called by YAPF to calculate cost estimate. Calculates distance to the destination
 	 *  adds it to the actual cost from origin and stores the sum to the Node::m_estimate
 	 */
-	inline bool PfCalcEstimate(Node& n)
+	inline bool PfCalcEstimate(Node &n)
 	{
 		n.m_estimate = n.m_cost;
 		return true;
@@ -75,9 +70,7 @@ public:
 };
 
 template <class Types>
-class CYapfDestinationAnySafeTileRailT
-	: public CYapfDestinationRailBase
-{
+class CYapfDestinationAnySafeTileRailT : public CYapfDestinationRailBase {
 public:
 	typedef typename Types::Tpf Tpf;              ///< the pathfinder class (derived from THIS class)
 	typedef typename Types::NodeList::Titem Node; ///< this will be our node type
@@ -87,11 +80,11 @@ public:
 	/** to access inherited path finder */
 	Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 	/** Called by YAPF to detect if node ends in the desired destination */
-	inline bool PfDetectDestination(Node& n)
+	inline bool PfDetectDestination(Node &n)
 	{
 		return PfDetectDestination(n.GetLastTile(), n.GetLastTrackdir());
 	}
@@ -107,7 +100,7 @@ public:
 	 * Called by YAPF to calculate cost estimate. Calculates distance to the destination
 	 *  adds it to the actual cost from origin and stores the sum to the Node::m_estimate.
 	 */
-	inline bool PfCalcEstimate(Node& n)
+	inline bool PfCalcEstimate(Node &n)
 	{
 		n.m_estimate = n.m_cost;
 		return true;
@@ -115,9 +108,7 @@ public:
 };
 
 template <class Types>
-class CYapfDestinationTileOrStationRailT
-	: public CYapfDestinationRailBase
-{
+class CYapfDestinationTileOrStationRailT : public CYapfDestinationRailBase {
 public:
 	typedef typename Types::Tpf Tpf;              ///< the pathfinder class (derived from THIS class)
 	typedef typename Types::NodeList::Titem Node; ///< this will be our node type
@@ -127,16 +118,18 @@ protected:
 	TileIndex    m_destTile;
 	TrackdirBits m_destTrackdirs;
 	StationID    m_dest_station_id;
+	bool         m_any_depot;
 
 	/** to access inherited path finder */
 	Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 public:
 	void SetDestination(const Train *v)
 	{
+		m_any_depot = false;
 		switch (v->current_order.GetType()) {
 			case OT_GOTO_WAYPOINT:
 				if (!Waypoint::Get(v->current_order.GetDestination())->IsSingleTile()) {
@@ -147,12 +140,19 @@ public:
 					 * waypoint. */
 					Yapf().DisableCache(true);
 				}
-				/* FALL THROUGH */
+				FALLTHROUGH;
+
 			case OT_GOTO_STATION:
 				m_destTile = CalcClosestStationTile(v->current_order.GetDestination(), v->tile, v->current_order.IsType(OT_GOTO_STATION) ? STATION_RAIL : STATION_WAYPOINT);
 				m_dest_station_id = v->current_order.GetDestination();
 				m_destTrackdirs = INVALID_TRACKDIR_BIT;
 				break;
+
+			case OT_GOTO_DEPOT:
+				if (v->current_order.GetDepotActionType() & ODATFB_NEAREST_DEPOT) {
+					m_any_depot = true;
+				}
+				FALLTHROUGH;
 
 			default:
 				m_destTile = v->dest_tile;
@@ -164,7 +164,7 @@ public:
 	}
 
 	/** Called by YAPF to detect if node ends in the desired destination */
-	inline bool PfDetectDestination(Node& n)
+	inline bool PfDetectDestination(Node &n)
 	{
 		return PfDetectDestination(n.GetLastTile(), n.GetLastTrackdir());
 	}
@@ -172,23 +172,24 @@ public:
 	/** Called by YAPF to detect if node ends in the desired destination */
 	inline bool PfDetectDestination(TileIndex tile, Trackdir td)
 	{
-		bool bDest;
 		if (m_dest_station_id != INVALID_STATION) {
-			bDest = HasStationTileRail(tile)
+			return HasStationTileRail(tile)
 				&& (GetStationIndex(tile) == m_dest_station_id)
 				&& (GetRailStationTrack(tile) == TrackdirToTrack(td));
-		} else {
-			bDest = (tile == m_destTile)
-				&& ((m_destTrackdirs & TrackdirToTrackdirBits(td)) != TRACKDIR_BIT_NONE);
 		}
-		return bDest;
+
+		if (m_any_depot) {
+			return IsRailDepotTile(tile);
+		}
+
+		return (tile == m_destTile) && HasTrackdir(m_destTrackdirs, td);
 	}
 
 	/**
 	 * Called by YAPF to calculate cost estimate. Calculates distance to the destination
 	 *  adds it to the actual cost from origin and stores the sum to the Node::m_estimate
 	 */
-	inline bool PfCalcEstimate(Node& n)
+	inline bool PfCalcEstimate(Node &n)
 	{
 		static const int dg_dir_to_x_offs[] = {-1, 0, 1, 0};
 		static const int dg_dir_to_y_offs[] = {0, 1, 0, -1};
@@ -205,7 +206,7 @@ public:
 		int y2 = 2 * TileY(m_destTile);
 		int dx = abs(x1 - x2);
 		int dy = abs(y1 - y2);
-		int dmin = min(dx, dy);
+		int dmin = std::min(dx, dy);
 		int dxy = abs(dx - dy);
 		int d = dmin * YAPF_TILE_CORNER_LENGTH + (dxy - 1) * (YAPF_TILE_LENGTH / 2);
 		n.m_estimate = n.m_cost + d;

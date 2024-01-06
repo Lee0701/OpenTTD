@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -25,7 +23,7 @@ class ScriptLog : public ScriptObject {
 
 public:
 	/**
-	 * Log levels; The value is also feed to DEBUG() lvl.
+	 * Log levels; The value is also feed to Debug() lvl.
 	 *  This has no use for you, as script writer.
 	 * @api -all
 	 */

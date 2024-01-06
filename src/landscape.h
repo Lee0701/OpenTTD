@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -36,10 +34,11 @@ byte LowestSnowLine();
 void ClearSnowLine();
 
 int GetSlopeZInCorner(Slope tileh, Corner corner);
-Slope GetFoundationSlope(TileIndex tile, int *z = NULL);
+Slope GetFoundationSlope(TileIndex tile, int *z = nullptr);
 
 uint GetPartialPixelZ(int x, int y, Slope corners);
 int GetSlopePixelZ(int x, int y);
+int GetSlopePixelZOutsideMap(int x, int y);
 void GetSlopePixelZOnEdge(Slope tileh, DiagDirection edge, int *z1, int *z2);
 
 /**
@@ -61,12 +60,12 @@ static inline int GetSlopePixelZInCorner(Slope tileh, Corner corner)
  * If a tile does not have a foundation, the function returns the same as GetTilePixelSlope.
  *
  * @param tile The tile of interest.
- * @param z returns the z of the foundation slope. (Can be NULL, if not needed)
+ * @param z returns the z of the foundation slope. (Can be nullptr, if not needed)
  * @return The slope on top of the foundation.
  */
 static inline Slope GetFoundationPixelSlope(TileIndex tile, int *z)
 {
-	assert(z != NULL);
+	assert(z != nullptr);
 	Slope s = GetFoundationSlope(tile, z);
 	*z *= TILE_HEIGHT;
 	return s;
@@ -108,12 +107,15 @@ static inline Point RemapCoords2(int x, int y)
  * @param y Y coordinate of the 2D coordinate.
  * @return X and Y components of equivalent world or tile coordinate.
  * @note Inverse of #RemapCoords function. Smaller values may get rounded.
+ * @see InverseRemapCoords2
  */
 static inline Point InverseRemapCoords(int x, int y)
 {
 	Point pt = {(y * 2 - x) >> (2 + ZOOM_LVL_SHIFT), (y * 2 + x) >> (2 + ZOOM_LVL_SHIFT)};
 	return pt;
 }
+
+Point InverseRemapCoords2(int x, int y, bool clamp_to_map = false, bool *clamped = nullptr);
 
 uint ApplyFoundationToSlope(Foundation f, Slope *s);
 /**

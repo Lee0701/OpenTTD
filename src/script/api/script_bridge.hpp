@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -66,10 +64,12 @@ public:
 	/**
 	 * Get the name of a bridge.
 	 * @param bridge_id The bridge to get the name of.
+	 * @param vehicle_type The vehicle-type of bridge to get the name of.
 	 * @pre IsValidBridge(bridge_id).
+	 * @pre vehicle_type == ScriptVehicle::VT_ROAD || vehicle_type == ScriptVehicle::VT_RAIL || vehicle_type == ScriptVehicle::VT_WATER
 	 * @return The name the bridge has.
 	 */
-	static char *GetName(BridgeID bridge_id);
+	static char *GetName(BridgeID bridge_id, ScriptVehicle::VehicleType vehicle_type);
 
 	/**
 	 * Get the maximum speed of a bridge.
@@ -133,7 +133,8 @@ public:
 	 * @pre 'start' and 'end' are in a straight line, i.e.
 	 *  ScriptMap::GetTileX(start) == ScriptMap::GetTileX(end) or
 	 *  ScriptMap::GetTileY(start) == ScriptMap::GetTileY(end).
-	 * @pre vehicle_type == ScriptVehicle::VT_ROAD || vehicle_type == ScriptVehicle::VT_WATER ||
+	 * @pre vehicle_type == ScriptVehicle::VT_WATER ||
+	 *   (vehicle_type == ScriptVehicle::VT_ROAD && ScriptRoad::IsRoadTypeAvailable(ScriptRoad::GetCurrentRoadType())) ||
 	 *   (vehicle_type == ScriptVehicle::VT_RAIL && ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
 	 * @game @pre Outside CompanyMode: vehicle_type == ScriptVehicle::VT_ROAD.
 	 * @exception ScriptError::ERR_ALREADY_BUILT

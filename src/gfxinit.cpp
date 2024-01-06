@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,8 +13,10 @@
 #include "3rdparty/md5/md5.h"
 #include "fontcache.h"
 #include "gfx_func.h"
+#include "transparency.h"
 #include "blitter/factory.hpp"
 #include "video/video_driver.hpp"
+#include "window_func.h"
 
 /* The type of set we're replacing */
 #define SET_TYPE "graphics"
@@ -24,8 +24,7 @@
 
 #include "table/sprites.h"
 
-/** Whether the given NewGRFs must get a palette remap from windows to DOS or not. */
-bool _palette_remap_grf[MAX_FILE_SLOTS];
+#include "safeguards.h"
 
 #include "table/landscape_sprite.h"
 
@@ -40,35 +39,35 @@ static const SpriteID * const _landscape_spriteindexes[] = {
  * Load an old fashioned GRF file.
  * @param filename   The name of the file to open.
  * @param load_index The offset of the first sprite.
- * @param file_index The Fio offset to load the file in.
+ * @param needs_palette_remap Whether the colours in the GRF file need a palette remap.
  * @return The number of loaded sprites.
  */
-static uint LoadGrfFile(const char *filename, uint load_index, int file_index)
+static uint LoadGrfFile(const char *filename, uint load_index, bool needs_palette_remap)
 {
 	uint load_index_org = load_index;
 	uint sprite_id = 0;
 
-	FioOpenFile(file_index, filename, BASESET_DIR);
+	SpriteFile &file = OpenCachedSpriteFile(filename, BASESET_DIR, needs_palette_remap);
 
-	DEBUG(sprite, 2, "Reading grf-file '%s'", filename);
+	Debug(sprite, 2, "Reading grf-file '{}'", filename);
 
-	byte container_ver = GetGRFContainerVersion();
+	byte container_ver = file.GetContainerVersion();
 	if (container_ver == 0) usererror("Base grf '%s' is corrupt", filename);
-	ReadGRFSpriteOffsets(container_ver);
+	ReadGRFSpriteOffsets(file);
 	if (container_ver >= 2) {
 		/* Read compression. */
-		byte compression = FioReadByte();
+		byte compression = file.ReadByte();
 		if (compression != 0) usererror("Unsupported compression format");
 	}
 
-	while (LoadNextSprite(load_index, file_index, sprite_id, container_ver)) {
+	while (LoadNextSprite(load_index, file, sprite_id)) {
 		load_index++;
 		sprite_id++;
 		if (load_index >= MAX_SPRITES) {
 			usererror("Too many sprites. Recompile with higher MAX_SPRITES value or remove some custom GRF files.");
 		}
 	}
-	DEBUG(sprite, 2, "Currently %i sprites are loaded", load_index);
+	Debug(sprite, 2, "Currently {} sprites are loaded", load_index);
 
 	return load_index - load_index_org;
 }
@@ -76,25 +75,25 @@ static uint LoadGrfFile(const char *filename, uint load_index, int file_index)
 /**
  * Load an old fashioned GRF file to replace already loaded sprites.
  * @param filename   The name of the file to open.
- * @param index_tlb  The offsets of each of the sprites.
- * @param file_index The Fio offset to load the file in.
+ * @param index_tbl  The offsets of each of the sprites.
+ * @param needs_palette_remap Whether the colours in the GRF file need a palette remap.
  * @return The number of loaded sprites.
  */
-static void LoadGrfFileIndexed(const char *filename, const SpriteID *index_tbl, int file_index)
+static void LoadGrfFileIndexed(const char *filename, const SpriteID *index_tbl, bool needs_palette_remap)
 {
 	uint start;
 	uint sprite_id = 0;
 
-	FioOpenFile(file_index, filename, BASESET_DIR);
+	SpriteFile &file = OpenCachedSpriteFile(filename, BASESET_DIR, needs_palette_remap);
 
-	DEBUG(sprite, 2, "Reading indexed grf-file '%s'", filename);
+	Debug(sprite, 2, "Reading indexed grf-file '{}'", filename);
 
-	byte container_ver = GetGRFContainerVersion();
+	byte container_ver = file.GetContainerVersion();
 	if (container_ver == 0) usererror("Base grf '%s' is corrupt", filename);
-	ReadGRFSpriteOffsets(container_ver);
+	ReadGRFSpriteOffsets(file);
 	if (container_ver >= 2) {
 		/* Read compression. */
-		byte compression = FioReadByte();
+		byte compression = file.ReadByte();
 		if (compression != 0) usererror("Unsupported compression format");
 	}
 
@@ -102,7 +101,7 @@ static void LoadGrfFileIndexed(const char *filename, const SpriteID *index_tbl, 
 		uint end = *index_tbl++;
 
 		do {
-			bool b = LoadNextSprite(start, file_index, sprite_id, container_ver);
+			[[maybe_unused]] bool b = LoadNextSprite(start, file, sprite_id);
 			assert(b);
 			sprite_id++;
 		} while (++start <= end);
@@ -116,11 +115,11 @@ static void LoadGrfFileIndexed(const char *filename, const SpriteID *index_tbl, 
  */
 void CheckExternalFiles()
 {
-	if (BaseGraphics::GetUsedSet() == NULL || BaseSounds::GetUsedSet() == NULL) return;
+	if (BaseGraphics::GetUsedSet() == nullptr || BaseSounds::GetUsedSet() == nullptr) return;
 
 	const GraphicsSet *used_set = BaseGraphics::GetUsedSet();
 
-	DEBUG(grf, 1, "Using the %s base graphics set", used_set->name);
+	Debug(grf, 1, "Using the {} base graphics set", used_set->name);
 
 	static const size_t ERROR_MESSAGE_LENGTH = 256;
 	static const size_t MISSING_FILE_MESSAGE_LENGTH = 128;
@@ -135,7 +134,7 @@ void CheckExternalFiles()
 
 	if (used_set->GetNumInvalid() != 0) {
 		/* Not all files were loaded successfully, see which ones */
-		add_pos += seprintf(add_pos, last, "Trying to load graphics set '%s', but it is incomplete. The game will probably not run correctly until you properly install this set or select another one. See section 4.1 of readme.txt.\n\nThe following files are corrupted or missing:\n", used_set->name);
+		add_pos += seprintf(add_pos, last, "Trying to load graphics set '%s', but it is incomplete. The game will probably not run correctly until you properly install this set or select another one. See section 4.1 of README.md.\n\nThe following files are corrupted or missing:\n", used_set->name.c_str());
 		for (uint i = 0; i < GraphicsSet::NUM_FILES; i++) {
 			MD5File::ChecksumResult res = GraphicsSet::CheckMD5(&used_set->files[i], BASESET_DIR);
 			if (res != MD5File::CR_MATCH) add_pos += seprintf(add_pos, last, "\t%s is %s (%s)\n", used_set->files[i].filename, res == MD5File::CR_MISMATCH ? "corrupt" : "missing", used_set->files[i].missing_warning);
@@ -145,9 +144,9 @@ void CheckExternalFiles()
 
 	const SoundsSet *sounds_set = BaseSounds::GetUsedSet();
 	if (sounds_set->GetNumInvalid() != 0) {
-		add_pos += seprintf(add_pos, last, "Trying to load sound set '%s', but it is incomplete. The game will probably not run correctly until you properly install this set or select another one. See section 4.1 of readme.txt.\n\nThe following files are corrupted or missing:\n", sounds_set->name);
+		add_pos += seprintf(add_pos, last, "Trying to load sound set '%s', but it is incomplete. The game will probably not run correctly until you properly install this set or select another one. See section 4.1 of README.md.\n\nThe following files are corrupted or missing:\n", sounds_set->name.c_str());
 
-		assert_compile(SoundsSet::NUM_FILES == 1);
+		static_assert(SoundsSet::NUM_FILES == 1);
 		/* No need to loop each file, as long as there is only a single
 		 * sound file. */
 		add_pos += seprintf(add_pos, last, "\t%s is %s (%s)\n", sounds_set->files->filename, SoundsSet::CheckMD5(sounds_set->files, BASESET_DIR) == MD5File::CR_MISMATCH ? "corrupt" : "missing", sounds_set->files->missing_warning);
@@ -159,12 +158,9 @@ void CheckExternalFiles()
 /** Actually load the sprite tables. */
 static void LoadSpriteTables()
 {
-	memset(_palette_remap_grf, 0, sizeof(_palette_remap_grf));
-	uint i = FIRST_GRF_SLOT;
 	const GraphicsSet *used_set = BaseGraphics::GetUsedSet();
 
-	_palette_remap_grf[i] = (PAL_DOS != used_set->palette);
-	LoadGrfFile(used_set->files[GFT_BASE].filename, 0, i++);
+	LoadGrfFile(used_set->files[GFT_BASE].filename, 0, PAL_DOS != used_set->palette);
 
 	/*
 	 * The second basic file always starts at the given location and does
@@ -172,8 +168,7 @@ static void LoadSpriteTables()
 	 * has a few sprites less. However, we do not care about those missing
 	 * sprites as they are not shown anyway (logos in intro game).
 	 */
-	_palette_remap_grf[i] = (PAL_DOS != used_set->palette);
-	LoadGrfFile(used_set->files[GFT_LOGOS].filename, 4793, i++);
+	LoadGrfFile(used_set->files[GFT_LOGOS].filename, 4793, PAL_DOS != used_set->palette);
 
 	/*
 	 * Load additional sprites for climates other than temperate.
@@ -181,11 +176,10 @@ static void LoadSpriteTables()
 	 * and the ground sprites.
 	 */
 	if (_settings_game.game_creation.landscape != LT_TEMPERATE) {
-		_palette_remap_grf[i] = (PAL_DOS != used_set->palette);
 		LoadGrfFileIndexed(
 			used_set->files[GFT_ARCTIC + _settings_game.game_creation.landscape - 1].filename,
 			_landscape_spriteindexes[_settings_game.game_creation.landscape - 1],
-			i++
+			PAL_DOS != used_set->palette
 		);
 	}
 
@@ -193,69 +187,166 @@ static void LoadSpriteTables()
 	InitializeUnicodeGlyphMap();
 
 	/*
-	 * Load the base NewGRF with OTTD required graphics as first NewGRF.
+	 * Load the base and extra NewGRF with OTTD required graphics as first NewGRF.
 	 * However, we do not want it to show up in the list of used NewGRFs,
 	 * so we have to manually add it, and then remove it later.
 	 */
 	GRFConfig *top = _grfconfig;
-	GRFConfig *master = new GRFConfig(used_set->files[GFT_EXTRA].filename);
+
+	/* Default extra graphics */
+	static const char *master_filename = "OPENTTD.GRF";
+	GRFConfig *master = new GRFConfig(master_filename);
+	master->palette |= GRFP_GRF_DOS;
+	FillGRFDetails(master, false, BASESET_DIR);
+	ClrBit(master->flags, GCF_INIT_ONLY);
+
+	/* Baseset extra graphics */
+	GRFConfig *extra = new GRFConfig(used_set->files[GFT_EXTRA].filename);
 
 	/* We know the palette of the base set, so if the base NewGRF is not
 	 * setting one, use the palette of the base set and not the global
 	 * one which might be the wrong palette for this base NewGRF.
 	 * The value set here might be overridden via action14 later. */
 	switch (used_set->palette) {
-		case PAL_DOS:     master->palette |= GRFP_GRF_DOS;     break;
-		case PAL_WINDOWS: master->palette |= GRFP_GRF_WINDOWS; break;
+		case PAL_DOS:     extra->palette |= GRFP_GRF_DOS;     break;
+		case PAL_WINDOWS: extra->palette |= GRFP_GRF_WINDOWS; break;
 		default: break;
 	}
-	FillGRFDetails(master, false, BASESET_DIR);
+	FillGRFDetails(extra, false, BASESET_DIR);
+	ClrBit(extra->flags, GCF_INIT_ONLY);
 
-	ClrBit(master->flags, GCF_INIT_ONLY);
-	master->next = top;
+	extra->next = top;
+	master->next = extra;
 	_grfconfig = master;
 
-	LoadNewGRF(SPR_NEWGRFS_BASE, i);
+	LoadNewGRF(SPR_NEWGRFS_BASE, 2);
+
+	uint total_extra_graphics = SPR_NEWGRFS_BASE - SPR_OPENTTD_BASE;
+	_missing_extra_graphics = GetSpriteCountForFile(master_filename, SPR_OPENTTD_BASE, SPR_NEWGRFS_BASE);
+	Debug(sprite, 1, "{} extra sprites, {} from baseset, {} from fallback", total_extra_graphics, total_extra_graphics - _missing_extra_graphics, _missing_extra_graphics);
+
+	/* The original baseset extra graphics intentionally make use of the fallback graphics.
+	 * Let's say everything which provides less than 500 sprites misses the rest intentionally. */
+	if (500 + _missing_extra_graphics > total_extra_graphics) _missing_extra_graphics = 0;
 
 	/* Free and remove the top element. */
+	delete extra;
 	delete master;
 	_grfconfig = top;
 }
 
 
+static void RealChangeBlitter(const char *repl_blitter)
+{
+	const char *cur_blitter = BlitterFactory::GetCurrentBlitter()->GetName();
+	if (strcmp(cur_blitter, repl_blitter) == 0) return;
+
+	Debug(driver, 1, "Switching blitter from '{}' to '{}'... ", cur_blitter, repl_blitter);
+	Blitter *new_blitter = BlitterFactory::SelectBlitter(repl_blitter);
+	if (new_blitter == nullptr) NOT_REACHED();
+	Debug(driver, 1, "Successfully switched to {}.", repl_blitter);
+
+	if (!VideoDriver::GetInstance()->AfterBlitterChange()) {
+		/* Failed to switch blitter, let's hope we can return to the old one. */
+		if (BlitterFactory::SelectBlitter(cur_blitter) == nullptr || !VideoDriver::GetInstance()->AfterBlitterChange()) usererror("Failed to reinitialize video driver. Specify a fixed blitter in the config");
+	}
+
+	/* Clear caches that might have sprites for another blitter. */
+	VideoDriver::GetInstance()->ClearSystemSprites();
+	ClearFontCache();
+	GfxClearSpriteCache();
+	ReInitAllWindows(false);
+}
+
 /**
  * Check blitter needed by NewGRF config and switch if needed.
+ * @return False when nothing changed, true otherwise.
  */
-static void SwitchNewGRFBlitter()
+static bool SwitchNewGRFBlitter()
 {
-	/* Get blitter of base set. */
-	bool is_32bpp = BaseGraphics::GetUsedSet()->blitter == BLT_32BPP;
+	/* Never switch if the blitter was specified by the user. */
+	if (!_blitter_autodetected) return false;
 
-	/* Get combined blitter mode of all NewGRFs. */
-	for (GRFConfig *c = _grfconfig; c != NULL; c = c->next) {
+	/* Null driver => dedicated server => do nothing. */
+	if (BlitterFactory::GetCurrentBlitter()->GetScreenDepth() == 0) return false;
+
+	/* Get preferred depth.
+	 *  - depth_wanted_by_base: Depth required by the baseset, i.e. the majority of the sprites.
+	 *  - depth_wanted_by_grf:  Depth required by some NewGRF.
+	 * Both can force using a 32bpp blitter. depth_wanted_by_base is used to select
+	 * between multiple 32bpp blitters, which perform differently with 8bpp sprites.
+	 */
+	uint depth_wanted_by_base = BaseGraphics::GetUsedSet()->blitter == BLT_32BPP ? 32 : 8;
+	uint depth_wanted_by_grf = _support8bpp != S8BPP_NONE ? 8 : 32;
+	for (GRFConfig *c = _grfconfig; c != nullptr; c = c->next) {
 		if (c->status == GCS_DISABLED || c->status == GCS_NOT_FOUND || HasBit(c->flags, GCF_INIT_ONLY)) continue;
-
-		if (c->palette & GRFP_BLT_32BPP) is_32bpp = true;
+		if (c->palette & GRFP_BLT_32BPP) depth_wanted_by_grf = 32;
 	}
+	/* We need a 32bpp blitter for font anti-alias. */
+	if (HasAntialiasedFonts()) depth_wanted_by_grf = 32;
 
-	/* A GRF would like a 32 bpp blitter, switch blitter if needed. Never switch if the blitter was specified by the user. */
-	if (_blitter_autodetected && is_32bpp && BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth() != 0 && BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth() < 16) {
-		const char *cur_blitter = BlitterFactoryBase::GetCurrentBlitter()->GetName();
-		if (BlitterFactoryBase::SelectBlitter("32bpp-anim") != NULL) {
-			if (!_video_driver->AfterBlitterChange()) {
-				/* Failed to switch blitter, let's hope we can return to the old one. */
-				if (BlitterFactoryBase::SelectBlitter(cur_blitter) == NULL || !_video_driver->AfterBlitterChange()) usererror("Failed to reinitialize video driver for 32 bpp blitter. Specify a fixed blitter in the config");
-			}
+	/* Search the best blitter. */
+	static const struct {
+		const char *name;
+		uint animation; ///< 0: no support, 1: do support, 2: both
+		uint min_base_depth, max_base_depth, min_grf_depth, max_grf_depth;
+	} replacement_blitters[] = {
+		{ "8bpp-optimized",  2,  8,  8,  8,  8 },
+		{ "40bpp-anim",      2,  8, 32,  8, 32 },
+#ifdef WITH_SSE
+		{ "32bpp-sse4",      0, 32, 32,  8, 32 },
+		{ "32bpp-ssse3",     0, 32, 32,  8, 32 },
+		{ "32bpp-sse2",      0, 32, 32,  8, 32 },
+		{ "32bpp-sse4-anim", 1, 32, 32,  8, 32 },
+#endif
+		{ "32bpp-optimized", 0,  8, 32,  8, 32 },
+#ifdef WITH_SSE
+		{ "32bpp-sse2-anim", 1,  8, 32,  8, 32 },
+#endif
+		{ "32bpp-anim",      1,  8, 32,  8, 32 },
+	};
+
+	const bool animation_wanted = HasBit(_display_opt, DO_FULL_ANIMATION);
+	const char *cur_blitter = BlitterFactory::GetCurrentBlitter()->GetName();
+
+	for (uint i = 0; i < lengthof(replacement_blitters); i++) {
+		if (animation_wanted && (replacement_blitters[i].animation == 0)) continue;
+		if (!animation_wanted && (replacement_blitters[i].animation == 1)) continue;
+
+		if (!IsInsideMM(depth_wanted_by_base, replacement_blitters[i].min_base_depth, replacement_blitters[i].max_base_depth + 1)) continue;
+		if (!IsInsideMM(depth_wanted_by_grf, replacement_blitters[i].min_grf_depth, replacement_blitters[i].max_grf_depth + 1)) continue;
+		const char *repl_blitter = replacement_blitters[i].name;
+
+		if (strcmp(repl_blitter, cur_blitter) == 0) {
+			return false;
 		}
+		if (BlitterFactory::GetBlitterFactory(repl_blitter) == nullptr) continue;
+
+		/* Inform the video driver we want to switch blitter as soon as possible. */
+		VideoDriver::GetInstance()->QueueOnMainThread(std::bind(&RealChangeBlitter, repl_blitter));
+		break;
 	}
+
+	return true;
+}
+
+/** Check whether we still use the right blitter, or use another (better) one. */
+void CheckBlitter()
+{
+	if (!SwitchNewGRFBlitter()) return;
+
+	ClearFontCache();
+	GfxClearSpriteCache();
+	ReInitAllWindows(false);
 }
 
 /** Initialise and load all the sprites. */
 void GfxLoadSprites()
 {
-	DEBUG(sprite, 2, "Loading sprite set %d", _settings_game.game_creation.landscape);
+	Debug(sprite, 2, "Loading sprite set {}", _settings_game.game_creation.landscape);
 
 	SwitchNewGRFBlitter();
+	VideoDriver::GetInstance()->ClearSystemSprites();
 	ClearFontCache();
 	GfxInitSpriteMem();
 	LoadSpriteTables();
@@ -272,11 +363,11 @@ bool GraphicsSet::FillSetDetails(IniFile *ini, const char *path, const char *ful
 		IniItem *item;
 
 		fetch_metadata("palette");
-		this->palette = (*item->value == 'D' || *item->value == 'd') ? PAL_DOS : PAL_WINDOWS;
+		this->palette = ((*item->value)[0] == 'D' || (*item->value)[0] == 'd') ? PAL_DOS : PAL_WINDOWS;
 
 		/* Get optional blitter information. */
 		item = metadata->GetItem("blitter", false);
-		this->blitter = (item != NULL && *item->value == '3') ? BLT_32BPP : BLT_8BPP;
+		this->blitter = (item != nullptr && (*item->value)[0] == '3') ? BLT_32BPP : BLT_8BPP;
 	}
 	return ret;
 }
@@ -294,7 +385,7 @@ bool GraphicsSet::FillSetDetails(IniFile *ini, const char *path, const char *ful
 {
 	size_t size = 0;
 	FILE *f = FioFOpenFile(file->filename, "rb", subdir, &size);
-	if (f == NULL) return MD5File::CR_NO_FILE;
+	if (f == nullptr) return MD5File::CR_NO_FILE;
 
 	size_t max = GRFGetSizeOfDataSection(f);
 
@@ -318,9 +409,9 @@ MD5File::ChecksumResult MD5File::CheckMD5(Subdirectory subdir, size_t max_size) 
 	size_t size;
 	FILE *f = FioFOpenFile(this->filename, "rb", subdir, &size);
 
-	if (f == NULL) return CR_NO_FILE;
+	if (f == nullptr) return CR_NO_FILE;
 
-	size = min(size, max_size);
+	size = std::min(size, max_size);
 
 	Md5 checksum;
 	uint8 buffer[1024];
@@ -348,14 +439,14 @@ template <class T, size_t Tnum_files, bool Tsearch_in_tars>
 template <class Tbase_set>
 /* static */ bool BaseMedia<Tbase_set>::DetermineBestSet()
 {
-	if (BaseMedia<Tbase_set>::used_set != NULL) return true;
+	if (BaseMedia<Tbase_set>::used_set != nullptr) return true;
 
-	const Tbase_set *best = NULL;
-	for (const Tbase_set *c = BaseMedia<Tbase_set>::available_sets; c != NULL; c = c->next) {
+	const Tbase_set *best = nullptr;
+	for (const Tbase_set *c = BaseMedia<Tbase_set>::available_sets; c != nullptr; c = c->next) {
 		/* Skip unusable sets */
 		if (c->GetNumMissing() != 0) continue;
 
-		if (best == NULL ||
+		if (best == nullptr ||
 				(best->fallback && !c->fallback) ||
 				best->valid_files < c->valid_files ||
 				(best->valid_files == c->valid_files && (
@@ -366,7 +457,7 @@ template <class Tbase_set>
 	}
 
 	BaseMedia<Tbase_set>::used_set = best;
-	return BaseMedia<Tbase_set>::used_set != NULL;
+	return BaseMedia<Tbase_set>::used_set != nullptr;
 }
 
 template <class Tbase_set>

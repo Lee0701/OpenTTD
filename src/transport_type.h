@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,7 +16,7 @@
 typedef uint16 UnitID;
 
 /** Available types of transport */
-enum TransportType {
+enum TransportType : byte {
 	/* These constants are for now linked to the representation of bridges
 	 * and tunnels, so they can be used by GetTileTrackStatus_TunnelBridge.
 	 * In an ideal world, these constants would be used everywhere when

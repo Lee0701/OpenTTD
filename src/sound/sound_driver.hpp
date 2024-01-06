@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,32 +13,30 @@
 #include "../driver.h"
 
 /** Base for all sound drivers. */
-class SoundDriver: public Driver {
+class SoundDriver : public Driver {
 public:
 	/** Called once every tick */
 	virtual void MainLoop() {}
-};
-
-/** Base of the factory for the sound drivers. */
-class SoundDriverFactoryBase: public DriverFactoryBase {
-};
-
-/**
- * Factory for the sound drivers.
- * @tparam T The type of the sound factory to register.
- */
-template <class T>
-class SoundDriverFactory: public SoundDriverFactoryBase {
-public:
-	SoundDriverFactory() { this->RegisterDriver(((T *)this)->GetName(), Driver::DT_SOUND, ((T *)this)->priority); }
 
 	/**
-	 * Get the long, human readable, name for the Driver-class.
+	 * Whether the driver has an output from which the user can hear sound.
+	 * Or in other words, whether we should warn the user if no soundset is
+	 * loaded and that loading one would fix the sound problems.
+	 * @return True for all drivers except null.
 	 */
-	const char *GetName();
+	virtual bool HasOutput() const
+	{
+		return true;
+	}
+
+	/**
+	 * Get the currently active instance of the sound driver.
+	 */
+	static SoundDriver *GetInstance() {
+		return static_cast<SoundDriver*>(*DriverFactoryBase::GetActiveDriver(Driver::DT_SOUND));
+	}
 };
 
-extern SoundDriver *_sound_driver;
-extern char *_ini_sounddriver;
+extern std::string _ini_sounddriver;
 
 #endif /* SOUND_SOUND_DRIVER_HPP */

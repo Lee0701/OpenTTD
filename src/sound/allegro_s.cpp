@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,20 +16,22 @@
 #include "allegro_s.h"
 #include <allegro.h>
 
+#include "../safeguards.h"
+
 static FSoundDriver_Allegro iFSoundDriver_Allegro;
 /** The stream we are writing too */
-static AUDIOSTREAM *_stream = NULL;
+static AUDIOSTREAM *_stream = nullptr;
 /** The number of samples in the buffer */
 static int _buffer_size;
 
 void SoundDriver_Allegro::MainLoop()
 {
 	/* We haven't opened a stream yet */
-	if (_stream == NULL) return;
+	if (_stream == nullptr) return;
 
 	void *data = get_audio_stream_buffer(_stream);
 	/* We don't have to fill the stream yet */
-	if (data == NULL) return;
+	if (data == nullptr) return;
 
 	/* Mix the samples */
 	MxMixSamples(data, _buffer_size);
@@ -50,23 +50,23 @@ void SoundDriver_Allegro::MainLoop()
  */
 extern int _allegro_instance_count;
 
-const char *SoundDriver_Allegro::Start(const char * const *parm)
+const char *SoundDriver_Allegro::Start(const StringList &parm)
 {
-	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, NULL)) {
-		DEBUG(driver, 0, "allegro: install_allegro failed '%s'", allegro_error);
+	if (_allegro_instance_count == 0 && install_allegro(SYSTEM_AUTODETECT, &errno, nullptr)) {
+		Debug(driver, 0, "allegro: install_allegro failed '{}'", allegro_error);
 		return "Failed to set up Allegro";
 	}
 	_allegro_instance_count++;
 
 	/* Initialise the sound */
-	if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL) != 0) {
-		DEBUG(driver, 0, "allegro: install_sound failed '%s'", allegro_error);
+	if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, nullptr) != 0) {
+		Debug(driver, 0, "allegro: install_sound failed '{}'", allegro_error);
 		return "Failed to set up Allegro sound";
 	}
 
 	/* Okay, there's no soundcard */
 	if (digi_card == DIGI_NONE) {
-		DEBUG(driver, 0, "allegro: no sound card found");
+		Debug(driver, 0, "allegro: no sound card found");
 		return "No sound card found";
 	}
 
@@ -74,14 +74,14 @@ const char *SoundDriver_Allegro::Start(const char * const *parm)
 	_buffer_size = GetDriverParamInt(parm, "samples", 1024) * hz / 11025;
 	_stream = play_audio_stream(_buffer_size, 16, true, hz, 255, 128);
 	MxInitialize(hz);
-	return NULL;
+	return nullptr;
 }
 
 void SoundDriver_Allegro::Stop()
 {
-	if (_stream != NULL) {
+	if (_stream != nullptr) {
 		stop_audio_stream(_stream);
-		_stream = NULL;
+		_stream = nullptr;
 	}
 	remove_sound();
 

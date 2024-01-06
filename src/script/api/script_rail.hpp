@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -32,17 +30,17 @@ public:
 		/** One-way roads cannot have crossings */
 		ERR_CROSSING_ON_ONEWAY_ROAD,       // [STR_ERROR_CROSSING_ON_ONEWAY_ROAD]
 
-		/** Track not suitable for signals */
-		ERR_UNSUITABLE_TRACK,              // [STR_ERROR_NO_SUITABLE_RAILROAD_TRACK]
+		/** No suitable track could be found */
+		ERR_UNSUITABLE_TRACK,              // [STR_ERROR_NO_SUITABLE_RAILROAD_TRACK, STR_ERROR_THERE_IS_NO_RAILROAD_TRACK, STR_ERROR_THERE_ARE_NO_SIGNALS, STR_ERROR_THERE_IS_NO_STATION]
 
 		/** This railtype cannot have crossings */
-		ERR_RAILTYPE_DISALLOWS_CROSSING,   // [STR_ERROR_CROSSING_DISALLOWED]
+		ERR_RAILTYPE_DISALLOWS_CROSSING,   // [STR_ERROR_CROSSING_DISALLOWED_RAIL]
 	};
 
 	/**
 	 * Types of rail known to the game.
 	 */
-	enum RailType {
+	enum RailType : byte {
 		/* Note: these values represent part of the in-game static values */
 		RAILTYPE_INVALID  = ::INVALID_RAILTYPE, ///< Invalid RailType.
 	};
@@ -268,6 +266,9 @@ public:
 	 * Build a NewGRF rail station. This calls callback 18 to let a NewGRF
 	 *  provide the station class / id to build, so we don't end up with
 	 *  only the default stations on the map.
+	 * When no NewGRF provides a rail station, or an unbuildable rail station is
+	 *  returned by a NewGRF, this function will fall back to building a default
+	 *  non-NewGRF station as if ScriptRail::BuildRailStation was called.
 	 * @param tile Place to build the station.
 	 * @param direction The direction to build the station.
 	 * @param num_platforms The number of platforms to build.
@@ -319,6 +320,7 @@ public:
 	 * @pre IsValidTile(tile).
 	 * @pre IsValidTile(tile2).
 	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptRail::ERR_UNSUITABLE_TRACK
 	 * @return Whether at least one tile has been/can be cleared or not.
 	 */
 	static bool RemoveRailWaypointTileRectangle(TileIndex tile, TileIndex tile2, bool keep_rail);
@@ -331,6 +333,7 @@ public:
 	 * @pre IsValidTile(tile).
 	 * @pre IsValidTile(tile2).
 	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptRail::ERR_UNSUITABLE_TRACK
 	 * @return Whether at least one tile has been/can be cleared or not.
 	 */
 	static bool RemoveRailStationTileRectangle(TileIndex tile, TileIndex tile2, bool keep_rail);
@@ -369,6 +372,7 @@ public:
 	 * @pre ScriptMap::IsValidTile(tile).
 	 * @pre (GetRailTracks(tile) & rail_track) != 0.
 	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptRail::ERR_UNSUITABLE_TRACK
 	 * @return Whether the rail has been/can be removed or not.
 	 * @note You can only remove a single track with this function so do not
 	 *   use the values from RailTrack as bitmask.
@@ -424,6 +428,7 @@ public:
 	 *      (ScriptMap::GetTileX(from) == ScriptMap::GetTileX(tile) && ScriptMap::GetTileX(tile) == ScriptMap::GetTileX(to)) ||
 	 *      (ScriptMap::GetTileY(from) == ScriptMap::GetTileY(tile) && ScriptMap::GetTileY(tile) == ScriptMap::GetTileY(to)).
 	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptRail::ERR_UNSUITABLE_TRACK
 	 * @return Whether the rail has been/can be removed or not.
 	 */
 	static bool RemoveRail(TileIndex from, TileIndex tile, TileIndex to);
@@ -457,6 +462,7 @@ public:
 	 * @pre ScriptMap::DistanceManhattan(tile, front) == 1.
 	 * @pre GetSignalType(tile, front) != SIGNALTYPE_NONE.
 	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptRail::ERR_UNSUITABLE_TRACK
 	 * @return Whether the signal has been/can be removed or not.
 	 */
 	static bool RemoveSignal(TileIndex tile, TileIndex front);

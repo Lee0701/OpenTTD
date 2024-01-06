@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,9 @@
 #include "debug.h"
 #include "core/alloc_func.hpp"
 #include "water_map.h"
+#include "string_func.h"
+
+#include "safeguards.h"
 
 #if defined(_MSC_VER)
 /* Why the hell is that not in all MSVC headers?? */
@@ -26,8 +27,8 @@ uint _map_size_y;    ///< Size of the map along the Y
 uint _map_size;      ///< The number of tiles on the map
 uint _map_tile_mask; ///< _map_size - 1 (to mask the mapsize)
 
-Tile *_m = NULL;          ///< Tiles of the map
-TileExtended *_me = NULL; ///< Extended Tiles of the map
+Tile *_m = nullptr;          ///< Tiles of the map
+TileExtended *_me = nullptr; ///< Extended Tiles of the map
 
 
 /**
@@ -46,7 +47,7 @@ void AllocateMap(uint size_x, uint size_y)
 		error("Invalid map size");
 	}
 
-	DEBUG(map, 1, "Allocating map of size %dx%d", size_x, size_y);
+	Debug(map, 1, "Allocating map of size {}x{}", size_x, size_y);
 
 	_map_log_x = FindFirstBit(size_x);
 	_map_log_y = FindFirstBit(size_y);
@@ -82,9 +83,9 @@ TileIndex TileAdd(TileIndex tile, TileIndexDiff add,
 	if (x >= MapSizeX() || y >= MapSizeY()) {
 		char buf[512];
 
-		snprintf(buf, lengthof(buf), "TILE_ADD(%s) when adding 0x%.4X and 0x%.4X failed",
-			exp, tile, add);
-#if !defined(_MSC_VER) || defined(WINCE)
+		seprintf(buf, lastof(buf), "TILE_ADD(%s) when adding 0x%.4X and 0x%.4X failed",
+			exp, (uint32)tile, add);
+#if !defined(_MSC_VER)
 		fprintf(stderr, "%s:%d %s\n", file, line, buf);
 #else
 		_assert(buf, (char*)file, line);
@@ -189,7 +190,7 @@ uint DistanceMax(TileIndex t0, TileIndex t1)
 {
 	const uint dx = Delta(TileX(t0), TileX(t1));
 	const uint dy = Delta(TileY(t0), TileY(t1));
-	return max(dx, dy);
+	return std::max(dx, dy);
 }
 
 
@@ -219,9 +220,9 @@ uint DistanceFromEdge(TileIndex tile)
 	const uint yl = TileY(tile);
 	const uint xh = MapSizeX() - 1 - xl;
 	const uint yh = MapSizeY() - 1 - yl;
-	const uint minl = min(xl, yl);
-	const uint minh = min(xh, yh);
-	return min(minl, minh);
+	const uint minl = std::min(xl, yl);
+	const uint minh = std::min(xh, yh);
+	return std::min(minl, minh);
 }
 
 /**
@@ -251,12 +252,12 @@ uint DistanceFromEdgeDir(TileIndex tile, DiagDirection dir)
  * @param proc: callback testing function pointer.
  * @param user_data to be passed to the callback function. Depends on the implementation
  * @return result of the search
- * @pre proc != NULL
+ * @pre proc != nullptr
  * @pre size > 0
  */
 bool CircularTileSearch(TileIndex *tile, uint size, TestTileOnSearchProc proc, void *user_data)
 {
-	assert(proc != NULL);
+	assert(proc != nullptr);
 	assert(size > 0);
 
 	if (size % 2 == 1) {
@@ -266,7 +267,7 @@ bool CircularTileSearch(TileIndex *tile, uint size, TestTileOnSearchProc proc, v
 
 		/* If tile test is not successful, get one tile up,
 		 * ready for a test in first circle around center tile */
-		*tile = TILE_ADD(*tile, TileOffsByDir(DIR_N));
+		*tile = TileAddByDir(*tile, DIR_N);
 		return CircularTileSearch(tile, size / 2, 1, 1, proc, user_data);
 	} else {
 		return CircularTileSearch(tile, size / 2, 0, 0, proc, user_data);
@@ -289,12 +290,12 @@ bool CircularTileSearch(TileIndex *tile, uint size, TestTileOnSearchProc proc, v
  * @param proc callback testing function pointer.
  * @param user_data to be passed to the callback function. Depends on the implementation
  * @return result of the search
- * @pre proc != NULL
+ * @pre proc != nullptr
  * @pre radius > 0
  */
 bool CircularTileSearch(TileIndex *tile, uint radius, uint w, uint h, TestTileOnSearchProc proc, void *user_data)
 {
-	assert(proc != NULL);
+	assert(proc != nullptr);
 	assert(radius > 0);
 
 	uint x = TileX(*tile) + w + 1;

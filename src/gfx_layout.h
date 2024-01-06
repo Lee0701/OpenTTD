@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,13 +16,17 @@
 
 #include <map>
 #include <string>
+#include <stack>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 
-#ifdef WITH_ICU
+#ifdef WITH_ICU_LX
 #include "layout/ParagraphLayout.h"
-#define ICU_FONTINSTANCE : public LEFontInstance
-#else /* WITH_ICU */
+#define ICU_FONTINSTANCE : public icu::LEFontInstance
+#else /* WITH_ICU_LX */
 #define ICU_FONTINSTANCE
-#endif /* WITH_ICU */
+#endif /* WITH_ICU_LX */
 
 /**
  * Text drawing parameters, which can change while drawing a line, but are kept between multiple parts
@@ -33,10 +35,11 @@
 struct FontState {
 	FontSize fontsize;       ///< Current font size.
 	TextColour cur_colour;   ///< Current text colour.
-	TextColour prev_colour;  ///< Text colour from before the last colour switch.
 
-	FontState() : fontsize(FS_END), cur_colour(TC_INVALID), prev_colour(TC_INVALID) {}
-	FontState(TextColour colour, FontSize fontsize) : fontsize(fontsize), cur_colour(colour), prev_colour(colour) {}
+	std::stack<TextColour, std::vector<TextColour>> colour_stack; ///< Stack of colours to assist with colour switching.
+
+	FontState() : fontsize(FS_END), cur_colour(TC_INVALID) {}
+	FontState(TextColour colour, FontSize fontsize) : fontsize(fontsize), cur_colour(colour) {}
 
 	/**
 	 * Switch to new colour \a c.
@@ -44,15 +47,27 @@ struct FontState {
 	 */
 	inline void SetColour(TextColour c)
 	{
-		assert(c >= TC_BLUE && c <= TC_BLACK);
-		this->prev_colour = this->cur_colour;
-		this->cur_colour = c;
+		assert((c & TC_COLOUR_MASK) >= TC_BLUE && (c & TC_COLOUR_MASK) <= TC_BLACK);
+		assert((c & (TC_COLOUR_MASK | TC_FLAGS_MASK)) == c);
+		if ((this->cur_colour & TC_FORCED) == 0) this->cur_colour = c;
 	}
 
-	/** Switch to previous colour. */
-	inline void SetPreviousColour()
+	/**
+	 * Switch to and pop the last saved colour on the stack.
+	 */
+	inline void PopColour()
 	{
-		Swap(this->cur_colour, this->prev_colour);
+		if (colour_stack.empty()) return;
+		SetColour(colour_stack.top());
+		colour_stack.pop();
+	}
+
+	/**
+	 * Push the current colour on to the stack.
+	 */
+	inline void PushColour()
+	{
+		colour_stack.push(this->cur_colour);
 	}
 
 	/**
@@ -75,7 +90,7 @@ public:
 
 	Font(FontSize size, TextColour colour);
 
-#ifdef WITH_ICU
+#ifdef WITH_ICU_LX
 	/* Implementation details of LEFontInstance */
 
 	le_int32 getUnitsPerEM() const;
@@ -91,124 +106,107 @@ public:
 	LEGlyphID mapCharToGlyph(LEUnicode32 ch) const;
 	void getGlyphAdvance(LEGlyphID glyph, LEPoint &advance) const;
 	le_bool getGlyphPoint(LEGlyphID glyph, le_int32 pointNumber, LEPoint &point) const;
-#endif /* WITH_ICU */
+#endif /* WITH_ICU_LX */
 };
 
 /** Mapping from index to font. */
 typedef SmallMap<int, Font *> FontMap;
 
-#ifndef WITH_ICU
 /**
- * Class handling the splitting of a paragraph of text into lines and
- * visual runs.
- *
- * One constructs this class with the text that needs to be split into
- * lines. Then nextLine is called with the maximum width until NULL is
- * returned. Each nextLine call creates VisualRuns which contain the
- * length of text that are to be drawn with the same font. In other
- * words, the result of this class is a list of sub strings with their
- * font. The sub strings are then already fully laid out, and only
- * need actual drawing.
- *
- * The positions in a visual run are sequential pairs of X,Y of the
- * begin of each of the glyphs plus an extra pair to mark the end.
- *
- * @note This variant does not handle left-to-right properly. This
- *       is supported in the one ParagraphLayout coming from ICU.
- * @note Does not conform to function naming style as it provides a
- *       fallback for the ICU class.
+ * Interface to glue fallback and normal layouter into one.
  */
-class ParagraphLayout {
+class ParagraphLayouter {
 public:
+	virtual ~ParagraphLayouter() {}
+
 	/** Visual run contains data about the bit of text with the same font. */
 	class VisualRun {
-		Font *font;       ///< The font used to layout these.
-		GlyphID *glyphs;  ///< The glyphs we're drawing.
-		float *positions; ///< The positions of the glyphs.
-		int glyph_count;  ///< The number of glyphs.
-
 	public:
-		VisualRun(Font *font, const WChar *chars, int glyph_count, int x);
-		~VisualRun();
-		Font *getFont() const;
-		int getGlyphCount() const;
-		const GlyphID *getGlyphs() const;
-		float *getPositions() const;
-		int getLeading() const;
+		virtual ~VisualRun() {}
+		virtual const Font *GetFont() const = 0;
+		virtual int GetGlyphCount() const = 0;
+		virtual const GlyphID *GetGlyphs() const = 0;
+		virtual const float *GetPositions() const = 0;
+		virtual int GetLeading() const = 0;
+		virtual const int *GetGlyphToCharMap() const = 0;
 	};
 
 	/** A single line worth of VisualRuns. */
-	class Line : public AutoDeleteSmallVector<VisualRun *, 4> {
+	class Line {
 	public:
-		int getLeading() const;
-		int getWidth() const;
-		int countRuns() const;
-		VisualRun *getVisualRun(int run) const;
+		virtual ~Line() {}
+		virtual int GetLeading() const = 0;
+		virtual int GetWidth() const = 0;
+		virtual int CountRuns() const = 0;
+		virtual const VisualRun &GetVisualRun(int run) const = 0;
+		virtual int GetInternalCharLength(WChar c) const = 0;
 	};
 
-	const WChar *buffer_begin; ///< Begin of the buffer.
-	const WChar *buffer;       ///< The current location in the buffer.
-	FontMap &runs;             ///< The fonts we have to use for this paragraph.
-
-	ParagraphLayout(WChar *buffer, int length, FontMap &runs);
-	void reflow();
-	Line *nextLine(int max_width);
+	virtual void Reflow() = 0;
+	virtual std::unique_ptr<const Line> NextLine(int max_width) = 0;
 };
-#endif /* !WITH_ICU */
 
 /**
  * The layouter performs all the layout work.
  *
  * It also accounts for the memory allocations and frees.
  */
-class Layouter : public AutoDeleteSmallVector<ParagraphLayout::Line *, 4> {
-#ifdef WITH_ICU
-	typedef UChar CharType; ///< The type of character used within the layouter.
-#else /* WITH_ICU */
-	typedef WChar CharType; ///< The type of character used within the layouter.
-#endif /* WITH_ICU */
-
-	size_t AppendToBuffer(CharType *buff, const CharType *buffer_last, WChar c);
-	ParagraphLayout *GetParagraphLayout(CharType *buff, CharType *buff_end, FontMap &fontMapping);
+class Layouter : public std::vector<std::unique_ptr<const ParagraphLayouter::Line>> {
+	const char *string; ///< Pointer to the original string.
 
 	/** Key into the linecache */
 	struct LineCacheKey {
 		FontState state_before;  ///< Font state at the beginning of the line.
 		std::string str;         ///< Source string of the line (including colour and font size codes).
+	};
 
-		/** Comparison operator for std::map */
-		bool operator<(const LineCacheKey &other) const
+	struct LineCacheQuery {
+		FontState state_before;  ///< Font state at the beginning of the line.
+		std::string_view str;    ///< Source string of the line (including colour and font size codes).
+	};
+
+	/** Comparator for std::map */
+	struct LineCacheCompare {
+		using is_transparent = void; ///< Enable map queries with various key types
+
+		/** Comparison operator for LineCacheKey and LineCacheQuery */
+		template<typename Key1, typename Key2>
+		bool operator()(const Key1 &lhs, const Key2 &rhs) const
 		{
-			if (this->state_before.fontsize != other.state_before.fontsize) return this->state_before.fontsize < other.state_before.fontsize;
-			if (this->state_before.cur_colour != other.state_before.cur_colour) return this->state_before.cur_colour < other.state_before.cur_colour;
-			if (this->state_before.prev_colour != other.state_before.prev_colour) return this->state_before.prev_colour < other.state_before.prev_colour;
-			return this->str < other.str;
+			if (lhs.state_before.fontsize != rhs.state_before.fontsize) return lhs.state_before.fontsize < rhs.state_before.fontsize;
+			if (lhs.state_before.cur_colour != rhs.state_before.cur_colour) return lhs.state_before.cur_colour < rhs.state_before.cur_colour;
+			if (lhs.state_before.colour_stack != rhs.state_before.colour_stack) return lhs.state_before.colour_stack < rhs.state_before.colour_stack;
+			return lhs.str < rhs.str;
 		}
 	};
+public:
 	/** Item in the linecache */
 	struct LineCacheItem {
 		/* Stuff that cannot be freed until the ParagraphLayout is freed */
-		CharType buffer[DRAW_STRING_BUFFER]; ///< Accessed by both ICU's and our ParagraphLayout::nextLine.
-		FontMap runs;                        ///< Accessed by our ParagraphLayout::nextLine.
+		void *buffer;              ///< Accessed by both ICU's and our ParagraphLayout::nextLine.
+		FontMap runs;              ///< Accessed by our ParagraphLayout::nextLine.
 
-		FontState state_after;   ///< Font state after the line.
-		ParagraphLayout *layout; ///< Layout of the line.
+		FontState state_after;     ///< Font state after the line.
+		ParagraphLayouter *layout; ///< Layout of the line.
 
-		LineCacheItem() : layout(NULL) {}
-		~LineCacheItem() { delete layout; }
+		LineCacheItem() : buffer(nullptr), layout(nullptr) {}
+		~LineCacheItem() { delete layout; free(buffer); }
 	};
-	typedef std::map<LineCacheKey, LineCacheItem> LineCache;
+private:
+	typedef std::map<LineCacheKey, LineCacheItem, LineCacheCompare> LineCache;
 	static LineCache *linecache;
 
 	static LineCacheItem &GetCachedParagraphLayout(const char *str, size_t len, const FontState &state);
 
 	typedef SmallMap<TextColour, Font *> FontColourMap;
 	static FontColourMap fonts[FS_END];
+public:
 	static Font *GetFont(FontSize size, TextColour colour);
 
-public:
 	Layouter(const char *str, int maxw = INT32_MAX, TextColour colour = TC_FROMSTRING, FontSize fontsize = FS_NORMAL);
 	Dimension GetBounds();
+	Point GetCharPosition(const char *ch) const;
+	const char *GetCharAtPosition(int x) const;
 
 	static void ResetFontCache(FontSize size);
 	static void ResetLineCache();

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,10 +9,6 @@
 
 #ifndef NETWORK_TYPE_H
 #define NETWORK_TYPE_H
-
-#include "core/game.h"
-
-#ifdef ENABLE_NETWORK
 
 /** How many clients can we have */
 static const uint MAX_CLIENTS = 255;
@@ -39,8 +33,18 @@ enum NetworkVehicleType {
 	NETWORK_VEH_END
 };
 
+/**
+ * Game type the server can be using.
+ * Used on the network protocol to communicate with Game Coordinator.
+ */
+enum ServerGameType : uint8 {
+	SERVER_GAME_TYPE_LOCAL = 0,
+	SERVER_GAME_TYPE_PUBLIC,
+	SERVER_GAME_TYPE_INVITE_ONLY,
+};
+
 /** 'Unique' identifier to be given to clients */
-enum ClientID {
+enum ClientID : uint32 {
 	INVALID_CLIENT_ID = 0, ///< Client is not part of anything
 	CLIENT_ID_SERVER  = 1, ///< Servers always have this ID
 	CLIENT_ID_FIRST   = 2, ///< The first client ID
@@ -66,8 +70,8 @@ struct NetworkCompanyStats {
 
 /** Some state information of a company, especially for servers */
 struct NetworkCompanyState {
-	char password[NETWORK_PASSWORD_LENGTH];         ///< The password for the company
-	uint16 months_empty;                            ///< How many months the company is empty
+	std::string password; ///< The password for the company
+	uint16 months_empty;  ///< How many months the company is empty
 };
 
 struct NetworkClientInfo;
@@ -78,14 +82,20 @@ enum NetworkPasswordType {
 	NETWORK_COMPANY_PASSWORD, ///< The password of the company.
 };
 
-/** Destination of our chat messages. */
+/**
+ * Destination of our chat messages.
+ * @warning The values of the enum items are part of the admin network API. Only append at the end.
+ */
 enum DestType {
 	DESTTYPE_BROADCAST, ///< Send message/notice to all clients (All)
 	DESTTYPE_TEAM,      ///< Send message/notice to everyone playing the same company (Team)
 	DESTTYPE_CLIENT,    ///< Send message/notice to only a certain client (Private)
 };
 
-/** Actions that can be used for NetworkTextMessage */
+/**
+ * Actions that can be used for NetworkTextMessage.
+ * @warning The values of the enum items are part of the admin network API. Only append at the end.
+ */
 enum NetworkAction {
 	NETWORK_ACTION_JOIN,
 	NETWORK_ACTION_LEAVE,
@@ -98,9 +108,14 @@ enum NetworkAction {
 	NETWORK_ACTION_COMPANY_SPECTATOR,
 	NETWORK_ACTION_COMPANY_JOIN,
 	NETWORK_ACTION_COMPANY_NEW,
+	NETWORK_ACTION_KICKED,
+	NETWORK_ACTION_EXTERNAL_CHAT,
 };
 
-/** The error codes we send around in the protocols. */
+/**
+ * The error codes we send around in the protocols.
+ * @warning The values of the enum items are part of the admin network API. Only append at the end.
+ */
 enum NetworkErrorCode {
 	NETWORK_ERROR_GENERAL, // Try to use this one like never
 
@@ -126,9 +141,9 @@ enum NetworkErrorCode {
 	NETWORK_ERROR_TIMEOUT_COMPUTER,
 	NETWORK_ERROR_TIMEOUT_MAP,
 	NETWORK_ERROR_TIMEOUT_JOIN,
+	NETWORK_ERROR_INVALID_CLIENT_NAME,
 
 	NETWORK_ERROR_END,
 };
 
-#endif /* ENABLE_NETWORK */
 #endif /* NETWORK_TYPE_H */

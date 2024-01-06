@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,17 +13,21 @@
 #include "../../station_base.h"
 #include "../../string_func.h"
 #include "../../strings_func.h"
+#include "../../station_cmd.h"
+#include "../../waypoint_cmd.h"
 #include "table/strings.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptBaseStation::IsValidBaseStation(StationID station_id)
 {
 	const BaseStation *st = ::BaseStation::GetIfValid(station_id);
-	return st != NULL && (st->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || st->owner == OWNER_NONE);
+	return st != nullptr && (st->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || st->owner == OWNER_NONE);
 }
 
 /* static */ char *ScriptBaseStation::GetName(StationID station_id)
 {
-	if (!IsValidBaseStation(station_id)) return NULL;
+	if (!IsValidBaseStation(station_id)) return nullptr;
 
 	::SetDParam(0, station_id);
 	return GetString(::Station::IsValidID(station_id) ? STR_STATION_NAME : STR_WAYPOINT_NAME);
@@ -37,12 +39,16 @@
 
 	EnforcePrecondition(false, ScriptObject::GetCompany() != OWNER_DEITY);
 	EnforcePrecondition(false, IsValidBaseStation(station_id));
-	EnforcePrecondition(false, name != NULL);
+	EnforcePrecondition(false, name != nullptr);
 	const char *text = name->GetDecodedText();
 	EnforcePreconditionEncodedText(false, text);
 	EnforcePreconditionCustomError(false, ::Utf8StringLength(text) < MAX_LENGTH_STATION_NAME_CHARS, ScriptError::ERR_PRECONDITION_STRING_TOO_LONG);
 
-	return ScriptObject::DoCommand(0, station_id, 0, ::Station::IsValidID(station_id) ? CMD_RENAME_STATION : CMD_RENAME_WAYPOINT, text);
+	if (::Station::IsValidID(station_id)) {
+		return ScriptObject::Command<CMD_RENAME_STATION>::Do(station_id, text);
+	} else {
+		return ScriptObject::Command<CMD_RENAME_WAYPOINT>::Do(station_id, text);
+	}
 }
 
 /* static */ TileIndex ScriptBaseStation::GetLocation(StationID station_id)
@@ -52,9 +58,9 @@
 	return ::BaseStation::Get(station_id)->xy;
 }
 
-/* static */ int32 ScriptBaseStation::GetConstructionDate(StationID station_id)
+/* static */ ScriptDate::Date ScriptBaseStation::GetConstructionDate(StationID station_id)
 {
-	if (!IsValidBaseStation(station_id)) return -1;
+	if (!IsValidBaseStation(station_id)) return ScriptDate::DATE_INVALID;
 
-	return ::BaseStation::Get(station_id)->build_date;
+	return (ScriptDate::Date)::BaseStation::Get(station_id)->build_date;
 }

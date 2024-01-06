@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,7 +22,5 @@ enum StatusBarInvalidate {
 
 bool IsNewsTickerShown();
 void ShowStatusBar();
-
-extern int16 *_preferred_statusbar_size;
 
 #endif /* STATUSBAR_GUI_H */

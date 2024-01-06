@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,85 +19,96 @@
 
 #include "table/strings.h"
 
+#include "safeguards.h"
+
 /**
  * Draw the details for the given vehicle at the given position
  *
  * @param v     current vehicle
- * @param left  The left most coordinate to draw
- * @param right The right most coordinate to draw
- * @param y     The y coordinate
+ * @param r     the Rect to draw within
  */
-void DrawAircraftDetails(const Aircraft *v, int left, int right, int y)
+void DrawAircraftDetails(const Aircraft *v, const Rect &r)
 {
-	int y_offset = (v->Next()->cargo_cap != 0) ? -(FONT_HEIGHT_NORMAL + 1): 0;
 	Money feeder_share = 0;
 
-	for (const Aircraft *u = v; u != NULL; u = u->Next()) {
+	int y = r.top;
+	for (const Aircraft *u = v; u != nullptr; u = u->Next()) {
 		if (u->IsNormalAircraft()) {
-			SetDParam(0, u->engine_type);
+			SetDParam(0, PackEngineNameDParam(u->engine_type, EngineNameContext::VehicleDetails));
 			SetDParam(1, u->build_year);
 			SetDParam(2, u->value);
-			DrawString(left, right, y, STR_VEHICLE_INFO_BUILT_VALUE);
+			DrawString(r.left, r.right, y, STR_VEHICLE_INFO_BUILT_VALUE);
+			y += FONT_HEIGHT_NORMAL;
 
 			SetDParam(0, u->cargo_type);
 			SetDParam(1, u->cargo_cap);
 			SetDParam(2, u->Next()->cargo_type);
 			SetDParam(3, u->Next()->cargo_cap);
 			SetDParam(4, GetCargoSubtypeText(u));
-			DrawString(left, right, y + FONT_HEIGHT_NORMAL, (u->Next()->cargo_cap != 0) ? STR_VEHICLE_INFO_CAPACITY_CAPACITY : STR_VEHICLE_INFO_CAPACITY);
+			DrawString(r.left, r.right, y, (u->Next()->cargo_cap != 0) ? STR_VEHICLE_INFO_CAPACITY_CAPACITY : STR_VEHICLE_INFO_CAPACITY);
+			y += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
 		}
 
 		if (u->cargo_cap != 0) {
-			uint cargo_count = u->cargo.Count();
+			uint cargo_count = u->cargo.StoredCount();
 
-			y_offset += FONT_HEIGHT_NORMAL + 1;
 			if (cargo_count != 0) {
 				/* Cargo names (fix pluralness) */
 				SetDParam(0, u->cargo_type);
 				SetDParam(1, cargo_count);
 				SetDParam(2, u->cargo.Source());
-				DrawString(left, right, y + 2 * FONT_HEIGHT_NORMAL + 1 + y_offset, STR_VEHICLE_DETAILS_CARGO_FROM);
+				DrawString(r.left, r.right, y, STR_VEHICLE_DETAILS_CARGO_FROM);
+				y += FONT_HEIGHT_NORMAL;
 				feeder_share += u->cargo.FeederShare();
 			}
 		}
 	}
 
+	y += WidgetDimensions::scaled.vsep_normal;
 	SetDParam(0, feeder_share);
-	DrawString(left, right, y + 3 * FONT_HEIGHT_NORMAL + 3 + y_offset, STR_VEHICLE_INFO_FEEDER_CARGO_VALUE);
+	DrawString(r.left, r.right, y, STR_VEHICLE_INFO_FEEDER_CARGO_VALUE);
 }
 
 
 /**
  * Draws an image of an aircraft
  * @param v         Front vehicle
- * @param left      The minimum horizontal position
- * @param right     The maximum horizontal position
- * @param y         Vertical position to draw at
+ * @param r         Rect to draw at
  * @param selection Selected vehicle to draw a frame around
  */
-void DrawAircraftImage(const Vehicle *v, int left, int right, int y, VehicleID selection, EngineImageType image_type)
+void DrawAircraftImage(const Vehicle *v, const Rect &r, VehicleID selection, EngineImageType image_type)
 {
 	bool rtl = _current_text_dir == TD_RTL;
 
-	SpriteID sprite = v->GetImage(rtl ? DIR_E : DIR_W, image_type);
-	const Sprite *real_sprite = GetSprite(sprite, ST_NORMAL);
+	VehicleSpriteSeq seq;
+	v->GetImage(rtl ? DIR_E : DIR_W, image_type, &seq);
 
-	int width = UnScaleByZoom(real_sprite->width, ZOOM_LVL_GUI);
-	int x_offs = UnScaleByZoom(real_sprite->x_offs, ZOOM_LVL_GUI);
-	int x = rtl ? right - width - x_offs : left - x_offs;
+	Rect rect;
+	seq.GetBounds(&rect);
+
+	int width = UnScaleGUI(rect.Width());
+	int x_offs = UnScaleGUI(rect.left);
+	int x = rtl ? r.right - width - x_offs : r.left - x_offs;
+	/* This magic -1 offset is related to the sprite_y_offsets in build_vehicle_gui.cpp */
+	int y = ScaleSpriteTrad(-1) + CenterBounds(r.top, r.bottom, 0);
 	bool helicopter = v->subtype == AIR_HELICOPTER;
 
+	int heli_offs = 0;
+
 	PaletteID pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
-	DrawSprite(sprite, pal, x, y + 10);
+	seq.Draw(x, y, pal, (v->vehstatus & VS_CRASHED) != 0);
 	if (helicopter) {
 		const Aircraft *a = Aircraft::From(v);
-		SpriteID rotor_sprite = GetCustomRotorSprite(a, true, image_type);
-		if (rotor_sprite == 0) rotor_sprite = SPR_ROTOR_STOPPED;
-		DrawSprite(rotor_sprite, PAL_NONE, x, y + 5);
+		VehicleSpriteSeq rotor_seq;
+		GetCustomRotorSprite(a, image_type, &rotor_seq);
+		if (!rotor_seq.IsValid()) rotor_seq.Set(SPR_ROTOR_STOPPED);
+		heli_offs = ScaleSpriteTrad(5);
+		rotor_seq.Draw(x, y - heli_offs, PAL_NONE, false);
 	}
 	if (v->index == selection) {
 		x += x_offs;
-		y += UnScaleByZoom(real_sprite->y_offs, ZOOM_LVL_GUI) + 10 - (helicopter ? 5 : 0);
-		DrawFrameRect(x - 1, y - 1, x + width + 1, y + UnScaleByZoom(real_sprite->height, ZOOM_LVL_GUI) + (helicopter ? 5 : 0) + 1, COLOUR_WHITE, FR_BORDERONLY);
+		y += UnScaleGUI(rect.top) - heli_offs;
+		Rect hr = {x, y, x + width - 1, y + UnScaleGUI(rect.Height()) + heli_offs - 1};
+		DrawFrameRect(hr.Expand(WidgetDimensions::scaled.bevel), COLOUR_WHITE, FR_BORDERONLY);
 	}
 }

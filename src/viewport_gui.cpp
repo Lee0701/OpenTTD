@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -22,12 +20,15 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 
-/* Extra ViewPort Window Stuff */
-static const NWidgetPart _nested_extra_view_port_widgets[] = {
+#include "safeguards.h"
+
+/* Extra Viewport Window Stuff */
+static const NWidgetPart _nested_extra_viewport_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_CAPTION, COLOUR_GREY, WID_EV_CAPTION), SetDataTip(STR_EXTRA_VIEW_PORT_TITLE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_GREY, WID_EV_CAPTION), SetDataTip(STR_EXTRA_VIEWPORT_TITLE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY),
@@ -51,13 +52,13 @@ static const NWidgetPart _nested_extra_view_port_widgets[] = {
 
 class ExtraViewportWindow : public Window {
 public:
-	ExtraViewportWindow(const WindowDesc *desc, int window_number, TileIndex tile) : Window()
+	ExtraViewportWindow(WindowDesc *desc, int window_number, TileIndex tile) : Window(desc)
 	{
-		this->InitNested(desc, window_number);
+		this->InitNested(window_number);
 
 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_EV_VIEWPORT);
-		nvp->InitializeViewport(this, 0, ZOOM_LVL_VIEWPORT);
-		if (_settings_client.gui.zoom_min == ZOOM_LVL_VIEWPORT) this->DisableWidget(WID_EV_ZOOM_IN);
+		nvp->InitializeViewport(this, 0, ScaleZoomGUI(ZOOM_LVL_VIEWPORT));
+		if (_settings_client.gui.zoom_min == viewport->zoom) this->DisableWidget(WID_EV_ZOOM_IN);
 
 		Point pt;
 		if (tile == INVALID_TILE) {
@@ -68,7 +69,7 @@ public:
 			pt.x = w->viewport->scrollpos_x + w->viewport->virtual_width / 2;
 			pt.y = w->viewport->scrollpos_y + w->viewport->virtual_height / 2;
 		} else {
-			pt = RemapCoords(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, TileHeight(tile));
+			pt = RemapCoords(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, TilePixelHeight(tile));
 		}
 
 		this->viewport->scrollpos_x = pt.x - this->viewport->virtual_width / 2;
@@ -77,7 +78,7 @@ public:
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
 			case WID_EV_CAPTION:
@@ -87,7 +88,7 @@ public:
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_EV_ZOOM_IN: DoZoomInOutWindow(ZOOM_IN,  this); break;
@@ -117,15 +118,15 @@ public:
 		}
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
-		if (this->viewport != NULL) {
+		if (this->viewport != nullptr) {
 			NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_EV_VIEWPORT);
 			nvp->UpdateViewportCoordinates(this);
 		}
 	}
 
-	virtual void OnScroll(Point delta)
+	void OnScroll(Point delta) override
 	{
 		this->viewport->scrollpos_x += ScaleByZoom(delta.x, this->viewport->zoom);
 		this->viewport->scrollpos_y += ScaleByZoom(delta.y, this->viewport->zoom);
@@ -133,9 +134,9 @@ public:
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
 	}
 
-	virtual void OnMouseWheel(int wheel)
+	void OnMouseWheel(int wheel) override
 	{
-		if (_settings_client.gui.scrollwheel_scrolling == 0) {
+		if (_settings_client.gui.scrollwheel_scrolling != 2) {
 			ZoomInOrOutToCursorWindow(wheel < 0, this);
 		}
 	}
@@ -145,7 +146,7 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		/* Only handle zoom message if intended for us (msg ZOOM_IN/ZOOM_OUT) */
@@ -153,25 +154,25 @@ public:
 	}
 };
 
-static const WindowDesc _extra_view_port_desc(
-	WDP_AUTO, 300, 268,
-	WC_EXTRA_VIEW_PORT, WC_NONE,
+static WindowDesc _extra_viewport_desc(
+	WDP_AUTO, "extra_viewport", 300, 268,
+	WC_EXTRA_VIEWPORT, WC_NONE,
 	0,
-	_nested_extra_view_port_widgets, lengthof(_nested_extra_view_port_widgets)
+	_nested_extra_viewport_widgets, lengthof(_nested_extra_viewport_widgets)
 );
 
 /**
  * Show a new Extra Viewport window.
  * @param tile Tile to center the view on. INVALID_TILE means to use the center of main viewport.
  */
-void ShowExtraViewPortWindow(TileIndex tile)
+void ShowExtraViewportWindow(TileIndex tile)
 {
 	int i = 0;
 
 	/* find next free window number for extra viewport */
-	while (FindWindowById(WC_EXTRA_VIEW_PORT, i) != NULL) i++;
+	while (FindWindowById(WC_EXTRA_VIEWPORT, i) != nullptr) i++;
 
-	new ExtraViewportWindow(&_extra_view_port_desc, i, tile);
+	new ExtraViewportWindow(&_extra_viewport_desc, i, tile);
 }
 
 /**
@@ -179,10 +180,10 @@ void ShowExtraViewPortWindow(TileIndex tile)
  * Center it on the tile under the cursor, if the cursor is inside a viewport.
  * If that fails, center it on main viewport center.
  */
-void ShowExtraViewPortWindowForTileUnderCursor()
+void ShowExtraViewportWindowForTileUnderCursor()
 {
 	/* Use tile under mouse as center for new viewport.
 	 * Do this before creating the window, it might appear just below the mouse. */
 	Point pt = GetTileBelowCursor();
-	ShowExtraViewPortWindow(pt.x != -1 ? TileVirtXY(pt.x, pt.y) : INVALID_TILE);
+	ShowExtraViewportWindow(pt.x != -1 ? TileVirtXY(pt.x, pt.y) : INVALID_TILE);
 }

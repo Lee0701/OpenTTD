@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,15 +12,18 @@
 #include "../../command_type.h"
 #include "../../settings_type.h"
 #include "../../network/network.h"
+#include "../../misc_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptGame::Pause()
 {
-	return ScriptObject::DoCommand(0, PM_PAUSED_GAME_SCRIPT, 1, CMD_PAUSE);
+	return ScriptObject::Command<CMD_PAUSE>::Do(PM_PAUSED_GAME_SCRIPT, true);
 }
 
 /* static */ bool ScriptGame::Unpause()
 {
-	return ScriptObject::DoCommand(0, PM_PAUSED_GAME_SCRIPT, 0, CMD_PAUSE);
+	return ScriptObject::Command<CMD_PAUSE>::Do(PM_PAUSED_GAME_SCRIPT, false);
 }
 
 /* static */ bool ScriptGame::IsPaused()
@@ -37,9 +38,5 @@
 
 /* static */ bool ScriptGame::IsMultiplayer()
 {
-#ifdef ENABLE_NETWORK
 	return _network_server;
-#else
-	return false;
-#endif
 }

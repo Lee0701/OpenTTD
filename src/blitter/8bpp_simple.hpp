@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,18 +16,17 @@
 /** Most trivial 8bpp blitter. */
 class Blitter_8bppSimple FINAL : public Blitter_8bppBase {
 public:
-	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
+	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
+	Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator) override;
 
-	/* virtual */ const char *GetName() { return "8bpp-simple"; }
+	const char *GetName() override { return "8bpp-simple"; }
 };
 
 /** Factory for the most trivial 8bpp blitter. */
-class FBlitter_8bppSimple: public BlitterFactory<FBlitter_8bppSimple> {
+class FBlitter_8bppSimple : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "8bpp-simple"; }
-	/* virtual */ const char *GetDescription() { return "8bpp Simple Blitter (relative slow, but never wrong)"; }
-	/* virtual */ Blitter *CreateInstance() { return new Blitter_8bppSimple(); }
+	FBlitter_8bppSimple() : BlitterFactory("8bpp-simple", "8bpp Simple Blitter (relative slow, but never wrong)") {}
+	Blitter *CreateInstance() override { return new Blitter_8bppSimple(); }
 };
 
 #endif /* BLITTER_8BPP_SIMPLE_HPP */

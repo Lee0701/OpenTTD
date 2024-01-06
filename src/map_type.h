@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,29 +15,33 @@
  * Look at docs/landscape.html for the exact meaning of the members.
  */
 struct Tile {
-	byte   type_height; ///< The type (bits 4..7) and height of the northern corner
-	byte   m1;          ///< Primarily used for ownership information
+	byte   type;        ///< The type (bits 4..7), bridges (2..3), rainforest/desert (0..1)
+	byte   height;      ///< The height of the northern corner.
 	uint16 m2;          ///< Primarily used for indices to towns, industries and stations
+	byte   m1;          ///< Primarily used for ownership information
 	byte   m3;          ///< General purpose
 	byte   m4;          ///< General purpose
 	byte   m5;          ///< General purpose
-	byte   m6;          ///< Primarily used for bridges and rainforest/desert
 };
+
+static_assert(sizeof(Tile) == 8);
 
 /**
  * Data that is stored per tile. Also used Tile for this.
  * Look at docs/landscape.html for the exact meaning of the members.
  */
 struct TileExtended {
-	byte m7; ///< Primarily used for newgrf support
+	byte m6;   ///< General purpose
+	byte m7;   ///< Primarily used for newgrf support
+	uint16 m8; ///< General purpose
 };
 
 /**
- * An offset value between to tiles.
+ * An offset value between two tiles.
  *
  * This value is used for the difference between
- * to tiles. It can be added to a tileindex to get
- * the resulting tileindex of the start tile applied
+ * two tiles. It can be added to a TileIndex to get
+ * the resulting TileIndex of the start tile applied
  * with this saved difference.
  *
  * @see TileDiffXY(int, int)
@@ -58,16 +60,16 @@ struct TileIndexDiffC {
 };
 
 /** Minimal and maximal map width and height */
-static const uint MIN_MAP_SIZE_BITS = 6;                      ///< Minimal size of map is equal to 2 ^ MIN_MAP_SIZE_BITS
-static const uint MAX_MAP_SIZE_BITS = 11;                     ///< Maximal size of map is equal to 2 ^ MAX_MAP_SIZE_BITS
-static const uint MIN_MAP_SIZE      = 1 << MIN_MAP_SIZE_BITS; ///< Minimal map size = 64
-static const uint MAX_MAP_SIZE      = 1 << MAX_MAP_SIZE_BITS; ///< Maximal map size = 2048
+static const uint MIN_MAP_SIZE_BITS = 6;                       ///< Minimal size of map is equal to 2 ^ MIN_MAP_SIZE_BITS
+static const uint MAX_MAP_SIZE_BITS = 12;                      ///< Maximal size of map is equal to 2 ^ MAX_MAP_SIZE_BITS
+static const uint MIN_MAP_SIZE      = 1U << MIN_MAP_SIZE_BITS; ///< Minimal map size = 64
+static const uint MAX_MAP_SIZE      = 1U << MAX_MAP_SIZE_BITS; ///< Maximal map size = 4096
 
 /**
  * Approximation of the length of a straight track, relative to a diagonal
  * track (ie the size of a tile side).
  *
- * #defined instead of const so it can
+ * \#defined instead of const so it can
  * stay integer. (no runtime float operations) Is this needed?
  * Watch out! There are _no_ brackets around here, to prevent intermediate
  * rounding! Be careful when using this!
@@ -76,7 +78,7 @@ static const uint MAX_MAP_SIZE      = 1 << MAX_MAP_SIZE_BITS; ///< Maximal map s
 #define STRAIGHT_TRACK_LENGTH 7071/10000
 
 /** Argument for CmdLevelLand describing what to do. */
-enum LevelMode {
+enum LevelMode : byte {
 	LM_LEVEL, ///< Level the land.
 	LM_LOWER, ///< Lower the land.
 	LM_RAISE, ///< Raise the land.

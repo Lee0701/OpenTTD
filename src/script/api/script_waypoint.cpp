@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,10 +13,12 @@
 #include "script_marine.hpp"
 #include "../../waypoint_base.h"
 
+#include "../../safeguards.h"
+
 /* static */ bool ScriptWaypoint::IsValidWaypoint(StationID waypoint_id)
 {
 	const Waypoint *wp = ::Waypoint::GetIfValid(waypoint_id);
-	return wp != NULL && (wp->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || wp->owner == OWNER_NONE);
+	return wp != nullptr && (wp->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || wp->owner == OWNER_NONE);
 }
 
 /* static */ StationID ScriptWaypoint::GetWaypointID(TileIndex tile)

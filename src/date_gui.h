@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,8 +18,8 @@
  * @param w the window that sends the callback
  * @param date the date that has been chosen
  */
-typedef void SetDateCallback(const Window *w, Date date);
+typedef void SetDateCallback(const Window *w, Date date, void *data);
 
-void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback);
+void ShowSetDateWindow(Window *parent, int window_number, Date initial_date, Year min_year, Year max_year, SetDateCallback *callback, void *callback_data);
 
 #endif /* DATE_GUI_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -28,13 +26,16 @@
 #include "date_func.h"
 #include "core/geometry_func.hpp"
 #include "gamelog.h"
+#include "stringfilter_type.h"
+#include "misc_cmd.h"
 
 #include "widgets/fios_widget.h"
 
 #include "table/sprites.h"
 #include "table/strings.h"
 
-SaveLoadDialogMode _saveload_mode;
+#include "safeguards.h"
+
 LoadCheckData _load_check_data;    ///< Data loaded from save during SL_LOAD_CHECK.
 
 static bool _fios_path_changed;
@@ -49,20 +50,19 @@ void LoadCheckData::Clear()
 	this->checkable = false;
 	this->error = INVALID_STRING_ID;
 	free(this->error_data);
-	this->error_data = NULL;
+	this->error_data = nullptr;
 
 	this->map_size_x = this->map_size_y = 256; // Default for old savegames which do not store mapsize.
 	this->current_date = 0;
-	memset(&this->settings, 0, sizeof(this->settings));
+	this->settings = {};
 
-	const CompanyPropertiesMap::iterator end = this->companies.End();
-	for (CompanyPropertiesMap::iterator it = this->companies.Begin(); it != end; it++) {
-		delete it->second;
+	for (auto &pair : this->companies) {
+		delete pair.second;
 	}
-	companies.Clear();
+	companies.clear();
 
 	GamelogFree(this->gamelog_action, this->gamelog_actions);
-	this->gamelog_action = NULL;
+	this->gamelog_action = nullptr;
 	this->gamelog_actions = 0;
 
 	ClearGRFConfigList(&this->grfconfig);
@@ -73,10 +73,24 @@ static const NWidgetPart _nested_load_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
+	/* Current directory and free space */
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
+
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+		/* Left side : filter box and available files */
 		NWidget(NWID_VERTICAL),
+			/* Filter box with label */
+			NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), SetResize(1, 1),
+				NWidget(NWID_HORIZONTAL), SetPadding(WidgetDimensions::unscaled.framerect.top, 0, WidgetDimensions::unscaled.framerect.bottom, 0),
+					SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.frametext.right, 0),
+						NWidget(WWT_TEXT, COLOUR_GREY), SetFill(0, 1), SetDataTip(STR_SAVELOAD_FILTER_TITLE , STR_NULL),
+						NWidget(WWT_EDITBOX, COLOUR_GREY, WID_SL_FILTER), SetFill(1, 0), SetMinimalSize(50, 12), SetResize(1, 0),
+							SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
+				EndContainer(),
+			EndContainer(),
+			/* Sort buttons */
 			NWidget(NWID_HORIZONTAL),
 				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYNAME), SetDataTip(STR_SORT_BY_CAPTION_NAME, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
@@ -84,20 +98,25 @@ static const NWidgetPart _nested_load_dialog_widgets[] = {
 				EndContainer(),
 				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SL_HOME_BUTTON), SetMinimalSize(12, 12), SetDataTip(SPR_HOUSE_ICON, STR_SAVELOAD_HOME_BUTTON),
 			EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_FILE_BACKGROUND),
-				NWidget(NWID_HORIZONTAL),
-					NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetFill(1, 1), SetPadding(2, 1, 2, 2),
+			/* Files */
+			NWidget(NWID_HORIZONTAL),
+				NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_FILE_BACKGROUND),
+					NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 							SetDataTip(0x0, STR_SAVELOAD_LIST_TOOLTIP), SetResize(1, 10), SetScrollbar(WID_SL_SCROLLBAR), EndContainer(),
-					NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
 				EndContainer(),
-				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SL_CONTENT_DOWNLOAD_SEL),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0),
-							SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
-				EndContainer(),
+				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
+			EndContainer(),
+			/* Online Content button */
+			NWidget(NWID_SELECTION, INVALID_COLOUR, WID_SL_CONTENT_DOWNLOAD_SEL),
+				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0),
+						SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
 			EndContainer(),
 		EndContainer(),
-		NWidget(WWT_PANEL, COLOUR_GREY),
-			NWidget(WWT_EMPTY, INVALID_COLOUR, WID_SL_DETAILS), SetResize(1, 1), SetFill(1, 1),
+
+		/* Right side : game details */
+		NWidget(NWID_VERTICAL),
+			NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_DETAILS), SetResize(1, 1), SetFill(1, 1),
+			EndContainer(),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_MISSING_NEWGRFS), SetDataTip(STR_NEWGRF_SETTINGS_FIND_MISSING_CONTENT_BUTTON, STR_NEWGRF_SETTINGS_FIND_MISSING_CONTENT_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 			NWidget(NWID_HORIZONTAL),
 				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
@@ -115,28 +134,43 @@ static const NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
+	/* Current directory and free space */
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
-	NWidget(NWID_VERTICAL),
-		NWidget(NWID_HORIZONTAL),
-			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYNAME), SetDataTip(STR_SORT_BY_CAPTION_NAME, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYDATE), SetDataTip(STR_SORT_BY_CAPTION_DATE, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
-			EndContainer(),
-			NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SL_HOME_BUTTON), SetMinimalSize(12, 12), SetDataTip(SPR_HOUSE_ICON, STR_SAVELOAD_HOME_BUTTON),
+
+	/* Filter box with label */
+	NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), SetResize(1, 1),
+		NWidget(NWID_HORIZONTAL), SetPadding(WidgetDimensions::unscaled.framerect.top, 0, WidgetDimensions::unscaled.framerect.bottom, 0),
+			SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.frametext.right, 0),
+				NWidget(WWT_TEXT, COLOUR_GREY), SetFill(0, 1), SetDataTip(STR_SAVELOAD_FILTER_TITLE , STR_NULL),
+				NWidget(WWT_EDITBOX, COLOUR_GREY, WID_SL_FILTER), SetFill(1, 0), SetMinimalSize(50, 12), SetResize(1, 0),
+					SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
 		EndContainer(),
+	EndContainer(),
+	/* Sort Buttons */
+	NWidget(NWID_HORIZONTAL),
+		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYNAME), SetDataTip(STR_SORT_BY_CAPTION_NAME, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYDATE), SetDataTip(STR_SORT_BY_CAPTION_DATE, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
+		EndContainer(),
+		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SL_HOME_BUTTON), SetMinimalSize(12, 12), SetDataTip(SPR_HOUSE_ICON, STR_SAVELOAD_HOME_BUTTON),
+	EndContainer(),
+	/* Files */
+	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_FILE_BACKGROUND),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetFill(1, 1), SetPadding(2, 1, 2, 2),
-						SetDataTip(0x0, STR_SAVELOAD_LIST_TOOLTIP), SetResize(1, 10), SetScrollbar(WID_SL_SCROLLBAR), EndContainer(),
-				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
-			EndContainer(),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0),
-						SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
-				NWidget(WWT_RESIZEBOX, COLOUR_GREY),
-			EndContainer(),
+			NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetFill(1, 1), SetPadding(2, 2, 2, 2),
+					SetDataTip(0x0, STR_SAVELOAD_LIST_TOOLTIP), SetResize(1, 10), SetScrollbar(WID_SL_SCROLLBAR), EndContainer(),
 		EndContainer(),
+		NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
+	EndContainer(),
+	/* Online Content and Load button */
+	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0), SetFill(1, 0),
+				SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_LOAD_BUTTON), SetResize(1, 0), SetFill(1, 0),
+				SetDataTip(STR_SAVELOAD_LOAD_BUTTON, STR_SAVELOAD_LOAD_HEIGHTMAP_TOOLTIP),
+		NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 	EndContainer(),
 };
 
@@ -145,10 +179,23 @@ static const NWidgetPart _nested_save_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
+	/* Current directory and free space */
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+		/* Left side : filter box and available files */
 		NWidget(NWID_VERTICAL),
+			/* Filter box with label */
+			NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), SetResize(1, 1),
+				NWidget(NWID_HORIZONTAL), SetPadding(WidgetDimensions::unscaled.framerect.top, 0, WidgetDimensions::unscaled.framerect.bottom, 0),
+					SetPIP(WidgetDimensions::unscaled.frametext.left, WidgetDimensions::unscaled.frametext.right, 0),
+					NWidget(WWT_TEXT, COLOUR_GREY), SetFill(0, 1), SetDataTip(STR_SAVELOAD_FILTER_TITLE , STR_NULL),
+					NWidget(WWT_EDITBOX, COLOUR_GREY, WID_SL_FILTER), SetFill(1, 0), SetMinimalSize(50, 12), SetResize(1, 0),
+						SetDataTip(STR_LIST_FILTER_OSKTITLE, STR_LIST_FILTER_TOOLTIP),
+				EndContainer(),
+			EndContainer(),
+			/* Sort buttons */
 			NWidget(NWID_HORIZONTAL),
 				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SORT_BYNAME), SetDataTip(STR_SORT_BY_CAPTION_NAME, STR_TOOLTIP_SORT_ORDER), SetFill(1, 0), SetResize(1, 0),
@@ -156,67 +203,64 @@ static const NWidgetPart _nested_save_dialog_widgets[] = {
 				EndContainer(),
 				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SL_HOME_BUTTON), SetMinimalSize(12, 12), SetDataTip(SPR_HOUSE_ICON, STR_SAVELOAD_HOME_BUTTON),
 			EndContainer(),
-			NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_FILE_BACKGROUND),
-				NWidget(NWID_HORIZONTAL),
-					NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetPadding(2, 1, 0, 2),
+			/* Files */
+			NWidget(NWID_HORIZONTAL),
+				NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_FILE_BACKGROUND),
+					NWidget(WWT_INSET, COLOUR_GREY, WID_SL_DRIVES_DIRECTORIES_LIST), SetPadding(2, 2, 2, 2),
 							SetDataTip(0x0, STR_SAVELOAD_LIST_TOOLTIP), SetResize(1, 10), SetScrollbar(WID_SL_SCROLLBAR), EndContainer(),
-					NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
 				EndContainer(),
-				NWidget(WWT_EDITBOX, COLOUR_GREY, WID_SL_SAVE_OSK_TITLE), SetPadding(3, 2, 2, 2), SetFill(1, 0), SetResize(1, 0),
+				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
+			EndContainer(),
+			NWidget(WWT_PANEL, COLOUR_GREY),
+				NWidget(WWT_EDITBOX, COLOUR_GREY, WID_SL_SAVE_OSK_TITLE), SetPadding(2, 2, 2, 2), SetFill(1, 0), SetResize(1, 0),
 						SetDataTip(STR_SAVELOAD_OSKTITLE, STR_SAVELOAD_EDITBOX_TOOLTIP),
 			EndContainer(),
+			/* Save/delete buttons */
 			NWidget(NWID_HORIZONTAL),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_DELETE_SELECTION), SetDataTip(STR_SAVELOAD_DELETE_BUTTON, STR_SAVELOAD_DELETE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_SAVE_GAME),        SetDataTip(STR_SAVELOAD_SAVE_BUTTON, STR_SAVELOAD_SAVE_TOOLTIP),     SetFill(1, 0), SetResize(1, 0),
 			EndContainer(),
 		EndContainer(),
-		NWidget(WWT_PANEL, COLOUR_GREY),
-			NWidget(WWT_EMPTY, INVALID_COLOUR, WID_SL_DETAILS), SetResize(1, 1), SetFill(1, 1),
+
+		/* Right side : game details */
+		NWidget(NWID_VERTICAL),
+			NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_DETAILS), SetResize(1, 1), SetFill(1, 1), EndContainer(),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(NWID_SPACER), SetResize(1, 0), SetFill(1, 1),
+				NWidget(WWT_PANEL, COLOUR_GREY), SetResize(1, 0), SetFill(1, 1), EndContainer(),
 				NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 			EndContainer(),
 		EndContainer(),
 	EndContainer(),
 };
 
-/** Colours for fios types, indexed by #FiosType. */
-const TextColour _fios_colours[] = {
-	TC_LIGHT_BLUE, TC_DARK_GREEN,  TC_DARK_GREEN, TC_ORANGE, TC_LIGHT_BROWN,
-	TC_ORANGE,     TC_LIGHT_BROWN, TC_ORANGE,     TC_ORANGE, TC_YELLOW
+/** Text colours of #DetailedFileType fios entries in the window. */
+static const TextColour _fios_colours[] = {
+	TC_LIGHT_BROWN,  // DFT_OLD_GAME_FILE
+	TC_ORANGE,       // DFT_GAME_FILE
+	TC_YELLOW,       // DFT_HEIGHTMAP_BMP
+	TC_ORANGE,       // DFT_HEIGHTMAP_PNG
+	TC_LIGHT_BLUE,   // DFT_FIOS_DRIVE
+	TC_DARK_GREEN,   // DFT_FIOS_PARENT
+	TC_DARK_GREEN,   // DFT_FIOS_DIR
+	TC_ORANGE,       // DFT_FIOS_DIRECT
 };
 
-void BuildFileList()
+
+/**
+ * Sort the collected list save games prior to displaying it in the save/load gui.
+ * @param[in,out] file_list List of save game files found in the directory.
+ */
+static void SortSaveGameList(FileList &file_list)
 {
-	_fios_path_changed = true;
-	FiosFreeSavegameList();
-
-	switch (_saveload_mode) {
-		case SLD_LOAD_SCENARIO:
-		case SLD_SAVE_SCENARIO:
-			FiosGetScenarioList(_saveload_mode); break;
-		case SLD_SAVE_HEIGHTMAP:
-		case SLD_LOAD_HEIGHTMAP:
-			FiosGetHeightmapList(_saveload_mode); break;
-
-		default: FiosGetSavegameList(_saveload_mode); break;
-	}
-
-	/* Invalidate saveload window */
-	InvalidateWindowData(WC_SAVELOAD, 0, 2, true);
-}
-
-static void MakeSortedSaveGameList()
-{
-	uint sort_start = 0;
-	uint sort_end = 0;
+	size_t sort_start = 0;
+	size_t sort_end = 0;
 
 	/* Directories are always above the files (FIOS_TYPE_DIR)
 	 * Drives (A:\ (windows only) are always under the files (FIOS_TYPE_DRIVE)
 	 * Only sort savegames/scenarios, not directories
 	 */
-	for (const FiosItem *item = _fios_items.Begin(); item != _fios_items.End(); item++) {
-		switch (item->type) {
+	for (const auto &item : file_list) {
+		switch (item.type) {
 			case FIOS_TYPE_DIR:    sort_start++; break;
 			case FIOS_TYPE_PARENT: sort_start++; break;
 			case FIOS_TYPE_DRIVE:  sort_end++;   break;
@@ -224,16 +268,38 @@ static void MakeSortedSaveGameList()
 		}
 	}
 
-	uint s_amount = _fios_items.Length() - sort_start - sort_end;
-	QSortT(_fios_items.Get(sort_start), s_amount, CompareFiosItems);
+	std::sort(file_list.begin() + sort_start, file_list.end() - sort_end);
 }
 
 struct SaveLoadWindow : public Window {
 private:
+	static const uint EDITBOX_MAX_SIZE   =  50;
+
 	QueryString filename_editbox; ///< Filename editbox.
-	FiosItem o_dir;
-	const FiosItem *selected;
+	AbstractFileType abstract_filetype; /// Type of file to select.
+	SaveLoadOperation fop;        ///< File operation to perform.
+	FileList fios_items;          ///< Save game list.
+	FiosItem o_dir;               ///< Original dir (home dir for this browser)
+	const FiosItem *selected;     ///< Selected game in #fios_items, or \c nullptr.
+	const FiosItem *highlighted;  ///< Item in fios_items highlighted by mouse pointer, or \c nullptr.
 	Scrollbar *vscroll;
+
+	StringFilter string_filter; ///< Filter for available games.
+	QueryString filter_editbox; ///< Filter editbox;
+	std::vector<bool> fios_items_shown; ///< Map of the filtered out fios items
+
+	static void SaveGameConfirmationCallback(Window *w, bool confirmed)
+	{
+		/* File name has already been written to _file_to_saveload */
+		if (confirmed) _switch_mode = SM_SAVE_GAME;
+	}
+
+	static void SaveHeightmapConfirmationCallback(Window *w, bool confirmed)
+	{
+		/* File name has already been written to _file_to_saveload */
+		if (confirmed) _switch_mode = SM_SAVE_HEIGHTMAP;
+	}
+
 public:
 
 	/** Generate a default save filename. */
@@ -243,87 +309,115 @@ public:
 		this->filename_editbox.text.UpdateSize();
 	}
 
-	SaveLoadWindow(const WindowDesc *desc, SaveLoadDialogMode mode) : filename_editbox(64)
+	SaveLoadWindow(WindowDesc *desc, AbstractFileType abstract_filetype, SaveLoadOperation fop)
+			: Window(desc), filename_editbox(64), abstract_filetype(abstract_filetype), fop(fop), filter_editbox(EDITBOX_MAX_SIZE)
 	{
-		static const StringID saveload_captions[] = {
-			STR_SAVELOAD_LOAD_CAPTION,
-			STR_SAVELOAD_LOAD_SCENARIO,
-			STR_SAVELOAD_SAVE_CAPTION,
-			STR_SAVELOAD_SAVE_SCENARIO,
-			STR_SAVELOAD_LOAD_HEIGHTMAP,
-			STR_SAVELOAD_SAVE_HEIGHTMAP,
-		};
-		assert((uint)mode < lengthof(saveload_captions));
+		assert(this->fop == SLO_SAVE || this->fop == SLO_LOAD);
 
-		/* Use an array to define what will be the current file type being handled
-		 * by current file mode */
-		switch (mode) {
-			case SLD_SAVE_GAME:     this->GenerateFileName(); break;
-			case SLD_SAVE_HEIGHTMAP:
-			case SLD_SAVE_SCENARIO: this->filename_editbox.text.Assign("UNNAMED"); break;
-			default:                break;
+		/* For saving, construct an initial file name. */
+		if (this->fop == SLO_SAVE) {
+			switch (this->abstract_filetype) {
+				case FT_SAVEGAME:
+					this->GenerateFileName();
+					break;
+
+				case FT_SCENARIO:
+				case FT_HEIGHTMAP:
+					this->filename_editbox.text.Assign("UNNAMED");
+					break;
+
+				default:
+					NOT_REACHED();
+			}
 		}
-
 		this->querystrings[WID_SL_SAVE_OSK_TITLE] = &this->filename_editbox;
 		this->filename_editbox.ok_button = WID_SL_SAVE_GAME;
 
-		this->CreateNestedTree(desc, true);
-		if (mode == SLD_LOAD_GAME) this->GetWidget<NWidgetStacked>(WID_SL_CONTENT_DOWNLOAD_SEL)->SetDisplayedPlane(SZSP_HORIZONTAL);
-		this->GetWidget<NWidgetCore>(WID_SL_CAPTION)->widget_data = saveload_captions[mode];
-		this->vscroll = this->GetScrollbar(WID_SL_SCROLLBAR);
+		this->CreateNestedTree(true);
+		if (this->fop == SLO_LOAD && this->abstract_filetype == FT_SAVEGAME) {
+			this->GetWidget<NWidgetStacked>(WID_SL_CONTENT_DOWNLOAD_SEL)->SetDisplayedPlane(SZSP_HORIZONTAL);
+		}
 
-		this->FinishInitNested(desc, 0);
+		/* Select caption string of the window. */
+		StringID caption_string;
+		switch (this->abstract_filetype) {
+			case FT_SAVEGAME:
+				caption_string = (this->fop == SLO_SAVE) ? STR_SAVELOAD_SAVE_CAPTION : STR_SAVELOAD_LOAD_CAPTION;
+				break;
+
+			case FT_SCENARIO:
+				caption_string = (this->fop == SLO_SAVE) ? STR_SAVELOAD_SAVE_SCENARIO : STR_SAVELOAD_LOAD_SCENARIO;
+				break;
+
+			case FT_HEIGHTMAP:
+				caption_string = (this->fop == SLO_SAVE) ? STR_SAVELOAD_SAVE_HEIGHTMAP : STR_SAVELOAD_LOAD_HEIGHTMAP;
+				break;
+
+			default:
+				NOT_REACHED();
+		}
+		this->GetWidget<NWidgetCore>(WID_SL_CAPTION)->widget_data = caption_string;
+
+		this->vscroll = this->GetScrollbar(WID_SL_SCROLLBAR);
+		this->FinishInitNested(0);
 
 		this->LowerWidget(WID_SL_DRIVES_DIRECTORIES_LIST);
+		this->querystrings[WID_SL_FILTER] = &this->filter_editbox;
+		this->filter_editbox.cancel_button = QueryString::ACTION_CLEAR;
 
 		/* pause is only used in single-player, non-editor mode, non-menu mode. It
 		 * will be unpaused in the WE_DESTROY event handler. */
 		if (_game_mode != GM_MENU && !_networking && _game_mode != GM_EDITOR) {
-			DoCommandP(0, PM_PAUSED_SAVELOAD, 1, CMD_PAUSE);
+			Command<CMD_PAUSE>::Post(PM_PAUSED_SAVELOAD, true);
 		}
 		SetObjectToPlace(SPR_CURSOR_ZZZ, PAL_NONE, HT_NONE, WC_MAIN_WINDOW, 0);
 
-		this->OnInvalidateData(0);
+		this->OnInvalidateData(SLIWD_RESCAN_FILES);
 
 		ResetObjectToPlace();
 
+		/* Select the initial directory. */
 		o_dir.type = FIOS_TYPE_DIRECT;
-		switch (_saveload_mode) {
-			case SLD_SAVE_GAME:
-			case SLD_LOAD_GAME:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), SAVE_DIR);
+		std::string dir;
+		switch (this->abstract_filetype) {
+			case FT_SAVEGAME:
+				dir = FioFindDirectory(SAVE_DIR);
 				break;
 
-			case SLD_SAVE_SCENARIO:
-			case SLD_LOAD_SCENARIO:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), SCENARIO_DIR);
+			case FT_SCENARIO:
+				dir = FioFindDirectory(SCENARIO_DIR);
 				break;
 
-			case SLD_SAVE_HEIGHTMAP:
-			case SLD_LOAD_HEIGHTMAP:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), HEIGHTMAP_DIR);
+			case FT_HEIGHTMAP:
+				dir = FioFindDirectory(HEIGHTMAP_DIR);
 				break;
 
 			default:
-				strecpy(o_dir.name, _personal_dir, lastof(o_dir.name));
+				dir = _personal_dir;
 		}
+		strecpy(o_dir.name, dir.c_str(), lastof(o_dir.name));
 
-		/* Focus the edit box by default in the save windows */
-		if (_saveload_mode == SLD_SAVE_GAME || _saveload_mode == SLD_SAVE_SCENARIO || _saveload_mode == SLD_SAVE_HEIGHTMAP) {
-			this->SetFocusedWidget(WID_SL_SAVE_OSK_TITLE);
+		switch (this->fop) {
+			case SLO_SAVE:
+				/* Focus the edit box by default in the save window */
+				this->SetFocusedWidget(WID_SL_SAVE_OSK_TITLE);
+				break;
+
+			default:
+				this->SetFocusedWidget(WID_SL_FILTER);
 		}
 	}
 
-	virtual ~SaveLoadWindow()
+	void Close() override
 	{
 		/* pause is only used in single-player, non-editor mode, non menu mode */
 		if (!_networking && _game_mode != GM_EDITOR && _game_mode != GM_MENU) {
-			DoCommandP(0, PM_PAUSED_SAVELOAD, 0, CMD_PAUSE);
+			Command<CMD_PAUSE>::Post(PM_PAUSED_SAVELOAD, false);
 		}
-		FiosFreeSavegameList();
+		this->Window::Close();
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		switch (widget) {
 			case WID_SL_SORT_BYNAME:
@@ -334,7 +428,7 @@ public:
 				break;
 
 			case WID_SL_BACKGROUND: {
-				static const char *path = NULL;
+				static const char *path = nullptr;
 				static StringID str = STR_ERROR_UNABLE_TO_READ_DRIVE;
 				static uint64 tot = 0;
 
@@ -343,140 +437,160 @@ public:
 					_fios_path_changed = false;
 				}
 
+				Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+
 				if (str != STR_ERROR_UNABLE_TO_READ_DRIVE) SetDParam(0, tot);
-				DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, r.top + FONT_HEIGHT_NORMAL + WD_FRAMERECT_TOP, str);
-				DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, r.top + WD_FRAMERECT_TOP, path, TC_BLACK);
+				DrawString(ir.left, ir.right, ir.top + FONT_HEIGHT_NORMAL, str);
+				DrawString(ir.left, ir.right, ir.top, path, TC_BLACK);
 				break;
 			}
 
 			case WID_SL_DRIVES_DIRECTORIES_LIST: {
-				GfxFillRect(r.left + 1, r.top + 1, r.right, r.bottom, PC_BLACK);
+				const Rect br = r.Shrink(WidgetDimensions::scaled.bevel);
+				GfxFillRect(br, PC_BLACK);
 
-				uint y = r.top + WD_FRAMERECT_TOP;
-				for (uint pos = this->vscroll->GetPosition(); pos < _fios_items.Length(); pos++) {
-					const FiosItem *item = _fios_items.Get(pos);
+				Rect tr = r.Shrink(WidgetDimensions::scaled.inset).WithHeight(this->resize.step_height);
+				uint scroll_pos = this->vscroll->GetPosition();
+				for (uint row = 0; row < this->fios_items.size() && tr.top < br.bottom; row++) {
+					if (!this->fios_items_shown[row]) {
+						/* The current item is filtered out : we do not show it */
+						scroll_pos++;
+						continue;
+					}
+					if (row < scroll_pos) continue;
+					const FiosItem *item = &this->fios_items[row];
 
 					if (item == this->selected) {
-						GfxFillRect(r.left + 1, y, r.right, y + this->resize.step_height, PC_DARK_BLUE);
+						GfxFillRect(br.left, tr.top, br.right, tr.bottom, PC_DARK_BLUE);
+					} else if (item == this->highlighted) {
+						GfxFillRect(br.left, tr.top, br.right, tr.bottom, PC_VERY_DARK_BLUE);
 					}
-					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, item->title, _fios_colours[item->type]);
-					y += this->resize.step_height;
-					if (y >= this->vscroll->GetCapacity() * this->resize.step_height + r.top + WD_FRAMERECT_TOP) break;
+					DrawString(tr, item->title, _fios_colours[GetDetailedFileType(item->type)]);
+					tr = tr.Translate(0, this->resize.step_height);
 				}
 				break;
 			}
 
-			case WID_SL_DETAILS: {
-				GfxFillRect(r.left + WD_FRAMERECT_LEFT, r.top + WD_FRAMERECT_TOP,
-						r.right - WD_FRAMERECT_RIGHT, r.top + FONT_HEIGHT_NORMAL * 2 + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM, PC_GREY);
-				DrawString(r.left, r.right, r.top + FONT_HEIGHT_NORMAL / 2 + WD_FRAMERECT_TOP, STR_SAVELOAD_DETAIL_CAPTION, TC_FROMSTRING, SA_HOR_CENTER);
-
-				if (this->selected == NULL) break;
-
-				uint y = r.top + FONT_HEIGHT_NORMAL * 2 + WD_PAR_VSEP_NORMAL + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
-				uint y_max = r.bottom - FONT_HEIGHT_NORMAL - WD_FRAMERECT_BOTTOM;
-
-				if (y > y_max) break;
-				if (!_load_check_data.checkable) {
-					/* Old savegame, no information available */
-					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_SAVELOAD_DETAIL_NOT_AVAILABLE);
-					y += FONT_HEIGHT_NORMAL;
-				} else if (_load_check_data.error != INVALID_STRING_ID) {
-					/* Incompatible / broken savegame */
-					SetDParamStr(0, _load_check_data.error_data);
-					y = DrawStringMultiLine(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT,
-							y, r.bottom - WD_FRAMERECT_BOTTOM, _load_check_data.error, TC_RED);
-				} else {
-					/* Mapsize */
-					SetDParam(0, _load_check_data.map_size_x);
-					SetDParam(1, _load_check_data.map_size_y);
-					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_NETWORK_SERVER_LIST_MAP_SIZE);
-					y += FONT_HEIGHT_NORMAL;
-					if (y > y_max) break;
-
-					/* Climate */
-					byte landscape = _load_check_data.settings.game_creation.landscape;
-					if (landscape < NUM_LANDSCAPE) {
-						SetDParam(0, STR_CHEAT_SWITCH_CLIMATE_TEMPERATE_LANDSCAPE + landscape);
-						DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_NETWORK_SERVER_LIST_LANDSCAPE);
-						y += FONT_HEIGHT_NORMAL;
-					}
-
-					y += WD_PAR_VSEP_NORMAL;
-					if (y > y_max) break;
-
-					/* Start date (if available) */
-					if (_load_check_data.settings.game_creation.starting_year != 0) {
-						SetDParam(0, ConvertYMDToDate(_load_check_data.settings.game_creation.starting_year, 0, 1));
-						DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_NETWORK_SERVER_LIST_START_DATE);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (y > y_max) break;
-
-					/* Hide current date for scenarios */
-					if (_saveload_mode != SLD_LOAD_SCENARIO && _saveload_mode != SLD_SAVE_SCENARIO) {
-						/* Current date */
-						SetDParam(0, _load_check_data.current_date);
-						DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_NETWORK_SERVER_LIST_CURRENT_DATE);
-						y += FONT_HEIGHT_NORMAL;
-					}
-
-					/* Hide the NewGRF stuff when saving. We also hide the button. */
-					if (_saveload_mode == SLD_LOAD_GAME || _saveload_mode == SLD_LOAD_SCENARIO) {
-						y += WD_PAR_VSEP_NORMAL;
-						if (y > y_max) break;
-
-						/* NewGrf compatibility */
-						SetDParam(0, _load_check_data.grfconfig == NULL ? STR_NEWGRF_LIST_NONE :
-								STR_NEWGRF_LIST_ALL_FOUND + _load_check_data.grf_compatibility);
-						DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_SAVELOAD_DETAIL_GRFSTATUS);
-						y += FONT_HEIGHT_NORMAL;
-					}
-					if (y > y_max) break;
-
-					/* Hide the company stuff for scenarios */
-					if (_saveload_mode != SLD_LOAD_SCENARIO && _saveload_mode != SLD_SAVE_SCENARIO) {
-						y += FONT_HEIGHT_NORMAL;
-						if (y > y_max) break;
-
-						/* Companies / AIs */
-						CompanyPropertiesMap::const_iterator end = _load_check_data.companies.End();
-						for (CompanyPropertiesMap::const_iterator it = _load_check_data.companies.Begin(); it != end; it++) {
-							SetDParam(0, it->first + 1);
-							const CompanyProperties &c = *it->second;
-							if (c.name != NULL) {
-								SetDParam(1, STR_JUST_RAW_STRING);
-								SetDParamStr(2, c.name);
-							} else {
-								SetDParam(1, c.name_1);
-								SetDParam(2, c.name_2);
-							}
-							DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_SAVELOAD_DETAIL_COMPANY_INDEX);
-							y += FONT_HEIGHT_NORMAL;
-							if (y > y_max) break;
-						}
-					}
-				}
+			case WID_SL_DETAILS:
+				this->DrawDetails(r);
 				break;
+		}
+	}
+
+	void DrawDetails(const Rect &r) const
+	{
+		/* Header panel */
+		int HEADER_HEIGHT = FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.frametext.Vertical();
+
+		Rect hr = r.WithHeight(HEADER_HEIGHT).Shrink(WidgetDimensions::scaled.frametext);
+		Rect tr = r.Shrink(WidgetDimensions::scaled.frametext);
+		tr.top += HEADER_HEIGHT;
+
+		/* Create the nice grayish rectangle at the details top */
+		GfxFillRect(r.WithHeight(HEADER_HEIGHT).Shrink(WidgetDimensions::scaled.bevel.left, WidgetDimensions::scaled.bevel.top, WidgetDimensions::scaled.bevel.right, 0), PC_GREY);
+		DrawString(hr.left, hr.right, hr.top, STR_SAVELOAD_DETAIL_CAPTION, TC_FROMSTRING, SA_HOR_CENTER);
+
+		if (this->selected == nullptr) return;
+
+		/* Details panel */
+		tr.bottom -= FONT_HEIGHT_NORMAL - 1;
+		if (tr.top > tr.bottom) return;
+
+		if (!_load_check_data.checkable) {
+			/* Old savegame, no information available */
+			DrawString(tr, STR_SAVELOAD_DETAIL_NOT_AVAILABLE);
+			tr.top += FONT_HEIGHT_NORMAL;
+		} else if (_load_check_data.error != INVALID_STRING_ID) {
+			/* Incompatible / broken savegame */
+			SetDParamStr(0, _load_check_data.error_data);
+			tr.top = DrawStringMultiLine(tr, _load_check_data.error, TC_RED);
+		} else {
+			/* Mapsize */
+			SetDParam(0, _load_check_data.map_size_x);
+			SetDParam(1, _load_check_data.map_size_y);
+			DrawString(tr, STR_NETWORK_SERVER_LIST_MAP_SIZE);
+			tr.top += FONT_HEIGHT_NORMAL;
+			if (tr.top > tr.bottom) return;
+
+			/* Climate */
+			byte landscape = _load_check_data.settings.game_creation.landscape;
+			if (landscape < NUM_LANDSCAPE) {
+				SetDParam(0, STR_CLIMATE_TEMPERATE_LANDSCAPE + landscape);
+				DrawString(tr, STR_NETWORK_SERVER_LIST_LANDSCAPE);
+				tr.top += FONT_HEIGHT_NORMAL;
+			}
+
+			tr.top += WidgetDimensions::scaled.vsep_normal;
+			if (tr.top > tr.bottom) return;
+
+			/* Start date (if available) */
+			if (_load_check_data.settings.game_creation.starting_year != 0) {
+				SetDParam(0, ConvertYMDToDate(_load_check_data.settings.game_creation.starting_year, 0, 1));
+				DrawString(tr, STR_NETWORK_SERVER_LIST_START_DATE);
+				tr.top += FONT_HEIGHT_NORMAL;
+			}
+			if (tr.top > tr.bottom) return;
+
+			/* Hide current date for scenarios */
+			if (this->abstract_filetype != FT_SCENARIO) {
+				/* Current date */
+				SetDParam(0, _load_check_data.current_date);
+				DrawString(tr, STR_NETWORK_SERVER_LIST_CURRENT_DATE);
+				tr.top += FONT_HEIGHT_NORMAL;
+			}
+
+			/* Hide the NewGRF stuff when saving. We also hide the button. */
+			if (this->fop == SLO_LOAD && (this->abstract_filetype == FT_SAVEGAME || this->abstract_filetype == FT_SCENARIO)) {
+				tr.top += WidgetDimensions::scaled.vsep_normal;
+				if (tr.top > tr.bottom) return;
+
+				/* NewGrf compatibility */
+				SetDParam(0, _load_check_data.grfconfig == nullptr ? STR_NEWGRF_LIST_NONE :
+						STR_NEWGRF_LIST_ALL_FOUND + _load_check_data.grf_compatibility);
+				DrawString(tr, STR_SAVELOAD_DETAIL_GRFSTATUS);
+				tr.top += FONT_HEIGHT_NORMAL;
+			}
+			if (tr.top > tr.bottom) return;
+
+			/* Hide the company stuff for scenarios */
+			if (this->abstract_filetype != FT_SCENARIO) {
+				tr.top += WidgetDimensions::scaled.vsep_wide;
+				if (tr.top > tr.bottom) return;
+
+				/* Companies / AIs */
+				for (auto &pair : _load_check_data.companies) {
+					SetDParam(0, pair.first + 1);
+					const CompanyProperties &c = *pair.second;
+					if (!c.name.empty()) {
+						SetDParam(1, STR_JUST_RAW_STRING);
+						SetDParamStr(2, c.name);
+					} else {
+						SetDParam(1, c.name_1);
+						SetDParam(2, c.name_2);
+					}
+					DrawString(tr, STR_SAVELOAD_DETAIL_COMPANY_INDEX);
+					tr.top += FONT_HEIGHT_NORMAL;
+					if (tr.top > tr.bottom) break;
+				}
 			}
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SL_BACKGROUND:
-				size->height = 2 * FONT_HEIGHT_NORMAL + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+				size->height = 2 * FONT_HEIGHT_NORMAL + padding.height;
 				break;
 
 			case WID_SL_DRIVES_DIRECTORIES_LIST:
 				resize->height = FONT_HEIGHT_NORMAL;
-				size->height = resize->height * 10 + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+				size->height = resize->height * 10 + padding.height;
 				break;
 			case WID_SL_SORT_BYNAME:
 			case WID_SL_SORT_BYDATE: {
 				Dimension d = GetStringBoundingBox(this->GetWidget<NWidgetCore>(widget)->widget_data);
-				d.width += padding.width + WD_SORTBUTTON_ARROW_WIDTH * 2; // Doubled since the string is centred and it also looks better.
+				d.width += padding.width + Window::SortButtonWidth() * 2; // Doubled since the string is centred and it also looks better.
 				d.height += padding.height;
 				*size = maxdim(*size, d);
 				break;
@@ -484,18 +598,18 @@ public:
 		}
 	}
 
-	virtual void OnPaint()
+	void OnPaint() override
 	{
 		if (_savegame_sort_dirty) {
 			_savegame_sort_dirty = false;
-			MakeSortedSaveGameList();
+			SortSaveGameList(this->fios_items);
+			this->OnInvalidateData(SLIWD_FILTER_CHANGES);
 		}
 
-		this->vscroll->SetCount(_fios_items.Length());
 		this->DrawWidgets();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_SL_SORT_BYNAME: // Sort save names by name
@@ -514,22 +628,27 @@ public:
 
 			case WID_SL_HOME_BUTTON: // OpenTTD 'button', jumps to OpenTTD directory
 				FiosBrowseTo(&o_dir);
-				this->InvalidateData();
+				this->InvalidateData(SLIWD_RESCAN_FILES);
 				break;
 
-			case WID_SL_LOAD_BUTTON:
-				if (this->selected != NULL && !_load_check_data.HasErrors() && (_load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs())) {
+			case WID_SL_LOAD_BUTTON: {
+				if (this->selected == nullptr || _load_check_data.HasErrors()) break;
+
+				const char *name = FiosBrowseTo(this->selected);
+				_file_to_saveload.SetMode(this->selected->type);
+				_file_to_saveload.SetName(name);
+				_file_to_saveload.SetTitle(this->selected->title);
+
+				if (this->abstract_filetype == FT_HEIGHTMAP) {
+					this->Close();
+					ShowHeightmapLoad();
+				} else if (!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()) {
 					_switch_mode = (_game_mode == GM_EDITOR) ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
-
-					const char *name = FiosBrowseTo(this->selected);
-					SetFiosType(this->selected->type);
-
-					strecpy(_file_to_saveload.name, name, lastof(_file_to_saveload.name));
-					strecpy(_file_to_saveload.title, this->selected->title, lastof(_file_to_saveload.title));
 					ClearErrorMessages();
-					delete this;
+					this->Close();
 				}
 				break;
+			}
 
 			case WID_SL_NEWGRF_INFO:
 				if (_load_check_data.HasNewGrfs()) {
@@ -540,53 +659,62 @@ public:
 			case WID_SL_MISSING_NEWGRFS:
 				if (!_network_available) {
 					ShowErrorMessage(STR_NETWORK_ERROR_NOTAVAILABLE, INVALID_STRING_ID, WL_ERROR);
-				} else {
-#if defined(ENABLE_NETWORK)
+				} else if (_load_check_data.HasNewGrfs()) {
 					ShowMissingContentWindow(_load_check_data.grfconfig);
-#endif
 				}
 				break;
 
 			case WID_SL_DRIVES_DIRECTORIES_LIST: { // Click the listbox
-				int y = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_SL_DRIVES_DIRECTORIES_LIST, WD_FRAMERECT_TOP);
+				int y = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_SL_DRIVES_DIRECTORIES_LIST, WidgetDimensions::scaled.inset.top);
 				if (y == INT_MAX) return;
 
-				const FiosItem *file = _fios_items.Get(y);
+				/* Get the corresponding non-filtered out item from the list */
+				int i = 0;
+				while (i <= y) {
+					if (!this->fios_items_shown[i]) y++;
+					i++;
+				}
+				const FiosItem *file = &this->fios_items[y];
 
 				const char *name = FiosBrowseTo(file);
-				if (name != NULL) {
-					if (click_count == 1) {
-						if (this->selected != file) {
-							this->selected = file;
-							_load_check_data.Clear();
+				if (name == nullptr) {
+					/* Changed directory, need refresh. */
+					this->InvalidateData(SLIWD_RESCAN_FILES);
+					break;
+				}
 
-							if (file->type == FIOS_TYPE_FILE || file->type == FIOS_TYPE_SCENARIO) {
-								SaveOrLoad(name, SL_LOAD_CHECK, NO_DIRECTORY, false);
-							}
-
-							this->InvalidateData(1);
-						}
-						if (_saveload_mode == SLD_SAVE_GAME || _saveload_mode == SLD_SAVE_SCENARIO || _saveload_mode == SLD_SAVE_HEIGHTMAP) {
-							/* Copy clicked name to editbox */
-							this->filename_editbox.text.Assign(file->title);
-							this->SetWidgetDirty(WID_SL_SAVE_OSK_TITLE);
-						}
-					} else if (!_load_check_data.HasErrors()) {
+				if (click_count == 1) {
+					if (this->selected != file) {
 						this->selected = file;
-						if (_saveload_mode == SLD_LOAD_GAME || _saveload_mode == SLD_LOAD_SCENARIO) {
-							this->OnClick(pt, WID_SL_LOAD_BUTTON, 1);
-						} else if (_saveload_mode == SLD_LOAD_HEIGHTMAP) {
-							SetFiosType(file->type);
-							strecpy(_file_to_saveload.name, name, lastof(_file_to_saveload.name));
-							strecpy(_file_to_saveload.title, file->title, lastof(_file_to_saveload.title));
+						_load_check_data.Clear();
 
-							delete this;
+						if (GetDetailedFileType(file->type) == DFT_GAME_FILE) {
+							/* Other detailed file types cannot be checked before. */
+							SaveOrLoad(name, SLO_CHECK, DFT_GAME_FILE, NO_DIRECTORY, false);
+						}
+
+						this->InvalidateData(SLIWD_SELECTION_CHANGES);
+					}
+					if (this->fop == SLO_SAVE) {
+						/* Copy clicked name to editbox */
+						this->filename_editbox.text.Assign(file->title);
+						this->SetWidgetDirty(WID_SL_SAVE_OSK_TITLE);
+					}
+				} else if (!_load_check_data.HasErrors()) {
+					this->selected = file;
+					if (this->fop == SLO_LOAD) {
+						if (this->abstract_filetype == FT_SAVEGAME || this->abstract_filetype == FT_SCENARIO) {
+							this->OnClick(pt, WID_SL_LOAD_BUTTON, 1);
+						} else {
+							assert(this->abstract_filetype == FT_HEIGHTMAP);
+							_file_to_saveload.SetMode(file->type);
+							_file_to_saveload.SetName(name);
+							_file_to_saveload.SetTitle(file->title);
+
+							this->Close();
 							ShowHeightmapLoad();
 						}
 					}
-				} else {
-					/* Changed directory, need refresh. */
-					this->InvalidateData();
 				}
 				break;
 			}
@@ -595,13 +723,12 @@ public:
 				if (!_network_available) {
 					ShowErrorMessage(STR_NETWORK_ERROR_NOTAVAILABLE, INVALID_STRING_ID, WL_ERROR);
 				} else {
-#if defined(ENABLE_NETWORK)
-					switch (_saveload_mode) {
+					assert(this->fop == SLO_LOAD);
+					switch (this->abstract_filetype) {
 						default: NOT_REACHED();
-						case SLD_LOAD_SCENARIO:  ShowNetworkContentListWindow(NULL, CONTENT_TYPE_SCENARIO);  break;
-						case SLD_LOAD_HEIGHTMAP: ShowNetworkContentListWindow(NULL, CONTENT_TYPE_HEIGHTMAP); break;
+						case FT_SCENARIO:  ShowNetworkContentListWindow(nullptr, CONTENT_TYPE_SCENARIO);  break;
+						case FT_HEIGHTMAP: ShowNetworkContentListWindow(nullptr, CONTENT_TYPE_HEIGHTMAP); break;
 					}
-#endif
 				}
 				break;
 
@@ -615,37 +742,68 @@ public:
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	void OnMouseOver(Point pt, int widget) override
+	{
+		if (widget == WID_SL_DRIVES_DIRECTORIES_LIST) {
+			int y = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_SL_DRIVES_DIRECTORIES_LIST, WidgetDimensions::scaled.inset.top);
+			if (y == INT_MAX) return;
+
+			/* Get the corresponding non-filtered out item from the list */
+			int i = 0;
+			while (i <= y) {
+				if (!this->fios_items_shown[i]) y++;
+				i++;
+			}
+			const FiosItem *file = &this->fios_items[y];
+
+			if (file != this->highlighted) {
+				this->highlighted = file;
+				this->SetWidgetDirty(WID_SL_DRIVES_DIRECTORIES_LIST);
+			}
+		} else if (this->highlighted != nullptr) {
+			this->highlighted = nullptr;
+			this->SetWidgetDirty(WID_SL_DRIVES_DIRECTORIES_LIST);
+		}
+	}
+
+	EventState OnKeyPress(WChar key, uint16 keycode) override
 	{
 		if (keycode == WKC_ESC) {
-			delete this;
+			this->Close();
 			return ES_HANDLED;
 		}
 
 		return ES_NOT_HANDLED;
 	}
 
-	virtual void OnTimeout()
+	void OnTimeout() override
 	{
-		/* This test protects against using widgets 11 and 12 which are only available
-		 * in those saveload modes. */
-		if (!(_saveload_mode == SLD_SAVE_GAME || _saveload_mode == SLD_SAVE_SCENARIO || _saveload_mode == SLD_SAVE_HEIGHTMAP)) return;
+		/* Widgets WID_SL_DELETE_SELECTION and WID_SL_SAVE_GAME only exist when saving to a file. */
+		if (this->fop != SLO_SAVE) return;
 
 		if (this->IsWidgetLowered(WID_SL_DELETE_SELECTION)) { // Delete button clicked
 			if (!FiosDelete(this->filename_editbox.text.buf)) {
 				ShowErrorMessage(STR_ERROR_UNABLE_TO_DELETE_FILE, INVALID_STRING_ID, WL_ERROR);
 			} else {
-				this->InvalidateData();
+				this->InvalidateData(SLIWD_RESCAN_FILES);
 				/* Reset file name to current date on successful delete */
-				if (_saveload_mode == SLD_SAVE_GAME) GenerateFileName();
+				if (this->abstract_filetype == FT_SAVEGAME) GenerateFileName();
 			}
 		} else if (this->IsWidgetLowered(WID_SL_SAVE_GAME)) { // Save button clicked
-			if (_saveload_mode  == SLD_SAVE_GAME || _saveload_mode == SLD_SAVE_SCENARIO) {
-				_switch_mode = SM_SAVE_GAME;
-				FiosMakeSavegameName(_file_to_saveload.name, this->filename_editbox.text.buf, sizeof(_file_to_saveload.name));
+			if (this->abstract_filetype == FT_SAVEGAME || this->abstract_filetype == FT_SCENARIO) {
+				_file_to_saveload.name = FiosMakeSavegameName(this->filename_editbox.text.buf);
+				if (FioCheckFileExists(_file_to_saveload.name, Subdirectory::SAVE_DIR)) {
+					ShowQuery(STR_SAVELOAD_OVERWRITE_TITLE, STR_SAVELOAD_OVERWRITE_WARNING, this, SaveLoadWindow::SaveGameConfirmationCallback);
+				} else {
+					_switch_mode = SM_SAVE_GAME;
+				}
 			} else {
-				_switch_mode = SM_SAVE_HEIGHTMAP;
-				FiosMakeHeightmapName(_file_to_saveload.name, this->filename_editbox.text.buf, sizeof(_file_to_saveload.name));
+				_file_to_saveload.name = FiosMakeHeightmapName(this->filename_editbox.text.buf);
+				if (FioCheckFileExists(_file_to_saveload.name, Subdirectory::SAVE_DIR)) {
+					ShowQuery(STR_SAVELOAD_OVERWRITE_TITLE, STR_SAVELOAD_OVERWRITE_WARNING, this, SaveLoadWindow::SaveHeightmapConfirmationCallback);
+				} else {
+					_switch_mode = SM_SAVE_HEIGHTMAP;
+				}
 			}
 
 			/* In the editor set up the vehicle engines correctly (date might have changed) */
@@ -653,7 +811,7 @@ public:
 		}
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
 		this->vscroll->SetCapacityFromWidget(this, WID_SL_DRIVES_DIRECTORIES_LIST);
 	}
@@ -663,126 +821,133 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		switch (data) {
-			case 0:
+			case SLIWD_RESCAN_FILES:
 				/* Rescan files */
-				this->selected = NULL;
+				this->selected = nullptr;
 				_load_check_data.Clear();
 				if (!gui_scope) break;
-				BuildFileList();
-				/* FALL THROUGH */
-			case 1:
+
+				_fios_path_changed = true;
+				this->fios_items.BuildFileList(this->abstract_filetype, this->fop);
+				this->vscroll->SetCount((uint)this->fios_items.size());
+				this->selected = nullptr;
+				_load_check_data.Clear();
+
+				/* We reset the files filtered */
+				this->OnInvalidateData(SLIWD_FILTER_CHANGES);
+
+				FALLTHROUGH;
+
+			case SLIWD_SELECTION_CHANGES:
 				/* Selection changes */
 				if (!gui_scope) break;
-				if (_saveload_mode == SLD_LOAD_GAME || _saveload_mode == SLD_LOAD_SCENARIO) {
-					this->SetWidgetDisabledState(WID_SL_LOAD_BUTTON,
-							this->selected == NULL || _load_check_data.HasErrors() || !(_load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()));
-					this->SetWidgetDisabledState(WID_SL_NEWGRF_INFO,
-							!_load_check_data.HasNewGrfs());
-					this->SetWidgetDisabledState(WID_SL_MISSING_NEWGRFS,
-							!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility == GLC_ALL_GOOD);
+
+				if (this->fop != SLO_LOAD) break;
+
+				switch (this->abstract_filetype) {
+					case FT_HEIGHTMAP:
+						this->SetWidgetDisabledState(WID_SL_LOAD_BUTTON, this->selected == nullptr || _load_check_data.HasErrors());
+						break;
+
+					case FT_SAVEGAME:
+					case FT_SCENARIO: {
+						bool disabled = this->selected == nullptr || _load_check_data.HasErrors();
+						if (!_settings_client.gui.UserIsAllowedToChangeNewGRFs()) {
+							disabled |= _load_check_data.HasNewGrfs() && _load_check_data.grf_compatibility == GLC_NOT_FOUND;
+						}
+						this->SetWidgetDisabledState(WID_SL_LOAD_BUTTON, disabled);
+						this->SetWidgetDisabledState(WID_SL_NEWGRF_INFO, !_load_check_data.HasNewGrfs());
+						this->SetWidgetDisabledState(WID_SL_MISSING_NEWGRFS,
+								!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility == GLC_ALL_GOOD);
+						break;
+					}
+
+					default:
+						NOT_REACHED();
 				}
 				break;
-			case 2:
-				/* _fios_items changed */
-				this->vscroll->SetCount(_fios_items.Length());
-				this->selected = NULL;
-				_load_check_data.Clear();
+
+			case SLIWD_FILTER_CHANGES:
+				/* Filter changes */
+				this->fios_items_shown.resize(this->fios_items.size());
+				uint items_shown_count = 0; ///< The number of items shown in the list
+				/* We pass through every fios item */
+				for (uint i = 0; i < this->fios_items.size(); i++) {
+					if (this->string_filter.IsEmpty()) {
+						/* We don't filter anything out if the filter editbox is empty */
+						this->fios_items_shown[i] = true;
+						items_shown_count++;
+					} else {
+						this->string_filter.ResetState();
+						this->string_filter.AddLine(this->fios_items[i].title);
+						/* We set the vector to show this fios element as filtered depending on the result of the filter */
+						this->fios_items_shown[i] = this->string_filter.GetState();
+						if (this->fios_items_shown[i]) items_shown_count++;
+
+						if (&(this->fios_items[i]) == this->selected && !this->fios_items_shown[i]) {
+							/* The selected element has been filtered out */
+							this->selected = nullptr;
+							this->OnInvalidateData(SLIWD_SELECTION_CHANGES);
+						}
+					}
+				}
+				this->vscroll->SetCount(items_shown_count);
 				break;
+		}
+	}
+
+	void OnEditboxChanged(int wid) override
+	{
+		if (wid == WID_SL_FILTER) {
+			this->string_filter.SetFilterTerm(this->filter_editbox.text.buf);
+			this->InvalidateData(SLIWD_FILTER_CHANGES);
 		}
 	}
 };
 
 /** Load game/scenario */
-static const WindowDesc _load_dialog_desc(
-	WDP_CENTER, 500, 294,
+static WindowDesc _load_dialog_desc(
+	WDP_CENTER, "load_game", 500, 294,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_load_dialog_widgets, lengthof(_nested_load_dialog_widgets)
 );
 
 /** Load heightmap */
-static const WindowDesc _load_heightmap_dialog_desc(
-	WDP_CENTER, 257, 320,
+static WindowDesc _load_heightmap_dialog_desc(
+	WDP_CENTER, "load_heightmap", 257, 320,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_load_heightmap_dialog_widgets, lengthof(_nested_load_heightmap_dialog_widgets)
 );
 
 /** Save game/scenario */
-static const WindowDesc _save_dialog_desc(
-	WDP_CENTER, 500, 294,
+static WindowDesc _save_dialog_desc(
+	WDP_CENTER, "save_game", 500, 294,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_save_dialog_widgets, lengthof(_nested_save_dialog_widgets)
 );
 
 /**
- * These values are used to convert the file/operations mode into a corresponding file type.
- * So each entry, as expressed by the related comment, is based on the enum
- */
-static const FileType _file_modetotype[] = {
-	FT_SAVEGAME,  // used for SLD_LOAD_GAME
-	FT_SCENARIO,  // used for SLD_LOAD_SCENARIO
-	FT_SAVEGAME,  // used for SLD_SAVE_GAME
-	FT_SCENARIO,  // used for SLD_SAVE_SCENARIO
-	FT_HEIGHTMAP, // used for SLD_LOAD_HEIGHTMAP
-	FT_HEIGHTMAP, // used for SLD_SAVE_HEIGHTMAP
-};
-
-/**
  * Launch save/load dialog in the given mode.
- * @param mode Save/load mode.
+ * @param abstract_filetype Kind of file to handle.
+ * @param fop File operation to perform (load or save).
  */
-void ShowSaveLoadDialog(SaveLoadDialogMode mode)
+void ShowSaveLoadDialog(AbstractFileType abstract_filetype, SaveLoadOperation fop)
 {
-	DeleteWindowById(WC_SAVELOAD, 0);
+	CloseWindowById(WC_SAVELOAD, 0);
 
-	const WindowDesc *sld;
-	switch (mode) {
-		case SLD_SAVE_GAME:
-		case SLD_SAVE_SCENARIO:
-		case SLD_SAVE_HEIGHTMAP:
-			sld = &_save_dialog_desc; break;
-		case SLD_LOAD_HEIGHTMAP:
-			sld = &_load_heightmap_dialog_desc; break;
-		default:
-			sld = &_load_dialog_desc; break;
+	WindowDesc *sld;
+	if (fop == SLO_SAVE) {
+		sld = &_save_dialog_desc;
+	} else {
+		/* Dialogue for loading a file. */
+		sld = (abstract_filetype == FT_HEIGHTMAP) ? &_load_heightmap_dialog_desc : &_load_dialog_desc;
 	}
 
-	_saveload_mode = mode;
-	_file_to_saveload.filetype = _file_modetotype[mode];
-
-	new SaveLoadWindow(sld, mode);
-}
-
-void SetFiosType(const byte fiostype)
-{
-	switch (fiostype) {
-		case FIOS_TYPE_FILE:
-		case FIOS_TYPE_SCENARIO:
-			_file_to_saveload.mode = SL_LOAD;
-			break;
-
-		case FIOS_TYPE_OLDFILE:
-		case FIOS_TYPE_OLD_SCENARIO:
-			_file_to_saveload.mode = SL_OLD_LOAD;
-			break;
-
-#ifdef WITH_PNG
-		case FIOS_TYPE_PNG:
-			_file_to_saveload.mode = SL_PNG;
-			break;
-#endif /* WITH_PNG */
-
-		case FIOS_TYPE_BMP:
-			_file_to_saveload.mode = SL_BMP;
-			break;
-
-		default:
-			_file_to_saveload.mode = SL_INVALID;
-			break;
-	}
+	new SaveLoadWindow(sld, abstract_filetype, fop);
 }

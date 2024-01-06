@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,9 @@
 #include "../../core/alloc_func.hpp"
 #include "../../debug.h"
 #include "../../window_func.h"
+#include "../../string_func.h"
+
+#include "../../safeguards.h"
 
 /* static */ void ScriptLog::Info(const char *message)
 {
@@ -32,7 +33,7 @@
 
 /* static */ void ScriptLog::Log(ScriptLog::ScriptLogType level, const char *message)
 {
-	if (ScriptObject::GetLogPointer() == NULL) {
+	if (ScriptObject::GetLogPointer() == nullptr) {
 		ScriptObject::GetLogPointer() = new LogData();
 		LogData *log = (LogData *)ScriptObject::GetLogPointer();
 
@@ -51,12 +52,12 @@
 
 	/* Free last message, and write new message */
 	free(log->lines[log->pos]);
-	log->lines[log->pos] = strdup(message);
+	log->lines[log->pos] = stredup(message);
 	log->type[log->pos] = level;
 
 	/* Cut string after first \n */
 	char *p;
-	while ((p = strchr(log->lines[log->pos], '\n')) != NULL) {
+	while ((p = strchr(log->lines[log->pos], '\n')) != nullptr) {
 		*p = '\0';
 		break;
 	}
@@ -73,7 +74,7 @@
 	}
 
 	/* Also still print to debug window */
-	DEBUG(script, level, "[%d] [%c] %s", (uint)ScriptObject::GetRootCompany(), logc, log->lines[log->pos]);
+	Debug(script, level, "[{}] [{}] {}", (uint)ScriptObject::GetRootCompany(), logc, log->lines[log->pos]);
 	InvalidateWindowData(WC_AI_DEBUG, 0, ScriptObject::GetRootCompany());
 }
 

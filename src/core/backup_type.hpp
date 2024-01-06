@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -53,7 +51,7 @@ struct Backup {
 		{
 			/* We cannot assert here, as missing restoration is 'normal' when exceptions are thrown.
 			 * Exceptions are especially used to abort world generation. */
-			DEBUG(misc, 0, "%s:%d: Backupped value was not restored!", this->file, this->line);
+			Debug(misc, 0, "{}:{}: Backed-up value was not restored!", this->file, this->line);
 			this->Restore();
 		}
 	}

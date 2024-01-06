@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,12 +10,20 @@
 #include "../../stdafx.h"
 #include "script_industry.hpp"
 #include "script_cargo.hpp"
+#include "script_company.hpp"
+#include "script_error.hpp"
 #include "script_map.hpp"
+#include "../../company_base.h"
 #include "../../industry.h"
+#include "../../string_func.h"
 #include "../../strings_func.h"
 #include "../../station_base.h"
 #include "../../newgrf_industries.h"
+#include "../../industry_cmd.h"
 #include "table/strings.h"
+#include <numeric>
+
+#include "../../safeguards.h"
 
 /* static */ int32 ScriptIndustry::GetIndustryCount()
 {
@@ -37,10 +43,24 @@
 
 /* static */ char *ScriptIndustry::GetName(IndustryID industry_id)
 {
-	if (!IsValidIndustry(industry_id)) return NULL;
+	if (!IsValidIndustry(industry_id)) return nullptr;
 
 	::SetDParam(0, industry_id);
 	return GetString(STR_INDUSTRY_NAME);
+}
+
+/* static */ bool ScriptIndustry::SetText(IndustryID industry_id, Text *text)
+{
+	CCountedPtr<Text> counter(text);
+
+	const char *encoded_text = nullptr;
+	if (text != nullptr) {
+		encoded_text = text->GetEncodedText();
+		EnforcePreconditionEncodedText(false, encoded_text);
+	}
+	EnforcePrecondition(false, IsValidIndustry(industry_id));
+
+	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetText, INDCTL_NONE, INVALID_OWNER, std::string{ encoded_text ? encoded_text : "" });
 }
 
 /* static */ ScriptIndustry::CargoAcceptState ScriptIndustry::IsCargoAccepted(IndustryID industry_id, CargoID cargo_id)
@@ -130,9 +150,7 @@
 	if (!IsValidIndustry(industry_id)) return -1;
 
 	Industry *ind = ::Industry::Get(industry_id);
-	StationList stations;
-	::FindStationsAroundTiles(ind->location, &stations);
-	return (int32)stations.Length();
+	return (int32)ind->stations_near.size();
 }
 
 /* static */ int32 ScriptIndustry::GetDistanceManhattanToTile(IndustryID industry_id, TileIndex tile)
@@ -169,7 +187,7 @@
 	if (!HasHeliport(industry_id)) return INVALID_TILE;
 
 	const Industry *ind = ::Industry::Get(industry_id);
-	TILE_AREA_LOOP(tile_cur, ind->location) {
+	for (TileIndex tile_cur : ind->location) {
 		if (IsTileType(tile_cur, MP_STATION) && IsOilRig(tile_cur)) {
 			return tile_cur;
 		}
@@ -191,7 +209,7 @@
 	if (!HasDock(industry_id)) return INVALID_TILE;
 
 	const Industry *ind = ::Industry::Get(industry_id);
-	TILE_AREA_LOOP(tile_cur, ind->location) {
+	for (TileIndex tile_cur : ind->location) {
 		if (IsTileType(tile_cur, MP_STATION) && IsOilRig(tile_cur)) {
 			return tile_cur;
 		}
@@ -205,4 +223,78 @@
 	if (!IsValidIndustry(industry_id)) return INVALID_INDUSTRYTYPE;
 
 	return ::Industry::Get(industry_id)->type;
+}
+
+int32 ScriptIndustry::GetLastProductionYear(IndustryID industry_id)
+{
+	Industry *i = Industry::GetIfValid(industry_id);
+	if (i == nullptr) return 0;
+	return i->last_prod_year;
+}
+
+ScriptDate::Date ScriptIndustry::GetCargoLastAcceptedDate(IndustryID industry_id, CargoID cargo_type)
+{
+	Industry *i = Industry::GetIfValid(industry_id);
+	if (i == nullptr) return ScriptDate::DATE_INVALID;
+
+	if (cargo_type == CT_INVALID) {
+		return (ScriptDate::Date)std::accumulate(std::begin(i->last_cargo_accepted_at), std::end(i->last_cargo_accepted_at), 0, [](Date a, Date b) { return std::max(a, b); });
+	} else {
+		int index = i->GetCargoAcceptedIndex(cargo_type);
+		if (index < 0) return ScriptDate::DATE_INVALID;
+		return (ScriptDate::Date)i->last_cargo_accepted_at[index];
+	}
+}
+
+uint32 ScriptIndustry::GetControlFlags(IndustryID industry_id)
+{
+	Industry *i = Industry::GetIfValid(industry_id);
+	if (i == nullptr) return 0;
+	return i->ctlflags;
+}
+
+bool ScriptIndustry::SetControlFlags(IndustryID industry_id, uint32 control_flags)
+{
+	if (ScriptObject::GetCompany() != OWNER_DEITY) return false;
+	if (!IsValidIndustry(industry_id)) return false;
+
+	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetControlFlags, (::IndustryControlFlags)control_flags & ::INDCTL_MASK, INVALID_OWNER, {});
+}
+
+/* static */ ScriptCompany::CompanyID ScriptIndustry::GetExclusiveSupplier(IndustryID industry_id)
+{
+	if (!IsValidIndustry(industry_id)) return ScriptCompany::COMPANY_INVALID;
+
+	auto company_id = ::Industry::Get(industry_id)->exclusive_supplier;
+	if (!::Company::IsValidID(company_id)) return ScriptCompany::COMPANY_INVALID;
+
+	return (ScriptCompany::CompanyID)((byte)company_id);
+}
+
+/* static */ bool ScriptIndustry::SetExclusiveSupplier(IndustryID industry_id, ScriptCompany::CompanyID company_id)
+{
+	EnforcePrecondition(false, IsValidIndustry(industry_id));
+
+	auto company = ScriptCompany::ResolveCompanyID(company_id);
+	::Owner owner = (company == ScriptCompany::COMPANY_INVALID ? ::INVALID_OWNER : (::Owner)company);
+	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetExclusiveSupplier, INDCTL_NONE, owner, {});
+}
+
+/* static */ ScriptCompany::CompanyID ScriptIndustry::GetExclusiveConsumer(IndustryID industry_id)
+{
+	if (!IsValidIndustry(industry_id)) return ScriptCompany::COMPANY_INVALID;
+
+	auto company_id = ::Industry::Get(industry_id)->exclusive_consumer;
+	if (!::Company::IsValidID(company_id)) return ScriptCompany::COMPANY_INVALID;
+
+	return (ScriptCompany::CompanyID)((byte)company_id);
+}
+
+/* static */ bool ScriptIndustry::SetExclusiveConsumer(IndustryID industry_id, ScriptCompany::CompanyID company_id)
+{
+	EnforcePrecondition(false, IsValidIndustry(industry_id));
+
+	auto company = ScriptCompany::ResolveCompanyID(company_id);
+	::Owner owner = (company == ScriptCompany::COMPANY_INVALID ? ::INVALID_OWNER : (::Owner)company);
+	return ScriptObject::Command<CMD_INDUSTRY_CTRL>::Do(industry_id, IndustryAction::SetExclusiveConsumer, INDCTL_NONE, owner, {});
 }

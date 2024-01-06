@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -91,7 +89,7 @@ enum TTDPAirportType {
 struct HangarTileTable {
 	TileIndexDiffC ti; ///< Tile offset from the top-most airport tile.
 	Direction dir;     ///< Direction of the exit.
-	byte hangar_num;   ///< The hanger to which this tile belongs.
+	byte hangar_num;   ///< The hangar to which this tile belongs.
 };
 
 /**
@@ -100,7 +98,7 @@ struct HangarTileTable {
 struct AirportSpec {
 	const struct AirportFTAClass *fsm;     ///< the finite statemachine for the default airports
 	const AirportTileTable * const *table; ///< list of the tiles composing the airport
-	Direction *rotation;                   ///< the rotation of each tiletable
+	const Direction *rotation;             ///< the rotation of each tiletable
 	byte num_table;                        ///< number of elements in the table
 	const HangarTileTable *depot_table;    ///< gives the position of the depots on the airports
 	byte nof_depots;                       ///< the number of hangar tiles in this airport
@@ -123,6 +121,7 @@ struct AirportSpec {
 	static AirportSpec *GetWithoutOverride(byte type);
 
 	bool IsAvailable() const;
+	bool IsWithinMapBounds(byte table, TileIndex index) const;
 
 	static void ResetAirports();
 
@@ -133,7 +132,7 @@ struct AirportSpec {
 		return (byte)(this - specs);
 	}
 
-	static AirportSpec dummy; ///< The dummy airport.
+	static const AirportSpec dummy; ///< The dummy airport.
 
 private:
 	static AirportSpec specs[NUM_AIRPORTS]; ///< Specs of the airports.

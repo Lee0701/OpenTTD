@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,7 @@
 #define SCRIPT_BASESTATION_HPP
 
 #include "script_text.hpp"
+#include "script_date.hpp"
 
 /**
  * Base class for stations and waypoints.
@@ -51,7 +50,7 @@ public:
 	 * @param station_id The basestation to set the name of.
 	 * @param name The new name of the station (can be either a raw string, or a ScriptText object).
 	 * @pre IsValidBaseStation(station_id).
-	 * @pre name != NULL && len(name) != 0.
+	 * @pre name != null && len(name) != 0.
 	 * @game @pre Valid ScriptCompanyMode active in scope.
 	 * @exception ScriptError::ERR_NAME_IS_NOT_UNIQUE
 	 * @return True if the name was changed.
@@ -73,7 +72,7 @@ public:
 	 * @param station_id The station to look at.
 	 * @return The last date some part of this station was build.
 	 */
-	static int32 GetConstructionDate(StationID station_id);
+	static ScriptDate::Date GetConstructionDate(StationID station_id);
 };
 
 #endif /* SCRIPT_BASESTATION_HPP */

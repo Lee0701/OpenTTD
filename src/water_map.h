@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -28,8 +26,8 @@ enum WaterTileTypeBitLayout {
 
 	WBL_COAST_FLAG        = 0,   ///< Flag for coast.
 
-	WBL_LOCK_ORIENT_BEGIN = 0,   ///< Start of lock orientiation bitfield.
-	WBL_LOCK_ORIENT_COUNT = 2,   ///< Length of lock orientiation bitfield.
+	WBL_LOCK_ORIENT_BEGIN = 0,   ///< Start of lock orientation bitfield.
+	WBL_LOCK_ORIENT_COUNT = 2,   ///< Length of lock orientation bitfield.
 	WBL_LOCK_PART_BEGIN   = 2,   ///< Start of lock part bitfield.
 	WBL_LOCK_PART_COUNT   = 2,   ///< Length of lock part bitfield.
 
@@ -46,7 +44,7 @@ enum WaterTileType {
 };
 
 /** classes of water (for #WATER_TILE_CLEAR water tile type). */
-enum WaterClass {
+enum WaterClass : byte {
 	WATER_CLASS_SEA,     ///< Sea.
 	WATER_CLASS_CANAL,   ///< Canal.
 	WATER_CLASS_RIVER,   ///< River.
@@ -54,6 +52,17 @@ enum WaterClass {
 };
 /** Helper information for extract tool. */
 template <> struct EnumPropsT<WaterClass> : MakeEnumPropsT<WaterClass, byte, WATER_CLASS_SEA, WATER_CLASS_INVALID, WATER_CLASS_INVALID, 2> {};
+
+/**
+ * Checks if a water class is valid.
+ *
+ * @param wc The value to check
+ * @return true if the given value is a valid water class.
+ */
+static inline bool IsValidWaterClass(WaterClass wc)
+{
+	return wc < WATER_CLASS_INVALID;
+}
 
 /** Sections of the water depot. */
 enum DepotPart {
@@ -68,6 +77,8 @@ enum LockPart {
 	LOCK_PART_LOWER  = 1, ///< Lower part of a lock.
 	LOCK_PART_UPPER  = 2, ///< Upper part of a lock.
 };
+
+bool IsPossibleDockingTile(TileIndex t);
 
 /**
  * Get the water tile type at a tile.
@@ -94,7 +105,7 @@ static inline WaterTileType GetWaterTileType(TileIndex t)
  */
 static inline bool HasTileWaterClass(TileIndex t)
 {
-	return IsTileType(t, MP_WATER) || IsTileType(t, MP_STATION) || IsTileType(t, MP_INDUSTRY) || IsTileType(t, MP_OBJECT);
+	return IsTileType(t, MP_WATER) || IsTileType(t, MP_STATION) || IsTileType(t, MP_INDUSTRY) || IsTileType(t, MP_OBJECT) || IsTileType(t, MP_TREES);
 }
 
 /**
@@ -204,7 +215,7 @@ static inline bool IsCoast(TileIndex t)
  */
 static inline bool IsCoastTile(TileIndex t)
 {
-	return IsTileType(t, MP_WATER) && IsCoast(t);
+	return (IsTileType(t, MP_WATER) && IsCoast(t)) || (IsTileType(t, MP_TREES) && GetWaterClass(t) != WATER_CLASS_INVALID);
 }
 
 /**
@@ -346,6 +357,27 @@ static inline bool HasTileWaterGround(TileIndex t)
 	return HasTileWaterClass(t) && IsTileOnWater(t) && !IsCoastTile(t);
 }
 
+/**
+ * Set the docking tile state of a tile. This is used by pathfinders to reach their destination.
+ * As well as water tiles, half-rail tiles, buoys and aqueduct ends can also be docking tiles.
+ * @param t the tile
+ * @param b the docking tile state
+ */
+static inline void SetDockingTile(TileIndex t, bool b)
+{
+	assert(IsTileType(t, MP_WATER) || IsTileType(t, MP_RAILWAY) || IsTileType(t, MP_STATION) || IsTileType(t, MP_TUNNELBRIDGE));
+	SB(_m[t].m1, 7, 1, b ? 1 : 0);
+}
+
+/**
+ * Checks whether the tile is marked as a dockling tile.
+ * @return true iff the tile is marked as a docking tile.
+ */
+static inline bool IsDockingTile(TileIndex t)
+{
+	return (IsTileType(t, MP_WATER) || IsTileType(t, MP_RAILWAY) || IsTileType(t, MP_STATION) || IsTileType(t, MP_TUNNELBRIDGE)) && HasBit(_m[t].m1, 7);
+}
+
 
 /**
  * Helper function to make a coast tile.
@@ -356,11 +388,12 @@ static inline void MakeShore(TileIndex t)
 	SetTileType(t, MP_WATER);
 	SetTileOwner(t, OWNER_WATER);
 	SetWaterClass(t, WATER_CLASS_SEA);
+	SetDockingTile(t, false);
 	_m[t].m2 = 0;
 	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = WBL_TYPE_NORMAL << WBL_TYPE_BEGIN | 1 << WBL_COAST_FLAG;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
 
@@ -376,11 +409,12 @@ static inline void MakeWater(TileIndex t, Owner o, WaterClass wc, uint8 random_b
 	SetTileType(t, MP_WATER);
 	SetTileOwner(t, o);
 	SetWaterClass(t, wc);
+	SetDockingTile(t, false);
 	_m[t].m2 = 0;
 	_m[t].m3 = 0;
 	_m[t].m4 = random_bits;
 	_m[t].m5 = WBL_TYPE_NORMAL << WBL_TYPE_BEGIN;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
 
@@ -429,11 +463,12 @@ static inline void MakeShipDepot(TileIndex t, Owner o, DepotID did, DepotPart pa
 	SetTileType(t, MP_WATER);
 	SetTileOwner(t, o);
 	SetWaterClass(t, original_water_class);
+	SetDockingTile(t, false);
 	_m[t].m2 = did;
 	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = WBL_TYPE_DEPOT << WBL_TYPE_BEGIN | part << WBL_DEPOT_PART | a << WBL_DEPOT_AXIS;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
 
@@ -451,11 +486,12 @@ static inline void MakeLockTile(TileIndex t, Owner o, LockPart part, DiagDirecti
 	SetTileType(t, MP_WATER);
 	SetTileOwner(t, o);
 	SetWaterClass(t, original_water_class);
+	SetDockingTile(t, false);
 	_m[t].m2 = 0;
 	_m[t].m3 = 0;
 	_m[t].m4 = 0;
 	_m[t].m5 = WBL_TYPE_LOCK << WBL_TYPE_BEGIN | part << WBL_LOCK_PART_BEGIN | dir << WBL_LOCK_ORIENT_BEGIN;
-	SB(_m[t].m6, 2, 4, 0);
+	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
 

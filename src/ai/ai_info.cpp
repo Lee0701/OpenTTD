@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,7 +13,11 @@
 #include "ai_info.hpp"
 #include "ai_scanner.hpp"
 #include "../debug.h"
+#include "../string_func.h"
 #include "../rev.h"
+#include <set>
+
+#include "../safeguards.h"
 
 /**
  * Check if the API version provided by the AI is supported.
@@ -23,12 +25,13 @@
  */
 static bool CheckAPIVersion(const char *api_version)
 {
-	return strcmp(api_version, "0.7") == 0 || strcmp(api_version, "1.0") == 0 || strcmp(api_version, "1.1") == 0 || strcmp(api_version, "1.2") == 0 || strcmp(api_version, "1.3") == 0;
+	static const std::set<std::string> versions = { "0.7", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10", "1.11", "12", "13" };
+	return versions.find(api_version) != versions.end();
 }
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #undef GetClassName
-#endif /* WIN32 */
+#endif /* _WIN32 */
 template <> const char *GetClassName<AIInfo, ST_AI>() { return "AIInfo"; }
 
 /* static */ void AIInfo::RegisterAPI(Squirrel *engine)
@@ -59,16 +62,16 @@ template <> const char *GetClassName<AIInfo, ST_AI>() { return "AIInfo"; }
 /* static */ SQInteger AIInfo::Constructor(HSQUIRRELVM vm)
 {
 	/* Get the AIInfo */
-	SQUserPointer instance = NULL;
-	if (SQ_FAILED(sq_getinstanceup(vm, 2, &instance, 0)) || instance == NULL) return sq_throwerror(vm, _SC("Pass an instance of a child class of AIInfo to RegisterAI"));
+	SQUserPointer instance = nullptr;
+	if (SQ_FAILED(sq_getinstanceup(vm, 2, &instance, nullptr)) || instance == nullptr) return sq_throwerror(vm, "Pass an instance of a child class of AIInfo to RegisterAI");
 	AIInfo *info = (AIInfo *)instance;
 
 	SQInteger res = ScriptInfo::Constructor(vm, info);
 	if (res != 0) return res;
 
 	ScriptConfigItem config = _start_date_config;
-	config.name = strdup(config.name);
-	config.description = strdup(config.description);
+	config.name = stredup(config.name);
+	config.description = stredup(config.description);
 	info->config_list.push_front(config);
 
 	if (info->engine->MethodExists(*info->SQ_instance, "MinVersionToLoad")) {
@@ -86,15 +89,15 @@ template <> const char *GetClassName<AIInfo, ST_AI>() { return "AIInfo"; }
 	if (info->engine->MethodExists(*info->SQ_instance, "GetAPIVersion")) {
 		if (!info->engine->CallStringMethodStrdup(*info->SQ_instance, "GetAPIVersion", &info->api_version, MAX_GET_OPS)) return SQ_ERROR;
 		if (!CheckAPIVersion(info->api_version)) {
-			DEBUG(script, 1, "Loading info.nut from (%s.%d): GetAPIVersion returned invalid version", info->GetName(), info->GetVersion());
+			Debug(script, 1, "Loading info.nut from ({}.{}): GetAPIVersion returned invalid version", info->GetName(), info->GetVersion());
 			return SQ_ERROR;
 		}
 	} else {
-		info->api_version = strdup("0.7");
+		info->api_version = stredup("0.7");
 	}
 
 	/* Remove the link to the real instance, else it might get deleted by RegisterAI() */
-	sq_setinstanceup(vm, 2, NULL);
+	sq_setinstanceup(vm, 2, nullptr);
 	/* Register the AI to the base system */
 	info->GetScanner()->RegisterScript(info);
 	return 0;
@@ -104,19 +107,19 @@ template <> const char *GetClassName<AIInfo, ST_AI>() { return "AIInfo"; }
 {
 	/* Get the AIInfo */
 	SQUserPointer instance;
-	sq_getinstanceup(vm, 2, &instance, 0);
+	sq_getinstanceup(vm, 2, &instance, nullptr);
 	AIInfo *info = (AIInfo *)instance;
-	info->api_version = NULL;
+	info->api_version = nullptr;
 
 	SQInteger res = ScriptInfo::Constructor(vm, info);
 	if (res != 0) return res;
 
 	char buf[8];
 	seprintf(buf, lastof(buf), "%d.%d", GB(_openttd_newgrf_version, 28, 4), GB(_openttd_newgrf_version, 24, 4));
-	info->api_version = strdup(buf);
+	info->api_version = stredup(buf);
 
 	/* Remove the link to the real instance, else it might get deleted by RegisterAI() */
-	sq_setinstanceup(vm, 2, NULL);
+	sq_setinstanceup(vm, 2, nullptr);
 	/* Register the AI to the base system */
 	static_cast<AIScannerInfo *>(info->GetScanner())->SetDummyAI(info);
 	return 0;
@@ -125,7 +128,7 @@ template <> const char *GetClassName<AIInfo, ST_AI>() { return "AIInfo"; }
 AIInfo::AIInfo() :
 	min_loadable_version(0),
 	use_as_random(false),
-	api_version(NULL)
+	api_version(nullptr)
 {
 }
 

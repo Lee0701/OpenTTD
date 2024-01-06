@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -50,9 +48,10 @@ public:
 	 * @param cargo Cargo type to query.
 	 * @param town_id %Town to query.
 	 * @param keep_monitoring If \c true, the given combination continues to be monitored for the next call. If \c false, monitoring ends.
-	 * @return Amount of delivered cargo of the given cargo type to the given town by the given company since the last call.
+	 * @return Amount of delivered cargo of the given cargo type to the given town by the given company since the last call, or
+	 * \c -1 if a parameter is out-of-bound.
 	 */
-	static uint32 GetTownDeliveryAmount(ScriptCompany::CompanyID company, CargoID cargo, TownID town_id, bool keep_monitoring);
+	static int32 GetTownDeliveryAmount(ScriptCompany::CompanyID company, CargoID cargo, TownID town_id, bool keep_monitoring);
 
 	/**
 	 * Get the amount of cargo delivered to an industry by a company since the last query, and update the monitoring state.
@@ -60,9 +59,10 @@ public:
 	 * @param cargo Cargo type to query.
 	 * @param industry_id %Industry to query.
 	 * @param keep_monitoring If \c true, the given combination continues to be monitored for the next call. If \c false, monitoring ends.
-	 * @return Amount of delivered cargo of the given cargo type to the given industry by the given company since the last call.
+	 * @return Amount of delivered cargo of the given cargo type to the given industry by the given company since the last call, or
+	 * \c -1 if a parameter is out-of-bound.
 	 */
-	static uint32 GetIndustryDeliveryAmount(ScriptCompany::CompanyID company, CargoID cargo, IndustryID industry_id, bool keep_monitoring);
+	static int32 GetIndustryDeliveryAmount(ScriptCompany::CompanyID company, CargoID cargo, IndustryID industry_id, bool keep_monitoring);
 
 	/**
 	 * Get the amount of cargo picked up (and delivered) from a town by a company since the last query, and update the monitoring state.
@@ -70,10 +70,11 @@ public:
 	 * @param cargo Cargo type to query.
 	 * @param town_id %Town to query.
 	 * @param keep_monitoring If \c true, the given combination continues to be monitored for the next call. If \c false, monitoring ends.
-	 * @return Amount of picked up cargo of the given cargo type to the given town by the given company since the last call.
+	 * @return Amount of picked up cargo of the given cargo type to the given town by the given company since the last call, or
+	 * \c -1 if a parameter is out-of-bound.
 	 * @note Amounts of picked-up cargo are added during final delivery of it, to prevent users from getting credit for picking up without delivering it.
 	 */
-	static uint32 GetTownPickupAmount(ScriptCompany::CompanyID company, CargoID cargo, TownID town_id, bool keep_monitoring);
+	static int32 GetTownPickupAmount(ScriptCompany::CompanyID company, CargoID cargo, TownID town_id, bool keep_monitoring);
 
 	/**
 	 * Get the amount of cargo picked up (and delivered) from an industry by a company since the last query, and update the monitoring state.
@@ -81,10 +82,11 @@ public:
 	 * @param cargo Cargo type to query.
 	 * @param industry_id %Industry to query.
 	 * @param keep_monitoring If \c true, the given combination continues to be monitored for the next call. If \c false, monitoring ends.
-	 * @return Amount of picked up cargo of the given cargo type to the given industry by the given company since the last call.
+	 * @return Amount of picked up cargo of the given cargo type to the given industry by the given company since the last call, or
+	 * \c -1 if a parameter is out-of-bound.
 	 * @note Amounts of picked-up cargo are added during final delivery of it, to prevent users from getting credit for picking up without delivering it.
 	 */
-	static uint32 GetIndustryPickupAmount(ScriptCompany::CompanyID company, CargoID cargo, IndustryID industry_id, bool keep_monitoring);
+	static int32 GetIndustryPickupAmount(ScriptCompany::CompanyID company, CargoID cargo, IndustryID industry_id, bool keep_monitoring);
 
 	/** Stop monitoring everything. */
 	static void StopAllMonitoring();

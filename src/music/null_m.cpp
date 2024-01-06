@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,6 +9,8 @@
 
 #include "../stdafx.h"
 #include "null_m.h"
+
+#include "../safeguards.h"
 
 /** The factory for the music player that does nothing. */
 static FMusicDriver_Null iFMusicDriver_Null;

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -41,20 +39,35 @@ protected:
 	T *data;
 
 	/** return reference to the array header (non-const) */
-	inline ArrayHeader& Hdr() { return *(ArrayHeader*)(((byte*)data) - HeaderSize); }
+	inline ArrayHeader& Hdr()
+	{
+		return *(ArrayHeader*)(((byte*)data) - HeaderSize);
+	}
+
 	/** return reference to the array header (const) */
-	inline const ArrayHeader& Hdr() const { return *(ArrayHeader*)(((byte*)data) - HeaderSize); }
+	inline const ArrayHeader& Hdr() const
+	{
+		return *(ArrayHeader*)(((byte*)data) - HeaderSize);
+	}
+
 	/** return reference to the block reference counter */
-	inline uint& RefCnt() { return Hdr().reference_count; }
+	inline uint& RefCnt()
+	{
+		return Hdr().reference_count;
+	}
+
 	/** return reference to number of used items */
-	inline uint& SizeRef() { return Hdr().items; }
+	inline uint& SizeRef()
+	{
+		return Hdr().items;
+	}
 
 public:
 	/** Default constructor. Preallocate space for items and header, then initialize header. */
 	FixedSizeArray()
 	{
 		/* Ensure the size won't overflow. */
-		assert_compile(C < (SIZE_MAX - HeaderSize) / Tsize);
+		static_assert(C < (SIZE_MAX - HeaderSize) / Tsize);
 
 		/* allocate block for header + items (don't construct items) */
 		data = (T*)((MallocT<byte>(HeaderSize + C * Tsize)) + HeaderSize);
@@ -63,7 +76,7 @@ public:
 	}
 
 	/** Copy constructor. Preallocate space for items and header, then initialize header. */
-	FixedSizeArray(const FixedSizeArray<T, C>& src)
+	FixedSizeArray(const FixedSizeArray<T, C> &src)
 	{
 		/* share block (header + items) with the source array */
 		data = src.data;
@@ -79,7 +92,7 @@ public:
 		Clear();
 		/* free the memory block occupied by items */
 		free(((byte*)data) - HeaderSize);
-		data = NULL;
+		data = nullptr;
 	}
 
 	/** Clear (destroy) all items */
@@ -96,19 +109,50 @@ public:
 	}
 
 	/** return number of used items */
-	inline uint Length() const { return Hdr().items; }
+	inline uint Length() const
+	{
+		return Hdr().items;
+	}
+
 	/** return true if array is full */
-	inline bool IsFull() const { return Length() >= C; }
+	inline bool IsFull() const
+	{
+		return Length() >= C;
+	}
+
 	/** return true if array is empty */
-	inline bool IsEmpty() const { return Length() <= 0; }
+	inline bool IsEmpty() const
+	{
+		return Length() <= 0;
+	}
+
 	/** add (allocate), but don't construct item */
-	inline T *Append() { assert(!IsFull()); return &data[SizeRef()++]; }
+	inline T *Append()
+	{
+		assert(!IsFull());
+		return &data[SizeRef()++];
+	}
+
 	/** add and construct item using default constructor */
-	inline T *AppendC() { T *item = Append(); new(item)T; return item; }
+	inline T *AppendC()
+	{
+		T *item = Append();
+		new(item)T;
+		return item;
+	}
 	/** return item by index (non-const version) */
-	inline T& operator [] (uint index) { assert(index < Length()); return data[index]; }
+	inline T& operator[](uint index)
+	{
+		assert(index < Length());
+		return data[index];
+	}
+
 	/** return item by index (const version) */
-	inline const T& operator [] (uint index) const { assert(index < Length()); return data[index]; }
+	inline const T& operator[](uint index) const
+	{
+		assert(index < Length());
+		return data[index];
+	}
 };
 
 #endif /* FIXEDSIZEARRAY_HPP */

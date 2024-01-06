@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -30,9 +28,11 @@ typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first d
 static const int DAY_TICKS         =  74; ///< ticks per day
 static const int DAYS_IN_YEAR      = 365; ///< days per year
 static const int DAYS_IN_LEAP_YEAR = 366; ///< sometimes, you need one day more...
+static const int MONTHS_IN_YEAR    =  12; ///< months per year
 
 static const int STATION_RATING_TICKS     = 185; ///< cycle duration for updating station rating
 static const int STATION_ACCEPTANCE_TICKS = 250; ///< cycle duration for updating station acceptance
+static const int STATION_LINKGRAPH_TICKS  = 504; ///< cycle duration for cleaning dead links
 static const int CARGO_AGING_TICKS        = 185; ///< cycle duration for aging cargo
 static const int INDUSTRY_PRODUCE_TICKS   = 256; ///< cycle duration for industry production
 static const int TOWN_GROWTH_TICKS        = 70;  ///< cycle duration for towns trying to grow. (this originates from the size of the town array in TTD
@@ -85,6 +85,8 @@ static const Year MIN_YEAR = 0;
 
 /** The default starting year */
 static const Year DEF_START_YEAR = 1950;
+/** The default scoring end year */
+static const Year DEF_END_YEAR = ORIGINAL_END_YEAR - 1;
 
 /**
  * MAX_YEAR, nicely rounded value of the number of years that can

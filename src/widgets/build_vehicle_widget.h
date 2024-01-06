@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,13 +13,15 @@
 /** Widgets of the #BuildVehicleWindow class. */
 enum BuildVehicleWidgets {
 	WID_BV_CAPTION,                   ///< Caption of window.
-	WID_BV_SORT_ASSENDING_DESCENDING, ///< Sort direction.
+	WID_BV_SORT_ASCENDING_DESCENDING, ///< Sort direction.
 	WID_BV_SORT_DROPDOWN,             ///< Criteria of sorting dropdown.
 	WID_BV_CARGO_FILTER_DROPDOWN,     ///< Cargo filter dropdown.
+	WID_BV_SHOW_HIDDEN_ENGINES,       ///< Toggle whether to display the hidden vehicles.
 	WID_BV_LIST,                      ///< List of vehicles.
 	WID_BV_SCROLLBAR,                 ///< Scrollbar of list.
 	WID_BV_PANEL,                     ///< Button panel.
 	WID_BV_BUILD,                     ///< Build panel.
+	WID_BV_SHOW_HIDE,                 ///< Button to hide or show the selected engine.
 	WID_BV_BUILD_SEL,                 ///< Build button.
 	WID_BV_RENAME,                    ///< Rename button.
 };

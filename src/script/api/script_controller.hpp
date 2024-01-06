@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,8 +16,31 @@
 
 /**
  * The Controller, the class each Script should extend. It creates the Script,
- *  makes sure the logic kicks in correctly, and that GetTick() has a valid
+ *  makes sure the logic kicks in correctly, and that #GetTick() has a valid
  *  value.
+ *
+ * When starting a new game, or when loading a game, OpenTTD tries to match a
+ *  script that matches to the specified version as close as possible. It tries
+ *  (from first to last, stopping as soon as the attempt succeeds)
+ *
+ *  - load the latest version of the same script that supports loading data from
+ *    the saved version (the version of saved data must be equal or greater
+ *    than ScriptInfo::MinVersionToLoad),
+ *  - load the latest version of the same script (ignoring version requirements),
+ *  - (for AIs) load a random AI, and finally
+ *  - (for AIs) load the dummy AI.
+ *
+ * After determining the script to use, starting it is done as follows
+ *
+ * - An instance is constructed of the class derived from ScriptController
+ *   (class name is retrieved from ScriptInfo::CreateInstance).
+ * - If there is script data available in the loaded game and if the data is
+ *   loadable according to ScriptInfo::MinVersionToLoad, #Load is called with the
+ *   data from the loaded game.
+ * - Finally, #Start is called to start execution of the script.
+ *
+ * See also https://wiki.openttd.org/en/Development/Script/Save%20and%20Load for more details.
+ *
  * @api ai game
  */
 class ScriptController {
@@ -45,6 +66,48 @@ public:
 	 * @note Cannot be called from within your script.
 	 */
 	void Start();
+
+#ifdef DOXYGEN_API
+	/**
+	 * Save the state of the script.
+	 *
+	 * By implementing this function, you can store some data inside the savegame.
+	 *   The function should return a table with the information you want to store.
+	 *   You can only store:
+	 *
+	 *   - integers,
+	 *   - strings,
+	 *   - arrays (max. 25 levels deep),
+	 *   - tables (max. 25 levels deep),
+	 *   - booleans, and
+	 *   - nulls.
+	 *
+	 * In particular, instances of classes can't be saved including
+	 *   ScriptList. Such a list should be converted to an array or table on
+	 *   save and converted back on load.
+	 *
+	 * The function is called as soon as the user saves the game,
+	 *   independently of other activities of the script. The script is not
+	 *   notified of the call. To avoid race-conditions between #Save and the
+	 *   other script code, change variables directly after a #Sleep, it is
+	 *   very unlikely, to get interrupted at that point in the execution.
+	 * See also https://wiki.openttd.org/en/Development/Script/Save%20and%20Load for more details.
+	 *
+	 * @note No other information is saved than the table returned by #Save.
+	 *   For example all pending events are lost as soon as the game is loaded.
+	 *
+	 * @return Data of the script that should be stored in the save game.
+	 */
+	SquirrelTable Save();
+
+	/**
+	 * Load saved data just before calling #Start.
+	 * The function is only called when there is data to load.
+	 * @param version Version number of the script that created the \a data.
+	 * @param data Data that was saved (return value of #Save).
+	 */
+	void Load(int version, SquirrelTable data);
+#endif /* DOXYGEN_API */
 
 	/**
 	 * Find at which tick your script currently is.
@@ -72,11 +135,20 @@ public:
 	/**
 	 * Get the OpenTTD version of this executable. The version is formatted
 	 * with the bits having the following meaning:
-	 * 28-31 major version
-	 * 24-27 minor version
-	 * 20-23 build
+	 * 24-31 major version + 16.
+	 * 20-23 minor version.
 	 *    19 1 if it is a release, 0 if it is not.
 	 *  0-18 revision number; 0 when the revision is unknown.
+	 * You have to subtract 16 from the major version to get the correct
+	 * value.
+	 *
+	 * Prior to OpenTTD 12, the bits have the following meaning:
+	 * 28-31 major version.
+	 * 24-27 minor version.
+	 * 20-23 build.
+	 *    19 1 if it is a release, 0 if it is not.
+	 *  0-18 revision number; 0 when the revision is unknown.
+	 *
 	 * @return The version in newgrf format.
 	 */
 	static uint GetVersion();
@@ -127,7 +199,8 @@ public:
 
 	/**
 	 * Import a library.
-	 * @param library The name of the library to import.
+	 * @param library The name of the library to import. The name should be composed as ScriptInfo::GetCategory() + "." +
+	 * ScriptInfo::CreateInstance().
 	 * @param class_name Under which name you want it to be available (or "" if you just want the returning object).
 	 * @param version Which version you want specifically.
 	 * @return The loaded library object. If class_name is set, it is also available (under the scope of the import) under that name.

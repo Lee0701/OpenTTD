@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -55,7 +53,7 @@ public:
 
 	/**
 	 * Resume execution of the Game Script. This function will not actually execute
-	 * the script, but set a flag so that the script is executed my the usual
+	 * the script, but set a flag so that the script is executed by the usual
 	 * mechanism that executes the script.
 	 */
 	static void Unpause();
@@ -89,15 +87,10 @@ public:
 	 */
 	static void Save();
 
-	/**
-	 * Load data for a GameScript from a savegame.
-	 */
-	static void Load(int version);
-
 	/** Wrapper function for GameScanner::GetConsoleList */
-	static char *GetConsoleList(char *p, const char *last, bool newest_only = false);
+	static std::string GetConsoleList(bool newest_only = false);
 	/** Wrapper function for GameScanner::GetConsoleLibraryList */
-	static char *GetConsoleLibraryList(char *p, const char *last);
+	static std::string GetConsoleLibraryList();
 	/** Wrapper function for GameScanner::GetInfoList */
 	static const ScriptInfoList *GetInfoList();
 	/** Wrapper function for GameScanner::GetUniqueInfoList */
@@ -112,11 +105,9 @@ public:
 	 */
 	static class GameInstance *GetInstance() { return Game::instance; }
 
-#if defined(ENABLE_NETWORK)
 	/** Wrapper function for GameScanner::HasGame */
 	static bool HasGame(const struct ContentInfo *ci, bool md5sum);
 	static bool HasGameLibrary(const ContentInfo *ci, bool md5sum);
-#endif
 	/** Gets the ScriptScanner instance that is used to find Game scripts */
 	static GameScannerInfo *GetScannerInfo();
 	/** Gets the ScriptScanner instance that is used to find Game Libraries */

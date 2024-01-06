@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,37 +12,34 @@
 
 #include "core/enum_type.hpp"
 
+typedef uint32 RoadTypeLabel;
+
 /**
  * The different roadtypes we support
  *
  * @note currently only ROADTYPE_ROAD and ROADTYPE_TRAM are supported.
  */
-enum RoadType {
-	ROADTYPE_BEGIN = 0,      ///< Used for iterations
-	ROADTYPE_ROAD = 0,       ///< Basic road type
-	ROADTYPE_TRAM = 1,       ///< Trams
-	ROADTYPE_END,            ///< Used for iterations
-	INVALID_ROADTYPE = 0xFF, ///< flag for invalid roadtype
+enum RoadType : byte {
+	ROADTYPE_BEGIN   = 0,    ///< Used for iterations
+	ROADTYPE_ROAD    = 0,    ///< Basic road type
+	ROADTYPE_TRAM    = 1,    ///< Trams
+	ROADTYPE_END     = 63,   ///< Used for iterations
+	INVALID_ROADTYPE = 63,   ///< flag for invalid roadtype
 };
 DECLARE_POSTFIX_INCREMENT(RoadType)
-template <> struct EnumPropsT<RoadType> : MakeEnumPropsT<RoadType, byte, ROADTYPE_BEGIN, ROADTYPE_END, INVALID_ROADTYPE, 2> {};
+template <> struct EnumPropsT<RoadType> : MakeEnumPropsT<RoadType, byte, ROADTYPE_BEGIN, ROADTYPE_END, INVALID_ROADTYPE, 6> {};
 
 /**
- * The different roadtypes we support, but then a bitmask of them
- * @note currently only roadtypes with ROADTYPE_ROAD and ROADTYPE_TRAM are supported.
+ * The different roadtypes we support, but then a bitmask of them.
+ * @note Must be treated as a uint64 type, narrowing it causes bit membership tests to give wrong results.
  */
-enum RoadTypes {
+enum RoadTypes : uint64 {
 	ROADTYPES_NONE     = 0,                                ///< No roadtypes
 	ROADTYPES_ROAD     = 1 << ROADTYPE_ROAD,               ///< Road
 	ROADTYPES_TRAM     = 1 << ROADTYPE_TRAM,               ///< Trams
-	ROADTYPES_ALL      = ROADTYPES_ROAD | ROADTYPES_TRAM,  ///< Road + trams
-	ROADTYPES_END,                                         ///< Used for iterations?
-	INVALID_ROADTYPES  = 0xFF,                             ///< Invalid roadtypes
+	INVALID_ROADTYPES  = UINT64_MAX,                       ///< Invalid roadtypes
 };
 DECLARE_ENUM_AS_BIT_SET(RoadTypes)
-template <> struct EnumPropsT<RoadTypes> : MakeEnumPropsT<RoadTypes, byte, ROADTYPES_NONE, ROADTYPES_END, INVALID_ROADTYPES, 2> {};
-typedef SimpleTinyEnumT<RoadTypes, byte> RoadTypesByte;
-
 
 /**
  * Enumeration for the road parts on a tile.
@@ -52,7 +47,7 @@ typedef SimpleTinyEnumT<RoadTypes, byte> RoadTypesByte;
  * This enumeration defines the possible road parts which
  * can be build on a tile.
  */
-enum RoadBits {
+enum RoadBits : byte {
 	ROAD_NONE = 0U,                  ///< No road-part is build
 	ROAD_NW   = 1U,                  ///< North-west part
 	ROAD_SW   = 2U,                  ///< South-west part
@@ -72,5 +67,17 @@ enum RoadBits {
 };
 DECLARE_ENUM_AS_BIT_SET(RoadBits)
 template <> struct EnumPropsT<RoadBits> : MakeEnumPropsT<RoadBits, byte, ROAD_NONE, ROAD_END, ROAD_NONE, 4> {};
+
+/** Which directions are disallowed ? */
+enum DisallowedRoadDirections : byte {
+	DRD_NONE,       ///< None of the directions are disallowed
+	DRD_SOUTHBOUND, ///< All southbound traffic is disallowed
+	DRD_NORTHBOUND, ///< All northbound traffic is disallowed
+	DRD_BOTH,       ///< All directions are disallowed
+	DRD_END,        ///< Sentinel
+};
+DECLARE_ENUM_AS_BIT_SET(DisallowedRoadDirections)
+/** Helper information for extract tool. */
+template <> struct EnumPropsT<DisallowedRoadDirections> : MakeEnumPropsT<DisallowedRoadDirections, byte, DRD_NONE, DRD_END, DRD_END, 2> {};
 
 #endif /* ROAD_TYPE_H */

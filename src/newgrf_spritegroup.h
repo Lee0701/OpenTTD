@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,6 +13,7 @@
 #include "town_type.h"
 #include "engine_type.h"
 #include "house_type.h"
+#include "industry_type.h"
 
 #include "newgrf_callbacks.h"
 #include "newgrf_generic.h"
@@ -33,17 +32,6 @@ static inline uint32 GetRegister(uint i)
 	return _temp_store.GetValue(i);
 }
 
-/**
- * Clears the value of a so-called newgrf "register".
- * @param i index of the register
- * @pre i < 0x110
- */
-static inline void ClearRegister(uint i)
-{
-	extern TemporaryStorageArray<int32, 0x110> _temp_store;
-	_temp_store.StoreValue(i, 0);
-}
-
 /* List of different sprite group types */
 enum SpriteGroupType {
 	SGT_REAL,
@@ -57,42 +45,32 @@ enum SpriteGroupType {
 
 struct SpriteGroup;
 typedef uint32 SpriteGroupID;
+struct ResolverObject;
 
 /* SPRITE_WIDTH is 24. ECS has roughly 30 sprite groups per real sprite.
  * Adding an 'extra' margin would be assuming 64 sprite groups per real
  * sprite. 64 = 2^6, so 2^30 should be enough (for now) */
-typedef Pool<SpriteGroup, SpriteGroupID, 1024, 1 << 30, PT_DATA> SpriteGroupPool;
+typedef Pool<SpriteGroup, SpriteGroupID, 1024, 1U << 30, PT_DATA> SpriteGroupPool;
 extern SpriteGroupPool _spritegroup_pool;
 
 /* Common wrapper for all the different sprite group types */
 struct SpriteGroup : SpriteGroupPool::PoolItem<&_spritegroup_pool> {
 protected:
-	SpriteGroup(SpriteGroupType type) : type(type) {}
+	SpriteGroup(SpriteGroupType type) : nfo_line(0), type(type) {}
 	/** Base sprite group resolver */
-	virtual const SpriteGroup *Resolve(struct ResolverObject *object) const { return this; };
+	virtual const SpriteGroup *Resolve(ResolverObject &object) const { return this; };
 
 public:
 	virtual ~SpriteGroup() {}
 
+	uint32 nfo_line;
 	SpriteGroupType type;
 
 	virtual SpriteID GetResult() const { return 0; }
 	virtual byte GetNumResults() const { return 0; }
 	virtual uint16 GetCallbackResult() const { return CALLBACK_FAILED; }
 
-	/**
-	 * ResolverObject (re)entry point.
-	 * This cannot be made a call to a virtual function because virtual functions
-	 * do not like NULL and checking for NULL *everywhere* is more cumbersome than
-	 * this little helper function.
-	 * @param group the group to resolve for
-	 * @param object information needed to resolve the group
-	 * @return the resolved group
-	 */
-	static const SpriteGroup *Resolve(const SpriteGroup *group, ResolverObject *object)
-	{
-		return group == NULL ? NULL : group->Resolve(object);
-	}
+	static const SpriteGroup *Resolve(const SpriteGroup *group, ResolverObject &object, bool top_level = true);
 };
 
 
@@ -100,7 +78,6 @@ public:
  * groups. */
 struct RealSpriteGroup : SpriteGroup {
 	RealSpriteGroup() : SpriteGroup(SGT_REAL) {}
-	~RealSpriteGroup();
 
 	/* Loaded = in motion, loading = not moving
 	 * Each group contains several spritesets, for various loading stages */
@@ -109,13 +86,11 @@ struct RealSpriteGroup : SpriteGroup {
 	 * with small amount of cargo whilst loading is for stations with a lot
 	 * of da stuff. */
 
-	byte num_loaded;       ///< Number of loaded groups
-	byte num_loading;      ///< Number of loading groups
-	const SpriteGroup **loaded;  ///< List of loaded groups (can be SpriteIDs or Callback results)
-	const SpriteGroup **loading; ///< List of loading groups (can be SpriteIDs or Callback results)
+	std::vector<const SpriteGroup *> loaded;  ///< List of loaded groups (can be SpriteIDs or Callback results)
+	std::vector<const SpriteGroup *> loading; ///< List of loading groups (can be SpriteIDs or Callback results)
 
 protected:
-	const SpriteGroup *Resolve(ResolverObject *object) const;
+	const SpriteGroup *Resolve(ResolverObject &object) const;
 };
 
 /* Shared by deterministic and random groups. */
@@ -191,20 +166,20 @@ struct DeterministicSpriteGroupRange {
 
 struct DeterministicSpriteGroup : SpriteGroup {
 	DeterministicSpriteGroup() : SpriteGroup(SGT_DETERMINISTIC) {}
-	~DeterministicSpriteGroup();
 
 	VarSpriteGroupScope var_scope;
 	DeterministicSpriteGroupSize size;
-	uint num_adjusts;
-	byte num_ranges;
-	DeterministicSpriteGroupAdjust *adjusts;
-	DeterministicSpriteGroupRange *ranges; // Dynamically allocated
+	bool calculated_result;
+	std::vector<DeterministicSpriteGroupAdjust> adjusts;
+	std::vector<DeterministicSpriteGroupRange> ranges; // Dynamically allocated
 
 	/* Dynamically allocated, this is the sole owner */
 	const SpriteGroup *default_group;
 
+	const SpriteGroup *error_group; // was first range, before sorting ranges
+
 protected:
-	const SpriteGroup *Resolve(ResolverObject *object) const;
+	const SpriteGroup *Resolve(ResolverObject &object) const;
 };
 
 enum RandomizedSpriteGroupCompareMode {
@@ -214,7 +189,6 @@ enum RandomizedSpriteGroupCompareMode {
 
 struct RandomizedSpriteGroup : SpriteGroup {
 	RandomizedSpriteGroup() : SpriteGroup(SGT_RANDOMIZED) {}
-	~RandomizedSpriteGroup();
 
 	VarSpriteGroupScope var_scope;  ///< Take this object:
 
@@ -223,12 +197,11 @@ struct RandomizedSpriteGroup : SpriteGroup {
 	byte count;
 
 	byte lowest_randbit; ///< Look for this in the per-object randomized bitmask:
-	byte num_groups; ///< must be power of 2
 
-	const SpriteGroup **groups; ///< Take the group with appropriate index:
+	std::vector<const SpriteGroup *> groups; ///< Take the group with appropriate index:
 
 protected:
-	const SpriteGroup *Resolve(ResolverObject *object) const;
+	const SpriteGroup *Resolve(ResolverObject &object) const;
 };
 
 
@@ -295,13 +268,16 @@ struct TileLayoutSpriteGroup : SpriteGroup {
 struct IndustryProductionSpriteGroup : SpriteGroup {
 	IndustryProductionSpriteGroup() : SpriteGroup(SGT_INDUSTRY_PRODUCTION) {}
 
-	uint8 version;
-	int16 subtract_input[3];  // signed
-	uint16 add_output[2];     // unsigned
+	uint8 version;                              ///< Production callback version used, or 0xFF if marked invalid
+	uint8 num_input;                            ///< How many subtract_input values are valid
+	int16 subtract_input[INDUSTRY_NUM_INPUTS];  ///< Take this much of the input cargo (can be negative, is indirect in cb version 1+)
+	CargoID cargo_input[INDUSTRY_NUM_INPUTS];   ///< Which input cargoes to take from (only cb version 2)
+	uint8 num_output;                           ///< How many add_output values are valid
+	uint16 add_output[INDUSTRY_NUM_OUTPUTS];    ///< Add this much output cargo when successful (unsigned, is indirect in cb version 1+)
+	CargoID cargo_output[INDUSTRY_NUM_OUTPUTS]; ///< Which output cargoes to add to (only cb version 2)
 	uint8 again;
-};
 
-struct ResolverObject;
+};
 
 /**
  * Interface to query and set values specific to a single #VarSpriteGroupScope (action 2 scope).
@@ -310,14 +286,13 @@ struct ResolverObject;
  * to different game entities from a #SpriteGroup-chain (action 1-2-3 chain).
  */
 struct ScopeResolver {
-	ResolverObject *ro; ///< Surrounding resolver object.
+	ResolverObject &ro; ///< Surrounding resolver object.
 
-	ScopeResolver(ResolverObject *ro);
-	virtual ~ScopeResolver();
+	ScopeResolver(ResolverObject &ro) : ro(ro) {}
+	virtual ~ScopeResolver() {}
 
 	virtual uint32 GetRandomBits() const;
 	virtual uint32 GetTriggers() const;
-	virtual void SetTriggers(int triggers) const;
 
 	virtual uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
 	virtual void StorePSA(uint reg, int32 value);
@@ -330,8 +305,20 @@ struct ScopeResolver {
  * to get the results of callbacks, rerandomisations or normal sprite lookups.
  */
 struct ResolverObject {
-	ResolverObject(const GRFFile *grffile, CallbackID callback = CBID_NO_CALLBACK, uint32 callback_param1 = 0, uint32 callback_param2 = 0);
-	virtual ~ResolverObject();
+	/**
+	 * Resolver constructor.
+	 * @param grffile NewGRF file associated with the object (or \c nullptr if none).
+	 * @param callback Callback code being resolved (default value is #CBID_NO_CALLBACK).
+	 * @param callback_param1 First parameter (var 10) of the callback (only used when \a callback is also set).
+	 * @param callback_param2 Second parameter (var 18) of the callback (only used when \a callback is also set).
+	 */
+	ResolverObject(const GRFFile *grffile, CallbackID callback = CBID_NO_CALLBACK, uint32 callback_param1 = 0, uint32 callback_param2 = 0)
+		: default_scope(*this), callback(callback), callback_param1(callback_param1), callback_param2(callback_param2), grffile(grffile), root_spritegroup(nullptr)
+	{
+		this->ResetState();
+	}
+
+	virtual ~ResolverObject() {}
 
 	ScopeResolver default_scope; ///< Default implementation of the grf scope.
 
@@ -339,16 +326,45 @@ struct ResolverObject {
 	uint32 callback_param1;     ///< First parameter (var 10) of the callback.
 	uint32 callback_param2;     ///< Second parameter (var 18) of the callback.
 
-	byte trigger;
-
 	uint32 last_value;          ///< Result of most recent DeterministicSpriteGroup (including procedure calls)
+
+	uint32 waiting_triggers;    ///< Waiting triggers to be used by any rerandomisation. (scope independent)
+	uint32 used_triggers;       ///< Subset of cur_triggers, which actually triggered some rerandomisation. (scope independent)
 	uint32 reseed[VSG_END];     ///< Collects bits to rerandomise while triggering triggers.
 
 	const GRFFile *grffile;     ///< GRFFile the resolved SpriteGroup belongs to
+	const SpriteGroup *root_spritegroup; ///< Root SpriteGroup to use for resolving
+
+	/**
+	 * Resolve SpriteGroup.
+	 * @return Result spritegroup.
+	 */
+	const SpriteGroup *Resolve()
+	{
+		return SpriteGroup::Resolve(this->root_spritegroup, *this);
+	}
+
+	/**
+	 * Resolve callback.
+	 * @return Callback result.
+	 */
+	uint16 ResolveCallback()
+	{
+		const SpriteGroup *result = Resolve();
+		return result != nullptr ? result->GetCallbackResult() : CALLBACK_FAILED;
+	}
 
 	virtual const SpriteGroup *ResolveReal(const RealSpriteGroup *group) const;
 
 	virtual ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, byte relative = 0);
+
+	/**
+	 * Returns the waiting triggers that did not trigger any rerandomisation.
+	 */
+	uint32 GetRemainingTriggers() const
+	{
+		return this->waiting_triggers & ~this->used_triggers;
+	}
 
 	/**
 	 * Returns the OR-sum of all bits that need reseeding
@@ -371,9 +387,22 @@ struct ResolverObject {
 	void ResetState()
 	{
 		this->last_value = 0;
-		this->trigger    = 0;
+		this->waiting_triggers = 0;
+		this->used_triggers = 0;
 		memset(this->reseed, 0, sizeof(this->reseed));
 	}
+
+	/**
+	 * Get the feature number being resolved for.
+	 * This function is mainly intended for the callback profiling feature.
+	 */
+	virtual GrfSpecFeature GetFeature() const { return GSF_INVALID; }
+	/**
+	 * Get an identifier for the item being resolved.
+	 * This function is mainly intended for the callback profiling feature,
+	 * and should return an identifier recognisable by the NewGRF developer.
+	 */
+	virtual uint32 GetDebugID() const { return 0; }
 };
 
 #endif /* NEWGRF_SPRITEGROUP_H */

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -125,11 +123,11 @@ public:
 	static int32 GetNumHangars(TileIndex tile);
 
 	/**
-	 * Get the first hanger tile of the airport.
+	 * Get the first hangar tile of the airport.
 	 * @param tile Any tile of the airport.
 	 * @pre ScriptMap::IsValidTile(tile).
 	 * @pre GetNumHangars(tile) > 0.
-	 * @return The first hanger tile of the airport.
+	 * @return The first hangar tile of the airport.
 	 * @note Possible there are more hangars, but you won't be able to find them
 	 *  without walking over all the tiles of the airport and using
 	 *  IsHangarTile() on them.
@@ -201,6 +199,14 @@ public:
 	 * @return Maintenance cost factor of the airport type.
 	 */
 	static uint16 GetMaintenanceCostFactor(AirportType type);
+
+	/**
+	 * Get the monthly maintenance cost of an airport type.
+	 * @param type The airport type to get the monthly maintenance cost of.
+	 * @pre IsAirportInformationAvailable(type)
+	 * @return Monthly maintenance cost of the airport type.
+	 */
+	static Money GetMonthlyMaintenanceCost(AirportType type);
 };
 
 #endif /* SCRIPT_AIRPORT_HPP */

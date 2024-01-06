@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -73,13 +71,13 @@ static const DrawTileSeqStruct _station_display_datas_1[] = {
 };
 
 static const DrawTileSeqStruct _station_display_datas_2[] = {
-	TILE_SEQ_LINE( 0,  0,  0, 16,  5,  2, SPR_RAIL_PLATFORM_BUILDING_X | (1U << PALETTE_MODIFIER_COLOUR))
+	TILE_SEQ_LINE( 0,  0,  0, 16,  5, 15, SPR_RAIL_PLATFORM_BUILDING_X | (1U << PALETTE_MODIFIER_COLOUR))
 	TILE_SEQ_LINE( 0, 11,  0, 16,  5,  2, SPR_RAIL_PLATFORM_X_FRONT    | (1U << PALETTE_MODIFIER_COLOUR))
 	TILE_SEQ_END()
 };
 
 static const DrawTileSeqStruct _station_display_datas_3[] = {
-	TILE_SEQ_LINE( 0,  0,  0,  5, 16,  2, SPR_RAIL_PLATFORM_BUILDING_Y | (1U << PALETTE_MODIFIER_COLOUR))
+	TILE_SEQ_LINE( 0,  0,  0,  5, 16, 15, SPR_RAIL_PLATFORM_BUILDING_Y | (1U << PALETTE_MODIFIER_COLOUR))
 	TILE_SEQ_LINE(11,  0,  0,  5, 16,  2, SPR_RAIL_PLATFORM_Y_FRONT    | (1U << PALETTE_MODIFIER_COLOUR))
 	TILE_SEQ_END()
 };
@@ -789,7 +787,7 @@ static const DrawTileSeqStruct _station_display_datas_waypoint_Y[] = {
  * @param dtss  Sequence child sprites of the tile
  */
 #define TILE_SPRITE_LINE(img, dtss) { {img, PAL_NONE}, dtss },
-#define TILE_SPRITE_NULL() { {0, 0}, NULL },
+#define TILE_SPRITE_NULL() { {0, 0}, nullptr },
 
 extern const DrawTileSprites _station_display_datas_rail[] = {
 	TILE_SPRITE_LINE(SPR_RAIL_TRACK_X,               _station_display_datas_0)
@@ -990,7 +988,7 @@ static const DrawTileSprites _station_display_datas_waypoint[] = {
 
 /* Default waypoint is also drawn as fallback for NewGRF waypoints.
  * As these are drawn/build like stations, they may use the same number of layouts. */
-assert_compile(lengthof(_station_display_datas_rail) == lengthof(_station_display_datas_waypoint));
+static_assert(lengthof(_station_display_datas_rail) == lengthof(_station_display_datas_waypoint));
 
 static const DrawTileSprites * const _station_display_datas[] = {
 	_station_display_datas_rail,

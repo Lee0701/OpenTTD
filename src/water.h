@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -38,8 +36,12 @@ void DrawWaterClassGround(const struct TileInfo *ti);
 void DrawShoreTile(Slope tileh);
 
 void MakeWaterKeepingClass(TileIndex tile, Owner o);
+void CheckForDockingTile(TileIndex t);
 
 bool RiverModifyDesertZone(TileIndex tile, void *data);
+static const uint RIVER_OFFSET_DESERT_DISTANCE = 5; ///< Circular tile search radius to create non-desert around a river tile.
+
+bool IsWateredTile(TileIndex tile, Direction from);
 
 /**
  * Calculates the maintenance cost of a number of canal tiles.

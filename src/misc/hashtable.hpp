@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -21,54 +19,57 @@ struct CHashTableSlotT
 
 	Titem_ *m_pFirst;
 
-	inline CHashTableSlotT() : m_pFirst(NULL) {}
+	inline CHashTableSlotT() : m_pFirst(nullptr) {}
 
 	/** hash table slot helper - clears the slot by simple forgetting its items */
-	inline void Clear() {m_pFirst = NULL;}
+	inline void Clear()
+	{
+		m_pFirst = nullptr;
+	}
 
 	/** hash table slot helper - linear search for item with given key through the given blob - const version */
-	inline const Titem_ *Find(const Key& key) const
+	inline const Titem_ *Find(const Key &key) const
 	{
-		for (const Titem_ *pItem = m_pFirst; pItem != NULL; pItem = pItem->GetHashNext()) {
+		for (const Titem_ *pItem = m_pFirst; pItem != nullptr; pItem = pItem->GetHashNext()) {
 			if (pItem->GetKey() == key) {
 				/* we have found the item, return it */
 				return pItem;
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	/** hash table slot helper - linear search for item with given key through the given blob - non-const version */
-	inline Titem_ *Find(const Key& key)
+	inline Titem_ *Find(const Key &key)
 	{
-		for (Titem_ *pItem = m_pFirst; pItem != NULL; pItem = pItem->GetHashNext()) {
+		for (Titem_ *pItem = m_pFirst; pItem != nullptr; pItem = pItem->GetHashNext()) {
 			if (pItem->GetKey() == key) {
 				/* we have found the item, return it */
 				return pItem;
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	/** hash table slot helper - add new item to the slot */
-	inline void Attach(Titem_& new_item)
+	inline void Attach(Titem_ &new_item)
 	{
-		assert(new_item.GetHashNext() == NULL);
+		assert(new_item.GetHashNext() == nullptr);
 		new_item.SetHashNext(m_pFirst);
 		m_pFirst = &new_item;
 	}
 
 	/** hash table slot helper - remove item from a slot */
-	inline bool Detach(Titem_& item_to_remove)
+	inline bool Detach(Titem_ &item_to_remove)
 	{
 		if (m_pFirst == &item_to_remove) {
 			m_pFirst = item_to_remove.GetHashNext();
-			item_to_remove.SetHashNext(NULL);
+			item_to_remove.SetHashNext(nullptr);
 			return true;
 		}
 		Titem_ *pItem = m_pFirst;
 		for (;;) {
-			if (pItem == NULL) {
+			if (pItem == nullptr) {
 				return false;
 			}
 			Titem_ *pNextItem = pItem->GetHashNext();
@@ -76,35 +77,35 @@ struct CHashTableSlotT
 			pItem = pNextItem;
 		}
 		pItem->SetHashNext(item_to_remove.GetHashNext());
-		item_to_remove.SetHashNext(NULL);
+		item_to_remove.SetHashNext(nullptr);
 		return true;
 	}
 
 	/** hash table slot helper - remove and return item from a slot */
-	inline Titem_ *Detach(const Key& key)
+	inline Titem_ *Detach(const Key &key)
 	{
 		/* do we have any items? */
-		if (m_pFirst == NULL) {
-			return NULL;
+		if (m_pFirst == nullptr) {
+			return nullptr;
 		}
 		/* is it our first item? */
 		if (m_pFirst->GetKey() == key) {
-			Titem_& ret_item = *m_pFirst;
+			Titem_ &ret_item = *m_pFirst;
 			m_pFirst = m_pFirst->GetHashNext();
-			ret_item.SetHashNext(NULL);
+			ret_item.SetHashNext(nullptr);
 			return &ret_item;
 		}
 		/* find it in the following items */
 		Titem_ *pPrev = m_pFirst;
-		for (Titem_ *pItem = m_pFirst->GetHashNext(); pItem != NULL; pPrev = pItem, pItem = pItem->GetHashNext()) {
+		for (Titem_ *pItem = m_pFirst->GetHashNext(); pItem != nullptr; pPrev = pItem, pItem = pItem->GetHashNext()) {
 			if (pItem->GetKey() == key) {
 				/* we have found the item, unlink and return it */
 				pPrev->SetHashNext(pItem->GetHashNext());
-				pItem->SetHashNext(NULL);
+				pItem->SetHashNext(nullptr);
 				return pItem;
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 };
 
@@ -128,7 +129,7 @@ struct CHashTableSlotT
  *    - public method that calculates key's hash:
  *        int CalcHash() const;
  *    - public 'equality' operator to compare the key with another one
- *        bool operator == (const Key& other) const;
+ *        bool operator==(const Key &other) const;
  */
 template <class Titem_, int Thash_bits_>
 class CHashTableT {
@@ -156,71 +157,78 @@ public:
 
 protected:
 	/** static helper - return hash for the given key modulo number of slots */
-	inline static int CalcHash(const Tkey& key)
+	inline static int CalcHash(const Tkey &key)
 	{
-		int32 hash = key.CalcHash();
-		if ((8 * Thash_bits) < 32) hash ^= hash >> (min(8 * Thash_bits, 31));
-		if ((4 * Thash_bits) < 32) hash ^= hash >> (min(4 * Thash_bits, 31));
-		if ((2 * Thash_bits) < 32) hash ^= hash >> (min(2 * Thash_bits, 31));
-		if ((1 * Thash_bits) < 32) hash ^= hash >> (min(1 * Thash_bits, 31));
-		hash &= (1 << Thash_bits) - 1;
+		uint32 hash = key.CalcHash();
+		hash -= (hash >> 17);          // hash * 131071 / 131072
+		hash -= (hash >> 5);           //   * 31 / 32
+		hash &= (1 << Thash_bits) - 1; //   modulo slots
 		return hash;
 	}
 
 	/** static helper - return hash for the given item modulo number of slots */
-	inline static int CalcHash(const Titem_& item) {return CalcHash(item.GetKey());}
+	inline static int CalcHash(const Titem_ &item)
+	{
+		return CalcHash(item.GetKey());
+	}
 
 public:
 	/** item count */
-	inline int Count() const {return m_num_items;}
+	inline int Count() const
+	{
+		return m_num_items;
+	}
 
 	/** simple clear - forget all items - used by CSegmentCostCacheT.Flush() */
-	inline void Clear() {for (int i = 0; i < Tcapacity; i++) m_slots[i].Clear();}
+	inline void Clear()
+	{
+		for (int i = 0; i < Tcapacity; i++) m_slots[i].Clear();
+	}
 
 	/** const item search */
-	const Titem_ *Find(const Tkey& key) const
+	const Titem_ *Find(const Tkey &key) const
 	{
 		int hash = CalcHash(key);
-		const Slot& slot = m_slots[hash];
+		const Slot &slot = m_slots[hash];
 		const Titem_ *item = slot.Find(key);
 		return item;
 	}
 
 	/** non-const item search */
-	Titem_ *Find(const Tkey& key)
+	Titem_ *Find(const Tkey &key)
 	{
 		int hash = CalcHash(key);
-		Slot& slot = m_slots[hash];
+		Slot &slot = m_slots[hash];
 		Titem_ *item = slot.Find(key);
 		return item;
 	}
 
 	/** non-const item search & optional removal (if found) */
-	Titem_ *TryPop(const Tkey& key)
+	Titem_ *TryPop(const Tkey &key)
 	{
 		int hash = CalcHash(key);
-		Slot& slot = m_slots[hash];
+		Slot &slot = m_slots[hash];
 		Titem_ *item = slot.Detach(key);
-		if (item != NULL) {
+		if (item != nullptr) {
 			m_num_items--;
 		}
 		return item;
 	}
 
 	/** non-const item search & removal */
-	Titem_& Pop(const Tkey& key)
+	Titem_& Pop(const Tkey &key)
 	{
 		Titem_ *item = TryPop(key);
-		assert(item != NULL);
+		assert(item != nullptr);
 		return *item;
 	}
 
 	/** non-const item search & optional removal (if found) */
-	bool TryPop(Titem_& item)
+	bool TryPop(Titem_ &item)
 	{
-		const Tkey& key = item.GetKey();
+		const Tkey &key = item.GetKey();
 		int hash = CalcHash(key);
-		Slot& slot = m_slots[hash];
+		Slot &slot = m_slots[hash];
 		bool ret = slot.Detach(item);
 		if (ret) {
 			m_num_items--;
@@ -229,18 +237,18 @@ public:
 	}
 
 	/** non-const item search & removal */
-	void Pop(Titem_& item)
+	void Pop(Titem_ &item)
 	{
-		bool ret = TryPop(item);
+		[[maybe_unused]] bool ret = TryPop(item);
 		assert(ret);
 	}
 
 	/** add one item - copy it from the given item */
-	void Push(Titem_& new_item)
+	void Push(Titem_ &new_item)
 	{
 		int hash = CalcHash(new_item);
-		Slot& slot = m_slots[hash];
-		assert(slot.Find(new_item.GetKey()) == NULL);
+		Slot &slot = m_slots[hash];
+		assert(slot.Find(new_item.GetKey()) == nullptr);
 		slot.Attach(new_item);
 		m_num_items++;
 	}

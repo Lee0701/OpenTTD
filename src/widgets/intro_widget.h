@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -24,14 +22,17 @@ enum SelectGameIntroWidgets {
 	WID_SGI_ARCTIC_LANDSCAPE,      ///< Select arctic landscape button.
 	WID_SGI_TROPIC_LANDSCAPE,      ///< Select tropic landscape button.
 	WID_SGI_TOYLAND_LANDSCAPE,     ///< Select toyland landscape button.
+	WID_SGI_BASESET_SELECTION,     ///< Baseset selection.
+	WID_SGI_BASESET,               ///< Baseset errors.
 	WID_SGI_TRANSLATION_SELECTION, ///< Translation selection.
-	WID_SGI_TRANSLATION,           ///< Translation.
+	WID_SGI_TRANSLATION,           ///< Translation errors.
 	WID_SGI_OPTIONS,               ///< Options button.
 	WID_SGI_HIGHSCORE,             ///< Highscore button.
 	WID_SGI_SETTINGS_OPTIONS,      ///< Settings button.
 	WID_SGI_GRF_SETTINGS,          ///< NewGRF button.
 	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
 	WID_SGI_AI_SETTINGS,           ///< AI button.
+	WID_SGI_GS_SETTINGS,           ///< Game Script button.
 	WID_SGI_EXIT,                  ///< Exit button.
 };
 

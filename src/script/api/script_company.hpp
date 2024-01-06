@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,9 @@
 #define SCRIPT_COMPANY_HPP
 
 #include "script_text.hpp"
+#include "../../economy_type.h"
+#include "../../livery.h"
+#include "../../gfx_type.h"
 
 /**
  * Class that handles all company related functions.
@@ -29,12 +30,13 @@ public:
 	/** Different constants related to CompanyID. */
 	enum CompanyID {
 		/* Note: these values represent part of the in-game Owner enum */
-		COMPANY_FIRST   = ::COMPANY_FIRST,   ///< The first available company.
-		COMPANY_LAST    = ::MAX_COMPANIES,   ///< The last available company.
+		COMPANY_FIRST     = ::COMPANY_FIRST,   ///< The first available company.
+		COMPANY_LAST      = ::MAX_COMPANIES,   ///< The last available company.
 
 		/* Custom added value, only valid for this API */
-		COMPANY_INVALID = -1,                ///< An invalid company.
-		COMPANY_SELF    = 254,               ///< Constant that gets resolved to the correct company index for your company.
+		COMPANY_INVALID   = -1,                ///< An invalid company.
+		COMPANY_SELF      = 254,               ///< Constant that gets resolved to the correct company index for your company.
+		COMPANY_SPECTATOR = 255,               ///< Constant indicating that player is spectating (gets resolved to COMPANY_INVALID)
 	};
 
 	/** Possible genders for company presidents. */
@@ -42,6 +44,76 @@ public:
 		GENDER_MALE,         ///< A male person.
 		GENDER_FEMALE,       ///< A female person.
 		GENDER_INVALID = -1, ///< An invalid gender.
+	};
+
+	/** List of different livery schemes. */
+	enum LiveryScheme {
+		LS_DEFAULT,                  ///< Default scheme.
+		LS_STEAM,                    ///< Steam engines.
+		LS_DIESEL,                   ///< Diesel engines.
+		LS_ELECTRIC,                 ///< Electric engines.
+		LS_MONORAIL,                 ///< Monorail engines.
+		LS_MAGLEV,                   ///< Maglev engines.
+		LS_DMU,                      ///< DMUs and their passenger wagons.
+		LS_EMU,                      ///< EMUs and their passenger wagons.
+		LS_PASSENGER_WAGON_STEAM,    ///< Passenger wagons attached to steam engines.
+		LS_PASSENGER_WAGON_DIESEL,   ///< Passenger wagons attached to diesel engines.
+		LS_PASSENGER_WAGON_ELECTRIC, ///< Passenger wagons attached to electric engines.
+		LS_PASSENGER_WAGON_MONORAIL, ///< Passenger wagons attached to monorail engines.
+		LS_PASSENGER_WAGON_MAGLEV,   ///< Passenger wagons attached to maglev engines.
+		LS_FREIGHT_WAGON,            ///< Freight wagons.
+		LS_BUS,                      ///< Buses.
+		LS_TRUCK,                    ///< Trucks.
+		LS_PASSENGER_SHIP,           ///< Passenger ships.
+		LS_FREIGHT_SHIP,             ///< Freight ships.
+		LS_HELICOPTER,               ///< Helicopters.
+		LS_SMALL_PLANE,              ///< Small aeroplanes.
+		LS_LARGE_PLANE,              ///< Large aeroplanes.
+		LS_PASSENGER_TRAM,           ///< Passenger trams.
+		LS_FREIGHT_TRAM,             ///< Freight trams.
+		LS_INVALID = -1,
+	};
+
+	/** List of colours. */
+	enum Colours {
+		COLOUR_DARK_BLUE,
+		COLOUR_PALE_GREEN,
+		COLOUR_PINK,
+		COLOUR_YELLOW,
+		COLOUR_RED,
+		COLOUR_LIGHT_BLUE,
+		COLOUR_GREEN,
+		COLOUR_DARK_GREEN,
+		COLOUR_BLUE,
+		COLOUR_CREAM,
+		COLOUR_MAUVE,
+		COLOUR_PURPLE,
+		COLOUR_ORANGE,
+		COLOUR_BROWN,
+		COLOUR_GREY,
+		COLOUR_WHITE,
+		COLOUR_INVALID = ::INVALID_COLOUR
+	};
+
+	/**
+	 * Types of expenses.
+	 * @api -ai
+	 */
+	enum ExpensesType : byte {
+		EXPENSES_CONSTRUCTION = ::EXPENSES_CONSTRUCTION,     ///< Construction costs.
+		EXPENSES_NEW_VEHICLES = ::EXPENSES_NEW_VEHICLES,     ///< New vehicles.
+		EXPENSES_TRAIN_RUN    = ::EXPENSES_TRAIN_RUN,        ///< Running costs trains.
+		EXPENSES_ROADVEH_RUN  = ::EXPENSES_ROADVEH_RUN,      ///< Running costs road vehicles.
+		EXPENSES_AIRCRAFT_RUN = ::EXPENSES_AIRCRAFT_RUN,     ///< Running costs aircraft.
+		EXPENSES_SHIP_RUN     = ::EXPENSES_SHIP_RUN,         ///< Running costs ships.
+		EXPENSES_PROPERTY     = ::EXPENSES_PROPERTY,         ///< Property costs.
+		EXPENSES_TRAIN_INC    = ::EXPENSES_TRAIN_REVENUE,    ///< Revenue from trains.
+		EXPENSES_ROADVEH_INC  = ::EXPENSES_ROADVEH_REVENUE,  ///< Revenue from road vehicles.
+		EXPENSES_AIRCRAFT_INC = ::EXPENSES_AIRCRAFT_REVENUE, ///< Revenue from aircraft.
+		EXPENSES_SHIP_INC     = ::EXPENSES_SHIP_REVENUE,     ///< Revenue from ships.
+		EXPENSES_LOAN_INT     = ::EXPENSES_LOAN_INTEREST,    ///< Interest payments over the loan.
+		EXPENSES_OTHER        = ::EXPENSES_OTHER,            ///< Other expenses.
+		EXPENSES_INVALID      = ::INVALID_EXPENSES,          ///< Invalid expense type.
 	};
 
 	/**
@@ -65,7 +137,7 @@ public:
 	/**
 	 * Set the name of your company.
 	 * @param name The new name of the company (can be either a raw string, or a ScriptText object).
-	 * @pre name != NULL && len(name) != 0.
+	 * @pre name != null && len(name) != 0.
 	 * @exception ScriptError::ERR_NAME_IS_NOT_UNIQUE
 	 * @return True if the name was changed.
 	 */
@@ -82,7 +154,7 @@ public:
 	/**
 	 * Set the name of your president.
 	 * @param name The new name of the president (can be either a raw string, or a ScriptText object).
-	 * @pre name != NULL && len(name) != 0.
+	 * @pre name != null && len(name) != 0.
 	 * @exception ScriptError::ERR_NAME_IS_NOT_UNIQUE
 	 * @return True if the name was changed.
 	 */
@@ -123,7 +195,7 @@ public:
 	 * @game @pre Valid ScriptCompanyMode active in scope.
 	 * @return True if the loan could be set to your requested amount.
 	 */
-	static bool SetLoanAmount(int32 loan);
+	static bool SetLoanAmount(Money loan);
 
 	/**
 	 * Sets the minimum amount to loan, i.e. the given amount of loan rounded up.
@@ -133,7 +205,7 @@ public:
 	 * @game @pre Valid ScriptCompanyMode active in scope.
 	 * @return True if we could allocate a minimum of 'loan' loan.
 	 */
-	static bool SetMinimumLoanAmount(int32 loan);
+	static bool SetMinimumLoanAmount(Money loan);
 
 	/**
 	 * Gets the amount your company have loaned.
@@ -163,6 +235,23 @@ public:
 	 * @return The actual bank balance.
 	 */
 	static Money GetBankBalance(CompanyID company);
+
+	/**
+	 * Changes the bank balance by a delta value. This method does not affect the loan but instead
+	 * allows a GS to give or take money from a company.
+	 * @param company The company to change the bank balance of.
+	 * @param delta Amount of money to give or take from the bank balance. A positive value adds money to the bank balance.
+	 * @param expenses_type The account in the finances window that will register the cost.
+	 * @param tile The tile to show text effect on or ScriptMap::TILE_INVALID
+	 * @return True, if the bank balance was changed.
+	 * @game @pre No ScriptCompanyMode active in scope.
+	 * @pre ResolveCompanyID(company) != COMPANY_INVALID.
+	 * @pre delta >= -2**31
+	 * @pre delta <   2**31
+	 * @note You need to create your own news message to inform about costs/gifts that you create using this command.
+	 * @api -ai
+	 */
+	static bool ChangeBankBalance(CompanyID company, Money delta, ExpensesType expenses_type, TileIndex tile);
 
 	/**
 	 * Get the income of the company in the given quarter.
@@ -279,9 +368,11 @@ public:
 	 * Set the minimum money needed to autorenew an engine for your company.
 	 * @param money The new minimum required money for autorenew to work.
 	 * @return True if autorenew money has been modified.
+	 * @pre money >= 0
+	 * @pre money <  2**32
 	 * @api -game
 	 */
-	static bool SetAutoRenewMoney(uint32 money);
+	static bool SetAutoRenewMoney(Money money);
 
 	/**
 	 * Return the minimum money needed to autorenew an engine for a company.
@@ -289,7 +380,37 @@ public:
 	 * @pre ResolveCompanyID(company) != COMPANY_INVALID.
 	 * @return The minimum required money for autorenew to work.
 	 */
-	static uint32 GetAutoRenewMoney(CompanyID company);
+	static Money GetAutoRenewMoney(CompanyID company);
+
+	/**
+	 * Set primary colour for your company.
+	 * @param scheme Livery scheme to set.
+	 * @param colour Colour to set.
+	 * @return False if unable to set primary colour of the livery scheme (e.g. colour in use).
+	 */
+	static bool SetPrimaryLiveryColour(LiveryScheme scheme, Colours colour);
+
+	/**
+	 * Set secondary colour for your company.
+	 * @param scheme Livery scheme to set.
+	 * @param colour Colour to set.
+	 * @return False if unable to set secondary colour of the livery scheme.
+	 */
+	static bool SetSecondaryLiveryColour(LiveryScheme scheme, Colours colour);
+
+	/**
+	 * Get primary colour of a livery for your company.
+	 * @param scheme Livery scheme to get.
+	 * @return Primary colour of livery.
+	 */
+	static ScriptCompany::Colours GetPrimaryLiveryColour(LiveryScheme scheme);
+
+	/**
+	 * Get secondary colour of a livery for your company.
+	 * @param scheme Livery scheme to get.
+	 * @return Secondary colour of livery.
+	 */
+	static ScriptCompany::Colours GetSecondaryLiveryColour(LiveryScheme scheme);
 };
 
 DECLARE_POSTFIX_INCREMENT(ScriptCompany::CompanyID)

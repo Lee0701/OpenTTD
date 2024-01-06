@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -19,9 +17,8 @@
 #include "../../viewport_func.h"
 #include "../../newgrf_station.h"
 
-#define DEBUG_YAPF_CACHE 0
+#include "../../safeguards.h"
 
-#if DEBUG_YAPF_CACHE
 template <typename Tpf> void DumpState(Tpf &pf1, Tpf &pf2)
 {
 	DumpTarget dmp1, dmp2;
@@ -29,14 +26,13 @@ template <typename Tpf> void DumpState(Tpf &pf1, Tpf &pf2)
 	pf2.DumpBase(dmp2);
 	FILE *f1 = fopen("yapf1.txt", "wt");
 	FILE *f2 = fopen("yapf2.txt", "wt");
-	fwrite(dmp1.m_out.Data(), 1, dmp1.m_out.Size(), f1);
-	fwrite(dmp2.m_out.Data(), 1, dmp2.m_out.Size(), f2);
+	assert(f1 != nullptr);
+	assert(f2 != nullptr);
+	fwrite(dmp1.m_out.c_str(), 1, dmp1.m_out.size(), f1);
+	fwrite(dmp2.m_out.c_str(), 1, dmp2.m_out.size(), f2);
 	fclose(f1);
 	fclose(f2);
 }
-#endif
-
-int _total_pf_time_us = 0;
 
 template <class Types>
 class CYapfReserveTrack
@@ -50,7 +46,7 @@ protected:
 	/** to access inherited pathfinder */
 	inline Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 private:
@@ -84,7 +80,7 @@ private:
 			tile = TILE_ADD(tile, diff);
 		} while (IsCompatibleTrainStationTile(tile, start) && tile != m_origin_tile);
 
-		TriggerStationRandomisation(NULL, start, SRT_PATH_RESERVATION);
+		TriggerStationRandomisation(nullptr, start, SRT_PATH_RESERVATION);
 
 		return true;
 	}
@@ -138,7 +134,7 @@ public:
 	/** Check the node for a possible reservation target. */
 	inline void FindSafePositionOnNode(Node *node)
 	{
-		assert(node->m_parent != NULL);
+		assert(node->m_parent != nullptr);
 
 		/* We will never pass more than two signals, no need to check for a safe tile. */
 		if (node->m_parent->m_num_signals_passed >= 2) return;
@@ -154,7 +150,7 @@ public:
 		m_res_fail_tile = INVALID_TILE;
 		m_origin_tile = origin;
 
-		if (target != NULL) {
+		if (target != nullptr) {
 			target->tile = m_res_dest;
 			target->trackdir = m_res_dest_td;
 			target->okay = false;
@@ -163,7 +159,7 @@ public:
 		/* Don't bother if the target is reserved. */
 		if (!IsWaitingPositionFree(Yapf().GetVehicle(), m_res_dest, m_res_dest_td)) return false;
 
-		for (Node *node = m_res_node; node->m_parent != NULL; node = node->m_parent) {
+		for (Node *node = m_res_node; node->m_parent != nullptr; node = node->m_parent) {
 			node->IterateTiles(Yapf().GetVehicle(), Yapf(), *this, &CYapfReserveTrack<Types>::ReserveSingleTrack);
 			if (m_res_fail_tile != INVALID_TILE) {
 				/* Reservation failed, undo. */
@@ -173,13 +169,13 @@ public:
 					/* If this is the node that failed, stop at the failed tile. */
 					m_res_fail_tile = fail_node == node ? stop_tile : INVALID_TILE;
 					fail_node->IterateTiles(Yapf().GetVehicle(), Yapf(), *this, &CYapfReserveTrack<Types>::UnreserveSingleTrack);
-				} while (fail_node != node && (fail_node = fail_node->m_parent) != NULL);
+				} while (fail_node != node && (fail_node = fail_node->m_parent) != nullptr);
 
 				return false;
 			}
 		}
 
-		if (target != NULL) target->okay = true;
+		if (target != nullptr) target->okay = true;
 
 		if (Yapf().CanUseGlobalCache(*m_res_node)) {
 			YapfNotifyTrackLayoutChange(INVALID_TILE, INVALID_TRACK);
@@ -202,7 +198,7 @@ protected:
 	/** to access inherited path finder */
 	inline Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 public:
@@ -211,7 +207,7 @@ public:
 	 *  reachable trackdir on the new tile creates new node, initializes it
 	 *  and adds it to the open list by calling Yapf().AddNewNode(n)
 	 */
-	inline void PfFollowNode(Node& old_node)
+	inline void PfFollowNode(Node &old_node)
 	{
 		TrackFollower F(Yapf().GetVehicle());
 		if (F.Follow(old_node.GetLastTile(), old_node.GetLastTrackdir())) {
@@ -225,7 +221,7 @@ public:
 		return 't';
 	}
 
-	static bool stFindNearestDepotTwoWay(const Train *v, TileIndex t1, Trackdir td1, TileIndex t2, Trackdir td2, int max_penalty, int reverse_penalty, TileIndex *depot_tile, bool *reversed)
+	static FindDepotData stFindNearestDepotTwoWay(const Train *v, TileIndex t1, Trackdir td1, TileIndex t2, Trackdir td2, int max_penalty, int reverse_penalty)
 	{
 		Tpf pf1;
 		/*
@@ -238,24 +234,24 @@ public:
 		 * depot orders and you do not disable automatic servicing.
 		 */
 		if (max_penalty != 0) pf1.DisableCache(true);
-		bool result1 = pf1.FindNearestDepotTwoWay(v, t1, td1, t2, td2, max_penalty, reverse_penalty, depot_tile, reversed);
+		FindDepotData result1 = pf1.FindNearestDepotTwoWay(v, t1, td1, t2, td2, max_penalty, reverse_penalty);
 
-#if DEBUG_YAPF_CACHE
-		Tpf pf2;
-		TileIndex depot_tile2 = INVALID_TILE;
-		bool reversed2 = false;
-		pf2.DisableCache(true);
-		bool result2 = pf2.FindNearestDepotTwoWay(v, t1, td1, t2, td2, max_penalty, reverse_penalty, &depot_tile2, &reversed2);
-		if (result1 != result2 || (result1 && (*depot_tile != depot_tile2 || *reversed != reversed2))) {
-			DEBUG(yapf, 0, "CACHE ERROR: FindNearestDepotTwoWay() = [%s, %s]", result1 ? "T" : "F", result2 ? "T" : "F");
-			DumpState(pf1, pf2);
+		if (_debug_desync_level >= 2) {
+			Tpf pf2;
+			pf2.DisableCache(true);
+			FindDepotData result2 = pf2.FindNearestDepotTwoWay(v, t1, td1, t2, td2, max_penalty, reverse_penalty);
+			if (result1.tile != result2.tile || (result1.reverse != result2.reverse)) {
+				Debug(desync, 2, "CACHE ERROR: FindNearestDepotTwoWay() = [{}, {}]",
+						result1.tile != INVALID_TILE ? "T" : "F",
+						result2.tile != INVALID_TILE ? "T" : "F");
+				DumpState(pf1, pf2);
+			}
 		}
-#endif
 
 		return result1;
 	}
 
-	inline bool FindNearestDepotTwoWay(const Train *v, TileIndex t1, Trackdir td1, TileIndex t2, Trackdir td2, int max_penalty, int reverse_penalty, TileIndex *depot_tile, bool *reversed)
+	inline FindDepotData FindNearestDepotTwoWay(const Train *v, TileIndex t1, Trackdir td1, TileIndex t2, Trackdir td2, int max_penalty, int reverse_penalty)
 	{
 		/* set origin and destination nodes */
 		Yapf().SetOrigin(t1, td1, t2, td2, reverse_penalty, true);
@@ -263,25 +259,20 @@ public:
 		Yapf().SetMaxCost(max_penalty);
 
 		/* find the best path */
-		bool bFound = Yapf().FindPath(v);
-		if (!bFound) return false;
+		if (!Yapf().FindPath(v)) return FindDepotData();
 
-		/* some path found
-		 * get found depot tile */
+		/* Some path found. */
 		Node *n = Yapf().GetBestNode();
-		*depot_tile = n->GetLastTile();
 
 		/* walk through the path back to the origin */
 		Node *pNode = n;
-		while (pNode->m_parent != NULL) {
+		while (pNode->m_parent != nullptr) {
 			pNode = pNode->m_parent;
 		}
 
 		/* if the origin node is our front vehicle tile/Trackdir then we didn't reverse
 		 * but we can also look at the cost (== 0 -> not reversed, == reverse_penalty -> reversed) */
-		*reversed = (pNode->m_cost != 0);
-
-		return true;
+		return FindDepotData(n->GetLastTile(), n->m_cost, pNode->m_cost != 0);
 	}
 };
 
@@ -298,7 +289,7 @@ protected:
 	/** to access inherited path finder */
 	inline Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 public:
@@ -307,7 +298,7 @@ public:
 	 *  reachable trackdir on the new tile creates new node, initializes it
 	 *  and adds it to the open list by calling Yapf().AddNewNode(n)
 	 */
-	inline void PfFollowNode(Node& old_node)
+	inline void PfFollowNode(Node &old_node)
 	{
 		TrackFollower F(Yapf().GetVehicle(), Yapf().GetCompatibleRailTypes());
 		if (F.Follow(old_node.GetLastTile(), old_node.GetLastTrackdir()) && F.MaskReservedTracks()) {
@@ -325,19 +316,19 @@ public:
 	{
 		/* Create pathfinder instance */
 		Tpf pf1;
-#if !DEBUG_YAPF_CACHE
-		bool result1 = pf1.FindNearestSafeTile(v, t1, td, override_railtype, false);
-
-#else
-		bool result2 = pf1.FindNearestSafeTile(v, t1, td, override_railtype, true);
-		Tpf pf2;
-		pf2.DisableCache(true);
-		bool result1 = pf2.FindNearestSafeTile(v, t1, td, override_railtype, false);
-		if (result1 != result2) {
-			DEBUG(yapf, 0, "CACHE ERROR: FindSafeTile() = [%s, %s]", result2 ? "T" : "F", result1 ? "T" : "F");
-			DumpState(pf1, pf2);
+		bool result1;
+		if (_debug_desync_level < 2) {
+			result1 = pf1.FindNearestSafeTile(v, t1, td, override_railtype, false);
+		} else {
+			bool result2 = pf1.FindNearestSafeTile(v, t1, td, override_railtype, true);
+			Tpf pf2;
+			pf2.DisableCache(true);
+			result1 = pf2.FindNearestSafeTile(v, t1, td, override_railtype, false);
+			if (result1 != result2) {
+				Debug(desync, 2, "CACHE ERROR: FindSafeTile() = [{}, {}]", result2 ? "T" : "F", result1 ? "T" : "F");
+				DumpState(pf1, pf2);
+			}
 		}
-#endif
 
 		return result1;
 	}
@@ -356,15 +347,15 @@ public:
 		this->SetReservationTarget(pNode, pNode->GetLastTile(), pNode->GetLastTrackdir());
 
 		/* Walk through the path back to the origin. */
-		Node *pPrev = NULL;
-		while (pNode->m_parent != NULL) {
+		Node *pPrev = nullptr;
+		while (pNode->m_parent != nullptr) {
 			pPrev = pNode;
 			pNode = pNode->m_parent;
 
 			this->FindSafePositionOnNode(pPrev);
 		}
 
-		return dont_reserve || this->TryReservePath(NULL, pNode->GetLastTile());
+		return dont_reserve || this->TryReservePath(nullptr, pNode->GetLastTile());
 	}
 };
 
@@ -381,7 +372,7 @@ protected:
 	/** to access inherited path finder */
 	inline Tpf& Yapf()
 	{
-		return *static_cast<Tpf*>(this);
+		return *static_cast<Tpf *>(this);
 	}
 
 public:
@@ -390,7 +381,7 @@ public:
 	 *  reachable trackdir on the new tile creates new node, initializes it
 	 *  and adds it to the open list by calling Yapf().AddNewNode(n)
 	 */
-	inline void PfFollowNode(Node& old_node)
+	inline void PfFollowNode(Node &old_node)
 	{
 		TrackFollower F(Yapf().GetVehicle());
 		if (F.Follow(old_node.GetLastTile(), old_node.GetLastTrackdir())) {
@@ -404,30 +395,32 @@ public:
 		return 't';
 	}
 
-	static Trackdir stChooseRailTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target)
+	static Trackdir stChooseRailTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target, TileIndex *dest)
 	{
 		/* create pathfinder instance */
 		Tpf pf1;
-#if !DEBUG_YAPF_CACHE
-		Trackdir result1 = pf1.ChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target);
+		Trackdir result1;
 
-#else
-		Trackdir result1 = pf1.ChooseRailTrack(v, tile, enterdir, tracks, path_found, false, NULL);
-		Tpf pf2;
-		pf2.DisableCache(true);
-		Trackdir result2 = pf2.ChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target);
-		if (result1 != result2) {
-			DEBUG(yapf, 0, "CACHE ERROR: ChooseRailTrack() = [%d, %d]", result1, result2);
-			DumpState(pf1, pf2);
+		if (_debug_desync_level < 2) {
+			result1 = pf1.ChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target, dest);
+		} else {
+			result1 = pf1.ChooseRailTrack(v, tile, enterdir, tracks, path_found, false, nullptr, nullptr);
+			Tpf pf2;
+			pf2.DisableCache(true);
+			Trackdir result2 = pf2.ChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target, dest);
+			if (result1 != result2) {
+				Debug(desync, 2, "CACHE ERROR: ChooseRailTrack() = [{}, {}]", result1, result2);
+				DumpState(pf1, pf2);
+			}
 		}
-#endif
 
 		return result1;
 	}
 
-	inline Trackdir ChooseRailTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target)
+	inline Trackdir ChooseRailTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target, TileIndex *dest)
 	{
-		if (target != NULL) target->tile = INVALID_TILE;
+		if (target != nullptr) target->tile = INVALID_TILE;
+		if (dest != nullptr) *dest = INVALID_TILE;
 
 		/* set origin and destination nodes */
 		PBSTileInfo origin = FollowTrainReservation(v);
@@ -440,24 +433,27 @@ public:
 		/* if path not found - return INVALID_TRACKDIR */
 		Trackdir next_trackdir = INVALID_TRACKDIR;
 		Node *pNode = Yapf().GetBestNode();
-		if (pNode != NULL) {
+		if (pNode != nullptr) {
 			/* reserve till end of path */
 			this->SetReservationTarget(pNode, pNode->GetLastTile(), pNode->GetLastTrackdir());
 
 			/* path was found or at least suggested
 			 * walk through the path back to the origin */
-			Node *pPrev = NULL;
-			while (pNode->m_parent != NULL) {
+			Node *pPrev = nullptr;
+			while (pNode->m_parent != nullptr) {
 				pPrev = pNode;
 				pNode = pNode->m_parent;
 
 				this->FindSafePositionOnNode(pPrev);
 			}
 			/* return trackdir from the best origin node (one of start nodes) */
-			Node& best_next_node = *pPrev;
+			Node &best_next_node = *pPrev;
 			next_trackdir = best_next_node.GetTrackdir();
 
-			if (reserve_track && path_found) this->TryReservePath(target, pNode->GetLastTile());
+			if (reserve_track && path_found) {
+				if (dest != nullptr) *dest = Yapf().GetBestNode()->GetLastTile();
+				this->TryReservePath(target, pNode->GetLastTile());
+			}
 		}
 
 		/* Treat the path as found if stopped on the first two way signal(s). */
@@ -470,15 +466,15 @@ public:
 		Tpf pf1;
 		bool result1 = pf1.CheckReverseTrain(v, t1, td1, t2, td2, reverse_penalty);
 
-#if DEBUG_YAPF_CACHE
-		Tpf pf2;
-		pf2.DisableCache(true);
-		bool result2 = pf2.CheckReverseTrain(v, t1, td1, t2, td2, reverse_penalty);
-		if (result1 != result2) {
-			DEBUG(yapf, 0, "CACHE ERROR: CheckReverseTrain() = [%s, %s]", result1 ? "T" : "F", result2 ? "T" : "F");
-			DumpState(pf1, pf2);
+		if (_debug_desync_level >= 2) {
+			Tpf pf2;
+			pf2.DisableCache(true);
+			bool result2 = pf2.CheckReverseTrain(v, t1, td1, t2, td2, reverse_penalty);
+			if (result1 != result2) {
+				Debug(desync, 2, "CACHE ERROR: CheckReverseTrain() = [{}, {}]", result1 ? "T" : "F", result2 ? "T" : "F");
+				DumpState(pf1, pf2);
+			}
 		}
-#endif
 
 		return result1;
 	}
@@ -498,12 +494,12 @@ public:
 		/* path was found
 		 * walk through the path back to the origin */
 		Node *pNode = Yapf().GetBestNode();
-		while (pNode->m_parent != NULL) {
+		while (pNode->m_parent != nullptr) {
 			pNode = pNode->m_parent;
 		}
 
 		/* check if it was reversed origin */
-		Node& best_org_node = *pNode;
+		Node &best_org_node = *pNode;
 		bool reversed = (best_org_node.m_cost != 0);
 		return reversed;
 	}
@@ -536,10 +532,10 @@ struct CYapfAnySafeTileRail1 : CYapfT<CYapfRail_TypesT<CYapfAnySafeTileRail1, CF
 struct CYapfAnySafeTileRail2 : CYapfT<CYapfRail_TypesT<CYapfAnySafeTileRail2, CFollowTrackFreeRailNo90, CRailNodeListTrackDir, CYapfDestinationAnySafeTileRailT , CYapfFollowAnySafeTileRailT> > {};
 
 
-Track YapfTrainChooseTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target)
+Track YapfTrainChooseTrack(const Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, bool &path_found, bool reserve_track, PBSTileInfo *target, TileIndex *dest)
 {
 	/* default is YAPF type 2 */
-	typedef Trackdir (*PfnChooseRailTrack)(const Train*, TileIndex, DiagDirection, TrackBits, bool&, bool, PBSTileInfo*);
+	typedef Trackdir (*PfnChooseRailTrack)(const Train*, TileIndex, DiagDirection, TrackBits, bool&, bool, PBSTileInfo*, TileIndex*);
 	PfnChooseRailTrack pfnChooseRailTrack = &CYapfRail1::stChooseRailTrack;
 
 	/* check if non-default YAPF type needed */
@@ -547,7 +543,7 @@ Track YapfTrainChooseTrack(const Train *v, TileIndex tile, DiagDirection enterdi
 		pfnChooseRailTrack = &CYapfRail2::stChooseRailTrack; // Trackdir, forbid 90-deg
 	}
 
-	Trackdir td_ret = pfnChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target);
+	Trackdir td_ret = pfnChooseRailTrack(v, tile, enterdir, tracks, path_found, reserve_track, target, dest);
 	return (td_ret != INVALID_TRACKDIR) ? TrackdirToTrack(td_ret) : FindFirstTrack(tracks);
 }
 
@@ -612,15 +608,13 @@ bool YapfTrainCheckReverse(const Train *v)
 
 FindDepotData YapfTrainFindNearestDepot(const Train *v, int max_penalty)
 {
-	FindDepotData fdd;
-
 	const Train *last_veh = v->Last();
 
 	PBSTileInfo origin = FollowTrainReservation(v);
 	TileIndex last_tile = last_veh->tile;
 	Trackdir td_rev = ReverseTrackdir(last_veh->GetVehicleTrackdir());
 
-	typedef bool (*PfnFindNearestDepotTwoWay)(const Train*, TileIndex, Trackdir, TileIndex, Trackdir, int, int, TileIndex*, bool*);
+	typedef FindDepotData (*PfnFindNearestDepotTwoWay)(const Train*, TileIndex, Trackdir, TileIndex, Trackdir, int, int);
 	PfnFindNearestDepotTwoWay pfnFindNearestDepotTwoWay = &CYapfAnyDepotRail1::stFindNearestDepotTwoWay;
 
 	/* check if non-default YAPF type needed */
@@ -628,9 +622,7 @@ FindDepotData YapfTrainFindNearestDepot(const Train *v, int max_penalty)
 		pfnFindNearestDepotTwoWay = &CYapfAnyDepotRail2::stFindNearestDepotTwoWay; // Trackdir, forbid 90-deg
 	}
 
-	bool ret = pfnFindNearestDepotTwoWay(v, origin.tile, origin.trackdir, last_tile, td_rev, max_penalty, YAPF_INFINITE_PENALTY, &fdd.tile, &fdd.reverse);
-	fdd.best_length = ret ? max_penalty / 2 : UINT_MAX; // some fake distance or NOT_FOUND
-	return fdd;
+	return pfnFindNearestDepotTwoWay(v, origin.tile, origin.trackdir, last_tile, td_rev, max_penalty, YAPF_INFINITE_PENALTY);
 }
 
 bool YapfTrainFindNearestSafeTile(const Train *v, TileIndex tile, Trackdir td, bool override_railtype)

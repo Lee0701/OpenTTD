@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -15,36 +13,35 @@
 #include "video_driver.hpp"
 
 /** The dedicated server video driver. */
-class VideoDriver_Dedicated: public VideoDriver {
+class VideoDriver_Dedicated : public VideoDriver {
 public:
-	/* virtual */ const char *Start(const char * const *param);
+	const char *Start(const StringList &param) override;
 
-	/* virtual */ void Stop();
+	void Stop() override;
 
-	/* virtual */ void MakeDirty(int left, int top, int width, int height);
+	void MakeDirty(int left, int top, int width, int height) override;
 
-	/* virtual */ void MainLoop();
+	void MainLoop() override;
 
-	/* virtual */ bool ChangeResolution(int w, int h);
+	bool ChangeResolution(int w, int h) override;
 
-	/* virtual */ bool ToggleFullscreen(bool fullscreen);
-	/* virtual */ const char *GetName() const { return "dedicated"; }
-	/* virtual */ bool HasGUI() const { return false; }
+	bool ToggleFullscreen(bool fullscreen) override;
+	const char *GetName() const override { return "dedicated"; }
+	bool HasGUI() const override { return false; }
 };
 
 /** Factory for the dedicated server video driver. */
-class FVideoDriver_Dedicated: public VideoDriverFactory<FVideoDriver_Dedicated> {
+class FVideoDriver_Dedicated : public DriverFactoryBase {
 public:
 #ifdef DEDICATED
 	/* Automatically select this dedicated driver when making a dedicated
 	 * server build. */
-	static const int priority = 10;
+	static const int PRIORITY = 10;
 #else
-	static const int priority = 0;
+	static const int PRIORITY = 0;
 #endif
-	/* virtual */ const char *GetName() { return "dedicated"; }
-	/* virtual */ const char *GetDescription() { return "Dedicated Video Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new VideoDriver_Dedicated(); }
+	FVideoDriver_Dedicated() : DriverFactoryBase(Driver::DT_VIDEO, PRIORITY, "dedicated", "Dedicated Video Driver") {}
+	Driver *CreateInstance() const override { return new VideoDriver_Dedicated(); }
 };
 
 #endif /* VIDEO_DEDICATED_H */

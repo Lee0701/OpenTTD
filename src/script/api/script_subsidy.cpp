@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,9 @@
 #include "script_error.hpp"
 #include "../../subsidy_base.h"
 #include "../../station_base.h"
+#include "../../subsidy_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptSubsidy::IsValidSubsidy(SubsidyID subsidy_id)
 {
@@ -38,7 +39,7 @@
 	EnforcePrecondition(false, (from_type == SPT_INDUSTRY && ScriptIndustry::IsValidIndustry(from_id)) || (from_type == SPT_TOWN && ScriptTown::IsValidTown(from_id)));
 	EnforcePrecondition(false, (to_type == SPT_INDUSTRY && ScriptIndustry::IsValidIndustry(to_id)) || (to_type == SPT_TOWN && ScriptTown::IsValidTown(to_id)));
 
-	return ScriptObject::DoCommand(0, from_type | (from_id << 8) | (cargo_type << 24), to_type | (to_id << 8), CMD_CREATE_SUBSIDY);
+	return ScriptObject::Command<CMD_CREATE_SUBSIDY>::Do(cargo_type, (::SourceType)from_type, from_id, (::SourceType)to_type, to_id);
 }
 
 /* static */ ScriptCompany::CompanyID ScriptSubsidy::GetAwardedTo(SubsidyID subsidy_id)
@@ -48,9 +49,9 @@
 	return (ScriptCompany::CompanyID)((byte)::Subsidy::Get(subsidy_id)->awarded);
 }
 
-/* static */ int32 ScriptSubsidy::GetExpireDate(SubsidyID subsidy_id)
+/* static */ ScriptDate::Date ScriptSubsidy::GetExpireDate(SubsidyID subsidy_id)
 {
-	if (!IsValidSubsidy(subsidy_id)) return -1;
+	if (!IsValidSubsidy(subsidy_id)) return ScriptDate::DATE_INVALID;
 
 	int year = ScriptDate::GetYear(ScriptDate::GetCurrentDate());
 	int month = ScriptDate::GetMonth(ScriptDate::GetCurrentDate());

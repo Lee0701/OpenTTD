@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,6 +11,8 @@
 #include "script_execmode.hpp"
 #include "../script_instance.hpp"
 #include "../script_fatalerror.hpp"
+
+#include "../../safeguards.h"
 
 bool ScriptExecMode::ModeProc()
 {
@@ -28,7 +28,7 @@ ScriptExecMode::ScriptExecMode()
 	this->SetDoCommandMode(&ScriptExecMode::ModeProc, this);
 }
 
-ScriptExecMode::~ScriptExecMode()
+void ScriptExecMode::FinalRelease()
 {
 	if (this->GetDoCommandModeInstance() != this) {
 		/* Ignore this error if the script already died. */
@@ -36,5 +36,9 @@ ScriptExecMode::~ScriptExecMode()
 			throw Script_FatalError("ScriptExecMode object was removed while it was not the latest *Mode object created.");
 		}
 	}
+}
+
+ScriptExecMode::~ScriptExecMode()
+{
 	this->SetDoCommandMode(this->last_mode, this->last_instance);
 }

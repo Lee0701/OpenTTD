@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -36,7 +34,9 @@ public:
 class ScriptWaypointList_Vehicle : public ScriptList {
 public:
 	/**
-	 * @param vehicle_id The vehicle to get the list of waypoints he has in its orders from.
+	 * Get the waypoints from the orders of the given vehicle. Duplicates are
+	 * not added. Waypoints are added in the order of the vehicle's orders.
+	 * @param vehicle_id The vehicle to get the list of waypoints for.
 	 */
 	ScriptWaypointList_Vehicle(VehicleID vehicle_id);
 };

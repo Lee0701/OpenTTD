@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,6 +15,7 @@ enum SaveLoadWidgets {
 	WID_SL_CAPTION,                 ///< Caption of the window.
 	WID_SL_SORT_BYNAME,             ///< Sort by name button.
 	WID_SL_SORT_BYDATE,             ///< Sort by date button.
+	WID_SL_FILTER,                  ///< Filter list of files
 	WID_SL_BACKGROUND,              ///< Background of window.
 	WID_SL_FILE_BACKGROUND,         ///< Background of file selection.
 	WID_SL_HOME_BUTTON,             ///< Home button.

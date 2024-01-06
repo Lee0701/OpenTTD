@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,13 +12,15 @@
 #include "../../gfx_func.h"
 #include "../../textbuf_gui.h"
 #include "../../fileio_func.h"
-#include "../../fios.h"
 #include <windows.h>
 #include <fcntl.h>
+#include <mmsystem.h>
 #include <regstr.h>
+#define NO_SHOBJIDL_SORTDIRECTION // Avoid multiple definition of SORT_ASCENDING
 #include <shlobj.h> /* SHGetFolderPath */
-#include <Shellapi.h>
+#include <shellapi.h>
 #include "win32.h"
+#include "../../fios.h"
 #include "../../core/alloc_func.hpp"
 #include "../../openttd.h"
 #include "../../core/random_func.hpp"
@@ -28,6 +28,11 @@
 #include "../../crashlog.h"
 #include <errno.h>
 #include <sys/stat.h>
+#include "../../language.h"
+#include "../../thread.h"
+#include <array>
+
+#include "../../safeguards.h"
 
 static bool _has_console;
 static bool _cursor_disable = true;
@@ -45,45 +50,15 @@ bool MyShowCursor(bool show, bool toggle)
 	return !show;
 }
 
-/**
- * Helper function needed by dynamically loading libraries
- * XXX: Hurray for MS only having an ANSI GetProcAddress function
- * on normal windows and no Wide version except for in Windows Mobile/CE
- */
-bool LoadLibraryList(Function proc[], const char *dll)
-{
-	while (*dll != '\0') {
-		HMODULE lib;
-		lib = LoadLibrary(MB_TO_WIDE(dll));
-
-		if (lib == NULL) return false;
-		for (;;) {
-			FARPROC p;
-
-			while (*dll++ != '\0') { /* Nothing */ }
-			if (*dll == '\0') break;
-#if defined(WINCE)
-			p = GetProcAddress(lib, MB_TO_WIDE(dll));
-#else
-			p = GetProcAddress(lib, dll);
-#endif
-			if (p == NULL) return false;
-			*proc++ = (Function)p;
-		}
-		dll++;
-	}
-	return true;
-}
-
 void ShowOSErrorBox(const char *buf, bool system)
 {
 	MyShowCursor(true);
-	MessageBox(GetActiveWindow(), MB_TO_WIDE(buf), _T("Error!"), MB_ICONSTOP);
+	MessageBox(GetActiveWindow(), OTTD2FS(buf).c_str(), L"Error!", MB_ICONSTOP | MB_TASKMODAL);
 }
 
 void OSOpenBrowser(const char *url)
 {
-	ShellExecute(GetActiveWindow(), _T("open"), MB_TO_WIDE(url), NULL, NULL, SW_SHOWNORMAL);
+	ShellExecute(GetActiveWindow(), L"open", OTTD2FS(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 /* Code below for windows version of opendir/readdir/closedir copied and
@@ -133,7 +108,7 @@ static inline void dir_free(DIR *d)
 	}
 }
 
-DIR *opendir(const TCHAR *path)
+DIR *opendir(const wchar_t *path)
 {
 	DIR *d;
 	UINT sem = SetErrorMode(SEM_FAILCRITICALERRORS); // disable 'no-disk' message box
@@ -141,15 +116,15 @@ DIR *opendir(const TCHAR *path)
 
 	if ((fa != INVALID_FILE_ATTRIBUTES) && (fa & FILE_ATTRIBUTE_DIRECTORY)) {
 		d = dir_calloc();
-		if (d != NULL) {
-			TCHAR search_path[MAX_PATH];
-			bool slash = path[_tcslen(path) - 1] == '\\';
+		if (d != nullptr) {
+			std::wstring search_path = path;
+			bool slash = path[wcslen(path) - 1] == '\\';
 
 			/* build search path for FindFirstFile, try not to append additional slashes
 			 * as it throws Win9x off its groove for root directories */
-			_sntprintf(search_path, lengthof(search_path), _T("%s%s*"), path, slash ? _T("") : _T("\\"));
-			*lastof(search_path) = '\0';
-			d->hFind = FindFirstFile(search_path, &d->fd);
+			if (!slash) search_path += L"\\";
+			search_path += L"*";
+			d->hFind = FindFirstFile(search_path.c_str(), &d->fd);
 
 			if (d->hFind != INVALID_HANDLE_VALUE ||
 					GetLastError() == ERROR_NO_MORE_FILES) { // the directory is empty
@@ -157,14 +132,14 @@ DIR *opendir(const TCHAR *path)
 				d->at_first_entry = true;
 			} else {
 				dir_free(d);
-				d = NULL;
+				d = nullptr;
 			}
 		} else {
 			errno = ENOMEM;
 		}
 	} else {
 		/* path not found or not a directory */
-		d = NULL;
+		d = nullptr;
 		errno = ENOENT;
 	}
 
@@ -178,11 +153,11 @@ struct dirent *readdir(DIR *d)
 
 	if (d->at_first_entry) {
 		/* the directory was empty when opened */
-		if (d->hFind == INVALID_HANDLE_VALUE) return NULL;
+		if (d->hFind == INVALID_HANDLE_VALUE) return nullptr;
 		d->at_first_entry = false;
 	} else if (!FindNextFile(d->hFind, &d->fd)) { // determine cause and bail
 		if (GetLastError() == ERROR_NO_MORE_FILES) SetLastError(prev_err);
-		return NULL;
+		return nullptr;
 	}
 
 	/* This entry has passed all checks; return information about it.
@@ -203,29 +178,20 @@ bool FiosIsRoot(const char *file)
 	return file[3] == '\0'; // C:\...
 }
 
-void FiosGetDrives()
+void FiosGetDrives(FileList &file_list)
 {
-#if defined(WINCE)
-	/* WinCE only knows one drive: / */
-	FiosItem *fios = _fios_items.Append();
-	fios->type = FIOS_TYPE_DRIVE;
-	fios->mtime = 0;
-	snprintf(fios->name, lengthof(fios->name), PATHSEP "");
-	strecpy(fios->title, fios->name, lastof(fios->title));
-#else
-	TCHAR drives[256];
-	const TCHAR *s;
+	wchar_t drives[256];
+	const wchar_t *s;
 
 	GetLogicalDriveStrings(lengthof(drives), drives);
 	for (s = drives; *s != '\0';) {
-		FiosItem *fios = _fios_items.Append();
+		FiosItem *fios = &file_list.emplace_back();
 		fios->type = FIOS_TYPE_DRIVE;
 		fios->mtime = 0;
-		snprintf(fios->name, lengthof(fios->name),  "%c:", s[0] & 0xFF);
+		seprintf(fios->name, lastof(fios->name),  "%c:", s[0] & 0xFF);
 		strecpy(fios->title, fios->name, lastof(fios->title));
 		while (*s++ != '\0') { /* Nothing */ }
 	}
-#endif
 }
 
 bool FiosIsValidFile(const char *path, const struct dirent *ent, struct stat *sb)
@@ -254,15 +220,10 @@ bool FiosIsHiddenFile(const struct dirent *ent)
 bool FiosGetDiskFreeSpace(const char *path, uint64 *tot)
 {
 	UINT sem = SetErrorMode(SEM_FAILCRITICALERRORS);  // disable 'no-disk' message box
-	bool retval = false;
-	TCHAR root[4];
-	DWORD spc, bps, nfc, tnc;
 
-	_sntprintf(root, lengthof(root), _T("%c:") _T(PATHSEP), path[0]);
-	if (tot != NULL && GetDiskFreeSpace(root, &spc, &bps, &nfc, &tnc)) {
-		*tot = ((spc * bps) * (uint64)nfc);
-		retval = true;
-	}
+	ULARGE_INTEGER bytes_free;
+	bool retval = GetDiskFreeSpaceEx(OTTD2FS(path).c_str(), &bytes_free, nullptr, nullptr);
+	if (retval && tot != nullptr) *tot = bytes_free.QuadPart;
 
 	SetErrorMode(sem); // reset previous setting
 	return retval;
@@ -301,16 +262,13 @@ static int ParseCommandLine(char *line, char **argv, int max_argc)
 
 void CreateConsole()
 {
-#if defined(WINCE)
-	/* WinCE doesn't support console stuff */
-#else
 	HANDLE hand;
 	CONSOLE_SCREEN_BUFFER_INFO coninfo;
 
 	if (_has_console) return;
 	_has_console = true;
 
-	AllocConsole();
+	if (!AllocConsole()) return;
 
 	hand = GetStdHandle(STD_OUTPUT_HANDLE);
 	GetConsoleScreenBufferInfo(hand, &coninfo);
@@ -333,9 +291,16 @@ void CreateConsole()
 		return;
 	}
 
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+	freopen("CONOUT$", "a", stdout);
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "a", stderr);
+#else
 	*stdout = *_fdopen(fd, "w");
 	*stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT), "r" );
 	*stderr = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT), "w" );
+#endif
+
 #else
 	/* open_osfhandle is not in cygwin */
 	*stdout = *fdopen(1, "w" );
@@ -343,10 +308,9 @@ void CreateConsole()
 	*stderr = *fdopen(2, "w" );
 #endif
 
-	setvbuf(stdin, NULL, _IONBF, 0);
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
-#endif
+	setvbuf(stdin, nullptr, _IONBF, 0);
+	setvbuf(stdout, nullptr, _IONBF, 0);
+	setvbuf(stderr, nullptr, _IONBF, 0);
 }
 
 /** Temporary pointer to get the help message to the window */
@@ -371,12 +335,10 @@ static INT_PTR CALLBACK HelpDialogFunc(HWND wnd, UINT msg, WPARAM wParam, LPARAM
 				*q++ = *p++;
 			}
 			*q = '\0';
-#if defined(UNICODE)
 			/* We need to put the text in a separate buffer because the default
-			 * buffer in MB_TO_WIDE might not be large enough (512 chars) */
-			wchar_t help_msgW[8192];
-#endif
-			SetDlgItemText(wnd, 11, MB_TO_WIDE_BUFFER(help_msg, help_msgW, lengthof(help_msgW)));
+			 * buffer in OTTD2FS might not be large enough (512 chars). */
+			wchar_t help_msg_buf[8192];
+			SetDlgItemText(wnd, 11, convert_to_fs(help_msg, help_msg_buf, lengthof(help_msg_buf)));
 			SendDlgItemMessage(wnd, 11, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), FALSE);
 		} return TRUE;
 
@@ -405,184 +367,162 @@ void ShowInfo(const char *str)
 			 * ShowInfo are much shorter, or so long they need this way of displaying
 			 * them anyway. */
 			_help_msg = str;
-			DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(101), NULL, HelpDialogFunc);
+			DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(101), nullptr, HelpDialogFunc);
 		} else {
-#if defined(UNICODE)
 			/* We need to put the text in a separate buffer because the default
-			 * buffer in MB_TO_WIDE might not be large enough (512 chars) */
-			wchar_t help_msgW[8192];
-#endif
-			MessageBox(GetActiveWindow(), MB_TO_WIDE_BUFFER(str, help_msgW, lengthof(help_msgW)), _T("OpenTTD"), MB_ICONINFORMATION | MB_OK);
+			 * buffer in OTTD2FS might not be large enough (512 chars). */
+			wchar_t help_msg_buf[8192];
+			MessageBox(GetActiveWindow(), convert_to_fs(str, help_msg_buf, lengthof(help_msg_buf)), L"OpenTTD", MB_ICONINFORMATION | MB_OK);
 		}
 		MyShowCursor(old);
 	}
 }
 
-#if defined(WINCE)
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
-#else
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-#endif
 {
 	int argc;
 	char *argv[64]; // max 64 command line arguments
-	char *cmdline;
 
-#if !defined(UNICODE)
-	_codepage = GetACP(); // get system codepage as some kind of a default
-#endif /* UNICODE */
+	/* Set system timer resolution to 1ms. */
+	timeBeginPeriod(1);
 
 	CrashLog::InitialiseCrashLog();
 
-#if defined(UNICODE)
+	/* Convert the command line to UTF-8. We need a dedicated buffer
+	 * for this because argv[] points into this buffer and this needs to
+	 * be available between subsequent calls to FS2OTTD(). */
+	char *cmdline = stredup(FS2OTTD(GetCommandLine()).c_str());
 
-#if !defined(WINCE)
-	/* Check if a win9x user started the win32 version */
-	if (HasBit(GetVersion(), 31)) usererror("This version of OpenTTD doesn't run on windows 95/98/ME.\nPlease download the win9x binary and try again.");
-#endif
-
-	/* For UNICODE we need to convert the commandline to char* _AND_
-	 * save it because argv[] points into this buffer and thus needs to
-	 * be available between subsequent calls to FS2OTTD() */
-	char cmdlinebuf[MAX_PATH];
-#endif /* UNICODE */
-
-	cmdline = WIDE_TO_MB_BUFFER(GetCommandLine(), cmdlinebuf, lengthof(cmdlinebuf));
+	/* Set the console codepage to UTF-8. */
+	SetConsoleOutputCP(CP_UTF8);
 
 #if defined(_DEBUG)
 	CreateConsole();
 #endif
 
-#if !defined(WINCE)
 	_set_error_mode(_OUT_TO_MSGBOX); // force assertion output to messagebox
-#endif
 
 	/* setup random seed to something quite random */
 	SetRandomSeed(GetTickCount());
 
 	argc = ParseCommandLine(cmdline, argv, lengthof(argv));
 
-	ttd_main(argc, argv);
+	/* Make sure our arguments contain only valid UTF-8 characters. */
+	for (int i = 0; i < argc; i++) StrMakeValidInPlace(argv[i]);
+
+	openttd_main(argc, argv);
+
+	/* Restore system timer resolution. */
+	timeEndPeriod(1);
+
+	free(cmdline);
 	return 0;
 }
 
-#if defined(WINCE)
-void GetCurrentDirectoryW(int length, wchar_t *path)
-{
-	/* Get the name of this module */
-	GetModuleFileName(NULL, path, length);
-
-	/* Remove the executable name, this we call CurrentDir */
-	wchar_t *pDest = wcsrchr(path, '\\');
-	if (pDest != NULL) {
-		int result = pDest - path + 1;
-		path[result] = '\0';
-	}
-}
-#endif
-
 char *getcwd(char *buf, size_t size)
 {
-#if defined(WINCE)
-	TCHAR path[MAX_PATH];
-	GetModuleFileName(NULL, path, MAX_PATH);
-	convert_from_fs(path, buf, size);
-	/* GetModuleFileName returns dir with file, so remove everything behind latest '\\' */
-	char *p = strrchr(buf, '\\');
-	if (p != NULL) *p = '\0';
-#elif defined(UNICODE)
-	TCHAR path[MAX_PATH];
+	wchar_t path[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH - 1, path);
 	convert_from_fs(path, buf, size);
-#else
-	GetCurrentDirectory(size, buf);
-#endif
 	return buf;
 }
 
+extern std::string _config_file;
 
 void DetermineBasePaths(const char *exe)
 {
-	char tmp[MAX_PATH];
-	TCHAR path[MAX_PATH];
+	extern std::array<std::string, NUM_SEARCHPATHS> _searchpaths;
+
+	wchar_t path[MAX_PATH];
 #ifdef WITH_PERSONAL_DIR
-	if (SUCCEEDED(OTTDSHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path))) {
-		strecpy(tmp, WIDE_TO_MB_BUFFER(path, tmp, lengthof(tmp)), lastof(tmp));
-		AppendPathSeparator(tmp, MAX_PATH);
-		ttd_strlcat(tmp, PERSONAL_DIR, MAX_PATH);
-		AppendPathSeparator(tmp, MAX_PATH);
-		_searchpaths[SP_PERSONAL_DIR] = strdup(tmp);
+	if (SUCCEEDED(SHGetFolderPath(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path))) {
+		std::string tmp(FS2OTTD(path));
+		AppendPathSeparator(tmp);
+		tmp += PERSONAL_DIR;
+		AppendPathSeparator(tmp);
+		_searchpaths[SP_PERSONAL_DIR] = tmp;
+
+		tmp += "content_download";
+		AppendPathSeparator(tmp);
+		_searchpaths[SP_AUTODOWNLOAD_PERSONAL_DIR] = tmp;
 	} else {
-		_searchpaths[SP_PERSONAL_DIR] = NULL;
+		_searchpaths[SP_PERSONAL_DIR].clear();
 	}
 
-	if (SUCCEEDED(OTTDSHGetFolderPath(NULL, CSIDL_COMMON_DOCUMENTS, NULL, SHGFP_TYPE_CURRENT, path))) {
-		strecpy(tmp, WIDE_TO_MB_BUFFER(path, tmp, lengthof(tmp)), lastof(tmp));
-		AppendPathSeparator(tmp, MAX_PATH);
-		ttd_strlcat(tmp, PERSONAL_DIR, MAX_PATH);
-		AppendPathSeparator(tmp, MAX_PATH);
-		_searchpaths[SP_SHARED_DIR] = strdup(tmp);
+	if (SUCCEEDED(SHGetFolderPath(nullptr, CSIDL_COMMON_DOCUMENTS, nullptr, SHGFP_TYPE_CURRENT, path))) {
+		std::string tmp(FS2OTTD(path));
+		AppendPathSeparator(tmp);
+		tmp += PERSONAL_DIR;
+		AppendPathSeparator(tmp);
+		_searchpaths[SP_SHARED_DIR] = tmp;
 	} else {
-		_searchpaths[SP_SHARED_DIR] = NULL;
+		_searchpaths[SP_SHARED_DIR].clear();
 	}
 #else
-	_searchpaths[SP_PERSONAL_DIR] = NULL;
-	_searchpaths[SP_SHARED_DIR]   = NULL;
+	_searchpaths[SP_PERSONAL_DIR].clear();
+	_searchpaths[SP_SHARED_DIR].clear();
 #endif
 
-	/* Get the path to working directory of OpenTTD */
-	getcwd(tmp, lengthof(tmp));
-	AppendPathSeparator(tmp, MAX_PATH);
-	_searchpaths[SP_WORKING_DIR] = strdup(tmp);
-
-	if (!GetModuleFileName(NULL, path, lengthof(path))) {
-		DEBUG(misc, 0, "GetModuleFileName failed (%lu)\n", GetLastError());
-		_searchpaths[SP_BINARY_DIR] = NULL;
+	if (_config_file.empty()) {
+		char cwd[MAX_PATH];
+		getcwd(cwd, lengthof(cwd));
+		std::string cwd_s(cwd);
+		AppendPathSeparator(cwd_s);
+		_searchpaths[SP_WORKING_DIR] = cwd_s;
 	} else {
-		TCHAR exec_dir[MAX_PATH];
-		_tcsncpy(path, MB_TO_WIDE_BUFFER(exe, path, lengthof(path)), lengthof(path));
-		if (!GetFullPathName(path, lengthof(exec_dir), exec_dir, NULL)) {
-			DEBUG(misc, 0, "GetFullPathName failed (%lu)\n", GetLastError());
-			_searchpaths[SP_BINARY_DIR] = NULL;
+		/* Use the folder of the config file as working directory. */
+		wchar_t config_dir[MAX_PATH];
+		wcsncpy(path, convert_to_fs(_config_file.c_str(), path, lengthof(path)), lengthof(path));
+		if (!GetFullPathName(path, lengthof(config_dir), config_dir, nullptr)) {
+			Debug(misc, 0, "GetFullPathName failed ({})", GetLastError());
+			_searchpaths[SP_WORKING_DIR].clear();
 		} else {
-			strecpy(tmp, WIDE_TO_MB_BUFFER(exec_dir, tmp, lengthof(tmp)), lastof(tmp));
-			char *s = strrchr(tmp, PATHSEPCHAR);
-			*(s + 1) = '\0';
-			_searchpaths[SP_BINARY_DIR] = strdup(tmp);
+			std::string tmp(FS2OTTD(config_dir));
+			auto pos = tmp.find_last_of(PATHSEPCHAR);
+			if (pos != std::string::npos) tmp.erase(pos + 1);
+
+			_searchpaths[SP_WORKING_DIR] = tmp;
 		}
 	}
 
-	_searchpaths[SP_INSTALLATION_DIR]       = NULL;
-	_searchpaths[SP_APPLICATION_BUNDLE_DIR] = NULL;
+	if (!GetModuleFileName(nullptr, path, lengthof(path))) {
+		Debug(misc, 0, "GetModuleFileName failed ({})", GetLastError());
+		_searchpaths[SP_BINARY_DIR].clear();
+	} else {
+		wchar_t exec_dir[MAX_PATH];
+		wcsncpy(path, convert_to_fs(exe, path, lengthof(path)), lengthof(path));
+		if (!GetFullPathName(path, lengthof(exec_dir), exec_dir, nullptr)) {
+			Debug(misc, 0, "GetFullPathName failed ({})", GetLastError());
+			_searchpaths[SP_BINARY_DIR].clear();
+		} else {
+			std::string tmp(FS2OTTD(exec_dir));
+			auto pos = tmp.find_last_of(PATHSEPCHAR);
+			if (pos != std::string::npos) tmp.erase(pos + 1);
+
+			_searchpaths[SP_BINARY_DIR] = tmp;
+		}
+	}
+
+	_searchpaths[SP_INSTALLATION_DIR].clear();
+	_searchpaths[SP_APPLICATION_BUNDLE_DIR].clear();
 }
 
 
-bool GetClipboardContents(char *buffer, size_t buff_len)
+bool GetClipboardContents(char *buffer, const char *last)
 {
 	HGLOBAL cbuf;
 	const char *ptr;
 
 	if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
-		OpenClipboard(NULL);
+		OpenClipboard(nullptr);
 		cbuf = GetClipboardData(CF_UNICODETEXT);
 
 		ptr = (const char*)GlobalLock(cbuf);
-		const char *ret = convert_from_fs((const wchar_t*)ptr, buffer, buff_len);
+		int out_len = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)ptr, -1, buffer, (last - buffer) + 1, nullptr, nullptr);
 		GlobalUnlock(cbuf);
 		CloseClipboard();
 
-		if (*ret == '\0') return false;
-#if !defined(UNICODE)
-	} else if (IsClipboardFormatAvailable(CF_TEXT)) {
-		OpenClipboard(NULL);
-		cbuf = GetClipboardData(CF_TEXT);
-
-		ptr = (const char*)GlobalLock(cbuf);
-		ttd_strlcpy(buffer, FS2OTTD(ptr), buff_len);
-
-		GlobalUnlock(cbuf);
-		CloseClipboard();
-#endif /* UNICODE */
+		if (out_len == 0) return false;
 	} else {
 		return false;
 	}
@@ -591,93 +531,47 @@ bool GetClipboardContents(char *buffer, size_t buff_len)
 }
 
 
-void CSleep(int milliseconds)
-{
-	Sleep(milliseconds);
-}
-
-
 /**
- * Convert to OpenTTD's encoding from that of the local environment.
- * When the project is built in UNICODE, the system codepage is irrelevant and
- * the input string is wide. In ANSI mode, the string is in the
- * local codepage which we'll convert to wide-char, and then to UTF-8.
+ * Convert to OpenTTD's encoding from a wide string.
  * OpenTTD internal encoding is UTF8.
- * The returned value's contents can only be guaranteed until the next call to
- * this function. So if the value is needed for anything else, use convert_from_fs
- * @param name pointer to a valid string that will be converted (local, or wide)
- * @return pointer to the converted string; if failed string is of zero-length
+ * @param name valid string that will be converted (local, or wide)
+ * @return converted string; if failed string is of zero-length
  * @see the current code-page comes from video\win32_v.cpp, event-notification
  * WM_INPUTLANGCHANGE
  */
-const char *FS2OTTD(const TCHAR *name)
+std::string FS2OTTD(const std::wstring &name)
 {
-	static char utf8_buf[512];
-#if defined(UNICODE)
-	return convert_from_fs(name, utf8_buf, lengthof(utf8_buf));
-#else
-	char *s = utf8_buf;
-
-	for (; *name != '\0'; name++) {
-		wchar_t w;
-		int len = MultiByteToWideChar(_codepage, 0, name, 1, &w, 1);
-		if (len != 1) {
-			DEBUG(misc, 0, "[utf8] M2W error converting '%c'. Errno %lu", *name, GetLastError());
-			continue;
-		}
-
-		if (s + Utf8CharLen(w) >= lastof(utf8_buf)) break;
-		s += Utf8Encode(s, w);
-	}
-
-	*s = '\0';
-	return utf8_buf;
-#endif /* UNICODE */
+	int name_len = (name.length() >= INT_MAX) ? INT_MAX : (int)name.length();
+	int len = WideCharToMultiByte(CP_UTF8, 0, name.c_str(), name_len, nullptr, 0, nullptr, nullptr);
+	if (len <= 0) return std::string();
+	char *utf8_buf = AllocaM(char, len + 1);
+	utf8_buf[len] = '\0';
+	WideCharToMultiByte(CP_UTF8, 0, name.c_str(), name_len, utf8_buf, len, nullptr, nullptr);
+	return std::string(utf8_buf, static_cast<size_t>(len));
 }
 
 /**
- * Convert from OpenTTD's encoding to that of the local environment.
- * When the project is built in UNICODE the system codepage is irrelevant and
- * the converted string is wide. In ANSI mode, the UTF8 string is converted
- * to multi-byte.
+ * Convert from OpenTTD's encoding to a wide string.
  * OpenTTD internal encoding is UTF8.
- * The returned value's contents can only be guaranteed until the next call to
- * this function. So if the value is needed for anything else, use convert_from_fs
- * @param name pointer to a valid string that will be converted (UTF8)
- * @return pointer to the converted string; if failed string is of zero-length
- * @see the current code-page comes from video\win32_v.cpp, event-notification
- * WM_INPUTLANGCHANGE
+ * @param name valid string that will be converted (UTF8)
+ * @param console_cp convert to the console encoding instead of the normal system encoding.
+ * @return converted string; if failed string is of zero-length
  */
-const TCHAR *OTTD2FS(const char *name)
+std::wstring OTTD2FS(const std::string &name)
 {
-	static TCHAR system_buf[512];
-#if defined(UNICODE)
-	return convert_to_fs(name, system_buf, lengthof(system_buf));
-#else
-	char *s = system_buf;
-
-	for (WChar c; (c = Utf8Consume(&name)) != '\0';) {
-		if (s >= lastof(system_buf)) break;
-
-		char mb;
-		int len = WideCharToMultiByte(_codepage, 0, (wchar_t*)&c, 1, &mb, 1, NULL, NULL);
-		if (len != 1) {
-			DEBUG(misc, 0, "[utf8] W2M error converting '0x%X'. Errno %lu", c, GetLastError());
-			continue;
-		}
-
-		*s++ = mb;
-	}
-
-	*s = '\0';
-	return system_buf;
-#endif /* UNICODE */
+	int name_len = (name.length() >= INT_MAX) ? INT_MAX : (int)name.length();
+	int len = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name_len, nullptr, 0);
+	if (len <= 0) return std::wstring();
+	wchar_t *system_buf = AllocaM(wchar_t, len + 1);
+	system_buf[len] = L'\0';
+	MultiByteToWideChar(CP_UTF8, 0, name.c_str(), name_len, system_buf, len);
+	return std::wstring(system_buf, static_cast<size_t>(len));
 }
 
 
 /**
  * Convert to OpenTTD's encoding from that of the environment in
- * UNICODE. OpenTTD encoding is UTF8, local is wide
+ * UNICODE. OpenTTD encoding is UTF8, local is wide.
  * @param name pointer to a valid string that will be converted
  * @param utf8_buf pointer to a valid buffer that will receive the converted string
  * @param buflen length in characters of the receiving buffer
@@ -685,11 +579,9 @@ const TCHAR *OTTD2FS(const char *name)
  */
 char *convert_from_fs(const wchar_t *name, char *utf8_buf, size_t buflen)
 {
-	int len = WideCharToMultiByte(CP_UTF8, 0, name, -1, utf8_buf, (int)buflen, NULL, NULL);
-	if (len == 0) {
-		DEBUG(misc, 0, "[utf8] W2M error converting wide-string. Errno %lu", GetLastError());
-		utf8_buf[0] = '\0';
-	}
+	/* Convert UTF-16 string to UTF-8. */
+	int len = WideCharToMultiByte(CP_UTF8, 0, name, -1, utf8_buf, (int)buflen, nullptr, nullptr);
+	if (len == 0) utf8_buf[0] = '\0';
 
 	return utf8_buf;
 }
@@ -697,107 +589,134 @@ char *convert_from_fs(const wchar_t *name, char *utf8_buf, size_t buflen)
 
 /**
  * Convert from OpenTTD's encoding to that of the environment in
- * UNICODE. OpenTTD encoding is UTF8, local is wide
+ * UNICODE. OpenTTD encoding is UTF8, local is wide.
  * @param name pointer to a valid string that will be converted
- * @param utf16_buf pointer to a valid wide-char buffer that will receive the
+ * @param system_buf pointer to a valid wide-char buffer that will receive the
  * converted string
  * @param buflen length in wide characters of the receiving buffer
- * @return pointer to utf16_buf. If conversion fails the string is of zero-length
+ * @param console_cp convert to the console encoding instead of the normal system encoding.
+ * @return pointer to system_buf. If conversion fails the string is of zero-length
  */
-wchar_t *convert_to_fs(const char *name, wchar_t *utf16_buf, size_t buflen)
+wchar_t *convert_to_fs(const char *name, wchar_t *system_buf, size_t buflen)
 {
-	int len = MultiByteToWideChar(CP_UTF8, 0, name, -1, utf16_buf, (int)buflen);
-	if (len == 0) {
-		DEBUG(misc, 0, "[utf8] M2W error converting '%s'. Errno %lu", name, GetLastError());
-		utf16_buf[0] = '\0';
-	}
+	int len = MultiByteToWideChar(CP_UTF8, 0, name, -1, system_buf, (int)buflen);
+	if (len == 0) system_buf[0] = '\0';
 
-	return utf16_buf;
-}
-
-/**
- * Our very own SHGetFolderPath function for support of windows operating
- * systems that don't have this function (eg Win9x, etc.). We try using the
- * native function, and if that doesn't exist we will try a more crude approach
- * of environment variables and hope for the best
- */
-HRESULT OTTDSHGetFolderPath(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPTSTR pszPath)
-{
-	static HRESULT (WINAPI *SHGetFolderPath)(HWND, int, HANDLE, DWORD, LPTSTR) = NULL;
-	static bool first_time = true;
-
-	/* We only try to load the library one time; if it fails, it fails */
-	if (first_time) {
-#if defined(UNICODE)
-# define W(x) x "W"
-#else
-# define W(x) x "A"
-#endif
-		/* The function lives in shell32.dll for all current Windows versions, but it first started to appear in SHFolder.dll. */
-		if (!LoadLibraryList((Function*)&SHGetFolderPath, "shell32.dll\0" W("SHGetFolderPath") "\0\0")) {
-			if (!LoadLibraryList((Function*)&SHGetFolderPath, "SHFolder.dll\0" W("SHGetFolderPath") "\0\0")) {
-				DEBUG(misc, 0, "Unable to load " W("SHGetFolderPath") "from either shell32.dll or SHFolder.dll");
-			}
-		}
-#undef W
-		first_time = false;
-	}
-
-	if (SHGetFolderPath != NULL) return SHGetFolderPath(hwnd, csidl, hToken, dwFlags, pszPath);
-
-	/* SHGetFolderPath doesn't exist, try a more conservative approach,
-	 * eg environment variables. This is only included for legacy modes
-	 * MSDN says: that 'pszPath' is a "Pointer to a null-terminated string of
-	 * length MAX_PATH which will receive the path" so let's assume that
-	 * Windows 95 with Internet Explorer 5.0, Windows 98 with Internet Explorer 5.0,
-	 * Windows 98 Second Edition (SE), Windows NT 4.0 with Internet Explorer 5.0,
-	 * Windows NT 4.0 with Service Pack 4 (SP4) */
-	{
-		DWORD ret;
-		switch (csidl) {
-			case CSIDL_FONTS: // Get the system font path, eg %WINDIR%\Fonts
-				ret = GetEnvironmentVariable(_T("WINDIR"), pszPath, MAX_PATH);
-				if (ret == 0) break;
-				_tcsncat(pszPath, _T("\\Fonts"), MAX_PATH);
-
-				return (HRESULT)0;
-
-			case CSIDL_PERSONAL:
-			case CSIDL_COMMON_DOCUMENTS: {
-				HKEY key;
-				if (RegOpenKeyEx(csidl == CSIDL_PERSONAL ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, REGSTR_PATH_SPECIAL_FOLDERS, 0, KEY_READ, &key) != ERROR_SUCCESS) break;
-				DWORD len = MAX_PATH;
-				ret = RegQueryValueEx(key, csidl == CSIDL_PERSONAL ? _T("Personal") : _T("Common Documents"), NULL, NULL, (LPBYTE)pszPath, &len);
-				RegCloseKey(key);
-				if (ret == ERROR_SUCCESS) return (HRESULT)0;
-				break;
-			}
-
-			/* XXX - other types to go here when needed... */
-		}
-	}
-
-	return E_INVALIDARG;
+	return system_buf;
 }
 
 /** Determine the current user's locale. */
 const char *GetCurrentLocale(const char *)
 {
+	const LANGID userUiLang = GetUserDefaultUILanguage();
+	const LCID userUiLocale = MAKELCID(userUiLang, SORT_DEFAULT);
+
 	char lang[9], country[9];
-	if (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, lengthof(lang)) == 0 ||
-	    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, lengthof(country)) == 0) {
+	if (GetLocaleInfoA(userUiLocale, LOCALE_SISO639LANGNAME, lang, lengthof(lang)) == 0 ||
+	    GetLocaleInfoA(userUiLocale, LOCALE_SISO3166CTRYNAME, country, lengthof(country)) == 0) {
 		/* Unable to retrieve the locale. */
-		return NULL;
+		return nullptr;
 	}
 	/* Format it as 'en_us'. */
 	static char retbuf[6] = {lang[0], lang[1], '_', country[0], country[1], 0};
 	return retbuf;
 }
 
-uint GetCPUCoreCount()
-{
-	SYSTEM_INFO info;
 
-	GetSystemInfo(&info);
-	return info.dwNumberOfProcessors;
+static WCHAR _cur_iso_locale[16] = L"";
+
+void Win32SetCurrentLocaleName(const char *iso_code)
+{
+	/* Convert the iso code into the format that windows expects. */
+	char iso[16];
+	if (strcmp(iso_code, "zh_TW") == 0) {
+		strecpy(iso, "zh-Hant", lastof(iso));
+	} else if (strcmp(iso_code, "zh_CN") == 0) {
+		strecpy(iso, "zh-Hans", lastof(iso));
+	} else {
+		/* Windows expects a '-' between language and country code, but we use a '_'. */
+		strecpy(iso, iso_code, lastof(iso));
+		for (char *c = iso; *c != '\0'; c++) {
+			if (*c == '_') *c = '-';
+		}
+	}
+
+	MultiByteToWideChar(CP_UTF8, 0, iso, -1, _cur_iso_locale, lengthof(_cur_iso_locale));
 }
+
+int OTTDStringCompare(const char *s1, const char *s2)
+{
+	typedef int (WINAPI *PFNCOMPARESTRINGEX)(LPCWSTR, DWORD, LPCWCH, int, LPCWCH, int, LPVOID, LPVOID, LPARAM);
+	static PFNCOMPARESTRINGEX _CompareStringEx = nullptr;
+	static bool first_time = true;
+
+#ifndef SORT_DIGITSASNUMBERS
+#	define SORT_DIGITSASNUMBERS 0x00000008  // use digits as numbers sort method
+#endif
+#ifndef LINGUISTIC_IGNORECASE
+#	define LINGUISTIC_IGNORECASE 0x00000010 // linguistically appropriate 'ignore case'
+#endif
+
+	if (first_time) {
+		static DllLoader _kernel32(L"Kernel32.dll");
+		_CompareStringEx = _kernel32.GetProcAddress("CompareStringEx");
+		first_time = false;
+	}
+
+	if (_CompareStringEx != nullptr) {
+		/* CompareStringEx takes UTF-16 strings, even in ANSI-builds. */
+		int len_s1 = MultiByteToWideChar(CP_UTF8, 0, s1, -1, nullptr, 0);
+		int len_s2 = MultiByteToWideChar(CP_UTF8, 0, s2, -1, nullptr, 0);
+
+		if (len_s1 != 0 && len_s2 != 0) {
+			LPWSTR str_s1 = AllocaM(WCHAR, len_s1);
+			LPWSTR str_s2 = AllocaM(WCHAR, len_s2);
+
+			MultiByteToWideChar(CP_UTF8, 0, s1, -1, str_s1, len_s1);
+			MultiByteToWideChar(CP_UTF8, 0, s2, -1, str_s2, len_s2);
+
+			int result = _CompareStringEx(_cur_iso_locale, LINGUISTIC_IGNORECASE | SORT_DIGITSASNUMBERS, str_s1, -1, str_s2, -1, nullptr, nullptr, 0);
+			if (result != 0) return result;
+		}
+	}
+
+	wchar_t s1_buf[512], s2_buf[512];
+	convert_to_fs(s1, s1_buf, lengthof(s1_buf));
+	convert_to_fs(s2, s2_buf, lengthof(s2_buf));
+
+	return CompareString(MAKELCID(_current_language->winlangid, SORT_DEFAULT), NORM_IGNORECASE, s1_buf, -1, s2_buf, -1);
+}
+
+#ifdef _MSC_VER
+/* Based on code from MSDN: https://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx */
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+PACK_N(struct THREADNAME_INFO {
+	DWORD dwType;     ///< Must be 0x1000.
+	LPCSTR szName;    ///< Pointer to name (in user addr space).
+	DWORD dwThreadID; ///< Thread ID (-1=caller thread).
+	DWORD dwFlags;    ///< Reserved for future use, must be zero.
+}, 8);
+
+/**
+ * Signal thread name to any attached debuggers.
+ */
+void SetCurrentThreadName(const char *threadName)
+{
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = threadName;
+	info.dwThreadID = -1;
+	info.dwFlags = 0;
+
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	} __except (EXCEPTION_EXECUTE_HANDLER) {
+	}
+#pragma warning(pop)
+}
+#else
+void SetCurrentThreadName(const char *) {}
+#endif

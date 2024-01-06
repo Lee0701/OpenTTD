@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,14 +12,13 @@
 
 #include "map_func.h"
 
+class OrthogonalTileIterator;
+
 /** Represents the covered area of e.g. a rail station */
-struct TileArea {
+struct OrthogonalTileArea {
 	TileIndex tile; ///< The base tile of the area
 	uint16 w;       ///< The width of the area
 	uint16 h;       ///< The height of the area
-
-	/** Just construct this tile area */
-	TileArea() {}
 
 	/**
 	 * Construct this tile area with some set values
@@ -29,10 +26,11 @@ struct TileArea {
 	 * @param w the width
 	 * @param h the height
 	 */
-	TileArea(TileIndex tile, uint8 w, uint8 h) : tile(tile), w(w), h(h) {}
+	OrthogonalTileArea(TileIndex tile = INVALID_TILE, uint8 w = 0, uint8 h = 0) : tile(tile), w(w), h(h)
+	{
+	}
 
-	TileArea(TileIndex start, TileIndex end);
-
+	OrthogonalTileArea(TileIndex start, TileIndex end);
 
 	void Add(TileIndex to_add);
 
@@ -46,9 +44,11 @@ struct TileArea {
 		this->h    = 0;
 	}
 
-	bool Intersects(const TileArea &ta) const;
+	bool Intersects(const OrthogonalTileArea &ta) const;
 
 	bool Contains(TileIndex tile) const;
+
+	OrthogonalTileArea &Expand(int rad);
 
 	void ClampToMap();
 
@@ -60,7 +60,46 @@ struct TileArea {
 	{
 		return TILE_ADDXY(this->tile, this->w / 2, this->h / 2);
 	}
+
+	OrthogonalTileIterator begin() const;
+
+	OrthogonalTileIterator end() const;
 };
+
+/** Represents a diagonal tile area. */
+struct DiagonalTileArea {
+
+	TileIndex tile; ///< Base tile of the area
+	int16 a;        ///< Extent in diagonal "x" direction (may be negative to signify the area stretches to the left)
+	int16 b;        ///< Extent in diagonal "y" direction (may be negative to signify the area stretches upwards)
+
+	/**
+	 * Construct this tile area with some set values.
+	 * @param tile The base tile.
+	 * @param a The "x" extent.
+	 * @param b The "y" estent.
+	 */
+	DiagonalTileArea(TileIndex tile = INVALID_TILE, int8 a = 0, int8 b = 0) : tile(tile), a(a), b(b)
+	{
+	}
+
+	DiagonalTileArea(TileIndex start, TileIndex end);
+
+	/**
+	 * Clears the TileArea by making the tile invalid and setting a and b to 0.
+	 */
+	void Clear()
+	{
+		this->tile = INVALID_TILE;
+		this->a    = 0;
+		this->b    = 0;
+	}
+
+	bool Contains(TileIndex tile) const;
+};
+
+/** Shorthand for the much more common orthogonal tile area. */
+typedef OrthogonalTileArea TileArea;
 
 /** Base class for tile iterators. */
 class TileIterator {
@@ -71,7 +110,7 @@ protected:
 	 * Initialise the iterator starting at this tile.
 	 * @param tile The tile we start iterating from.
 	 */
-	TileIterator(TileIndex tile) : tile(tile)
+	TileIterator(TileIndex tile = INVALID_TILE) : tile(tile)
 	{
 	}
 
@@ -91,6 +130,15 @@ public:
 	}
 
 	/**
+	 * Get the tile we are currently at.
+	 * @return The tile we are at, or INVALID_TILE when we're done.
+	 */
+	inline TileIndex operator *() const
+	{
+		return this->tile;
+	}
+
+	/**
 	 * Move ourselves to the next tile in the rectangle on the map.
 	 */
 	virtual TileIterator& operator ++() = 0;
@@ -99,6 +147,36 @@ public:
 	 * Allocate a new iterator that is a copy of this one.
 	 */
 	virtual TileIterator *Clone() const = 0;
+
+	/**
+	 * Equality comparison.
+	 */
+	bool operator ==(const TileIterator &rhs) const
+	{
+		return this->tile == rhs.tile;
+	}
+	/**
+	 * Inequality comparison.
+	 */
+	bool operator !=(const TileIterator &rhs) const
+	{
+		return this->tile != rhs.tile;
+	}
+
+	/**
+	 * Equality comparison.
+	 */
+	bool operator ==(const TileIndex &rhs) const
+	{
+		return this->tile == rhs;
+	}
+	/**
+	 * Inequality comparison.
+	 */
+	bool operator !=(const TileIndex &rhs) const
+	{
+		return this->tile != rhs;
+	}
 };
 
 /** Iterator to iterate over a tile area (rectangle) of the map. */
@@ -113,8 +191,18 @@ public:
 	 * Construct the iterator.
 	 * @param ta Area, i.e. begin point and width/height of to-be-iterated area.
 	 */
-	OrthogonalTileIterator(const TileArea &ta) : TileIterator(ta.w == 0 || ta.h == 0 ? INVALID_TILE : ta.tile), w(ta.w), x(ta.w), y(ta.h)
+	OrthogonalTileIterator(const OrthogonalTileArea &ta) : TileIterator(ta.w == 0 || ta.h == 0 ? INVALID_TILE : ta.tile), w(ta.w), x(ta.w), y(ta.h)
 	{
+	}
+
+	/**
+	 * Construct the iterator.
+	 * @param corner1 Tile from where to begin iterating.
+	 * @param corner2 Tile where to end the iterating.
+	 */
+	OrthogonalTileIterator(TileIndex corner1, TileIndex corner2)
+	{
+		*this = OrthogonalTileIterator(OrthogonalTileArea(corner1, corner2));
 	}
 
 	/**
@@ -152,7 +240,25 @@ private:
 	int b_max;   ///< The (rotated) y coordinate of the end of the iteration.
 
 public:
-	DiagonalTileIterator(TileIndex begin, TileIndex end);
+
+	/**
+	 * Construct the iterator.
+	 * @param ta Area, i.e. begin point and (diagonal) width/height of to-be-iterated area.
+	 */
+	DiagonalTileIterator(const DiagonalTileArea &ta) :
+		TileIterator(ta.tile), base_x(TileX(ta.tile)), base_y(TileY(ta.tile)), a_cur(0), b_cur(0), a_max(ta.a), b_max(ta.b)
+	{
+	}
+
+	/**
+	 * Construct the iterator.
+	 * @param corner1 Tile from where to begin iterating.
+	 * @param corner2 Tile where to end the iterating.
+	 */
+	DiagonalTileIterator(TileIndex corner1, TileIndex corner2)
+	{
+		*this = DiagonalTileIterator(DiagonalTileArea(corner1, corner2));
+	}
 
 	TileIterator& operator ++();
 
@@ -161,13 +267,5 @@ public:
 		return new DiagonalTileIterator(*this);
 	}
 };
-
-/**
- * A loop which iterates over the tiles of a TileArea.
- * @param var The name of the variable which contains the current tile.
- *            This variable will be allocated in this \c for of this loop.
- * @param ta  The tile area to search over.
- */
-#define TILE_AREA_LOOP(var, ta) for (OrthogonalTileIterator var(ta); var != INVALID_TILE; ++var)
 
 #endif /* TILEAREA_TYPE_H */

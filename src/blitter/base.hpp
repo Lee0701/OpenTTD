@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -20,12 +18,14 @@ enum BlitterMode {
 	BM_NORMAL,       ///< Perform the simple blitting.
 	BM_COLOUR_REMAP, ///< Perform a colour remapping.
 	BM_TRANSPARENT,  ///< Perform transparency colour remapping.
+	BM_CRASH_REMAP,  ///< Perform a crash remapping.
+	BM_BLACK_REMAP,  ///< Perform remapping to a completely blackened sprite
 };
 
 /**
  * How all blitters should look like. Extend this class to make your own.
  */
-class Blitter {
+class Blitter : public SpriteEncoder {
 public:
 	/** Parameters related to blitting. */
 	struct BlitterParams {
@@ -58,6 +58,11 @@ public:
 	 */
 	virtual uint8 GetScreenDepth() = 0;
 
+	bool Is32BppSupported() override
+	{
+		return this->GetScreenDepth() > 8;
+	}
+
 	/**
 	 * Draw an image to the screen, given an amount of params defined above.
 	 */
@@ -73,11 +78,6 @@ public:
 	 * @param pal the palette to use.
 	 */
 	virtual void DrawColourMappingRect(void *dst, int width, int height, PaletteID pal) = 0;
-
-	/**
-	 * Convert a sprite from the loader to our own format.
-	 */
-	virtual Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator) = 0;
 
 	/**
 	 * Move the destination pointer the requested amount x and y, keeping in mind
@@ -118,8 +118,9 @@ public:
 	 * @param screen_height The height of the screen you are drawing in (to avoid buffer-overflows).
 	 * @param colour A 8bpp mapping colour.
 	 * @param width Line width.
+	 * @param dash Length of dashes for dashed lines. 0 means solid line.
 	 */
-	virtual void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width);
+	virtual void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width, int dash = 0) = 0;
 
 	/**
 	 * Copy from a buffer to the screen.
@@ -185,6 +186,14 @@ public:
 	virtual Blitter::PaletteAnimation UsePaletteAnimation() = 0;
 
 	/**
+	 * Does this blitter require a separate animation buffer from the video backend?
+	 */
+	virtual bool NeedsAnimationBuffer()
+	{
+		return false;
+	}
+
+	/**
 	 * Get the name of the blitter, the same as the Factory-instance returns.
 	 */
 	virtual const char *GetName() = 0;
@@ -200,6 +209,8 @@ public:
 	virtual void PostResize() { };
 
 	virtual ~Blitter() { }
+
+	template <typename SetPixelT> void DrawLineGeneric(int x, int y, int x2, int y2, int screen_width, int screen_height, int width, int dash, SetPixelT set_pixel);
 };
 
 #endif /* BLITTER_BASE_HPP */

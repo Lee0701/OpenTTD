@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,18 +9,21 @@
 
 #include "../../stdafx.h"
 #include "../../script/squirrel.hpp"
-#include "../../command_func.h"
 #include "../../company_func.h"
 #include "../../company_base.h"
 #include "../../network/network.h"
 #include "../../genworld.h"
 #include "../../string_func.h"
 #include "../../strings_func.h"
+#include "../../command_func.h"
 
 #include "../script_storage.hpp"
 #include "../script_instance.hpp"
 #include "../script_fatalerror.hpp"
 #include "script_error.hpp"
+#include "../../debug.h"
+
+#include "../../safeguards.h"
 
 /**
  * Get the storage associated with the current ScriptInstance.
@@ -34,9 +35,9 @@ static ScriptStorage *GetStorage()
 }
 
 
-/* static */ ScriptInstance *ScriptObject::ActiveInstance::active = NULL;
+/* static */ ScriptInstance *ScriptObject::ActiveInstance::active = nullptr;
 
-ScriptObject::ActiveInstance::ActiveInstance(ScriptInstance *instance)
+ScriptObject::ActiveInstance::ActiveInstance(ScriptInstance *instance) : alc_scope(instance->engine)
 {
 	this->last_active = ScriptObject::ActiveInstance::active;
 	ScriptObject::ActiveInstance::active = instance;
@@ -49,7 +50,7 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 
 /* static */ ScriptInstance *ScriptObject::GetActiveInstance()
 {
-	assert(ScriptObject::ActiveInstance::active != NULL);
+	assert(ScriptObject::ActiveInstance::active != nullptr);
 	return ScriptObject::ActiveInstance::active;
 }
 
@@ -81,9 +82,26 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 	return GetStorage()->mode_instance;
 }
 
+/* static */ void ScriptObject::SetLastCommand(const CommandDataBuffer &data, Commands cmd)
+{
+	ScriptStorage *s = GetStorage();
+	Debug(script, 6, "SetLastCommand company={:02d} cmd={} data={}", s->root_company, cmd, FormatArrayAsHex(data));
+	s->last_data = data;
+	s->last_cmd = cmd;
+}
+
+/* static */ bool ScriptObject::CheckLastCommand(const CommandDataBuffer &data, Commands cmd)
+{
+	ScriptStorage *s = GetStorage();
+	Debug(script, 6, "CheckLastCommand company={:02d} cmd={} data={}", s->root_company, cmd, FormatArrayAsHex(data));
+	if (s->last_cmd != cmd) return false;
+	if (s->last_data != data) return false;
+	return true;
+}
+
 /* static */ void ScriptObject::SetDoCommandCosts(Money value)
 {
-	GetStorage()->costs = CommandCost(value);
+	GetStorage()->costs = CommandCost(INVALID_EXPENSES, value); // Expense type is never read.
 }
 
 /* static */ void ScriptObject::IncreaseDoCommandCosts(Money value)
@@ -139,11 +157,6 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 /* static */ void ScriptObject::SetLastCommandRes(bool res)
 {
 	GetStorage()->last_command_res = res;
-	/* Also store the results of various global variables */
-	SetNewVehicleID(_new_vehicle_id);
-	SetNewSignID(_new_sign_id);
-	SetNewGroupID(_new_group_id);
-	SetNewGoalID(_new_goal_id);
 }
 
 /* static */ bool ScriptObject::GetLastCommandRes()
@@ -151,44 +164,14 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 	return GetStorage()->last_command_res;
 }
 
-/* static */ void ScriptObject::SetNewVehicleID(VehicleID vehicle_id)
+/* static */ void ScriptObject::SetLastCommandResData(CommandDataBuffer data)
 {
-	GetStorage()->new_vehicle_id = vehicle_id;
+	GetStorage()->last_cmd_ret = std::move(data);
 }
 
-/* static */ VehicleID ScriptObject::GetNewVehicleID()
+/* static */ const CommandDataBuffer &ScriptObject::GetLastCommandResData()
 {
-	return GetStorage()->new_vehicle_id;
-}
-
-/* static */ void ScriptObject::SetNewSignID(SignID sign_id)
-{
-	GetStorage()->new_sign_id = sign_id;
-}
-
-/* static */ SignID ScriptObject::GetNewSignID()
-{
-	return GetStorage()->new_sign_id;
-}
-
-/* static */ void ScriptObject::SetNewGroupID(GroupID group_id)
-{
-	GetStorage()->new_group_id = group_id;
-}
-
-/* static */ GroupID ScriptObject::GetNewGroupID()
-{
-	return GetStorage()->new_group_id;
-}
-
-/* static */ void ScriptObject::SetNewGoalID(GoalID goal_id)
-{
-	GetStorage()->new_goal_id = goal_id;
-}
-
-/* static */ GroupID ScriptObject::GetNewGoalID()
-{
-	return GetStorage()->new_goal_id;
+	return GetStorage()->last_cmd_ret;
 }
 
 /* static */ void ScriptObject::SetAllowDoCommand(bool allow)
@@ -239,8 +222,8 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 {
 	char buffer[64];
 	::GetString(buffer, string, lastof(buffer));
-	::str_validate(buffer, lastof(buffer), SVS_NONE);
-	return ::strdup(buffer);
+	::StrMakeValidInPlace(buffer, lastof(buffer), SVS_NONE);
+	return ::stredup(buffer);
 }
 
 /* static */ void ScriptObject::SetCallbackVariable(int index, int value)
@@ -254,32 +237,34 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 	return GetStorage()->callback_value[index];
 }
 
-/* static */ bool ScriptObject::DoCommand(TileIndex tile, uint32 p1, uint32 p2, uint cmd, const char *text, Script_SuspendCallbackProc *callback)
+/* static */ CommandCallbackData *ScriptObject::GetDoCommandCallback()
+{
+	return ScriptObject::GetActiveInstance()->GetDoCommandCallback();
+}
+
+std::tuple<bool, bool, bool> ScriptObject::DoCommandPrep()
 {
 	if (!ScriptObject::CanSuspend()) {
 		throw Script_FatalError("You are not allowed to execute any DoCommand (even indirect) in your constructor, Save(), Load(), and any valuator.");
 	}
 
+	/* Are we only interested in the estimate costs? */
+	bool estimate_only = GetDoCommandMode() != nullptr && !GetDoCommandMode()();
+
+	bool networking = _networking && !_generating_world;
+
 	if (ScriptObject::GetCompany() != OWNER_DEITY && !::Company::IsValidID(ScriptObject::GetCompany())) {
 		ScriptObject::SetLastError(ScriptError::ERR_PRECONDITION_INVALID_COMPANY);
-		return false;
+		return { true, estimate_only, networking };
 	}
 
-	assert(StrEmpty(text) || (GetCommandFlags(cmd) & CMD_STR_CTRL) != 0 || StrValid(text, text + strlen(text)));
+	return { false, estimate_only, networking };
+}
 
+bool ScriptObject::DoCommandProcessResult(const CommandCost &res, Script_SuspendCallbackProc *callback, bool estimate_only)
+{
 	/* Set the default callback to return a true/false result of the DoCommand */
-	if (callback == NULL) callback = &ScriptInstance::DoCommandReturn;
-
-	/* Are we only interested in the estimate costs? */
-	bool estimate_only = GetDoCommandMode() != NULL && !GetDoCommandMode()();
-
-#ifdef ENABLE_NETWORK
-	/* Only set p2 when the command does not come from the network. */
-	if (GetCommandFlags(cmd) & CMD_CLIENT_ID && p2 == 0) p2 = UINT32_MAX;
-#endif
-
-	/* Try to perform the command. */
-	CommandCost res = ::DoCommandPInternal(tile, p1, p2, cmd, (_networking && !_generating_world) ? ScriptObject::GetActiveInstance()->GetDoCommandCallback() : NULL, text, false, estimate_only);
+	if (callback == nullptr) callback = &ScriptInstance::DoCommandReturn;
 
 	/* We failed; set the error and bail out */
 	if (res.Failed()) {
@@ -302,7 +287,7 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 
 	if (_generating_world) {
 		IncreaseDoCommandCosts(res.GetCost());
-		if (callback != NULL) {
+		if (callback != nullptr) {
 			/* Insert return value into to stack and throw a control code that
 			 * the return value in the stack should be used. */
 			callback(GetActiveInstance());
@@ -316,7 +301,7 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 		IncreaseDoCommandCosts(res.GetCost());
 
 		/* Suspend the script player for 1+ ticks, so it simulates multiplayer. This
-		 *  both avoids confusion when a developer launched his script in a
+		 *  both avoids confusion when a developer launched the script in a
 		 *  multiplayer game, but also gives time for the GUI and human player
 		 *  to interact with the game. */
 		throw Script_Suspend(GetDoCommandDelay(), callback);

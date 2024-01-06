@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,9 +16,10 @@
  *       Scripts must or can implemented to provide information to OpenTTD to
  *       base configuring/starting/loading the Script on.
  *
- * @note The required functions are also needed for Script Libraries. As such
- *       the information here can be used for libraries, but the information
- *       will not be shown in the GUI except for error/debug messages.
+ * @note The required functions are also needed for Script Libraries, but in
+ *       that case you extend ScriptLibrary. As such the information here can
+ *       be used for libraries, but the information will not be shown in the
+ *       GUI except for error/debug messages.
  *
  * @api ai game
  */
@@ -43,6 +42,8 @@ public:
 	 *
 	 * @return The name of the Script.
 	 * @note This function is required.
+	 * @note This name is not used as library name by ScriptController::Import,
+	 * instead the name returned by #CreateInstance is used.
 	 */
 	string GetName();
 
@@ -144,7 +145,8 @@ public:
 
 	/**
 	 * Gets the name of main class of the Script so OpenTTD knows
-	 * what class to instantiate.
+	 * what class to instantiate. For libraries, this name is also
+	 * used when other scripts import it using ScriptController::Import.
 	 *
 	 * @return The class name of the Script.
 	 * @note This function is required.
@@ -201,7 +203,7 @@ public:
 	/** Miscellaneous flags for Script settings. */
 	enum ScriptConfigFlags {
 		CONFIG_NONE,      ///< Normal setting.
-		CONFIG_RANDOM,    ///< When randomizing the Script, pick any value between min_value and max_value.
+		CONFIG_RANDOM,    ///< When randomizing the Script, pick any value between min_value and max_value (inclusive).
 		CONFIG_BOOLEAN,   ///< This value is a boolean (either 0 (false) or 1 (true) ).
 		CONFIG_INGAME,    ///< This setting can be changed while the Script is running.
 		CONFIG_DEVELOPER, ///< This setting will only be visible when the Script development tools are active.
@@ -216,20 +218,27 @@ public:
 	 *    store the current configuration of Scripts. Required.
 	 *  - description A single line describing the setting. Required.
 	 *  - min_value The minimum value of this setting. Required for integer
-	 *    settings and not allowed for boolean settings.
+	 *    settings and not allowed for boolean settings. The value will be
+	 *    clamped in the range [MIN(int32), MAX(int32)] (inclusive).
 	 *  - max_value The maximum value of this setting. Required for integer
-	 *    settings and not allowed for boolean settings.
+	 *    settings and not allowed for boolean settings. The value will be
+	 *    clamped in the range [MIN(int32), MAX(int32)] (inclusive).
 	 *  - easy_value The default value if the easy difficulty level
-	 *    is selected. Required.
+	 *    is selected. Required. The value will be clamped in the range
+	 *    [MIN(int32), MAX(int32)] (inclusive).
 	 *  - medium_value The default value if the medium difficulty level
-	 *    is selected. Required.
+	 *    is selected. Required. The value will be clamped in the range
+	 *    [MIN(int32), MAX(int32)] (inclusive).
 	 *  - hard_value The default value if the hard difficulty level
-	 *    is selected. Required.
+	 *    is selected. Required. The value will be clamped in the range
+	 *    [MIN(int32), MAX(int32)] (inclusive).
 	 *  - custom_value The default value if the custom difficulty level
-	 *    is selected. Required.
+	 *    is selected. Required. The value will be clamped in the range
+	 *    [MIN(int32), MAX(int32)] (inclusive).
 	 *  - random_deviation If this property has a nonzero value, then the
-	 *    actual value of the setting in game will be
-	 *    user_configured_value + random(-random_deviation, random_deviation).
+	 *    actual value of the setting in game will be randomized in the range
+	 *    [user_configured_value - random_deviation, user_configured_value + random_deviation] (inclusive).
+	 *    random_deviation sign is ignored and the value is clamped in the range [0, MAX(int32)] (inclusive).
 	 *    Not allowed if the CONFIG_RANDOM flag is set, otherwise optional.
 	 *  - step_size The increase/decrease of the value every time the user
 	 *    clicks one of the up/down arrow buttons. Optional, default is 1.
@@ -245,13 +254,16 @@ public:
 	 *  user will see the corresponding name.
 	 * @param setting_name The name of the setting.
 	 * @param value_names A table that maps values to names. The first
-	 *   character of every identifier is ignored and the rest should
+	 *   character of every identifier is ignored, the second character
+	 *   could be '_' to indicate the value is negative, and the rest should
 	 *   be an integer of the value you define a name for. The value
 	 *   is a short description of that value.
 	 * To define labels for a setting named "competition_level" you could
 	 * for example call it like this:
 	 * AddLabels("competition_level", {_0 = "no competition", _1 = "some competition",
 	 * _2 = "a lot of competition"});
+	 * Another example, for a setting with a negative value:
+	 * AddLabels("amount", {__1 = "less than one", _0 = "none", _1 = "more than one"});
 	 *
 	 * @note This is a function provided by OpenTTD, you don't have to
 	 * include it in your Script but should just call it from GetSettings.

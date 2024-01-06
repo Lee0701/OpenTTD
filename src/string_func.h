@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -26,38 +24,49 @@
 #ifndef STRING_FUNC_H
 #define STRING_FUNC_H
 
+#include <stdarg.h>
+#include <iosfwd>
+
 #include "core/bitmath_func.hpp"
+#include "core/span_type.hpp"
 #include "string_type.h"
 
-void ttd_strlcat(char *dst, const char *src, size_t size);
-void ttd_strlcpy(char *dst, const char *src, size_t size);
+char *strecat(char *dst, const char *src, const char *last) NOACCESS(3);
+char *strecpy(char *dst, const char *src, const char *last) NOACCESS(3);
+char *stredup(const char *src, const char *last = nullptr) NOACCESS(2);
 
-char *strecat(char *dst, const char *src, const char *last);
-char *strecpy(char *dst, const char *src, const char *last);
-
-int CDECL seprintf(char *str, const char *last, const char *format, ...) WARN_FORMAT(3, 4);
+int CDECL seprintf(char *str, const char *last, const char *format, ...) WARN_FORMAT(3, 4) NOACCESS(2);
+int CDECL vseprintf(char *str, const char *last, const char *format, va_list ap) WARN_FORMAT(3, 0) NOACCESS(2);
 
 char *CDECL str_fmt(const char *str, ...) WARN_FORMAT(1, 2);
 
-void str_validate(char *str, const char *last, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK);
-void ValidateString(const char *str);
+std::string FormatArrayAsHex(span<const byte> data);
 
-void str_fix_scc_encoded(char *str, const char *last);
+void StrMakeValidInPlace(char *str, const char *last, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK) NOACCESS(2);
+[[nodiscard]] std::string StrMakeValid(const std::string &str, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK);
+void StrMakeValidInPlace(char *str, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK);
+
+void str_fix_scc_encoded(char *str, const char *last) NOACCESS(2);
 void str_strip_colours(char *str);
 bool strtolower(char *str);
+bool strtolower(std::string &str, std::string::size_type offs = 0);
 
-bool StrValid(const char *str, const char *last);
+bool StrValid(const char *str, const char *last) NOACCESS(2);
+void StrTrimInPlace(std::string &str);
+
+bool StrStartsWith(const std::string_view str, const std::string_view prefix);
+bool StrEndsWith(const std::string_view str, const std::string_view suffix);
 
 /**
  * Check if a string buffer is empty.
  *
  * @param s The pointer to the first element of the buffer
  * @return true if the buffer starts with the terminating null-character or
- *         if the given pointer points to NULL else return false
+ *         if the given pointer points to nullptr else return false
  */
 static inline bool StrEmpty(const char *s)
 {
-	return s == NULL || s[0] == '\0';
+	return s == nullptr || s[0] == '\0';
 }
 
 /**
@@ -80,6 +89,7 @@ bool IsValidChar(WChar key, CharSetFilter afilter);
 
 size_t Utf8Decode(WChar *c, const char *s);
 size_t Utf8Encode(char *buf, WChar c);
+size_t Utf8Encode(std::ostreambuf_iterator<char> &buf, WChar c);
 size_t Utf8TrimString(char *s, size_t maxlen);
 
 
@@ -90,6 +100,13 @@ static inline WChar Utf8Consume(const char **s)
 	return c;
 }
 
+template <class Titr>
+static inline WChar Utf8Consume(Titr &s)
+{
+	WChar c;
+	s += Utf8Decode(&c, &*s);
+	return c;
+}
 
 /**
  * Return the length of a UTF-8 encoded character.
@@ -147,7 +164,60 @@ static inline char *Utf8PrevChar(char *s)
 	return ret;
 }
 
+static inline const char *Utf8PrevChar(const char *s)
+{
+	const char *ret = s;
+	while (IsUtf8Part(*--ret)) {}
+	return ret;
+}
+
 size_t Utf8StringLength(const char *s);
+size_t Utf8StringLength(const std::string &str);
+
+/**
+ * Is the given character a lead surrogate code point?
+ * @param c The character to test.
+ * @return True if the character is a lead surrogate code point.
+ */
+static inline bool Utf16IsLeadSurrogate(uint c)
+{
+	return c >= 0xD800 && c <= 0xDBFF;
+}
+
+/**
+ * Is the given character a lead surrogate code point?
+ * @param c The character to test.
+ * @return True if the character is a lead surrogate code point.
+ */
+static inline bool Utf16IsTrailSurrogate(uint c)
+{
+	return c >= 0xDC00 && c <= 0xDFFF;
+}
+
+/**
+ * Convert an UTF-16 surrogate pair to the corresponding Unicode character.
+ * @param lead Lead surrogate code point.
+ * @param trail Trail surrogate code point.
+ * @return Decoded Unicode character.
+ */
+static inline WChar Utf16DecodeSurrogate(uint lead, uint trail)
+{
+	return 0x10000 + (((lead - 0xD800) << 10) | (trail - 0xDC00));
+}
+
+/**
+ * Decode an UTF-16 character.
+ * @param c Pointer to one or two UTF-16 code points.
+ * @return Decoded Unicode character.
+ */
+static inline WChar Utf16DecodeChar(const uint16 *c)
+{
+	if (Utf16IsLeadSurrogate(c[0])) {
+		return Utf16DecodeSurrogate(c[0], c[1]);
+	} else {
+		return *c;
+	}
+}
 
 /**
  * Is the given character a text direction character.
@@ -196,14 +266,6 @@ static inline bool IsWhitespace(WChar c)
 #if defined(__NetBSD__) || defined(__FreeBSD__)
 #include <sys/param.h>
 #endif
-
-/* strndup is a GNU extension */
-#if defined(_GNU_SOURCE) || (defined(__NetBSD_Version__) && 400000000 <= __NetBSD_Version__) || (defined(__FreeBSD_version) && 701101 <= __FreeBSD_version) || (defined(__DARWIN_C_LEVEL) && __DARWIN_C_LEVEL >= 200809L)
-#	undef DEFINE_STRNDUP
-#else
-#	define DEFINE_STRNDUP
-char *strndup(const char *s, size_t len);
-#endif /* strndup is available */
 
 /* strcasestr is available for _GNU_SOURCE, BSD and some Apple */
 #if defined(_GNU_SOURCE) || (defined(__BSD_VISIBLE) && __BSD_VISIBLE) || (defined(__APPLE__) && (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))) || defined(_NETBSD_SOURCE)

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -19,8 +17,6 @@
 #include "../network_type.h"
 #include "../../core/pool_type.hpp"
 
-#ifdef ENABLE_NETWORK
-
 /**
  * Enum with types of TCP packets specific to the admin network.
  * This protocol may only be extended to ensure stability.
@@ -34,6 +30,7 @@ enum PacketAdminType {
 	ADMIN_PACKET_ADMIN_RCON,             ///< The admin sends a remote console command.
 	ADMIN_PACKET_ADMIN_GAMESCRIPT,       ///< The admin sends a JSON string for the GameScript.
 	ADMIN_PACKET_ADMIN_PING,             ///< The admin sends a ping to the server, expecting a ping-reply (PONG) packet.
+	ADMIN_PACKET_ADMIN_EXTERNAL_CHAT,    ///< The admin sends a chat message from external source.
 
 	ADMIN_PACKET_SERVER_FULL = 100,      ///< The server tells the admin it cannot accept the admin.
 	ADMIN_PACKET_SERVER_BANNED,          ///< The server tells the admin it is banned.
@@ -59,10 +56,11 @@ enum PacketAdminType {
 	ADMIN_PACKET_SERVER_RCON,            ///< The server's reply to a remove console command.
 	ADMIN_PACKET_SERVER_CONSOLE,         ///< The server gives the admin the data that got printed to its console.
 	ADMIN_PACKET_SERVER_CMD_NAMES,       ///< The server sends out the names of the DoCommands to the admins.
-	ADMIN_PACKET_SERVER_CMD_LOGGING,     ///< The server gives the admin copies of incoming command packets.
+	ADMIN_PACKET_SERVER_CMD_LOGGING_OLD, ///< Used to be the type ID of \c ADMIN_PACKET_SERVER_CMD_LOGGING in \c NETWORK_GAME_ADMIN_VERSION 1.
 	ADMIN_PACKET_SERVER_GAMESCRIPT,      ///< The server gives the admin information from the GameScript in JSON.
 	ADMIN_PACKET_SERVER_RCON_END,        ///< The server indicates that the remote console command has completed.
 	ADMIN_PACKET_SERVER_PONG,            ///< The server replies to a ping request from the admin.
+	ADMIN_PACKET_SERVER_CMD_LOGGING,     ///< The server gives the admin copies of incoming command packets.
 
 	INVALID_ADMIN_PACKET = 0xFF,         ///< An invalid marker for admin packets.
 };
@@ -113,9 +111,9 @@ enum AdminCompanyRemoveReason {
 /** Main socket handler for admin related connections. */
 class NetworkAdminSocketHandler : public NetworkTCPSocketHandler {
 protected:
-	char admin_name[NETWORK_CLIENT_NAME_LENGTH];           ///< Name of the admin.
-	char admin_version[NETWORK_REVISION_LENGTH];           ///< Version string of the admin.
-	AdminStatus status;                                    ///< Status of this admin.
+	std::string admin_name;    ///< Name of the admin.
+	std::string admin_version; ///< Version string of the admin.
+	AdminStatus status;        ///< Status of this admin.
 
 	NetworkRecvStatus ReceiveInvalidPacket(PacketAdminType type);
 
@@ -138,7 +136,7 @@ protected:
 
 	/**
 	 * Register updates to be sent at certain frequencies (as announced in the PROTOCOL packet):
-	 * uint16  Update type (see #AdminUpdateType).
+	 * uint16  Update type (see #AdminUpdateType). Note integer type - see "Certain Packet Information" in docs/admin_network.md.
 	 * uint16  Update frequency (see #AdminUpdateFrequency), setting #ADMIN_FREQUENCY_POLL is always ignored.
 	 * @param p The packet that was just received.
 	 * @return The state the network should have.
@@ -147,7 +145,7 @@ protected:
 
 	/**
 	 * Poll the server for certain updates, an invalid poll (e.g. not existent id) gets silently dropped:
-	 * uint8   #AdminUpdateType the server should answer for, only if #AdminUpdateFrequency #ADMIN_FREQUENCY_POLL is advertised in the PROTOCOL packet.
+	 * uint8   #AdminUpdateType the server should answer for, only if #AdminUpdateFrequency #ADMIN_FREQUENCY_POLL is advertised in the PROTOCOL packet. Note integer type - see "Certain Packet Information" in docs/admin_network.md.
 	 * uint32  ID relevant to the packet type, e.g.
 	 *          - the client ID for #ADMIN_UPDATE_CLIENT_INFO. Use UINT32_MAX to show all clients.
 	 *          - the company ID for #ADMIN_UPDATE_COMPANY_INFO. Use UINT32_MAX to show all companies.
@@ -166,6 +164,17 @@ protected:
 	 * @return The state the network should have.
 	 */
 	virtual NetworkRecvStatus Receive_ADMIN_CHAT(Packet *p);
+
+	/**
+	 * Send chat from the external source:
+	 * string  Name of the source this message came from.
+	 * uint16  TextColour to use for the message.
+	 * string  Name of the user who sent the messsage.
+	 * string  Message.
+	 * @param p The packet that was just received.
+	 * @return The state the network should have.
+	 */
+	virtual NetworkRecvStatus Receive_ADMIN_EXTERNAL_CHAT(Packet *p);
 
 	/**
 	 * Execute a command on the servers console:
@@ -226,7 +235,7 @@ protected:
 
 	/**
 	 * Welcome a connected admin to the game:
-	 * string  Name of the Server (e.g. as advertised to master server).
+	 * string  Name of the Server.
 	 * string  OpenTTD version string.
 	 * bool    Server is dedicated.
 	 * string  Name of the Map.
@@ -363,7 +372,7 @@ protected:
 	 * uint8   ID of the company.
 	 * uint64  Money.
 	 * uint64  Loan.
-	 * uint64  Income.
+	 * int64   Income.
 	 * uint16  Delivered cargo (this quarter).
 	 * uint64  Company value (last quarter).
 	 * uint16  Performance (last quarter).
@@ -455,10 +464,8 @@ protected:
 	 * uint32  ID of the client sending the command.
 	 * uint8   ID of the company (0..MAX_COMPANIES-1).
 	 * uint16  ID of the command.
-	 * uint32  P1 (variable data passed to the command).
-	 * uint32  P2 (variable data passed to the command).
-	 * uint32  Tile where this is taking place.
-	 * string  Text passed to the command.
+	 * <var>   Command specific buffer with encoded parameters of variable length.
+	 *         The content differs per command and can change without notification.
 	 * uint32  Frame of execution.
 	 * @param p The packet that was just received.
 	 * @return The state the network should have.
@@ -483,10 +490,9 @@ protected:
 
 	NetworkRecvStatus HandlePacket(Packet *p);
 public:
-	NetworkRecvStatus CloseConnection(bool error = true);
+	NetworkRecvStatus CloseConnection(bool error = true) override;
 
 	NetworkAdminSocketHandler(SOCKET s);
-	~NetworkAdminSocketHandler();
 
 	NetworkRecvStatus ReceivePackets();
 
@@ -499,7 +505,5 @@ public:
 		return this->status;
 	}
 };
-
-#endif /* ENABLE_NETWORK */
 
 #endif /* NETWORK_CORE_TCP_ADMIN_H */

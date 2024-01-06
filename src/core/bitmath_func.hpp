@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -224,7 +222,7 @@ static inline uint8 FindFirstBit2x64(const int value)
 	}
 }
 
-uint8 FindFirstBit(uint32 x);
+uint8 FindFirstBit(uint64 x);
 uint8 FindLastBit(uint64 x);
 
 /**
@@ -302,6 +300,7 @@ static inline bool HasAtMostOneBit(T value)
 template <typename T>
 static inline T ROL(const T x, const uint8 n)
 {
+	if (n == 0) return x;
 	return (T)(x << n | x >> (sizeof(x) * 8 - n));
 }
 
@@ -317,60 +316,71 @@ static inline T ROL(const T x, const uint8 n)
 template <typename T>
 static inline T ROR(const T x, const uint8 n)
 {
+	if (n == 0) return x;
 	return (T)(x >> n | x << (sizeof(x) * 8 - n));
 }
 
-/**
- * Do an operation for each set bit in a value.
- *
- * This macros is used to do an operation for each set
- * bit in a variable. The second parameter is a
- * variable that is used as the bit position counter.
- * The fourth parameter is an expression of the bits
- * we need to iterate over. This expression will be
- * evaluated once.
- *
- * @param Tbitpos_type Type of the position counter variable.
- * @param bitpos_var   The position counter variable.
- * @param Tbitset_type Type of the bitset value.
- * @param bitset_value The bitset value which we check for bits.
- *
- * @see FOR_EACH_SET_BIT
- */
-#define FOR_EACH_SET_BIT_EX(Tbitpos_type, bitpos_var, Tbitset_type, bitset_value) \
-	for (                                                                           \
-		Tbitset_type ___FESBE_bits = (bitpos_var = (Tbitpos_type)0, bitset_value);    \
-		___FESBE_bits != (Tbitset_type)0;                                             \
-		___FESBE_bits = (Tbitset_type)(___FESBE_bits >> 1), bitpos_var++              \
-	)                                                                               \
-		if ((___FESBE_bits & 1) != 0)
+ /**
+ * Iterable ensemble of each set bit in a value.
+ * @tparam Tbitpos Type of the position variable.
+ * @tparam Tbitset Type of the bitset value.
+*/
+template <typename Tbitpos = uint, typename Tbitset = uint>
+struct SetBitIterator {
+	struct Iterator {
+		typedef Tbitpos value_type;
+		typedef value_type *pointer;
+		typedef value_type &reference;
+		typedef size_t difference_type;
+		typedef std::forward_iterator_tag iterator_category;
 
-/**
- * Do an operation for each set set bit in a value.
- *
- * This macros is used to do an operation for each set
- * bit in a variable. The first parameter is a variable
- * that is used as the bit position counter.
- * The second parameter is an expression of the bits
- * we need to iterate over. This expression will be
- * evaluated once.
- *
- * @param bitpos_var   The position counter variable.
- * @param bitset_value The value which we check for set bits.
- */
-#define FOR_EACH_SET_BIT(bitpos_var, bitset_value) FOR_EACH_SET_BIT_EX(uint, bitpos_var, uint, bitset_value)
+		explicit Iterator(Tbitset bitset) : bitset(bitset), bitpos(static_cast<Tbitpos>(0))
+		{
+			this->Validate();
+		}
+
+		bool operator==(const Iterator &other) const
+		{
+			return this->bitset == other.bitset && (this->bitset == 0 || this->bitpos == other.bitpos);
+		}
+		bool operator!=(const Iterator &other) const { return !(*this == other); }
+		Tbitpos operator*() const { return this->bitpos; }
+		Iterator & operator++() { this->Next(); this->Validate(); return *this; }
+
+	private:
+		Tbitset bitset;
+		Tbitpos bitpos;
+		void Validate()
+		{
+			while (this->bitset != 0 && (this->bitset & 1) == 0) this->Next();
+		}
+		void Next()
+		{
+			this->bitset = static_cast<Tbitset>(this->bitset >> 1);
+			this->bitpos++;
+		}
+	};
+
+	SetBitIterator(Tbitset bitset) : bitset(bitset) {}
+	Iterator begin() { return Iterator(this->bitset); }
+	Iterator end() { return Iterator(static_cast<Tbitset>(0)); }
+	bool empty() { return this->begin() == this->end(); }
+
+private:
+	Tbitset bitset;
+};
 
 #if defined(__APPLE__)
 	/* Make endian swapping use Apple's macros to increase speed
 	 * (since it will use hardware swapping if available).
 	 * Even though they should return uint16 and uint32, we get
 	 * warnings if we don't cast those (why?) */
-	#define BSWAP32(x) ((uint32)Endian32_Swap(x))
-	#define BSWAP16(x) ((uint16)Endian16_Swap(x))
+#	define BSWAP32(x) (static_cast<uint32>(CFSwapInt32(x)))
+#	define BSWAP16(x) (static_cast<uint16>(CFSwapInt16(x)))
 #elif defined(_MSC_VER)
 	/* MSVC has intrinsics for swapping, resulting in faster code */
-	#define BSWAP32(x) (_byteswap_ulong(x))
-	#define BSWAP16(x) (_byteswap_ushort(x))
+#	define BSWAP32(x) (_byteswap_ulong(x))
+#	define BSWAP16(x) (_byteswap_ushort(x))
 #else
 	/**
 	 * Perform a 32 bits endianness bitswap on x.
@@ -381,7 +391,7 @@ static inline T ROR(const T x, const uint8 n)
 	{
 #if !defined(__ICC) && defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4)  && __GNUC_MINOR__ >= 3))
 		/* GCC >= 4.3 provides a builtin, resulting in faster code */
-		return (uint32)__builtin_bswap32((int32)x);
+		return static_cast<uint32>(__builtin_bswap32(static_cast<int32>(x)));
 #else
 		return ((x >> 24) & 0xFF) | ((x >> 8) & 0xFF00) | ((x << 8) & 0xFF0000) | ((x << 24) & 0xFF000000);
 #endif /* defined(__GNUC__) */

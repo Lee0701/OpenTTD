@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,10 +15,11 @@
 #include "../../industry.h"
 #include "../../station_base.h"
 
+#include "../../safeguards.h"
+
 ScriptCargoList::ScriptCargoList()
 {
-	const CargoSpec *cs;
-	FOR_ALL_CARGOSPECS(cs) {
+	for (const CargoSpec *cs : CargoSpec::Iterate()) {
 		this->AddItem(cs->Index());
 	}
 }
@@ -57,6 +56,6 @@ ScriptCargoList_StationAccepting::ScriptCargoList_StationAccepting(StationID sta
 
 	Station *st = ::Station::Get(station_id);
 	for (CargoID i = 0; i < NUM_CARGO; i++) {
-		if (HasBit(st->goods[i].acceptance_pickup, GoodsEntry::GES_ACCEPTANCE)) this->AddItem(i);
+		if (HasBit(st->goods[i].status, GoodsEntry::GES_ACCEPTANCE)) this->AddItem(i);
 	}
 }

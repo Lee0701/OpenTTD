@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -11,12 +9,16 @@
 
 #include "stdafx.h"
 #include "landscape.h"
+#include "company_func.h"
 #include "signs_base.h"
 #include "signs_func.h"
 #include "strings_func.h"
 #include "core/pool_func.hpp"
+#include "viewport_kdtree.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /** Initialize the sign-pool */
 SignPool _sign_pool("Sign");
@@ -33,8 +35,6 @@ Sign::Sign(Owner owner)
 /** Destroy the sign */
 Sign::~Sign()
 {
-	free(this->name);
-
 	if (CleaningPool()) return;
 
 	DeleteRenameSignWindow(this->index);
@@ -46,16 +46,30 @@ Sign::~Sign()
 void Sign::UpdateVirtCoord()
 {
 	Point pt = RemapCoords(this->x, this->y, this->z);
+
+	if (this->sign.kdtree_valid) _viewport_sign_kdtree.Remove(ViewportSignKdtreeItem::MakeSign(this->index));
+
 	SetDParam(0, this->index);
 	this->sign.UpdatePosition(pt.x, pt.y - 6 * ZOOM_LVL_BASE, STR_WHITE_SIGN);
+
+	_viewport_sign_kdtree.Insert(ViewportSignKdtreeItem::MakeSign(this->index));
 }
 
 /** Update the coordinates of all signs */
 void UpdateAllSignVirtCoords()
 {
-	Sign *si;
-
-	FOR_ALL_SIGNS(si) {
+	for (Sign *si : Sign::Iterate()) {
 		si->UpdateVirtCoord();
 	}
+}
+
+/**
+ * Check if the current company can rename a given sign.
+ * @param *si The sign in question.
+ * @return true if the sign can be renamed, else false.
+ */
+bool CompanyCanRenameSign(const Sign *si)
+{
+	if (si->owner == OWNER_DEITY && _current_company != OWNER_DEITY && _game_mode != GM_EDITOR) return false;
+	return true;
 }

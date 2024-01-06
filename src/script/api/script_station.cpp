@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -13,14 +11,18 @@
 #include "script_station.hpp"
 #include "script_map.hpp"
 #include "script_town.hpp"
+#include "script_cargo.hpp"
 #include "../../station_base.h"
 #include "../../roadstop_base.h"
 #include "../../town.h"
+#include "../../station_cmd.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptStation::IsValidStation(StationID station_id)
 {
 	const Station *st = ::Station::GetIfValid(station_id);
-	return st != NULL && (st->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || st->owner == OWNER_NONE);
+	return st != nullptr && (st->owner == ScriptObject::GetCompany() || ScriptObject::GetCompany() == OWNER_DEITY || st->owner == OWNER_NONE);
 }
 
 /* static */ ScriptCompany::CompanyID ScriptStation::GetOwner(StationID station_id)
@@ -36,18 +38,117 @@
 	return ::GetStationIndex(tile);
 }
 
+template<bool Tfrom, bool Tvia>
+/* static */ bool ScriptStation::IsCargoRequestValid(StationID station_id,
+		StationID from_station_id, StationID via_station_id, CargoID cargo_id)
+{
+	if (!IsValidStation(station_id)) return false;
+	if (Tfrom && !IsValidStation(from_station_id) && from_station_id != STATION_INVALID) return false;
+	if (Tvia && !IsValidStation(via_station_id) && via_station_id != STATION_INVALID) return false;
+	if (!ScriptCargo::IsValidCargo(cargo_id)) return false;
+	return true;
+}
+
+template<bool Tfrom, bool Tvia>
+/* static */ int32 ScriptStation::CountCargoWaiting(StationID station_id,
+		StationID from_station_id, StationID via_station_id, CargoID cargo_id)
+{
+	if (!ScriptStation::IsCargoRequestValid<Tfrom, Tvia>(station_id, from_station_id,
+			via_station_id, cargo_id)) {
+		return -1;
+	}
+
+	const StationCargoList &cargo_list = ::Station::Get(station_id)->goods[cargo_id].cargo;
+	if (!Tfrom && !Tvia) return cargo_list.TotalCount();
+
+	uint16 cargo_count = 0;
+	std::pair<StationCargoList::ConstIterator, StationCargoList::ConstIterator> range = Tvia ?
+				cargo_list.Packets()->equal_range(via_station_id) :
+				std::make_pair(StationCargoList::ConstIterator(cargo_list.Packets()->begin()),
+						StationCargoList::ConstIterator(cargo_list.Packets()->end()));
+	for (StationCargoList::ConstIterator it = range.first; it != range.second; it++) {
+		const CargoPacket *cp = *it;
+		if (!Tfrom || cp->SourceStation() == from_station_id) cargo_count += cp->Count();
+	}
+
+	return cargo_count;
+}
+
 /* static */ int32 ScriptStation::GetCargoWaiting(StationID station_id, CargoID cargo_id)
 {
-	if (!IsValidStation(station_id)) return -1;
-	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
+	return CountCargoWaiting<false, false>(station_id, STATION_INVALID, STATION_INVALID, cargo_id);
+}
 
-	return ::Station::Get(station_id)->goods[cargo_id].cargo.Count();
+/* static */ int32 ScriptStation::GetCargoWaitingFrom(StationID station_id,
+		StationID from_station_id, CargoID cargo_id)
+{
+	return CountCargoWaiting<true, false>(station_id, from_station_id, STATION_INVALID, cargo_id);
+}
+
+/* static */ int32 ScriptStation::GetCargoWaitingVia(StationID station_id,
+		StationID via_station_id, CargoID cargo_id)
+{
+	return CountCargoWaiting<false, true>(station_id, STATION_INVALID, via_station_id, cargo_id);
+}
+
+/* static */ int32 ScriptStation::GetCargoWaitingFromVia(StationID station_id,
+		StationID from_station_id, StationID via_station_id, CargoID cargo_id)
+{
+	return CountCargoWaiting<true, true>(station_id, from_station_id, via_station_id, cargo_id);
+}
+
+template<bool Tfrom, bool Tvia>
+/* static */ int32 ScriptStation::CountCargoPlanned(StationID station_id,
+		StationID from_station_id, StationID via_station_id, CargoID cargo_id)
+{
+	if (!ScriptStation::IsCargoRequestValid<Tfrom, Tvia>(station_id, from_station_id,
+			via_station_id, cargo_id)) {
+		return -1;
+	}
+
+	const FlowStatMap &flows = ::Station::Get(station_id)->goods[cargo_id].flows;
+	if (Tfrom) {
+		return Tvia ? flows.GetFlowFromVia(from_station_id, via_station_id) :
+					  flows.GetFlowFrom(from_station_id);
+	} else {
+		return Tvia ? flows.GetFlowVia(via_station_id) : flows.GetFlow();
+	}
+}
+
+/* static */ int32 ScriptStation::GetCargoPlanned(StationID station_id, CargoID cargo_id)
+{
+	return CountCargoPlanned<false, false>(station_id, STATION_INVALID, STATION_INVALID, cargo_id);
+}
+
+/* static */ int32 ScriptStation::GetCargoPlannedFrom(StationID station_id,
+		StationID from_station_id, CargoID cargo_id)
+{
+	return CountCargoPlanned<true, false>(station_id, from_station_id, STATION_INVALID, cargo_id);
+}
+
+/* static */ int32 ScriptStation::GetCargoPlannedVia(StationID station_id,
+		StationID via_station_id, CargoID cargo_id)
+{
+	return CountCargoPlanned<false, true>(station_id, STATION_INVALID, via_station_id, cargo_id);
+}
+
+/* static */ int32 ScriptStation::GetCargoPlannedFromVia(StationID station_id,
+		StationID from_station_id, StationID via_station_id, CargoID cargo_id)
+{
+	return CountCargoPlanned<true, true>(station_id, from_station_id, via_station_id, cargo_id);
+}
+
+/* static */ bool ScriptStation::HasCargoRating(StationID station_id, CargoID cargo_id)
+{
+	if (!IsValidStation(station_id)) return false;
+	if (!ScriptCargo::IsValidCargo(cargo_id)) return false;
+
+	return ::Station::Get(station_id)->goods[cargo_id].HasRating();
 }
 
 /* static */ int32 ScriptStation::GetCargoRating(StationID station_id, CargoID cargo_id)
 {
-	if (!IsValidStation(station_id)) return -1;
-	if (!ScriptCargo::IsValidCargo(cargo_id)) return -1;
+	if (!ScriptStation::HasCargoRating(station_id, cargo_id)) return -1;
 
 	return ::ToPercent8(::Station::Get(station_id)->goods[cargo_id].rating);
 }
@@ -109,13 +210,11 @@
 	if (!IsValidStation(station_id)) return false;
 	if (!ScriptRoad::IsRoadTypeAvailable(road_type)) return false;
 
-	::RoadTypes r = RoadTypeToRoadTypes((::RoadType)road_type);
-
-	for (const RoadStop *rs = ::Station::Get(station_id)->GetPrimaryRoadStop(ROADSTOP_BUS); rs != NULL; rs = rs->next) {
-		if ((::GetRoadTypes(rs->xy) & r) != 0) return true;
+	for (const RoadStop *rs = ::Station::Get(station_id)->GetPrimaryRoadStop(ROADSTOP_BUS); rs != nullptr; rs = rs->next) {
+		if (HasBit(::GetPresentRoadTypes(rs->xy), (::RoadType)road_type)) return true;
 	}
-	for (const RoadStop *rs = ::Station::Get(station_id)->GetPrimaryRoadStop(ROADSTOP_TRUCK); rs != NULL; rs = rs->next) {
-		if ((::GetRoadTypes(rs->xy) & r) != 0) return true;
+	for (const RoadStop *rs = ::Station::Get(station_id)->GetPrimaryRoadStop(ROADSTOP_TRUCK); rs != nullptr; rs = rs->next) {
+		if (HasBit(::GetPresentRoadTypes(rs->xy), (::RoadType)road_type)) return true;
 	}
 
 	return false;
@@ -128,7 +227,7 @@
 	return ::Station::Get(station_id)->town->index;
 }
 
-/*static */ bool ScriptStation::IsAirportClosed(StationID station_id)
+/* static */ bool ScriptStation::IsAirportClosed(StationID station_id)
 {
 	EnforcePrecondition(false, IsValidStation(station_id));
 	EnforcePrecondition(false, HasStationType(station_id, STATION_AIRPORT));
@@ -136,10 +235,10 @@
 	return (::Station::Get(station_id)->airport.flags & AIRPORT_CLOSED_block) != 0;
 }
 
-/*static */ bool ScriptStation::OpenCloseAirport(StationID station_id)
+/* static */ bool ScriptStation::OpenCloseAirport(StationID station_id)
 {
 	EnforcePrecondition(false, IsValidStation(station_id));
 	EnforcePrecondition(false, HasStationType(station_id, STATION_AIRPORT));
 
-	return ScriptObject::DoCommand(0, station_id, 0, CMD_OPEN_CLOSE_AIRPORT);
+	return ScriptObject::Command<CMD_OPEN_CLOSE_AIRPORT>::Do(station_id);
 }

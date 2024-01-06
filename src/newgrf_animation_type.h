@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -46,11 +44,12 @@ enum IndustryAnimationTrigger {
 
 /** Animation triggers for airport tiles */
 enum AirpAnimationTrigger {
-	AAT_BUILT,               ///< Triggered when the airport is built (for all tiles at the same time).
-	AAT_TILELOOP,            ///< Triggered in the periodic tile loop.
-	AAT_STATION_NEW_CARGO,   ///< Triggered when new cargo arrives at the station (for all tiles at the same time).
-	AAT_STATION_CARGO_TAKEN, ///< Triggered when a cargo type is completely removed from the station (for all tiles at the same time).
-	AAT_STATION_250_TICKS,   ///< Triggered every 250 ticks (for all tiles at the same time).
+	AAT_BUILT,                   ///< Triggered when the airport is built (for all tiles at the same time).
+	AAT_TILELOOP,                ///< Triggered in the periodic tile loop.
+	AAT_STATION_NEW_CARGO,       ///< Triggered when new cargo arrives at the station (for all tiles at the same time).
+	AAT_STATION_CARGO_TAKEN,     ///< Triggered when a cargo type is completely removed from the station (for all tiles at the same time).
+	AAT_STATION_250_TICKS,       ///< Triggered every 250 ticks (for all tiles at the same time).
+	AAT_STATION_AIRPLANE_LAND,   ///< Triggered when an airplane (not a helicopter) touches down at the airport (for single tile).
 };
 
 /** Animation triggers for objects. */

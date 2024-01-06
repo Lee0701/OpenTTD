@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,8 +10,12 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include "cpu.h"
+#include <chrono>
+#include "3rdparty/fmt/format.h"
+
 /* Debugging messages policy:
- * These should be the severities used for direct DEBUG() calls
+ * These should be the severities used for direct Debug() calls
  * maximum debugging level should be 10 if really deep, deep
  * debugging is needed.
  * (there is room for exceptions, but you have to have a good cause):
@@ -26,50 +28,40 @@
  * 6.. - extremely detailed spamming
  */
 
-#ifdef NO_DEBUG_MESSAGES
-	#define DEBUG(name, level, ...) { }
-#else /* NO_DEBUG_MESSAGES */
-	/**
-	 * Output a line of debugging information.
-	 * @param name Category
-	 * @param level Debugging level, higher levels means more detailed information.
-	 */
-	#define DEBUG(name, level, ...) if ((level) == 0 || _debug_ ## name ## _level >= (level)) debug(#name, __VA_ARGS__)
+/**
+ * Ouptut a line of debugging information.
+ * @param name The category of debug information.
+ * @param level The maximum debug level this message should be shown at. When the debug level for this category is set lower, then the message will not be shown.
+ * @param format_string The formatting string of the message.
+ */
+#define Debug(name, level, format_string, ...) if ((level) == 0 || _debug_ ## name ## _level >= (level)) DebugPrint(#name, fmt::format(FMT_STRING(format_string), ## __VA_ARGS__))
+void DebugPrint(const char *level, const std::string &message);
 
-	extern int _debug_driver_level;
-	extern int _debug_grf_level;
-	extern int _debug_map_level;
-	extern int _debug_misc_level;
-	extern int _debug_net_level;
-	extern int _debug_sprite_level;
-	extern int _debug_oldloader_level;
-	extern int _debug_npf_level;
-	extern int _debug_yapf_level;
-	extern int _debug_freetype_level;
-	extern int _debug_script_level;
-	extern int _debug_sl_level;
-	extern int _debug_gamelog_level;
-	extern int _debug_desync_level;
-	extern int _debug_console_level;
+extern int _debug_driver_level;
+extern int _debug_grf_level;
+extern int _debug_map_level;
+extern int _debug_misc_level;
+extern int _debug_net_level;
+extern int _debug_sprite_level;
+extern int _debug_oldloader_level;
+extern int _debug_npf_level;
+extern int _debug_yapf_level;
+extern int _debug_fontcache_level;
+extern int _debug_script_level;
+extern int _debug_sl_level;
+extern int _debug_gamelog_level;
+extern int _debug_desync_level;
+extern int _debug_console_level;
 #ifdef RANDOM_DEBUG
-	extern int _debug_random_level;
+extern int _debug_random_level;
 #endif
 
-	void CDECL debug(const char *dbg, const char *format, ...) WARN_FORMAT(2, 3);
-#endif /* NO_DEBUG_MESSAGES */
-
 char *DumpDebugFacilityNames(char *buf, char *last);
-void SetDebugString(const char *s);
+void SetDebugString(const char *s, void (*error_func)(const char *));
 const char *GetDebugString();
 
 /* Shorter form for passing filename and linenumber */
 #define FILE_LINE __FILE__, __LINE__
-
-/**
- * Get the tick counter from the CPU (high precision timing).
- * @return The count.
- */
-uint64 ottd_rdtsc();
 
 /* Used for profiling
  *
@@ -91,27 +83,46 @@ uint64 ottd_rdtsc();
  *
  * TIC() / TOC() creates its own block, so make sure not the mangle
  *  it with another block.
+ *
+ * The output is counted in CPU cycles, and not comparable across
+ *  machines. Mainly useful for local optimisations.
  **/
 #define TIC() {\
 	uint64 _xxx_ = ottd_rdtsc();\
-	static uint64 __sum__ = 0;\
-	static uint32 __i__ = 0;
+	static uint64 _sum_ = 0;\
+	static uint32 _i_ = 0;
 
 #define TOC(str, count)\
-	__sum__ += ottd_rdtsc() - _xxx_;\
-	if (++__i__ == count) {\
-		DEBUG(misc, 0, "[%s] " OTTD_PRINTF64 " [avg: %.1f]", str, __sum__, __sum__/(double)__i__);\
-		__i__ = 0;\
-		__sum__ = 0;\
+	_sum_ += ottd_rdtsc() - _xxx_;\
+	if (++_i_ == count) {\
+		Debug(misc, 0, "[{}] {} [avg: {:.1f}]", str, _sum_, _sum_/(double)_i_);\
+		_i_ = 0;\
+		_sum_ = 0;\
 	}\
 }
+
+/* Chrono based version. The output is in microseconds. */
+#define TICC() {\
+	auto _start_ = std::chrono::high_resolution_clock::now();\
+	static uint64 _sum_ = 0;\
+	static uint32 _i_ = 0;
+
+#define TOCC(str, _count_)\
+	_sum_ += (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - _start_)).count();\
+	if (++_i_ == _count_) {\
+		Debug(misc, 0, "[{}] {} us [avg: {:.1f} us]", str, _sum_, _sum_/(double)_i_);\
+		_i_ = 0;\
+		_sum_ = 0;\
+	}\
+}
+
 
 void ShowInfo(const char *str);
 void CDECL ShowInfoF(const char *str, ...) WARN_FORMAT(1, 2);
 
 const char *GetLogPrefix();
 
-/** The real time in the game. */
-extern uint32 _realtime_tick;
+void DebugSendRemoteMessages();
+void DebugReconsiderSendRemoteMessages();
 
 #endif /* DEBUG_H */

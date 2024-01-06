@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,9 +16,8 @@
 
 void UpdateCompanyHQ(TileIndex tile, uint score);
 
-void BuildObject(ObjectType type, TileIndex tile, CompanyID owner = OWNER_NONE, struct Town *town = NULL, uint8 view = 0);
+void BuildObject(ObjectType type, TileIndex tile, CompanyID owner = OWNER_NONE, struct Town *town = nullptr, uint8 view = 0);
 
-void PlaceProc_Object(TileIndex tile);
-void ShowBuildObjectPicker(struct Window *w);
+Window *ShowBuildObjectPicker();
 
 #endif /* OBJECT_H */

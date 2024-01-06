@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,11 +15,12 @@
 #include "string_func.h"
 #include "strings_func.h"
 #include "table/strings.h"
-#include "core/sort_func.hpp"
 #include "debug.h"
 
+#include "safeguards.h"
+
 HighScore _highscore_table[SP_HIGHSCORE_END][5]; ///< various difficulty-settings; top 5
-char *_highscore_file; ///< The file to store the highscore data in.
+std::string _highscore_file; ///< The file to store the highscore data in.
 
 static const StringID _endgame_perf_titles[] = {
 	STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN,
@@ -44,7 +43,7 @@ static const StringID _endgame_perf_titles[] = {
 
 StringID EndGameGetPerformanceTitleFromValue(uint value)
 {
-	value = minu(value / 64, lengthof(_endgame_perf_titles) - 1);
+	value = std::min<uint>(value / 64, lengthof(_endgame_perf_titles) - 1);
 
 	return _endgame_perf_titles[value];
 }
@@ -77,9 +76,9 @@ int8 SaveHighScoreValue(const Company *c)
 }
 
 /** Sort all companies given their performance */
-static int CDECL HighScoreSorter(const Company * const *a, const Company * const *b)
+static bool HighScoreSorter(const Company * const &a, const Company * const &b)
 {
-	return (*b)->old_economy[0].performance_history - (*a)->old_economy[0].performance_history;
+	return b->old_economy[0].performance_history < a->old_economy[0].performance_history;
 }
 
 /**
@@ -88,15 +87,14 @@ static int CDECL HighScoreSorter(const Company * const *a, const Company * const
  */
 int8 SaveHighScoreValueNetwork()
 {
-	const Company *c;
 	const Company *cl[MAX_COMPANIES];
 	uint count = 0;
 	int8 company = -1;
 
 	/* Sort all active companies with the highest score first */
-	FOR_ALL_COMPANIES(c) cl[count++] = c;
+	for (const Company *c : Company::Iterate()) cl[count++] = c;
 
-	QSortT(cl, count, &HighScoreSorter);
+	std::sort(std::begin(cl), std::begin(cl) + count, HighScoreSorter);
 
 	{
 		uint i;
@@ -125,22 +123,22 @@ int8 SaveHighScoreValueNetwork()
 /** Save HighScore table to file */
 void SaveToHighScore()
 {
-	FILE *fp = fopen(_highscore_file, "wb");
+	FILE *fp = fopen(_highscore_file.c_str(), "wb");
 
-	if (fp != NULL) {
+	if (fp != nullptr) {
 		uint i;
 		HighScore *hs;
 
 		for (i = 0; i < SP_SAVED_HIGHSCORE_END; i++) {
 			for (hs = _highscore_table[i]; hs != endof(_highscore_table[i]); hs++) {
 				/* First character is a command character, so strlen will fail on that */
-				byte length = min(sizeof(hs->company), StrEmpty(hs->company) ? 0 : (int)strlen(&hs->company[1]) + 1);
+				byte length = std::min(sizeof(hs->company), StrEmpty(hs->company) ? 0 : strlen(&hs->company[1]) + 1);
 
 				if (fwrite(&length, sizeof(length), 1, fp)       != 1 || // write away string length
 						fwrite(hs->company, length, 1, fp)           >  1 || // Yes... could be 0 bytes too
 						fwrite(&hs->score, sizeof(hs->score), 1, fp) != 1 ||
 						fwrite("  ", 2, 1, fp)                       != 1) { // XXX - placeholder for hs->title, not saved anymore; compatibility
-					DEBUG(misc, 1, "Could not save highscore.");
+					Debug(misc, 1, "Could not save highscore.");
 					i = SP_SAVED_HIGHSCORE_END;
 					break;
 				}
@@ -153,26 +151,26 @@ void SaveToHighScore()
 /** Initialize the highscore table to 0 and if any file exists, load in values */
 void LoadFromHighScore()
 {
-	FILE *fp = fopen(_highscore_file, "rb");
+	FILE *fp = fopen(_highscore_file.c_str(), "rb");
 
 	memset(_highscore_table, 0, sizeof(_highscore_table));
 
-	if (fp != NULL) {
+	if (fp != nullptr) {
 		uint i;
 		HighScore *hs;
 
 		for (i = 0; i < SP_SAVED_HIGHSCORE_END; i++) {
 			for (hs = _highscore_table[i]; hs != endof(_highscore_table[i]); hs++) {
 				byte length;
-				if (fread(&length, sizeof(length), 1, fp)       !=  1 ||
-						fread(hs->company, length, 1, fp)           >   1 || // Yes... could be 0 bytes too
-						fread(&hs->score, sizeof(hs->score), 1, fp) !=  1 ||
-						fseek(fp, 2, SEEK_CUR)                      == -1) { // XXX - placeholder for hs->title, not saved anymore; compatibility
-					DEBUG(misc, 1, "Highscore corrupted");
+				if (fread(&length, sizeof(length), 1, fp)                              !=  1 ||
+						fread(hs->company, std::min<int>(lengthof(hs->company), length), 1, fp) >   1 || // Yes... could be 0 bytes too
+						fread(&hs->score, sizeof(hs->score), 1, fp)                        !=  1 ||
+						fseek(fp, 2, SEEK_CUR)                                             == -1) { // XXX - placeholder for hs->title, not saved anymore; compatibility
+					Debug(misc, 1, "Highscore corrupted");
 					i = SP_SAVED_HIGHSCORE_END;
 					break;
 				}
-				str_validate(hs->company, lastof(hs->company), SVS_NONE);
+				StrMakeValidInPlace(hs->company, lastof(hs->company), SVS_NONE);
 				hs->title = EndGameGetPerformanceTitleFromValue(hs->score);
 			}
 		}

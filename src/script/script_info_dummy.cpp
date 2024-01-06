@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -9,13 +7,15 @@
 
 /** @file script_info_dummy.cpp Implementation of a dummy Script. */
 
-#include <squirrel.h>
 #include "../stdafx.h"
+#include <squirrel.h>
 
 #include "../string_func.h"
 #include "../strings_func.h"
 
-/* The reason this exists in C++, is that a user can trash his ai/ or game/ dir,
+#include "../safeguards.h"
+
+/* The reason this exists in C++, is that a user can trash their ai/ or game/ dir,
  *  leaving no Scripts available. The complexity to solve this is insane, and
  *  therefore the alternative is used, and make sure there is always a Script
  *  available, no matter what the situation is. By defining it in C++, there
@@ -39,12 +39,12 @@ void Script_CreateDummyInfo(HSQUIRRELVM vm, const char *type, const char *dir)
 	dp += seprintf(dp, lastof(dummy_script), "function CreateInstance() { return \"Dummy%s\"; }\n", type);
 	dp += seprintf(dp, lastof(dummy_script), "} RegisterDummy%s(Dummy%s());\n", type, type);
 
-	const SQChar *sq_dummy_script = OTTD2SQ(dummy_script);
+	const SQChar *sq_dummy_script = dummy_script;
 
 	sq_pushroottable(vm);
 
 	/* Load and run the script */
-	if (SQ_SUCCEEDED(sq_compilebuffer(vm, sq_dummy_script, scstrlen(sq_dummy_script), _SC("dummy"), SQTrue))) {
+	if (SQ_SUCCEEDED(sq_compilebuffer(vm, sq_dummy_script, strlen(sq_dummy_script), "dummy", SQTrue))) {
 		sq_push(vm, -2);
 		if (SQ_SUCCEEDED(sq_call(vm, 1, SQFalse, SQTrue))) {
 			sq_pop(vm, 1);
@@ -84,22 +84,22 @@ void Script_CreateDummy(HSQUIRRELVM vm, StringID string, const char *type)
 	char *p = safe_error_message;
 	do {
 		newline = strchr(p, '\n');
-		if (newline != NULL) *newline = '\0';
+		if (newline != nullptr) *newline = '\0';
 
 		dp += seprintf(dp, lastof(dummy_script), "    %sLog.Error(\"%s\");\n", type, p);
 		p = newline + 1;
-	} while (newline != NULL);
+	} while (newline != nullptr);
 
-	dp = strecpy(dp, "  }\n}\n", lastof(dummy_script));
+	strecpy(dp, "  }\n}\n", lastof(dummy_script));
 
 	/* 3) We translate the error message in the character format that Squirrel wants.
 	 *    We can use the fact that the wchar string printing also uses %s to print
 	 *    old style char strings, which is what was generated during the script generation. */
-	const SQChar *sq_dummy_script = OTTD2SQ(dummy_script);
+	const SQChar *sq_dummy_script = dummy_script;
 
 	/* And finally we load and run the script */
 	sq_pushroottable(vm);
-	if (SQ_SUCCEEDED(sq_compilebuffer(vm, sq_dummy_script, scstrlen(sq_dummy_script), _SC("dummy"), SQTrue))) {
+	if (SQ_SUCCEEDED(sq_compilebuffer(vm, sq_dummy_script, strlen(sq_dummy_script), "dummy", SQTrue))) {
 		sq_push(vm, -2);
 		if (SQ_SUCCEEDED(sq_call(vm, 1, SQFalse, SQTrue))) {
 			sq_pop(vm, 1);

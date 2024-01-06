@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,8 @@
 #include "../../stdafx.h"
 #include "script_railtypelist.hpp"
 #include "../../rail.h"
+
+#include "../../safeguards.h"
 
 ScriptRailTypeList::ScriptRailTypeList()
 {

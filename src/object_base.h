@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,11 +16,12 @@
 #include "town_type.h"
 #include "date_type.h"
 
-typedef Pool<Object, ObjectID, 64, 64000> ObjectPool;
+typedef Pool<Object, ObjectID, 64, 0xFF0000> ObjectPool;
 extern ObjectPool _object_pool;
 
 /** An object, such as transmitter, on the map. */
 struct Object : ObjectPool::PoolItem<&_object_pool> {
+	ObjectType type;    ///< Type of the object
 	Town *town;         ///< Town the object is built in
 	TileArea location;  ///< Location of the object
 	Date build_date;    ///< Date of construction
@@ -79,9 +78,6 @@ protected:
 	static uint16 counts[NUM_OBJECTS]; ///< Number of objects per type ingame
 };
 
-#define FOR_ALL_OBJECTS_FROM(var, start) FOR_ALL_ITEMS_FROM(Object, object_index, var, start)
-#define FOR_ALL_OBJECTS(var) FOR_ALL_OBJECTS_FROM(var, 0)
-
 /**
  * Keeps track of removed objects during execution/testruns of commands.
  */
@@ -91,6 +87,6 @@ struct ClearedObjectArea {
 };
 
 ClearedObjectArea *FindClearedObject(TileIndex tile);
-extern SmallVector<ClearedObjectArea, 4> _cleared_object_areas;
+extern std::vector<ClearedObjectArea> _cleared_object_areas;
 
 #endif /* OBJECT_BASE_H */

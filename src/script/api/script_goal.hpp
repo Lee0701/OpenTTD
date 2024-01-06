@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,7 @@
 #ifndef SCRIPT_GOAL_HPP
 #define SCRIPT_GOAL_HPP
 
+#include "script_client.hpp"
 #include "script_company.hpp"
 #include "../../goal_type.h"
 
@@ -37,13 +36,14 @@ public:
 	/**
 	 * Goal types that can be given to a goal.
 	 */
-	enum GoalType {
+	enum GoalType : byte {
 		/* Note: these values represent part of the in-game GoalType enum */
 		GT_NONE     = ::GT_NONE,     ///< Destination is not linked.
 		GT_TILE     = ::GT_TILE,     ///< Destination is a tile.
 		GT_INDUSTRY = ::GT_INDUSTRY, ///< Destination is an industry.
 		GT_TOWN     = ::GT_TOWN,     ///< Destination is a town.
 		GT_COMPANY  = ::GT_COMPANY,  ///< Destination is a company.
+		GT_STORY_PAGE = ::GT_STORY_PAGE ///< Destination is a story page.
 	};
 
 	/**
@@ -57,6 +57,9 @@ public:
 		QT_ERROR,       ///< Showing an error; title: Error.
 	};
 
+	/**
+	 * Types of buttons that can be in the question window.
+	 */
 	enum QuestionButton {
 		/* Note: these values represent part of the string list starting with STR_GOAL_QUESTION_BUTTON_CANCEL */
 		BUTTON_CANCEL    = (1 << 0),  ///< Cancel button.
@@ -94,8 +97,11 @@ public:
 	 * @param destination The destination of the \a type type.
 	 * @return The new GoalID, or GOAL_INVALID if it failed.
 	 * @pre No ScriptCompanyMode may be in scope.
-	 * @pre goal != NULL && len(goal) != 0.
+	 * @pre goal != null && len(goal) != 0.
 	 * @pre company == COMPANY_INVALID || ResolveCompanyID(company) != COMPANY_INVALID.
+	 * @pre if type is GT_STORY_PAGE, the company of the goal and the company of the story page need to match:
+	 *       \li Global goals can only reference global story pages.
+	 *       \li Company specific goals can reference global story pages and story pages of the same company.
 	 */
 	static GoalID New(ScriptCompany::CompanyID company, Text *goal, GoalType type, uint32 destination);
 
@@ -109,7 +115,51 @@ public:
 	static bool Remove(GoalID goal_id);
 
 	/**
-	 * Ask a question.
+	 * Update goal text of a goal.
+	 * @param goal_id The goal to update.
+	 * @param goal The new goal text (can be either a raw string, or a ScriptText object).
+	 * @return True if the action succeeded.
+	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre goal != null && len(goal) != 0.
+	 * @pre IsValidGoal(goal_id).
+	 */
+	static bool SetText(GoalID goal_id, Text *goal);
+
+	/**
+	 * Update the progress text of a goal. The progress text is a text that
+	 * is shown adjacent to the goal but in a separate column. Try to keep
+	 * the progress string short.
+	 * @param goal_id The goal to update.
+	 * @param progress The new progress text for the goal (can be either a raw string,
+	 * or a ScriptText object). To clear the progress string you can pass null or an
+	 * empty string.
+	 * @return True if the action succeeded.
+	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre IsValidGoal(goal_id).
+	 */
+	static bool SetProgress(GoalID goal_id, Text *progress);
+
+	/**
+	 * Update completed status of goal
+	 * @param goal_id The goal to update.
+	 * @param complete The new goal completed status.
+	 * @return True if the action succeeded.
+	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre IsValidGoal(goal_id).
+	 */
+	static bool SetCompleted(GoalID goal_id, bool complete);
+
+	/**
+	 * Checks if a given goal have been marked as completed.
+	 * @param goal_id The goal to check complete status.
+	 * @return True if the goal is completed, otherwise false.
+	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre IsValidGoal(goal_id).
+	 */
+	static bool IsCompleted(GoalID goal_id);
+
+	/**
+	 * Ask a question of all players in a company.
 	 * @param uniqueid Your unique id to distinguish results of multiple questions in the returning event.
 	 * @param company The company to ask the question, or ScriptCompany::COMPANY_INVALID for all.
 	 * @param question The question to ask (can be either a raw string, or a ScriptText object).
@@ -117,13 +167,31 @@ public:
 	 * @param buttons Any combinations (at least 1, up to 3) of buttons defined in QuestionButton. Like BUTTON_YES + BUTTON_NO.
 	 * @return True if the action succeeded.
 	 * @pre No ScriptCompanyMode may be in scope.
-	 * @pre question != NULL && len(question) != 0.
+	 * @pre question != null && len(question) != 0.
 	 * @pre company == COMPANY_INVALID || ResolveCompanyID(company) != COMPANY_INVALID.
 	 * @pre CountBits(buttons) >= 1 && CountBits(buttons) <= 3.
 	 * @note Replies to the question are given by you via the event ScriptEvent_GoalQuestionAnswer.
 	 * @note There is no guarantee you ever get a reply on your question.
 	 */
 	static bool Question(uint16 uniqueid, ScriptCompany::CompanyID company, Text *question, QuestionType type, int buttons);
+
+	/**
+	 * Ask client a question.
+	 * @param uniqueid Your unique id to distinguish results of multiple questions in the returning event.
+	 * @param client The client to ask the question.
+	 * @param question The question to ask (can be either a raw string, or a ScriptText object).
+	 * @param type The type of question that is being asked.
+	 * @param buttons Any combinations (at least 1, up to 3) of buttons defined in QuestionButton. Like BUTTON_YES + BUTTON_NO.
+	 * @return True if the action succeeded.
+	 * @pre No ScriptCompanyMode may be in scope.
+	 * @pre ScriptGame::IsMultiplayer()
+	 * @pre question != null && len(question) != 0.
+	 * @pre ResolveClientID(client) != CLIENT_INVALID.
+	 * @pre CountBits(buttons) >= 1 && CountBits(buttons) <= 3.
+	 * @note Replies to the question are given by you via the event ScriptEvent_GoalQuestionAnswer.
+	 * @note There is no guarantee you ever get a reply on your question.
+	 */
+	static bool QuestionClient(uint16 uniqueid, ScriptClient::ClientID client, Text *question, QuestionType type, int buttons);
 
 	/**
 	 * Close the question on all clients.
@@ -136,6 +204,12 @@ public:
 	 *   companies, but you are only interested in the reply of the first.
 	 */
 	static bool CloseQuestion(uint16 uniqueid);
+
+protected:
+	/**
+	 * Does common checks and asks the question.
+	 */
+	static bool DoQuestion(uint16 uniqueid, uint32 target, bool is_client, Text *question, QuestionType type, uint32 buttons);
 };
 
 #endif /* SCRIPT_GOAL_HPP */

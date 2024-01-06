@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -18,21 +16,25 @@
 #include "../stdafx.h"
 #include "../os/macosx/macos.h"
 #include "cocoa_m.h"
+#include "midifile.hpp"
 #include "../debug.h"
+#include "../base_media_base.h"
 
-#define Rect        OTTDRect
-#define Point       OTTDPoint
 #include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
-#undef Rect
-#undef Point
+
+#include "../safeguards.h"
+
+#if !defined(HAVE_OSX_1011_SDK)
+#define kMusicSequenceFile_AnyType 0
+#endif
 
 static FMusicDriver_Cocoa iFMusicDriver_Cocoa;
 
 
-static MusicPlayer    _player = NULL;
-static MusicSequence  _sequence = NULL;
+static MusicPlayer    _player = nullptr;
+static MusicSequence  _sequence = nullptr;
 static MusicTimeStamp _seq_length = 0;
 static bool           _playing = false;
 static byte           _volume = 127;
@@ -41,12 +43,12 @@ static byte           _volume = 127;
 /** Set the volume of the current sequence. */
 static void DoSetVolume()
 {
-	if (_sequence == NULL) return;
+	if (_sequence == nullptr) return;
 
 	AUGraph graph;
 	MusicSequenceGetAUGraph(_sequence, &graph);
 
-	AudioUnit output_unit = NULL;
+	AudioUnit output_unit = nullptr;
 
 	/* Get output audio unit */
 	UInt32 node_count = 0;
@@ -56,40 +58,16 @@ static void DoSetVolume()
 		AUGraphGetIndNode(graph, i, &node);
 
 		AudioUnit unit;
-		OSType comp_type = 0;
+		AudioComponentDescription desc;
+		AUGraphNodeInfo(graph, node, &desc, &unit);
 
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-		if (MacOSVersionIsAtLeast(10, 5, 0)) {
-			/* The 10.6 SDK has changed the function prototype of
-			 * AUGraphNodeInfo. This is a binary compatible change,
-			 * but we need to get the type declaration right or
-			 * risk compilation errors. The header AudioComponent.h
-			 * was introduced in 10.6 so use it to decide which
-			 * type definition to use. */
-#ifdef __AUDIOCOMPONENT_H__
-			AudioComponentDescription desc;
-#else
-			ComponentDescription desc;
-#endif
-			AUGraphNodeInfo(graph, node, &desc, &unit);
-			comp_type = desc.componentType;
-		} else
-#endif
-		{
-#if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5)
-			ComponentDescription desc;
-			AUGraphGetNodeInfo(graph, node, &desc, NULL, NULL, &unit);
-			comp_type = desc.componentType;
-#endif
-		}
-
-		if (comp_type == kAudioUnitType_Output) {
+		if (desc.componentType == kAudioUnitType_Output) {
 			output_unit = unit;
 			break;
 		}
 	}
-	if (output_unit == NULL) {
-		DEBUG(driver, 1, "cocoa_m: Failed to get output node to set volume");
+	if (output_unit == nullptr) {
+		Debug(driver, 1, "cocoa_m: Failed to get output node to set volume");
 		return;
 	}
 
@@ -101,16 +79,16 @@ static void DoSetVolume()
 /**
  * Initialized the MIDI player, including QuickTime initialization.
  */
-const char *MusicDriver_Cocoa::Start(const char * const *parm)
+const char *MusicDriver_Cocoa::Start(const StringList &parm)
 {
 	if (NewMusicPlayer(&_player) != noErr) return "failed to create music player";
 
-	return NULL;
+	return nullptr;
 }
 
 
 /**
- * Checks wether the player is active.
+ * Checks whether the player is active.
  */
 bool MusicDriver_Cocoa::IsSongPlaying()
 {
@@ -127,67 +105,50 @@ bool MusicDriver_Cocoa::IsSongPlaying()
  */
 void MusicDriver_Cocoa::Stop()
 {
-	if (_player != NULL) DisposeMusicPlayer(_player);
-	if (_sequence != NULL) DisposeMusicSequence(_sequence);
+	if (_player != nullptr) DisposeMusicPlayer(_player);
+	if (_sequence != nullptr) DisposeMusicSequence(_sequence);
 }
 
 
 /**
  * Starts playing a new song.
  *
- * @param filename Path to a MIDI file.
+ * @param song Description of music to load and play
  */
-void MusicDriver_Cocoa::PlaySong(const char *filename)
+void MusicDriver_Cocoa::PlaySong(const MusicSongInfo &song)
 {
-	DEBUG(driver, 2, "cocoa_m: trying to play '%s'", filename);
+	std::string filename = MidiFile::GetSMFFile(song);
+
+	Debug(driver, 2, "cocoa_m: trying to play '{}'", filename);
 
 	this->StopSong();
-	if (_sequence != NULL) {
+	if (_sequence != nullptr) {
 		DisposeMusicSequence(_sequence);
-		_sequence = NULL;
+		_sequence = nullptr;
 	}
 
+	if (filename.empty()) return;
+
 	if (NewMusicSequence(&_sequence) != noErr) {
-		DEBUG(driver, 0, "cocoa_m: Failed to create music sequence");
+		Debug(driver, 0, "cocoa_m: Failed to create music sequence");
 		return;
 	}
 
-	const char *os_file = OTTD2FS(filename);
-	CFURLRef url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8*)os_file, strlen(os_file), false);
+	std::string os_file = OTTD2FS(filename);
+	CFAutoRelease<CFURLRef> url(CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8*)os_file.c_str(), os_file.length(), false));
 
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-	if (MacOSVersionIsAtLeast(10, 5, 0)) {
-		if (MusicSequenceFileLoad(_sequence, url, 0, 0) != noErr) {
-			DEBUG(driver, 0, "cocoa_m: Failed to load MIDI file");
-			CFRelease(url);
-			return;
-		}
-	} else
-#endif
-	{
-#if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5)
-		FSRef ref_file;
-		if (!CFURLGetFSRef(url, &ref_file)) {
-			DEBUG(driver, 0, "cocoa_m: Failed to make FSRef");
-			CFRelease(url);
-			return;
-		}
-		if (MusicSequenceLoadSMFWithFlags(_sequence, &ref_file, 0) != noErr) {
-			DEBUG(driver, 0, "cocoa_m: Failed to load MIDI file old style");
-			CFRelease(url);
-			return;
-		}
-#endif
+	if (MusicSequenceFileLoad(_sequence, url.get(), kMusicSequenceFile_AnyType, 0) != noErr) {
+		Debug(driver, 0, "cocoa_m: Failed to load MIDI file");
+		return;
 	}
-	CFRelease(url);
 
 	/* Construct audio graph */
-	AUGraph graph = NULL;
+	AUGraph graph = nullptr;
 
 	MusicSequenceGetAUGraph(_sequence, &graph);
 	AUGraphOpen(graph);
 	if (AUGraphInitialize(graph) != noErr) {
-		DEBUG(driver, 0, "cocoa_m: Failed to initialize AU graph");
+		Debug(driver, 0, "cocoa_m: Failed to initialize AU graph");
 		return;
 	}
 
@@ -196,7 +157,7 @@ void MusicDriver_Cocoa::PlaySong(const char *filename)
 	MusicSequenceGetTrackCount(_sequence, &num_tracks);
 	_seq_length = 0;
 	for (UInt32 i = 0; i < num_tracks; i++) {
-		MusicTrack     track = NULL;
+		MusicTrack     track = nullptr;
 		MusicTimeStamp track_length = 0;
 		UInt32         prop_size = sizeof(MusicTimeStamp);
 		MusicSequenceGetIndTrack(_sequence, i, &track);
@@ -212,7 +173,7 @@ void MusicDriver_Cocoa::PlaySong(const char *filename)
 	if (MusicPlayerStart(_player) != noErr) return;
 	_playing = true;
 
-	DEBUG(driver, 3, "cocoa_m: playing '%s'", filename);
+	Debug(driver, 3, "cocoa_m: playing '{}'", filename);
 }
 
 
@@ -222,7 +183,7 @@ void MusicDriver_Cocoa::PlaySong(const char *filename)
 void MusicDriver_Cocoa::StopSong()
 {
 	MusicPlayerStop(_player);
-	MusicPlayerSetSequence(_player, NULL);
+	MusicPlayerSetSequence(_player, nullptr);
 	_playing = false;
 }
 

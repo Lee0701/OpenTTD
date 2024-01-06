@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -27,6 +25,8 @@
  */
 FT_Error GetFontByFaceName(const char *font_name, FT_Face *face);
 
+#endif /* WITH_FREETYPE */
+
 /**
  * We would like to have a fallback font as the current one
  * doesn't contain all characters we need.
@@ -37,8 +37,6 @@ FT_Error GetFontByFaceName(const char *font_name, FT_Face *face);
  * @param callback The function to call to check for missing glyphs.
  * @return true if a font has been set, false otherwise.
  */
-bool SetFallbackFont(FreeTypeSettings *settings, const char *language_isocode, int winlangid, class MissingGlyphSearcher *callback);
-
-#endif /* WITH_FREETYPE */
+bool SetFallbackFont(struct FontCacheSettings *settings, const char *language_isocode, int winlangid, class MissingGlyphSearcher *callback);
 
 #endif

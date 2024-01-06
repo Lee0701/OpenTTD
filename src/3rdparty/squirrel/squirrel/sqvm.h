@@ -12,9 +12,8 @@
 void sq_base_register(HSQUIRRELVM v);
 
 struct SQExceptionTrap{
-	SQExceptionTrap() {}
-	SQExceptionTrap(SQInteger ss, SQInteger stackbase,SQInstruction *ip, SQInteger ex_target){ _stacksize = ss; _stackbase = stackbase; _ip = ip; _extarget = ex_target;}
-	SQExceptionTrap(const SQExceptionTrap &et) { (*this) = et;	}
+	SQExceptionTrap(SQInteger ss, SQInteger stackbase,SQInstruction *ip, SQInteger ex_target)
+		: _stackbase(stackbase), _stacksize(ss), _ip(ip), _extarget(ex_target) {}
 	SQInteger _stackbase;
 	SQInteger _stacksize;
 	SQInstruction *_ip;
@@ -82,7 +81,7 @@ public:
 	SQString *PrintObjVal(const SQObject &o);
 
 
-	void Raise_Error(const SQChar *s, ...);
+	void Raise_Error(const SQChar *s, ...) WARN_FORMAT(2, 3);
 	void Raise_Error(SQObjectPtr &desc);
 	void Raise_IdxError(const SQObject &o);
 	void Raise_CompareError(const SQObject &o1, const SQObject &o2);
@@ -114,7 +113,7 @@ public:
 #endif
 
 #ifndef NO_GARBAGE_COLLECTOR
-	void Mark(SQCollectable **chain);
+	void EnqueueMarkObjectForChildren(SQGCMarkerQueue &queue);
 #endif
 	void Finalize();
 	void GrowCallStack() {
@@ -203,7 +202,7 @@ inline SQObjectPtr &stack_get(HSQUIRRELVM v,SQInteger idx){return ((idx>=0)?(v->
 	if(v->_callsstacksize == v->_alloccallsstacksize) { \
 		if (v->_callsstacksize > 65535 && !v->_in_stackoverflow) {\
 			v->_in_stackoverflow = true; \
-			v->Raise_Error(_SC("stack overflow"));\
+			v->Raise_Error("stack overflow");\
 			v->CallErrorHandler(v->_lasterror);\
 			return false;\
 		}\

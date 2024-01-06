@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -17,7 +15,7 @@
 /**
  * Enum for all companies/owners.
  */
-enum Owner {
+enum Owner : byte {
 	/* All companies below MAX_COMPANIES are playable
 	 * companies, above, they are special, computer controlled 'companies' */
 	OWNER_BEGIN     = 0x00, ///< First owner
@@ -42,13 +40,12 @@ static const uint MAX_LENGTH_PRESIDENT_NAME_CHARS = 32; ///< The maximum length 
 static const uint MAX_LENGTH_COMPANY_NAME_CHARS   = 32; ///< The maximum length of a company name in characters including '\0'
 
 static const uint MAX_HISTORY_QUARTERS            = 24; ///< The maximum number of quarters kept as performance's history
+static const uint MAX_COMPANY_SHARE_OWNERS        =  4; ///< The maximum number of shares of a company that can be owned by another company.
 
 /** Define basic enum properties */
 template <> struct EnumPropsT<Owner> : MakeEnumPropsT<Owner, byte, OWNER_BEGIN, OWNER_END, INVALID_OWNER> {};
-typedef TinyEnumT<Owner> OwnerByte;
 
 typedef Owner CompanyID;
-typedef OwnerByte CompanyByte;
 
 typedef uint16 CompanyMask;
 
@@ -56,12 +53,23 @@ struct Company;
 typedef uint32 CompanyManagerFace; ///< Company manager face bits, info see in company_manager_face.h
 
 /** The reason why the company was removed. */
-enum CompanyRemoveReason {
+enum CompanyRemoveReason : uint8 {
 	CRR_MANUAL,    ///< The company is manually removed.
 	CRR_AUTOCLEAN, ///< The company is removed due to autoclean.
 	CRR_BANKRUPT,  ///< The company went belly-up.
 
 	CRR_END,       ///< Sentinel for end.
+
+	CRR_NONE = CRR_MANUAL, ///< Dummy reason for actions that don't need one.
+};
+
+/** The action to do with CMD_COMPANY_CTRL. */
+enum CompanyCtrlAction : uint8 {
+	CCA_NEW,    ///< Create a new company.
+	CCA_NEW_AI, ///< Create a new AI company.
+	CCA_DELETE, ///< Delete a company.
+
+	CCA_END,    ///< Sentinel for end.
 };
 
 #endif /* COMPANY_TYPE_H */

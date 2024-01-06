@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -278,6 +276,12 @@ enum CallbackID {
 
 	/** Called when industry is built to set initial production level. */
 	CBID_INDUSTRY_PROD_CHANGE_BUILD      = 0x15F, // 15 bit callback
+
+	/** Called to spawn visual effects for vehicles. */
+	CBID_VEHICLE_SPAWN_VISUAL_EFFECT     = 0x160, // 15 bit callback
+
+	/** Called to determine the engine name to show. */
+	CBID_VEHICLE_NAME                    = 0x161, // 15 bit callback
 };
 
 /**
@@ -293,6 +297,7 @@ enum VehicleCallbackMask {
 	CBM_VEHICLE_CARGO_SUFFIX   = 5, ///< Show suffix after cargo name
 	CBM_VEHICLE_COLOUR_REMAP   = 6, ///< Change colour mapping of vehicle
 	CBM_VEHICLE_SOUND_EFFECT   = 7, ///< Vehicle uses custom sound effects
+	CBM_VEHICLE_NAME           = 8, ///< Engine name
 };
 
 /**

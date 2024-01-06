@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -12,6 +10,8 @@
 #include "../stdafx.h"
 #include "pool_type.hpp"
 
+#include "../safeguards.h"
+
 /**
  * Destructor removes this object from the pool vector and
  * deletes the vector itself if this was the last item removed.
@@ -19,8 +19,8 @@
 /* virtual */ PoolBase::~PoolBase()
 {
 	PoolVector *pools = PoolBase::GetPools();
-	pools->Erase(pools->Find(this));
-	if (pools->Length() == 0) delete pools;
+	pools->erase(std::find(pools->begin(), pools->end(), this));
+	if (pools->size() == 0) delete pools;
 }
 
 /**
@@ -29,10 +29,7 @@
  */
 /* static */ void PoolBase::Clean(PoolType pt)
 {
-	PoolVector *pools = PoolBase::GetPools();
-	PoolBase **end = pools->End();
-	for (PoolBase **ppool = pools->Begin(); ppool != end; ppool++) {
-		PoolBase *pool = *ppool;
+	for (PoolBase *pool : *PoolBase::GetPools()) {
 		if (pool->type & pt) pool->CleanPool();
 	}
 }

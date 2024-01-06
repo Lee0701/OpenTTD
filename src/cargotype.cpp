@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,11 +12,13 @@
 #include "newgrf_cargo.h"
 #include "string_func.h"
 #include "strings_func.h"
-#include "core/sort_func.hpp"
+#include "settings_type.h"
 
 #include "table/sprites.h"
 #include "table/strings.h"
 #include "table/cargo_const.h"
+
+#include "safeguards.h"
 
 CargoSpec CargoSpec::array[NUM_CARGO];
 
@@ -26,12 +26,12 @@ CargoSpec CargoSpec::array[NUM_CARGO];
  * Bitmask of cargo types available. This includes phony cargoes like regearing cargoes.
  * Initialized during a call to #SetupCargoForClimate.
  */
-uint32 _cargo_mask;
+CargoTypes _cargo_mask;
 
 /**
  * Bitmask of real cargo types available. Phony cargoes like regearing cargoes are excluded.
  */
-uint32 _standard_cargo_mask;
+CargoTypes _standard_cargo_mask;
 
 /**
  * Set up the default cargo types for the given landscape type.
@@ -42,8 +42,8 @@ void SetupCargoForClimate(LandscapeID l)
 	assert(l < lengthof(_default_climate_cargo));
 
 	/* Reset and disable all cargo types */
-	memset(CargoSpec::array, 0, sizeof(CargoSpec::array));
 	for (CargoID i = 0; i < lengthof(CargoSpec::array); i++) {
+		*CargoSpec::Get(i) = {};
 		CargoSpec::Get(i)->bitnum = INVALID_CARGO;
 
 		/* Set defaults for newer properties, which old GRFs do not know */
@@ -79,14 +79,35 @@ void SetupCargoForClimate(LandscapeID l)
 }
 
 /**
+ * Get the cargo ID of a default cargo, if present.
+ * @param l Landscape
+ * @param ct Default cargo type.
+ * @return ID number if the cargo exists, else #CT_INVALID
+ */
+CargoID GetDefaultCargoID(LandscapeID l, CargoType ct)
+{
+	assert(l < lengthof(_default_climate_cargo));
+
+	if (ct == CT_INVALID) return CT_INVALID;
+
+	assert(ct < lengthof(_default_climate_cargo[0]));
+	CargoLabel cl = _default_climate_cargo[l][ct];
+	/* Bzzt: check if cl is just an index into the cargo table */
+	if (cl < lengthof(_default_cargo)) {
+		cl = _default_cargo[cl].label;
+	}
+
+	return GetCargoIDByLabel(cl);
+}
+
+/**
  * Get the cargo ID by cargo label.
  * @param cl Cargo type to get.
  * @return ID number if the cargo exists, else #CT_INVALID
  */
 CargoID GetCargoIDByLabel(CargoLabel cl)
 {
-	const CargoSpec *cs;
-	FOR_ALL_CARGOSPECS(cs) {
+	for (const CargoSpec *cs : CargoSpec::Iterate()) {
 		if (cs->label == cl) return cs->Index();
 	}
 
@@ -104,8 +125,7 @@ CargoID GetCargoIDByBitnum(uint8 bitnum)
 {
 	if (bitnum == INVALID_CARGO) return CT_INVALID;
 
-	const CargoSpec *cs;
-	FOR_ALL_CARGOSPECS(cs) {
+	for (const CargoSpec *cs : CargoSpec::Iterate()) {
 		if (cs->bitnum == bitnum) return cs->Index();
 	}
 
@@ -130,64 +150,68 @@ SpriteID CargoSpec::GetCargoIcon() const
 	return sprite;
 }
 
-const CargoSpec *_sorted_cargo_specs[NUM_CARGO]; ///< Cargo specifications sorted alphabetically by name.
-uint8 _sorted_cargo_specs_size;                  ///< Number of cargo specifications stored at the _sorted_cargo_specs array (including special cargoes).
-uint8 _sorted_standard_cargo_specs_size;         ///< Number of standard cargo specifications stored at the _sorted_cargo_specs array.
-
+std::vector<const CargoSpec *> _sorted_cargo_specs;   ///< Cargo specifications sorted alphabetically by name.
+span<const CargoSpec *> _sorted_standard_cargo_specs; ///< Standard cargo specifications sorted alphabetically by name.
 
 /** Sort cargo specifications by their name. */
-static int CDECL CargoSpecNameSorter(const CargoSpec * const *a, const CargoSpec * const *b)
+static bool CargoSpecNameSorter(const CargoSpec * const &a, const CargoSpec * const &b)
 {
 	static char a_name[64];
 	static char b_name[64];
 
-	GetString(a_name, (*a)->name, lastof(a_name));
-	GetString(b_name, (*b)->name, lastof(b_name));
+	GetString(a_name, a->name, lastof(a_name));
+	GetString(b_name, b->name, lastof(b_name));
 
 	int res = strnatcmp(a_name, b_name); // Sort by name (natural sorting).
 
 	/* If the names are equal, sort by cargo bitnum. */
-	return (res != 0) ? res : ((*a)->bitnum - (*b)->bitnum);
+	return (res != 0) ? res < 0 : (a->bitnum < b->bitnum);
 }
 
 /** Sort cargo specifications by their cargo class. */
-static int CDECL CargoSpecClassSorter(const CargoSpec * const *a, const CargoSpec * const *b)
+static bool CargoSpecClassSorter(const CargoSpec * const &a, const CargoSpec * const &b)
 {
-	int res = ((*b)->classes & CC_PASSENGERS) - ((*a)->classes & CC_PASSENGERS);
+	int res = (b->classes & CC_PASSENGERS) - (a->classes & CC_PASSENGERS);
 	if (res == 0) {
-		res = ((*b)->classes & CC_MAIL) - ((*a)->classes & CC_MAIL);
+		res = (b->classes & CC_MAIL) - (a->classes & CC_MAIL);
 		if (res == 0) {
-			res = ((*a)->classes & CC_SPECIAL) - ((*b)->classes & CC_SPECIAL);
+			res = (a->classes & CC_SPECIAL) - (b->classes & CC_SPECIAL);
 			if (res == 0) {
 				return CargoSpecNameSorter(a, b);
 			}
 		}
 	}
 
-	return res;
+	return res < 0;
 }
 
 /** Initialize the list of sorted cargo specifications. */
 void InitializeSortedCargoSpecs()
 {
-	_sorted_cargo_specs_size = 0;
-	const CargoSpec *cargo;
+	_sorted_cargo_specs.clear();
 	/* Add each cargo spec to the list. */
-	FOR_ALL_CARGOSPECS(cargo) {
-		_sorted_cargo_specs[_sorted_cargo_specs_size] = cargo;
-		_sorted_cargo_specs_size++;
+	for (const CargoSpec *cargo : CargoSpec::Iterate()) {
+		_sorted_cargo_specs.push_back(cargo);
 	}
 
 	/* Sort cargo specifications by cargo class and name. */
-	QSortT(_sorted_cargo_specs, _sorted_cargo_specs_size, &CargoSpecClassSorter);
+	std::sort(_sorted_cargo_specs.begin(), _sorted_cargo_specs.end(), &CargoSpecClassSorter);
 
+	/* Count the number of standard cargos and fill the mask. */
 	_standard_cargo_mask = 0;
-
-	_sorted_standard_cargo_specs_size = 0;
-	FOR_ALL_SORTED_CARGOSPECS(cargo) {
+	uint8 nb_standard_cargo = 0;
+	for (const auto &cargo : _sorted_cargo_specs) {
 		if (cargo->classes & CC_SPECIAL) break;
-		_sorted_standard_cargo_specs_size++;
+		nb_standard_cargo++;
 		SetBit(_standard_cargo_mask, cargo->Index());
 	}
+
+	/* _sorted_standard_cargo_specs is a subset of _sorted_cargo_specs. */
+	_sorted_standard_cargo_specs = { _sorted_cargo_specs.data(), nb_standard_cargo };
 }
 
+uint64 CargoSpec::WeightOfNUnitsInTrain(uint32 n) const
+{
+	if (this->is_freight) n *= _settings_game.vehicle.freight_trains;
+	return this->WeightOfNUnits(n);
+}

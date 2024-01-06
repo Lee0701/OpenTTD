@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -36,7 +34,7 @@ public:
 	 * @note If the resulting JSON of your table is larger than 1450 bytes,
 	 *   nothing will be sent (and false will be returned).
 	 */
-	static bool Send(table);
+	static bool Send(void *table);
 #endif /* DOXYGEN_API */
 
 private:

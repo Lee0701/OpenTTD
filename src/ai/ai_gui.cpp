@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -28,8 +26,13 @@
 #include "../widgets/dropdown_type.h"
 #include "../widgets/dropdown_func.h"
 #include "../hotkeys.h"
+#include "../core/geometry_func.hpp"
+#include "../guitimer_func.h"
+#include "../company_cmd.h"
+#include "../misc_cmd.h"
 
 #include "ai.hpp"
+#include "ai_gui.hpp"
 #include "../script/api/script_log.hpp"
 #include "ai_config.hpp"
 #include "ai_info.hpp"
@@ -39,10 +42,11 @@
 #include "../game/game_info.hpp"
 #include "../game/game_instance.hpp"
 
-
 #include "table/strings.h"
 
 #include <vector>
+
+#include "../safeguards.h"
 
 static ScriptConfig *GetConfig(CompanyID slot)
 {
@@ -65,7 +69,7 @@ struct AIListWindow : public Window {
 	 * @param desc The description of the window.
 	 * @param slot The company we're changing the AI for.
 	 */
-	AIListWindow(const WindowDesc *desc, CompanyID slot) : Window(),
+	AIListWindow(WindowDesc *desc, CompanyID slot) : Window(desc),
 		slot(slot)
 	{
 		if (slot == OWNER_DEITY) {
@@ -74,9 +78,9 @@ struct AIListWindow : public Window {
 			this->info_list = AI::GetUniqueInfoList();
 		}
 
-		this->CreateNestedTree(desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_AIL_SCROLLBAR);
-		this->FinishInitNested(desc); // Initializes 'this->line_height' as side effect.
+		this->FinishInitNested(); // Initializes 'this->line_height' as side effect.
 
 		this->vscroll->SetCount((int)this->info_list->size() + 1);
 
@@ -85,16 +89,18 @@ struct AIListWindow : public Window {
 		if (GetConfig(slot)->HasScript()) {
 			ScriptInfo *info = GetConfig(slot)->GetInfo();
 			int i = 0;
-			for (ScriptInfoList::const_iterator it = this->info_list->begin(); it != this->info_list->end(); it++, i++) {
-				if ((*it).second == info) {
+			for (const auto &item : *this->info_list) {
+				if (item.second == info) {
 					this->selected = i;
 					break;
 				}
+
+				i++;
 			}
 		}
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
 			case WID_AIL_CAPTION:
@@ -103,59 +109,61 @@ struct AIListWindow : public Window {
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget == WID_AIL_LIST) {
-			this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
+			this->line_height = FONT_HEIGHT_NORMAL + padding.height;
 
 			resize->width = 1;
 			resize->height = this->line_height;
-			size->height = GB(this->GetWidget<NWidgetCore>(widget)->widget_data, MAT_ROW_START, MAT_ROW_BITS) * this->line_height;
+			size->height = 5 * this->line_height;
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		switch (widget) {
 			case WID_AIL_LIST: {
 				/* Draw a list of all available AIs. */
-				int y = this->GetWidget<NWidgetBase>(WID_AIL_LIST)->pos_y;
+				Rect tr = r.Shrink(WidgetDimensions::scaled.matrix);
 				/* First AI in the list is hardcoded to random */
 				if (this->vscroll->IsVisible(0)) {
-					DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_LEFT, y + WD_MATRIX_TOP, this->slot == OWNER_DEITY ? STR_AI_CONFIG_NONE : STR_AI_CONFIG_RANDOM_AI, this->selected == -1 ? TC_WHITE : TC_ORANGE);
-					y += this->line_height;
+					DrawString(tr, this->slot == OWNER_DEITY ? STR_AI_CONFIG_NONE : STR_AI_CONFIG_RANDOM_AI, this->selected == -1 ? TC_WHITE : TC_ORANGE);
+					tr.top += this->line_height;
 				}
-				ScriptInfoList::const_iterator it = this->info_list->begin();
-				for (int i = 1; it != this->info_list->end(); i++, it++) {
+				int i = 0;
+				for (const auto &item : *this->info_list) {
+					i++;
 					if (this->vscroll->IsVisible(i)) {
-						DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, (*it).second->GetName(), (this->selected == i - 1) ? TC_WHITE : TC_ORANGE);
-						y += this->line_height;
+						DrawString(tr, item.second->GetName(), (this->selected == i - 1) ? TC_WHITE : TC_ORANGE);
+						tr.top += this->line_height;
 					}
 				}
 				break;
 			}
 			case WID_AIL_INFO_BG: {
-				AIInfo *selected_info = NULL;
-				ScriptInfoList::const_iterator it = this->info_list->begin();
-				for (int i = 1; selected_info == NULL && it != this->info_list->end(); i++, it++) {
-					if (this->selected == i - 1) selected_info = static_cast<AIInfo *>((*it).second);
+				ScriptInfo *selected_info = nullptr;
+				int i = 0;
+				for (const auto &item : *this->info_list) {
+					i++;
+					if (this->selected == i - 1) selected_info = static_cast<ScriptInfo *>(item.second);
 				}
 				/* Some info about the currently selected AI. */
-				if (selected_info != NULL) {
-					int y = r.top + WD_FRAMERECT_TOP;
+				if (selected_info != nullptr) {
+					Rect tr = r.Shrink(WidgetDimensions::scaled.frametext, WidgetDimensions::scaled.framerect);
 					SetDParamStr(0, selected_info->GetAuthor());
-					DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, y, STR_AI_LIST_AUTHOR);
-					y += FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL;
+					DrawString(tr, STR_AI_LIST_AUTHOR);
+					tr.top += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
 					SetDParam(0, selected_info->GetVersion());
-					DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, y, STR_AI_LIST_VERSION);
-					y += FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL;
-					if (selected_info->GetURL() != NULL) {
+					DrawString(tr, STR_AI_LIST_VERSION);
+					tr.top += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
+					if (selected_info->GetURL() != nullptr) {
 						SetDParamStr(0, selected_info->GetURL());
-						DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, y, STR_AI_LIST_URL);
-						y += FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL;
+						DrawString(tr, STR_AI_LIST_URL);
+						tr.top += FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
 					}
 					SetDParamStr(0, selected_info->GetDescription());
-					DrawStringMultiLine(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, y, r.bottom - WD_FRAMERECT_BOTTOM, STR_JUST_RAW_STRING, TC_WHITE);
+					DrawStringMultiLine(tr, STR_JUST_RAW_STRING, TC_WHITE);
 				}
 				break;
 			}
@@ -168,28 +176,29 @@ struct AIListWindow : public Window {
 	void ChangeAI()
 	{
 		if (this->selected == -1) {
-			GetConfig(slot)->Change(NULL);
+			GetConfig(slot)->Change(nullptr);
 		} else {
 			ScriptInfoList::const_iterator it = this->info_list->begin();
 			for (int i = 0; i < this->selected; i++) it++;
 			GetConfig(slot)->Change((*it).second->GetName(), (*it).second->GetVersion());
 		}
-		InvalidateWindowData(WC_GAME_OPTIONS, WN_GAME_OPTIONS_AI);
+		InvalidateWindowData(WC_GAME_OPTIONS, slot == OWNER_DEITY ? WN_GAME_OPTIONS_GS : WN_GAME_OPTIONS_AI);
 		InvalidateWindowClassesData(WC_AI_SETTINGS);
-		DeleteWindowByClass(WC_QUERY_STRING);
+		CloseWindowByClass(WC_QUERY_STRING);
+		InvalidateWindowClassesData(WC_TEXTFILE);
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_AIL_LIST: { // Select one of the AIs
-				int sel = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_AIL_LIST, 0, this->line_height) - 1;
+				int sel = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_AIL_LIST) - 1;
 				if (sel < (int)this->info_list->size()) {
 					this->selected = sel;
 					this->SetDirty();
 					if (click_count > 1) {
 						this->ChangeAI();
-						delete this;
+						this->Close();
 					}
 				}
 				break;
@@ -197,21 +206,19 @@ struct AIListWindow : public Window {
 
 			case WID_AIL_ACCEPT: {
 				this->ChangeAI();
-				delete this;
+				this->Close();
 				break;
 			}
 
 			case WID_AIL_CANCEL:
-				delete this;
+				this->Close();
 				break;
 		}
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
-		NWidgetCore *nwi = this->GetWidget<NWidgetCore>(WID_AIL_LIST);
-		this->vscroll->SetCapacity(nwi->current_y / this->line_height);
-		nwi->widget_data = (this->vscroll->GetCapacity() << MAT_ROW_START) + (1 << MAT_COL_START);
+		this->vscroll->SetCapacityFromWidget(this, WID_AIL_LIST);
 	}
 
 	/**
@@ -219,10 +226,10 @@ struct AIListWindow : public Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (_game_mode == GM_NORMAL && Company::IsValidID(this->slot)) {
-			delete this;
+			this->Close();
 			return;
 		}
 
@@ -231,7 +238,7 @@ struct AIListWindow : public Window {
 		this->vscroll->SetCount((int)this->info_list->size() + 1);
 
 		/* selected goes from -1 .. length of ai list - 1. */
-		this->selected = min(this->selected, this->vscroll->GetCount() - 2);
+		this->selected = std::min(this->selected, this->vscroll->GetCount() - 2);
 	}
 };
 
@@ -240,12 +247,13 @@ static const NWidgetPart _nested_ai_list_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_AIL_CAPTION), SetDataTip(STR_AI_LIST_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_MAUVE),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIL_LIST), SetMinimalSize(188, 112), SetFill(1, 1), SetResize(1, 1), SetDataTip(0x501, STR_AI_LIST_TOOLTIP), SetScrollbar(WID_AIL_SCROLLBAR),
+		NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIL_LIST), SetMinimalSize(188, 112), SetFill(1, 1), SetResize(1, 1), SetMatrixDataTip(1, 0, STR_AI_LIST_TOOLTIP), SetScrollbar(WID_AIL_SCROLLBAR),
 		NWidget(NWID_VSCROLLBAR, COLOUR_MAUVE, WID_AIL_SCROLLBAR),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_MAUVE, WID_AIL_INFO_BG), SetMinimalTextLines(8, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM), SetResize(1, 0),
+	NWidget(WWT_PANEL, COLOUR_MAUVE, WID_AIL_INFO_BG), SetMinimalTextLines(8, WidgetDimensions::unscaled.framerect.Vertical() + WidgetDimensions::unscaled.vsep_normal * 3), SetResize(1, 0),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
@@ -257,8 +265,8 @@ static const NWidgetPart _nested_ai_list_widgets[] = {
 };
 
 /** Window definition for the ai list window. */
-static const WindowDesc _ai_list_desc(
-	WDP_CENTER, 200, 234,
+static WindowDesc _ai_list_desc(
+	WDP_CENTER, "settings_script_list", 200, 234,
 	WC_AI_LIST, WC_NONE,
 	0,
 	_nested_ai_list_widgets, lengthof(_nested_ai_list_widgets)
@@ -268,9 +276,9 @@ static const WindowDesc _ai_list_desc(
  * Open the AI list window to chose an AI for the given company slot.
  * @param slot The slot to change the AI of.
  */
-static void ShowAIListWindow(CompanyID slot)
+void ShowAIListWindow(CompanyID slot)
 {
-	DeleteWindowByClass(WC_AI_LIST);
+	CloseWindowByClass(WC_AI_LIST);
 	new AIListWindow(&_ai_list_desc, slot);
 }
 
@@ -284,11 +292,11 @@ struct AISettingsWindow : public Window {
 	bool clicked_increase;                ///< Whether we clicked the increase or decrease button.
 	bool clicked_dropdown;                ///< Whether the dropdown is open.
 	bool closing_dropdown;                ///< True, if the dropdown list is currently closing.
-	int timeout;                          ///< Timeout for unclicking the button.
+	GUITimer timeout;                     ///< Timeout for unclicking the button.
 	int clicked_row;                      ///< The clicked row of settings.
 	int line_height;                      ///< Height of a row in the matrix widget.
 	Scrollbar *vscroll;                   ///< Cache of the vertical scrollbar.
-	typedef std::vector<const ScriptConfigItem *> VisibleSettingsList;
+	typedef std::vector<const ScriptConfigItem *> VisibleSettingsList; ///< typdef for a vector of script settings
 	VisibleSettingsList visible_settings; ///< List of visible AI settings
 
 	/**
@@ -296,7 +304,7 @@ struct AISettingsWindow : public Window {
 	 * @param desc The description of the window.
 	 * @param slot The company we're changing the settings for.
 	 */
-	AISettingsWindow(const WindowDesc *desc, CompanyID slot) : Window(),
+	AISettingsWindow(WindowDesc *desc, CompanyID slot) : Window(desc),
 		slot(slot),
 		clicked_button(-1),
 		clicked_dropdown(false),
@@ -304,24 +312,12 @@ struct AISettingsWindow : public Window {
 		timeout(0)
 	{
 		this->ai_config = GetConfig(slot);
-		this->RebuildVisibleSettings();
 
-		this->CreateNestedTree(desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_AIS_SCROLLBAR);
-		this->FinishInitNested(desc, slot);  // Initializes 'this->line_height' as side effect.
+		this->FinishInitNested(slot);  // Initializes 'this->line_height' as side effect.
 
-		this->SetWidgetDisabledState(WID_AIS_RESET, _game_mode != GM_MENU && Company::IsValidID(this->slot));
-
-		this->vscroll->SetCount((int)this->visible_settings.size());
-	}
-
-	virtual void SetStringParameters(int widget) const
-	{
-		switch (widget) {
-			case WID_AIS_CAPTION:
-				SetDParam(0, (this->slot == OWNER_DEITY) ? STR_AI_SETTINGS_CAPTION_GAMESCRIPT : STR_AI_SETTINGS_CAPTION_AI);
-				break;
-		}
+		this->RebuildVisibleSettings();
 	}
 
 	/**
@@ -333,27 +329,28 @@ struct AISettingsWindow : public Window {
 	{
 		visible_settings.clear();
 
-		ScriptConfigItemList::const_iterator it = this->ai_config->GetConfigList()->begin();
-		for (; it != this->ai_config->GetConfigList()->end(); it++) {
-			bool no_hide = (it->flags & SCRIPTCONFIG_DEVELOPER) == 0;
+		for (const auto &item : *this->ai_config->GetConfigList()) {
+			bool no_hide = (item.flags & SCRIPTCONFIG_DEVELOPER) == 0;
 			if (no_hide || _settings_client.gui.ai_developer_tools) {
-				visible_settings.push_back(&(*it));
+				visible_settings.push_back(&item);
 			}
 		}
+
+		this->vscroll->SetCount((int)this->visible_settings.size());
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget == WID_AIS_BACKGROUND) {
-			this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
+			this->line_height = std::max(SETTING_BUTTON_HEIGHT, FONT_HEIGHT_NORMAL) + padding.height;
 
 			resize->width = 1;
 			resize->height = this->line_height;
-			size->height = GB(this->GetWidget<NWidgetCore>(widget)->widget_data, MAT_ROW_START, MAT_ROW_BITS) * this->line_height;
+			size->height = 5 * this->line_height;
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget != WID_AIS_BACKGROUND) return;
 
@@ -362,18 +359,18 @@ struct AISettingsWindow : public Window {
 		int i = 0;
 		for (; !this->vscroll->IsVisible(i); i++) it++;
 
+		Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
 		bool rtl = _current_text_dir == TD_RTL;
-		uint buttons_left = rtl ? r.right - SETTING_BUTTON_WIDTH - 3 : r.left + 4;
-		uint text_left    = r.left + (rtl ? WD_FRAMERECT_LEFT : SETTING_BUTTON_WIDTH + 8);
-		uint text_right   = r.right - (rtl ? SETTING_BUTTON_WIDTH + 8 : WD_FRAMERECT_RIGHT);
-
+		Rect br = ir.WithWidth(SETTING_BUTTON_WIDTH, rtl);
+		Rect tr = ir.Indent(SETTING_BUTTON_WIDTH + WidgetDimensions::scaled.hsep_wide, rtl);
 
 		int y = r.top;
 		int button_y_offset = (this->line_height - SETTING_BUTTON_HEIGHT) / 2;
+		int text_y_offset = (this->line_height - FONT_HEIGHT_NORMAL) / 2;
 		for (; this->vscroll->IsVisible(i) && it != visible_settings.end(); i++, it++) {
 			const ScriptConfigItem &config_item = **it;
 			int current_value = config->GetSetting((config_item).name);
-			bool editable = _game_mode == GM_MENU || ((this->slot != OWNER_DEITY) && !Company::IsValidID(this->slot)) || (config_item.flags & SCRIPTCONFIG_INGAME) != 0;
+			bool editable = this->IsEditableItem(config_item);
 
 			StringID str;
 			TextColour colour;
@@ -394,15 +391,15 @@ struct AISettingsWindow : public Window {
 			}
 
 			if ((config_item.flags & SCRIPTCONFIG_BOOLEAN) != 0) {
-				DrawBoolButton(buttons_left, y + button_y_offset, current_value != 0, editable);
+				DrawBoolButton(br.left, y + button_y_offset, current_value != 0, editable);
 				SetDParam(idx++, current_value == 0 ? STR_CONFIG_SETTING_OFF : STR_CONFIG_SETTING_ON);
 			} else {
 				if (config_item.complete_labels) {
-					DrawDropDownButton(buttons_left, y + button_y_offset, COLOUR_YELLOW, this->clicked_row == i && clicked_dropdown, editable);
+					DrawDropDownButton(br.left, y + button_y_offset, COLOUR_YELLOW, this->clicked_row == i && clicked_dropdown, editable);
 				} else {
-					DrawArrowButtons(buttons_left, y + button_y_offset, COLOUR_YELLOW, (this->clicked_button == i) ? 1 + (this->clicked_increase != rtl) : 0, editable && current_value > config_item.min_value, editable && current_value < config_item.max_value);
+					DrawArrowButtons(br.left, y + button_y_offset, COLOUR_YELLOW, (this->clicked_button == i) ? 1 + (this->clicked_increase != rtl) : 0, editable && current_value > config_item.min_value, editable && current_value < config_item.max_value);
 				}
-				if (config_item.labels != NULL && config_item.labels->Contains(current_value)) {
+				if (config_item.labels != nullptr && config_item.labels->Contains(current_value)) {
 					SetDParam(idx++, STR_JUST_RAW_STRING);
 					SetDParamStr(idx++, config_item.labels->Find(current_value)->second);
 				} else {
@@ -411,12 +408,12 @@ struct AISettingsWindow : public Window {
 				}
 			}
 
-			DrawString(text_left, text_right, y + WD_MATRIX_TOP, str, colour);
+			DrawString(tr.left, tr.right, y + text_y_offset, str, colour);
 			y += this->line_height;
 		}
 	}
 
-	virtual void OnPaint()
+	void OnPaint() override
 	{
 		if (this->closing_dropdown) {
 			this->closing_dropdown = false;
@@ -425,43 +422,41 @@ struct AISettingsWindow : public Window {
 		this->DrawWidgets();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_AIS_BACKGROUND: {
-				const NWidgetBase *wid = this->GetWidget<NWidgetBase>(WID_AIS_BACKGROUND);
-				int num = (pt.y - wid->pos_y) / this->line_height + this->vscroll->GetPosition();
+				Rect r = this->GetWidget<NWidgetBase>(widget)->GetCurrentRect().Shrink(WidgetDimensions::scaled.matrix, RectPadding::zero);
+				int num = (pt.y - r.top) / this->line_height + this->vscroll->GetPosition();
 				if (num >= (int)this->visible_settings.size()) break;
 
 				VisibleSettingsList::const_iterator it = this->visible_settings.begin();
 				for (int i = 0; i < num; i++) it++;
 				const ScriptConfigItem config_item = **it;
-				if (_game_mode == GM_NORMAL && ((this->slot == OWNER_DEITY) || Company::IsValidID(this->slot)) && (config_item.flags & SCRIPTCONFIG_INGAME) == 0) return;
+				if (!this->IsEditableItem(config_item)) return;
 
 				if (this->clicked_row != num) {
-					DeleteChildWindows(WC_QUERY_STRING);
-					HideDropDownMenu(this);
+					this->CloseChildWindows(WC_QUERY_STRING);
+					this->CloseChildWindows(WC_DROPDOWN_MENU);
 					this->clicked_row = num;
 					this->clicked_dropdown = false;
 				}
 
 				bool bool_item = (config_item.flags & SCRIPTCONFIG_BOOLEAN) != 0;
 
-				int x = pt.x - wid->pos_x;
-				if (_current_text_dir == TD_RTL) x = wid->current_x - 1 - x;
-				x -= 4;
+				int x = pt.x - r.left;
+				if (_current_text_dir == TD_RTL) x = r.Width() - 1 - x;
 
 				/* One of the arrows is clicked (or green/red rect in case of bool value) */
 				int old_val = this->ai_config->GetSetting(config_item.name);
 				if (!bool_item && IsInsideMM(x, 0, SETTING_BUTTON_WIDTH) && config_item.complete_labels) {
 					if (this->clicked_dropdown) {
 						/* unclick the dropdown */
-						HideDropDownMenu(this);
+						this->CloseChildWindows(WC_DROPDOWN_MENU);
 						this->clicked_dropdown = false;
 						this->closing_dropdown = false;
 					} else {
-						const NWidgetBase *wid = this->GetWidget<NWidgetBase>(WID_AIS_BACKGROUND);
-						int rel_y = (pt.y - (int)wid->pos_y) % this->line_height;
+						int rel_y = (pt.y - r.top) % this->line_height;
 
 						Rect wi_rect;
 						wi_rect.left = pt.x - (_current_text_dir == TD_RTL ? SETTING_BUTTON_WIDTH - 1 - x : x);
@@ -469,17 +464,17 @@ struct AISettingsWindow : public Window {
 						wi_rect.top = pt.y - rel_y + (this->line_height - SETTING_BUTTON_HEIGHT) / 2;
 						wi_rect.bottom = wi_rect.top + SETTING_BUTTON_HEIGHT - 1;
 
-						/* For dropdowns we also have to check the y position thoroughly, the mouse may not above the just opening dropdown */
+						/* If the mouse is still held but dragged outside of the dropdown list, keep the dropdown open */
 						if (pt.y >= wi_rect.top && pt.y <= wi_rect.bottom) {
 							this->clicked_dropdown = true;
 							this->closing_dropdown = false;
 
-							DropDownList *list = new DropDownList();
+							DropDownList list;
 							for (int i = config_item.min_value; i <= config_item.max_value; i++) {
-								list->push_back(new DropDownListCharStringItem(config_item.labels->Find(i)->second, i, false));
+								list.emplace_back(new DropDownListCharStringItem(config_item.labels->Find(i)->second, i, false));
 							}
 
-							ShowDropDownListAt(this, list, old_val, -1, wi_rect, COLOUR_ORANGE, true);
+							ShowDropDownListAt(this, std::move(list), old_val, -1, wi_rect, COLOUR_ORANGE, true);
 						}
 					}
 				} else if (IsInsideMM(x, 0, SETTING_BUTTON_WIDTH)) {
@@ -501,52 +496,43 @@ struct AISettingsWindow : public Window {
 					if (new_val != old_val) {
 						this->ai_config->SetSetting(config_item.name, new_val);
 						this->clicked_button = num;
-						this->timeout = 5;
+						this->timeout.SetInterval(150);
 					}
 				} else if (!bool_item && !config_item.complete_labels) {
 					/* Display a query box so users can enter a custom value. */
 					SetDParam(0, old_val);
-					ShowQueryString(STR_JUST_INT, STR_CONFIG_SETTING_QUERY_CAPTION, 10, this, CS_NUMERAL, QSF_NONE);
+					ShowQueryString(STR_JUST_INT, STR_CONFIG_SETTING_QUERY_CAPTION, INT32_DIGITS_WITH_SIGN_AND_TERMINATION, this, CS_NUMERAL_SIGNED, QSF_NONE);
 				}
 				this->SetDirty();
 				break;
 			}
 
 			case WID_AIS_ACCEPT:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_AIS_RESET:
-				if (_game_mode == GM_MENU || !Company::IsValidID(this->slot)) {
-					this->ai_config->ResetSettings();
-					this->SetDirty();
-				}
+				this->ai_config->ResetEditableSettings(_game_mode == GM_MENU || ((this->slot != OWNER_DEITY) && !Company::IsValidID(this->slot)));
+				this->SetDirty();
 				break;
 		}
 	}
 
-	virtual void OnQueryTextFinished(char *str)
+	void OnQueryTextFinished(char *str) override
 	{
 		if (StrEmpty(str)) return;
-		ScriptConfigItemList::const_iterator it = this->ai_config->GetConfigList()->begin();
-		for (int i = 0; i < this->clicked_row; i++) it++;
-		if (_game_mode == GM_NORMAL && ((this->slot == OWNER_DEITY) || Company::IsValidID(this->slot)) && (it->flags & SCRIPTCONFIG_INGAME) == 0) return;
 		int32 value = atoi(str);
-		this->ai_config->SetSetting((*it).name, value);
-		this->SetDirty();
+
+		SetValue(value);
 	}
 
-	virtual void OnDropdownSelect(int widget, int index)
+	void OnDropdownSelect(int widget, int index) override
 	{
 		assert(this->clicked_dropdown);
-		ScriptConfigItemList::const_iterator it = this->ai_config->GetConfigList()->begin();
-		for (int i = 0; i < this->clicked_row; i++) it++;
-		if (_game_mode == GM_NORMAL && ((this->slot == OWNER_DEITY) || Company::IsValidID(this->slot)) && (it->flags & SCRIPTCONFIG_INGAME) == 0) return;
-		this->ai_config->SetSetting((*it).name, index);
-		this->SetDirty();
+		SetValue(index);
 	}
 
-	virtual void OnDropdownClose(Point pt, int widget, int index, bool instant_close)
+	void OnDropdownClose(Point pt, int widget, int index, bool instant_close) override
 	{
 		/* We cannot raise the dropdown button just yet. OnClick needs some hint, whether
 		 * the same dropdown button was clicked again, and then not open the dropdown again.
@@ -557,16 +543,14 @@ struct AISettingsWindow : public Window {
 		this->SetDirty();
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
-		NWidgetCore *nwi = this->GetWidget<NWidgetCore>(WID_AIS_BACKGROUND);
-		this->vscroll->SetCapacity(nwi->current_y / this->line_height);
-		nwi->widget_data = (this->vscroll->GetCapacity() << MAT_ROW_START) + (1 << MAT_COL_START);
+		this->vscroll->SetCapacityFromWidget(this, WID_AIS_BACKGROUND);
 	}
 
-	virtual void OnTick()
+	void OnRealtimeTick(uint delta_ms) override
 	{
-		if (--this->timeout == 0) {
+		if (this->timeout.Elapsed(delta_ms)) {
 			this->clicked_button = -1;
 			this->SetDirty();
 		}
@@ -577,9 +561,31 @@ struct AISettingsWindow : public Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		this->RebuildVisibleSettings();
+		this->CloseChildWindows(WC_DROPDOWN_MENU);
+		this->CloseChildWindows(WC_QUERY_STRING);
+	}
+
+private:
+	bool IsEditableItem(const ScriptConfigItem &config_item) const
+	{
+		return _game_mode == GM_MENU
+		    || _game_mode == GM_EDITOR
+		    || ((this->slot != OWNER_DEITY) && !Company::IsValidID(this->slot))
+		    || (config_item.flags & SCRIPTCONFIG_INGAME) != 0
+		    || _settings_client.gui.ai_developer_tools;
+	}
+
+	void SetValue(int value)
+	{
+		VisibleSettingsList::const_iterator it = this->visible_settings.begin();
+		for (int i = 0; i < this->clicked_row; i++) it++;
+		const ScriptConfigItem config_item = **it;
+		if (_game_mode == GM_NORMAL && ((this->slot == OWNER_DEITY) || Company::IsValidID(this->slot)) && (config_item.flags & SCRIPTCONFIG_INGAME) == 0) return;
+		this->ai_config->SetSetting(config_item.name, value);
+		this->SetDirty();
 	}
 };
 
@@ -587,10 +593,11 @@ struct AISettingsWindow : public Window {
 static const NWidgetPart _nested_ai_settings_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
-		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_AIS_CAPTION), SetDataTip(STR_AI_SETTINGS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_AIS_CAPTION), SetDataTip(STR_AI_SETTINGS_CAPTION_AI, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_MAUVE),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIS_BACKGROUND), SetMinimalSize(188, 182), SetResize(1, 1), SetFill(1, 0), SetDataTip(0x501, STR_NULL), SetScrollbar(WID_AIS_SCROLLBAR),
+		NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIS_BACKGROUND), SetMinimalSize(188, 182), SetResize(1, 1), SetFill(1, 0), SetMatrixDataTip(1, 0, STR_NULL), SetScrollbar(WID_AIS_SCROLLBAR),
 		NWidget(NWID_VSCROLLBAR, COLOUR_MAUVE, WID_AIS_SCROLLBAR),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
@@ -603,8 +610,8 @@ static const NWidgetPart _nested_ai_settings_widgets[] = {
 };
 
 /** Window definition for the AI settings window. */
-static const WindowDesc _ai_settings_desc(
-	WDP_CENTER, 500, 208,
+static WindowDesc _ai_settings_desc(
+	WDP_CENTER, "settings_script", 500, 208,
 	WC_AI_SETTINGS, WC_NONE,
 	0,
 	_nested_ai_settings_widgets, lengthof(_nested_ai_settings_widgets)
@@ -616,8 +623,8 @@ static const WindowDesc _ai_settings_desc(
  */
 static void ShowAISettingsWindow(CompanyID slot)
 {
-	DeleteWindowByClass(WC_AI_LIST);
-	DeleteWindowByClass(WC_AI_SETTINGS);
+	CloseWindowByClass(WC_AI_LIST);
+	CloseWindowByClass(WC_AI_SETTINGS);
 	new AISettingsWindow(&_ai_settings_desc, slot);
 }
 
@@ -628,15 +635,24 @@ struct ScriptTextfileWindow : public TextfileWindow {
 
 	ScriptTextfileWindow(TextfileType file_type, CompanyID slot) : TextfileWindow(file_type), slot(slot)
 	{
-		const char *textfile = GetConfig(slot)->GetTextfile(file_type, slot);
-		this->LoadTextfile(textfile, (slot == OWNER_DEITY) ? GAME_DIR : AI_DIR);
+		this->OnInvalidateData();
 	}
 
-	/* virtual */ void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		if (widget == WID_TF_CAPTION) {
 			SetDParam(0, (slot == OWNER_DEITY) ? STR_CONTENT_TYPE_GAME_SCRIPT : STR_CONTENT_TYPE_AI);
-			SetDParamStr(1, GetConfig(slot)->GetName());
+			SetDParamStr(1, GetConfig(slot)->GetInfo()->GetName());
+		}
+	}
+
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	{
+		const char *textfile = GetConfig(slot)->GetTextfile(file_type, slot);
+		if (textfile == nullptr) {
+			this->Close();
+		} else {
+			this->LoadTextfile(textfile, (slot == OWNER_DEITY) ? GAME_DIR : AI_DIR);
 		}
 	}
 };
@@ -648,7 +664,7 @@ struct ScriptTextfileWindow : public TextfileWindow {
  */
 void ShowScriptTextfileWindow(TextfileType file_type, CompanyID slot)
 {
-	DeleteWindowByClass(WC_TEXTFILE);
+	CloseWindowById(WC_TEXTFILE, file_type);
 	new ScriptTextfileWindow(file_type, slot);
 }
 
@@ -657,15 +673,15 @@ void ShowScriptTextfileWindow(TextfileType file_type, CompanyID slot)
 static const NWidgetPart _nested_ai_config_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
-		NWidget(WWT_CAPTION, COLOUR_MAUVE), SetDataTip(STR_AI_CONFIG_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_CAPTION, COLOUR_MAUVE), SetDataTip(STR_AI_CONFIG_CAPTION_AI, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_MAUVE, WID_AIC_BACKGROUND),
 		NWidget(NWID_VERTICAL), SetPIP(4, 4, 4),
 			NWidget(NWID_HORIZONTAL), SetPIP(7, 0, 7),
-				NWidget(WWT_PUSHARROWBTN, COLOUR_YELLOW, WID_AIC_DECREASE), SetFill(0, 1), SetDataTip(AWV_DECREASE, STR_NULL),
-				NWidget(WWT_PUSHARROWBTN, COLOUR_YELLOW, WID_AIC_INCREASE), SetFill(0, 1), SetDataTip(AWV_INCREASE, STR_NULL),
+				NWidget(WWT_PUSHARROWBTN, COLOUR_YELLOW, WID_AIC_DECREASE), SetDataTip(AWV_DECREASE, STR_NULL),
+				NWidget(WWT_PUSHARROWBTN, COLOUR_YELLOW, WID_AIC_INCREASE), SetDataTip(AWV_INCREASE, STR_NULL),
 				NWidget(NWID_SPACER), SetMinimalSize(6, 0),
-				NWidget(WWT_TEXT, COLOUR_MAUVE, WID_AIC_NUMBER), SetDataTip(STR_DIFFICULTY_LEVEL_SETTING_MAXIMUM_NO_COMPETITORS, STR_NULL), SetFill(1, 0), SetPadding(1, 0, 0, 0),
+				NWidget(WWT_TEXT, COLOUR_MAUVE, WID_AIC_NUMBER), SetDataTip(STR_AI_CONFIG_MAX_COMPETITORS, STR_NULL), SetFill(1, 0),
 			EndContainer(),
 			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_MOVE_UP), SetResize(1, 0), SetFill(1, 0), SetDataTip(STR_AI_CONFIG_MOVE_UP, STR_AI_CONFIG_MOVE_UP_TOOLTIP),
@@ -674,31 +690,28 @@ static const NWidgetPart _nested_ai_config_widgets[] = {
 		EndContainer(),
 		NWidget(WWT_FRAME, COLOUR_MAUVE), SetDataTip(STR_AI_CONFIG_AI, STR_NULL), SetPadding(0, 5, 0, 5),
 			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIC_LIST), SetMinimalSize(288, 112), SetFill(1, 0), SetDataTip(0x801, STR_AI_CONFIG_AILIST_TOOLTIP), SetScrollbar(WID_AIC_SCROLLBAR),
+				NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIC_LIST), SetMinimalSize(288, 112), SetFill(1, 0), SetMatrixDataTip(1, 8, STR_AI_CONFIG_AILIST_TOOLTIP), SetScrollbar(WID_AIC_SCROLLBAR),
 				NWidget(NWID_VSCROLLBAR, COLOUR_MAUVE, WID_AIC_SCROLLBAR),
 			EndContainer(),
 		EndContainer(),
 		NWidget(NWID_SPACER), SetMinimalSize(0, 9),
-		NWidget(WWT_FRAME, COLOUR_MAUVE), SetDataTip(STR_AI_CONFIG_GAMESCRIPT, STR_NULL), SetPadding(0, 5, 4, 5),
-			NWidget(WWT_MATRIX, COLOUR_MAUVE, WID_AIC_GAMELIST), SetMinimalSize(288, 14), SetFill(1, 0), SetDataTip(0x101, STR_AI_CONFIG_GAMELIST_TOOLTIP),
+		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CHANGE), SetFill(1, 0), SetMinimalSize(93, 0), SetDataTip(STR_AI_CONFIG_CHANGE_AI, STR_AI_CONFIG_CHANGE_TOOLTIP),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CONFIGURE), SetFill(1, 0), SetMinimalSize(93, 0), SetDataTip(STR_AI_CONFIG_CONFIGURE, STR_AI_CONFIG_CONFIGURE_TOOLTIP),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
 		EndContainer(),
 		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CHANGE), SetFill(1, 0), SetMinimalSize(93, 12), SetDataTip(STR_AI_CONFIG_CHANGE, STR_AI_CONFIG_CHANGE_TOOLTIP),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CONFIGURE), SetFill(1, 0), SetMinimalSize(93, 12), SetDataTip(STR_AI_CONFIG_CONFIGURE, STR_AI_CONFIG_CONFIGURE_TOOLTIP),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CLOSE), SetFill(1, 0), SetMinimalSize(93, 12), SetDataTip(STR_AI_SETTINGS_CLOSE, STR_NULL),
-			EndContainer(),
-		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(7, 0, 7),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_TEXTFILE + TFT_README), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_README, STR_NULL),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CLOSE), SetFill(1, 0), SetMinimalSize(93, 0), SetDataTip(STR_AI_SETTINGS_CLOSE, STR_NULL),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_TEXTFILE + TFT_CHANGELOG), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_CHANGELOG, STR_NULL),
 			NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_TEXTFILE + TFT_LICENSE), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_TEXTFILE_VIEW_LICENCE, STR_NULL),
 		EndContainer(),
-		NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CONTENT_DOWNLOAD), SetFill(1, 0), SetMinimalSize(279, 12), SetPadding(0, 7, 9, 7), SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_YELLOW, WID_AIC_CONTENT_DOWNLOAD), SetFill(1, 0), SetMinimalSize(279, 0), SetPadding(0, 7, 9, 7), SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
 	EndContainer(),
 };
 
 /** Window definition for the configure AI window. */
-static const WindowDesc _ai_config_desc(
-	WDP_CENTER, 0, 0,
+static WindowDesc _ai_config_desc(
+	WDP_CENTER, "settings_script_config", 0, 0,
 	WC_GAME_OPTIONS, WC_NONE,
 	0,
 	_nested_ai_config_widgets, lengthof(_nested_ai_config_widgets)
@@ -712,55 +725,45 @@ struct AIConfigWindow : public Window {
 	int line_height;         ///< Height of a single AI-name line.
 	Scrollbar *vscroll;      ///< Cache of the vertical scrollbar.
 
-	AIConfigWindow() : Window()
+	AIConfigWindow() : Window(&_ai_config_desc)
 	{
-		this->InitNested(&_ai_config_desc, WN_GAME_OPTIONS_AI); // Initializes 'this->line_height' as a side effect.
+		this->InitNested(WN_GAME_OPTIONS_AI); // Initializes 'this->line_height' as a side effect.
 		this->vscroll = this->GetScrollbar(WID_AIC_SCROLLBAR);
 		this->selected_slot = INVALID_COMPANY;
 		NWidgetCore *nwi = this->GetWidget<NWidgetCore>(WID_AIC_LIST);
 		this->vscroll->SetCapacity(nwi->current_y / this->line_height);
 		this->vscroll->SetCount(MAX_COMPANIES);
-		nwi->widget_data = (this->vscroll->GetCapacity() << MAT_ROW_START) + (1 << MAT_COL_START);
 		this->OnInvalidateData(0);
 	}
 
-	~AIConfigWindow()
+	void Close() override
 	{
-		DeleteWindowByClass(WC_AI_LIST);
-		DeleteWindowByClass(WC_AI_SETTINGS);
+		CloseWindowByClass(WC_AI_LIST);
+		CloseWindowByClass(WC_AI_SETTINGS);
+		this->Window::Close();
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
 			case WID_AIC_NUMBER:
 				SetDParam(0, GetGameSettings().difficulty.max_no_competitors);
 				break;
-			case WID_AIC_CHANGE:
-				switch (selected_slot) {
-					case OWNER_DEITY:
-						SetDParam(0, STR_AI_CONFIG_CHANGE_GAMESCRIPT);
-						break;
-
-					case INVALID_COMPANY:
-						SetDParam(0, STR_AI_CONFIG_CHANGE_NONE);
-						break;
-
-					default:
-						SetDParam(0, STR_AI_CONFIG_CHANGE_AI);
-						break;
-				}
-				break;
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
-			case WID_AIC_GAMELIST:
+			case WID_AIC_DECREASE:
+			case WID_AIC_INCREASE:
+				*size = maxdim(*size, NWidgetScrollbar::GetHorizontalDimension());
+				break;
+
 			case WID_AIC_LIST:
-				this->line_height = FONT_HEIGHT_NORMAL + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
-				size->height = GB(this->GetWidget<NWidgetCore>(widget)->widget_data, MAT_ROW_START, MAT_ROW_BITS) * this->line_height;
+				this->line_height = FONT_HEIGHT_NORMAL + padding.height;
+				resize->height = this->line_height;
+				size->height = 8 * this->line_height;
 				break;
 		}
 	}
@@ -772,12 +775,10 @@ struct AIConfigWindow : public Window {
 	 */
 	static bool IsEditable(CompanyID slot)
 	{
-		if (slot == OWNER_DEITY) return _game_mode != GM_NORMAL;
-
 		if (_game_mode != GM_NORMAL) {
 			return slot > 0 && slot <= GetGameSettings().difficulty.max_no_competitors;
 		}
-		if (Company::IsValidID(slot) || slot < 0) return false;
+		if (Company::IsValidID(slot)) return false;
 
 		int max_slot = GetGameSettings().difficulty.max_no_competitors;
 		for (CompanyID cid = COMPANY_FIRST; cid < (CompanyID)max_slot && cid < MAX_COMPANIES; cid++) {
@@ -786,49 +787,35 @@ struct AIConfigWindow : public Window {
 		return slot < max_slot;
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		switch (widget) {
-			case WID_AIC_GAMELIST: {
-				StringID text = STR_AI_CONFIG_NONE;
-
-				if (GameConfig::GetConfig()->GetInfo() != NULL) {
-					SetDParamStr(0, GameConfig::GetConfig()->GetInfo()->GetName());
-					text = STR_JUST_RAW_STRING;
-				}
-
-				DrawString(r.left + 10, r.right - 10, r.top + WD_MATRIX_TOP, text,
-						(this->selected_slot == OWNER_DEITY) ? TC_WHITE : (IsEditable(OWNER_DEITY) ? TC_ORANGE : TC_SILVER));
-
-				break;
-			}
-
 			case WID_AIC_LIST: {
-				int y = r.top;
+				Rect tr = r.Shrink(WidgetDimensions::scaled.matrix);
 				for (int i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && i < MAX_COMPANIES; i++) {
 					StringID text;
 
 					if ((_game_mode != GM_NORMAL && i == 0) || (_game_mode == GM_NORMAL && Company::IsValidHumanID(i))) {
 						text = STR_AI_CONFIG_HUMAN_PLAYER;
-					} else if (AIConfig::GetConfig((CompanyID)i)->GetInfo() != NULL) {
+					} else if (AIConfig::GetConfig((CompanyID)i)->GetInfo() != nullptr) {
 						SetDParamStr(0, AIConfig::GetConfig((CompanyID)i)->GetInfo()->GetName());
 						text = STR_JUST_RAW_STRING;
 					} else {
 						text = STR_AI_CONFIG_RANDOM_AI;
 					}
-					DrawString(r.left + 10, r.right - 10, y + WD_MATRIX_TOP, text,
+					DrawString(tr, text,
 							(this->selected_slot == i) ? TC_WHITE : (IsEditable((CompanyID)i) ? TC_ORANGE : TC_SILVER));
-					y += this->line_height;
+					tr.top += this->line_height;
 				}
 				break;
 			}
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		if (widget >= WID_AIC_TEXTFILE && widget < WID_AIC_TEXTFILE + TFT_END) {
-			if (this->selected_slot == INVALID_COMPANY || GetConfig(this->selected_slot) == NULL) return;
+			if (this->selected_slot == INVALID_COMPANY || GetConfig(this->selected_slot) == nullptr) return;
 
 			ShowScriptTextfileWindow((TextfileType)(widget - WID_AIC_TEXTFILE), this->selected_slot);
 			return;
@@ -839,24 +826,16 @@ struct AIConfigWindow : public Window {
 			case WID_AIC_INCREASE: {
 				int new_value;
 				if (widget == WID_AIC_DECREASE) {
-					new_value = max(0, GetGameSettings().difficulty.max_no_competitors - 1);
+					new_value = std::max(0, GetGameSettings().difficulty.max_no_competitors - 1);
 				} else {
-					new_value = min(MAX_COMPANIES - 1, GetGameSettings().difficulty.max_no_competitors + 1);
+					new_value = std::min(MAX_COMPANIES - 1, GetGameSettings().difficulty.max_no_competitors + 1);
 				}
 				IConsoleSetSetting("difficulty.max_no_competitors", new_value);
-				this->InvalidateData();
-				break;
-			}
-
-			case WID_AIC_GAMELIST: {
-				this->selected_slot = OWNER_DEITY;
-				this->InvalidateData();
-				if (click_count > 1 && this->selected_slot != INVALID_COMPANY) ShowAIListWindow((CompanyID)this->selected_slot);
 				break;
 			}
 
 			case WID_AIC_LIST: { // Select a slot
-				this->selected_slot = (CompanyID)this->vscroll->GetScrolledRowFromWidget(pt.y, this, widget, 0, this->line_height);
+				this->selected_slot = (CompanyID)this->vscroll->GetScrolledRowFromWidget(pt.y, this, widget);
 				this->InvalidateData();
 				if (click_count > 1 && this->selected_slot != INVALID_COMPANY) ShowAIListWindow((CompanyID)this->selected_slot);
 				break;
@@ -889,17 +868,14 @@ struct AIConfigWindow : public Window {
 				break;
 
 			case WID_AIC_CLOSE:
-				delete this;
+				this->Close();
 				break;
 
 			case WID_AIC_CONTENT_DOWNLOAD:
 				if (!_network_available) {
 					ShowErrorMessage(STR_NETWORK_ERROR_NOTAVAILABLE, INVALID_STRING_ID, WL_ERROR);
 				} else {
-#if defined(ENABLE_NETWORK)
-					ShowNetworkContentListWindow(NULL, CONTENT_TYPE_AI);
-					_network_content_client.RequestContentList(CONTENT_TYPE_GAME);
-#endif
+					ShowNetworkContentListWindow(nullptr, CONTENT_TYPE_AI);
 				}
 				break;
 		}
@@ -910,7 +886,7 @@ struct AIConfigWindow : public Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!IsEditable(this->selected_slot)) {
 			this->selected_slot = INVALID_COMPANY;
@@ -922,11 +898,11 @@ struct AIConfigWindow : public Window {
 		this->SetWidgetDisabledState(WID_AIC_INCREASE, GetGameSettings().difficulty.max_no_competitors == MAX_COMPANIES - 1);
 		this->SetWidgetDisabledState(WID_AIC_CHANGE, this->selected_slot == INVALID_COMPANY);
 		this->SetWidgetDisabledState(WID_AIC_CONFIGURE, this->selected_slot == INVALID_COMPANY || GetConfig(this->selected_slot)->GetConfigList()->size() == 0);
-		this->SetWidgetDisabledState(WID_AIC_MOVE_UP, this->selected_slot == OWNER_DEITY || this->selected_slot == INVALID_COMPANY || !IsEditable((CompanyID)(this->selected_slot - 1)));
-		this->SetWidgetDisabledState(WID_AIC_MOVE_DOWN, this->selected_slot == OWNER_DEITY || this->selected_slot == INVALID_COMPANY || !IsEditable((CompanyID)(this->selected_slot + 1)));
+		this->SetWidgetDisabledState(WID_AIC_MOVE_UP, this->selected_slot == INVALID_COMPANY || !IsEditable((CompanyID)(this->selected_slot - 1)));
+		this->SetWidgetDisabledState(WID_AIC_MOVE_DOWN, this->selected_slot == INVALID_COMPANY || !IsEditable((CompanyID)(this->selected_slot + 1)));
 
 		for (TextfileType tft = TFT_BEGIN; tft < TFT_END; tft++) {
-			this->SetWidgetDisabledState(WID_AIC_TEXTFILE + tft, this->selected_slot == INVALID_COMPANY || (GetConfig(this->selected_slot)->GetTextfile(tft, this->selected_slot) == NULL));
+			this->SetWidgetDisabledState(WID_AIC_TEXTFILE + tft, this->selected_slot == INVALID_COMPANY || (GetConfig(this->selected_slot)->GetTextfile(tft, this->selected_slot) == nullptr));
 		}
 	}
 };
@@ -934,7 +910,7 @@ struct AIConfigWindow : public Window {
 /** Open the AI config window. */
 void ShowAIConfigWindow()
 {
-	DeleteWindowByClass(WC_GAME_OPTIONS);
+	CloseWindowByClass(WC_GAME_OPTIONS);
 	new AIConfigWindow();
 }
 
@@ -963,10 +939,7 @@ static bool SetScriptButtonColour(NWidgetCore &button, bool dead, bool paused)
  * Window with everything an AI prints via ScriptLog.
  */
 struct AIDebugWindow : public Window {
-	static const int top_offset;    ///< Offset of the text at the top of the WID_AID_LOG_PANEL.
-	static const int bottom_offset; ///< Offset of the text at the bottom of the WID_AID_LOG_PANEL.
-
-	static const unsigned int MAX_BREAK_STR_STRING_LENGTH = 256; ///< Maximum length of the break string.
+	static const uint MAX_BREAK_STR_STRING_LENGTH = 256;   ///< Maximum length of the break string.
 
 	static CompanyID ai_debug_company;                     ///< The AI that is (was last) being debugged.
 	int redraw_timer;                                      ///< Timer for redrawing the window, otherwise it'll happen every tick.
@@ -995,7 +968,7 @@ struct AIDebugWindow : public Window {
 	{
 		if (ai_debug_company == OWNER_DEITY) {
 			GameInstance *game = Game::GetInstance();
-			return game == NULL || game->IsDead();
+			return game == nullptr || game->IsDead();
 		}
 		return !Company::IsValidAiID(ai_debug_company) || Company::Get(ai_debug_company)->ai_instance->IsDead();
 	}
@@ -1009,7 +982,7 @@ struct AIDebugWindow : public Window {
 	{
 		switch (company) {
 			case INVALID_COMPANY: return false;
-			case OWNER_DEITY:     return Game::GetInstance() != NULL;
+			case OWNER_DEITY:     return Game::GetInstance() != nullptr;
 			default:              return Company::IsValidAiID(company);
 		}
 	}
@@ -1025,8 +998,7 @@ struct AIDebugWindow : public Window {
 
 		ai_debug_company = INVALID_COMPANY;
 
-		const Company *c;
-		FOR_ALL_COMPANIES(c) {
+		for (const Company *c : Company::Iterate()) {
 			if (c->is_ai) {
 				ChangeToAI(c->index);
 				return;
@@ -1034,7 +1006,7 @@ struct AIDebugWindow : public Window {
 		}
 
 		/* If no AI is available, see if there is a game script. */
-		if (Game::GetInstance() != NULL) ChangeToAI(OWNER_DEITY);
+		if (Game::GetInstance() != nullptr) ChangeToAI(OWNER_DEITY);
 	}
 
 	/**
@@ -1042,13 +1014,13 @@ struct AIDebugWindow : public Window {
 	 * @param desc The description of the window.
 	 * @param number The window number (actually unused).
 	 */
-	AIDebugWindow(const WindowDesc *desc, WindowNumber number) : break_editbox(MAX_BREAK_STR_STRING_LENGTH)
+	AIDebugWindow(WindowDesc *desc, WindowNumber number) : Window(desc), break_editbox(MAX_BREAK_STR_STRING_LENGTH)
 	{
-		this->CreateNestedTree(desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_AID_SCROLLBAR);
 		this->show_break_box = _settings_client.gui.ai_developer_tools;
 		this->GetWidget<NWidgetStacked>(WID_AID_BREAK_STRING_WIDGETS)->SetDisplayedPlane(this->show_break_box ? 0 : SZSP_HORIZONTAL);
-		this->FinishInitNested(desc, number);
+		this->FinishInitNested(number);
 
 		if (!this->show_break_box) break_check_enabled = false;
 
@@ -1058,6 +1030,8 @@ struct AIDebugWindow : public Window {
 
 		this->querystrings[WID_AID_BREAK_STR_EDIT_BOX] = &this->break_editbox;
 
+		SetWidgetsDisabledState(!this->show_break_box, WID_AID_BREAK_STR_ON_OFF_BTN, WID_AID_BREAK_STR_EDIT_BOX, WID_AID_MATCH_CASE_BTN, WIDGET_LIST_END);
+
 		/* Restore the break string value from static variable */
 		this->break_editbox.text.Assign(this->break_string);
 
@@ -1065,15 +1039,15 @@ struct AIDebugWindow : public Window {
 		this->InvalidateData(-1);
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget == WID_AID_LOG_PANEL) {
-			resize->height = FONT_HEIGHT_NORMAL + WD_PAR_VSEP_NORMAL;
-			size->height = 14 * resize->height + this->top_offset + this->bottom_offset;
+			resize->height = FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal;
+			size->height = 14 * resize->height + WidgetDimensions::scaled.framerect.Vertical();
 		}
 	}
 
-	virtual void OnPaint()
+	void OnPaint() override
 	{
 		this->SelectValidDebugCompany();
 
@@ -1109,7 +1083,7 @@ struct AIDebugWindow : public Window {
 
 		/* Set button colour for Game Script. */
 		GameInstance *game = Game::GetInstance();
-		bool valid = game != NULL;
+		bool valid = game != nullptr;
 		bool dead = valid && game->IsDead();
 		bool paused = valid && game->IsPaused();
 
@@ -1123,7 +1097,7 @@ struct AIDebugWindow : public Window {
 
 		ScriptLog::LogData *log = this->GetLogPointer();
 
-		int scroll_count = (log == NULL) ? 0 : log->used;
+		int scroll_count = (log == nullptr) ? 0 : log->used;
 		if (this->vscroll->GetCount() != scroll_count) {
 			this->vscroll->SetCount(scroll_count);
 
@@ -1131,7 +1105,7 @@ struct AIDebugWindow : public Window {
 			this->SetWidgetDirty(WID_AID_SCROLLBAR);
 		}
 
-		if (log == NULL) return;
+		if (log == nullptr) return;
 
 		/* Detect when the user scrolls the window. Enable autoscroll when the
 		 * bottom-most line becomes visible. */
@@ -1139,10 +1113,8 @@ struct AIDebugWindow : public Window {
 			this->autoscroll = this->vscroll->GetPosition() >= log->used - this->vscroll->GetCapacity();
 		}
 		if (this->autoscroll) {
-			int scroll_pos = max(0, log->used - this->vscroll->GetCapacity());
-			if (scroll_pos != this->vscroll->GetPosition()) {
-				this->vscroll->SetPosition(scroll_pos);
-
+			int scroll_pos = std::max(0, log->used - this->vscroll->GetCapacity());
+			if (this->vscroll->SetPosition(scroll_pos)) {
 				/* We need a repaint */
 				this->SetWidgetDirty(WID_AID_SCROLLBAR);
 				this->SetWidgetDirty(WID_AID_LOG_PANEL);
@@ -1151,13 +1123,13 @@ struct AIDebugWindow : public Window {
 		this->last_vscroll_pos = this->vscroll->GetPosition();
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
 			case WID_AID_NAME_TEXT:
 				if (ai_debug_company == OWNER_DEITY) {
 					const GameInfo *info = Game::GetInfo();
-					assert(info != NULL);
+					assert(info != nullptr);
 					SetDParam(0, STR_AI_DEBUG_NAME_AND_VERSION);
 					SetDParamStr(1, info->GetName());
 					SetDParam(2, info->GetVersion());
@@ -1165,7 +1137,7 @@ struct AIDebugWindow : public Window {
 					SetDParam(0, STR_EMPTY);
 				} else {
 					const AIInfo *info = Company::Get(ai_debug_company)->ai_info;
-					assert(info != NULL);
+					assert(info != nullptr);
 					SetDParam(0, STR_AI_DEBUG_NAME_AND_VERSION);
 					SetDParamStr(1, info->GetName());
 					SetDParam(2, info->GetVersion());
@@ -1174,19 +1146,20 @@ struct AIDebugWindow : public Window {
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (ai_debug_company == INVALID_COMPANY) return;
 
 		switch (widget) {
 			case WID_AID_LOG_PANEL: {
 				ScriptLog::LogData *log = this->GetLogPointer();
-				if (log == NULL) return;
+				if (log == nullptr) return;
 
-				int y = this->top_offset;
+				Rect br = r.Shrink(WidgetDimensions::scaled.bevel);
+				Rect tr = r.Shrink(WidgetDimensions::scaled.framerect);
 				for (int i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && i < log->used; i++) {
 					int pos = (i + log->pos + 1 - log->used + log->count) % log->count;
-					if (log->lines[pos] == NULL) break;
+					if (log->lines[pos] == nullptr) break;
 
 					TextColour colour;
 					switch (log->type[pos]) {
@@ -1200,12 +1173,12 @@ struct AIDebugWindow : public Window {
 
 					/* Check if the current line should be highlighted */
 					if (pos == this->highlight_row) {
-						GfxFillRect(r.left + 1, r.top + y, r.right - 1, r.top + y + this->resize.step_height - WD_PAR_VSEP_NORMAL, PC_BLACK);
+						GfxFillRect(br.left, tr.top, br.right, tr.top + this->resize.step_height - 1, PC_BLACK);
 						if (colour == TC_BLACK) colour = TC_WHITE; // Make black text readable by inverting it to white.
 					}
 
-					DrawString(r.left + 7, r.right - 7, r.top + y, log->lines[pos], colour, SA_LEFT | SA_FORCE);
-					y += this->resize.step_height;
+					DrawString(tr, log->lines[pos], colour, SA_LEFT | SA_FORCE);
+					tr.top += this->resize.step_height;
 				}
 				break;
 			}
@@ -1225,7 +1198,7 @@ struct AIDebugWindow : public Window {
 		this->highlight_row = -1; // The highlight of one AI make little sense for another AI.
 
 		/* Close AI settings window to prevent confusion */
-		DeleteWindowByClass(WC_AI_SETTINGS);
+		CloseWindowByClass(WC_AI_SETTINGS);
 
 		this->InvalidateData(-1);
 
@@ -1233,7 +1206,7 @@ struct AIDebugWindow : public Window {
 		this->last_vscroll_pos = this->vscroll->GetPosition();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		/* Also called for hotkeys, so check for disabledness */
 		if (this->IsWidgetDisabled(widget)) return;
@@ -1251,8 +1224,8 @@ struct AIDebugWindow : public Window {
 			case WID_AID_RELOAD_TOGGLE:
 				if (ai_debug_company == OWNER_DEITY) break;
 				/* First kill the company of the AI, then start a new one. This should start the current AI again */
-				DoCommandP(0, 2 | ai_debug_company << 16, CRR_MANUAL, CMD_COMPANY_CTRL);
-				DoCommandP(0, 1 | ai_debug_company << 16, 0, CMD_COMPANY_CTRL);
+				Command<CMD_COMPANY_CTRL>::Post(CCA_DELETE, ai_debug_company, CRR_MANUAL, INVALID_CLIENT_ID);
+				Command<CMD_COMPANY_CTRL>::Post(CCA_NEW_AI, ai_debug_company, CRR_NONE, INVALID_CLIENT_ID);
 				break;
 
 			case WID_AID_SETTINGS:
@@ -1283,8 +1256,7 @@ struct AIDebugWindow : public Window {
 				if ((_pause_mode & PM_PAUSED_NORMAL) == PM_PAUSED_NORMAL) {
 					bool all_unpaused = !Game::IsPaused();
 					if (all_unpaused) {
-						Company *c;
-						FOR_ALL_COMPANIES(c) {
+						for (const Company *c : Company::Iterate()) {
 							if (c->is_ai && AI::IsPaused(c->index)) {
 								all_unpaused = false;
 								break;
@@ -1292,7 +1264,7 @@ struct AIDebugWindow : public Window {
 						}
 						if (all_unpaused) {
 							/* All scripts have been unpaused => unpause the game. */
-							DoCommandP(0, PM_PAUSED_NORMAL, 0, CMD_PAUSE);
+							Command<CMD_PAUSE>::Post(PM_PAUSED_NORMAL, false);
 						}
 					}
 				}
@@ -1303,24 +1275,7 @@ struct AIDebugWindow : public Window {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
-	{
-		EventState state = ES_NOT_HANDLED;
-		int num = CheckHotkeyMatch(aidebug_hotkeys, keycode, this);
-		if (num != -1) {
-			if (this->show_break_box && num == WID_AID_BREAK_STR_EDIT_BOX) {
-				this->SetFocusedWidget(WID_AID_BREAK_STR_EDIT_BOX);
-				SetFocusedWindow(this);
-				state = ES_HANDLED;
-			} else if (this->show_break_box || num < WID_AID_BREAK_STRING_WIDGETS) {
-				this->OnClick(Point(), num, 1);
-				state = ES_HANDLED;
-			}
-		}
-		return state;
-	}
-
-	virtual void OnEditboxChanged(int wid)
+	void OnEditboxChanged(int wid) override
 	{
 		if (wid == WID_AID_BREAK_STR_EDIT_BOX) {
 			/* Save the current string to static member so it can be restored next time the window is opened. */
@@ -1335,7 +1290,7 @@ struct AIDebugWindow : public Window {
 	 *             This is the company ID of the AI/GS which wrote a new log message, or -1 in other cases.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		/* If the log message is related to the active company tab, check the break string.
 		 * This needs to be done in gameloop-scope, so the AI is suspended immediately. */
@@ -1343,7 +1298,7 @@ struct AIDebugWindow : public Window {
 			/* Get the log instance of the active company */
 			ScriptLog::LogData *log = this->GetLogPointer();
 
-			if (log != NULL) {
+			if (log != nullptr) {
 				this->break_string_filter.ResetState();
 				this->break_string_filter.AddLine(log->lines[log->pos]);
 				if (this->break_string_filter.GetState()) {
@@ -1358,7 +1313,7 @@ struct AIDebugWindow : public Window {
 
 					/* Pause the game. */
 					if ((_pause_mode & PM_PAUSED_NORMAL) == PM_UNPAUSED) {
-						DoCommandP(0, PM_PAUSED_NORMAL, 1, CMD_PAUSE);
+						Command<CMD_PAUSE>::Post(PM_PAUSED_NORMAL, true);
 					}
 
 					/* Highlight row that matched */
@@ -1371,8 +1326,8 @@ struct AIDebugWindow : public Window {
 
 		this->SelectValidDebugCompany();
 
-		ScriptLog::LogData *log = ai_debug_company != INVALID_COMPANY ? this->GetLogPointer() : NULL;
-		this->vscroll->SetCount((log == NULL) ? 0 : log->used);
+		ScriptLog::LogData *log = ai_debug_company != INVALID_COMPANY ? this->GetLogPointer() : nullptr;
+		this->vscroll->SetCount((log == nullptr) ? 0 : log->used);
 
 		/* Update company buttons */
 		for (CompanyID i = COMPANY_FIRST; i < MAX_COMPANIES; i++) {
@@ -1380,28 +1335,27 @@ struct AIDebugWindow : public Window {
 			this->SetWidgetLoweredState(i + WID_AID_COMPANY_BUTTON_START, ai_debug_company == i);
 		}
 
-		this->SetWidgetDisabledState(WID_AID_SCRIPT_GAME, Game::GetGameInstance() == NULL);
+		this->SetWidgetDisabledState(WID_AID_SCRIPT_GAME, Game::GetGameInstance() == nullptr);
 		this->SetWidgetLoweredState(WID_AID_SCRIPT_GAME, ai_debug_company == OWNER_DEITY);
 
 		this->SetWidgetLoweredState(WID_AID_BREAK_STR_ON_OFF_BTN, this->break_check_enabled);
 		this->SetWidgetLoweredState(WID_AID_MATCH_CASE_BTN, this->case_sensitive_break_check);
 
 		this->SetWidgetDisabledState(WID_AID_SETTINGS, ai_debug_company == INVALID_COMPANY);
-		this->SetWidgetDisabledState(WID_AID_RELOAD_TOGGLE, ai_debug_company == INVALID_COMPANY || ai_debug_company == OWNER_DEITY);
+		extern CompanyID _local_company;
+		this->SetWidgetDisabledState(WID_AID_RELOAD_TOGGLE, ai_debug_company == INVALID_COMPANY || ai_debug_company == OWNER_DEITY || ai_debug_company == _local_company);
 		this->SetWidgetDisabledState(WID_AID_CONTINUE_BTN, ai_debug_company == INVALID_COMPANY ||
 				(ai_debug_company == OWNER_DEITY ? !Game::IsPaused() : !AI::IsPaused(ai_debug_company)));
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
-		this->vscroll->SetCapacityFromWidget(this, WID_AID_LOG_PANEL);
+		this->vscroll->SetCapacityFromWidget(this, WID_AID_LOG_PANEL, WidgetDimensions::scaled.framerect.Vertical());
 	}
 
-	static Hotkey<AIDebugWindow> aidebug_hotkeys[];
+	static HotkeyList hotkeys;
 };
 
-const int AIDebugWindow::top_offset = WD_FRAMERECT_TOP + 2;
-const int AIDebugWindow::bottom_offset = WD_FRAMERECT_BOTTOM;
 CompanyID AIDebugWindow::ai_debug_company = INVALID_COMPANY;
 char AIDebugWindow::break_string[MAX_BREAK_STR_STRING_LENGTH] = "";
 bool AIDebugWindow::break_check_enabled = true;
@@ -1411,35 +1365,48 @@ StringFilter AIDebugWindow::break_string_filter(&AIDebugWindow::case_sensitive_b
 /** Make a number of rows with buttons for each company for the AI debug window. */
 NWidgetBase *MakeCompanyButtonRowsAIDebug(int *biggest_index)
 {
-	return MakeCompanyButtonRows(biggest_index, WID_AID_COMPANY_BUTTON_START, WID_AID_COMPANY_BUTTON_END, 8, STR_AI_DEBUG_SELECT_AI_TOOLTIP);
+	return MakeCompanyButtonRows(biggest_index, WID_AID_COMPANY_BUTTON_START, WID_AID_COMPANY_BUTTON_END, COLOUR_GREY, 8, STR_AI_DEBUG_SELECT_AI_TOOLTIP);
 }
 
-Hotkey<AIDebugWindow> AIDebugWindow::aidebug_hotkeys[] = {
-	Hotkey<AIDebugWindow>('1', "company_1", WID_AID_COMPANY_BUTTON_START),
-	Hotkey<AIDebugWindow>('2', "company_2", WID_AID_COMPANY_BUTTON_START + 1),
-	Hotkey<AIDebugWindow>('3', "company_3", WID_AID_COMPANY_BUTTON_START + 2),
-	Hotkey<AIDebugWindow>('4', "company_4", WID_AID_COMPANY_BUTTON_START + 3),
-	Hotkey<AIDebugWindow>('5', "company_5", WID_AID_COMPANY_BUTTON_START + 4),
-	Hotkey<AIDebugWindow>('6', "company_6", WID_AID_COMPANY_BUTTON_START + 5),
-	Hotkey<AIDebugWindow>('7', "company_7", WID_AID_COMPANY_BUTTON_START + 6),
-	Hotkey<AIDebugWindow>('8', "company_8", WID_AID_COMPANY_BUTTON_START + 7),
-	Hotkey<AIDebugWindow>('9', "company_9", WID_AID_COMPANY_BUTTON_START + 8),
-	Hotkey<AIDebugWindow>((uint16)0, "company_10", WID_AID_COMPANY_BUTTON_START + 9),
-	Hotkey<AIDebugWindow>((uint16)0, "company_11", WID_AID_COMPANY_BUTTON_START + 10),
-	Hotkey<AIDebugWindow>((uint16)0, "company_12", WID_AID_COMPANY_BUTTON_START + 11),
-	Hotkey<AIDebugWindow>((uint16)0, "company_13", WID_AID_COMPANY_BUTTON_START + 12),
-	Hotkey<AIDebugWindow>((uint16)0, "company_14", WID_AID_COMPANY_BUTTON_START + 13),
-	Hotkey<AIDebugWindow>((uint16)0, "company_15", WID_AID_COMPANY_BUTTON_START + 14),
-	Hotkey<AIDebugWindow>('S', "settings", WID_AID_SETTINGS),
-	Hotkey<AIDebugWindow>('0', "game_script", WID_AID_SCRIPT_GAME),
-	Hotkey<AIDebugWindow>((uint16)0, "reload", WID_AID_RELOAD_TOGGLE),
-	Hotkey<AIDebugWindow>('B', "break_toggle", WID_AID_BREAK_STR_ON_OFF_BTN),
-	Hotkey<AIDebugWindow>('F', "break_string", WID_AID_BREAK_STR_EDIT_BOX),
-	Hotkey<AIDebugWindow>('C', "match_case", WID_AID_MATCH_CASE_BTN),
-	Hotkey<AIDebugWindow>(WKC_RETURN, "continue", WID_AID_CONTINUE_BTN),
-	HOTKEY_LIST_END(AIDebugWindow)
+/**
+ * Handler for global hotkeys of the AIDebugWindow.
+ * @param hotkey Hotkey
+ * @return ES_HANDLED if hotkey was accepted.
+ */
+static EventState AIDebugGlobalHotkeys(int hotkey)
+{
+	if (_game_mode != GM_NORMAL) return ES_NOT_HANDLED;
+	Window *w = ShowAIDebugWindow(INVALID_COMPANY);
+	if (w == nullptr) return ES_NOT_HANDLED;
+	return w->OnHotkey(hotkey);
+}
+
+static Hotkey aidebug_hotkeys[] = {
+	Hotkey('1', "company_1", WID_AID_COMPANY_BUTTON_START),
+	Hotkey('2', "company_2", WID_AID_COMPANY_BUTTON_START + 1),
+	Hotkey('3', "company_3", WID_AID_COMPANY_BUTTON_START + 2),
+	Hotkey('4', "company_4", WID_AID_COMPANY_BUTTON_START + 3),
+	Hotkey('5', "company_5", WID_AID_COMPANY_BUTTON_START + 4),
+	Hotkey('6', "company_6", WID_AID_COMPANY_BUTTON_START + 5),
+	Hotkey('7', "company_7", WID_AID_COMPANY_BUTTON_START + 6),
+	Hotkey('8', "company_8", WID_AID_COMPANY_BUTTON_START + 7),
+	Hotkey('9', "company_9", WID_AID_COMPANY_BUTTON_START + 8),
+	Hotkey((uint16)0, "company_10", WID_AID_COMPANY_BUTTON_START + 9),
+	Hotkey((uint16)0, "company_11", WID_AID_COMPANY_BUTTON_START + 10),
+	Hotkey((uint16)0, "company_12", WID_AID_COMPANY_BUTTON_START + 11),
+	Hotkey((uint16)0, "company_13", WID_AID_COMPANY_BUTTON_START + 12),
+	Hotkey((uint16)0, "company_14", WID_AID_COMPANY_BUTTON_START + 13),
+	Hotkey((uint16)0, "company_15", WID_AID_COMPANY_BUTTON_START + 14),
+	Hotkey('S', "settings", WID_AID_SETTINGS),
+	Hotkey('0', "game_script", WID_AID_SCRIPT_GAME),
+	Hotkey((uint16)0, "reload", WID_AID_RELOAD_TOGGLE),
+	Hotkey('B', "break_toggle", WID_AID_BREAK_STR_ON_OFF_BTN),
+	Hotkey('F', "break_string", WID_AID_BREAK_STR_EDIT_BOX),
+	Hotkey('C', "match_case", WID_AID_MATCH_CASE_BTN),
+	Hotkey(WKC_RETURN, "continue", WID_AID_CONTINUE_BTN),
+	HOTKEY_LIST_END
 };
-Hotkey<AIDebugWindow> *_aidebug_hotkeys = AIDebugWindow::aidebug_hotkeys;
+HotkeyList AIDebugWindow::hotkeys("aidebug", aidebug_hotkeys, AIDebugGlobalHotkeys);
 
 /** Widgets for the AI debug window. */
 static const NWidgetPart _nested_ai_debug_widgets[] = {
@@ -1447,6 +1414,7 @@ static const NWidgetPart _nested_ai_debug_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_AI_DEBUG, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_AID_VIEW),
@@ -1486,11 +1454,12 @@ static const NWidgetPart _nested_ai_debug_widgets[] = {
 };
 
 /** Window definition for the AI debug window. */
-static const WindowDesc _ai_debug_desc(
-	WDP_AUTO, 600, 450,
+static WindowDesc _ai_debug_desc(
+	WDP_AUTO, "script_debug", 600, 450,
 	WC_AI_DEBUG, WC_NONE,
 	0,
-	_nested_ai_debug_widgets, lengthof(_nested_ai_debug_widgets)
+	_nested_ai_debug_widgets, lengthof(_nested_ai_debug_widgets),
+	&AIDebugWindow::hotkeys
 );
 
 /**
@@ -1501,26 +1470,14 @@ Window *ShowAIDebugWindow(CompanyID show_company)
 {
 	if (!_networking || _network_server) {
 		AIDebugWindow *w = (AIDebugWindow *)BringWindowToFrontById(WC_AI_DEBUG, 0);
-		if (w == NULL) w = new AIDebugWindow(&_ai_debug_desc, 0);
+		if (w == nullptr) w = new AIDebugWindow(&_ai_debug_desc, 0);
 		if (show_company != INVALID_COMPANY) w->ChangeToAI(show_company);
 		return w;
 	} else {
 		ShowErrorMessage(STR_ERROR_AI_DEBUG_SERVER_ONLY, INVALID_STRING_ID, WL_INFO);
 	}
 
-	return NULL;
-}
-
-/**
- * Handler for global AI debug window hotkeys.
- */
-EventState AIDebugGlobalHotkeys(uint16 key, uint16 keycode)
-{
-	int num = CheckHotkeyMatch<AIDebugWindow>(_aidebug_hotkeys, keycode, NULL, true);
-	if (num == -1) return ES_NOT_HANDLED;
-	Window *w = ShowAIDebugWindow(INVALID_COMPANY);
-	if (w == NULL) return ES_NOT_HANDLED;
-	return w->OnKeyPress(key, keycode);
+	return nullptr;
 }
 
 /**
@@ -1537,8 +1494,7 @@ void ShowAIDebugWindowIfAIError()
 	/* Network clients can't debug AIs. */
 	if (_networking && !_network_server) return;
 
-	Company *c;
-	FOR_ALL_COMPANIES(c) {
+	for (const Company *c : Company::Iterate()) {
 		if (c->is_ai && c->ai_instance->IsDead()) {
 			ShowAIDebugWindow(c->index);
 			break;
@@ -1546,7 +1502,7 @@ void ShowAIDebugWindowIfAIError()
 	}
 
 	GameInstance *g = Game::GetGameInstance();
-	if (g != NULL && g->IsDead()) {
+	if (g != nullptr && g->IsDead()) {
 		ShowAIDebugWindow(OWNER_DEITY);
 	}
 }
