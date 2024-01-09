@@ -62,7 +62,7 @@ struct TileIndexDiffC {
 /** Minimal and maximal map width and height */
 static const uint MIN_MAP_SIZE_BITS = 6;                      ///< Minimal size of map is equal to 2 ^ MIN_MAP_SIZE_BITS
 static const uint MAX_MAP_SIZE_BITS = 20;                     ///< Maximal size of map is equal to 2 ^ MAX_MAP_SIZE_BITS
-static const uint MAX_MAP_TILES_BITS = 26;                    ///< Maximal number of tiles in a map is equal to 2 ^ MAX_MAP_TILES_BITS.
+static const uint MAX_MAP_TILES_BITS = 28;                    ///< Maximal number of tiles in a map is equal to 2 ^ MAX_MAP_TILES_BITS.
 static const uint MIN_MAP_SIZE      = 1 << MIN_MAP_SIZE_BITS; ///< Minimal map size = 64
 static const uint MAX_MAP_SIZE      = 1 << MAX_MAP_SIZE_BITS; ///< Maximal map size = 8192
 static const uint MAX_MAP_TILES     = 1 << MAX_MAP_TILES_BITS;///< Maximal number of tiles in a map = 2048 * 2048
