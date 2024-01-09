@@ -27,7 +27,7 @@
  * Do not allow images for which the longest side is twice the maximum number of
  * tiles along the longest side of the (tile) map.
  */
-static const uint MAX_HEIGHTMAP_SIDE_LENGTH_IN_PIXELS = 2 * MAX_MAP_SIZE;
+static const uint MAX_HEIGHTMAP_SIDE_LENGTH_IN_PIXELS = 2 * (1 << 16);
 
 /*
  * Maximum size in pixels of the heightmap image.

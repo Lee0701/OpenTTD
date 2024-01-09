@@ -18,6 +18,7 @@
 #include "sound_func.h"
 #include "fios.h"
 #include "string_func.h"
+#include "gui.h"
 #include "widgets/dropdown_type.h"
 #include "widgets/dropdown_func.h"
 #include "querystring_gui.h"
@@ -352,13 +353,38 @@ static void LandscapeGenerationCallback(Window *w, bool confirmed)
 	if (confirmed) StartGeneratingLandscape((GenerateLandscapeWindowMode)w->window_number);
 }
 
-static DropDownList BuildMapsizeDropDown()
+/**
+ * Check if map size set lies in allowed boundaries.
+ * @param print_warning If set to true, messagebox with warning is printed out if size is outside limits.
+ * @return true if size is ok, false otherwise.
+ */
+static bool CheckMapSize(bool print_warning = true)
+{
+	uint64 tiles = 1ULL << (_settings_newgame.game_creation.map_x + _settings_newgame.game_creation.map_y);
+
+	if (_settings_newgame.game_creation.map_x + _settings_newgame.game_creation.map_y > MAX_MAP_TILES_BITS) {
+		if (print_warning) {
+			SetDParam(0, MAX_MAP_TILES);
+			SetDParam(1, tiles);
+			ShowErrorMessage(STR_MAPGEN_TOO_MANY_TILES_MESSAGE, INVALID_STRING_ID, WL_ERROR, 0, 0);
+		}
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Build dropdown list with map sizes
+ * Dimension selected in the other dropdown is used to suggest which choices are 'valid'
+ * @param other_dimension Dimension specified by the second dropdown.
+ */
+static DropDownList BuildMapsizeDropDown(int other_dimension)
 {
 	DropDownList list;
 
 	for (uint i = MIN_MAP_SIZE_BITS; i <= MAX_MAP_SIZE_BITS; i++) {
-		DropDownListParamStringItem *item = new DropDownListParamStringItem(STR_JUST_INT, i, false);
-		item->SetParam(0, 1LL << i);
+		DropDownListParamStringItem *item = new DropDownListParamStringItem((i + other_dimension > MAX_MAP_TILES_BITS) ? STR_RED_INT : STR_JUST_INT, i, false);
+		item->SetParam(0, 1 << i);
 		list.emplace_back(item);
 	}
 
@@ -412,6 +438,14 @@ struct GenerateLandscapeWindow : public Window {
 	char name[64];
 	GenerateLandscapeWindowMode mode;
 
+	void SetDropDownColor()
+	{
+		/* Draw sizes in mapsize selection dropdowns in red if too large size is selected */
+		bool mapsize_valid = CheckMapSize(false);
+		this->GetWidget<NWidgetCore>(WID_GL_MAPSIZE_X_PULLDOWN)->widget_data = mapsize_valid ? STR_JUST_INT : STR_RED_INT;
+		this->GetWidget<NWidgetCore>(WID_GL_MAPSIZE_Y_PULLDOWN)->widget_data = mapsize_valid ? STR_JUST_INT : STR_RED_INT;
+	}
+
 	GenerateLandscapeWindow(WindowDesc *desc, WindowNumber number = 0) : Window(desc)
 	{
 		this->InitNested(number);
@@ -419,6 +453,8 @@ struct GenerateLandscapeWindow : public Window {
 		this->LowerWidget(_settings_newgame.game_creation.landscape + WID_GL_TEMPERATE);
 
 		this->mode = (GenerateLandscapeWindowMode)this->window_number;
+
+		SetDropDownColor();
 
 		/* Disable town and industry in SE */
 		this->SetWidgetDisabledState(WID_GL_TOWN_PULLDOWN,     _game_mode == GM_EDITOR);
@@ -693,11 +729,11 @@ struct GenerateLandscapeWindow : public Window {
 				break;
 
 			case WID_GL_MAPSIZE_X_PULLDOWN: // Mapsize X
-				ShowDropDownList(this, BuildMapsizeDropDown(), _settings_newgame.game_creation.map_x, WID_GL_MAPSIZE_X_PULLDOWN);
+				ShowDropDownList(this, BuildMapsizeDropDown(_settings_newgame.game_creation.map_y), _settings_newgame.game_creation.map_x, WID_GL_MAPSIZE_X_PULLDOWN);
 				break;
 
 			case WID_GL_MAPSIZE_Y_PULLDOWN: // Mapsize Y
-				ShowDropDownList(this, BuildMapsizeDropDown(), _settings_newgame.game_creation.map_y, WID_GL_MAPSIZE_Y_PULLDOWN);
+				ShowDropDownList(this, BuildMapsizeDropDown(_settings_newgame.game_creation.map_x), _settings_newgame.game_creation.map_y, WID_GL_MAPSIZE_Y_PULLDOWN);
 				break;
 
 			case WID_GL_TOWN_PULLDOWN: // Number of towns
@@ -713,6 +749,7 @@ struct GenerateLandscapeWindow : public Window {
 				break;
 
 			case WID_GL_GENERATE_BUTTON: { // Generate
+				if (!CheckMapSize()) break;
 				/* Get rotated map size. */
 				uint map_x;
 				uint map_y;
@@ -905,8 +942,14 @@ struct GenerateLandscapeWindow : public Window {
 	void OnDropdownSelect(int widget, int index) override
 	{
 		switch (widget) {
-			case WID_GL_MAPSIZE_X_PULLDOWN:     _settings_newgame.game_creation.map_x = index; break;
-			case WID_GL_MAPSIZE_Y_PULLDOWN:     _settings_newgame.game_creation.map_y = index; break;
+			case WID_GL_MAPSIZE_X_PULLDOWN:
+				_settings_newgame.game_creation.map_x = index;
+				SetDropDownColor();
+				break;
+			case WID_GL_MAPSIZE_Y_PULLDOWN:
+				_settings_newgame.game_creation.map_y = index;
+				SetDropDownColor();
+				break;
 			case WID_GL_RIVER_PULLDOWN:         _settings_newgame.game_creation.amount_of_rivers = index; break;
 			case WID_GL_SMOOTHNESS_PULLDOWN:    _settings_newgame.game_creation.tgen_smoothness = index;  break;
 			case WID_GL_VARIETY_PULLDOWN:       _settings_newgame.game_creation.variety = index; break;
@@ -1108,10 +1151,19 @@ struct CreateScenarioWindow : public Window
 {
 	uint widget_id;
 
+	void SetDropDownColor()
+	{
+		/* Draw sizes in mapsize selection dropdowns in red if too large size is selected */
+		bool mapsize_valid = CheckMapSize(false);
+		this->GetWidget<NWidgetCore>(WID_CS_MAPSIZE_X_PULLDOWN)->widget_data = mapsize_valid ? STR_JUST_INT : STR_RED_INT;
+		this->GetWidget<NWidgetCore>(WID_CS_MAPSIZE_Y_PULLDOWN)->widget_data = mapsize_valid ? STR_JUST_INT : STR_RED_INT;
+	}
+
 	CreateScenarioWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
 	{
 		this->InitNested(window_number);
 		this->LowerWidget(_settings_newgame.game_creation.landscape + WID_CS_TEMPERATE);
+		SetDropDownColor();
 	}
 
 	void SetStringParameters(int widget) const override
@@ -1134,6 +1186,8 @@ struct CreateScenarioWindow : public Window
 				break;
 		}
 	}
+
+
 
 	void OnPaint() override
 	{
@@ -1188,18 +1242,20 @@ struct CreateScenarioWindow : public Window
 				break;
 
 			case WID_CS_MAPSIZE_X_PULLDOWN: // Mapsize X
-				ShowDropDownList(this, BuildMapsizeDropDown(), _settings_newgame.game_creation.map_x, WID_CS_MAPSIZE_X_PULLDOWN);
+				ShowDropDownList(this, BuildMapsizeDropDown(_settings_newgame.game_creation.map_y), _settings_newgame.game_creation.map_x, WID_CS_MAPSIZE_X_PULLDOWN);
 				break;
 
 			case WID_CS_MAPSIZE_Y_PULLDOWN: // Mapsize Y
-				ShowDropDownList(this, BuildMapsizeDropDown(), _settings_newgame.game_creation.map_y, WID_CS_MAPSIZE_Y_PULLDOWN);
+				ShowDropDownList(this, BuildMapsizeDropDown(_settings_newgame.game_creation.map_x), _settings_newgame.game_creation.map_y, WID_CS_MAPSIZE_Y_PULLDOWN);
 				break;
 
 			case WID_CS_EMPTY_WORLD: // Empty world / flat world
+				if (!CheckMapSize()) break;
 				StartGeneratingLandscape(GLWM_SCENARIO);
 				break;
 
 			case WID_CS_RANDOM_WORLD: // Generate
+				if (!CheckMapSize()) break;
 				ShowGenerateLandscape();
 				break;
 
@@ -1258,6 +1314,8 @@ struct CreateScenarioWindow : public Window
 			case WID_CS_MAPSIZE_X_PULLDOWN: _settings_newgame.game_creation.map_x = index; break;
 			case WID_CS_MAPSIZE_Y_PULLDOWN: _settings_newgame.game_creation.map_y = index; break;
 		}
+		SetDropDownColor();
+
 		this->SetDirty();
 	}
 

@@ -821,8 +821,8 @@ static void TileLoop_Trees(TileIndex tile)
  */
 bool DecrementTreeCounter()
 {
-	/* Ensure _trees_tick_ctr can be decremented past zero only once for the largest map size. */
-	static_assert(2 * (MAX_MAP_SIZE_BITS - MIN_MAP_SIZE_BITS) - 4 <= std::numeric_limits<byte>::digits);
+	uint scaled_map_size = ScaleByMapSize(1);
+	if (scaled_map_size >= 256) return scaled_map_size >> 8;
 
 	/* byte underflow */
 	byte old_trees_tick_ctr = _trees_tick_ctr;
