@@ -255,7 +255,7 @@ std::vector<uint8> GenerateGeneralPasswordHash(const std::string &password, cons
  */
 bool NetworkCompanyIsPassworded(CompanyID company_id)
 {
-	return _networking && company_id < MAX_COMPANIES && HasBit(_network_company_passworded, company_id);
+	return _networking && company_id < MAX_COMPANIES && _network_company_passworded.at(company_id);
 }
 
 /* This puts a text-message to the console, or in the future, the chat-box,
@@ -674,7 +674,7 @@ void NetworkClose(bool close_admins)
 	delete[] _network_company_states;
 	_network_company_states = nullptr;
 	_network_company_server_id.clear();
-	_network_company_passworded = 0;
+	_network_company_passworded.reset();
 
 	InitializeNetworkPools(close_admins);
 
@@ -978,7 +978,7 @@ bool NetworkServerStart()
 	_record_sync_records = false;
 
 	_network_clients_connected = 0;
-	_network_company_passworded = 0;
+	_network_company_passworded.reset();
 
 	NetworkInitGameInfo();
 

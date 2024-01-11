@@ -507,7 +507,8 @@ static Colours GenerateCompanyColour()
 		if (colours[i] != INVALID_COLOUR) return colours[i];
 	}
 
-	NOT_REACHED();
+	/* No more unique colours left, assign random one */
+	return (Colours)(Random() & 0xF);
 }
 
 /**
@@ -709,7 +710,7 @@ static void HandleBankruptcyTakeover(Company *c)
 	 * Note that the company going bankrupt can't buy itself. */
 	static const int TAKE_OVER_TIMEOUT = 3 * 30 * DAY_TICKS / (MAX_COMPANIES - 1);
 
-	assert(c->bankrupt_asked != 0);
+	assert(c->bankrupt_asked.any());
 
 
 	/* We're currently asking some company to buy 'us' */
@@ -732,15 +733,15 @@ static void HandleBankruptcyTakeover(Company *c)
 	}
 
 	/* Did we ask everyone for bankruptcy? If so, bail out. */
-	if (c->bankrupt_asked == MAX_UVALUE(CompanyMask)) return;
+	if (c->bankrupt_asked.all()) return;
 
 	Company *best = nullptr;
 	int32 best_performance = -1;
 
 	/* Ask the company with the highest performance history first */
 	for (Company *c2 : Company::Iterate()) {
-		if ((c2->bankrupt_asked == 0 || (c2->bankrupt_flags & CBRF_SALE_ONLY)) && // Don't ask companies going bankrupt themselves
-				!HasBit(c->bankrupt_asked, c2->index) &&
+		if (c2->bankrupt_asked.none() || (c2->bankrupt_flags & CBRF_SALE_ONLY)) && // Don't ask companies going bankrupt themselves
+				!c->bankrupt_asked.at(c2->index) &&
 				best_performance < c2->old_economy[1].performance_history &&
 				MayCompanyTakeOver(c2->index, c->index)) {
 			best_performance = c2->old_economy[1].performance_history;
@@ -751,16 +752,16 @@ static void HandleBankruptcyTakeover(Company *c)
 	/* Asked all companies? */
 	if (best_performance == -1) {
 		if (c->bankrupt_flags & CBRF_SALE_ONLY) {
-			c->bankrupt_asked = 0;
+			c->bankrupt_asked.reset();
 			CloseWindowById(WC_BUY_COMPANY, c->index);
 		} else {
-			c->bankrupt_asked = MAX_UVALUE(CompanyMask);
+			c->bankrupt_asked.set();
 		}
 		c->bankrupt_flags = CBRF_NONE;
 		return;
 	}
 
-	SetBit(c->bankrupt_asked, best->index);
+	c->bankrupt_asked.set(best->index, true);
 	c->bankrupt_last_asked = best->index;
 
 	c->bankrupt_timeout = TAKE_OVER_TIMEOUT;
@@ -790,7 +791,7 @@ void OnTick_Companies(bool main_tick)
 	}
 	for (Company *c : Company::Iterate()) {
 		if (c->name_1 != 0) GenerateCompanyName(c);
-		if (c->bankrupt_asked != 0 && c->bankrupt_timeout == 0) HandleBankruptcyTakeover(c);
+		if (c->bankrupt_asked.any() && c->bankrupt_timeout == 0) HandleBankruptcyTakeover(c);
 	}
 
 	if (_new_competitor_timeout.HasFired() && _game_mode != GM_MENU && AI::CanStartNew()) {
@@ -1097,13 +1098,6 @@ CommandCost CmdSetCompanyColour(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 	if (scheme == LS_DEFAULT && colour == INVALID_COLOUR) return CMD_ERROR;
 
 	Company *c = Company::Get(_current_company);
-
-	/* Ensure no two companies have the same primary colour */
-	if (scheme == LS_DEFAULT && !second) {
-		for (const Company *cc : Company::Iterate()) {
-			if (cc != c && cc->colour == colour) return CMD_ERROR;
-		}
-	}
 
 	if (flags & DC_EXEC) {
 		if (!second) {

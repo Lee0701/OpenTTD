@@ -893,9 +893,10 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendCompanyUpdate()
 {
 	Packet *p = new Packet(PACKET_SERVER_COMPANY_UPDATE, SHRT_MAX);
 
-	static_assert(sizeof(_network_company_passworded) <= sizeof(uint16));
-	p->Send_uint16(_network_company_passworded);
+	for (uint i = 0; i < CompanyMask::bsize; i++)
+		p->Send_uint64(_network_company_passworded.data[i]);
 	this->SendPacket(p);
+
 	return NETWORK_RECV_STATUS_OKAY;
 }
 
@@ -2238,7 +2239,7 @@ void NetworkServerUpdateCompanyPassworded(CompanyID company_id, bool passworded)
 {
 	if (NetworkCompanyIsPassworded(company_id) == passworded) return;
 
-	SB(_network_company_passworded, company_id, 1, !!passworded);
+	_network_company_passworded.set(company_id, passworded);
 	SetWindowClassesDirty(WC_COMPANY);
 
 	for (NetworkClientSocket *cs : NetworkClientSocket::Iterate()) {

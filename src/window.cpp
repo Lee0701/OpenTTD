@@ -247,7 +247,7 @@ void Window::DisableAllWidgetHighlight()
  * @param widget_index index of this widget in the window
  * @param highlighted_colour Colour of highlight, or TC_INVALID to disable.
  */
-void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour)
+void Window::SetWidgetHighlight(int widget_index, TextColour highlighted_colour)
 {
 	dbg_assert(widget_index < this->nested_array_size);
 
@@ -280,7 +280,7 @@ void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour
  * @param widget_index index of this widget in the window
  * @return status of the widget ie: highlighted = true, not highlighted = false
  */
-bool Window::IsWidgetHighlighted(byte widget_index) const
+bool Window::IsWidgetHighlighted(int widget_index) const
 {
 	dbg_assert(widget_index < this->nested_array_size);
 
@@ -570,7 +570,7 @@ void Window::RaiseButtons(bool autoraise)
  * Invalidate a widget, i.e. mark it as being changed and in need of redraw.
  * @param widget_index the widget to redraw.
  */
-void Window::SetWidgetDirty(byte widget_index)
+void Window::SetWidgetDirty(int widget_index)
 {
 	/* Sometimes this function is called before the window is even fully initialized */
 	if (this->nested_array == nullptr) return;
@@ -608,7 +608,7 @@ EventState Window::OnHotkey(int hotkey)
  * unclicked in a few ticks.
  * @param widget the widget to "click"
  */
-void Window::HandleButtonClick(byte widget)
+void Window::HandleButtonClick(int widget)
 {
 	this->LowerWidget(widget);
 	this->SetTimeout();
@@ -3360,7 +3360,7 @@ void SetWindowDirty(WindowClass cls, WindowNumber number)
  * @param number Window number in that class
  * @param widget_index Index number of the widget that needs repainting
  */
-void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_index)
+void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, int widget_index)
 {
 	if (cls < WC_END && !_present_window_types[cls]) return;
 

@@ -133,7 +133,10 @@ public:
 
 		this->ordinal_width = 0;
 		for (uint i = 0; i < MAX_COMPANIES; i++) {
-			this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox(STR_ORDINAL_NUMBER_1ST + i).width);
+			if (i + STR_ORDINAL_NUMBER_1ST <= STR_ORDINAL_NUMBER_15TH)
+				this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox(i + STR_ORDINAL_NUMBER_1ST).width);
+			else
+				this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox((std::to_string(i + 1) + ".").c_str()).width);
 		}
 		this->ordinal_width += WidgetDimensions::scaled.hsep_wide; // Keep some extra spacing
 

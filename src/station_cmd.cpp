@@ -800,7 +800,7 @@ static CommandCost BuildStationPart(Station **st, DoCommandFlag flags, bool reus
 				if (_local_company == _current_company && !HasBit((*st)->town->have_ratings, _current_company)) {
 					ZoningTownAuthorityRatingChange();
 				}
-				SetBit((*st)->town->have_ratings, _current_company);
+				(*st)->town->have_ratings.set(_current_company);
 				if (_cheats.town_rating.value) {
 					(*st)->town->ratings[_current_company] = RATING_MAXIMUM;
 				}

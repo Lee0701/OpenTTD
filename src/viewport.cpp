@@ -908,7 +908,7 @@ Point GetTileZoomCenterWindow(bool in, Window * w)
  * @param widget_zoom_in widget index for window with zoom-in button
  * @param widget_zoom_out widget index for window with zoom-out button
  */
-void HandleZoomMessage(Window *w, const Viewport *vp, byte widget_zoom_in, byte widget_zoom_out)
+void HandleZoomMessage(Window *w, const Viewport *vp, int widget_zoom_in, int widget_zoom_out)
 {
 	w->SetWidgetDisabledState(widget_zoom_in, vp->zoom <= _settings_client.gui.zoom_min);
 	w->SetWidgetDirty(widget_zoom_in);
@@ -3883,7 +3883,7 @@ static void ViewportDoDrawPhase2(Viewport *vp, ViewportDrawerDynamic *vdd)
 		ViewportDrawDirtyBlocks(&vdd->dpi, HasBit(_viewport_debug_flags, VDF_DIRTY_BLOCK_PER_DRAW));
 	}
 
-	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask() != 0) {
+	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask().any()) {
 		/* translate to window coordinates */
 		DrawPixelInfo dp = vdd->dpi;
 		ZoomLevel zoom = vdd->dpi.zoom;
@@ -4976,7 +4976,7 @@ void RebuildViewportOverlay(Window *w, bool incremental)
 bool IsViewportOverlayOutsideCachedRegion(Window *w)
 {
 	if (w->viewport->overlay != nullptr &&
-			w->viewport->overlay->GetCompanyMask() != 0 &&
+			w->viewport->overlay->GetCompanyMask().any() &&
 			w->viewport->overlay->GetCargoMask() != 0) {
 		return !w->viewport->overlay->CacheStillValid();
 	} else {

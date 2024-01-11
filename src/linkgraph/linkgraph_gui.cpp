@@ -117,7 +117,7 @@ void LinkGraphOverlay::RebuildCache(bool incremental)
 		this->cached_stations.clear();
 		this->last_update_number = GetWindowUpdateNumber();
 	}
-	if (this->company_mask == 0) return;
+	if (this->company_mask.none()) return;
 
 	DrawPixelInfo dpi;
 	bool cache_all = false;
@@ -207,7 +207,7 @@ void LinkGraphOverlay::RebuildCache(bool incremental)
 				assert(sta != stb);
 
 				/* Show links between stations of selected companies or "neutral" ones like oilrigs. */
-				if (stb->owner != OWNER_NONE && sta->owner != OWNER_NONE && !HasBit(this->company_mask, stb->owner)) return;
+				if (stb->owner != OWNER_NONE && sta->owner != OWNER_NONE && !this->company_mask.at(stb->owner)) return;
 				if (stb->rect.IsEmpty()) return;
 
 				if (incremental && std::binary_search(incremental_station_exclude.begin(), incremental_station_exclude.end(), to)) return;
@@ -644,7 +644,7 @@ void LinkGraphOverlay::SetCompanyMask(CompanyMask company_mask)
 /** Make a number of rows with buttons for each company for the linkgraph legend window. */
 NWidgetBase *MakeCompanyButtonRowsLinkGraphGUI(int *biggest_index)
 {
-	return MakeCompanyButtonRows(biggest_index, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST, COLOUR_GREY, 3, STR_NULL);
+	return MakeCompanyButtonRows(biggest_index, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST, COLOUR_GREY, 15, STR_LINKGRAPH_LEGEND_SELECT_COMPANIES);
 }
 
 NWidgetBase *MakeSaturationLegendLinkGraphGUI(int *biggest_index)
@@ -763,7 +763,7 @@ void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay)
 	CompanyMask companies = this->overlay->GetCompanyMask();
 	for (uint c = 0; c < MAX_COMPANIES; c++) {
 		if (!this->IsWidgetDisabled(WID_LGL_COMPANY_FIRST + c)) {
-			this->SetWidgetLoweredState(WID_LGL_COMPANY_FIRST + c, HasBit(companies, c));
+			this->SetWidgetLoweredState(WID_LGL_COMPANY_FIRST + c, companies.at(c));
 		}
 	}
 	CargoTypes cargoes = this->overlay->GetCargoMask();
@@ -856,11 +856,11 @@ bool LinkGraphLegendWindow::OnTooltip([[maybe_unused]] Point, int widget, Toolti
  */
 void LinkGraphLegendWindow::UpdateOverlayCompanies()
 {
-	uint32 mask = 0;
+	CompanyMask mask;
 	for (uint c = 0; c < MAX_COMPANIES; c++) {
 		if (this->IsWidgetDisabled(c + WID_LGL_COMPANY_FIRST)) continue;
 		if (!this->IsWidgetLowered(c + WID_LGL_COMPANY_FIRST)) continue;
-		SetBit(mask, c);
+		mask.set(c);
 	}
 	this->overlay->SetCompanyMask(mask);
 }

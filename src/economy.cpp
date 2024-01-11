@@ -437,12 +437,12 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	for (Town *t : Town::Iterate()) {
 		/* If a company takes over, give the ratings to that company. */
 		if (new_owner != INVALID_OWNER) {
-			if (HasBit(t->have_ratings, old_owner)) {
-				if (HasBit(t->have_ratings, new_owner)) {
+			if (t->have_ratings.at(old_owner)) {
+				if (t->have_ratings.at(new_owner)) {
 					/* use max of the two ratings. */
 					t->ratings[new_owner] = std::max(t->ratings[new_owner], t->ratings[old_owner]);
 				} else {
-					SetBit(t->have_ratings, new_owner);
+					t->have_ratings.set(new_owner);
 					t->ratings[new_owner] = t->ratings[old_owner];
 				}
 			}
@@ -450,7 +450,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 
 		/* Reset the ratings for the old owner */
 		t->ratings[old_owner] = RATING_INITIAL;
-		ClrBit(t->have_ratings, old_owner);
+		t->have_ratings.reset(old_owner);
 
 		/* Transfer exclusive rights */
 		if (t->exclusive_counter > 0 && t->exclusivity == old_owner) {
@@ -678,7 +678,7 @@ static void CompanyCheckBankrupt(Company *c)
 	if (c->money - c->current_loan >= -_economy.max_loan) {
 		int previous_months_of_bankruptcy = CeilDiv(c->months_of_bankruptcy, 3);
 		c->months_of_bankruptcy = 0;
-		c->bankrupt_asked = 0;
+		c->bankrupt_asked.reset();
 		CloseWindowById(WC_BUY_COMPANY, c->index);
 		if (previous_months_of_bankruptcy != 0) CompanyAdminUpdate(c);
 		return;
@@ -718,7 +718,8 @@ static void CompanyCheckBankrupt(Company *c)
 			Money val = CalculateCompanyValue(c, false);
 
 			c->bankrupt_value = val;
-			c->bankrupt_asked = 1 << c->index; // Don't ask the owner
+			c->bankrupt_asked.reset();
+			c->bankrupt_asked.set(c->index, true); // Don't ask the owner
 			c->bankrupt_timeout = 0;
 
 			/* The company assets should always have some value */
@@ -735,7 +736,7 @@ static void CompanyCheckBankrupt(Company *c)
 				 * is no THE-END, otherwise mark the client as spectator to make sure
 				 * they are no longer in control of this company. However... when you
 				 * join another company (cheat) the "unowned" company can bankrupt. */
-				c->bankrupt_asked = MAX_UVALUE(CompanyMask);
+				c->bankrupt_asked.set();
 				break;
 			}
 
@@ -2604,7 +2605,7 @@ CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 	if (hostile_takeover && HasBit(c->bankrupt_asked, _current_company)) hostile_takeover = false;
 
 	/* Disable takeovers when not asked */
-	if (!hostile_takeover && !HasBit(c->bankrupt_asked, _current_company)) return CMD_ERROR;
+	if (!hostile_takeover && !c->bankrupt_asked.at(_current_company)) return CMD_ERROR;
 
 	/* Only allow hostile takeover of AI companies and when in single player */
 	if (hostile_takeover && !c->is_ai) return CMD_ERROR;
