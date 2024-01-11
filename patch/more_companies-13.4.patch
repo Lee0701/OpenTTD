@@ -1,0 +1,2566 @@
+diff --git a/src/ai/ai_gui.cpp b/src/ai/ai_gui.cpp
+index c43430e2a4..5e97142381 100644
+--- a/src/ai/ai_gui.cpp
++++ b/src/ai/ai_gui.cpp
+@@ -1365,7 +1365,7 @@ StringFilter AIDebugWindow::break_string_filter(&AIDebugWindow::case_sensitive_b
+ /** Make a number of rows with buttons for each company for the AI debug window. */
+ NWidgetBase *MakeCompanyButtonRowsAIDebug(int *biggest_index)
+ {
+-	return MakeCompanyButtonRows(biggest_index, WID_AID_COMPANY_BUTTON_START, WID_AID_COMPANY_BUTTON_END, COLOUR_GREY, 8, STR_AI_DEBUG_SELECT_AI_TOOLTIP);
++	return MakeCompanyButtonRows(biggest_index, WID_AID_COMPANY_BUTTON_START, WID_AID_COMPANY_BUTTON_END, COLOUR_GREY, 15, STR_AI_DEBUG_SELECT_AI_TOOLTIP);
+ }
+ 
+ /**
+diff --git a/src/build_vehicle_gui.cpp b/src/build_vehicle_gui.cpp
+index f550187bb5..a78dfb0229 100644
+--- a/src/build_vehicle_gui.cpp
++++ b/src/build_vehicle_gui.cpp
+@@ -1033,7 +1033,7 @@ void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_li
+ 		const uint num_engines = GetGroupNumEngines(_local_company, selected_group, item.engine_id);
+ 
+ 		const Engine *e = Engine::Get(item.engine_id);
+-		bool hidden = HasBit(e->company_hidden, _local_company);
++		bool hidden = e->company_hidden.at(_local_company);
+ 		StringID str = hidden ? STR_HIDDEN_ENGINE_NAME : STR_ENGINE_NAME;
+ 		TextColour tc = (item.engine_id == selected_id) ? TC_WHITE : ((hidden | shaded) ? (TC_GREY | TC_FORCED | TC_NO_SHADE) : TC_BLACK);
+ 
+diff --git a/src/cargomonitor.h b/src/cargomonitor.h
+index 31053c46cb..80a58095e1 100644
+--- a/src/cargomonitor.h
++++ b/src/cargomonitor.h
+@@ -45,7 +45,7 @@ enum CargoCompanyBits {
+ 	CCB_CARGO_TYPE_START       = 19, ///< Start bit of the cargo type field.
+ 	CCB_CARGO_TYPE_LENGTH      = 6,  ///< Number of bits of the cargo type field.
+ 	CCB_COMPANY_START          = 25, ///< Start bit of the company field.
+-	CCB_COMPANY_LENGTH         = 4,  ///< Number of bits of the company field.
++	CCB_COMPANY_LENGTH         = 8,  ///< Number of bits of the company field.
+ };
+ 
+ static_assert(NUM_CARGO     <= (1 << CCB_CARGO_TYPE_LENGTH));
+diff --git a/src/clear_map.h b/src/clear_map.h
+index 159f5c6a40..ac2bfaf48a 100644
+--- a/src/clear_map.h
++++ b/src/clear_map.h
+@@ -260,7 +260,6 @@ static inline void MakeClear(TileIndex t, ClearGround g, uint density)
+ {
+ 	SetTileType(t, MP_CLEAR);
+ 	_m[t].m1 = 0;
+-	SetTileOwner(t, OWNER_NONE);
+ 	_m[t].m2 = 0;
+ 	_m[t].m3 = 0;
+ 	_m[t].m4 = 0 << 5 | 0 << 2;
+@@ -268,6 +267,8 @@ static inline void MakeClear(TileIndex t, ClearGround g, uint density)
+ 	_me[t].m6 = 0;
+ 	_me[t].m7 = 0;
+ 	_me[t].m8 = 0;
++	_me[t].m9 = 0;
++	SetTileOwner(t, OWNER_NONE);
+ }
+ 
+ 
+@@ -281,7 +282,6 @@ static inline void MakeField(TileIndex t, uint field_type, IndustryID industry)
+ {
+ 	SetTileType(t, MP_CLEAR);
+ 	_m[t].m1 = 0;
+-	SetTileOwner(t, OWNER_NONE);
+ 	_m[t].m2 = industry;
+ 	_m[t].m3 = field_type;
+ 	_m[t].m4 = 0 << 5 | 0 << 2;
+@@ -289,6 +289,8 @@ static inline void MakeField(TileIndex t, uint field_type, IndustryID industry)
+ 	SB(_me[t].m6, 2, 4, 0);
+ 	_me[t].m7 = 0;
+ 	_me[t].m8 = 0;
++	_me[t].m9 = 0;
++	SetTileOwner(t, OWNER_NONE);
+ }
+ 
+ /**
+diff --git a/src/company_base.h b/src/company_base.h
+index bb88e94fd6..3f172188dd 100644
+--- a/src/company_base.h
++++ b/src/company_base.h
+@@ -110,7 +110,7 @@ struct CompanyProperties {
+ 		: name_2(0), name_1(0), president_name_1(0), president_name_2(0),
+ 		  face(0), money(0), money_fraction(0), current_loan(0), colour(0), block_preview(0),
+ 		  location_of_HQ(0), last_build_coordinate(0), share_owners(), inaugurated_year(0),
+-		  months_of_bankruptcy(0), bankrupt_asked(0), bankrupt_timeout(0), bankrupt_value(0),
++		  months_of_bankruptcy(0), bankrupt_asked(), bankrupt_timeout(0), bankrupt_value(0),
+ 		  terraform_limit(0), clear_limit(0), tree_limit(0), build_object_limit(0), is_ai(false), engine_renew_list(nullptr) {}
+ };
+ 
+diff --git a/src/company_cmd.cpp b/src/company_cmd.cpp
+index 0d7f765754..2c32810fc1 100644
+--- a/src/company_cmd.cpp
++++ b/src/company_cmd.cpp
+@@ -477,7 +477,8 @@ static Colours GenerateCompanyColour()
+ 		if (colours[i] != INVALID_COLOUR) return colours[i];
+ 	}
+ 
+-	NOT_REACHED();
++	/* No more unique colours left, assign random one */
++	return (Colours)(Random() & 0xF);
+ }
+ 
+ /**
+@@ -664,7 +665,7 @@ static void HandleBankruptcyTakeover(Company *c)
+ 	 * Note that the company going bankrupt can't buy itself. */
+ 	static const int TAKE_OVER_TIMEOUT = 3 * 30 * DAY_TICKS / (MAX_COMPANIES - 1);
+ 
+-	assert(c->bankrupt_asked != 0);
++	assert(c->bankrupt_asked.any());
+ 
+ 	/* We're currently asking some company to buy 'us' */
+ 	if (c->bankrupt_timeout != 0) {
+@@ -676,15 +677,15 @@ static void HandleBankruptcyTakeover(Company *c)
+ 	}
+ 
+ 	/* Did we ask everyone for bankruptcy? If so, bail out. */
+-	if (c->bankrupt_asked == MAX_UVALUE(CompanyMask)) return;
++	if (c->bankrupt_asked.all()) return;
+ 
+ 	Company *best = nullptr;
+ 	int32 best_performance = -1;
+ 
+ 	/* Ask the company with the highest performance history first */
+ 	for (Company *c2 : Company::Iterate()) {
+-		if (c2->bankrupt_asked == 0 && // Don't ask companies going bankrupt themselves
+-				!HasBit(c->bankrupt_asked, c2->index) &&
++		if (c2->bankrupt_asked.none() && // Don't ask companies going bankrupt themselves
++				!c->bankrupt_asked.at(c2->index) &&
+ 				best_performance < c2->old_economy[1].performance_history &&
+ 				MayCompanyTakeOver(c2->index, c->index)) {
+ 			best_performance = c2->old_economy[1].performance_history;
+@@ -694,11 +695,11 @@ static void HandleBankruptcyTakeover(Company *c)
+ 
+ 	/* Asked all companies? */
+ 	if (best_performance == -1) {
+-		c->bankrupt_asked = MAX_UVALUE(CompanyMask);
++		c->bankrupt_asked.set();
+ 		return;
+ 	}
+ 
+-	SetBit(c->bankrupt_asked, best->index);
++	c->bankrupt_asked.set(best->index, true);
+ 
+ 	c->bankrupt_timeout = TAKE_OVER_TIMEOUT;
+ 	if (best->is_ai) {
+@@ -716,7 +717,7 @@ void OnTick_Companies()
+ 	Company *c = Company::GetIfValid(_cur_company_tick_index);
+ 	if (c != nullptr) {
+ 		if (c->name_1 != 0) GenerateCompanyName(c);
+-		if (c->bankrupt_asked != 0) HandleBankruptcyTakeover(c);
++		if (c->bankrupt_asked.any()) HandleBankruptcyTakeover(c);
+ 	}
+ 
+ 	if (_next_competitor_start == 0) {
+@@ -961,13 +962,6 @@ CommandCost CmdSetCompanyColour(DoCommandFlag flags, LiveryScheme scheme, bool p
+ 
+ 	Company *c = Company::Get(_current_company);
+ 
+-	/* Ensure no two companies have the same primary colour */
+-	if (scheme == LS_DEFAULT && primary) {
+-		for (const Company *cc : Company::Iterate()) {
+-			if (cc != c && cc->colour == colour) return CMD_ERROR;
+-		}
+-	}
+-
+ 	if (flags & DC_EXEC) {
+ 		if (primary) {
+ 			if (scheme != LS_DEFAULT) SB(c->livery[scheme].in_use, 0, 1, colour != INVALID_COLOUR);
+diff --git a/src/company_gui.cpp b/src/company_gui.cpp
+index af1e2344ac..fef544008d 100644
+--- a/src/company_gui.cpp
++++ b/src/company_gui.cpp
+@@ -635,16 +635,14 @@ private:
+ 		uint32 used_colours = 0;
+ 		const Company *c;
+ 		const Livery *livery, *default_livery = nullptr;
++ 		LiveryScheme scheme;
+ 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
+ 		byte default_col;
+ 
+-		/* Disallow other company colours for the primary colour */
+-		if (this->livery_class < LC_GROUP_RAIL && HasBit(this->sel, LS_DEFAULT) && primary) {
+-			for (const Company *c : Company::Iterate()) {
+-				if (c->index != _local_company) SetBit(used_colours, c->colour);
+-			}
++		/* Get the first selected livery to use as the default dropdown item */
++		for (scheme = LS_BEGIN; scheme < LS_END; scheme++) {
++			if (HasBit(this->sel, scheme)) break;
+ 		}
+-
+ 		c = Company::Get((CompanyID)this->window_number);
+ 
+ 		if (this->livery_class < LC_GROUP_RAIL) {
+@@ -1379,7 +1377,7 @@ class SelectCompanyManagerFaceWindow : public Window
+ 	 * @param val            the value which will be displayed
+ 	 * @param is_bool_widget is it a bool button
+ 	 */
+-	void SetFaceStringParameters(byte widget_index, uint8 val, bool is_bool_widget) const
++	void SetFaceStringParameters(int widget_index, uint8 val, bool is_bool_widget) const
+ 	{
+ 		const NWidgetCore *nwi_widget = this->GetWidget<NWidgetCore>(widget_index);
+ 		if (nwi_widget->IsDisabled()) {
+diff --git a/src/company_type.h b/src/company_type.h
+index 3bbcf731e6..abc72807a2 100644
+--- a/src/company_type.h
++++ b/src/company_type.h
+@@ -15,24 +15,33 @@
+ /**
+  * Enum for all companies/owners.
+  */
+-enum Owner : byte {
++enum Owner {
++	OLD_MAX_COMPANIES   = 0x0F,
++	OLD_OWNER_TOWN      = 0x0F,
++	OLD_OWNER_NONE      = 0x10,
++	OLD_OWNER_WATER     = 0x11,
++	OLD_OWNER_DEITY     = 0x12,
++	OLD_OWNER_END,
++
+ 	/* All companies below MAX_COMPANIES are playable
+ 	 * companies, above, they are special, computer controlled 'companies' */
++
+ 	OWNER_BEGIN     = 0x00, ///< First owner
+ 	COMPANY_FIRST   = 0x00, ///< First company, same as owner
+-	MAX_COMPANIES   = 0x0F, ///< Maximum number of companies
+-	OWNER_TOWN      = 0x0F, ///< A town owns the tile, or a town is expanding
+-	OWNER_NONE      = 0x10, ///< The tile has no ownership
+-	OWNER_WATER     = 0x11, ///< The tile/execution is done by "water"
+-	OWNER_DEITY     = 0x12, ///< The object is owned by a superuser / goal script
++
++	MAX_COMPANIES   = 0xF0, ///< Maximum number of companies
++	OWNER_TOWN      = 0xF0, ///< A town owns the tile, or a town is expanding
++	OWNER_NONE      = 0xF1, ///< The tile has no ownership
++	OWNER_WATER     = 0xF2, ///< The tile/execution is done by "water"
++	OWNER_DEITY     = 0xF3, ///< The object is owned by a superuser / goal script
+ 	OWNER_END,              ///< Last + 1 owner
+ 	INVALID_OWNER   = 0xFF, ///< An invalid owner
+ 	INVALID_COMPANY = 0xFF, ///< An invalid company
+ 
+ 	/* 'Fake' companies used for networks */
+-	COMPANY_INACTIVE_CLIENT = 253, ///< The client is joining
+-	COMPANY_NEW_COMPANY     = 254, ///< The client wants a new company
+-	COMPANY_SPECTATOR       = 255, ///< The client is spectating
++	COMPANY_INACTIVE_CLIENT = 0xFD, ///< The client is joining
++	COMPANY_NEW_COMPANY     = 0xFE, ///< The client wants a new company
++	COMPANY_SPECTATOR       = 0xFF, ///< The client is spectating
+ };
+ DECLARE_POSTFIX_INCREMENT(Owner)
+ 
+@@ -47,7 +56,8 @@ template <> struct EnumPropsT<Owner> : MakeEnumPropsT<Owner, byte, OWNER_BEGIN,
+ 
+ typedef Owner CompanyID;
+ 
+-typedef uint16 CompanyMask;
++#include "core/bitmath_func.hpp"
++typedef Bitset<MAX_COMPANIES> CompanyMask;
+ 
+ struct Company;
+ typedef uint32 CompanyManagerFace; ///< Company manager face bits, info see in company_manager_face.h
+diff --git a/src/core/bitmath_func.hpp b/src/core/bitmath_func.hpp
+index 979d9b73b7..a7ef06389e 100644
+--- a/src/core/bitmath_func.hpp
++++ b/src/core/bitmath_func.hpp
+@@ -320,6 +320,152 @@ static inline T ROR(const T x, const uint8 n)
+ 	return (T)(x >> n | x << (sizeof(x) * 8 - n));
+ }
+ 
++template <int esize>
++class Bitset
++{
++public:
++	static const int bsize = esize / 64 + (esize % 64 ? 1 : 0);
++	static const int msize = bsize * 8;
++
++	uint64 data[bsize];
++
++	Bitset()
++	{
++		reset();
++	}
++
++	uint which_byte(uint n) const
++	{
++		for (uint b = 0; b < bsize; b++) {
++			if (n < (b + 1) * 64)
++				return b;
++		}
++		return (uint)-1;
++	}
++
++	void set(uint n, bool v)
++	{
++		uint b = which_byte(n);
++		if (b >= bsize)
++			return;
++		int bit = n % 64;
++		data[b] = (data[b] & ~((uint64)1 << bit)) | ((uint64)v << bit);
++	}
++
++	bool at(uint n) const
++	{
++		uint b = which_byte(n);
++		if (b >= bsize)
++			return false;
++		return (data[b] & ((uint64)1 << (n % 64))) != 0;
++	}
++
++	bool all() const
++	{
++		uint b;
++		for (b = 0; b < esize / 64; b++)
++			if (data[b] != (uint64)-1)
++				return false;
++		if (esize % 64) {
++			uint64 bitmask = ~((uint64)-1 << (esize % 64));
++			if ((data[b] & bitmask) != bitmask)
++				return false;
++		}
++		return true;
++	}
++
++	bool none() const
++	{
++		uint b;
++		for (b = 0; b < esize / 64; b++)
++			if (data[b] != (uint64)0)
++				return false;
++		if (esize % 64) {
++			uint64 bitmask = ~((uint64)-1 << (esize % 64));
++			if ((data[b] & bitmask) != 0)
++				return false;
++		}
++		return true;
++	}
++
++	bool any() const
++	{
++		return !none();
++	}
++
++	uint count() const
++	{
++		if (all())
++			return esize;
++		if (none())
++			return 0;
++		uint c = 0, b;
++		for (b = 0; b < esize / 64; b++)
++			for (uint i = 0; i < 64; i++)
++				if (data[b] & ((uint64)1 << i))
++					c++;
++		uint mod = esize % 64;
++		if (mod) {
++			for (uint i = 0; i < mod; i++)
++				if (data[b] & ((uint64)1 << i))
++					c++;
++		}
++		return c;
++	}
++
++	void toggle(uint n)
++	{
++		if (at(n))
++			reset(n);
++		else
++			set(n);
++	}
++
++	void reset()
++	{
++		memset(data, 0x00, msize);
++	}
++
++	void reset(uint n)
++	{
++		set(n, false);
++	}
++
++	void set()
++	{
++		memset(data, 0xFF, msize);
++	}
++
++	void set(uint n)
++	{
++		set(n, true);
++	}
++
++	bool compare(const Bitset<esize> &o) const
++	{
++		uint b;
++		for (b = 0; b < esize / 64; b++)
++			if (data[b] != o.data[b])
++				return false;
++		if (esize % 64) {
++			uint64 bitmask = ~((uint64)-1 << (esize % 64));
++			if ((data[b] & bitmask) != (o.data[b] & bitmask))
++				return false;
++		}
++		return true;
++	}
++
++	bool operator == (const Bitset<esize> &o) const
++	{
++		return compare(o);
++	}
++
++	bool operator != (const Bitset<esize>& o) const
++	{
++		return !compare(o);
++	}
++};
++
+  /**
+  * Iterable ensemble of each set bit in a value.
+  * @tparam Tbitpos Type of the position variable.
+diff --git a/src/crashlog.cpp b/src/crashlog.cpp
+index 35f0076bde..4ccf788cf7 100644
+--- a/src/crashlog.cpp
++++ b/src/crashlog.cpp
+@@ -65,6 +65,38 @@
+ # include <zlib.h>
+ #endif
+ 
++#ifdef WITH_ALLEGRO
++#	include <allegro.h>
++#endif /* WITH_ALLEGRO */
++#ifdef WITH_FONTCONFIG
++#	include <fontconfig/fontconfig.h>
++#endif /* WITH_FONTCONFIG */
++#ifdef WITH_PNG
++	/* pngconf.h, included by png.h doesn't like something in the
++	 * freetype headers. As such it's not alphabetically sorted. */
++#	include <png.h>
++#endif /* WITH_PNG */
++#ifdef WITH_FREETYPE
++#	include <ft2build.h>
++#	include FT_FREETYPE_H
++#endif /* WITH_FREETYPE */
++#if defined(WITH_ICU_LAYOUT) || defined(WITH_ICU_SORT)
++#	include <unicode/uversion.h>
++#endif /* WITH_ICU_SORT || WITH_ICU_LAYOUT */
++#ifdef WITH_LZMA
++#	include <lzma.h>
++#endif
++#ifdef WITH_LZO
++#include <lzo/lzo1x.h>
++#endif
++#ifdef WITH_SDL
++#	include "sdl.h"
++#	include <SDL.h>
++#endif /* WITH_SDL */
++#ifdef WITH_ZLIB
++# include <zlib.h>
++#endif
++
+ #include "safeguards.h"
+ 
+ /* static */ const char *CrashLog::message = nullptr;
+diff --git a/src/economy.cpp b/src/economy.cpp
+index cb1e598319..bf8eb8c6b3 100644
+--- a/src/economy.cpp
++++ b/src/economy.cpp
+@@ -376,12 +376,12 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
+ 	for (Town *t : Town::Iterate()) {
+ 		/* If a company takes over, give the ratings to that company. */
+ 		if (new_owner != INVALID_OWNER) {
+-			if (HasBit(t->have_ratings, old_owner)) {
+-				if (HasBit(t->have_ratings, new_owner)) {
++			if (t->have_ratings.at(old_owner)) {
++				if (t->have_ratings.at(new_owner)) {
+ 					/* use max of the two ratings. */
+ 					t->ratings[new_owner] = std::max(t->ratings[new_owner], t->ratings[old_owner]);
+ 				} else {
+-					SetBit(t->have_ratings, new_owner);
++					t->have_ratings.set(new_owner);
+ 					t->ratings[new_owner] = t->ratings[old_owner];
+ 				}
+ 			}
+@@ -389,7 +389,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
+ 
+ 		/* Reset the ratings for the old owner */
+ 		t->ratings[old_owner] = RATING_INITIAL;
+-		ClrBit(t->have_ratings, old_owner);
++		t->have_ratings.reset(old_owner);
+ 
+ 		/* Transfer exclusive rights */
+ 		if (t->exclusive_counter > 0 && t->exclusivity == old_owner) {
+@@ -570,7 +570,7 @@ static void CompanyCheckBankrupt(Company *c)
+ 	if (c->money - c->current_loan >= -_economy.max_loan) {
+ 		int previous_months_of_bankruptcy = CeilDiv(c->months_of_bankruptcy, 3);
+ 		c->months_of_bankruptcy = 0;
+-		c->bankrupt_asked = 0;
++		c->bankrupt_asked.reset();
+ 		if (previous_months_of_bankruptcy != 0) CompanyAdminUpdate(c);
+ 		return;
+ 	}
+@@ -609,7 +609,8 @@ static void CompanyCheckBankrupt(Company *c)
+ 			Money val = CalculateCompanyValue(c, false);
+ 
+ 			c->bankrupt_value = val;
+-			c->bankrupt_asked = 1 << c->index; // Don't ask the owner
++			c->bankrupt_asked.reset();
++			c->bankrupt_asked.set(c->index, true); // Don't ask the owner
+ 			c->bankrupt_timeout = 0;
+ 
+ 			/* The company assets should always have some value */
+@@ -626,7 +627,7 @@ static void CompanyCheckBankrupt(Company *c)
+ 				 * is no THE-END, otherwise mark the client as spectator to make sure
+ 				 * they are no longer in control of this company. However... when you
+ 				 * join another company (cheat) the "unowned" company can bankrupt. */
+-				c->bankrupt_asked = MAX_UVALUE(CompanyMask);
++				c->bankrupt_asked.set();
+ 				break;
+ 			}
+ 
+@@ -2108,7 +2109,7 @@ CommandCost CmdBuyCompany(DoCommandFlag flags, CompanyID target_company)
+ 	if (c == nullptr) return CMD_ERROR;
+ 
+ 	/* Disable takeovers when not asked */
+-	if (!HasBit(c->bankrupt_asked, _current_company)) return CMD_ERROR;
++	if (!c->bankrupt_asked.at(_current_company)) return CMD_ERROR;
+ 
+ 	/* Disable taking over the local company in singleplayer mode */
+ 	if (!_networking && _local_company == c->index) return CMD_ERROR;
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 7e45f69e90..c4a2ba3ea5 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -590,12 +590,12 @@ void CalcEngineReliability(Engine *e, bool new_month)
+ 	if (new_month && re->index > e->index && age != MAX_DAY) age++; /* parent variant's age has not yet updated. */
+ 
+ 	/* Check for early retirement */
+-	if (e->company_avail != 0 && !_settings_game.vehicle.never_expire_vehicles && e->info.base_life != 0xFF) {
++	if (e->company_avail.any() && !_settings_game.vehicle.never_expire_vehicles && e->info.base_life != 0xFF) {
+ 		int retire_early = e->info.retire_early;
+ 		uint retire_early_max_age = std::max(0, e->duration_phase_1 + e->duration_phase_2 - retire_early * 12);
+ 		if (retire_early != 0 && age >= retire_early_max_age) {
+ 			/* Early retirement is enabled and we're past the date... */
+-			e->company_avail = 0;
++			e->company_avail.reset();
+ 			ClearLastVariant(e->index, e->type);
+ 			AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
+ 		}
+@@ -614,7 +614,7 @@ void CalcEngineReliability(Engine *e, bool new_month)
+ 	} else {
+ 		/* time's up for this engine.
+ 		 * We will now completely retire this design */
+-		e->company_avail = 0;
++		e->company_avail.reset();
+ 		e->reliability = e->reliability_final;
+ 		/* Kick this engine out of the lists */
+ 		ClearLastVariant(e->index, e->type);
+@@ -656,8 +656,8 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed)
+ 
+ 	e->age = 0;
+ 	e->flags = 0;
+-	e->company_avail = 0;
+-	e->company_hidden = 0;
++	e->company_avail.reset();
++	e->company_hidden.reset();
+ 
+ 	/* Vehicles with the same base_intro date shall be introduced at the same time.
+ 	 * Make sure they use the same randomisation of the date. */
+@@ -675,7 +675,7 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed)
+ 	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : (Date)GB(r, 0, 9) + ei->base_intro;
+ 	if (e->intro_date <= _date) {
+ 		e->age = (aging_date - e->intro_date) >> 5;
+-		e->company_avail = (CompanyMask)-1;
++		e->company_avail.set();
+ 		e->flags |= ENGINE_AVAILABLE;
+ 	}
+ 
+@@ -708,7 +708,7 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed)
+ 	/* prevent certain engines from ever appearing. */
+ 	if (!HasBit(ei->climates, _settings_game.game_creation.landscape)) {
+ 		e->flags |= ENGINE_AVAILABLE;
+-		e->company_avail = 0;
++		e->company_avail.reset();
+ 	}
+ }
+ 
+@@ -752,7 +752,7 @@ static void EnableEngineForCompany(EngineID eid, CompanyID company)
+ 	Engine *e = Engine::Get(eid);
+ 	Company *c = Company::Get(company);
+ 
+-	SetBit(e->company_avail, company);
++	e->company_avail.set(company, true);
+ 	if (e->type == VEH_TRAIN) {
+ 		c->avail_railtypes = GetCompanyRailtypes(c->index);
+ 	} else if (e->type == VEH_ROAD) {
+@@ -780,7 +780,7 @@ static void DisableEngineForCompany(EngineID eid, CompanyID company)
+ 	Engine *e = Engine::Get(eid);
+ 	Company *c = Company::Get(company);
+ 
+-	ClrBit(e->company_avail, company);
++	e->company_avail.reset(company);
+ 	if (e->type == VEH_TRAIN) {
+ 		c->avail_railtypes = GetCompanyRailtypes(c->index);
+ 	} else if (e->type == VEH_ROAD) {
+@@ -804,7 +804,10 @@ static void AcceptEnginePreview(EngineID eid, CompanyID company, int recursion_d
+ 	Engine *e = Engine::Get(eid);
+ 
+ 	e->preview_company = INVALID_COMPANY;
+-	e->preview_asked = (CompanyMask)-1;
++	e->preview_asked.set();
++	if (company == _local_company) {
++		AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
++	}
+ 
+ 	EnableEngineForCompany(eid, company);
+ 
+@@ -840,7 +843,7 @@ static CompanyID GetPreviewCompany(Engine *e)
+ 
+ 	int32 best_hist = -1;
+ 	for (const Company *c : Company::Iterate()) {
+-		if (c->block_preview == 0 && !HasBit(e->preview_asked, c->index) &&
++		if (c->block_preview == 0 && !e->preview_asked.at(c->index) &&
+ 				c->old_economy[0].performance_history > best_hist) {
+ 
+ 			/* Check whether the company uses similar vehicles */
+@@ -895,15 +898,15 @@ void EnginesDailyLoop()
+ 					CloseWindowById(WC_ENGINE_PREVIEW, i);
+ 					e->preview_company = INVALID_COMPANY;
+ 				}
+-			} else if (CountBits(e->preview_asked) < MAX_COMPANIES) {
++			} else if (!e->preview_asked.all()) {
+ 				e->preview_company = GetPreviewCompany(e);
+ 
+ 				if (e->preview_company == INVALID_COMPANY) {
+-					e->preview_asked = (CompanyMask)-1;
++					e->preview_asked.set();
+ 					continue;
+ 				}
+ 
+-				SetBit(e->preview_asked, e->preview_company);
++				e->preview_asked.set(e->preview_company, true);
+ 				e->preview_wait = 20;
+ 				/* AIs are intentionally not skipped for preview even if they cannot build a certain
+ 				 * vehicle type. This is done to not give poor performing human companies an "unfair"
+@@ -924,7 +927,7 @@ void EnginesDailyLoop()
+ void ClearEnginesHiddenFlagOfCompany(CompanyID cid)
+ {
+ 	for (Engine *e : Engine::Iterate()) {
+-		SB(e->company_hidden, cid, 1, 0);
++		e->company_hidden.set(cid, false);
+ 	}
+ }
+ 
+@@ -942,7 +945,7 @@ CommandCost CmdSetVehicleVisibility(DoCommandFlag flags, EngineID engine_id, boo
+ 	if (!IsEngineBuildable(e->index, e->type, _current_company)) return CMD_ERROR;
+ 
+ 	if ((flags & DC_EXEC) != 0) {
+-		SB(e->company_hidden, _current_company, 1, hide ? 1 : 0);
++		e->company_hidden.set(_current_company, hide);
+ 		AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
+ 	}
+ 
+@@ -1006,7 +1009,7 @@ static void NewVehicleAvailable(Engine *e)
+ 		for (Company *c : Company::Iterate()) {
+ 			uint block_preview = c->block_preview;
+ 
+-			if (!HasBit(e->company_avail, c->index)) continue;
++			if (!e->company_avail.at(c->index)) continue;
+ 
+ 			/* We assume the user did NOT build it.. prove me wrong ;) */
+ 			c->block_preview = 20;
+@@ -1028,7 +1031,7 @@ static void NewVehicleAvailable(Engine *e)
+ 	AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
+ 
+ 	/* Now available for all companies */
+-	e->company_avail = (CompanyMask)-1;
++	e->company_avail.set();
+ 
+ 	/* Do not introduce new rail wagons */
+ 	if (IsWagon(index)) return;
+@@ -1097,7 +1100,7 @@ void EnginesMonthlyLoop()
+ 				/* Show preview dialog to one of the companies. */
+ 				e->flags |= ENGINE_EXCLUSIVE_PREVIEW;
+ 				e->preview_company = INVALID_COMPANY;
+-				e->preview_asked = 0;
++				e->preview_asked.reset();
+ 			}
+ 		}
+ 
+@@ -1178,10 +1181,10 @@ bool IsEngineBuildable(EngineID engine, VehicleType type, CompanyID company)
+ 	/* check if it's available ... */
+ 	if (company == OWNER_DEITY) {
+ 		/* ... for any company (preview does not count) */
+-		if (!(e->flags & ENGINE_AVAILABLE) || e->company_avail == 0) return false;
++		if (!(e->flags & ENGINE_AVAILABLE) || e->company_avail.none()) return false;
+ 	} else {
+ 		/* ... for this company */
+-		if (!HasBit(e->company_avail, company)) return false;
++		if (!e->company_avail.at(company)) return false;
+ 	}
+ 
+ 	if (!e->IsEnabled()) return false;
+@@ -1243,7 +1246,7 @@ void CheckEngines()
+ 		if (e->type == VEH_TRAIN && e->u.rail.railveh_type == RAILVEH_WAGON) continue;
+ 
+ 		/* We have an available engine... yay! */
+-		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail != 0) return;
++		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail.any()) return;
+ 
+ 		/* Okay, try to find the earliest date. */
+ 		min_date = std::min(min_date, e->info.base_intro);
+diff --git a/src/engine_base.h b/src/engine_base.h
+index 14af402021..b415cdc658 100644
+--- a/src/engine_base.h
++++ b/src/engine_base.h
+@@ -134,7 +134,7 @@ struct Engine : EnginePool::PoolItem<&_engine_pool> {
+ 	 */
+ 	inline bool IsHidden(CompanyID c) const
+ 	{
+-		return c < MAX_COMPANIES && HasBit(this->company_hidden, c);
++		return c < MAX_COMPANIES && this->company_hidden.at(c);
+ 	}
+ 
+ 	/**
+diff --git a/src/graph_gui.cpp b/src/graph_gui.cpp
+index 792aee681a..99edc29eee 100644
+--- a/src/graph_gui.cpp
++++ b/src/graph_gui.cpp
+@@ -27,6 +27,7 @@
+ #include "table/strings.h"
+ #include "table/sprites.h"
+ #include <math.h>
++#include <string>
+ 
+ #include "safeguards.h"
+ 
+@@ -48,7 +49,7 @@ struct GraphLegendWindow : Window {
+ 		this->InitNested(window_number);
+ 
+ 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
+-			if (!HasBit(_legend_excluded_companies, c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
++			if (!_legend_excluded_companies.at(c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
+ 
+ 			this->OnInvalidateData(c);
+ 		}
+@@ -71,14 +72,14 @@ struct GraphLegendWindow : Window {
+ 		const Rect tr = ir.Indent(d.width + WidgetDimensions::scaled.hsep_normal, rtl);
+ 		SetDParam(0, cid);
+ 		SetDParam(1, cid);
+-		DrawString(tr.left, tr.right, CenterBounds(tr.top, tr.bottom, FONT_HEIGHT_NORMAL), STR_COMPANY_NAME_COMPANY_NUM, HasBit(_legend_excluded_companies, cid) ? TC_BLACK : TC_WHITE);
++		DrawString(tr.left, tr.right, CenterBounds(tr.top, tr.bottom, FONT_HEIGHT_NORMAL), STR_COMPANY_NAME_COMPANY_NUM, _legend_excluded_companies.at(cid) ? TC_BLACK : TC_WHITE);
+ 	}
+ 
+ 	void OnClick(Point pt, int widget, int click_count) override
+ 	{
+ 		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
+ 
+-		ToggleBit(_legend_excluded_companies, widget - WID_GL_FIRST_COMPANY);
++		_legend_excluded_companies.toggle(widget - WID_GL_FIRST_COMPANY);
+ 		this->ToggleWidgetLoweredState(widget);
+ 		this->SetDirty();
+ 		InvalidateWindowData(WC_INCOME_GRAPH, 0);
+@@ -98,7 +99,7 @@ struct GraphLegendWindow : Window {
+ 		if (!gui_scope) return;
+ 		if (Company::IsValidID(data)) return;
+ 
+-		SetBit(_legend_excluded_companies, data);
++		_legend_excluded_companies.set(data);
+ 		this->RaiseWidget(data + WID_GL_FIRST_COMPANY);
+ 	}
+ };
+@@ -163,7 +164,7 @@ struct ValuesInterval {
+ 
+ struct BaseGraphWindow : Window {
+ protected:
+-	static const int GRAPH_MAX_DATASETS     =  64;
++	static const int GRAPH_MAX_DATASETS     =  (int)MAX_COMPANIES > (int)NUM_CARGO ? (int)MAX_COMPANIES : (int)NUM_CARGO;
+ 	static const int GRAPH_BASE_COLOUR      =  GREY_SCALE(2);
+ 	static const int GRAPH_GRID_COLOUR      =  GREY_SCALE(3);
+ 	static const int GRAPH_AXIS_LINE_COLOUR =  GREY_SCALE(1);
+@@ -176,8 +177,8 @@ protected:
+ 	static const int MIN_GRAPH_NUM_LINES_Y  =   9; ///< Minimal number of horizontal lines to draw.
+ 	static const int MIN_GRID_PIXEL_SIZE    =  20; ///< Minimum distance between graph lines.
+ 
+-	uint64 excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
+-	byte num_dataset;
++	Bitset<GRAPH_MAX_DATASETS> excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
++	int num_dataset;
+ 	byte num_on_x_axis;
+ 	byte num_vert_lines;
+ 
+@@ -211,7 +212,7 @@ protected:
+ 		current_interval.lowest  = INT64_MAX;
+ 
+ 		for (int i = 0; i < this->num_dataset; i++) {
+-			if (HasBit(this->excluded_data, i)) continue;
++			if (this->excluded_data.at(i)) continue;
+ 			for (int j = 0; j < this->num_on_x_axis; j++) {
+ 				OverflowSafeInt64 datapoint = this->cost[i][j];
+ 
+@@ -418,7 +419,7 @@ protected:
+ 		uint pointoffs1 = (linewidth + 1) / 2;
+ 		uint pointoffs2 = linewidth + 1 - pointoffs1;
+ 		for (int i = 0; i < this->num_dataset; i++) {
+-			if (!HasBit(this->excluded_data, i)) {
++			if (!this->excluded_data.at(i)) {
+ 				/* Centre the dot between the grid lines. */
+ 				x = r.left + (x_sep / 2);
+ 
+@@ -566,11 +567,11 @@ public:
+ 	 */
+ 	void UpdateStatistics(bool initialize)
+ 	{
+-		CompanyMask excluded_companies = _legend_excluded_companies;
++		Bitset<GRAPH_MAX_DATASETS> excluded_companies = _legend_excluded_companies;
+ 
+ 		/* Exclude the companies which aren't valid */
+ 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
+-			if (!Company::IsValidID(c)) SetBit(excluded_companies, c);
++			if (!Company::IsValidID(c)) excluded_companies.set(c);
+ 		}
+ 
+ 		byte nums = 0;
+@@ -904,11 +905,11 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
+ 
+ 	void UpdateExcludedData()
+ 	{
+-		this->excluded_data = 0;
++		this->excluded_data.reset();
+ 
+ 		int i = 0;
+ 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
+-			if (HasBit(_legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
++			if (HasBit(_legend_excluded_cargo, cs->Index())) this->excluded_data.set(i);
+ 			i++;
+ 		}
+ 	}
+@@ -978,7 +979,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
+ 			case WID_CPR_ENABLE_CARGOES:
+ 				/* Remove all cargoes from the excluded lists. */
+ 				_legend_excluded_cargo = 0;
+-				this->excluded_data = 0;
++				this->excluded_data.reset();
+ 				this->SetDirty();
+ 				break;
+ 
+@@ -987,7 +988,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
+ 				int i = 0;
+ 				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
+ 					SetBit(_legend_excluded_cargo, cs->Index());
+-					SetBit(this->excluded_data, i);
++					this->excluded_data.set(i);
+ 					i++;
+ 				}
+ 				this->SetDirty();
+@@ -1396,6 +1397,6 @@ void ShowPerformanceRatingDetail()
+ 
+ void InitializeGraphGui()
+ {
+-	_legend_excluded_companies = 0;
++	_legend_excluded_companies.reset();
+ 	_legend_excluded_cargo = 0;
+ }
+diff --git a/src/lang/catalan.txt b/src/lang/catalan.txt
+index 3072bf029d..65b5ddf70d 100644
+--- a/src/lang/catalan.txt
++++ b/src/lang/catalan.txt
+@@ -1354,13 +1354,11 @@ STR_CONFIG_SETTING_ALLOW_EXCLUSIVE_HELPTEXT                     :Si una companyi
+ 
+ STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS                         :Permet finançar edificis: {STRING}
+ STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS_HELPTEXT                :Permet a les companyies donar diners a les poblacions per finançar nous edificis.
+-
+ STR_CONFIG_SETTING_ALLOW_FUND_ROAD                              :Permet finançar la reconstrucció dels carrers locals: {STRING}
+ STR_CONFIG_SETTING_ALLOW_FUND_ROAD_HELPTEXT                     :Permet a les companyies donar diners a les poblacions per la reconstrucció de carrers i sabotejar la circulació de vehicles.
+ 
+ STR_CONFIG_SETTING_ALLOW_GIVE_MONEY                             :Permet enviar diners a altres companyies: {STRING}
+ STR_CONFIG_SETTING_ALLOW_GIVE_MONEY_HELPTEXT                    :Permet transferir diners entre companyies en el mode multijugador.
+-
+ STR_CONFIG_SETTING_FREIGHT_TRAINS                               :Multiplicador de pes per simular trens pesats: {STRING}
+ STR_CONFIG_SETTING_FREIGHT_TRAINS_HELPTEXT                      :Estableix l'impacte de transportar contenidors en trens. Els valors alts fan que transportar contenidors sigui més exigent amb els trens, especialment als turons.
+ 
+@@ -1417,7 +1415,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONTHS_VALUE_AFTER                 :{COMMA} mes{P 0
+ 
+ STR_CONFIG_SETTING_AUTORENEW_MONEY                              :Mínim de diners per a renovacions automàtiques: {STRING}
+ STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Estableix la quantitat mínima de diners que han de quedar al banc abans de considerar l'autorenovació de vehicles.
+-
+ STR_CONFIG_SETTING_ERRMSG_DURATION                              :Duració del missatge d'error: {STRING}
+ STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Duració dels missatges d'error mostrats en finestres vermelles. Alguns missatges d'error (crítics) no es tanquen automàticament i s'han de tancar manualment
+ STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} segon{P 0 "" s}
+@@ -1612,7 +1609,6 @@ STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_ACTIONS              :Totes
+ 
+ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS                       :Mostra els grups en el llistat de vehicles de la companyia: {STRING}
+ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Activa la utilització de llistes avançades de vehicles per agrupar vehicles.
+-
+ STR_CONFIG_SETTING_LOADING_INDICATORS                           :Utilitza indicadors de càrrega: {STRING}
+ STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Selecciona si els indicadors de càrrega seran mostrats sobre els vehicles en càrrega o descàrrega
+ 
+@@ -1655,7 +1651,6 @@ STR_CONFIG_SETTING_SOUND_NEWS_HELPTEXT                          :Reprodueix un s
+ 
+ STR_CONFIG_SETTING_SOUND_NEW_YEAR                               :Cap d'any: {STRING}
+ STR_CONFIG_SETTING_SOUND_NEW_YEAR_HELPTEXT                      :Reprodueix un efecte de so al final de l'any quan apareix el resum financer de l'any de la companyia en comparació amb l'anterior
+-
+ STR_CONFIG_SETTING_SOUND_CONFIRM                                :Construcció: {STRING}
+ STR_CONFIG_SETTING_SOUND_CONFIRM_HELPTEXT                       :Reprodueix un efecte de so quan es realitzin amb èxit construccions o altres accions
+ 
+@@ -1704,7 +1699,6 @@ STR_CONFIG_SETTING_AI_PROFILE_HARD                              :Difícil
+ 
+ STR_CONFIG_SETTING_AI_IN_MULTIPLAYER                            :Permet IA en multijugador: {STRING}
+ STR_CONFIG_SETTING_AI_IN_MULTIPLAYER_HELPTEXT                   :Permet a les IA participar en partides multijugador.
+-
+ STR_CONFIG_SETTING_SCRIPT_MAX_OPCODES                           :#opcodes abans de suspendre els scripts: {STRING}
+ STR_CONFIG_SETTING_SCRIPT_MAX_OPCODES_HELPTEXT                  :Màxim nombre de passos de càlcul que un script pot fer en un torn
+ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY                            :Ús de memòria màxim per script: {STRING}
+@@ -1847,7 +1841,6 @@ STR_CONFIG_SETTING_ALLOW_TOWN_ROADS                             :Les poblacions
+ STR_CONFIG_SETTING_ALLOW_TOWN_ROADS_HELPTEXT                    :Permet a les poblacions construir carreteres per créixer. Desactiveu aquesta opció per evitar que les poblacions construeixin carreteres.
+ STR_CONFIG_SETTING_ALLOW_TOWN_LEVEL_CROSSINGS                   :Les poblacions poden construir passos a nivell: {STRING}
+ STR_CONFIG_SETTING_ALLOW_TOWN_LEVEL_CROSSINGS_HELPTEXT          :Activant aquesta opció, les poblacions podran construir passos a nivell.
+-
+ STR_CONFIG_SETTING_NOISE_LEVEL                                  :Permet a la ciutat controlar el nivell de soroll dels aeroports: {STRING}
+ STR_CONFIG_SETTING_NOISE_LEVEL_HELPTEXT                         :Amb aquesta opció desactivada, no podran haver-hi més de dos aeroports en una mateixa població. Amb aquesta opció activada, el nombre d'aeroports en cada població està limitat pel límit d'acceptació de soroll de la població, que depèn de la mida de l'aeroport i de la distància
+ 
+diff --git a/src/lang/esperanto.txt b/src/lang/esperanto.txt
+index a3561c7f7f..0b46c695c8 100644
+--- a/src/lang/esperanto.txt
++++ b/src/lang/esperanto.txt
+@@ -1778,7 +1778,6 @@ STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Kiam tiu ĉi ag
+ 
+ STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktivigu vagonajn rapideclimojn: {STRING}
+ STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Kiam ebligita, ankaŭ uzu rapideco-limigojn de vagonoj por decidi la maksimuman rapidecon de trajno
+-
+ STR_CONFIG_SETTING_DISABLE_ELRAILS                              :Malŝaltu elektrajn relojn: {STRING}
+ STR_CONFIG_SETTING_DISABLE_ELRAILS_HELPTEXT                     :Se tiu ĉi agordo estas aktiva, ne necesas elektrigi relojn por ke elektraj lokomotivoj povu veturi sur ili
+ 
+diff --git a/src/lang/gaelic.txt b/src/lang/gaelic.txt
+index e64d042a27..9bd5e0b0a7 100644
+--- a/src/lang/gaelic.txt
++++ b/src/lang/gaelic.txt
+@@ -1461,7 +1461,6 @@ STR_CONFIG_SETTING_BRIBE_HELPTEXT                               :Faodaidh compan
+ 
+ STR_CONFIG_SETTING_ALLOW_EXCLUSIVE                              :Ceadaich ceannach aig còirichean giùlain às-dùnach: {STRING}
+ STR_CONFIG_SETTING_ALLOW_EXCLUSIVE_HELPTEXT                     :Ma cheannaicheas companaidh còirichean giùlain às-dùnach airson baile, chan fhaigh stèiseanan (taistealaich no carago) nan co-fharpaiseach carago sam bith fad bliadhna
+-
+ STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS                         :Ceadaich maoineachadh thogalaichean: {STRING}
+ STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS_HELPTEXT                :Faodaidh companaidhean airgead a thoirt dha bhailtean ach an tog iad taighean ùra
+ 
+diff --git a/src/lang/hebrew.txt b/src/lang/hebrew.txt
+index 873b908c5e..ee043b5627 100644
+--- a/src/lang/hebrew.txt
++++ b/src/lang/hebrew.txt
+@@ -970,6 +970,8 @@ STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}בחר 
+ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :אחר
+ STR_GAME_OPTIONS_RESOLUTION_ITEM                                :{NUM}x{NUM}
+ 
++STR_GAME_OPTIONS_GUI_ZOOM_FRAME                                 :{BLACK}גודל ממשק
++STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_TOOLTIP                      :{BLACK}בחר את ממשק גודל העצם לשימוש
+ 
+ STR_GAME_OPTIONS_VIDEO_VSYNC                                    :{BLACK}VSync
+ 
+@@ -1837,12 +1839,10 @@ STR_CONFIG_SETTING_DISTRIBUTION_SYMMETRIC                       :סימטרי
+ 
+ STR_CONFIG_SETTING_LINKGRAPH_ACCURACY                           :דיוק החלוקה: {STRING}
+ STR_CONFIG_SETTING_LINKGRAPH_ACCURACY_HELPTEXT                  :ככל שתקבע ערך גבוה יותר כך ייארך זמן עיבוד במעד של גרף הקישור. אם זה ייארך זמן רב מידי אתה עלול לראות תקיעות. אולם אם תקבע ערך זה להיות נמוך, החלוקה לא תהיה מדוייקת, ואתה עלול לראות שהמטען לא יישלח למקומות שאתה מצפה שישלח.
+-
+ STR_CONFIG_SETTING_DEMAND_DISTANCE                              :השפעת המרחק על ביקושים: {STRING}
+ STR_CONFIG_SETTING_DEMAND_DISTANCE_HELPTEXT                     :אם תקבע ערך זה ליותר מ-0, המרחק בין תחנת מקור A של מטען מסויים ויעד אפשרי B ישפיע על כמות המטען שנשלח מ-A ל-B. ככל ש-B מרוחקת מ-A כך פחות מטען יישלח. כלל שתקבע ערך גבוה יותר, כך פחות מטען יישלח לתחנות מרוחקות ויותר מטען יישלח לתחנות קרובות.
+ STR_CONFIG_SETTING_DEMAND_SIZE                                  :כמות המטען החוזר עבור מצב סימטרי: {STRING}
+ STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :קביעת ערך זה לקטן מ-100% יגרום לחלוקה הסימטרית להתנהג יותר כמו חלוקה אסימטרית. פחות מטען יישלח בעל כורחו חזרה אם כמות מסויימת נשלחת לתחנה. אם ערך זה ייקבע ל-0%, החלוקה הסימטרית תהיה חלוקה אסימטרית.
+-
+ STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :הרוויה של מסלולים קצרים לפני שימוש במסלולי קיבולת גבוהה: {STRING}
+ STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :לעיתים קרובות יש מספר מסלולים בין שתי תחנות נתונות. אלגוריתם מרחק-מטען יגרום לרוויה במסלול הקצר ביותר תחילה, אחר כך ישתמש במסלול הקצר הבא אחריו עד שהוא יהיה רווי וכן הלאה. רוויה נקבעת על ידי הערכת הקיבולת והשימוש המתוכנן. ברגע שכל המסלולים רוויים, אם עדיין נותר ביקוש, הוא יעמיס על כל המסלולים, תוך כדי העדפת המסלולים עם קיבולת גבוהה. רוב הזמן האלגוריתם לא יעריך את הקיבלת במדוייק. הגדרה זאת מאפשרת לך לציין עד לאיזה אחוז יש לגרום למסלול קצר לרוויה בפעם הראשונה לפני שייבחר המסלול הבא הארוך ממנו. קבע הגדרה זו לערך קטן מ-100% כדי למנוע תחנות צפופות במקרה של הערכת יתר של הקיבולת.
+ 
+@@ -2115,6 +2115,10 @@ STR_NETWORK_SERVER_VISIBILITY_PUBLIC                            :פומבי
+ 
+ # Network server list
+ STR_NETWORK_SERVER_LIST_CAPTION                                 :{WHITE}משחק רשת
++STR_NETWORK_SERVER_LIST_ADVERTISED                              :{BLACK}מפורסם
++STR_NETWORK_SERVER_LIST_ADVERTISED_TOOLTIP                      :{BLACK}בחר בין משחק מפורסם (אינטרנטי) ומשחק לא מפורסם (רשת מקומית, LAN)
++STR_NETWORK_SERVER_LIST_ADVERTISED_NO                           :לא
++STR_NETWORK_SERVER_LIST_ADVERTISED_YES                          :כן
+ STR_NETWORK_SERVER_LIST_PLAYER_NAME                             :{BLACK} :שם השחקן
+ STR_NETWORK_SERVER_LIST_ENTER_NAME_TOOLTIP                      :{BLACK}זהו שמך כפי שיצפה ע"י המשתתפים האחרים
+ 
+diff --git a/src/lang/korean.txt b/src/lang/korean.txt
+index fbf03edc4f..523aa6b7e1 100644
+--- a/src/lang/korean.txt
++++ b/src/lang/korean.txt
+@@ -1821,7 +1821,6 @@ STR_CONFIG_SETTING_DRAG_SIGNALS_FIXED_DISTANCE_HELPTEXT         :신호기를 CT
+ 
+ STR_CONFIG_SETTING_SEMAPHORE_BUILD_BEFORE_DATE                  :전자식 신호기의 사용: {STRING}년 이후에
+ STR_CONFIG_SETTING_SEMAPHORE_BUILD_BEFORE_DATE_HELPTEXT         :전자식 신호기를 사용할 수 있는 연도를 설정합니다. 이 이전에는 구식 신호기만 사용 가능합니다. (두 신호기는 기능적으로는 동일하고 모습만 다릅니다.)
+-
+ STR_CONFIG_SETTING_CYCLE_SIGNAL_TYPES                           :신호기를 CTRL 클릭할 때 바뀌는 신호기의 종류: {STRING}
+ STR_CONFIG_SETTING_CYCLE_SIGNAL_TYPES_HELPTEXT                  :신호기 건설에서 CTRL+클릭할 때 바뀌는 신호기의 종류를 선택합니다
+ ###length 2
+diff --git a/src/lang/slovenian.txt b/src/lang/slovenian.txt
+index a0b81d8a3d..0f70fedb6a 100644
+--- a/src/lang/slovenian.txt
++++ b/src/lang/slovenian.txt
+@@ -1509,7 +1509,6 @@ STR_CONFIG_SETTING_TERRAIN_TYPE_HELPTEXT                        :(samo TerraGene
+ 
+ STR_CONFIG_SETTING_INDUSTRY_DENSITY                             :Gostota industrij: {STRING}
+ STR_CONFIG_SETTING_INDUSTRY_DENSITY_HELPTEXT                    :Nastavi, koliko industrij naj bi bilo ustvarjenih in kolikšen nivo naj bi se vzdrževal skozi igro
+-
+ STR_CONFIG_SETTING_OIL_REF_EDGE_DISTANCE                        :Največja oddaljenost rafinerij nafte od roba: {STRING}
+ STR_CONFIG_SETTING_OIL_REF_EDGE_DISTANCE_HELPTEXT               :Naftne rafinerije se nahajajo le pri robu kater, to je ob obali na otoških kartah
+ 
+@@ -1528,7 +1527,6 @@ STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_ROUGH              :Zelo valovit
+ 
+ STR_CONFIG_SETTING_VARIETY                                      :Raznolika distribucija: {STRING}
+ STR_CONFIG_SETTING_VARIETY_HELPTEXT                             :(TerraGenesis only) Nadzor nad ravninskimi in goratimi predeli ozemlja. Ker to izravna ozemlje, nastavi drugo nastavitev na gorato.
+-
+ STR_CONFIG_SETTING_RIVER_AMOUNT                                 :Število rek: {STRING}
+ STR_CONFIG_SETTING_RIVER_AMOUNT_HELPTEXT                        :Izberi koliko rek generirati
+ 
+diff --git a/src/lang/spanish.txt b/src/lang/spanish.txt
+index 66c33e6d46..88a9bbf0b3 100644
+--- a/src/lang/spanish.txt
++++ b/src/lang/spanish.txt
+@@ -1088,7 +1088,7 @@ STR_VARIETY_VERY_LOW                                            :Muy Baja
+ STR_VARIETY_LOW                                                 :Baja
+ STR_VARIETY_MEDIUM                                              :Media
+ STR_VARIETY_HIGH                                                :Alta
+-STR_VARIETY_VERY_HIGH                                           :Muy Alta
++STR_VARIETY_VERY_HIGH                                           :Muy alta
+ 
+ ###length 5
+ STR_AI_SPEED_VERY_SLOW                                          :Muy lenta
+diff --git a/src/lang/spanish_MX.txt b/src/lang/spanish_MX.txt
+index 695814f41d..3d8602117d 100644
+--- a/src/lang/spanish_MX.txt
++++ b/src/lang/spanish_MX.txt
+@@ -2533,7 +2533,6 @@ STR_CONTENT_DETAIL_SUBTITLE_SELECTED                            :{SILVER}Conteni
+ STR_CONTENT_DETAIL_SUBTITLE_AUTOSELECTED                        :{SILVER}Dependencia elegida para descargar
+ STR_CONTENT_DETAIL_SUBTITLE_ALREADY_HERE                        :{SILVER}Este contenido ya fue descargado
+ STR_CONTENT_DETAIL_SUBTITLE_DOES_NOT_EXIST                      :{SILVER}Este contenido es desconocido y no puede ser descargado en OpenTTD
+-
+ STR_CONTENT_DETAIL_UPDATE                                       :{SILVER}Este es un sustituto de un{G "" a} {STRING} existente
+ STR_CONTENT_DETAIL_NAME                                         :{SILVER}Nombre: {WHITE}{STRING}
+ STR_CONTENT_DETAIL_VERSION                                      :{SILVER}Versión: {WHITE}{STRING}
+diff --git a/src/lang/tamil.txt b/src/lang/tamil.txt
+index 9fcdabcc00..7bdde6c8ce 100644
+--- a/src/lang/tamil.txt
++++ b/src/lang/tamil.txt
+@@ -1724,7 +1724,6 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :ஒன்று
+ STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :தொடக்க நகர அளவு பெருக்கம்: {STRING}
+ STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :ஆட்டத்தின் தொடக்கத்தில் மாநகரங்களின் அளவு நகரங்களை ஒப்பிடுகையில்
+ 
+-
+ STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :பயணிகள் பரிமாற்றம் வகை: {STRING}
+ STR_CONFIG_SETTING_DISTRIBUTION_MAIL                            :அஞ்சல் பரிமாற்றம் வகை: {STRING}
+ STR_CONFIG_SETTING_DISTRIBUTION_DEFAULT                         :மற்ற சரக்கு வகுப்புகளுக்கான விநியோக முறை: {STRING}
+diff --git a/src/league_gui.cpp b/src/league_gui.cpp
+index a46cd2efa6..78a79b2317 100644
+--- a/src/league_gui.cpp
++++ b/src/league_gui.cpp
+@@ -133,7 +133,10 @@ public:
+ 
+ 		this->ordinal_width = 0;
+ 		for (uint i = 0; i < MAX_COMPANIES; i++) {
+-			this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox(STR_ORDINAL_NUMBER_1ST + i).width);
++			if (i + STR_ORDINAL_NUMBER_1ST <= STR_ORDINAL_NUMBER_15TH)
++				this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox(i + STR_ORDINAL_NUMBER_1ST).width);
++			else
++				this->ordinal_width = std::max(this->ordinal_width, GetStringBoundingBox((std::to_string(i + 1) + ".").c_str()).width);
+ 		}
+ 		this->ordinal_width += WidgetDimensions::scaled.hsep_wide; // Keep some extra spacing
+ 
+diff --git a/src/linkgraph/linkgraph_gui.cpp b/src/linkgraph/linkgraph_gui.cpp
+index 8752894b04..844fffd699 100644
+--- a/src/linkgraph/linkgraph_gui.cpp
++++ b/src/linkgraph/linkgraph_gui.cpp
+@@ -69,7 +69,7 @@ void LinkGraphOverlay::RebuildCache()
+ {
+ 	this->cached_links.clear();
+ 	this->cached_stations.clear();
+-	if (this->company_mask == 0) return;
++	if (this->company_mask.none()) return;
+ 
+ 	DrawPixelInfo dpi;
+ 	this->GetWidgetDpi(&dpi);
+@@ -100,7 +100,7 @@ void LinkGraphOverlay::RebuildCache()
+ 				assert(sta != stb);
+ 
+ 				/* Show links between stations of selected companies or "neutral" ones like oilrigs. */
+-				if (stb->owner != OWNER_NONE && sta->owner != OWNER_NONE && !HasBit(this->company_mask, stb->owner)) continue;
++				if (stb->owner != OWNER_NONE && sta->owner != OWNER_NONE && !this->company_mask.at(stb->owner)) continue;
+ 				if (stb->rect.IsEmpty()) continue;
+ 
+ 				if (!this->IsLinkVisible(pta, this->GetStationMiddle(stb), &dpi)) continue;
+@@ -442,7 +442,7 @@ void LinkGraphOverlay::SetCargoMask(CargoTypes cargo_mask)
+  * Set a new company mask and rebuild the cache.
+  * @param company_mask New company mask.
+  */
+-void LinkGraphOverlay::SetCompanyMask(uint32 company_mask)
++void LinkGraphOverlay::SetCompanyMask(CompanyMask company_mask)
+ {
+ 	this->company_mask = company_mask;
+ 	this->RebuildCache();
+@@ -452,7 +452,7 @@ void LinkGraphOverlay::SetCompanyMask(uint32 company_mask)
+ /** Make a number of rows with buttons for each company for the linkgraph legend window. */
+ NWidgetBase *MakeCompanyButtonRowsLinkGraphGUI(int *biggest_index)
+ {
+-	return MakeCompanyButtonRows(biggest_index, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST, COLOUR_GREY, 3, STR_NULL);
++	return MakeCompanyButtonRows(biggest_index, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST, COLOUR_GREY, 15, STR_LINKGRAPH_LEGEND_SELECT_COMPANIES);
+ }
+ 
+ NWidgetBase *MakeSaturationLegendLinkGraphGUI(int *biggest_index)
+@@ -562,10 +562,10 @@ LinkGraphLegendWindow::LinkGraphLegendWindow(WindowDesc *desc, int window_number
+  */
+ void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay) {
+ 	this->overlay = overlay;
+-	uint32 companies = this->overlay->GetCompanyMask();
++	CompanyMask companies = this->overlay->GetCompanyMask();
+ 	for (uint c = 0; c < MAX_COMPANIES; c++) {
+ 		if (!this->IsWidgetDisabled(WID_LGL_COMPANY_FIRST + c)) {
+-			this->SetWidgetLoweredState(WID_LGL_COMPANY_FIRST + c, HasBit(companies, c));
++			this->SetWidgetLoweredState(WID_LGL_COMPANY_FIRST + c, companies.at(c));
+ 		}
+ 	}
+ 	CargoTypes cargoes = this->overlay->GetCargoMask();
+@@ -668,11 +668,11 @@ bool LinkGraphLegendWindow::OnTooltip(Point pt, int widget, TooltipCloseConditio
+  */
+ void LinkGraphLegendWindow::UpdateOverlayCompanies()
+ {
+-	uint32 mask = 0;
++	CompanyMask mask;
+ 	for (uint c = 0; c < MAX_COMPANIES; c++) {
+ 		if (this->IsWidgetDisabled(c + WID_LGL_COMPANY_FIRST)) continue;
+ 		if (!this->IsWidgetLowered(c + WID_LGL_COMPANY_FIRST)) continue;
+-		SetBit(mask, c);
++		mask.set(c);
+ 	}
+ 	this->overlay->SetCompanyMask(mask);
+ }
+diff --git a/src/linkgraph/linkgraph_gui.h b/src/linkgraph/linkgraph_gui.h
+index ef249b9bfd..6a56393e9b 100644
+--- a/src/linkgraph/linkgraph_gui.h
++++ b/src/linkgraph/linkgraph_gui.h
+@@ -56,13 +56,13 @@ public:
+ 	 * @param company_mask Bitmask of companies to be shown.
+ 	 * @param scale Desired thickness of lines and size of station dots.
+ 	 */
+-	LinkGraphOverlay(Window *w, uint wid, CargoTypes cargo_mask, uint32 company_mask, uint scale) :
++	LinkGraphOverlay(Window *w, uint wid, CargoTypes cargo_mask, CompanyMask company_mask, uint scale) :
+ 			window(w), widget_id(wid), cargo_mask(cargo_mask), company_mask(company_mask), scale(scale)
+ 	{}
+ 
+ 	void Draw(const DrawPixelInfo *dpi);
+ 	void SetCargoMask(CargoTypes cargo_mask);
+-	void SetCompanyMask(uint32 company_mask);
++	void SetCompanyMask(CompanyMask company_mask);
+ 
+ 	bool ShowTooltip(Point pt, TooltipCloseCondition close_cond);
+ 
+@@ -73,13 +73,13 @@ public:
+ 	CargoTypes GetCargoMask() { return this->cargo_mask; }
+ 
+ 	/** Get a bitmask of the currently shown companies. */
+-	uint32 GetCompanyMask() { return this->company_mask; }
++	CompanyMask GetCompanyMask() { return this->company_mask; }
+ 
+ protected:
+ 	Window *window;                    ///< Window to be drawn into.
+ 	const uint widget_id;              ///< ID of Widget in Window to be drawn to.
+ 	CargoTypes cargo_mask;             ///< Bitmask of cargos to be displayed.
+-	uint32 company_mask;               ///< Bitmask of companies to be displayed.
++	CompanyMask company_mask;               ///< Bitmask of companies to be displayed.
+ 	LinkMap cached_links;              ///< Cache for links to reduce recalculation.
+ 	StationSupplyList cached_stations; ///< Cache for stations to be drawn.
+ 	uint scale;                        ///< Width of link lines.
+diff --git a/src/main_gui.cpp b/src/main_gui.cpp
+index 50f14003ee..afc75980a5 100644
+--- a/src/main_gui.cpp
++++ b/src/main_gui.cpp
+@@ -224,7 +224,8 @@ struct MainWindow : Window
+ 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_M_VIEWPORT);
+ 		nvp->InitializeViewport(this, TileXY(32, 32), ScaleZoomGUI(ZOOM_LVL_VIEWPORT));
+ 
+-		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, 0, 2);
++		CompanyMask empty;
++		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, empty, 3);
+ 		this->refresh.SetInterval(LINKGRAPH_DELAY);
+ 	}
+ 
+@@ -235,7 +236,7 @@ struct MainWindow : Window
+ 		this->refresh.SetInterval(LINKGRAPH_REFRESH_PERIOD);
+ 
+ 		if (this->viewport->overlay->GetCargoMask() == 0 ||
+-				this->viewport->overlay->GetCompanyMask() == 0) {
++				this->viewport->overlay->GetCompanyMask().none()) {
+ 			return;
+ 		}
+ 
+diff --git a/src/map_type.h b/src/map_type.h
+index 89012d6753..b31dd855dd 100644
+--- a/src/map_type.h
++++ b/src/map_type.h
+@@ -34,6 +34,7 @@ struct TileExtended {
+ 	byte m6;   ///< General purpose
+ 	byte m7;   ///< Primarily used for newgrf support
+ 	uint16 m8; ///< General purpose
++	uint16 m9; ///< Extended ownership information
+ };
+ 
+ /**
+diff --git a/src/misc_gui.cpp b/src/misc_gui.cpp
+index e24bf74f0c..d37241ebe0 100644
+--- a/src/misc_gui.cpp
++++ b/src/misc_gui.cpp
+@@ -127,6 +127,7 @@ public:
+ 		Debug(misc, LANDINFOD_LEVEL, "m6     = {:#x}", _me[tile].m6);
+ 		Debug(misc, LANDINFOD_LEVEL, "m7     = {:#x}", _me[tile].m7);
+ 		Debug(misc, LANDINFOD_LEVEL, "m8     = {:#x}", _me[tile].m8);
++		Debug(misc, LANDINFOD_LEVEL, "m9     = {:#x}", _me[tile].m9);
+ #undef LANDINFOD_LEVEL
+ 	}
+ 
+diff --git a/src/network/network.cpp b/src/network/network.cpp
+index f4ae3a361e..58eddf114c 100644
+--- a/src/network/network.cpp
++++ b/src/network/network.cpp
+@@ -212,7 +212,7 @@ std::string GenerateCompanyPasswordHash(const std::string &password, const std::
+  */
+ bool NetworkCompanyIsPassworded(CompanyID company_id)
+ {
+-	return HasBit(_network_company_passworded, company_id);
++	return _network_company_passworded.at(company_id);
+ }
+ 
+ /* This puts a text-message to the console, or in the future, the chat-box,
+@@ -610,7 +610,7 @@ void NetworkClose(bool close_admins)
+ 
+ 	delete[] _network_company_states;
+ 	_network_company_states = nullptr;
+-	_network_company_passworded = 0;
++	_network_company_passworded.reset();
+ 
+ 	InitializeNetworkPools(close_admins);
+ }
+@@ -899,7 +899,7 @@ bool NetworkServerStart()
+ 	_network_own_client_id = CLIENT_ID_SERVER;
+ 
+ 	_network_clients_connected = 0;
+-	_network_company_passworded = 0;
++	_network_company_passworded.reset();
+ 
+ 	NetworkInitGameInfo();
+ 
+diff --git a/src/network/network_client.cpp b/src/network/network_client.cpp
+index ac4da07ee9..b4cfaa8556 100644
+--- a/src/network/network_client.cpp
++++ b/src/network/network_client.cpp
+@@ -1124,7 +1124,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_COMPANY_UPDATE(
+ {
+ 	if (this->status < STATUS_ACTIVE) return NETWORK_RECV_STATUS_MALFORMED_PACKET;
+ 
+-	_network_company_passworded = p->Recv_uint16();
++	for (uint i = 0; i < CompanyMask::bsize; i++)
++		_network_company_passworded.data[i] = p->Recv_uint64();
+ 	SetWindowClassesDirty(WC_COMPANY);
+ 
+ 	return NETWORK_RECV_STATUS_OKAY;
+diff --git a/src/network/network_gui.cpp b/src/network/network_gui.cpp
+index c0aa6306b1..a071d3f3ab 100644
+--- a/src/network/network_gui.cpp
++++ b/src/network/network_gui.cpp
+@@ -1034,7 +1034,7 @@ void ShowNetworkGameWindow()
+ }
+ 
+ struct NetworkStartServerWindow : public Window {
+-	byte widget_id;              ///< The widget that has the pop-up input menu
++	int widget_id;              ///< The widget that has the pop-up input menu
+ 	QueryString name_editbox;    ///< Server name editbox.
+ 
+ 	NetworkStartServerWindow(WindowDesc *desc) : Window(desc), name_editbox(NETWORK_NAME_LENGTH)
+@@ -1129,7 +1129,7 @@ struct NetworkStartServerWindow : public Window {
+ 			case WID_NSS_COMPANIES_TXT:  // Click on number of companies
+ 				this->widget_id = WID_NSS_COMPANIES_TXT;
+ 				SetDParam(0, _settings_client.network.max_companies);
+-				ShowQueryString(STR_JUST_INT, STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES,  3, this, CS_NUMERAL, QSF_NONE);
++				ShowQueryString(STR_JUST_INT, STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES,  4, this, CS_NUMERAL, QSF_NONE);
+ 				break;
+ 
+ 			case WID_NSS_GENERATE_GAME: // Start game
+@@ -1655,6 +1655,9 @@ private:
+ 		this->player_host_index = -1;
+ 		this->player_self_index = -1;
+ 
++		/* Spectators */
++		this->RebuildListCompany(COMPANY_SPECTATOR, client_playas);
++
+ 		/* As spectator, show a line to create a new company. */
+ 		if (client_playas == COMPANY_SPECTATOR && !NetworkMaxCompaniesReached()) {
+ 			this->buttons[line_count].emplace_back(new CompanyButton(SPR_JOIN, STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP, COLOUR_ORANGE, COMPANY_SPECTATOR, &NetworkClientListWindow::OnClickCompanyNew));
+@@ -1672,9 +1675,6 @@ private:
+ 			this->RebuildListCompany(c->index, client_playas);
+ 		}
+ 
+-		/* Spectators */
+-		this->RebuildListCompany(COMPANY_SPECTATOR, client_playas);
+-
+ 		this->vscroll->SetCount(this->line_count);
+ 	}
+ 
+@@ -2106,6 +2106,9 @@ public:
+ 				NetworkClientInfo *own_ci = NetworkClientInfo::GetByClientID(_network_own_client_id);
+ 				CompanyID client_playas = own_ci == nullptr ? COMPANY_SPECTATOR : own_ci->client_playas;
+ 
++				/* Spectators */
++				this->DrawCompany(COMPANY_SPECTATOR, ir, line);
++
+ 				if (client_playas == COMPANY_SPECTATOR && !NetworkMaxCompaniesReached()) {
+ 					this->DrawCompany(COMPANY_NEW_COMPANY, ir, line);
+ 				}
+@@ -2119,9 +2122,6 @@ public:
+ 					this->DrawCompany(c->index, ir, line);
+ 				}
+ 
+-				/* Spectators */
+-				this->DrawCompany(COMPANY_SPECTATOR, ir, line);
+-
+ 				break;
+ 			}
+ 		}
+diff --git a/src/network/network_server.cpp b/src/network/network_server.cpp
+index 67d59bddda..6ebaed3979 100644
+--- a/src/network/network_server.cpp
++++ b/src/network/network_server.cpp
+@@ -776,8 +776,10 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendCompanyUpdate()
+ {
+ 	Packet *p = new Packet(PACKET_SERVER_COMPANY_UPDATE);
+ 
+-	p->Send_uint16(_network_company_passworded);
++	for (uint i = 0; i < CompanyMask::bsize; i++)
++		p->Send_uint64(_network_company_passworded.data[i]);
+ 	this->SendPacket(p);
++
+ 	return NETWORK_RECV_STATUS_OKAY;
+ }
+ 
+@@ -1897,7 +1899,7 @@ void NetworkServerUpdateCompanyPassworded(CompanyID company_id, bool passworded)
+ {
+ 	if (NetworkCompanyIsPassworded(company_id) == passworded) return;
+ 
+-	SB(_network_company_passworded, company_id, 1, !!passworded);
++	_network_company_passworded.set(company_id, passworded);
+ 	SetWindowClassesDirty(WC_COMPANY);
+ 
+ 	for (NetworkClientSocket *cs : NetworkClientSocket::Iterate()) {
+diff --git a/src/newgrf_town.cpp b/src/newgrf_town.cpp
+index a7671a8ac9..79ebab8dd7 100644
+--- a/src/newgrf_town.cpp
++++ b/src/newgrf_town.cpp
+@@ -77,8 +77,8 @@
+ 		case 0xAB: return GB(this->t->ratings[6], 8, 8);
+ 		case 0xAC: return this->t->ratings[7];
+ 		case 0xAD: return GB(this->t->ratings[7], 8, 8);
+-		case 0xAE: return this->t->have_ratings;
+-		case 0xB2: return this->t->statues;
++		case 0xAE: return (uint32)this->t->have_ratings.data[0];
++		case 0xB2: return (uint32)this->t->statues.data[0];
+ 		case 0xB6: return ClampToU16(this->t->cache.num_houses);
+ 		case 0xB9: return this->t->growth_rate / TOWN_GROWTH_TICKS;
+ 		case 0xBA: return ClampToU16(this->t->supplied[CT_PASSENGERS].new_max);
+diff --git a/src/object_cmd.cpp b/src/object_cmd.cpp
+index 3adf5e35db..c145edb9e3 100644
+--- a/src/object_cmd.cpp
++++ b/src/object_cmd.cpp
+@@ -600,7 +600,7 @@ static CommandCost ClearTile_Object(TileIndex tile, DoCommandFlag flags)
+ 		case OBJECT_STATUE:
+ 			if (flags & DC_EXEC) {
+ 				Town *town = o->town;
+-				ClrBit(town->statues, GetTileOwner(tile));
++				town->statues.reset(GetTileOwner(tile));
+ 				SetWindowDirty(WC_TOWN_AUTHORITY, town->index);
+ 			}
+ 			break;
+@@ -861,10 +861,10 @@ static void ChangeTileOwner_Object(TileIndex tile, Owner old_owner, Owner new_ow
+ 		SetTileOwner(tile, new_owner);
+ 	} else if (type == OBJECT_STATUE) {
+ 		Town *t = Object::GetByTile(tile)->town;
+-		ClrBit(t->statues, old_owner);
+-		if (new_owner != INVALID_OWNER && !HasBit(t->statues, new_owner)) {
++		t->statues.reset(old_owner);
++		if (new_owner != INVALID_OWNER && !t->statues.at(new_owner)) {
+ 			/* Transfer ownership to the new company */
+-			SetBit(t->statues, new_owner);
++			t->statues.set(new_owner);
+ 			SetTileOwner(tile, new_owner);
+ 		} else {
+ 			do_clear = true;
+diff --git a/src/rail.cpp b/src/rail.cpp
+index 63afa379e0..d94384a0b5 100644
+--- a/src/rail.cpp
++++ b/src/rail.cpp
+@@ -256,7 +256,7 @@ RailTypes GetCompanyRailtypes(CompanyID company, bool introduces)
+ 		const EngineInfo *ei = &e->info;
+ 
+ 		if (HasBit(ei->climates, _settings_game.game_creation.landscape) &&
+-				(HasBit(e->company_avail, company) || _date >= e->intro_date + DAYS_IN_YEAR)) {
++				(e->company_avail.at(company) || _date >= e->intro_date + DAYS_IN_YEAR)) {
+ 			const RailVehicleInfo *rvi = &e->u.rail;
+ 
+ 			if (rvi->railveh_type != RAILVEH_WAGON) {
+diff --git a/src/road.cpp b/src/road.cpp
+index d143ae652d..259bbb698d 100644
+--- a/src/road.cpp
++++ b/src/road.cpp
+@@ -193,7 +193,7 @@ RoadTypes GetCompanyRoadTypes(CompanyID company, bool introduces)
+ 		const EngineInfo *ei = &e->info;
+ 
+ 		if (HasBit(ei->climates, _settings_game.game_creation.landscape) &&
+-				(HasBit(e->company_avail, company) || _date >= e->intro_date + DAYS_IN_YEAR)) {
++				(e->company_avail.at(company) || _date >= e->intro_date + DAYS_IN_YEAR)) {
+ 			const RoadVehicleInfo *rvi = &e->u.road;
+ 			assert(rvi->roadtype < ROADTYPE_END);
+ 			if (introduces) {
+@@ -285,7 +285,7 @@ RoadTypes ExistingRoadTypes(CompanyID c)
+ 		if (!HasBit(e->info.climates, _settings_game.game_creation.landscape)) continue;
+ 
+ 		/* Check whether available for all potential companies */
+-		if (e->company_avail != (CompanyMask)-1) continue;
++		if (!e->company_avail.all()) continue;
+ 
+ 		known_roadtypes |= GetRoadTypeInfo(e->u.road.roadtype)->introduces_roadtypes;
+ 	}
+diff --git a/src/road_map.h b/src/road_map.h
+index 6be02e42f6..47434b1dae 100644
+--- a/src/road_map.h
++++ b/src/road_map.h
+@@ -232,13 +232,25 @@ static inline bool HasTileAnyRoadType(TileIndex t, RoadTypes rts)
+  * @return Owner of the given road type.
+  */
+ static inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
++{
++	assert(MayHaveRoad(t));
++	if(rtt == RTT_ROAD) {
++		if(IsNormalRoadTile(t)) return GetTileOwner(t);
++		else return (Owner) _m[t].m3;
++	}
++
++	Owner o = (Owner) _m[t].m1;
++	return o == OWNER_TOWN ? OWNER_NONE : o;
++}
++
++static inline Owner GetOldRoadOwner(TileIndex t, RoadTramType rtt)
+ {
+ 	assert(MayHaveRoad(t));
+ 	if (rtt == RTT_ROAD) return (Owner)GB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5);
+ 
+ 	/* Trams don't need OWNER_TOWN, and remapping OWNER_NONE
+ 	 * to OWNER_TOWN makes it use one bit less */
+-	Owner o = (Owner)GB(_m[t].m3, 4, 4);
++	Owner o = (Owner)GB(_m[t].m1, 4, 4);
+ 	return o == OWNER_TOWN ? OWNER_NONE : o;
+ }
+ 
+@@ -249,6 +261,16 @@ static inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
+  * @param o  New owner of the given road type.
+  */
+ static inline void SetRoadOwner(TileIndex t, RoadTramType rtt, Owner o)
++{
++	if(rtt == RTT_ROAD) {
++		if(IsNormalRoadTile(t)) SetTileOwner(t, o);
++		else _m[t].m3 = o;
++	} else {
++		_m[t].m1 = o == OWNER_NONE ? OWNER_TOWN : o;
++	}
++}
++
++static inline void SetOldRoadOwner(TileIndex t, RoadTramType rtt, Owner o)
+ {
+ 	if (rtt == RTT_ROAD) {
+ 		SB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5, o);
+@@ -666,15 +688,15 @@ static inline void MakeRoadCrossing(TileIndex t, Owner road, Owner tram, Owner r
+ 	_m[t].m4 = INVALID_ROADTYPE;
+ 	_m[t].m5 = ROAD_TILE_CROSSING << 6 | roaddir;
+ 	SB(_me[t].m6, 2, 4, 0);
+-	_me[t].m7 = road;
+ 	_me[t].m8 = INVALID_ROADTYPE << 6 | rat;
+ 	SetRoadTypes(t, road_rt, tram_rt);
++	SetRoadOwner(t, RTT_ROAD, road);
+ 	SetRoadOwner(t, RTT_TRAM, tram);
+ }
+ 
+ /**
+  * Make a road depot.
+- * @param t     Tile to make a level crossing.
++ * @param t     Tile to make a road depot.
+  * @param owner New owner of the depot.
+  * @param did   New depot ID.
+  * @param dir   Direction of the depot exit.*
+@@ -689,7 +711,7 @@ static inline void MakeRoadDepot(TileIndex t, Owner owner, DepotID did, DiagDire
+ 	_m[t].m4 = INVALID_ROADTYPE;
+ 	_m[t].m5 = ROAD_TILE_DEPOT << 6 | dir;
+ 	SB(_me[t].m6, 2, 4, 0);
+-	_me[t].m7 = owner;
++	SetTileOwner(t, owner);
+ 	_me[t].m8 = INVALID_ROADTYPE << 6;
+ 	SetRoadType(t, GetRoadTramType(rt), rt);
+ 	SetRoadOwner(t, RTT_TRAM, owner);
+diff --git a/src/saveload/afterload.cpp b/src/saveload/afterload.cpp
+index 45d35657b2..4041c7dc86 100644
+--- a/src/saveload/afterload.cpp
++++ b/src/saveload/afterload.cpp
+@@ -159,7 +159,7 @@ static void ConvertTownOwner()
+ 				FALLTHROUGH;
+ 
+ 			case MP_TUNNELBRIDGE:
+-				if (_m[tile].m1 & 0x80) SetTileOwner(tile, OWNER_TOWN);
++				if (_m[tile].m1 & 0x80) SetOldTileOwner(tile, OWNER_TOWN);
+ 				break;
+ 
+ 			default: break;
+@@ -439,7 +439,7 @@ static void CDECL HandleSavegameLoadCrash(int signum)
+  */
+ static void FixOwnerOfRailTrack(TileIndex t)
+ {
+-	assert(!Company::IsValidID(GetTileOwner(t)) && (IsLevelCrossingTile(t) || IsPlainRailTile(t)));
++	assert(!Company::IsValidID(GetOldTileOwner(t)) && (IsLevelCrossingTile(t) || IsPlainRailTile(t)));
+ 
+ 	/* remove leftover rail piece from crossing (from very old savegames) */
+ 	Train *v = nullptr;
+@@ -452,7 +452,7 @@ static void FixOwnerOfRailTrack(TileIndex t)
+ 
+ 	if (v != nullptr) {
+ 		/* when there is a train on crossing (it could happen in TTD), set owner of crossing to train owner */
+-		SetTileOwner(t, v->owner);
++		SetOldTileOwner(t, v->owner);
+ 		return;
+ 	}
+ 
+@@ -461,27 +461,27 @@ static void FixOwnerOfRailTrack(TileIndex t)
+ 		TileIndex tt = t + TileOffsByDiagDir(dd);
+ 		if (GetTileTrackStatus(t, TRANSPORT_RAIL, 0, dd) != 0 &&
+ 				GetTileTrackStatus(tt, TRANSPORT_RAIL, 0, ReverseDiagDir(dd)) != 0 &&
+-				Company::IsValidID(GetTileOwner(tt))) {
+-			SetTileOwner(t, GetTileOwner(tt));
++				Company::IsValidID(GetOldTileOwner(tt))) {
++			SetOldTileOwner(t, GetOldTileOwner(tt));
+ 			return;
+ 		}
+ 	}
+ 
+ 	if (IsLevelCrossingTile(t)) {
+ 		/* else change the crossing to normal road (road vehicles won't care) */
+-		Owner road = GetRoadOwner(t, RTT_ROAD);
+-		Owner tram = GetRoadOwner(t, RTT_TRAM);
++		Owner road = GetOldRoadOwner(t, RTT_ROAD);
++		Owner tram = GetOldRoadOwner(t, RTT_TRAM);
+ 		RoadBits bits = GetCrossingRoadBits(t);
+ 		bool hasroad = HasBit(_me[t].m7, 6);
+ 		bool hastram = HasBit(_me[t].m7, 7);
+ 
+ 		/* MakeRoadNormal */
+ 		SetTileType(t, MP_ROAD);
+-		SetTileOwner(t, road);
++		SetOldTileOwner(t, road);
+ 		_m[t].m3 = (hasroad ? bits : 0);
+ 		_m[t].m5 = (hastram ? bits : 0) | ROAD_TILE_NORMAL << 6;
+ 		SB(_me[t].m6, 2, 4, 0);
+-		SetRoadOwner(t, RTT_TRAM, tram);
++		SetOldRoadOwner(t, RTT_TRAM, tram);
+ 		return;
+ 	}
+ 
+@@ -537,6 +537,23 @@ static inline bool MayHaveBridgeAbove(TileIndex t)
+ 			IsTileType(t, MP_WATER) || IsTileType(t, MP_TUNNELBRIDGE) || IsTileType(t, MP_OBJECT);
+ }
+ 
++
++static Owner UpdateOwnerEnum(Owner o)
++{
++	switch (o) {
++		case OLD_OWNER_TOWN: return OWNER_TOWN;
++		case OLD_OWNER_NONE: return OWNER_NONE;
++		case OLD_OWNER_WATER: return OWNER_WATER;
++		case OLD_OWNER_DEITY: return OWNER_DEITY;
++		default: return o;
++	}
++}
++
++static Owner UpdateOwnerEnumTram(Owner o)
++{
++	return UpdateOwnerEnum(o == OLD_OWNER_TOWN ? OLD_OWNER_NONE : o);
++}
++
+ /**
+  * Start the scripts.
+  */
+@@ -657,8 +674,8 @@ bool AfterLoadGame()
+ 	 * walk through the whole map.. */
+ 	if (IsSavegameVersionBefore(SLV_4, 3)) {
+ 		for (TileIndex t = 0; t < map_size; t++) {
+-			if (IsTileType(t, MP_WATER) && GetTileOwner(t) >= MAX_COMPANIES) {
+-				SetTileOwner(t, OWNER_WATER);
++			if (IsTileType(t, MP_WATER) && GetOldTileOwner(t) >= OLD_MAX_COMPANIES) {
++				SetOldTileOwner(t, OLD_OWNER_WATER);
+ 			}
+ 		}
+ 	}
+@@ -843,7 +860,7 @@ bool AfterLoadGame()
+ 				default: break;
+ 
+ 				case MP_WATER:
+-					if (GetWaterTileType(t) == WATER_TILE_LOCK && GetTileOwner(t) == OWNER_WATER) SetTileOwner(t, OWNER_NONE);
++					if (GetWaterTileType(t) == WATER_TILE_LOCK && GetOldTileOwner(t) == OLD_OWNER_WATER) SetOldTileOwner(t, OLD_OWNER_NONE);
+ 					break;
+ 
+ 				case MP_STATION: {
+@@ -898,7 +915,7 @@ bool AfterLoadGame()
+ 				BaseStation *bst = BaseStation::GetByTile(t);
+ 
+ 				/* Sanity check */
+-				if (!IsBuoy(t) && bst->owner != GetTileOwner(t)) SlErrorCorrupt("Wrong owner for station tile");
++				if (!IsBuoy(t) && bst->owner != GetOldTileOwner(t) && bst->owner != GetTileOwner(t)) SlErrorCorrupt("Wrong owner for station tile");
+ 
+ 				/* Set up station spread */
+ 				bst->rect.BeforeAddTile(t, StationRect::ADD_FORCE);
+@@ -971,7 +988,7 @@ bool AfterLoadGame()
+ 
+ 				case MP_ROAD:
+ 					_m[t].m4 |= (_m[t].m2 << 4);
+-					if ((GB(_m[t].m5, 4, 2) == ROAD_TILE_CROSSING ? (Owner)_m[t].m3 : GetTileOwner(t)) == OWNER_TOWN) {
++					if ((GB(_m[t].m5, 4, 2) == ROAD_TILE_CROSSING ? (Owner)_m[t].m3 : GetOldTileOwner(t)) == OLD_OWNER_TOWN) {
+ 						SetTownIndex(t, CalcClosestTownFromTile(t)->index);
+ 					} else {
+ 						SetTownIndex(t, 0);
+@@ -1124,7 +1141,7 @@ bool AfterLoadGame()
+ 					if (!IsRoadStop(t)) break;
+ 
+ 					if (fix_roadtypes) SB(_me[t].m7, 6, 2, (RoadTypes)GB(_m[t].m3, 0, 3));
+-					SB(_me[t].m7, 0, 5, HasBit(_me[t].m6, 2) ? OWNER_TOWN : GetTileOwner(t));
++					SB(_me[t].m7, 0, 5, HasBit(_me[t].m6, 2) ? OWNER_TOWN : GetOldTileOwner(t));
+ 					SB(_m[t].m3, 4, 4, _m[t].m1);
+ 					_m[t].m4 = 0;
+ 					break;
+@@ -1134,9 +1151,9 @@ bool AfterLoadGame()
+ 					if (((old_bridge && IsBridge(t)) ? (TransportType)GB(_m[t].m5, 1, 2) : GetTunnelBridgeTransportType(t)) == TRANSPORT_ROAD) {
+ 						if (fix_roadtypes) SB(_me[t].m7, 6, 2, (RoadTypes)GB(_m[t].m3, 0, 3));
+ 
+-						Owner o = GetTileOwner(t);
++						Owner o = GetOldTileOwner(t);
+ 						SB(_me[t].m7, 0, 5, o); // road owner
+-						SB(_m[t].m3, 4, 4, o == OWNER_NONE ? OWNER_TOWN : o); // tram owner
++						SB(_m[t].m3, 4, 4, o == OLD_OWNER_NONE ? OLD_OWNER_TOWN : o); // tram owner
+ 					}
+ 					SB(_me[t].m6, 2, 4, GB(_m[t].m2, 4, 4)); // bridge type
+ 					SB(_me[t].m7, 5, 1, GB(_m[t].m4, 7, 1)); // snow/desert
+@@ -1193,12 +1210,12 @@ bool AfterLoadGame()
+ 						if (GB(_m[t].m5, 3, 2) == TRANSPORT_RAIL) {
+ 							MakeRailNormal(
+ 								t,
+-								GetTileOwner(t),
++								GetOldTileOwner(t),
+ 								axis == AXIS_X ? TRACK_BIT_Y : TRACK_BIT_X,
+ 								GetRailType(t)
+ 							);
+ 						} else {
+-							TownID town = IsTileOwner(t, OWNER_TOWN) ? ClosestTownFromTile(t, UINT_MAX)->index : 0;
++							TownID town = IsTileOwner(t, OLD_OWNER_TOWN) ? ClosestTownFromTile(t, UINT_MAX)->index : 0;
+ 
+ 							/* MakeRoadNormal */
+ 							SetTileType(t, MP_ROAD);
+@@ -1207,7 +1224,7 @@ bool AfterLoadGame()
+ 							_m[t].m5 = (axis == AXIS_X ? ROAD_Y : ROAD_X) | ROAD_TILE_NORMAL << 6;
+ 							SB(_me[t].m6, 2, 4, 0);
+ 							_me[t].m7 = 1 << 6;
+-							SetRoadOwner(t, RTT_TRAM, OWNER_NONE);
++							SetOldRoadOwner(t, RTT_TRAM, OWNER_NONE);
+ 						}
+ 					} else {
+ 						if (GB(_m[t].m5, 3, 2) == 0) {
+@@ -1216,10 +1233,10 @@ bool AfterLoadGame()
+ 							if (!IsTileFlat(t)) {
+ 								MakeShore(t);
+ 							} else {
+-								if (GetTileOwner(t) == OWNER_WATER) {
++								if (GetOldTileOwner(t) == OLD_OWNER_WATER) {
+ 									MakeSea(t);
+ 								} else {
+-									MakeCanal(t, GetTileOwner(t), Random());
++									MakeCanal(t, GetOldTileOwner(t), Random());
+ 								}
+ 							}
+ 						}
+@@ -1551,7 +1568,7 @@ bool AfterLoadGame()
+ 	 * be OWNER_NONE. So replace OWNER_NONE with OWNER_WATER. */
+ 	if (IsSavegameVersionBefore(SLV_46)) {
+ 		for (Waypoint *wp : Waypoint::Iterate()) {
+-			if ((wp->facilities & FACIL_DOCK) != 0 && IsTileOwner(wp->xy, OWNER_NONE) && TileHeight(wp->xy) == 0) SetTileOwner(wp->xy, OWNER_WATER);
++			if ((wp->facilities & FACIL_DOCK) != 0 && IsTileOwner(wp->xy, OLD_OWNER_NONE) && TileHeight(wp->xy) == 0) SetOldTileOwner(wp->xy, OLD_OWNER_WATER);
+ 		}
+ 	}
+ 
+@@ -1659,9 +1676,9 @@ bool AfterLoadGame()
+ 		for (TileIndex t = 0; t < map_size; t++) {
+ 			if (IsTileType(t, MP_WATER) &&
+ 					GetWaterTileType(t) == WATER_TILE_CLEAR &&
+-					GetTileOwner(t) == OWNER_WATER &&
++					GetOldTileOwner(t) == OLD_OWNER_WATER &&
+ 					TileHeight(t) != 0) {
+-				SetTileOwner(t, OWNER_NONE);
++				SetOldTileOwner(t, OLD_OWNER_NONE);
+ 			}
+ 		}
+ 	}
+@@ -1675,7 +1692,7 @@ bool AfterLoadGame()
+ 	if (IsSavegameVersionBefore(SLV_83)) {
+ 		for (TileIndex t = 0; t < map_size; t++) {
+ 			if (IsShipDepotTile(t)) {
+-				_m[t].m4 = (TileHeight(t) == 0) ? OWNER_WATER : OWNER_NONE;
++				_m[t].m4 = (TileHeight(t) == 0) ? OLD_OWNER_WATER : OLD_OWNER_NONE;
+ 			}
+ 		}
+ 	}
+@@ -1804,15 +1821,15 @@ bool AfterLoadGame()
+ 			if (IsTileType(t, MP_WATER)) {
+ 				if (GetWaterClass(t) != WATER_CLASS_RIVER) {
+ 					if (IsWater(t)) {
+-						Owner o = GetTileOwner(t);
+-						if (o == OWNER_WATER) {
++						Owner o = GetOldTileOwner(t);
++						if (o == OLD_OWNER_WATER) {
+ 							MakeSea(t);
+ 						} else {
+ 							MakeCanal(t, o, Random());
+ 						}
+ 					} else if (IsShipDepot(t)) {
+ 						Owner o = (Owner)_m[t].m4; // Original water owner
+-						SetWaterClass(t, o == OWNER_WATER ? WATER_CLASS_SEA : WATER_CLASS_CANAL);
++						SetWaterClass(t, o == OLD_OWNER_WATER ? WATER_CLASS_SEA : WATER_CLASS_CANAL);
+ 					}
+ 				}
+ 			}
+@@ -1840,8 +1857,8 @@ bool AfterLoadGame()
+ 			}
+ 
+ 			if (IsBuoyTile(t) || IsDriveThroughStopTile(t) || IsTileType(t, MP_WATER)) {
+-				Owner o = GetTileOwner(t);
+-				if (o < MAX_COMPANIES && !Company::IsValidID(o)) {
++				Owner o = GetOldTileOwner(t);
++				if (o < OLD_MAX_COMPANIES && !Company::IsValidID(o)) {
+ 					Backup<CompanyID> cur_company(_current_company, o, FILE_LINE);
+ 					ChangeTileOwner(t, o, INVALID_OWNER);
+ 					cur_company.Restore();
+@@ -1855,14 +1872,14 @@ bool AfterLoadGame()
+ 				/* works for all RoadTileType */
+ 				for (RoadTramType rtt : _roadtramtypes) {
+ 					/* update even non-existing road types to update tile owner too */
+-					Owner o = GetRoadOwner(t, rtt);
+-					if (o < MAX_COMPANIES && !Company::IsValidID(o)) SetRoadOwner(t, rtt, OWNER_NONE);
++					Owner o = GetOldRoadOwner(t, rtt);
++					if (o < OLD_MAX_COMPANIES && !Company::IsValidID(o)) SetOldRoadOwner(t, rtt, OLD_OWNER_NONE);
+ 				}
+ 				if (IsLevelCrossing(t)) {
+-					if (!Company::IsValidID(GetTileOwner(t))) FixOwnerOfRailTrack(t);
++					if (!Company::IsValidID(GetOldTileOwner(t))) FixOwnerOfRailTrack(t);
+ 				}
+ 			} else if (IsPlainRailTile(t)) {
+-				if (!Company::IsValidID(GetTileOwner(t))) FixOwnerOfRailTrack(t);
++				if (!Company::IsValidID(GetOldTileOwner(t))) FixOwnerOfRailTrack(t);
+ 			}
+ 		}
+ 
+@@ -1991,7 +2008,7 @@ bool AfterLoadGame()
+ 
+ 		/* signs with invalid owner left from older savegames */
+ 		for (Sign *si : Sign::Iterate()) {
+-			if (si->owner != OWNER_NONE && !Company::IsValidID(si->owner)) si->owner = OWNER_NONE;
++			if (si->owner != OLD_OWNER_NONE && !Company::IsValidID(si->owner)) si->owner = OWNER_NONE;
+ 		}
+ 
+ 		/* Station can get named based on an industry type, but the current ones
+@@ -2011,16 +2028,16 @@ bool AfterLoadGame()
+ 
+ 		/* More companies ... */
+ 		for (Company *c : Company::Iterate()) {
+-			if (c->bankrupt_asked == 0xFF) c->bankrupt_asked = 0xFFFF;
++			if (c->bankrupt_asked.data[0] == 0x00000000000000FF) c->bankrupt_asked.set();
+ 		}
+ 
+ 		for (Engine *e : Engine::Iterate()) {
+-			if (e->company_avail == 0xFF) e->company_avail = 0xFFFF;
++			if (e->company_avail.data[0] == 0x00000000000000FF) e->company_avail.set();
+ 		}
+ 
+ 		for (Town *t : Town::Iterate()) {
+-			if (t->have_ratings == 0xFF) t->have_ratings = 0xFFFF;
+-			for (uint i = 8; i != MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
++			if (t->have_ratings.data[0] == 0x00000000000000FF) t->have_ratings.set();
++			for (uint i = 8; i != OLD_MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
+ 		}
+ 	}
+ 
+@@ -2470,8 +2487,8 @@ bool AfterLoadGame()
+ 	/* Add (random) colour to all objects. */
+ 	if (IsSavegameVersionBefore(SLV_148)) {
+ 		for (Object *o : Object::Iterate()) {
+-			Owner owner = GetTileOwner(o->location.tile);
+-			o->colour = (owner == OWNER_NONE) ? Random() & 0xF : Company::Get(owner)->livery->colour1;
++			Owner owner = GetOldTileOwner(o->location.tile);
++			o->colour = (owner == OLD_OWNER_NONE) ? Random() & 0xF : Company::Get(owner)->livery->colour1;
+ 		}
+ 	}
+ 
+@@ -2820,9 +2837,9 @@ bool AfterLoadGame()
+ 	if (IsSavegameVersionBefore(SLV_172)) {
+ 		for (TileIndex t = 0; t < map_size; t++) {
+ 			if (!IsStandardRoadStopTile(t)) continue;
+-			Owner o = GetTileOwner(t);
+-			SetRoadOwner(t, RTT_ROAD, o);
+-			SetRoadOwner(t, RTT_TRAM, o);
++			Owner o = GetOldTileOwner(t);
++			SetOldRoadOwner(t, RTT_ROAD, o);
++			SetOldRoadOwner(t, RTT_TRAM, o);
+ 		}
+ 	}
+ 
+@@ -3147,6 +3164,45 @@ bool AfterLoadGame()
+ 		}
+ 	}
+ 
++	/* More companies */
++	if (IsSavegameVersionBefore(SLV_MORE_COMPANIES)) {
++		for (TileIndex t = 0; t < map_size; t++) {
++			if (IsTileType(t, MP_HOUSE))
++				continue;
++			if (IsTileType(t, MP_INDUSTRY))
++				continue;
++
++			SetTileOwner(t, UpdateOwnerEnum(GetOldTileOwner(t)));
++
++			if (IsTileType(t, MP_ROAD) || IsTileType(t, MP_TUNNELBRIDGE) || IsRoadStopTile(t)) {
++				SetRoadOwner(t, RTT_ROAD, UpdateOwnerEnum(GetOldRoadOwner(t, RTT_ROAD)));
++				SetRoadOwner(t, RTT_TRAM, UpdateOwnerEnumTram(GetOldRoadOwner(t, RTT_TRAM)));
++			}
++		}
++
++		for(Sign *i : Sign::Iterate()) {
++			i->owner = UpdateOwnerEnum(i->owner);
++		}
++
++		for(Station *s : Station::Iterate()) {
++			s->owner = UpdateOwnerEnum(s->owner);
++		}
++
++		for(Company *c : Company::Iterate()) {
++			if (c->bankrupt_asked.data[0] >= 0x0000000000007FFF) c->bankrupt_asked.set();
++		}
++
++		for(Engine *e : Engine::Iterate()) {
++			if (e->company_avail.data[0] >= 0x0000000000007FFF) e->company_avail.set();
++			if (e->preview_asked.data[0] >= 0x0000000000007FFF) e->preview_asked.set();
++		}
++
++		for(Town *t : Town::Iterate()) {
++			if (t->have_ratings.data[0] >= 0x0000000000007FFF) t->have_ratings.set();
++			for (uint i = OLD_MAX_COMPANIES; i != MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
++		}
++	}
++
+ 	/* Road stops is 'only' updating some caches, but they are needed for PF calls in SLV_MULTITRACK_LEVEL_CROSSINGS teleporting. */
+ 	AfterLoadRoadStops();
+ 
+diff --git a/src/saveload/engine_sl.cpp b/src/saveload/engine_sl.cpp
+index 39699e04d5..4001675cf6 100644
+--- a/src/saveload/engine_sl.cpp
++++ b/src/saveload/engine_sl.cpp
+@@ -33,13 +33,16 @@ static const SaveLoad _engine_desc[] = {
+ 	     SLE_VAR(Engine, duration_phase_2,    SLE_UINT16),
+ 	     SLE_VAR(Engine, duration_phase_3,    SLE_UINT16),
+ 	     SLE_VAR(Engine, flags,               SLE_UINT8),
+-	 SLE_CONDVAR(Engine, preview_asked,       SLE_UINT16,                SLV_179, SL_MAX_VERSION),
++	 SLE_CONDVAR(Engine, preview_asked.data,  SLE_FILE_U16 | SLE_VAR_U64,  SLV_179, SLV_MORE_COMPANIES),
++	 SLE_CONDARR(Engine, preview_asked.data,  SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
+ 	 SLE_CONDVAR(Engine, preview_company,     SLE_UINT8,                 SLV_179, SL_MAX_VERSION),
+ 	     SLE_VAR(Engine, preview_wait,        SLE_UINT8),
+-	 SLE_CONDVAR(Engine, company_avail,       SLE_FILE_U8  | SLE_VAR_U16,  SL_MIN_VERSION, SLV_104),
+-	 SLE_CONDVAR(Engine, company_avail,       SLE_UINT16,                SLV_104, SL_MAX_VERSION),
+-	 SLE_CONDVAR(Engine, company_hidden,      SLE_UINT16,                SLV_193, SL_MAX_VERSION),
+-	SLE_CONDSSTR(Engine, name,                SLE_STR,                    SLV_84, SL_MAX_VERSION),
++	 SLE_CONDVAR(Engine, company_avail.data,  SLE_FILE_U8  | SLE_VAR_U64,  SL_MIN_VERSION, SLV_104),
++	 SLE_CONDVAR(Engine, company_avail.data,  SLE_FILE_U16 | SLE_VAR_U64,  SLV_104, SLV_MORE_COMPANIES),
++	 SLE_CONDARR(Engine, company_avail.data,  SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
++	 SLE_CONDVAR(Engine, company_hidden.data, SLE_FILE_U16 | SLE_VAR_U64,  SLV_193, SLV_MORE_COMPANIES),
++	 SLE_CONDARR(Engine, company_hidden.data, SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
++	 SLE_CONDSSTR(Engine, name,                SLE_STR,                 SLV_84, SL_MAX_VERSION),
+ };
+ 
+ static std::vector<Engine*> _temp_engine;
+@@ -110,7 +113,7 @@ struct ENGNChunkHandler : ChunkHandler {
+ 				 * Just cancel any previews. */
+ 				e->flags &= ~4; // ENGINE_OFFER_WINDOW_OPEN
+ 				e->preview_company = INVALID_COMPANY;
+-				e->preview_asked = (CompanyMask)-1;
++				e->preview_asked.set();
+ 			}
+ 		}
+ 	}
+diff --git a/src/saveload/map_sl.cpp b/src/saveload/map_sl.cpp
+index 07a36d6a38..eab3a7c11e 100644
+--- a/src/saveload/map_sl.cpp
++++ b/src/saveload/map_sl.cpp
+@@ -353,6 +353,33 @@ struct MAP8ChunkHandler : ChunkHandler {
+ 	}
+ };
+ 
++struct MAP9ChunkHandler : ChunkHandler {
++	MAP9ChunkHandler() : ChunkHandler('MAP9', CH_RIFF) {}
++
++	void Load() const override
++	{
++		std::array<uint16, MAP_SL_BUF_SIZE> buf;
++		TileIndex size = MapSize();
++
++		for (TileIndex i = 0; i != size;) {
++			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
++			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _me[i++].m9 = buf[j];
++		}
++	}
++
++	void Save() const override
++	{
++		std::array<uint16, MAP_SL_BUF_SIZE> buf;
++		TileIndex size = MapSize();
++
++		SlSetLength(size * sizeof(uint16));
++		for (TileIndex i = 0; i != size;) {
++			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) buf[j] = _me[i++].m9;
++			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
++		}
++	}
++};
++
+ static const MAPSChunkHandler MAPS;
+ static const MAPTChunkHandler MAPT;
+ static const MAPHChunkHandler MAPH;
+@@ -364,6 +391,7 @@ static const MAP5ChunkHandler MAP5;
+ static const MAPEChunkHandler MAPE;
+ static const MAP7ChunkHandler MAP7;
+ static const MAP8ChunkHandler MAP8;
++static const MAP9ChunkHandler MAP9;
+ static const ChunkHandlerRef map_chunk_handlers[] = {
+ 	MAPS,
+ 	MAPT,
+@@ -376,6 +404,7 @@ static const ChunkHandlerRef map_chunk_handlers[] = {
+ 	MAPE,
+ 	MAP7,
+ 	MAP8,
++	MAP9,
+ };
+ 
+ extern const ChunkHandlerTable _map_chunk_handlers(map_chunk_handlers);
+diff --git a/src/saveload/saveload.h b/src/saveload/saveload.h
+index fa8ea38766..f609b4f73a 100644
+--- a/src/saveload/saveload.h
++++ b/src/saveload/saveload.h
+@@ -345,6 +345,8 @@ enum SaveLoadVersion : uint16 {
+ 	SLV_LAST_LOADING_TICK,                  ///< 301  PR#9693 Store tick of last loading for vehicles.
+ 	SLV_MULTITRACK_LEVEL_CROSSINGS,         ///< 302  PR#9931 v13.0  Multi-track level crossings.
+ 
++	SLV_MORE_COMPANIES = 0x4000,
++
+ 	SL_MAX_VERSION,                         ///< Highest possible saveload version
+ };
+ 
+diff --git a/src/saveload/town_sl.cpp b/src/saveload/town_sl.cpp
+index 7b91259171..5719d8e353 100644
+--- a/src/saveload/town_sl.cpp
++++ b/src/saveload/town_sl.cpp
+@@ -212,15 +212,20 @@ static const SaveLoad _town_desc[] = {
+ 	SLE_CONDSSTR(Town, name,                 SLE_STR | SLF_ALLOW_CONTROL, SLV_84, SL_MAX_VERSION),
+ 
+ 	    SLE_VAR(Town, flags,                 SLE_UINT8),
+-	SLE_CONDVAR(Town, statues,               SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
+-	SLE_CONDVAR(Town, statues,               SLE_UINT16,               SLV_104, SL_MAX_VERSION),
++	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
++	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U16 | SLE_VAR_U64, SLV_104, SLV_MORE_COMPANIES),
++	SLE_CONDARR(Town, statues.data,          SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
+ 
+-	SLE_CONDVAR(Town, have_ratings,          SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
+-	SLE_CONDVAR(Town, have_ratings,          SLE_UINT16,               SLV_104, SL_MAX_VERSION),
++	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U8  | SLE_VAR_U64, SL_MIN_VERSION, SLV_104),
++	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U16 | SLE_VAR_U64, SLV_104, SLV_MORE_COMPANIES),
++	SLE_CONDARR(Town, have_ratings.data,     SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
+ 	SLE_CONDARR(Town, ratings,               SLE_INT16, 8,               SL_MIN_VERSION, SLV_104),
+-	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
++	SLE_CONDARR(Town, ratings,               SLE_INT16, OLD_MAX_COMPANIES, SLV_104, SLV_MORE_COMPANIES),
++	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, SLV_MORE_COMPANIES, SL_MAX_VERSION),
++	/* failed bribe attempts are stored since savegame format 4 */
+ 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               SLV_4, SLV_104),
+-	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
++	SLE_CONDARR(Town, unwanted,              SLE_INT8,  OLD_MAX_COMPANIES, SLV_104, SLV_MORE_COMPANIES),
++	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_MORE_COMPANIES, SL_MAX_VERSION),
+ 
+ 	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+ 	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_UINT32,                 SLV_9, SLV_165),
+diff --git a/src/script/api/script_enginelist.cpp b/src/script/api/script_enginelist.cpp
+index c6f594cc7e..dfe96a04c5 100644
+--- a/src/script/api/script_enginelist.cpp
++++ b/src/script/api/script_enginelist.cpp
+@@ -16,6 +16,6 @@
+ ScriptEngineList::ScriptEngineList(ScriptVehicle::VehicleType vehicle_type)
+ {
+ 	for (const Engine *e : Engine::IterateType((::VehicleType)vehicle_type)) {
+-		if (ScriptObject::GetCompany() == OWNER_DEITY || HasBit(e->company_avail, ScriptObject::GetCompany())) this->AddItem(e->index);
++		if (ScriptObject::GetCompany() == OWNER_DEITY || e->company_avail.at(ScriptObject::GetCompany())) this->AddItem(e->index);
+ 	}
+ }
+diff --git a/src/script/api/script_town.cpp b/src/script/api/script_town.cpp
+index afa309c92b..ca72863025 100644
+--- a/src/script/api/script_town.cpp
++++ b/src/script/api/script_town.cpp
+@@ -214,7 +214,7 @@
+ 	if (ScriptObject::GetCompany() == OWNER_DEITY) return false;
+ 	if (!IsValidTown(town_id)) return false;
+ 
+-	return ::HasBit(::Town::Get(town_id)->statues, ScriptObject::GetCompany());
++	return ::Town::Get(town_id)->statues.at(ScriptObject::GetCompany());
+ }
+ 
+ /* static */ bool ScriptTown::IsCity(TownID town_id)
+@@ -316,7 +316,7 @@
+ 	if (company == ScriptCompany::COMPANY_INVALID) return TOWN_RATING_INVALID;
+ 
+ 	const Town *t = ::Town::Get(town_id);
+-	if (!HasBit(t->have_ratings, company)) {
++	if (!t->have_ratings.at(company)) {
+ 		return TOWN_RATING_NONE;
+ 	} else if (t->ratings[company] <= RATING_APPALLING) {
+ 		return TOWN_RATING_APPALLING;
+diff --git a/src/smallmap_gui.cpp b/src/smallmap_gui.cpp
+index 67aec0e430..fc9b843e36 100644
+--- a/src/smallmap_gui.cpp
++++ b/src/smallmap_gui.cpp
+@@ -1598,7 +1598,7 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
+ 	if (!this->refresh.Elapsed(delta_ms)) return;
+ 
+ 	if (this->map_type == SMT_LINKSTATS) {
+-		uint32 company_mask = this->GetOverlayCompanyMask();
++		CompanyMask company_mask = this->GetOverlayCompanyMask();
+ 		if (this->overlay->GetCompanyMask() != company_mask) {
+ 			this->overlay->SetCompanyMask(company_mask);
+ 		} else {
+diff --git a/src/smallmap_gui.h b/src/smallmap_gui.h
+index cb2992bbae..8b45f27108 100644
+--- a/src/smallmap_gui.h
++++ b/src/smallmap_gui.h
+@@ -151,9 +151,11 @@ protected:
+ 	 * the _local_company. Spectators get to see all companies' links.
+ 	 * @return Company mask.
+ 	 */
+-	inline uint32 GetOverlayCompanyMask() const
++	inline CompanyMask GetOverlayCompanyMask() const
+ 	{
+-		return Company::IsValidID(_local_company) ? 1U << _local_company : 0xffffffff;
++		CompanyMask mask;
++		Company::IsValidID(_local_company) ? mask.set(_local_company) : mask.set();
++		return mask;
+ 	}
+ 
+ 	void RebuildColourIndexIfNecessary();
+diff --git a/src/station_cmd.cpp b/src/station_cmd.cpp
+index fd69a9899e..6ab32cbad0 100644
+--- a/src/station_cmd.cpp
++++ b/src/station_cmd.cpp
+@@ -713,7 +713,7 @@ static CommandCost BuildStationPart(Station **st, DoCommandFlag flags, bool reus
+ 			(*st)->string_id = GenerateStationName(*st, area.tile, name_class);
+ 
+ 			if (Company::IsValidID(_current_company)) {
+-				SetBit((*st)->town->have_ratings, _current_company);
++				(*st)->town->have_ratings.set(_current_company);
+ 			}
+ 		}
+ 	}
+@@ -3504,7 +3504,7 @@ static void UpdateStationRating(Station *st)
+ 				if (ge->max_waiting_cargo <= 100) rating += 10;
+ 			}
+ 
+-			if (Company::IsValidID(st->owner) && HasBit(st->town->statues, st->owner)) rating += 26;
++			if (Company::IsValidID(st->owner) && st->town->statues.at(st->owner)) rating += 26;
+ 
+ 			byte age = ge->last_age;
+ 			if (age < 3) rating += 10;
+diff --git a/src/tile_map.h b/src/tile_map.h
+index b6c715e8a8..5841e0cccb 100644
+--- a/src/tile_map.h
++++ b/src/tile_map.h
+@@ -181,6 +181,15 @@ static inline Owner GetTileOwner(TileIndex tile)
+ 	assert(!IsTileType(tile, MP_HOUSE));
+ 	assert(!IsTileType(tile, MP_INDUSTRY));
+ 
++	return (Owner) (_me[tile].m9 >> 8);
++}
++
++static inline Owner GetOldTileOwner(TileIndex tile)
++{
++	assert(IsValidTile(tile));
++	assert(!IsTileType(tile, MP_HOUSE));
++	assert(!IsTileType(tile, MP_INDUSTRY));
++
+ 	return (Owner)GB(_m[tile].m1, 0, 5);
+ }
+ 
+@@ -201,6 +210,15 @@ static inline void SetTileOwner(TileIndex tile, Owner owner)
+ 	assert(!IsTileType(tile, MP_HOUSE));
+ 	assert(!IsTileType(tile, MP_INDUSTRY));
+ 
++	SB(_me[tile].m9, 8, 8, owner);
++}
++
++static inline void SetOldTileOwner(TileIndex tile, Owner owner)
++{
++	assert(IsValidTile(tile));
++	assert(!IsTileType(tile, MP_HOUSE));
++	assert(!IsTileType(tile, MP_INDUSTRY));
++
+ 	SB(_m[tile].m1, 0, 5, owner);
+ }
+ 
+diff --git a/src/town_cmd.cpp b/src/town_cmd.cpp
+index 280fa4efea..6a6c964643 100644
+--- a/src/town_cmd.cpp
++++ b/src/town_cmd.cpp
+@@ -1872,10 +1872,10 @@ static void DoCreateTown(Town *t, TileIndex tile, uint32 townnameparts, TownSize
+ 
+ 	for (uint i = 0; i != MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
+ 
+-	t->have_ratings = 0;
++	t->have_ratings.reset();
+ 	t->exclusivity = INVALID_COMPANY;
+ 	t->exclusive_counter = 0;
+-	t->statues = 0;
++	t->statues.reset();
+ 
+ 	{
+ 		TownNameParams tnp(_settings_game.game_creation.town_name);
+@@ -3187,7 +3187,7 @@ static CommandCost TownActionBuildStatue(Town *t, DoCommandFlag flags)
+ 		Command<CMD_LANDSCAPE_CLEAR>::Do(DC_EXEC, statue_data.best_position);
+ 		cur_company.Restore();
+ 		BuildObject(OBJECT_STATUE, statue_data.best_position, _current_company, t);
+-		SetBit(t->statues, _current_company); // Once found and built, "inform" the Town.
++		t->statues.set(_current_company, true); // Once found and built, "inform" the Town.
+ 		MarkTileDirtyByTile(statue_data.best_position);
+ 	}
+ 	return CommandCost();
+@@ -3325,7 +3325,7 @@ TownActions GetMaskOfTownActions(CompanyID cid, const Town *t)
+ 			if (cur == TACT_ROAD_REBUILD && !_settings_game.economy.fund_roads) continue;
+ 
+ 			/* Is the company not able to build a statue ? */
+-			if (cur == TACT_BUILD_STATUE && HasBit(t->statues, cid)) continue;
++			if (cur == TACT_BUILD_STATUE && t->statues.at(cid)) continue;
+ 
+ 			if (avail >= _town_action_costs[i] * _price[PR_TOWN_ACTION] >> 8) {
+ 				buttons |= cur;
+@@ -3694,7 +3694,7 @@ void ChangeTownRating(Town *t, int add, int max, DoCommandFlag flags)
+ 	if (_town_rating_test) {
+ 		_town_test_ratings[t] = rating;
+ 	} else {
+-		SetBit(t->have_ratings, _current_company);
++		t->have_ratings.set(_current_company, true);
+ 		t->ratings[_current_company] = rating;
+ 		SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
+ 	}
+diff --git a/src/town_gui.cpp b/src/town_gui.cpp
+index f5506244fd..addcaee389 100644
+--- a/src/town_gui.cpp
++++ b/src/town_gui.cpp
+@@ -162,7 +162,7 @@ public:
+ 
+ 		/* Draw list of companies */
+ 		for (const Company *c : Company::Iterate()) {
+-			if ((HasBit(this->town->have_ratings, c->index) || this->town->exclusivity == c->index)) {
++			if (this->town->have_ratings.at(c->index) || this->town->exclusivity == c->index) {
+ 				DrawCompanyIcon(c->index, icon.left, text.top + icon_y_offset);
+ 
+ 				SetDParam(0, c->index);
+@@ -756,8 +756,8 @@ private:
+ 		bool before = !TownDirectoryWindow::last_sorting.order; // Value to get 'a' before 'b'.
+ 
+ 		/* Towns without rating are always after towns with rating. */
+-		if (HasBit(a->have_ratings, _local_company)) {
+-			if (HasBit(b->have_ratings, _local_company)) {
++		if (a->have_ratings.at(_local_company)) {
++			if (b->have_ratings.at(_local_company)) {
+ 				int16 a_rating = a->ratings[_local_company];
+ 				int16 b_rating = b->ratings[_local_company];
+ 				if (a_rating == b_rating) return TownDirectoryWindow::TownNameSorter(a, b);
+@@ -765,8 +765,7 @@ private:
+ 			}
+ 			return before;
+ 		}
+-		if (HasBit(b->have_ratings, _local_company)) return !before;
+-
++		if (b->have_ratings.at(_local_company)) return !before;
+ 		/* Sort unrated towns always on ascending town name. */
+ 		if (before) return TownDirectoryWindow::TownNameSorter(a, b);
+ 		return !TownDirectoryWindow::TownNameSorter(a, b);
+@@ -839,7 +838,7 @@ public:
+ 					assert(t->xy != INVALID_TILE);
+ 
+ 					/* Draw rating icon. */
+-					if (_game_mode == GM_EDITOR || !HasBit(t->have_ratings, _local_company)) {
++					if (_game_mode == GM_EDITOR || !t->have_ratings.at(_local_company)) {
+ 						DrawSprite(SPR_TOWN_RATING_NA, PAL_NONE, icon_x, tr.top + (this->resize.step_height - icon_size.height) / 2);
+ 					} else {
+ 						SpriteID icon = SPR_TOWN_RATING_APALLING;
+diff --git a/src/vehicle.cpp b/src/vehicle.cpp
+index ac81331d2f..f297a7811b 100644
+--- a/src/vehicle.cpp
++++ b/src/vehicle.cpp
+@@ -214,7 +214,7 @@ bool Vehicle::NeedsServicing() const
+ 		EngineID new_engine = EngineReplacementForCompany(c, v->engine_type, v->group_id, &replace_when_old);
+ 
+ 		/* Check engine availability */
+-		if (new_engine == INVALID_ENGINE || !HasBit(Engine::Get(new_engine)->company_avail, v->owner)) continue;
++		if (new_engine == INVALID_ENGINE || !Engine::Get(new_engine)->company_avail.at(v->owner)) continue;
+ 		/* Is the vehicle old if we are not always replacing? */
+ 		if (replace_when_old && !v->NeedsAutorenewing(c, false)) continue;
+ 
+@@ -1395,11 +1395,8 @@ void AgeVehicle(Vehicle *v)
+ 	/* Don't warn about vehicles which are non-primary (e.g., part of an articulated vehicle), don't belong to us, are crashed, or are stopped */
+ 	if (v->Previous() != nullptr || v->owner != _local_company || (v->vehstatus & VS_CRASHED) != 0 || (v->vehstatus & VS_STOPPED) != 0) return;
+ 
+-	const Company *c = Company::Get(v->owner);
+ 	/* Don't warn if a renew is active */
+-	if (c->settings.engine_renew && v->GetEngine()->company_avail != 0) return;
+-	/* Don't warn if a replacement is active */
+-	if (EngineHasReplacementForCompany(c, v->engine_type, v->group_id)) return;
++	if (Company::Get(v->owner)->settings.engine_renew && v->GetEngine()->company_avail.any()) return;
+ 
+ 	StringID str;
+ 	if (age == -DAYS_IN_LEAP_YEAR) {
+@@ -1858,7 +1855,7 @@ bool CanBuildVehicleInfrastructure(VehicleType type, byte subtype)
+ 		/* Can we actually build the vehicle type? */
+ 		for (const Engine *e : Engine::IterateType(type)) {
+ 			if (type == VEH_ROAD && GetRoadTramType(e->u.road.roadtype) != (RoadTramType)subtype) continue;
+-			if (HasBit(e->company_avail, _local_company)) return true;
++			if (e->company_avail.at(_local_company)) return true;
+ 		}
+ 		return false;
+ 	}
+diff --git a/src/vehiclelist.cpp b/src/vehiclelist.cpp
+index 111762ee13..589c12859f 100644
+--- a/src/vehiclelist.cpp
++++ b/src/vehiclelist.cpp
+@@ -15,30 +15,28 @@
+ #include "safeguards.h"
+ 
+ /**
+- * Pack a VehicleListIdentifier in a single uint32.
++ * Pack a VehicleListIdentifier in a single uint64.
+  * @return The packed identifier.
+  */
+-uint32 VehicleListIdentifier::Pack() const
++uint64 VehicleListIdentifier::Pack() const
+ {
+-	byte c = this->company == OWNER_NONE ? 0xF : (byte)this->company;
+-	assert(c             < (1 <<  4));
++	byte c = (byte)this->company;
+ 	assert(this->vtype   < (1 <<  2));
+ 	assert(this->index   < (1 << 20));
+ 	assert(this->type    < VLT_END);
+ 	static_assert(VLT_END <= (1 <<  3));
+ 
+-	return c << 28 | this->type << 23 | this->vtype << 26 | this->index;
++	return (uint64)c << 28 | (uint64)this->type << 23 | (uint64)this->vtype << 26 | (uint64)this->index;
+ }
+ 
+ /**
+- * Unpack a VehicleListIdentifier from a single uint32.
++ * Unpack a VehicleListIdentifier from a single uint64.
+  * @param data The data to unpack.
+  * @return true iff the data was valid (enough).
+  */
+-bool VehicleListIdentifier::UnpackIfValid(uint32 data)
++bool VehicleListIdentifier::UnpackIfValid(uint64 data)
+ {
+-	byte c        = GB(data, 28, 4);
+-	this->company = c == 0xF ? OWNER_NONE : (CompanyID)c;
++	this->company = (CompanyID)GB(data, 28, 8);
+ 	this->type    = (VehicleListType)GB(data, 23, 3);
+ 	this->vtype   = (VehicleType)GB(data, 26, 2);
+ 	this->index   = GB(data, 0, 20);
+@@ -50,7 +48,7 @@ bool VehicleListIdentifier::UnpackIfValid(uint32 data)
+  * Decode a packed vehicle list identifier into a new one.
+  * @param data The data to unpack.
+  */
+-/* static */ VehicleListIdentifier VehicleListIdentifier::UnPack(uint32 data)
++/* static */ VehicleListIdentifier VehicleListIdentifier::UnPack(uint64 data)
+ {
+ 	VehicleListIdentifier result;
+ 	[[maybe_unused]] bool ret = result.UnpackIfValid(data);
+diff --git a/src/vehiclelist.h b/src/vehiclelist.h
+index 6f6e5cb5fe..e93bbe5dc0 100644
+--- a/src/vehiclelist.h
++++ b/src/vehiclelist.h
+@@ -32,9 +32,9 @@ struct VehicleListIdentifier {
+ 	CompanyID company;    ///< The company associated with this list.
+ 	uint32 index;         ///< A vehicle list type specific index.
+ 
+-	uint32 Pack() const;
+-	bool UnpackIfValid(uint32 data);
+-	static VehicleListIdentifier UnPack(uint32 data);
++	uint64 Pack() const;
++	bool UnpackIfValid(uint64 data);
++	static VehicleListIdentifier UnPack(uint64 data);
+ 
+ 	bool Valid() const { return this->type < VLT_END; }
+ 
+diff --git a/src/viewport.cpp b/src/viewport.cpp
+index b32bca80d2..dd9253510b 100644
+--- a/src/viewport.cpp
++++ b/src/viewport.cpp
+@@ -482,7 +482,7 @@ Point GetTileZoomCenterWindow(bool in, Window * w)
+  * @param widget_zoom_in widget index for window with zoom-in button
+  * @param widget_zoom_out widget index for window with zoom-out button
+  */
+-void HandleZoomMessage(Window *w, const Viewport *vp, byte widget_zoom_in, byte widget_zoom_out)
++void HandleZoomMessage(Window *w, const Viewport *vp, int widget_zoom_in, int widget_zoom_out)
+ {
+ 	w->SetWidgetDisabledState(widget_zoom_in, vp->zoom <= _settings_client.gui.zoom_min);
+ 	w->SetWidgetDirty(widget_zoom_in);
+@@ -1774,7 +1774,7 @@ void ViewportDoDraw(const Viewport *vp, int left, int top, int right, int bottom
+ 	dp.height = UnScaleByZoom(dp.height, zoom);
+ 	_cur_dpi = &dp;
+ 
+-	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask() != 0) {
++	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask().any()) {
+ 		/* translate to window coordinates */
+ 		dp.left = x;
+ 		dp.top = y;
+@@ -2391,7 +2391,7 @@ bool HandleViewportClicked(const Viewport *vp, int x, int y)
+ void RebuildViewportOverlay(Window *w)
+ {
+ 	if (w->viewport->overlay != nullptr &&
+-			w->viewport->overlay->GetCompanyMask() != 0 &&
++			w->viewport->overlay->GetCompanyMask().any() &&
+ 			w->viewport->overlay->GetCargoMask() != 0) {
+ 		w->viewport->overlay->SetDirty();
+ 		w->SetDirty();
+diff --git a/src/viewport_func.h b/src/viewport_func.h
+index 16a8fdc5ec..7d2c3c196f 100644
+--- a/src/viewport_func.h
++++ b/src/viewport_func.h
+@@ -33,7 +33,7 @@ bool DoZoomInOutWindow(ZoomStateChange how, Window *w);
+ void ZoomInOrOutToCursorWindow(bool in, Window * w);
+ Point GetTileZoomCenterWindow(bool in, Window * w);
+ void FixTitleGameZoom(int zoom_adjust = 0);
+-void HandleZoomMessage(Window *w, const Viewport *vp, byte widget_zoom_in, byte widget_zoom_out);
++void HandleZoomMessage(Window *w, const Viewport *vp, int widget_zoom_in, int widget_zoom_out);
+ 
+ /**
+  * Zoom a viewport as far as possible in the given direction.
+diff --git a/src/window.cpp b/src/window.cpp
+index fa632c3e81..aff8992151 100644
+--- a/src/window.cpp
++++ b/src/window.cpp
+@@ -239,7 +239,7 @@ void Window::DisableAllWidgetHighlight()
+  * @param widget_index index of this widget in the window
+  * @param highlighted_colour Colour of highlight, or TC_INVALID to disable.
+  */
+-void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour)
++void Window::SetWidgetHighlight(int widget_index, TextColour highlighted_colour)
+ {
+ 	assert(widget_index < this->nested_array_size);
+ 
+@@ -272,7 +272,7 @@ void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour
+  * @param widget_index index of this widget in the window
+  * @return status of the widget ie: highlighted = true, not highlighted = false
+  */
+-bool Window::IsWidgetHighlighted(byte widget_index) const
++bool Window::IsWidgetHighlighted(int widget_index) const
+ {
+ 	assert(widget_index < this->nested_array_size);
+ 
+@@ -618,7 +618,7 @@ void Window::RaiseButtons(bool autoraise)
+  * Invalidate a widget, i.e. mark it as being changed and in need of redraw.
+  * @param widget_index the widget to redraw.
+  */
+-void Window::SetWidgetDirty(byte widget_index) const
++void Window::SetWidgetDirty(int widget_index) const
+ {
+ 	/* Sometimes this function is called before the window is even fully initialized */
+ 	if (this->nested_array == nullptr) return;
+@@ -656,7 +656,7 @@ EventState Window::OnHotkey(int hotkey)
+  * unclicked in a few ticks.
+  * @param widget the widget to "click"
+  */
+-void Window::HandleButtonClick(byte widget)
++void Window::HandleButtonClick(int widget)
+ {
+ 	this->LowerWidget(widget);
+ 	this->SetTimeout();
+@@ -3166,7 +3166,7 @@ void SetWindowDirty(WindowClass cls, WindowNumber number)
+  * @param number Window number in that class
+  * @param widget_index Index number of the widget that needs repainting
+  */
+-void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_index)
++void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, int widget_index)
+ {
+ 	for (const Window *w : Window::Iterate()) {
+ 		if (w->window_class == cls && w->window_number == number) {
+diff --git a/src/window_func.h b/src/window_func.h
+index d68b7ba1c1..9b97447a5a 100644
+--- a/src/window_func.h
++++ b/src/window_func.h
+@@ -49,7 +49,7 @@ void ShowVitalWindows();
+  */
+ void ReInitAllWindows(bool zoom_changed);
+ 
+-void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, byte widget_index);
++void SetWindowWidgetDirty(WindowClass cls, WindowNumber number, int widget_index);
+ void SetWindowDirty(WindowClass cls, WindowNumber number);
+ void SetWindowClassesDirty(WindowClass cls);
+ 
+diff --git a/src/window_gui.h b/src/window_gui.h
+index 798d6d32dc..1b3ba2b0e8 100644
+--- a/src/window_gui.h
++++ b/src/window_gui.h
+@@ -308,8 +308,8 @@ public:
+ 	}
+ 
+ 	void DisableAllWidgetHighlight();
+-	void SetWidgetHighlight(byte widget_index, TextColour highlighted_colour);
+-	bool IsWidgetHighlighted(byte widget_index) const;
++	void SetWidgetHighlight(int widget_index, TextColour highlighted_colour);
++	bool IsWidgetHighlighted(int widget_index) const;
+ 
+ 	/**
+ 	 * Sets the enabled/disabled status of a widget.
+@@ -318,7 +318,7 @@ public:
+ 	 * @param widget_index index of this widget in the window
+ 	 * @param disab_stat status to use ie: disabled = true, enabled = false
+ 	 */
+-	inline void SetWidgetDisabledState(byte widget_index, bool disab_stat)
++	inline void SetWidgetDisabledState(int widget_index, bool disab_stat)
+ 	{
+ 		assert(widget_index < this->nested_array_size);
+ 		if (this->nested_array[widget_index] != nullptr) this->GetWidget<NWidgetCore>(widget_index)->SetDisabled(disab_stat);
+@@ -328,7 +328,7 @@ public:
+ 	 * Sets a widget to disabled.
+ 	 * @param widget_index index of this widget in the window
+ 	 */
+-	inline void DisableWidget(byte widget_index)
++	inline void DisableWidget(int widget_index)
+ 	{
+ 		SetWidgetDisabledState(widget_index, true);
+ 	}
+@@ -337,7 +337,7 @@ public:
+ 	 * Sets a widget to Enabled.
+ 	 * @param widget_index index of this widget in the window
+ 	 */
+-	inline void EnableWidget(byte widget_index)
++	inline void EnableWidget(int widget_index)
+ 	{
+ 		SetWidgetDisabledState(widget_index, false);
+ 	}
+@@ -347,7 +347,7 @@ public:
+ 	 * @param widget_index index of this widget in the window
+ 	 * @return status of the widget ie: disabled = true, enabled = false
+ 	 */
+-	inline bool IsWidgetDisabled(byte widget_index) const
++	inline bool IsWidgetDisabled(int widget_index) const
+ 	{
+ 		assert(widget_index < this->nested_array_size);
+ 		return this->GetWidget<NWidgetCore>(widget_index)->IsDisabled();
+@@ -358,7 +358,7 @@ public:
+ 	 * @param widget_index : index of the widget in the window to check
+ 	 * @return true if given widget is the focused window in this window
+ 	 */
+-	inline bool IsWidgetFocused(byte widget_index) const
++	inline bool IsWidgetFocused(int widget_index) const
+ 	{
+ 		return this->nested_focus != nullptr && this->nested_focus->index == widget_index;
+ 	}
+@@ -369,7 +369,7 @@ public:
+ 	 * @param widget_index : index of the widget in the window to check
+ 	 * @return true if given widget is the focused window in this window and this window has focus
+ 	 */
+-	inline bool IsWidgetGloballyFocused(byte widget_index) const
++	inline bool IsWidgetGloballyFocused(int widget_index) const
+ 	{
+ 		return _focused_window == this && IsWidgetFocused(widget_index);
+ 	}
+@@ -379,7 +379,7 @@ public:
+ 	 * @param widget_index index of this widget in the window
+ 	 * @param lowered_stat status to use ie: lowered = true, raised = false
+ 	 */
+-	inline void SetWidgetLoweredState(byte widget_index, bool lowered_stat)
++	inline void SetWidgetLoweredState(int widget_index, bool lowered_stat)
+ 	{
+ 		assert(widget_index < this->nested_array_size);
+ 		this->GetWidget<NWidgetCore>(widget_index)->SetLowered(lowered_stat);
+@@ -389,7 +389,7 @@ public:
+ 	 * Invert the lowered/raised  status of a widget.
+ 	 * @param widget_index index of this widget in the window
+ 	 */
+-	inline void ToggleWidgetLoweredState(byte widget_index)
++	inline void ToggleWidgetLoweredState(int widget_index)
+ 	{
+ 		assert(widget_index < this->nested_array_size);
+ 		bool lowered_state = this->GetWidget<NWidgetCore>(widget_index)->IsLowered();
+@@ -400,7 +400,7 @@ public:
+ 	 * Marks a widget as lowered.
+ 	 * @param widget_index index of this widget in the window
+ 	 */
+-	inline void LowerWidget(byte widget_index)
++	inline void LowerWidget(int widget_index)
+ 	{
+ 		SetWidgetLoweredState(widget_index, true);
+ 	}
+@@ -409,7 +409,7 @@ public:
+ 	 * Marks a widget as raised.
+ 	 * @param widget_index index of this widget in the window
+ 	 */
+-	inline void RaiseWidget(byte widget_index)
++	inline void RaiseWidget(int widget_index)
+ 	{
+ 		SetWidgetLoweredState(widget_index, false);
+ 	}
+@@ -419,7 +419,7 @@ public:
+ 	 * @param widget_index index of this widget in the window
+ 	 * @return status of the widget ie: lowered = true, raised= false
+ 	 */
+-	inline bool IsWidgetLowered(byte widget_index) const
++	inline bool IsWidgetLowered(int widget_index) const
+ 	{
+ 		assert(widget_index < this->nested_array_size);
+ 		return this->GetWidget<NWidgetCore>(widget_index)->IsLowered();
+@@ -431,13 +431,13 @@ public:
+ 	EventState HandleEditBoxKey(int wid, WChar key, uint16 keycode);
+ 	virtual void InsertTextString(int wid, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end);
+ 
+-	void HandleButtonClick(byte widget);
++	void HandleButtonClick(int widget);
+ 	int GetRowFromWidget(int clickpos, int widget, int padding, int line_height = -1) const;
+ 
+ 	void RaiseButtons(bool autoraise = false);
+ 	void CDECL SetWidgetsDisabledState(bool disab_stat, int widgets, ...);
+ 	void CDECL SetWidgetsLoweredState(bool lowered_stat, int widgets, ...);
+-	void SetWidgetDirty(byte widget_index) const;
++	void SetWidgetDirty(int widget_index) const;
+ 
+ 	void DrawWidgets() const;
+ 	void DrawViewport() const;
+@@ -901,7 +901,7 @@ Window *FindWindowFromPt(int x, int y);
+  * @return %Window pointer of the newly created window, or the existing one if \a return_existing is set, or \c nullptr.
+  */
+ template <typename Wcls>
+-Wcls *AllocateWindowDescFront(WindowDesc *desc, int window_number, bool return_existing = false)
++Wcls *AllocateWindowDescFront(WindowDesc *desc, WindowNumber window_number, bool return_existing = false)
+ {
+ 	Wcls *w = static_cast<Wcls *>(BringWindowToFrontById(desc->cls, window_number));
+ 	if (w != nullptr) return return_existing ? w : nullptr;
+diff --git a/src/window_type.h b/src/window_type.h
+index 8b1c0cd80a..a8fa05c52a 100644
+--- a/src/window_type.h
++++ b/src/window_type.h
+@@ -713,7 +713,7 @@ enum GameOptionsInvalidationData {
+ struct Window;
+ 
+ /** Number to differentiate different windows of the same class */
+-typedef int32 WindowNumber;
++typedef int64 WindowNumber;
+ 
+ /** State of handling an event. */
+ enum EventState {
