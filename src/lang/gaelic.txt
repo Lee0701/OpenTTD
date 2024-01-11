@@ -1461,7 +1461,6 @@ STR_CONFIG_SETTING_BRIBE_HELPTEXT                               :Faodaidh compan
 
 STR_CONFIG_SETTING_ALLOW_EXCLUSIVE                              :Ceadaich ceannach aig còirichean giùlain às-dùnach: {STRING}
 STR_CONFIG_SETTING_ALLOW_EXCLUSIVE_HELPTEXT                     :Ma cheannaicheas companaidh còirichean giùlain às-dùnach airson baile, chan fhaigh stèiseanan (taistealaich no carago) nan co-fharpaiseach carago sam bith fad bliadhna
-
 STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS                         :Ceadaich maoineachadh thogalaichean: {STRING}
 STR_CONFIG_SETTING_ALLOW_FUND_BUILDINGS_HELPTEXT                :Faodaidh companaidhean airgead a thoirt dha bhailtean ach an tog iad taighean ùra
 

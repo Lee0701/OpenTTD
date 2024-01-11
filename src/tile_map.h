@@ -181,6 +181,15 @@ static inline Owner GetTileOwner(TileIndex tile)
 	assert(!IsTileType(tile, MP_HOUSE));
 	assert(!IsTileType(tile, MP_INDUSTRY));
 
+	return (Owner) (_me[tile].m9 >> 8);
+}
+
+static inline Owner GetOldTileOwner(TileIndex tile)
+{
+	assert(IsValidTile(tile));
+	assert(!IsTileType(tile, MP_HOUSE));
+	assert(!IsTileType(tile, MP_INDUSTRY));
+
 	return (Owner)GB(_m[tile].m1, 0, 5);
 }
 
@@ -196,6 +205,15 @@ static inline Owner GetTileOwner(TileIndex tile)
  * @pre The type of the tile must not be MP_HOUSE and MP_INDUSTRY
  */
 static inline void SetTileOwner(TileIndex tile, Owner owner)
+{
+	assert(IsValidTile(tile));
+	assert(!IsTileType(tile, MP_HOUSE));
+	assert(!IsTileType(tile, MP_INDUSTRY));
+
+	SB(_me[tile].m9, 8, 8, owner);
+}
+
+static inline void SetOldTileOwner(TileIndex tile, Owner owner)
 {
 	assert(IsValidTile(tile));
 	assert(!IsTileType(tile, MP_HOUSE));

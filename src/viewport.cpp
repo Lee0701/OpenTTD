@@ -482,7 +482,7 @@ Point GetTileZoomCenterWindow(bool in, Window * w)
  * @param widget_zoom_in widget index for window with zoom-in button
  * @param widget_zoom_out widget index for window with zoom-out button
  */
-void HandleZoomMessage(Window *w, const Viewport *vp, byte widget_zoom_in, byte widget_zoom_out)
+void HandleZoomMessage(Window *w, const Viewport *vp, int widget_zoom_in, int widget_zoom_out)
 {
 	w->SetWidgetDisabledState(widget_zoom_in, vp->zoom <= _settings_client.gui.zoom_min);
 	w->SetWidgetDirty(widget_zoom_in);
@@ -1774,7 +1774,7 @@ void ViewportDoDraw(const Viewport *vp, int left, int top, int right, int bottom
 	dp.height = UnScaleByZoom(dp.height, zoom);
 	_cur_dpi = &dp;
 
-	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask() != 0) {
+	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask().any()) {
 		/* translate to window coordinates */
 		dp.left = x;
 		dp.top = y;
@@ -2391,7 +2391,7 @@ bool HandleViewportClicked(const Viewport *vp, int x, int y)
 void RebuildViewportOverlay(Window *w)
 {
 	if (w->viewport->overlay != nullptr &&
-			w->viewport->overlay->GetCompanyMask() != 0 &&
+			w->viewport->overlay->GetCompanyMask().any() &&
 			w->viewport->overlay->GetCargoMask() != 0) {
 		w->viewport->overlay->SetDirty();
 		w->SetDirty();

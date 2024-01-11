@@ -970,6 +970,8 @@ STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}בחר �
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :אחר
 STR_GAME_OPTIONS_RESOLUTION_ITEM                                :{NUM}x{NUM}
 
+STR_GAME_OPTIONS_GUI_ZOOM_FRAME                                 :{BLACK}גודל ממשק
+STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_TOOLTIP                      :{BLACK}בחר את ממשק גודל העצם לשימוש
 
 STR_GAME_OPTIONS_VIDEO_VSYNC                                    :{BLACK}VSync
 
@@ -1837,12 +1839,10 @@ STR_CONFIG_SETTING_DISTRIBUTION_SYMMETRIC                       :סימטרי
 
 STR_CONFIG_SETTING_LINKGRAPH_ACCURACY                           :דיוק החלוקה: {STRING}
 STR_CONFIG_SETTING_LINKGRAPH_ACCURACY_HELPTEXT                  :ככל שתקבע ערך גבוה יותר כך ייארך זמן עיבוד במעד של גרף הקישור. אם זה ייארך זמן רב מידי אתה עלול לראות תקיעות. אולם אם תקבע ערך זה להיות נמוך, החלוקה לא תהיה מדוייקת, ואתה עלול לראות שהמטען לא יישלח למקומות שאתה מצפה שישלח.
-
 STR_CONFIG_SETTING_DEMAND_DISTANCE                              :השפעת המרחק על ביקושים: {STRING}
 STR_CONFIG_SETTING_DEMAND_DISTANCE_HELPTEXT                     :אם תקבע ערך זה ליותר מ-0, המרחק בין תחנת מקור A של מטען מסויים ויעד אפשרי B ישפיע על כמות המטען שנשלח מ-A ל-B. ככל ש-B מרוחקת מ-A כך פחות מטען יישלח. כלל שתקבע ערך גבוה יותר, כך פחות מטען יישלח לתחנות מרוחקות ויותר מטען יישלח לתחנות קרובות.
 STR_CONFIG_SETTING_DEMAND_SIZE                                  :כמות המטען החוזר עבור מצב סימטרי: {STRING}
 STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :קביעת ערך זה לקטן מ-100% יגרום לחלוקה הסימטרית להתנהג יותר כמו חלוקה אסימטרית. פחות מטען יישלח בעל כורחו חזרה אם כמות מסויימת נשלחת לתחנה. אם ערך זה ייקבע ל-0%, החלוקה הסימטרית תהיה חלוקה אסימטרית.
-
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :הרוויה של מסלולים קצרים לפני שימוש במסלולי קיבולת גבוהה: {STRING}
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :לעיתים קרובות יש מספר מסלולים בין שתי תחנות נתונות. אלגוריתם מרחק-מטען יגרום לרוויה במסלול הקצר ביותר תחילה, אחר כך ישתמש במסלול הקצר הבא אחריו עד שהוא יהיה רווי וכן הלאה. רוויה נקבעת על ידי הערכת הקיבולת והשימוש המתוכנן. ברגע שכל המסלולים רוויים, אם עדיין נותר ביקוש, הוא יעמיס על כל המסלולים, תוך כדי העדפת המסלולים עם קיבולת גבוהה. רוב הזמן האלגוריתם לא יעריך את הקיבלת במדוייק. הגדרה זאת מאפשרת לך לציין עד לאיזה אחוז יש לגרום למסלול קצר לרוויה בפעם הראשונה לפני שייבחר המסלול הבא הארוך ממנו. קבע הגדרה זו לערך קטן מ-100% כדי למנוע תחנות צפופות במקרה של הערכת יתר של הקיבולת.
 
@@ -2115,6 +2115,10 @@ STR_NETWORK_SERVER_VISIBILITY_PUBLIC                            :פומבי
 
 # Network server list
 STR_NETWORK_SERVER_LIST_CAPTION                                 :{WHITE}משחק רשת
+STR_NETWORK_SERVER_LIST_ADVERTISED                              :{BLACK}מפורסם
+STR_NETWORK_SERVER_LIST_ADVERTISED_TOOLTIP                      :{BLACK}בחר בין משחק מפורסם (אינטרנטי) ומשחק לא מפורסם (רשת מקומית, LAN)
+STR_NETWORK_SERVER_LIST_ADVERTISED_NO                           :לא
+STR_NETWORK_SERVER_LIST_ADVERTISED_YES                          :כן
 STR_NETWORK_SERVER_LIST_PLAYER_NAME                             :{BLACK} :שם השחקן
 STR_NETWORK_SERVER_LIST_ENTER_NAME_TOOLTIP                      :{BLACK}זהו שמך כפי שיצפה ע"י המשתתפים האחרים
 

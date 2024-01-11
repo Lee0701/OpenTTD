@@ -212,15 +212,20 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDSSTR(Town, name,                 SLE_STR | SLF_ALLOW_CONTROL, SLV_84, SL_MAX_VERSION),
 
 	    SLE_VAR(Town, flags,                 SLE_UINT8),
-	SLE_CONDVAR(Town, statues,               SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
-	SLE_CONDVAR(Town, statues,               SLE_UINT16,               SLV_104, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U16 | SLE_VAR_U64, SLV_104, SLV_MORE_COMPANIES),
+	SLE_CONDARR(Town, statues.data,          SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
 
-	SLE_CONDVAR(Town, have_ratings,          SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
-	SLE_CONDVAR(Town, have_ratings,          SLE_UINT16,               SLV_104, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U8  | SLE_VAR_U64, SL_MIN_VERSION, SLV_104),
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U16 | SLE_VAR_U64, SLV_104, SLV_MORE_COMPANIES),
+	SLE_CONDARR(Town, have_ratings.data,     SLE_UINT64, CompanyMask::bsize, SLV_MORE_COMPANIES, SL_MAX_VERSION),
 	SLE_CONDARR(Town, ratings,               SLE_INT16, 8,               SL_MIN_VERSION, SLV_104),
-	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, OLD_MAX_COMPANIES, SLV_104, SLV_MORE_COMPANIES),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, SLV_MORE_COMPANIES, SL_MAX_VERSION),
+	/* failed bribe attempts are stored since savegame format 4 */
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               SLV_4, SLV_104),
-	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  OLD_MAX_COMPANIES, SLV_104, SLV_MORE_COMPANIES),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_MORE_COMPANIES, SL_MAX_VERSION),
 
 	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
 	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_UINT32,                 SLV_9, SLV_165),

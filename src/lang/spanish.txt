@@ -1088,7 +1088,7 @@ STR_VARIETY_VERY_LOW                                            :Muy Baja
 STR_VARIETY_LOW                                                 :Baja
 STR_VARIETY_MEDIUM                                              :Media
 STR_VARIETY_HIGH                                                :Alta
-STR_VARIETY_VERY_HIGH                                           :Muy Alta
+STR_VARIETY_VERY_HIGH                                           :Muy alta
 
 ###length 5
 STR_AI_SPEED_VERY_SLOW                                          :Muy lenta

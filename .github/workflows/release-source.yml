@@ -30,7 +30,8 @@ jobs:
       uses: actions/checkout@v3
       with:
         # We generate a changelog; for this we need the full git log.
-        fetch-depth: 0
+        # Maybe not yet for us.
+        fetch-depth: 1
 
     - name: Checkout (Manual)
       if: github.event_name == 'workflow_dispatch'
@@ -38,7 +39,8 @@ jobs:
       with:
         ref: ${{ github.event.inputs.ref }}
         # We generate a changelog; for this we need the full git log.
-        fetch-depth: 0
+        # Maybe not yet for us.
+        fetch-depth: 1
 
     - name: Checkout (Trigger)
       if: github.event_name == 'repository_dispatch'
@@ -46,7 +48,8 @@ jobs:
       with:
         ref: ${{ github.event.client_payload.ref }}
         # We generate a changelog; for this we need the full git log.
-        fetch-depth: 0
+        # Maybe not yet for us.
+        fetch-depth: 1
 
     - name: Check valid branch name
       run: |

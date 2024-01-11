@@ -353,6 +353,33 @@ struct MAP8ChunkHandler : ChunkHandler {
 	}
 };
 
+struct MAP9ChunkHandler : ChunkHandler {
+	MAP9ChunkHandler() : ChunkHandler('MAP9', CH_RIFF) {}
+
+	void Load() const override
+	{
+		std::array<uint16, MAP_SL_BUF_SIZE> buf;
+		TileIndex size = MapSize();
+
+		for (TileIndex i = 0; i != size;) {
+			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _me[i++].m9 = buf[j];
+		}
+	}
+
+	void Save() const override
+	{
+		std::array<uint16, MAP_SL_BUF_SIZE> buf;
+		TileIndex size = MapSize();
+
+		SlSetLength(size * sizeof(uint16));
+		for (TileIndex i = 0; i != size;) {
+			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) buf[j] = _me[i++].m9;
+			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+		}
+	}
+};
+
 static const MAPSChunkHandler MAPS;
 static const MAPTChunkHandler MAPT;
 static const MAPHChunkHandler MAPH;
@@ -364,6 +391,7 @@ static const MAP5ChunkHandler MAP5;
 static const MAPEChunkHandler MAPE;
 static const MAP7ChunkHandler MAP7;
 static const MAP8ChunkHandler MAP8;
+static const MAP9ChunkHandler MAP9;
 static const ChunkHandlerRef map_chunk_handlers[] = {
 	MAPS,
 	MAPT,
@@ -376,6 +404,7 @@ static const ChunkHandlerRef map_chunk_handlers[] = {
 	MAPE,
 	MAP7,
 	MAP8,
+	MAP9,
 };
 
 extern const ChunkHandlerTable _map_chunk_handlers(map_chunk_handlers);

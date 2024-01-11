@@ -308,8 +308,8 @@ public:
 	}
 
 	void DisableAllWidgetHighlight();
-	void SetWidgetHighlight(byte widget_index, TextColour highlighted_colour);
-	bool IsWidgetHighlighted(byte widget_index) const;
+	void SetWidgetHighlight(int widget_index, TextColour highlighted_colour);
+	bool IsWidgetHighlighted(int widget_index) const;
 
 	/**
 	 * Sets the enabled/disabled status of a widget.
@@ -318,7 +318,7 @@ public:
 	 * @param widget_index index of this widget in the window
 	 * @param disab_stat status to use ie: disabled = true, enabled = false
 	 */
-	inline void SetWidgetDisabledState(byte widget_index, bool disab_stat)
+	inline void SetWidgetDisabledState(int widget_index, bool disab_stat)
 	{
 		assert(widget_index < this->nested_array_size);
 		if (this->nested_array[widget_index] != nullptr) this->GetWidget<NWidgetCore>(widget_index)->SetDisabled(disab_stat);
@@ -328,7 +328,7 @@ public:
 	 * Sets a widget to disabled.
 	 * @param widget_index index of this widget in the window
 	 */
-	inline void DisableWidget(byte widget_index)
+	inline void DisableWidget(int widget_index)
 	{
 		SetWidgetDisabledState(widget_index, true);
 	}
@@ -337,7 +337,7 @@ public:
 	 * Sets a widget to Enabled.
 	 * @param widget_index index of this widget in the window
 	 */
-	inline void EnableWidget(byte widget_index)
+	inline void EnableWidget(int widget_index)
 	{
 		SetWidgetDisabledState(widget_index, false);
 	}
@@ -347,7 +347,7 @@ public:
 	 * @param widget_index index of this widget in the window
 	 * @return status of the widget ie: disabled = true, enabled = false
 	 */
-	inline bool IsWidgetDisabled(byte widget_index) const
+	inline bool IsWidgetDisabled(int widget_index) const
 	{
 		assert(widget_index < this->nested_array_size);
 		return this->GetWidget<NWidgetCore>(widget_index)->IsDisabled();
@@ -358,7 +358,7 @@ public:
 	 * @param widget_index : index of the widget in the window to check
 	 * @return true if given widget is the focused window in this window
 	 */
-	inline bool IsWidgetFocused(byte widget_index) const
+	inline bool IsWidgetFocused(int widget_index) const
 	{
 		return this->nested_focus != nullptr && this->nested_focus->index == widget_index;
 	}
@@ -369,7 +369,7 @@ public:
 	 * @param widget_index : index of the widget in the window to check
 	 * @return true if given widget is the focused window in this window and this window has focus
 	 */
-	inline bool IsWidgetGloballyFocused(byte widget_index) const
+	inline bool IsWidgetGloballyFocused(int widget_index) const
 	{
 		return _focused_window == this && IsWidgetFocused(widget_index);
 	}
@@ -379,7 +379,7 @@ public:
 	 * @param widget_index index of this widget in the window
 	 * @param lowered_stat status to use ie: lowered = true, raised = false
 	 */
-	inline void SetWidgetLoweredState(byte widget_index, bool lowered_stat)
+	inline void SetWidgetLoweredState(int widget_index, bool lowered_stat)
 	{
 		assert(widget_index < this->nested_array_size);
 		this->GetWidget<NWidgetCore>(widget_index)->SetLowered(lowered_stat);
@@ -389,7 +389,7 @@ public:
 	 * Invert the lowered/raised  status of a widget.
 	 * @param widget_index index of this widget in the window
 	 */
-	inline void ToggleWidgetLoweredState(byte widget_index)
+	inline void ToggleWidgetLoweredState(int widget_index)
 	{
 		assert(widget_index < this->nested_array_size);
 		bool lowered_state = this->GetWidget<NWidgetCore>(widget_index)->IsLowered();
@@ -400,7 +400,7 @@ public:
 	 * Marks a widget as lowered.
 	 * @param widget_index index of this widget in the window
 	 */
-	inline void LowerWidget(byte widget_index)
+	inline void LowerWidget(int widget_index)
 	{
 		SetWidgetLoweredState(widget_index, true);
 	}
@@ -409,7 +409,7 @@ public:
 	 * Marks a widget as raised.
 	 * @param widget_index index of this widget in the window
 	 */
-	inline void RaiseWidget(byte widget_index)
+	inline void RaiseWidget(int widget_index)
 	{
 		SetWidgetLoweredState(widget_index, false);
 	}
@@ -419,7 +419,7 @@ public:
 	 * @param widget_index index of this widget in the window
 	 * @return status of the widget ie: lowered = true, raised= false
 	 */
-	inline bool IsWidgetLowered(byte widget_index) const
+	inline bool IsWidgetLowered(int widget_index) const
 	{
 		assert(widget_index < this->nested_array_size);
 		return this->GetWidget<NWidgetCore>(widget_index)->IsLowered();
@@ -431,13 +431,13 @@ public:
 	EventState HandleEditBoxKey(int wid, WChar key, uint16 keycode);
 	virtual void InsertTextString(int wid, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end);
 
-	void HandleButtonClick(byte widget);
+	void HandleButtonClick(int widget);
 	int GetRowFromWidget(int clickpos, int widget, int padding, int line_height = -1) const;
 
 	void RaiseButtons(bool autoraise = false);
 	void CDECL SetWidgetsDisabledState(bool disab_stat, int widgets, ...);
 	void CDECL SetWidgetsLoweredState(bool lowered_stat, int widgets, ...);
-	void SetWidgetDirty(byte widget_index) const;
+	void SetWidgetDirty(int widget_index) const;
 
 	void DrawWidgets() const;
 	void DrawViewport() const;
@@ -901,7 +901,7 @@ Window *FindWindowFromPt(int x, int y);
  * @return %Window pointer of the newly created window, or the existing one if \a return_existing is set, or \c nullptr.
  */
 template <typename Wcls>
-Wcls *AllocateWindowDescFront(WindowDesc *desc, int window_number, bool return_existing = false)
+Wcls *AllocateWindowDescFront(WindowDesc *desc, WindowNumber window_number, bool return_existing = false)
 {
 	Wcls *w = static_cast<Wcls *>(BringWindowToFrontById(desc->cls, window_number));
 	if (w != nullptr) return return_existing ? w : nullptr;

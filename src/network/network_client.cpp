@@ -1124,7 +1124,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_COMPANY_UPDATE(
 {
 	if (this->status < STATUS_ACTIVE) return NETWORK_RECV_STATUS_MALFORMED_PACKET;
 
-	_network_company_passworded = p->Recv_uint16();
+	for (uint i = 0; i < CompanyMask::bsize; i++)
+		_network_company_passworded.data[i] = p->Recv_uint64();
 	SetWindowClassesDirty(WC_COMPANY);
 
 	return NETWORK_RECV_STATUS_OKAY;

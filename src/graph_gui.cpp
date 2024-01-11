@@ -27,6 +27,7 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 #include <math.h>
+#include <string>
 
 #include "safeguards.h"
 
@@ -48,7 +49,7 @@ struct GraphLegendWindow : Window {
 		this->InitNested(window_number);
 
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!HasBit(_legend_excluded_companies, c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
+			if (!_legend_excluded_companies.at(c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
 
 			this->OnInvalidateData(c);
 		}
@@ -71,14 +72,14 @@ struct GraphLegendWindow : Window {
 		const Rect tr = ir.Indent(d.width + WidgetDimensions::scaled.hsep_normal, rtl);
 		SetDParam(0, cid);
 		SetDParam(1, cid);
-		DrawString(tr.left, tr.right, CenterBounds(tr.top, tr.bottom, FONT_HEIGHT_NORMAL), STR_COMPANY_NAME_COMPANY_NUM, HasBit(_legend_excluded_companies, cid) ? TC_BLACK : TC_WHITE);
+		DrawString(tr.left, tr.right, CenterBounds(tr.top, tr.bottom, FONT_HEIGHT_NORMAL), STR_COMPANY_NAME_COMPANY_NUM, _legend_excluded_companies.at(cid) ? TC_BLACK : TC_WHITE);
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
 	{
 		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
 
-		ToggleBit(_legend_excluded_companies, widget - WID_GL_FIRST_COMPANY);
+		_legend_excluded_companies.toggle(widget - WID_GL_FIRST_COMPANY);
 		this->ToggleWidgetLoweredState(widget);
 		this->SetDirty();
 		InvalidateWindowData(WC_INCOME_GRAPH, 0);
@@ -98,7 +99,7 @@ struct GraphLegendWindow : Window {
 		if (!gui_scope) return;
 		if (Company::IsValidID(data)) return;
 
-		SetBit(_legend_excluded_companies, data);
+		_legend_excluded_companies.set(data);
 		this->RaiseWidget(data + WID_GL_FIRST_COMPANY);
 	}
 };
@@ -163,7 +164,7 @@ struct ValuesInterval {
 
 struct BaseGraphWindow : Window {
 protected:
-	static const int GRAPH_MAX_DATASETS     =  64;
+	static const int GRAPH_MAX_DATASETS     =  (int)MAX_COMPANIES > (int)NUM_CARGO ? (int)MAX_COMPANIES : (int)NUM_CARGO;
 	static const int GRAPH_BASE_COLOUR      =  GREY_SCALE(2);
 	static const int GRAPH_GRID_COLOUR      =  GREY_SCALE(3);
 	static const int GRAPH_AXIS_LINE_COLOUR =  GREY_SCALE(1);
@@ -176,8 +177,8 @@ protected:
 	static const int MIN_GRAPH_NUM_LINES_Y  =   9; ///< Minimal number of horizontal lines to draw.
 	static const int MIN_GRID_PIXEL_SIZE    =  20; ///< Minimum distance between graph lines.
 
-	uint64 excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
-	byte num_dataset;
+	Bitset<GRAPH_MAX_DATASETS> excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
+	int num_dataset;
 	byte num_on_x_axis;
 	byte num_vert_lines;
 
@@ -211,7 +212,7 @@ protected:
 		current_interval.lowest  = INT64_MAX;
 
 		for (int i = 0; i < this->num_dataset; i++) {
-			if (HasBit(this->excluded_data, i)) continue;
+			if (this->excluded_data.at(i)) continue;
 			for (int j = 0; j < this->num_on_x_axis; j++) {
 				OverflowSafeInt64 datapoint = this->cost[i][j];
 
@@ -418,7 +419,7 @@ protected:
 		uint pointoffs1 = (linewidth + 1) / 2;
 		uint pointoffs2 = linewidth + 1 - pointoffs1;
 		for (int i = 0; i < this->num_dataset; i++) {
-			if (!HasBit(this->excluded_data, i)) {
+			if (!this->excluded_data.at(i)) {
 				/* Centre the dot between the grid lines. */
 				x = r.left + (x_sep / 2);
 
@@ -566,11 +567,11 @@ public:
 	 */
 	void UpdateStatistics(bool initialize)
 	{
-		CompanyMask excluded_companies = _legend_excluded_companies;
+		Bitset<GRAPH_MAX_DATASETS> excluded_companies = _legend_excluded_companies;
 
 		/* Exclude the companies which aren't valid */
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!Company::IsValidID(c)) SetBit(excluded_companies, c);
+			if (!Company::IsValidID(c)) excluded_companies.set(c);
 		}
 
 		byte nums = 0;
@@ -904,11 +905,11 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 
 	void UpdateExcludedData()
 	{
-		this->excluded_data = 0;
+		this->excluded_data.reset();
 
 		int i = 0;
 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
-			if (HasBit(_legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
+			if (HasBit(_legend_excluded_cargo, cs->Index())) this->excluded_data.set(i);
 			i++;
 		}
 	}
@@ -978,7 +979,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			case WID_CPR_ENABLE_CARGOES:
 				/* Remove all cargoes from the excluded lists. */
 				_legend_excluded_cargo = 0;
-				this->excluded_data = 0;
+				this->excluded_data.reset();
 				this->SetDirty();
 				break;
 
@@ -987,7 +988,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 				int i = 0;
 				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 					SetBit(_legend_excluded_cargo, cs->Index());
-					SetBit(this->excluded_data, i);
+					this->excluded_data.set(i);
 					i++;
 				}
 				this->SetDirty();
@@ -1396,6 +1397,6 @@ void ShowPerformanceRatingDetail()
 
 void InitializeGraphGui()
 {
-	_legend_excluded_companies = 0;
+	_legend_excluded_companies.reset();
 	_legend_excluded_cargo = 0;
 }

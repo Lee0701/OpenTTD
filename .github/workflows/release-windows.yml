@@ -35,11 +35,6 @@ jobs:
       run: |
         tar -xf source.tar.gz --strip-components=1
 
-    - name: Install dependencies
-      shell: bash
-      run: |
-        choco install pandoc
-
     - name: Prepare cache key
       id: key
       shell: powershell

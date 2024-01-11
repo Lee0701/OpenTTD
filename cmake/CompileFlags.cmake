@@ -151,7 +151,7 @@ macro(compile_flags)
                 if(NO_SSE4_FOUND)
                     add_compile_options(
                         # Don't use SSE4 for general sources to increase compatibility.
-                        -mno-sse4
+                        # -mno-sse4
                     )
                 endif()
             endif()

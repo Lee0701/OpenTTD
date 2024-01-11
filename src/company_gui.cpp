@@ -635,16 +635,14 @@ private:
 		uint32 used_colours = 0;
 		const Company *c;
 		const Livery *livery, *default_livery = nullptr;
+ 		LiveryScheme scheme;
 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
 		byte default_col;
 
-		/* Disallow other company colours for the primary colour */
-		if (this->livery_class < LC_GROUP_RAIL && HasBit(this->sel, LS_DEFAULT) && primary) {
-			for (const Company *c : Company::Iterate()) {
-				if (c->index != _local_company) SetBit(used_colours, c->colour);
-			}
+		/* Get the first selected livery to use as the default dropdown item */
+		for (scheme = LS_BEGIN; scheme < LS_END; scheme++) {
+			if (HasBit(this->sel, scheme)) break;
 		}
-
 		c = Company::Get((CompanyID)this->window_number);
 
 		if (this->livery_class < LC_GROUP_RAIL) {
@@ -1379,7 +1377,7 @@ class SelectCompanyManagerFaceWindow : public Window
 	 * @param val            the value which will be displayed
 	 * @param is_bool_widget is it a bool button
 	 */
-	void SetFaceStringParameters(byte widget_index, uint8 val, bool is_bool_widget) const
+	void SetFaceStringParameters(int widget_index, uint8 val, bool is_bool_widget) const
 	{
 		const NWidgetCore *nwi_widget = this->GetWidget<NWidgetCore>(widget_index);
 		if (nwi_widget->IsDisabled()) {

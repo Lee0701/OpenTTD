@@ -2533,7 +2533,6 @@ STR_CONTENT_DETAIL_SUBTITLE_SELECTED                            :{SILVER}Conteni
 STR_CONTENT_DETAIL_SUBTITLE_AUTOSELECTED                        :{SILVER}Dependencia elegida para descargar
 STR_CONTENT_DETAIL_SUBTITLE_ALREADY_HERE                        :{SILVER}Este contenido ya fue descargado
 STR_CONTENT_DETAIL_SUBTITLE_DOES_NOT_EXIST                      :{SILVER}Este contenido es desconocido y no puede ser descargado en OpenTTD
-
 STR_CONTENT_DETAIL_UPDATE                                       :{SILVER}Este es un sustituto de un{G "" a} {STRING} existente
 STR_CONTENT_DETAIL_NAME                                         :{SILVER}Nombre: {WHITE}{STRING}
 STR_CONTENT_DETAIL_VERSION                                      :{SILVER}Versión: {WHITE}{STRING}

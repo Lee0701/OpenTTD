@@ -1778,7 +1778,6 @@ STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Kiam tiu ĉi ag
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktivigu vagonajn rapideclimojn: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Kiam ebligita, ankaŭ uzu rapideco-limigojn de vagonoj por decidi la maksimuman rapidecon de trajno
-
 STR_CONFIG_SETTING_DISABLE_ELRAILS                              :Malŝaltu elektrajn relojn: {STRING}
 STR_CONFIG_SETTING_DISABLE_ELRAILS_HELPTEXT                     :Se tiu ĉi agordo estas aktiva, ne necesas elektrigi relojn por ke elektraj lokomotivoj povu veturi sur ili
 
