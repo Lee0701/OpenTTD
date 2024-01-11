@@ -3942,7 +3942,7 @@ bool AfterLoadGame()
 
 			SetTileOwner(t, UpdateOwnerEnum(GetOldTileOwner(t)));
 
-			if (IsTileType(t, MP_ROAD) || IsTileType(t, MP_TUNNELBRIDGE) || IsRoadStopTile(t)) {
+			if (IsTileType(t, MP_ROAD) || IsTileType(t, MP_TUNNELBRIDGE) || IsAnyRoadStopTile(t)) {
 				SetRoadOwner(t, RTT_ROAD, UpdateOwnerEnum(GetOldRoadOwner(t, RTT_ROAD)));
 				SetRoadOwner(t, RTT_TRAM, UpdateOwnerEnumTram(GetOldRoadOwner(t, RTT_TRAM)));
 			}
