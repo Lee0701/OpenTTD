@@ -4387,13 +4387,14 @@ void UpdateAllTownRatings()
 {
 	if (_cheats.town_rating.value) {
 		for (Town *t : Town::Iterate()) {
-			if (Company::IsValidID(_local_company) && HasBit(t->have_ratings, _local_company) && t->ratings[_local_company] <= 0) {
+			if (Company::IsValidID(_local_company) && t->have_ratings.at(_local_company) && t->ratings[_local_company] <= 0) {
 				ZoningTownAuthorityRatingChange();
 			}
-			for (uint8 c : SetBitIterator(t->have_ratings)) {
+			for(uint8 c = 0; c < t->have_ratings.size; c++) {
+				if(!t->have_ratings.at(c)) continue;
 				t->ratings[c] = RATING_MAXIMUM;
 			}
-			if (t->have_ratings != 0) {
+			if (t->have_ratings.any()) {
 				t->UpdateVirtCoord();
 				SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
 			}

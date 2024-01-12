@@ -655,7 +655,7 @@ static void RetireEngineIfPossible(Engine *e, int age_threshold)
 		if ((ymd.year * 12) + ymd.month + age_threshold >= _settings_game.vehicle.no_expire_vehicles_after * 12) return;
 	}
 
-	e->company_avail = 0;
+	e->company_avail.reset();
 	ClearLastVariant(e->index, e->type);
 	AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
 }
@@ -697,7 +697,6 @@ void CalcEngineReliability(Engine *e, bool new_month)
 		uint max = e->reliability_max;
 		e->reliability = (int)age * (int)(e->reliability_final - max) / e->duration_phase_3 + max;
 	} else {
-		e->company_avail.reset();
 		e->reliability = e->reliability_final;
 		/* time's up for this engine.
 		 * We will now completely retire this design */
@@ -759,9 +758,9 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed, Date no_introduce
 	/* Don't randomise the start-date in the first two years after gamestart to ensure availability
 	 * of engines in early starting games.
 	 * Note: TTDP uses fixed 1922 */
-	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : (DateDelta)GB(r, 0, 9) + ei->base_intro;
-	if (e->intro_date <= _date && e->intro_date <= no_introduce_after_date) {
-		e->age = (aging_date - e->intro_date).base() >> 5;
+	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : GB(r, 0, 9) + ei->base_intro.base();
+	if (e->intro_date <= _date) {
+		e->age = (aging_date.base() - e->intro_date.base()) >> 5;
 		e->company_avail.set();
 		e->flags |= ENGINE_AVAILABLE;
 	}
@@ -1053,7 +1052,7 @@ CommandCost CmdSetVehicleVisibility(TileIndex tile, DoCommandFlag flags, uint32 
 	if (!IsEngineBuildable(e->index, e->type, _current_company)) return CMD_ERROR;
 
 	if ((flags & DC_EXEC) != 0) {
-		e->company_hidden.set(_current_company, hide);
+		e->company_hidden.set(_current_company);
 		AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
 	}
 

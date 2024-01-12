@@ -1956,10 +1956,11 @@ class NIHTown : public NIHelper {
 				t->growth_rate, t->grow_counter, t->time_until_rebuild, HasBit(t->flags, TOWN_IS_GROWING) ? 1 : 0,HasBit(t->flags, TOWN_CUSTOM_GROWTH) ? 1 : 0);
 		output.print(buffer);
 
-		if (t->have_ratings != 0) {
+		if (t->have_ratings.any()) {
 			output.print("  Company ratings:");
-			for (uint8 bit : SetBitIterator(t->have_ratings)) {
-				seprintf(buffer, lastof(buffer), "    %u: %d", bit, t->ratings[bit]);
+			for (int i = 0; i < t->have_ratings.size; i++) {
+				if(!t->have_ratings.at(i)) continue;
+				seprintf(buffer, lastof(buffer), "    %u: %d", i, t->ratings[i]);
 				output.print(buffer);
 			}
 		}

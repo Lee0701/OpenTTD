@@ -91,7 +91,7 @@ Company::~Company()
 	if (CleaningPool()) return;
 
 	DeleteCompanyWindows(this->index);
-	SetBit(_saved_PLYP_invalid_mask, this->index);
+	_saved_PLYP_invalid_mask.set(this->index);
 }
 
 /**
@@ -658,7 +658,7 @@ void StartupCompanies()
 
 static void ClearSavedPLYP()
 {
-	_saved_PLYP_invalid_mask = 0;
+	_saved_PLYP_invalid_mask.reset();
 	_saved_PLYP_data.clear();
 }
 
@@ -740,7 +740,7 @@ static void HandleBankruptcyTakeover(Company *c)
 
 	/* Ask the company with the highest performance history first */
 	for (Company *c2 : Company::Iterate()) {
-		if (c2->bankrupt_asked.none() || (c2->bankrupt_flags & CBRF_SALE_ONLY)) && // Don't ask companies going bankrupt themselves
+		if ((c2->bankrupt_asked.none() || (c2->bankrupt_flags & CBRF_SALE_ONLY)) && // Don't ask companies going bankrupt themselves
 				!c->bankrupt_asked.at(c2->index) &&
 				best_performance < c2->old_economy[1].performance_history &&
 				MayCompanyTakeOver(c2->index, c->index)) {
@@ -762,7 +762,6 @@ static void HandleBankruptcyTakeover(Company *c)
 	}
 
 	c->bankrupt_asked.set(best->index, true);
-	c->bankrupt_last_asked = best->index;
 
 	c->bankrupt_timeout = TAKE_OVER_TIMEOUT;
 
@@ -785,7 +784,7 @@ void OnTick_Companies(bool main_tick)
 	if (main_tick) {
 		Company *c = Company::GetIfValid(_cur_company_tick_index);
 		if (c != nullptr) {
-			if (c->bankrupt_asked != 0) HandleBankruptcyTakeover(c);
+			if (c->bankrupt_asked.any()) HandleBankruptcyTakeover(c);
 		}
 		_cur_company_tick_index = (_cur_company_tick_index + 1) % MAX_COMPANIES;
 	}
@@ -1021,9 +1020,9 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			if (!(flags & DC_EXEC)) return CommandCost();
 
 			c->bankrupt_flags |= CBRF_SALE;
-			if (c->bankrupt_asked == 0) c->bankrupt_flags |= CBRF_SALE_ONLY;
+			if (!c->bankrupt_asked.any()) c->bankrupt_flags |= CBRF_SALE_ONLY;
 			c->bankrupt_value = CalculateCompanyValue(c, false);
-			c->bankrupt_asked = 1 << c->index; // Don't ask the owner
+			c->bankrupt_asked.set(c->index); // Don't ask the owner
 			c->bankrupt_timeout = 0;
 			CloseWindowById(WC_BUY_COMPANY, c->index);
 			break;

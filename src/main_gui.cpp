@@ -256,9 +256,9 @@ struct MainWindow : Window
 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_M_VIEWPORT);
 		nvp->InitializeViewport(this, TileXY(32, 32), ScaleZoomGUI(ZOOM_LVL_VIEWPORT));
 
-		CompanyMask empty;
 		this->viewport->map_type = (ViewportMapType) _settings_client.gui.default_viewport_map_mode;
-		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, empty, 2);
+		CompanyMask empty;
+		this->viewport->overlay = new LinkGraphOverlay(this, WID_M_VIEWPORT, 0, empty, 3);
 		this->refresh.SetInterval(LINKGRAPH_DELAY);
 	}
 

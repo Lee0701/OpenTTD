@@ -946,7 +946,7 @@ struct DeliveredCargoGraphWindow : ExcludingCargoBaseGraphWindow {
 
 		/* Exclude the companies which aren't valid */
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!Company::IsValidID(c)) SetBit(excluded_companies, c);
+			if (!Company::IsValidID(c)) excluded_companies.set(c);
 		}
 
 		byte nums = 0;
@@ -967,21 +967,21 @@ struct DeliveredCargoGraphWindow : ExcludingCargoBaseGraphWindow {
 			return;
 		}
 
-		this->excluded_data = UINT64_MAX;
+		this->excluded_data.set();
 		this->num_on_x_axis = nums;
 		this->year = yr;
 		this->month = mo;
 
 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (HasBit(_legend_excluded_cargo, cs->Index())) continue;
-			ClrBit(this->excluded_data, cs->Index());
+			this->excluded_data.reset(cs->Index());
 			this->colours[cs->Index()] = cs->legend_colour;
 
 			for (int j = this->num_on_x_axis, i = 0; --j >= 0;) {
 				bool is_valid = false;
 				OverflowSafeInt64 total_delivered = 0;
 				for (CompanyID k = COMPANY_FIRST; k < MAX_COMPANIES; k++) {
-					if (HasBit(excluded_companies, k)) continue;
+					if (excluded_companies.at(k)) continue;
 
 					/* Invalid companies are excluded by excluded_companies */
 					const Company *c = Company::Get(k);
@@ -1849,12 +1849,12 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 
 	void UpdateExcludedData()
 	{
-		this->excluded_data = 0;
+		this->excluded_data.reset();
 
 		uint8 i = 0;
 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (!HasBit(this->present_cargoes, cs->Index())) continue;
-			if (HasBit(legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
+			if (HasBit(legend_excluded_cargo, cs->Index())) this->excluded_data.set(i);
 			i++;
 		}
 	}
@@ -1928,7 +1928,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 			case WID_SCG_ENABLE_CARGOES:
 				/* Remove all cargoes from the excluded lists. */
 				this->legend_excluded_cargo = 0;
-				this->excluded_data = 0;
+				this->excluded_data.reset();
 				this->SetDirty();
 				break;
 
@@ -1938,7 +1938,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 				int i = 0;
 				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 					if (!HasBit(this->present_cargoes, cs->Index())) continue;
-					SetBit(this->excluded_data, i);
+					this->excluded_data.set(i);
 					i++;
 				}
 				this->SetDirty();

@@ -16,6 +16,8 @@
 #include "road_func.h"
 #include "tile_map.h"
 
+#include "core/bitmath_func.hpp"
+
 
 /** The different types of road tiles. */
 enum RoadTileType {
@@ -251,7 +253,7 @@ static inline bool HasTileAnyRoadType(TileIndex t, RoadTypes rts)
  */
 static inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 {
-	dbg_assert(MayHaveRoad(t));
+	assert(MayHaveRoad(t));
 	if(rtt == RTT_ROAD) {
 		if(IsNormalRoadTile(t)) return GetTileOwner(t);
 		else return (Owner) _m[t].m3;
@@ -263,7 +265,7 @@ static inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 
 static inline Owner GetOldRoadOwner(TileIndex t, RoadTramType rtt)
 {
-	assert(MayHaveRoad(t));
+	dbg_assert(MayHaveRoad(t));
 	if (rtt == RTT_ROAD) return (Owner)GB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5);
 
 	/* Trams don't need OWNER_TOWN, and remapping OWNER_NONE

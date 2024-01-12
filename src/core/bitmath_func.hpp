@@ -12,6 +12,8 @@
 
 #include <type_traits>
 
+#include "../stdafx.h"
+
 /**
  * Fetch \a n bits from \a x, started at bit \a s.
  *
@@ -105,7 +107,7 @@ static inline T AB(T &x, const uint8 s, const uint8 n, const U i)
 template <typename T>
 debug_inline static bool HasBit(const T x, const uint8 y)
 {
-	return (x & ((T)1U << y)) != 0;
+	return (x & ((T)1U << y)) != 0;	
 }
 
 /**
@@ -423,10 +425,12 @@ static inline T ROR(const T x, const uint8 n)
 	return (T)(x >> n | x << (sizeof(x) * 8 - n));
 }
 
+
 template <int esize>
 class Bitset
 {
 public:
+	static const int size = esize;
 	static const int bsize = esize / 64 + (esize % 64 ? 1 : 0);
 	static const int msize = bsize * 8;
 

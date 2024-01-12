@@ -285,8 +285,9 @@ static const SaveLoad _company_desc[] = {
 	    SLE_VAR(CompanyProperties, months_of_bankruptcy,  SLE_UINT8),
 	SLE_CONDVAR_X(CompanyProperties, bankrupt_last_asked, SLE_UINT8,         SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_BANKRUPTCY_EXTRA)),
 	SLE_CONDVAR_X(CompanyProperties, bankrupt_flags,      SLE_UINT8,         SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_BANKRUPTCY_EXTRA, 2)),
-	SLE_CONDVAR(CompanyProperties, bankrupt_asked,        SLE_FILE_U8  | SLE_VAR_U16,  SL_MIN_VERSION, SLV_104),
-	SLE_CONDVAR(CompanyProperties, bankrupt_asked,        SLE_UINT16,                SLV_104, SL_MAX_VERSION),
+	SLE_CONDVAR(CompanyProperties, bankrupt_asked.data[0],        SLE_FILE_U8  | SLE_VAR_U64,  SL_MIN_VERSION, SLV_104),
+	SLE_CONDVAR(CompanyProperties, bankrupt_asked.data[0],        SLE_FILE_U16 | SLE_VAR_U64,  SLV_104, SL_MAX_VERSION),
+	SLE_CONDARR_X(CompanyProperties, bankrupt_asked.data, SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES, 1)),
 	    SLE_VAR(CompanyProperties, bankrupt_timeout,      SLE_INT16),
 	SLE_CONDVAR(CompanyProperties, bankrupt_value,        SLE_VAR_I64 | SLE_FILE_I32,  SL_MIN_VERSION, SLV_65),
 	SLE_CONDVAR(CompanyProperties, bankrupt_value,        SLE_INT64,                  SLV_65, SL_MAX_VERSION),
@@ -572,10 +573,11 @@ static void Save_PLYX()
 static void Load_PLYP()
 {
 	size_t size = SlGetFieldLength();
-	CompanyMask invalid_mask = 0;
+	CompanyMask invalid_mask;
 	if (SlXvIsFeaturePresent(XSLFI_COMPANY_PW, 2)) {
 		if (size <= 2) return;
-		invalid_mask = SlReadUint16();
+		// TODO: Needs upgrade to work with more_companies
+		invalid_mask.data[0] = SlReadUint16();
 		size -= 2;
 	}
 	if (size <= 16 + 24 + 16 || (_networking && !_network_server)) {
@@ -619,7 +621,7 @@ static void Load_PLYP()
 				std::string password;
 				password.resize(SlReadUint32());
 				ReadBuffer::GetCurrent()->CopyBytes((uint8 *)password.data(), password.size());
-				if (!HasBit(invalid_mask, cid)) {
+				if (!invalid_mask.at(cid)) {
 					NetworkServerSetCompanyPassword((CompanyID)cid, password, true);
 				}
 			}
@@ -646,7 +648,7 @@ static void Save_PLYP()
 			SlSetLength(0);
 		} else {
 			SlSetLength(2 + _saved_PLYP_data.size());
-			SlWriteUint16(_saved_PLYP_invalid_mask);
+			SlWriteUint16(_saved_PLYP_invalid_mask.data[0]);
 			MemoryDumper::GetCurrent()->CopyBytes((const uint8 *)_saved_PLYP_data.data(), _saved_PLYP_data.size());
 		}
 		return;

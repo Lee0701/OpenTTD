@@ -15,7 +15,7 @@
 /**
  * Enum for all companies/owners.
  */
-enum Owner {
+enum Owner : byte {
 	OLD_MAX_COMPANIES   = 0x0F,
 	OLD_OWNER_TOWN      = 0x0F,
 	OLD_OWNER_NONE      = 0x10,

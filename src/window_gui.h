@@ -532,7 +532,7 @@ public:
 		(this->RaiseWidgetWhenLowered(widgets), ...);
 	}
 
-	void SetWidgetDirty(byte widget_index);
+	void SetWidgetDirty(int widget_index);
 
 	void DrawWidgets() const;
 	void DrawViewport(uint8 display_flags) const;

@@ -657,7 +657,6 @@ private:
 		for (scheme = LS_BEGIN; scheme < LS_END; scheme++) {
 			if (HasBit(this->sel, scheme)) break;
 		}
-
 		const Company *c = Company::Get((CompanyID)this->window_number);
 
 		if (this->livery_class < LC_GROUP_RAIL) {
@@ -2816,7 +2815,7 @@ struct BuyCompanyWindow : Window {
 	void Close(int data = 0) override
 	{
 		const Company *c = Company::GetIfValid((CompanyID)this->window_number);
-		if (!this->hostile_takeover && c != nullptr && HasBit(c->bankrupt_asked, this->owner) && _current_company == this->owner) {
+		if (!this->hostile_takeover && c != nullptr && c->bankrupt_asked.at(this->owner) && _current_company == this->owner) {
 			EnqueueDoCommandP(NewCommandContainerBasic(0, this->window_number, 0, CMD_DECLINE_BUY_COMPANY | CMD_NO_SHIFT_ESTIMATE));
 		}
 		this->Window::Close();

@@ -2477,7 +2477,7 @@ static void DoAcquireCompany(Company *c, bool hostile_takeover)
 
 	if (c->is_ai) AI::Stop(c->index);
 
-	c->bankrupt_asked = 0;
+	c->bankrupt_asked.reset();
 
 	DeleteCompanyWindows(ci);
 	InvalidateWindowClassesData(WC_TRAINS_LIST, 0);
@@ -2602,7 +2602,7 @@ CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 	if (hostile_takeover && _settings_game.economy.allow_shares) return CMD_ERROR;
 
 	/* If you do a hostile takeover but the company went bankrupt, buy it via bankruptcy rules. */
-	if (hostile_takeover && HasBit(c->bankrupt_asked, _current_company)) hostile_takeover = false;
+	if (hostile_takeover && c->bankrupt_asked.at(_current_company)) hostile_takeover = false;
 
 	/* Disable takeovers when not asked */
 	if (!hostile_takeover && !c->bankrupt_asked.at(_current_company)) return CMD_ERROR;

@@ -3743,7 +3743,7 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 
 	AutoRestoreBackup dpi_backup(_cur_dpi, &_vdd->dpi);
 
-	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask() != 0) {
+	if (vp->overlay != nullptr && vp->overlay->GetCargoMask() != 0 && vp->overlay->GetCompanyMask().any()) {
 		vp->overlay->PrepareDraw();
 	}
 
@@ -4966,7 +4966,7 @@ HandleViewportClickedResult HandleViewportClicked(const Viewport *vp, int x, int
 void RebuildViewportOverlay(Window *w, bool incremental)
 {
 	if (w->viewport->overlay != nullptr &&
-			w->viewport->overlay->GetCompanyMask() != 0 &&
+			w->viewport->overlay->GetCompanyMask().any() &&
 			w->viewport->overlay->GetCargoMask() != 0) {
 		w->viewport->overlay->RebuildCache(incremental);
 		if (!incremental) w->SetDirty();

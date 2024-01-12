@@ -161,7 +161,7 @@ protected:
 		this->toc_width = 0;
 
 		btree::btree_set<GroupID> groups;
-		CompanyMask companies = 0;
+		CompanyMask companies;
 		int unitnumber_max[4] = { -1, -1, -1, -1 };
 
 		for (const Vehicle *v : Vehicle::Iterate()) {
@@ -186,7 +186,7 @@ protected:
 						}
 
 						if (_settings_client.gui.departure_show_company) {
-							SetBit(companies, v->owner);
+							companies.set(v->owner);
 						}
 						break;
 					}
@@ -216,8 +216,9 @@ protected:
 			if (width > this->group_width) this->group_width = width;
 		}
 
-		for (uint owner : SetBitIterator(companies)) {
-			SetDParam(0, owner);
+		for (int i = 0; i < companies.size; i++) {
+			if(!companies.at(i)) continue;
+			SetDParam(0, i);
 			int width = (GetStringBoundingBox(STR_DEPARTURES_TOC)).width + 4;
 			if (width > this->toc_width) this->toc_width = width;
 		}

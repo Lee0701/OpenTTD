@@ -3933,7 +3933,7 @@ bool AfterLoadGame()
 	}
 
 	/* More companies */
-	if (IsSavegameVersionBefore(SLV_MORE_COMPANIES)) {
+	if(SlXvIsFeatureMissing(XSLFI_MORE_COMPANIES)) {
 		for (TileIndex t = 0; t < map_size; t++) {
 			if (IsTileType(t, MP_HOUSE))
 				continue;
