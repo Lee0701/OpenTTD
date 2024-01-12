@@ -34,15 +34,15 @@ static const SaveLoad _engine_desc[] = {
 	     SLE_VAR(Engine, flags,               SLE_UINT8),
 	SLE_CONDNULL(1,                                                        SL_MIN_VERSION, SLV_179), // old preview_company_rank
 	SLE_CONDVAR(Engine, preview_asked.data[0],SLE_FILE_U16 | SLE_VAR_U64,  SLV_179, SL_MAX_VERSION),
-	SLE_CONDARR_X(Engine, preview_asked,      SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
+	SLE_CONDARR_X(Engine, preview_asked.data,      SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
 	 SLE_CONDVAR(Engine, preview_company,     SLE_UINT8,                 SLV_179, SL_MAX_VERSION),
 	     SLE_VAR(Engine, preview_wait,        SLE_UINT8),
 	SLE_CONDNULL(1,                                                        SL_MIN_VERSION,  SLV_45),
 	SLE_CONDVAR(Engine, company_avail.data[0],SLE_FILE_U8  | SLE_VAR_U64,  SL_MIN_VERSION, SLV_104),
 	 SLE_CONDVAR(Engine, company_avail.data[0],       SLE_FILE_U16 | SLE_VAR_U64,  SLV_104, SL_MAX_VERSION),
-	 SLE_CONDARR_X(Engine, company_avail,       SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
+	 SLE_CONDARR_X(Engine, company_avail.data,       SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
 	 SLE_CONDVAR(Engine, company_hidden.data[0],SLE_FILE_U16 | SLE_VAR_U64,  SLV_193, SL_MAX_VERSION),
-	 SLE_CONDARR_X(Engine, company_hidden,      SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
+	 SLE_CONDARR_X(Engine, company_hidden.data,      SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
 	 SLE_CONDSTR(Engine, name,                SLE_STR, 0,                 SLV_84, SL_MAX_VERSION),
 
 	SLE_CONDNULL(16,                                                       SLV_2, SLV_144), // old reserved space

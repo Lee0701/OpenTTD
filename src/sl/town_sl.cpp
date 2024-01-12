@@ -171,11 +171,13 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDVAR_X(Town, stadium_count,       SLE_UINT16, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TOWN_MULTI_BUILDING)),
 	SLE_CONDVAR(Town, statues.data[0],               SLE_FILE_U8  | SLE_VAR_U64, SL_MIN_VERSION, SLV_104),
 	SLE_CONDVAR(Town, statues.data[0],               SLE_FILE_U16 | SLE_VAR_U64,               SLV_104, SL_MAX_VERSION),
+	SLE_CONDARR_X(Town, statues.data, SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
 
 	SLE_CONDNULL(1, SL_MIN_VERSION, SLV_2),                   ///< sort_index, no longer in use
 
 	SLE_CONDVAR(Town, have_ratings.data[0],          SLE_FILE_U8  | SLE_VAR_U64, SL_MIN_VERSION, SLV_104),
 	SLE_CONDVAR(Town, have_ratings.data[0],          SLE_FILE_U16 | SLE_VAR_U64,               SLV_104, SL_MAX_VERSION),
+	SLE_CONDARR_X(Town, have_ratings.data, SLE_UINT64, CompanyMask::bsize, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_MORE_COMPANIES)),
 	SLE_CONDARR(Town, ratings,               SLE_INT16, 8,               SL_MIN_VERSION, SLV_104),
 	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
 	SLE_CONDNULL_X(MAX_COMPANIES, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SPRINGPP)),
