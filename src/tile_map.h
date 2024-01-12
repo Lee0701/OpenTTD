@@ -186,7 +186,7 @@ static inline Owner GetTileOwner(TileIndex tile)
 	dbg_assert_msg(IsValidTile(tile), "tile: 0x%X, size: 0x%X", tile, MapSize());
 	dbg_assert_msg(!IsTileType(tile, MP_HOUSE) && !IsTileType(tile, MP_INDUSTRY), "tile: 0x%X (%d)", tile, GetTileType(tile));
 
-	return (Owner) (_me[tile].m9 >> 8);
+	return (Owner) GB(_me[tile].m9, 8, 8);
 }
 
 static inline Owner GetOldTileOwner(TileIndex tile)

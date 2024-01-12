@@ -212,11 +212,23 @@ static void Load_MAP8()
 	}
 }
 
+static void Load_MAP9()
+{
+	std::array<uint16, MAP_SL_BUF_SIZE> buf;
+	TileIndex size = MapSize();
+
+	for (TileIndex i = 0; i != size;) {
+		SlArray(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+		for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _me[i++].m9 = buf[j];
+	}
+}
+
 static void Load_WMAP()
 {
 	static_assert(sizeof(Tile) == 8);
 	static_assert(sizeof(TileExtended) == 6);
 	assert(_sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 1 || _sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 2);
+	assert(_sl_xv_feature_versions[XSLFI_EXTEND_TILEDATA] == 1);
 
 	ReadBuffer *reader = ReadBuffer::GetCurrent();
 	const TileIndex size = MapSize();
@@ -246,15 +258,25 @@ static void Load_WMAP()
 		}
 	} else if (_sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 2) {
 #if TTD_ENDIAN == TTD_LITTLE_ENDIAN
-		reader->CopyBytes((byte *) _me, size * 4);
+		if(_sl_xv_feature_versions[XSLFI_EXTEND_TILEDATA] == 1) {
+			reader->CopyBytes((byte *) _me, size * 6);
+		} else {
+			reader->CopyBytes((byte *) _me, size * 4);
+		}
 #else
 		for (TileIndex i = 0; i != size; i++) {
-			reader->CheckBytes(4);
+			if(_sl_xv_feature_versions[XSLFI_EXTEND_TILEDATA] == 1) reader->CheckBytes(6);
+			else reader->CheckBytes(4);
 			_me[i].m6 = reader->RawReadByte();
 			_me[i].m7 = reader->RawReadByte();
 			uint16 m8 = reader->RawReadByte();
 			m8 |= ((uint16) reader->RawReadByte()) << 8;
 			_me[i].m8 = m8;
+			if(_sl_xv_feature_versions[XSLFI_EXTEND_TILEDATA] == 1) {
+				uint16 m9 = reader->RawReadByte();
+				m9 |= ((uint16) reader->RawReadByte()) << 8;
+				_me[i].m9 = m9;
+			}
 		}
 #endif
 	} else {
@@ -267,14 +289,15 @@ static void Save_WMAP()
 	static_assert(sizeof(Tile) == 8);
 	static_assert(sizeof(TileExtended) == 6);
 	assert(_sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 2);
+	assert(_sl_xv_feature_versions[XSLFI_EXTEND_TILEDATA] == 1);
 
 	MemoryDumper *dumper = MemoryDumper::GetCurrent();
 	const TileIndex size = MapSize();
-	SlSetLength(size * 12);
+	SlSetLength(size * 14);
 
 #if TTD_ENDIAN == TTD_LITTLE_ENDIAN
 	dumper->CopyBytes((byte *) _m, size * 8);
-	dumper->CopyBytes((byte *) _me, size * 4);
+	dumper->CopyBytes((byte *) _me, size * 6);
 #else
 	for (TileIndex i = 0; i != size; i++) {
 		dumper->CheckBytes(8);
@@ -288,11 +311,13 @@ static void Save_WMAP()
 		dumper->RawWriteByte(_m[i].m5);
 	}
 	for (TileIndex i = 0; i != size; i++) {
-		dumper->CheckBytes(4);
+		dumper->CheckBytes(6);
 		dumper->RawWriteByte(_me[i].m6);
 		dumper->RawWriteByte(_me[i].m7);
 		dumper->RawWriteByte(GB(_me[i].m8, 0, 8));
 		dumper->RawWriteByte(GB(_me[i].m8, 8, 8));
+		dumper->RawWriteByte(GB(_me[i].m9, 0, 8));
+		dumper->RawWriteByte(GB(_me[i].m9, 8, 8));
 	}
 #endif
 }
@@ -343,6 +368,11 @@ struct MAP7 {
 };
 
 struct MAP8 {
+	typedef uint16 FieldT;
+	static const FieldT &GetField(TileIndex t) { return _me[t].m8; }
+};
+
+struct MAP9 {
 	typedef uint16 FieldT;
 	static const FieldT &GetField(TileIndex t) { return _me[t].m8; }
 };
@@ -415,6 +445,7 @@ static const ChunkHandler map_chunk_handlers[] = {
 	{ 'MAPE', Save_MAP<MAP6>, Load_MAP6, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'MAP7', Save_MAP<MAP7>, Load_MAP7, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'MAP8', Save_MAP<MAP8>, Load_MAP8, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
+	{ 'MAP9', Save_MAP<MAP9>, Load_MAP9, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'WMAP', Save_WMAP,      Load_WMAP, nullptr, nullptr,    CH_RIFF, Special_WMAP },
 };
 

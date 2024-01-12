@@ -266,11 +266,9 @@ static inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 static inline Owner GetOldRoadOwner(TileIndex t, RoadTramType rtt)
 {
 	dbg_assert(MayHaveRoad(t));
-	if (rtt == RTT_ROAD) return (Owner)GB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5);
+	if(rtt == RTT_ROAD) return (Owner) GB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5);
 
-	/* Trams don't need OWNER_TOWN, and remapping OWNER_NONE
-	 * to OWNER_TOWN makes it use one bit less */
-	Owner o = (Owner)GB(_m[t].m1, 4, 4);
+	Owner o = (Owner) GB(_m[t].m1, 4, 4);
 	return o == OWNER_TOWN ? OWNER_NONE : o;
 }
 

@@ -211,6 +211,9 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 
 	{ XSLFI_TABLE_PATS,                       XSCF_NULL,                1,   1, "table_pats",                       nullptr, nullptr, nullptr          },
 
+	{ XSLFI_EXTEND_TILEDATA,                  XSCF_NULL,                1,   1, "extend_tiledata",                  nullptr, nullptr, "MAP9"           },
+	{ XSLFI_MORE_COMPANIES,                   XSCF_NULL,                1,   1, "more_companies",                   nullptr, nullptr, "PLYM"           },
+
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr }, // This is the end marker
 };
 

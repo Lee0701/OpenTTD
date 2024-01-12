@@ -160,6 +160,7 @@ enum SlXvFeatureIndex {
 
 	XSLFI_TABLE_PATS,                             ///< Use upstream table format for PATS
 
+	XSLFI_EXTEND_TILEDATA,
 	XSLFI_MORE_COMPANIES,
 
 	XSLFI_RIFF_HEADER_60_BIT,                     ///< Size field in RIFF chunk header is 60 bit
