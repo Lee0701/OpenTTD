@@ -39,7 +39,7 @@ void NewGRFClass<Tspec, Tid, Tmax>::InsertDefaults()
 }
 
 template <typename Tspec, typename Tid, Tid Tmax>
-bool NewGRFClass<Tspec, Tid, Tmax>::IsUIAvailable(uint index) const
+bool NewGRFClass<Tspec, Tid, Tmax>::IsUIAvailable(uint) const
 {
 	return true;
 }
@@ -130,7 +130,7 @@ uint32 RoadStopScopeResolver::GetVariable(uint16 variable, uint32 parameter, Get
 			return 2;
 
 		/* Terrain type */
-		case 0x42: return this->tile == INVALID_TILE ? 0 : GetTerrainType(this->tile, TCX_NORMAL); // terrain_type
+		case 0x42: return this->tile == INVALID_TILE ? 0 : (GetTileSlope(this->tile) << 8 | GetTerrainType(this->tile, TCX_NORMAL));
 
 		/* Road type */
 		case 0x43: return get_road_type_variable(RTT_ROAD);
@@ -371,7 +371,7 @@ void DrawRoadStopTile(int x, int y, RoadType roadtype, const RoadStopSpec *spec,
 			}
 		}
 	} else {
-		/* Drive-in stop */
+		/* Bay stop */
 		if ((draw_mode & ROADSTOP_DRAW_MODE_ROAD) && rti->UsesOverlay()) {
 			SpriteID ground = GetCustomRoadSprite(rti, INVALID_TILE, ROTSG_ROADSTOP);
 			DrawSprite(ground + view, PAL_NONE, x, y);
@@ -470,15 +470,8 @@ void TriggerRoadStopRandomisation(Station *st, TileIndex tile, RoadStopRandomTri
 
 	uint32 whole_reseed = 0;
 
-	CargoTypes empty_mask = 0;
-	if (trigger == RSRT_CARGO_TAKEN) {
-		/* Create a bitmask of completely empty cargo types to be matched */
-		for (CargoID i = 0; i < NUM_CARGO; i++) {
-			if (st->goods[i].CargoTotalCount() == 0) {
-				SetBit(empty_mask, i);
-			}
-		}
-	}
+	/* Bitmask of completely empty cargo types to be matched. */
+	CargoTypes empty_mask = (trigger == RSRT_CARGO_TAKEN) ? GetEmptyMask(st) : 0;
 
 	uint32 used_triggers = 0;
 	auto process_tile = [&](TileIndex cur_tile) {
@@ -687,7 +680,7 @@ void StationUpdateRoadStopCachedTriggers(BaseStation *st)
 	}
 }
 
-void DumpRoadStopSpriteGroup(const BaseStation *st, const RoadStopSpec *spec, DumpSpriteGroupPrinter print)
+void DumpRoadStopSpriteGroup(const BaseStation *st, const RoadStopSpec *spec, SpriteGroupDumper &dumper)
 {
 	CargoID ctype = CT_DEFAULT_NA;
 
@@ -710,5 +703,5 @@ void DumpRoadStopSpriteGroup(const BaseStation *st, const RoadStopSpec *spec, Du
 		ctype = CT_DEFAULT;
 	}
 
-	DumpSpriteGroup(spec->grf_prop.spritegroup[ctype], std::move(print));
+	dumper.DumpSpriteGroup(spec->grf_prop.spritegroup[ctype], 0);
 }

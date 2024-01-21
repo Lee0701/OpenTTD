@@ -69,17 +69,8 @@ void ResetRoadTypes()
 {
 	static_assert(lengthof(_original_roadtypes) <= lengthof(_roadtypes));
 
-	uint i = 0;
-	for (; i < lengthof(_original_roadtypes); i++) _roadtypes[i] = _original_roadtypes[i];
-
-	static const RoadTypeInfo empty_roadtype = {
-		{ 0, 0, 0, 0, 0, 0 },
-		{ 0, 0, 0, 0, 0, 0 },
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, 0, {}, {} },
-		ROADTYPES_NONE, ROTFB_NONE, RXTFB_NONE, RTCM_NORMAL, 0, 0, 0, 0,
-		RoadTypeLabelList(), 0, 0, ROADTYPES_NONE, ROADTYPES_NONE, 0,
-		{}, {} };
-	for (; i < lengthof(_roadtypes);          i++) _roadtypes[i] = empty_roadtype;
+	auto insert = std::copy(std::begin(_original_roadtypes), std::end(_original_roadtypes), std::begin(_roadtypes));
+	std::fill(insert, std::end(_roadtypes), RoadTypeInfo{});
 
 	_roadtypes_hidden_mask = ROADTYPES_NONE;
 	_roadtypes_type        = ROADTYPES_TRAM;
@@ -616,10 +607,9 @@ CommandCost CheckAllowRemoveRoad(TileIndex tile, RoadBits remove, Owner owner, R
  * @param flags operation to perform
  * @param pieces roadbits to remove
  * @param rt roadtype to remove
- * @param crossing_check should we check if there is a tram track when we are removing road from crossing?
  * @param town_check should we check if the town allows removal?
  */
-static CommandCost RemoveRoad(TileIndex tile, DoCommandFlag flags, RoadBits pieces, RoadTramType rtt, bool crossing_check, bool town_check = true)
+static CommandCost RemoveRoad(TileIndex tile, DoCommandFlag flags, RoadBits pieces, RoadTramType rtt, bool town_check)
 {
 	assert(pieces != ROAD_NONE);
 
@@ -967,6 +957,17 @@ static CommandCost CheckRoadSlope(Slope tileh, RoadBits *pieces, RoadBits existi
 }
 
 /**
+ * Checks the tile and returns whether the current player is allowed to convert the roadtype to another roadtype without taking ownership
+ * @param owner the tile owner.
+ * @param rtt Road/tram type.
+ * @return whether the road is convertible
+ */
+static bool CanConvertUnownedRoadType(Owner owner, RoadTramType rtt)
+{
+	return (owner == OWNER_NONE || (owner == OWNER_TOWN && rtt == RTT_ROAD));
+}
+
+/**
  * Build a piece of road.
  * @param tile tile where to build road
  * @param flags operation to perform
@@ -1110,6 +1111,11 @@ CommandCost CmdBuildRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 			/* Level crossings may only be built on these slopes */
 			if (!HasBit(VALID_LEVEL_CROSSING_SLOPES, tileh)) {
 				return_cmd_error(STR_ERROR_LAND_SLOPED_IN_WRONG_DIRECTION);
+			}
+
+			if (!_settings_game.construction.crossing_with_competitor && company != OWNER_TOWN && company != OWNER_DEITY) {
+				CommandCost ret = CheckTileOwnership(tile);
+				if (ret.Failed()) return ret;
 			}
 
 			if (GetRailTileType(tile) != RAIL_TILE_NORMAL) goto do_clear;
@@ -1302,6 +1308,14 @@ CommandCost CmdBuildRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 					} else {
 						RoadType other_end_rt = GetRoadType(other_end, rtt);
 						if (other_end_rt != rt) {
+							/* Also check owner of the other side of the bridge, in case it differs */
+							Owner other_end_owner = GetRoadOwner(other_end, rtt);
+							if (!CanConvertUnownedRoadType(other_end_owner, rtt)) {
+								CommandCost ret = CheckOwnership(other_end_owner, other_end);
+								if (ret.Failed()) {
+									return ret;
+								}
+							}
 							if (HasPowerOnRoad(other_end_rt, rt)) {
 								cost.AddCost(CountBits(other_end_existing) * RoadConvertCost(other_end_rt, rt));
 							} else {
@@ -1599,7 +1613,7 @@ CommandCost CmdBuildLongRoad(TileIndex start_tile, DoCommandFlag flags, uint32 p
 			last_error = ret;
 			if (last_error.GetErrorMessage() != STR_ERROR_ALREADY_BUILT) {
 				if (is_ai) return last_error;
-				break;
+				if (had_success) break; // Keep going if we haven't constructed any road yet, skipping the start of the drag
 			}
 		} else {
 			had_success = true;
@@ -1687,7 +1701,7 @@ CommandCost CmdRemoveLongRoad(TileIndex start_tile, DoCommandFlag flags, uint32 
 						_additional_cash_required = DoCommand(start_tile, end_tile, p2, flags & ~DC_EXEC, CMD_REMOVE_LONG_ROAD).GetCost();
 						return cost;
 					}
-					RemoveRoad(tile, flags, bits, rtt, true, false);
+					RemoveRoad(tile, flags, bits, rtt, false);
 				}
 				cost.AddCost(ret);
 				had_success = true;
@@ -1826,7 +1840,7 @@ static CommandCost ClearTile_Road(TileIndex tile, DoCommandFlag flags)
 			for (RoadTramType rtt : { RTT_TRAM, RTT_ROAD }) {
 				if (!MayHaveRoad(tile) || GetRoadType(tile, rtt) == INVALID_ROADTYPE) continue;
 
-				CommandCost tmp_ret = RemoveRoad(tile, flags, GetCrossingRoadBits(tile), rtt, false);
+				CommandCost tmp_ret = RemoveRoad(tile, flags, GetCrossingRoadBits(tile), rtt, true);
 				if (tmp_ret.Failed()) return tmp_ret;
 				ret.AddCost(tmp_ret);
 			}
@@ -2265,7 +2279,7 @@ static void DrawTile_Road(TileInfo *ti, DrawTileProcParams params)
 
 			Axis axis = GetCrossingRailAxis(ti->tile);
 
-			const RailtypeInfo *rti = GetRailTypeInfo(GetRailType(ti->tile));
+			const RailTypeInfo *rti = GetRailTypeInfo(GetRailType(ti->tile));
 
 			RoadType road_rt = GetRoadTypeRoad(ti->tile);
 			RoadType tram_rt = GetRoadTypeTram(ti->tile);
@@ -2495,7 +2509,7 @@ void UpdateNearestTownForRoadTiles(bool invalidate)
 	}
 }
 
-static int GetSlopePixelZ_Road(TileIndex tile, uint x, uint y, bool ground_vehicle)
+static int GetSlopePixelZ_Road(TileIndex tile, uint x, uint y, bool)
 {
 
 	if (IsNormalRoad(tile)) {
@@ -2528,6 +2542,8 @@ static const Roadside _town_road_types[][2] = {
 	{ ROADSIDE_STREET_LIGHTS, ROADSIDE_PAVED }
 };
 
+static_assert(lengthof(_town_road_types) == HZB_END);
+
 static const Roadside _town_road_types_2[][2] = {
 	{ ROADSIDE_GRASS,         ROADSIDE_GRASS },
 	{ ROADSIDE_PAVED,         ROADSIDE_PAVED },
@@ -2535,6 +2551,8 @@ static const Roadside _town_road_types_2[][2] = {
 	{ ROADSIDE_STREET_LIGHTS, ROADSIDE_PAVED },
 	{ ROADSIDE_STREET_LIGHTS, ROADSIDE_PAVED }
 };
+
+static_assert(lengthof(_town_road_types_2) == HZB_END);
 
 
 static void TileLoop_Road(TileIndex tile)
@@ -2804,7 +2822,7 @@ static void GetTileDesc_Road(TileIndex tile, TileDesc *td)
 			td->str = STR_LAI_ROAD_DESCRIPTION_ROAD_RAIL_LEVEL_CROSSING;
 			rail_owner = GetTileOwner(tile);
 
-			const RailtypeInfo *rti = GetRailTypeInfo(GetRailType(tile));
+			const RailTypeInfo *rti = GetRailTypeInfo(GetRailType(tile));
 			td->railtype = rti->strings.name;
 			td->rail_speed = rti->max_speed;
 
@@ -2852,7 +2870,7 @@ static const byte _roadveh_enter_depot_dir[4] = {
 	TRACKDIR_X_SW, TRACKDIR_Y_NW, TRACKDIR_X_NE, TRACKDIR_Y_SE
 };
 
-static VehicleEnterTileStatus VehicleEnter_Road(Vehicle *v, TileIndex tile, int x, int y)
+static VehicleEnterTileStatus VehicleEnter_Road(Vehicle *v, TileIndex tile, int, int)
 {
 	switch (GetRoadTileType(tile)) {
 		case ROAD_TILE_DEPOT: {
@@ -2992,17 +3010,6 @@ static Vehicle *UpdateRoadVehPowerProc(Vehicle *v, void *data)
 }
 
 /**
- * Checks the tile and returns whether the current player is allowed to convert the roadtype to another roadtype without taking ownership
- * @param owner the tile owner.
- * @param rtt Road/tram type.
- * @return whether the road is convertible
- */
-static bool CanConvertUnownedRoadType(Owner owner, RoadTramType rtt)
-{
-	return (owner == OWNER_NONE || (owner == OWNER_TOWN && rtt == RTT_ROAD));
-}
-
-/**
  * Convert the ownership of the RoadType of the tile if applicable
  * @param tile the tile of which convert ownership
  * @param num_pieces the count of the roadbits to assign to the new owner
@@ -3025,14 +3032,16 @@ static void ConvertRoadTypeOwner(TileIndex tile, uint num_pieces, Owner owner, R
 	switch (owner) {
 	case OWNER_NONE:
 		SetRoadOwner(tile, GetRoadTramType(to_type), (Owner)_current_company);
-		UpdateCompanyRoadInfrastructure(to_type, _current_company, num_pieces);
+		if (num_pieces > 0) UpdateCompanyRoadInfrastructure(to_type, _current_company, num_pieces);
 		break;
 
 	default:
-		c = Company::Get(owner);
-		c->infrastructure.road[from_type] -= num_pieces;
-		c->infrastructure.road[to_type] += num_pieces;
-		DirtyCompanyInfrastructureWindows(c->index);
+		if (num_pieces > 0) {
+			c = Company::Get(owner);
+			c->infrastructure.road[from_type] -= num_pieces;
+			c->infrastructure.road[to_type] += num_pieces;
+			DirtyCompanyInfrastructureWindows(c->index);
+		}
 		break;
 	}
 }
@@ -3121,8 +3130,8 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		/* Disallow converting town roads to types which do not allow houses, unless this is allowed */
 		if (rtt == RTT_ROAD && owner == OWNER_TOWN && HasBit(GetRoadTypeInfo(to_type)->flags, ROTF_NO_HOUSES)
 				&& !_settings_game.construction.convert_town_road_no_houses) {
+			SetDParamsForOwnedBy(OWNER_TOWN, tile);
 			error.MakeError(STR_ERROR_OWNED_BY);
-			GetNameOfOwner(OWNER_TOWN, tile);
 			continue;
 		}
 
@@ -3137,8 +3146,8 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				}
 
 				if (rtt == RTT_ROAD && owner == OWNER_TOWN) {
+					SetDParamsForOwnedBy(OWNER_TOWN, tile);
 					error.MakeError(STR_ERROR_OWNED_BY);
-					GetNameOfOwner(OWNER_TOWN, tile);
 					continue;
 				}
 			}
@@ -3186,6 +3195,18 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				if (OrthogonalTileArea(area_start, area_end).Contains(endtile)) continue;
 			}
 
+			if (IsBridge(tile) && include_middle) {
+				/* Also check owner of the other side of the bridge, in case it differs */
+				Owner end_owner = GetRoadOwner(endtile, rtt);
+				if (!CanConvertUnownedRoadType(end_owner, rtt)) {
+					CommandCost ret = CheckOwnership(end_owner, endtile);
+					if (ret.Failed()) {
+						error = ret;
+						continue;
+					}
+				}
+			}
+
 			/* When not converting rail <-> el. rail, any vehicle cannot be in tunnel/bridge */
 			if (!HasPowerOnRoad(from_type, to_type)) {
 				CommandCost ret = TunnelBridgeIsFree(tile, endtile);
@@ -3195,8 +3216,8 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				}
 
 				if (rtt == RTT_ROAD && owner == OWNER_TOWN) {
+					SetDParamsForOwnedBy(OWNER_TOWN, tile);
 					error.MakeError(STR_ERROR_OWNED_BY);
-					GetNameOfOwner(OWNER_TOWN, tile);
 					continue;
 				}
 			}
@@ -3226,20 +3247,21 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 
 			if (flags & DC_EXEC) {
 				/* Update the company infrastructure counters. */
+				SubtractRoadTunnelBridgeInfrastructure(tile, endtile);
+
 				if (owner == _current_company) {
-					ConvertRoadTypeOwner(tile, tile_pieces, owner, from_type, to_type);
+					ConvertRoadTypeOwner(tile, 0, owner, from_type, to_type);
 					if (include_middle) {
-						ConvertRoadTypeOwner(endtile, end_pieces, owner, from_type, to_type);
+						ConvertRoadTypeOwner(endtile, 0, owner, from_type, to_type);
 						SetTunnelBridgeOwner(tile, endtile, _current_company);
 					}
-				} else {
-					UpdateCompanyRoadInfrastructure(from_type, owner, -(int)(tile_pieces + end_pieces));
-					UpdateCompanyRoadInfrastructure(to_type, owner, tile_pieces + end_pieces);
 				}
 
 				/* Perform the conversion */
 				SetRoadType(tile, rtt, to_type);
 				if (include_middle) SetRoadType(endtile, rtt, to_type);
+
+				AddRoadTunnelBridgeInfrastructure(tile, endtile);
 
 				FindVehicleOnPos(tile, VEH_ROAD, &affected_rvs, &UpdateRoadVehPowerProc);
 				FindVehicleOnPos(endtile, VEH_ROAD, &affected_rvs, &UpdateRoadVehPowerProc);

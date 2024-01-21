@@ -14,6 +14,8 @@
 enum AirportToolbarWidgets {
 	WID_AT_AIRPORT,  ///< Build airport button.
 	WID_AT_DEMOLISH, ///< Demolish button.
+
+	INVALID_WID_AT = -1,
 };
 
 /** Widgets of the #BuildAirportWindow class. */
@@ -26,7 +28,6 @@ enum AirportPickerWidgets {
 	WID_AP_LAYOUT_INCREASE, ///< Increase the layout number.
 	WID_AP_AIRPORT_SPRITE,  ///< A visual display of the airport currently selected.
 	WID_AP_EXTRA_TEXT,      ///< Additional text about the airport.
-	WID_AP_BOTTOMPANEL,     ///< Panel at the bottom.
 	WID_AP_COVERAGE_LABEL,  ///< Label if you want to see the coverage.
 	WID_AP_BTN_DONTHILIGHT, ///< Don't show the coverage button.
 	WID_AP_BTN_DOHILIGHT,   ///< Show the coverage button.

@@ -63,6 +63,7 @@ enum SpriteGroupFlags : uint8 {
 	SGF_NONE                     = 0,
 	SGF_ACTION6                  = 1 << 0,
 	SGF_INLINING                 = 1 << 1,
+	SGF_SKIP_CB                  = 1 << 2,
 };
 DECLARE_ENUM_AS_BIT_SET(SpriteGroupFlags)
 
@@ -71,7 +72,7 @@ struct SpriteGroup : SpriteGroupPool::PoolItem<&_spritegroup_pool> {
 protected:
 	SpriteGroup(SpriteGroupType type) : nfo_line(0), type(type) {}
 	/** Base sprite group resolver */
-	virtual const SpriteGroup *Resolve(ResolverObject &object) const { return this; };
+	virtual const SpriteGroup *Resolve([[maybe_unused]] ResolverObject &object) const { return this; };
 
 public:
 	virtual ~SpriteGroup() = default;
@@ -104,6 +105,8 @@ struct RealSpriteGroup : SpriteGroup {
 
 	std::vector<const SpriteGroup *> loaded;  ///< List of loaded groups (can be SpriteIDs or Callback results)
 	std::vector<const SpriteGroup *> loading; ///< List of loading groups (can be SpriteIDs or Callback results)
+
+	void AnalyseCallbacks(AnalyseCallbackOperation &op) const override;
 
 protected:
 	const SpriteGroup *Resolve(ResolverObject &object) const override;
@@ -593,8 +596,8 @@ struct ResultSpriteGroup : SpriteGroup {
 
 	SpriteID sprite;
 	byte num_sprites;
-	SpriteID GetResult() const { return this->sprite; }
-	byte GetNumResults() const { return this->num_sprites; }
+	SpriteID GetResult() const override { return this->sprite; }
+	byte GetNumResults() const override { return this->num_sprites; }
 };
 
 /**
@@ -767,7 +770,8 @@ enum DumpSpriteGroupPrintOp {
 using DumpSpriteGroupPrinter = std::function<void(const SpriteGroup *, DumpSpriteGroupPrintOp, uint32, const char *)>;
 
 struct SpriteGroupDumper {
-	static bool use_shadows;
+	bool use_shadows = false;
+	bool more_details = false;
 
 private:
 	char buffer[1024];
@@ -782,6 +786,7 @@ private:
 		SGDF_RANGE            = 1 << 1,
 	};
 
+	char *DumpSpriteGroupAdjust(char *p, const char *last, const DeterministicSpriteGroupAdjust &adjust, const char *padding, uint32 &highlight_tag, uint &conditional_indent);
 	void DumpSpriteGroup(const SpriteGroup *sg, const char *prefix, uint flags);
 
 public:
@@ -791,9 +796,13 @@ public:
 	{
 		this->DumpSpriteGroup(sg, "", flags);
 	}
+
+	void Print(const char *msg)
+	{
+		this->print_fn(nullptr, DSGPO_PRINT, 0, msg);
+	}
 };
 
-void DumpSpriteGroup(const SpriteGroup *sg, DumpSpriteGroupPrinter print);
 uint32 EvaluateDeterministicSpriteGroupAdjust(DeterministicSpriteGroupSize size, const DeterministicSpriteGroupAdjust &adjust, ScopeResolver *scope, uint32 last_value, uint32 value);
 
 #endif /* NEWGRF_SPRITEGROUP_H */

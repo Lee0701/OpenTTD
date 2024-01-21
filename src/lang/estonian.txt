@@ -247,6 +247,9 @@ STR_COLOUR_GREY                                                 :Hall
 STR_COLOUR_WHITE                                                :Valge
 STR_COLOUR_RANDOM                                               :Suvaline
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} miili tunnis
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} km/h
@@ -290,6 +293,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL} kN
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL} meeter
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL} m
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Märksõna:
@@ -476,31 +480,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :Läbipaistvad h
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :Läbipaistvad sildid
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :Mängu salvestamine
 STR_FILE_MENU_LOAD_GAME                                         :Mängu jätkamine
 STR_FILE_MENU_QUIT_GAME                                         :Lahku mängust
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Välju
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :Maailmakaart
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Lisa vaateaken
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :Kaubavoo legend
 STR_MAP_MENU_SIGN_LIST                                          :Siltide register
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :Asustuste register
 STR_TOWN_MENU_FOUND_TOWN                                        :Raja asustus
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Toetused
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :Opereerimiskasumi graafik
 STR_GRAPH_MENU_INCOME_GRAPH                                     :Tulugraafik
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Äraveetud kauba graafik
@@ -509,57 +507,46 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Firmaväärtust
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Veotasude määrad
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :Ettevõtete edetabel
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :Täpsustatud tulemushinnang
 STR_GRAPH_MENU_HIGHSCORE                                        :Edetabel
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :Tööstuste register
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Tööstuste ahel
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Uue tööstuse rahastamine
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Rööbastee ehitamine
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Elektriraudtee ehitamine
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Monorelsi ehitamine
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Magnethõljuktee ehitamine
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Maanteede ehitamine
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Trammiteede ehitamine
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Veeteede ehitamine
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Lennuväljade ehitamine
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Maapinna kujundamine
 STR_LANDSCAPING_MENU_PLANT_TREES                                :Puude istutamine
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Paigalda silt
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Heli/muusika
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :Viimane teade
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :Teadete ajalugu
 STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :Kustuta kõik teated
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Maa-ala andmed
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Lülita konsool sisse/välja
 STR_ABOUT_MENU_AI_DEBUG                                         :AI/GameScripti debugimine
 STR_ABOUT_MENU_SCREENSHOT                                       :Ekraanipilt
@@ -769,8 +756,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Vajuta l
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Vajuta laulule, et see eemaldada praegusest progammist (Custom1 või Custom2 ainult)
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Parimad ettevõtted aastal {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Ettevõtete edetabelis {NUM} kohal
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Äriinimene
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Ettevõtja
@@ -959,10 +944,6 @@ STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}Uus {STR
 
 STR_NEWS_SHOW_VEHICLE_GROUP_TOOLTIP                             :{BLACK}Ava sõiduki jaole fokuseeritud jaoaken
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}Jaam {STATION} ei võta enam vastu veost {STRING}
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}Jaam {STATION} ei võta enam vastu veoseid {STRING}, ega {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}Jaam {STATION} võtab nüüd vastu veost {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}Jaam {STATION} võtab nüüd vastu veoseid {STRING} ja {STRING}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Toetuse pakkumine lõppes:{}{}{STRING.g} kohast {STRING} kohta {STRING} veoste eest ei maksta enam toetusi
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Toetuse maksmise aeg sai läbi:{}{}{STRING}kohast {STRING} kohta {STRING} eest ei maksta enam edaspidi toetust
@@ -1089,7 +1070,6 @@ STR_GAME_OPTIONS_REFRESH_RATE_WARNING                           :{WHITE}Värsken
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Lähtegraafikakogu
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Valib kasutatava lähtegraafikakogu
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} puuduv{P "" ad}/viga{P ne sed} fail{P "" id}
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Lisateave lähtegraafikakogu kohta
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Lähtehelikogu
@@ -1098,8 +1078,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Lisateav
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Lähtemuusikakogu
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Valib kasutatava lähtemuusikakogu
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} viga{P "ne" "sed"} fail{P "" "id"}
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Rohkem teavet lähtemuusikakogu kohta
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Ei õnnestunud tuvastada toetatud resulutsioone
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Täisekraanrežiim ebaõnnestus
@@ -1261,6 +1241,7 @@ STR_CONFIG_SETTING_REALISTIC                                    :Reaalne
 STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :Vasakul
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :Keskel
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Paremal
+
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Stardilaenu ülempiirang: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Suurim summa, mida ettevõte saab laenata (arvestamata inflatsiooni)
@@ -1432,6 +1413,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :Ei
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :Vähem
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :Keskmiselt
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Läbisõidupeatused asulate kuuluvatel teedel: {STRING}
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Lubab asulatele kuuluvatele teedele ehitada läbisõidupeatuseid
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Läbisõidupeatused konkurentide teedel: {STRING}
@@ -1443,6 +1425,7 @@ STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE_HELPTEXT          :Taristuga kaasn
 
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR                      :Ettevõtte esialgne värv: {STRING}
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR_HELPTEXT             :Vali ettevõttele esialgne värvus
+
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :Aegumatud lennuväljad: {STRING}
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS_HELPTEXT               :Selle seade sisse lülitamine jätab kõik lennujaamade tüübid avatuks lõpmata ajaks peale nende avanemist
@@ -1477,7 +1460,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Väikseim panga
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Veateadete kestvus: {STRING}
 STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Punases aknas olevate veateadete näitamise kestvus. On ka mõned (tähtsad) veateated, mis ise ei sulgu, vaid mis tuleb käsitsi sulgeda
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} sekund{P 0 "" it}
 
 STR_CONFIG_SETTING_HOVER_DELAY                                  :Vihjeid näidatakse pärast: {STRING}
 STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Viivitus, kui kaua peab hiirega liidese osale osutama, enne kui selle kohta vihjet näidatakse. On ka võimalik vihjeid parema hiireklõpsuga näidata
@@ -1645,9 +1627,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :Väljas
 
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE                        :Aken suletakse paremklõpsuga: {STRING}
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE_HELPTEXT               :Sulgeb akna, kui selles paremklõps teha. Lülitab välja paremklõpsuga vihjed!
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :Salvestusväłp: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Vali välpsalvestuste vaheline ajavahemik
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :Salvestatud mängu nimes kasutatakse {STRING} kuupäevavormingut
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_HELPTEXT           :Kuupäeva vorming salvestatud mängu nimes
@@ -1673,8 +1653,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Laseb kasutada 
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Kasuta laadimisnäidikuid: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Vali, kas koorma laadimisel ja tühjendamisel näidatakse laadimisnäidikuid
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Graafik on sammudes, mitte päevades: {STRING}
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Graafikus on ajad märgitud mitte päevades, vaid sammudes
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Graafikus on saabumis- ja väljumisajad: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Sõiduki graafikus esitatakse eeldatavaid saabumis- ja väljumisaegu
@@ -2159,6 +2138,8 @@ STR_ABANDON_GAME_CAPTION                                        :{WHITE}Mängu l
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Kas lõpetada mäng?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Kas sa oled kindel, et sa tahad stsenaariumi tegemise lõpetada?
 
+# Help window
+
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Petmine
 STR_CHEATS_TOOLTIP                                              :{BLACK}Märgistatud kastid näitavad et, kas sa oled varem seda pettust kasutanud
@@ -2639,7 +2620,6 @@ STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Vaheta l
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK}Vaheta sildade läbipaistvust. Ctrl+klõps lukustab
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Vaheta läbipaistvust rajatistel, nagu majakad ja antennid. Ctrl+klõps lukustab
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Õhuliinide läbipaistvuse vahetamine. Ctrl+klõps lukustab
-STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Vaheta laadimisnäidikute läbipaistvust. Ctrl+klõps lukustab
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Muuda esemed nähtamatuks, mitte läbipaistvaks
 
 # Linkgraph legend window
@@ -4542,8 +4522,6 @@ STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(Oode {STRING},
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :({STRING} sõidukestus, ajastamata)
 STR_TIMETABLE_STAY_FOR                                          :ja oota {STRING}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :ja sõida {STRING} jaoks
-STR_TIMETABLE_DAYS                                              :{COMMA} päev{P "" a}
-STR_TIMETABLE_TICKS                                             :{COMMA} samm{P "" u}
 
 STR_TIMETABLE_TOTAL_TIME                                        :{BLACK}Selle graafiku läbimine võtab {STRING}
 STR_TIMETABLE_TOTAL_TIME_INCOMPLETE                             :{BLACK}Selle graafiku läbimine võtab vähemalt {STRING} (kõik ei ole planeeritud)
@@ -4552,10 +4530,8 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Sõiduk 
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}See sõiduk on {STRING} hiljaks jäämas
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}See sõiduk on {STRING} varajane
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}Graafikuga pole veel alustatud
-STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}Graafikuga alustatakse {STRING}
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Alguskuupäev
-STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Vali graafiku alguskuupäev. Ctrl-klõps määrab graafiku alguskuupäeva ja jaotab sõidukid ühtlaselt, kasutades järjestust, kui sihid on planeeritud
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Muuda aega
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Muuda märgitud korraldusele määratud aega. Ctrl+klõps seab aja kõigile korraldustele
@@ -4678,7 +4654,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Murrab t
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Vaata abi
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Muudatuste logi
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Litsents
-###length 4
+###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} {STRING} abi.
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} muudatuste logi {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} litsents {STRING}
@@ -4816,7 +4792,6 @@ STR_ERROR_TOO_CLOSE_TO_EDGE_OF_MAP_SUB                          :{WHITE}... liig
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... liiga lähedal teisele asulale
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... liiga palju asulaid
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... pole enam ruumi kaardil
-STR_ERROR_TOWN_EXPAND_WARN_NO_ROADS                             :{WHITE}Asula ei ehita teid. Teedeehituse lubamiseks Põhjalik seadistus->Majandus->Asulad
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}Teede ehitamine
 STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Seda asulat ei saa kõrvaldada...{}Jaam või depoo viitab asulale, või asulale kuuluvat ruutu ei saa kõrvaldada
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... asula keskuses ei leidu kujule sobivat kohta

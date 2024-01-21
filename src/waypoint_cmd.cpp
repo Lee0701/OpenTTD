@@ -177,7 +177,7 @@ static CommandCost IsValidTileForWaypoint(TileIndex tile, Axis axis, StationID *
 
 extern void GetStationLayout(byte *layout, uint numtracks, uint plat_len, const StationSpec *statspec);
 extern CommandCost FindJoiningWaypoint(StationID existing_station, StationID station_to_join, bool adjacent, TileArea ta, Waypoint **wp, bool is_road);
-extern CommandCost CanExpandRailStation(const BaseStation *st, TileArea &new_ta, Axis axis);
+extern CommandCost CanExpandRailStation(const BaseStation *st, TileArea &new_ta);
 extern CommandCost IsRailStationBridgeAboveOk(TileIndex tile, const StationSpec *statspec, byte layout);
 
 /**
@@ -269,7 +269,7 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 
 		/* check if we want to expand an already existing waypoint? */
 		if (wp->train_station.tile != INVALID_TILE) {
-			CommandCost ret = CanExpandRailStation(wp, new_location, axis);
+			CommandCost ret = CanExpandRailStation(wp, new_location);
 			if (ret.Failed()) return ret;
 		}
 
@@ -317,6 +317,18 @@ CommandCost CmdBuildRailWaypoint(TileIndex start_tile, DoCommandFlag flags, uint
 			MakeRailWaypoint(tile, wp->owner, wp->index, axis, layout_ptr[i], GetRailType(tile));
 			if (old_specindex != map_spec_index) DeallocateSpecFromStation(wp, old_specindex);
 			SetCustomStationSpecIndex(tile, map_spec_index);
+
+			/* Should be the same as layout but axis component could be wrong... */
+			StationGfx gfx = GetStationGfx(tile);
+			bool blocked = spec != nullptr && HasBit(spec->blocked, gfx);
+			/* Default stations do not draw pylons under roofs (gfx >= 4) */
+			bool pylons = spec != nullptr ? HasBit(spec->pylons, gfx) : gfx < 4;
+			bool wires = spec == nullptr || !HasBit(spec->wires, gfx);
+
+			SetStationTileBlocked(tile, blocked);
+			SetStationTileHavePylons(tile, pylons);
+			SetStationTileHaveWires(tile, wires);
+
 			SetRailStationReservation(tile, reserved);
 			MarkTileDirtyByTile(tile, VMDF_NOT_MAP_MODE);
 

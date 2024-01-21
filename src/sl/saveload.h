@@ -15,10 +15,16 @@
 #include "../fios.h"
 #include "../strings_type.h"
 #include "../scope.h"
+#include "../core/ring_buffer.hpp"
+#include "../core/tinystring_type.hpp"
+#include "../core/strong_typedef_type.hpp"
 
 #include <stdarg.h>
 #include <vector>
+#include <array>
+#include <list>
 #include <string>
+#include <type_traits>
 
 /** Save or load result codes. */
 enum SaveOrLoadResult {
@@ -83,12 +89,14 @@ void SlUnreachablePlaceholder();
 enum ChunkSaveLoadSpecialOp {
 	CSLSO_PRE_LOAD,
 	CSLSO_PRE_LOADCHECK,
+	CSLSO_PRE_PTRS,
 	CSLSO_SHOULD_SAVE_CHUNK,
 };
 enum ChunkSaveLoadSpecialOpResult {
 	CSLSOR_NONE,
 	CSLSOR_LOAD_CHUNK_CONSUMED,
 	CSLSOR_DONT_SAVE_CHUNK,
+	CSLSOR_UPSTREAM_SAVE_CHUNK,
 };
 typedef ChunkSaveLoadSpecialOpResult ChunkSaveLoadSpecialProc(uint32, ChunkSaveLoadSpecialOp);
 
@@ -99,7 +107,7 @@ enum ChunkType {
 	CH_SPARSE_ARRAY = 2,
 	CH_EXT_HDR      = 15, ///< Extended chunk header
 
-	CH_UPSTREAM_SAVE = 0x80,
+	CH_UNUSED = 0x80,
 };
 
 /** Handlers and description of chunk. */
@@ -135,15 +143,11 @@ namespace upstream_sl {
 
 		ChunkHandler ch = {
 			id,
-			nullptr,
 			SlUnreachablePlaceholder,
-			[]() {
-				SlExecWithSlVersion(F::GetLoadVersion(), []() {
-					SlFixPointerChunkByID(id);
-				});
-			},
 			SlUnreachablePlaceholder,
-			CH_UPSTREAM_SAVE
+			SlUnreachablePlaceholder,
+			SlUnreachablePlaceholder,
+			CH_UNUSED
 		};
 		ch.special_proc = [](uint32 chunk_id, ChunkSaveLoadSpecialOp op) -> ChunkSaveLoadSpecialOpResult {
 			assert(id == chunk_id);
@@ -158,6 +162,58 @@ namespace upstream_sl {
 						SlLoadCheckChunkByID(id);
 					});
 					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_PRE_PTRS:
+					SlExecWithSlVersion(F::GetLoadVersion(), []() {
+						SlFixPointerChunkByID(id);
+					});
+					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_SHOULD_SAVE_CHUNK:
+					return CSLSOR_UPSTREAM_SAVE_CHUNK;
+				default:
+					return CSLSOR_NONE;
+			}
+		};
+		return ch;
+	}
+
+	template <uint32 id, typename F>
+	ChunkHandler MakeConditionallyUpstreamChunkHandler(ChunkSaveLoadProc *save_proc, ChunkSaveLoadProc *load_proc, ChunkSaveLoadProc *ptrs_proc, ChunkSaveLoadProc *load_check_proc, ChunkType type)
+	{
+		extern void SlLoadChunkByID(uint32);
+		extern void SlLoadCheckChunkByID(uint32);
+		extern void SlFixPointerChunkByID(uint32);
+
+		ChunkHandler ch = {
+			id,
+			save_proc,
+			load_proc,
+			ptrs_proc,
+			load_check_proc,
+			type
+		};
+		ch.special_proc = [](uint32 chunk_id, ChunkSaveLoadSpecialOp op) -> ChunkSaveLoadSpecialOpResult {
+			assert(id == chunk_id);
+			switch (op) {
+				case CSLSO_PRE_LOAD:
+					if (!F::LoadUpstream()) return CSLSOR_NONE;
+					SlExecWithSlVersion(F::GetLoadVersion(), []() {
+						SlLoadChunkByID(id);
+					});
+					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_PRE_LOADCHECK:
+					if (!F::LoadUpstream()) return CSLSOR_NONE;
+					SlExecWithSlVersion(F::GetLoadVersion(), []() {
+						SlLoadCheckChunkByID(id);
+					});
+					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_PRE_PTRS:
+					if (!F::LoadUpstream()) return CSLSOR_NONE;
+					SlExecWithSlVersion(F::GetLoadVersion(), []() {
+						SlFixPointerChunkByID(id);
+					});
+					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_SHOULD_SAVE_CHUNK:
+					return F::SaveUpstream() ? CSLSOR_UPSTREAM_SAVE_CHUNK : CSLSOR_NONE;
 				default:
 					return CSLSOR_NONE;
 			}
@@ -167,6 +223,7 @@ namespace upstream_sl {
 }
 
 using upstream_sl::MakeUpstreamChunkHandler;
+using upstream_sl::MakeConditionallyUpstreamChunkHandler;
 
 struct NullStruct {
 	byte null;
@@ -199,6 +256,191 @@ enum SaveLoadChunkExtHeaderFlags {
 DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
 
 /**
+ * Get the NumberType of a setting. This describes the integer type
+ * as it is represented in memory
+ * @param type VarType holding information about the variable-type
+ * @return the SLE_VAR_* part of a variable-type description
+ */
+static inline constexpr VarType GetVarMemType(VarType type)
+{
+	return type & 0xF0; // GB(type, 4, 4) << 4;
+}
+
+/**
+ * Get the FileType of a setting. This describes the integer type
+ * as it is represented in a savegame/file
+ * @param type VarType holding information about the file-type
+ * @return the SLE_FILE_* part of a variable-type description
+ */
+static inline constexpr VarType GetVarFileType(VarType type)
+{
+	return type & 0xF; // GB(type, 0, 4);
+}
+
+template <class, template <class, class...> class>
+struct sl_is_instance : public std::false_type {};
+
+template <class...Ts, template <class, class...> class U>
+struct sl_is_instance<U<Ts...>, U> : public std::true_type {};
+
+template<template<class, std::size_t> class T, class U>
+struct sl_is_derived_from_array
+{
+private:
+	template<class V, std::size_t N>
+	static decltype(static_cast<T<V, N>>(std::declval<U>()), std::true_type{}) test(const T<V, N>&);
+	static std::false_type test(...);
+
+public:
+	static constexpr bool value = decltype(sl_is_derived_from_array::test(std::declval<U>()))::value;
+};
+
+/**
+ * Return expect size in bytes of a VarType
+ * @param type VarType to get size of.
+ * @return size of type in bytes.
+ */
+static inline constexpr size_t SlVarSize(VarType type)
+{
+	switch (GetVarMemType(type)) {
+		case SLE_VAR_BL:
+			return sizeof(bool);
+		case SLE_VAR_I8:
+		case SLE_VAR_U8:
+			return sizeof(int8);
+		case SLE_VAR_I16:
+		case SLE_VAR_U16:
+			return sizeof(int16);
+		case SLE_VAR_I32:
+		case SLE_VAR_U32:
+			return sizeof(int32);
+		case SLE_VAR_I64:
+		case SLE_VAR_U64:
+			return sizeof(int64);
+		case SLE_VAR_NAME:
+			return sizeof(std::string);
+		default:
+			return sizeof(void *);
+	}
+}
+
+/**
+ * Check whether the variable size/type of the variable in the saveload configuration
+ * matches with the actual variable size, for primitive types.
+ */
+template <typename TYPE>
+static inline constexpr bool SlCheckPrimitiveTypeVar(VarType type)
+{
+	using T = typename std::remove_reference<TYPE>::type;
+
+	if (GetVarMemType(type) == SLE_VAR_NAME) {
+		return std::is_same_v<T, std::string>;
+	}
+	if (GetVarMemType(type) == SLE_VAR_CNAME) {
+		return std::is_same_v<T, char *> || std::is_same_v<T, const char *> || std::is_same_v<T, TinyString>;
+	}
+	if (!std::is_integral_v<T> && !std::is_enum_v<T> && !sl_is_instance<T, OverflowSafeInt>{} && !std::is_base_of_v<StrongTypedefBase, T>) return false;
+	return sizeof(T) == SlVarSize(type);
+}
+
+/**
+ * Check whether the variable size/type of the variable in the saveload configuration
+ * matches with the actual variable size, for array types.
+ */
+template <typename TYPE>
+static inline constexpr bool SlCheckArrayTypeVar(VarType type, size_t length, bool top_level)
+{
+	using T = typename std::remove_reference<TYPE>::type;
+
+	if constexpr (std::is_array_v<T>) {
+		return SlCheckPrimitiveTypeVar<typename std::remove_all_extents_t<T>>(type);
+	}
+	if constexpr (sl_is_derived_from_array<std::array, T>::value) {
+		return SlCheckArrayTypeVar<typename T::value_type>(type, length, false);
+	}
+	if constexpr (std::is_class_v<T>) {
+		/* If T is class/struct, assume that the array is writing all its members, so check that the total size matches.
+		 * It's impractical to check the actual struct/class fields. */
+		if (top_level && sizeof(T) == length) return true;
+	}
+	return SlCheckPrimitiveTypeVar<T>(type);
+}
+
+/**
+ * Check whether the variable size/type of the variable in the saveload configuration
+ * matches with the actual variable size.
+ */
+template <typename T>
+static inline constexpr bool SlCheckVar(SaveLoadType cmd, VarType type, size_t length)
+{
+	if (GetVarMemType(type) == SLE_VAR_NULL) return true;
+
+	switch (cmd) {
+		case SL_VAR:
+			return SlCheckPrimitiveTypeVar<T>(type);
+
+		case SL_REF:
+			/* These should all be pointer sized. */
+			return sizeof(T) == sizeof(void *);
+
+		case SL_STR:
+			/* These should be pointer sized, or fixed array. */
+			if (GetVarMemType(type) == SLE_VAR_STRB) {
+				return sizeof(T) == length;
+			}
+			return std::is_same_v<T, char *> || std::is_same_v<T, const char *> || std::is_same_v<T, TinyString>;
+
+		case SL_STDSTR:
+			/* These should be all pointers to std::string. */
+			return std::is_same_v<typename std::remove_reference<T>::type, std::string>;
+
+		case SL_ARR:
+			/* Partial load of array is permitted. */
+			return SlCheckArrayTypeVar<T>(type, SlVarSize(type) * length, true) && sizeof(T) >= SlVarSize(type) * length;
+
+		case SL_REFLIST:
+			if constexpr (sl_is_instance<T, std::list>{}) {
+				return std::is_pointer_v<typename T::value_type> || sl_is_instance<typename T::value_type, std::unique_ptr>{};
+			}
+			return false;
+
+		case SL_PTRRING:
+			if constexpr (sl_is_instance<T, ring_buffer>{}) {
+				return std::is_pointer_v<typename T::value_type> || sl_is_instance<typename T::value_type, std::unique_ptr>{};
+			}
+			return false;
+
+		case SL_VEC:
+			if constexpr (sl_is_instance<T, std::vector>{}) {
+				return std::is_pointer_v<typename T::value_type> || sl_is_instance<typename T::value_type, std::unique_ptr>{};
+			}
+			return false;
+
+		case SL_RING:
+			if constexpr (sl_is_instance<T, ring_buffer>{}) {
+				return SlCheckPrimitiveTypeVar<typename T::value_type>(type);
+			}
+			return false;
+
+		case SL_VARVEC:
+			if constexpr (sl_is_instance<T, std::vector>{}) {
+				return SlCheckPrimitiveTypeVar<typename T::value_type>(type);
+			}
+			return false;
+
+		default:
+			return true;
+	}
+}
+
+template <typename T, SaveLoadType cmd, VarType type, size_t length>
+static inline constexpr void *SlVarWrapper(void* ptr)
+{
+	static_assert(SlCheckVar<T>(cmd, type, length));
+	return ptr;
+}
+
+/**
  * Storage of simple variables, references (pointers), and arrays.
  * @param cmd      Load/save type. @see SaveLoadType
  * @param base     Name of the class or struct containing the variable.
@@ -209,7 +451,7 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
  * @param extver   SlXvFeatureTest to test (along with from and to) which savegames have the field
  * @note In general, it is better to use one of the SLE_* macros below.
  */
-#define SLE_GENERAL_X(cmd, base, variable, type, length, from, to, extver) SaveLoad {false, cmd, type, length, from, to, (void*)cpp_offsetof(base, variable), cpp_sizeof(base, variable), extver}
+#define SLE_GENERAL_X(cmd, base, variable, type, length, from, to, extver) SaveLoad {false, cmd, type, length, from, to, SlVarWrapper<decltype(base::variable), cmd, type, length>((void*)cpp_offsetof(base, variable)), sizeof(base::variable), extver}
 #define SLE_GENERAL(cmd, base, variable, type, length, from, to) SLE_GENERAL_X(cmd, base, variable, type, length, from, to, SlXvFeatureTest())
 
 /**
@@ -440,7 +682,7 @@ DECLARE_ENUM_AS_BIT_SET(SaveLoadChunkExtHeaderFlags)
  * @param extver   SlXvFeatureTest to test (along with from and to) which savegames have the field
  * @note In general, it is better to use one of the SLEG_* macros below.
  */
-#define SLEG_GENERAL_X(cmd, variable, type, length, from, to, extver) SaveLoad {true, cmd, type, length, from, to, (void*)&variable, sizeof(variable), extver}
+#define SLEG_GENERAL_X(cmd, variable, type, length, from, to, extver) SaveLoad {true, cmd, type, length, from, to, SlVarWrapper<decltype(variable), cmd, type, length>((void*)&variable), sizeof(variable), extver}
 #define SLEG_GENERAL(cmd, variable, type, length, from, to) SLEG_GENERAL_X(cmd, variable, type, length, from, to, SlXvFeatureTest())
 
 /**
@@ -647,28 +889,6 @@ static inline bool SlIsObjectCurrentlyValid(SaveLoadVersion version_from, SaveLo
 	if (!ext_feature_test.IsFeaturePresent(_sl_xv_feature_static_versions, SAVEGAME_VERSION, version_from, version_to)) return false;
 
 	return true;
-}
-
-/**
- * Get the NumberType of a setting. This describes the integer type
- * as it is represented in memory
- * @param type VarType holding information about the variable-type
- * @return the SLE_VAR_* part of a variable-type description
- */
-static inline VarType GetVarMemType(VarType type)
-{
-	return type & 0xF0; // GB(type, 4, 4) << 4;
-}
-
-/**
- * Get the FileType of a setting. This describes the integer type
- * as it is represented in a savegame/file
- * @param type VarType holding information about the file-type
- * @return the SLE_FILE_* part of a variable-type description
- */
-static inline VarType GetVarFileType(VarType type)
-{
-	return type & 0xF; // GB(type, 0, 4);
 }
 
 /**

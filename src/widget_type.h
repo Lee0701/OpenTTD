@@ -20,8 +20,6 @@
 
 #include <vector>
 
-static const int WIDGET_LIST_END = -1; ///< indicate the end of widgets' list for vararg functions
-
 /** Bits of the #WWT_MATRIX widget data. */
 enum MatrixWidgetValues {
 	/* Number of column bits of the WWT_MATRIX widget data. */
@@ -39,6 +37,12 @@ enum ArrowWidgetValues {
 	AWV_INCREASE, ///< Arrow to the right or in case of RTL to the left
 	AWV_LEFT,     ///< Force the arrow to the left
 	AWV_RIGHT,    ///< Force the arrow to the right
+};
+
+/** WidgetData values for a resize box widget. */
+enum ResizeWidgetValues {
+	RWV_SHOW_BEVEL, ///< Bevel of resize box is shown.
+	RWV_HIDE_BEVEL, ///< Bevel of resize box is hidden.
 };
 
 /**
@@ -92,6 +96,7 @@ enum WidgetType : uint8 {
 	WPT_DATATIP,      ///< Widget part for specifying data and tooltip.
 	WPT_PADDING,      ///< Widget part for specifying a padding.
 	WPT_PIPSPACE,     ///< Widget part for specifying pre/inter/post space for containers.
+	WPT_PIPRATIO,     ///< Widget part for specifying pre/inter/post ratio for containers.
 	WPT_TEXTSTYLE,    ///< Widget part for specifying text colour.
 	WPT_ALIGNMENT,    ///< Widget part for specifying text/image alignment.
 	WPT_ENDCONTAINER, ///< Widget part to denote end of a container.
@@ -139,8 +144,8 @@ public:
 	NWidgetBase(WidgetType tp);
 
 	virtual void AdjustPaddingForZoom();
-	virtual void SetupSmallestSize(Window *w, bool init_array) = 0;
-	virtual void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) = 0;
+	virtual void SetupSmallestSize(Window *w) = 0;
+	virtual void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) = 0;
 
 	virtual void FillNestedArray(NWidgetBase **array, uint length) = 0;
 
@@ -149,7 +154,7 @@ public:
 
 	virtual bool IsHighlighted() const { return false; }
 	virtual TextColour GetHighlightColour() const { return TC_INVALID; }
-	virtual void SetHighlighted(TextColour highlight_colour) {}
+	virtual void SetHighlighted([[maybe_unused]] TextColour highlight_colour) {}
 
 	/**
 	 * Set additional space (padding) around the widget.
@@ -226,7 +231,7 @@ public:
 	}
 
 protected:
-	inline void StoreSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height);
+	inline void StoreSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height);
 };
 
 /**
@@ -255,7 +260,7 @@ inline uint NWidgetBase::GetVerticalStepSize(SizingType sizing) const
  * @param given_width  Width allocated to the widget.
  * @param given_height Height allocated to the widget.
  */
-inline void NWidgetBase::StoreSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height)
+inline void NWidgetBase::StoreSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height)
 {
 	this->pos_x = x;
 	this->pos_y = y;
@@ -283,9 +288,11 @@ public:
 	void SetFill(uint fill_x, uint fill_y);
 	void SetResize(uint resize_x, uint resize_y);
 
+	bool UpdateMultilineWidgetSize(const std::string &str, int max_lines);
+	bool UpdateSize(uint min_x, uint min_y);
 	bool UpdateVerticalSize(uint min_y);
 
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 
 	uint min_x; ///< Minimal horizontal size of only this widget.
 	uint min_y; ///< Minimal vertical size of only this widget.
@@ -433,6 +440,10 @@ public:
 	void Add(NWidgetBase *wid);
 	void FillNestedArray(NWidgetBase **array, uint length) override;
 
+	void Draw(const Window *w) override;
+	NWidgetCore *GetWidgetFromPos(int x, int y) override;
+	void FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets) override;
+
 	/** Return whether the container is empty. */
 	inline bool IsEmpty() { return head == nullptr; }
 
@@ -469,15 +480,15 @@ public:
 	void SetIndex(int index);
 
 	void AdjustPaddingForZoom() override;
-	void SetupSmallestSize(Window *w, bool init_array) override;
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void SetupSmallestSize(Window *w) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 	void FillNestedArray(NWidgetBase **array, uint length) override;
 
 	void Draw(const Window *w) override;
 	NWidgetCore *GetWidgetFromPos(int x, int y) override;
 	void FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets) override;
 
-	void SetDisplayedPlane(int plane);
+	bool SetDisplayedPlane(int plane);
 
 	int shown_plane; ///< Plane being displayed (for #NWID_SELECTION only).
 	int index;       ///< If non-negative, index in the #Window::nested_array.
@@ -501,21 +512,23 @@ public:
 	NWidgetPIPContainer(WidgetType tp, NWidContainerFlags flags = NC_NONE);
 
 	void AdjustPaddingForZoom() override;
-	void SetPIP(uint8 pip_pre, uint8 pip_inter, uint8 pip_post);
-
-	void Draw(const Window *w) override;
-	NWidgetCore *GetWidgetFromPos(int x, int y) override;
-	void FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets) override;
+	void SetPIP(uint8_t pip_pre, uint8_t pip_inter, uint8_t pip_post);
+	void SetPIPRatio(uint8_t pip_ratio_pre, uint8_t pip_ratio_inter, uint8_t pip_rato_post);
 
 protected:
 	NWidContainerFlags flags; ///< Flags of the container.
-	uint8 pip_pre;            ///< Amount of space before first widget.
-	uint8 pip_inter;          ///< Amount of space between widgets.
-	uint8 pip_post;           ///< Amount of space after last widget.
+	uint8_t pip_pre;            ///< Amount of space before first widget.
+	uint8_t pip_inter;          ///< Amount of space between widgets.
+	uint8_t pip_post;           ///< Amount of space after last widget.
+	uint8_t pip_ratio_pre;      ///< Ratio of remaining space before first widget.
+	uint8_t pip_ratio_inter;    ///< Ratio of remaining space between widgets.
+	uint8_t pip_ratio_post;     ///< Ratio of remaining space after last widget.
 
-	uint8 uz_pip_pre;         ///< Unscaled space before first widget.
-	uint8 uz_pip_inter;       ///< Unscaled space between widgets.
-	uint8 uz_pip_post;        ///< Unscaled space after last widget.
+	uint8_t uz_pip_pre;         ///< Unscaled space before first widget.
+	uint8_t uz_pip_inter;       ///< Unscaled space between widgets.
+	uint8_t uz_pip_post;        ///< Unscaled space after last widget.
+
+	uint8_t gaps; ///< Number of gaps between widgets.
 };
 
 /**
@@ -526,8 +539,8 @@ class NWidgetHorizontal : public NWidgetPIPContainer {
 public:
 	NWidgetHorizontal(NWidContainerFlags flags = NC_NONE);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void SetupSmallestSize(Window *w) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 };
 
 /**
@@ -538,7 +551,7 @@ class NWidgetHorizontalLTR : public NWidgetHorizontal {
 public:
 	NWidgetHorizontalLTR(NWidContainerFlags flags = NC_NONE);
 
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 };
 
 /**
@@ -549,8 +562,8 @@ class NWidgetVertical : public NWidgetPIPContainer {
 public:
 	NWidgetVertical(NWidContainerFlags flags = NC_NONE);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void SetupSmallestSize(Window *w) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 };
 
 /**
@@ -571,8 +584,8 @@ public:
 	void SetCount(int count);
 	void SetScrollbar(Scrollbar *sb);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void SetupSmallestSize(Window *w) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 	void FillNestedArray(NWidgetBase **array, uint length) override;
 
 	NWidgetCore *GetWidgetFromPos(int x, int y) override;
@@ -602,7 +615,7 @@ class NWidgetSpacer : public NWidgetResizeBase {
 public:
 	NWidgetSpacer(int width, int height);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
+	void SetupSmallestSize(Window *w) override;
 	void FillNestedArray(NWidgetBase **array, uint length) override;
 
 	void Draw(const Window *w) override;
@@ -621,11 +634,12 @@ public:
 	~NWidgetBackground();
 
 	void Add(NWidgetBase *nwid);
-	void SetPIP(uint8 pip_pre, uint8 pip_inter, uint8 pip_post);
+	void SetPIP(uint8_t pip_pre, uint8_t pip_inter, uint8_t pip_post);
+	void SetPIPRatio(uint8_t pip_ratio_pre, uint8_t pip_ratio_inter, uint8_t pip_ratio_post);
 
 	void AdjustPaddingForZoom() override;
-	void SetupSmallestSize(Window *w, bool init_array) override;
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override;
+	void SetupSmallestSize(Window *w) override;
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;
 
 	void FillNestedArray(NWidgetBase **array, uint length) override;
 
@@ -651,7 +665,7 @@ class NWidgetViewport : public NWidgetCore {
 public:
 	NWidgetViewport(int index);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
+	void SetupSmallestSize(Window *w) override;
 	void Draw(const Window *w) override;
 
 	void InitializeViewport(Window *w, uint32 follow_flags, ZoomLevel zoom);
@@ -851,7 +865,7 @@ class NWidgetScrollbar : public NWidgetCore, public Scrollbar {
 public:
 	NWidgetScrollbar(WidgetType tp, Colours colour, int index);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
+	void SetupSmallestSize(Window *w) override;
 	void Draw(const Window *w) override;
 
 	static void InvalidateDimensionCache();
@@ -871,7 +885,7 @@ class NWidgetLeaf : public NWidgetCore {
 public:
 	NWidgetLeaf(WidgetType tp, Colours colour, int index, uint32 data, StringID tip);
 
-	void SetupSmallestSize(Window *w, bool init_array) override;
+	void SetupSmallestSize(Window *w) override;
 	void Draw(const Window *w) override;
 
 	bool ButtonHit(const Point &pt);
@@ -1276,6 +1290,25 @@ static inline NWidgetPart SetPIP(uint8 pre, uint8 inter, uint8 post)
 }
 
 /**
+ * Widget part function for setting a pre/inter/post ratio.
+ * @param pre The ratio of space before the first widget.
+ * @param inter The ratio of space between widgets.
+ * @param post The ratio of space after the last widget.
+ * @ingroup NestedWidgetParts
+ */
+static inline NWidgetPart SetPIPRatio(uint8_t ratio_pre, uint8_t ratio_inter, uint8_t ratio_post)
+{
+	NWidgetPart part;
+
+	part.type = WPT_PIPRATIO;
+	part.u.pip.pre = ratio_pre;
+	part.u.pip.inter = ratio_inter;
+	part.u.pip.post = ratio_post;
+
+	return part;
+}
+
+/**
  * Attach a scrollbar to a widget.
  * The scrollbar is controlled when using the mousewheel on the widget.
  * Multiple widgets can refer to the same scrollbar to make the mousewheel work in all of them.
@@ -1343,8 +1376,9 @@ static inline NWidgetPart NWidgetFunction(NWidgetFunctionType *func_ptr)
 	return part;
 }
 
-NWidgetContainer *MakeNWidgets(const NWidgetPart *parts, int count, int *biggest_index, NWidgetContainer *container);
-NWidgetContainer *MakeWindowNWidgetTree(const NWidgetPart *parts, int count, int *biggest_index, NWidgetStacked **shade_select);
+bool IsContainerWidgetType(WidgetType tp);
+NWidgetContainer *MakeNWidgets(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, int *biggest_index, NWidgetContainer *container);
+NWidgetContainer *MakeWindowNWidgetTree(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, int *biggest_index, NWidgetStacked **shade_select);
 
 NWidgetBase *MakeCompanyButtonRows(int *biggest_index, int widget_first, int widget_last, Colours button_colour, int max_length, StringID button_tooltip);
 

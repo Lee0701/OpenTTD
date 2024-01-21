@@ -13,7 +13,7 @@
 #include "engine_func.h"
 #include "landscape.h"
 #include "sl/saveload.h"
-#include "network/core/game_info.h"
+#include "network/core/network_game_info.h"
 #include "network/network.h"
 #include "network/network_func.h"
 #include "network/network_base.h"
@@ -108,7 +108,7 @@ public:
 static ConsoleFileList _console_file_list; ///< File storage cache for the console.
 
 /* console command defines */
-#define DEF_CONSOLE_CMD(function) static bool function(byte argc, char *argv[])
+#define DEF_CONSOLE_CMD(function) static bool function([[maybe_unused]] byte argc, [[maybe_unused]] char *argv[])
 #define DEF_CONSOLE_HOOK(function) static ConsoleHookResult function(bool echo)
 
 /****************
@@ -2106,17 +2106,17 @@ static ContentType StringToContentType(const char *str)
 
 /** Asynchronous callback */
 struct ConsoleContentCallback : public ContentCallback {
-	void OnConnect(bool success)
+	void OnConnect(bool success) override
 	{
 		IConsolePrintF(CC_DEFAULT, "Content server connection %s", success ? "established" : "failed");
 	}
 
-	void OnDisconnect()
+	void OnDisconnect() override
 	{
 		IConsolePrintF(CC_DEFAULT, "Content server connection closed");
 	}
 
-	void OnDownloadComplete(ContentID cid)
+	void OnDownloadComplete(ContentID cid) override
 	{
 		IConsolePrintF(CC_DEFAULT, "Completed download of %d", cid);
 	}
@@ -2491,7 +2491,7 @@ DEF_CONSOLE_CMD(ConMergeLinkgraphJobsAsap)
 		return true;
 	}
 
-	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) lgj->ShiftJoinDate((((_date * DAY_TICKS) + _date_fract) - lgj->JoinDateTicks()) / DAY_TICKS);
+	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) lgj->ShiftJoinDate((NowDateTicks() - lgj->JoinDateTicks()).base() / DAY_TICKS);
 	return true;
 }
 
@@ -2739,15 +2739,13 @@ DEF_CONSOLE_CMD(ConDumpLinkgraphJobs)
 
 	IConsolePrintF(CC_DEFAULT, PRINTF_SIZE " link graph jobs", LinkGraphJob::GetNumItems());
 	for (const LinkGraphJob *lgj : LinkGraphJob::Iterate()) {
-		YearMonthDay start_ymd;
-		ConvertDateToYMD(lgj->StartDateTicks() / DAY_TICKS, &start_ymd);
-		YearMonthDay join_ymd;
-		ConvertDateToYMD(lgj->JoinDateTicks() / DAY_TICKS, &join_ymd);
+		YearMonthDay start_ymd = ConvertDateToYMD(lgj->StartDateTicks().ToDate());
+		YearMonthDay join_ymd = ConvertDateToYMD(lgj->JoinDateTicks().ToDate());
 		IConsolePrintF(CC_DEFAULT, "  Job: %5u, nodes: %u, cost: " OTTD_PRINTF64U ", start: (%u, %4i-%02i-%02i, %i), end: (%u, %4i-%02i-%02i, %i), duration: %u",
 				lgj->index, lgj->Graph().Size(), lgj->Graph().CalculateCostEstimate(),
-				lgj->StartDateTicks(), start_ymd.year, start_ymd.month + 1, start_ymd.day, lgj->StartDateTicks() % DAY_TICKS,
-				lgj->JoinDateTicks(), join_ymd.year, join_ymd.month + 1, join_ymd.day, lgj->JoinDateTicks() % DAY_TICKS,
-				lgj->JoinDateTicks() - lgj->StartDateTicks());
+				lgj->StartDateTicks().base(), start_ymd.year, start_ymd.month + 1, start_ymd.day, lgj->StartDateTicks().ToDateFractRemainder(),
+				lgj->JoinDateTicks().base(), join_ymd.year, join_ymd.month + 1, join_ymd.day, lgj->JoinDateTicks().ToDateFractRemainder(),
+				(lgj->JoinDateTicks() - lgj->StartDateTicks()).base());
 	 }
 	return true;
 }
@@ -2831,7 +2829,7 @@ DEF_CONSOLE_CMD(ConDumpRailTypes)
 
 	btree::btree_map<uint32, const GRFFile *> grfs;
 	for (RailType rt = RAILTYPE_BEGIN; rt < RAILTYPE_END; rt++) {
-		const RailtypeInfo *rti = GetRailTypeInfo(rt);
+		const RailTypeInfo *rti = GetRailTypeInfo(rt);
 		if (rti->label == 0) continue;
 		uint32 grfid = 0;
 		const GRFFile *grf = rti->grffile[RTSG_GROUND];
@@ -3354,8 +3352,7 @@ DEF_CONSOLE_CMD(ConMiscDebug)
 		IConsoleHelp("  4: MDF_ZONING_RS_TROPIC_ZONE");
 		IConsoleHelp("  8: MDF_ZONING_RS_ANIMATED_TILE");
 		IConsoleHelp(" 10: MDF_NEWGRF_SG_SAVE_RAW");
-		IConsoleHelp(" 20: MDF_NEWGRF_SG_DUMP_MORE_DETAIL");
-		IConsoleHelp(" 40: MDF_SPECIAL_CMDS");
+		IConsoleHelp(" 20: MDF_SPECIAL_CMDS");
 		return true;
 	}
 
@@ -3626,7 +3623,7 @@ DEF_CONSOLE_CMD(ConRailTypeMapColourCtl)
 	uint8 map_colour = atoi(argv[2]);
 
 	if (rt >= RAILTYPE_END) return true;
-	extern RailtypeInfo _railtypes[RAILTYPE_END];
+	extern RailTypeInfo _railtypes[RAILTYPE_END];
 
 	_railtypes[rt].map_colour = map_colour;
 	MarkAllViewportMapLandscapesDirty();
@@ -3687,20 +3684,20 @@ DEF_CONSOLE_CMD(ConIfDay)
 
 DEF_CONSOLE_CMD(ConIfHour)
 {
-	Minutes minutes = _scaled_date_ticks / _settings_time.ticks_per_minute + _settings_time.clock_offset;
-	return ConConditionalCommon(argc, argv,  MINUTES_HOUR(minutes), "the current hour (in game, assuming time is in minutes)", "if_hour");
+	TickMinutes minutes = _settings_time.NowInTickMinutes();
+	return ConConditionalCommon(argc, argv, minutes.ClockHour(), "the current hour (in game, assuming time is in minutes)", "if_hour");
 }
 
 DEF_CONSOLE_CMD(ConIfMinute)
 {
-	Minutes minutes = _scaled_date_ticks / _settings_time.ticks_per_minute + _settings_time.clock_offset;
-	return ConConditionalCommon(argc, argv, MINUTES_MINUTE(minutes), "the current minute (in game, assuming time is in minutes)", "if_minute");
+	TickMinutes minutes = _settings_time.NowInTickMinutes();
+	return ConConditionalCommon(argc, argv, minutes.ClockMinute(), "the current minute (in game, assuming time is in minutes)", "if_minute");
 }
 
 DEF_CONSOLE_CMD(ConIfHourMinute)
 {
-	Minutes minutes = _scaled_date_ticks / _settings_time.ticks_per_minute + _settings_time.clock_offset;
-	return ConConditionalCommon(argc, argv, (MINUTES_HOUR(minutes) * 100) + MINUTES_MINUTE(minutes), "the current hour and minute 0000 - 2359 (in game, assuming time is in minutes)", "if_hour_minute");
+	TickMinutes minutes = _settings_time.NowInTickMinutes();
+	return ConConditionalCommon(argc, argv, minutes.ClockHHMM(), "the current hour and minute 0000 - 2359 (in game, assuming time is in minutes)", "if_hour_minute");
 }
 
 /** World-coordinates for a town or map corner. */

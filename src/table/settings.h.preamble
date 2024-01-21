@@ -10,6 +10,12 @@
 /* Callback function used in _settings[] as well as _company_settings[] */
 static size_t ConvertLandscape(const char *value);
 
+/* Callback function used in _settings[] as well as _gui_settings[] */
+static void UpdateTimeSettings(int32 new_value);
+
+/* Callback function used for various settings */
+static bool CheckTTDPatchSettingFlag(uint flag);
+
 
 /****************************
  * OTTD specific INI stuff
@@ -128,6 +134,3 @@ static size_t ConvertLandscape(const char *value);
 
 #define SDTC_OMANY(var, type, flags, def, max, full, str, strhelp, strval, pre_check, post_callback, from, to, extver, cat, guiproc, startup, patxname)\
 	SDTG_OMANY(#var, type, flags, _settings_client.var, def, max, full, str, strhelp, strval, pre_check, post_callback, from, to, extver, cat, guiproc, startup, patxname)
-
-#define SDT_XREF(from, to, extver, xref, xrefcvt)\
-	NSD(Xref, SLE_CONDNULL_X(0, from, to, extver), SettingsXref(xref, xrefcvt))

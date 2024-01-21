@@ -45,9 +45,12 @@
 
 #include "newgrf_config.h"
 
+#include "widgets/dropdown_type.h"
 #include "widgets/newgrf_debug_widget.h"
 
 #include "table/strings.h"
+
+#include <array>
 
 #include "safeguards.h"
 
@@ -223,10 +226,13 @@ public:
 	}
 
 	virtual void ExtraInfo(uint index, NIExtraInfoOutput &output) const {}
-	virtual void SpriteDump(uint index, DumpSpriteGroupPrinter print) const {}
+	virtual void SpriteDump(uint index, SpriteGroupDumper &dumper) const {}
 	virtual bool ShowExtraInfoOnly(uint index) const { return false; };
 	virtual bool ShowExtraInfoIncludingGRFIDOnly(uint index) const { return false; };
 	virtual bool ShowSpriteDumpButton(uint index) const { return false; };
+	virtual bool ShowOptionsDropDown(uint index) const { return false; }
+	virtual void FillOptionsDropDown(uint index, DropDownList &list) const { return; }
+	virtual void OnOptionsDropdownSelect(uint index, int selected) const { return; }
 
 protected:
 	/**
@@ -322,8 +328,11 @@ struct NewGRFInspectWindow : Window {
 
 	bool auto_refresh = false;
 	bool log_console = false;
+	bool click_to_mark_mode = false;
 	bool sprite_dump = false;
 	bool sprite_dump_unopt = false;
+	bool sprite_dump_more_details = false;
+	bool show_dropdown = false;
 
 	uint32 extra_info_flags = 0;
 	btree::btree_map<int, uint> extra_info_click_flag_toggles;
@@ -331,8 +340,18 @@ struct NewGRFInspectWindow : Window {
 	btree::btree_map<int, uint16> nfo_line_lines;
 	const SpriteGroup *selected_sprite_group = nullptr;
 	btree::btree_map<int, uint32> highlight_tag_lines;
-	uint32 selected_highlight_tags[6] = {};
 	btree::btree_set<const SpriteGroup *> collapsed_groups;
+
+	std::array<uint32, 6> selected_highlight_tags = {};
+	std::array<const SpriteGroup *, 8> marked_groups = {};
+
+	enum DropDownOptions {
+		NGIWDDO_GOTO_SPRITE,
+		NGIWDDO_CLEAR,
+		NGIWDDO_MORE_DETAILS,
+		NGIWDDO_CLICK_TO_HIGHLIGHT,
+		NGIWDDO_CLICK_TO_MARK,
+	};
 
 	/**
 	 * Check whether the given variable has a parameter.
@@ -398,11 +417,14 @@ struct NewGRFInspectWindow : Window {
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_NGRFI_SCROLLBAR);
 		bool show_sprite_dump_button = GetFeatureHelper(wno)->ShowSpriteDumpButton(::GetFeatureIndex(wno));
+		bool show_options = GetFeatureHelper(wno)->ShowOptionsDropDown(::GetFeatureIndex(wno));
+		this->show_dropdown = show_sprite_dump_button || show_options;
 		this->GetWidget<NWidgetStacked>(WID_NGRFI_SPRITE_DUMP_SEL)->SetDisplayedPlane(show_sprite_dump_button ? 0 : SZSP_NONE);
 		this->GetWidget<NWidgetStacked>(WID_NGRFI_SPRITE_DUMP_UNOPT_SEL)->SetDisplayedPlane(show_sprite_dump_button ? 0 : SZSP_NONE);
-		this->GetWidget<NWidgetStacked>(WID_NGRFI_SPRITE_DUMP_GOTO_SEL)->SetDisplayedPlane(show_sprite_dump_button ? 0 : SZSP_NONE);
+		this->GetWidget<NWidgetStacked>(WID_NGRFI_OPTIONS_SEL)->SetDisplayedPlane(this->show_dropdown ? 0 : SZSP_NONE);
 		this->SetWidgetDisabledState(WID_NGRFI_SPRITE_DUMP_UNOPT, true);
-		this->SetWidgetDisabledState(WID_NGRFI_SPRITE_DUMP_GOTO, true);
+		this->SetWidgetDisabledState(WID_NGRFI_SPRITE_DUMP_OPTIONS, !show_sprite_dump_button);
+		this->SetWidgetDisabledState(WID_NGRFI_MAIN_OPTIONS, !show_options);
 		this->FinishInitNested(wno);
 
 		this->vscroll->SetCount(0);
@@ -418,14 +440,14 @@ struct NewGRFInspectWindow : Window {
 		GetFeatureHelper(this->window_number)->SetStringParameters(this->GetFeatureIndex());
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_NGRFI_VEH_CHAIN: {
 				assert(this->HasChainIndex());
 				GrfSpecFeature f = GetFeatureNum(this->window_number);
 				if (f == GSF_SHIPS) {
-					size->height = FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.framerect.Vertical();
+					size->height = GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.framerect.Vertical();
 					break;
 				}
 				size->height = std::max(size->height, GetVehicleImageCellSize((VehicleType)(VEH_TRAIN + (f - GSF_TRAINS)), EIT_IN_DEPOT).height + 2 + WidgetDimensions::scaled.bevel.Vertical());
@@ -433,7 +455,7 @@ struct NewGRFInspectWindow : Window {
 			}
 
 			case WID_NGRFI_MAINPANEL:
-				resize->height = std::max(11, FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.vsep_normal);
+				resize->height = std::max(11, GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_normal);
 				resize->width  = 1;
 
 				size->height = 5 * resize->height + WidgetDimensions::scaled.frametext.Vertical();
@@ -566,12 +588,14 @@ struct NewGRFInspectWindow : Window {
 		const_cast<NewGRFInspectWindow *>(this)->highlight_tag_lines.clear();
 		const_cast<NewGRFInspectWindow *>(this)->nfo_line_lines.clear();
 		if (this->sprite_dump) {
-			SpriteGroupDumper::use_shadows = this->sprite_dump_unopt;
+			const bool rtl = _current_text_dir == TD_RTL;
+			Rect sprite_ir = ir.Indent(WidgetDimensions::scaled.hsep_normal * 3, rtl);
+
 			bool collapsed = false;
 			const SpriteGroup *collapse_group = nullptr;
 			uint collapse_lines = 0;
 			char tmp_buf[256];
-			nih->SpriteDump(index, [&](const SpriteGroup *group, DumpSpriteGroupPrintOp operation, uint32 highlight_tag, const char *buf) {
+			SpriteGroupDumper dumper([&](const SpriteGroup *group, DumpSpriteGroupPrintOp operation, uint32 highlight_tag, const char *buf) {
 				if (this->log_console && operation == DSGPO_PRINT) DEBUG(misc, 0, "  %s", buf);
 
 				if (operation == DSGPO_NFO_LINE) {
@@ -621,9 +645,22 @@ struct NewGRFInspectWindow : Window {
 						}
 					}
 				}
-				::DrawString(ir.left, ir.right, ir.top + (scroll_offset * this->resize.step_height), buf, colour);
+				if (group != nullptr) {
+					for (uint i = 0; i < lengthof(this->marked_groups); i++) {
+						if (this->marked_groups[i] == group) {
+							static const uint8 mark_colours[] = { PC_YELLOW, PC_GREEN, PC_ORANGE, PC_DARK_BLUE, PC_RED, PC_LIGHT_BLUE, 0xAE /* purple */, 0x6C /* brown */ };
+							static_assert(lengthof(this->marked_groups) == lengthof(mark_colours));
+							Rect mark_ir = ir.Indent(WidgetDimensions::scaled.hsep_normal, rtl).WithWidth(WidgetDimensions::scaled.hsep_normal, rtl).Translate(0, (scroll_offset * this->resize.step_height));
+							GfxFillRect(mark_ir.left, mark_ir.top, mark_ir.right, mark_ir.top + this->resize.step_height - 1, mark_colours[i]);
+							break;
+						}
+					}
+				}
+				::DrawString(sprite_ir.left, sprite_ir.right, sprite_ir.top + (scroll_offset * this->resize.step_height), buf, colour);
 			});
-			SpriteGroupDumper::use_shadows = false;
+			dumper.use_shadows = this->sprite_dump_unopt;
+			dumper.more_details = this->sprite_dump_more_details;
+			nih->SpriteDump(index, dumper);
 			return;
 		} else {
 			NewGRFInspectWindow *this_mutable = const_cast<NewGRFInspectWindow *>(this);
@@ -763,7 +800,7 @@ struct NewGRFInspectWindow : Window {
 						break;
 
 					case NIT_CARGO:
-						string = value != INVALID_CARGO ? CargoSpec::Get(value)->name : STR_QUANTITY_N_A;
+						string = value != CT_INVALID ? CargoSpec::Get(value)->name : STR_QUANTITY_N_A;
 						break;
 
 					default:
@@ -812,21 +849,32 @@ struct NewGRFInspectWindow : Window {
 		return true;
 	}
 
+	template <typename T, typename V>
+	void SelectTagArrayItem(T &items, V value)
+	{
+		for (size_t i = 0; i < items.size(); i++) {
+			if (items[i] == value) {
+				items[i] = V{};
+				return;
+			}
+		}
+		for (size_t i = 0; i < items.size(); i++) {
+			if (!items[i]) {
+				items[i] = value;
+				return;
+			}
+		}
+		items[items.size() - 1] = value;
+	}
+
 	void SelectHighlightTag(uint32 tag)
 	{
-		for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
-			if (this->selected_highlight_tags[i] == tag) {
-				this->selected_highlight_tags[i] = 0;
-				return;
-			}
-		}
-		for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
-			if (this->selected_highlight_tags[i] == 0) {
-				this->selected_highlight_tags[i] = tag;
-				return;
-			}
-		}
-		this->selected_highlight_tags[lengthof(this->selected_highlight_tags) - 1] = tag;
+		this->SelectTagArrayItem(this->selected_highlight_tags, tag);
+	}
+
+	void SelectMarkedGroup(const SpriteGroup *group)
+	{
+		this->SelectTagArrayItem(this->marked_groups, group);
 	}
 
 	void OnClick(Point pt, int widget, int click_count) override
@@ -884,14 +932,20 @@ struct NewGRFInspectWindow : Window {
 							}
 							this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
 						}
-
 					} else {
 						const SpriteGroup *group = nullptr;
 						auto iter = this->sprite_group_lines.find(line);
 						if (iter != this->sprite_group_lines.end()) group = iter->second;
-						if (group != nullptr || this->selected_sprite_group != nullptr) {
-							this->selected_sprite_group = (group == this->selected_sprite_group) ? nullptr : group;
-							this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
+						if (this->click_to_mark_mode) {
+							if (group != nullptr) {
+								this->SelectMarkedGroup(group);
+								this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
+							}
+						} else {
+							if (group != nullptr || this->selected_sprite_group != nullptr) {
+								this->selected_sprite_group = (group == this->selected_sprite_group) ? nullptr : group;
+								this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
+							}
 						}
 					}
 					return;
@@ -946,11 +1000,13 @@ struct NewGRFInspectWindow : Window {
 				this->sprite_dump = !this->sprite_dump;
 				this->SetWidgetLoweredState(WID_NGRFI_SPRITE_DUMP, this->sprite_dump);
 				this->SetWidgetDisabledState(WID_NGRFI_SPRITE_DUMP_UNOPT, !this->sprite_dump || !UnOptimisedSpriteDumpOK());
-				this->SetWidgetDisabledState(WID_NGRFI_SPRITE_DUMP_GOTO, !this->sprite_dump);
-				this->GetWidget<NWidgetCore>(WID_NGRFI_MAINPANEL)->SetToolTip(this->sprite_dump ? STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP : STR_NULL);
+				if (this->show_dropdown) {
+					this->GetWidget<NWidgetStacked>(WID_NGRFI_OPTIONS_SEL)->SetDisplayedPlane(this->sprite_dump ? 1 : 0);
+				}
 				this->SetWidgetDirty(WID_NGRFI_SPRITE_DUMP);
 				this->SetWidgetDirty(WID_NGRFI_SPRITE_DUMP_UNOPT);
-				this->SetWidgetDirty(WID_NGRFI_SPRITE_DUMP_GOTO);
+				this->SetWidgetDirty(WID_NGRFI_SPRITE_DUMP_OPTIONS);
+				this->SetWidgetDirty(WID_NGRFI_MAIN_OPTIONS);
 				this->SetWidgetDirty(WID_NGRFI_MAINPANEL);
 				this->SetWidgetDirty(WID_NGRFI_SCROLLBAR);
 				break;
@@ -980,11 +1036,63 @@ struct NewGRFInspectWindow : Window {
 				break;
 			}
 
-			case WID_NGRFI_SPRITE_DUMP_GOTO: {
+			case WID_NGRFI_SPRITE_DUMP_OPTIONS: {
+				DropDownList list;
+				list.push_back(std::make_unique<DropDownListStringItem>(STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO, NGIWDDO_GOTO_SPRITE, false));
+				list.push_back(std::make_unique<DropDownListStringItem>(STR_NEWGRF_INSPECT_SPRITE_DUMP_CLEAR, NGIWDDO_CLEAR, false));
+				list.push_back(std::make_unique<DropDownListDividerItem>(-1, false));
+				list.push_back(std::make_unique<DropDownListCheckedItem>(!this->click_to_mark_mode, STR_NEWGRF_INSPECT_SPRITE_DUMP_CLICK_TO_HIGHLIGHT, NGIWDDO_CLICK_TO_HIGHLIGHT, false));
+				list.push_back(std::make_unique<DropDownListCheckedItem>(this->click_to_mark_mode, STR_NEWGRF_INSPECT_SPRITE_DUMP_CLICK_TO_MARK, NGIWDDO_CLICK_TO_MARK, false));
+				list.push_back(std::make_unique<DropDownListDividerItem>(-1, false));
+				list.push_back(std::make_unique<DropDownListCheckedItem>(this->sprite_dump_more_details, STR_NEWGRF_INSPECT_SPRITE_DUMP_MORE_DETAILS, NGIWDDO_MORE_DETAILS, false));
+
+				ShowDropDownList(this, std::move(list), 0, WID_NGRFI_SPRITE_DUMP_OPTIONS, 140);
+				break;
+			}
+
+			case WID_NGRFI_MAIN_OPTIONS: {
+				DropDownList list;
+				GetFeatureHelper(this->window_number)->FillOptionsDropDown(this->GetFeatureIndex(), list);
+				ShowDropDownList(this, std::move(list), 0, WID_NGRFI_MAIN_OPTIONS, 140);
+				break;
+			}
+		}
+	}
+
+	void OnDropdownSelect(int widget, int index) override
+	{
+		if (widget == WID_NGRFI_MAIN_OPTIONS) {
+			GetFeatureHelper(this->window_number)->OnOptionsDropdownSelect(this->GetFeatureIndex(), index);
+			return;
+		}
+
+		if (widget != WID_NGRFI_SPRITE_DUMP_OPTIONS) return;
+
+		switch (index) {
+			case NGIWDDO_GOTO_SPRITE:
 				this->current_edit_param = 0;
 				ShowQueryString(STR_EMPTY, STR_SPRITE_ALIGNER_GOTO_CAPTION, 10, this, CS_NUMERAL, QSF_NONE);
 				break;
-			}
+			case NGIWDDO_CLEAR:
+				this->selected_highlight_tags.fill(0);
+				this->marked_groups.fill(nullptr);
+				this->selected_sprite_group = nullptr;
+				this->SetDirty();
+				break;
+			case NGIWDDO_MORE_DETAILS:
+				this->sprite_dump_more_details = !this->sprite_dump_more_details;
+				this->SetDirty();
+				break;
+			case NGIWDDO_CLICK_TO_HIGHLIGHT:
+				this->click_to_mark_mode = false;
+				break;
+			case NGIWDDO_CLICK_TO_MARK:
+				this->click_to_mark_mode = true;
+				this->selected_sprite_group = nullptr;
+				this->SetDirty();
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -1015,7 +1123,7 @@ struct NewGRFInspectWindow : Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		if (this->HasChainIndex()) {
@@ -1037,14 +1145,30 @@ struct NewGRFInspectWindow : Window {
 		this->redraw_panel = false;
 		this->redraw_scrollbar = false;
 	}
+
+	virtual bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	{
+		if (widget == WID_NGRFI_MAINPANEL && this->sprite_dump) {
+			_temp_special_strings[0] = GetString(this->click_to_mark_mode ? STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_MARK : STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT);
+			_temp_special_strings[0] += "\n";
+			_temp_special_strings[0] += GetString(STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_COLLAPSE);
+			_temp_special_strings[0] += "\n";
+			_temp_special_strings[0] += GetString(STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT_TEMP);
+			GuiShowTooltips(this, SPECSTR_TEMP_START, close_cond);
+			return true;
+		}
+
+		return false;
+	}
 };
 
 static const NWidgetPart _nested_newgrf_inspect_chain_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_NGRFI_CAPTION), SetDataTip(STR_NEWGRF_INSPECT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
-		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_SPRITE_DUMP_GOTO_SEL),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_GOTO), SetDataTip(STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO, STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO_TOOLTIP),
+		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_OPTIONS_SEL),
+			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_NGRFI_MAIN_OPTIONS), SetDataTip(SPR_ARROW_DOWN, STR_NEWGRF_INSPECT_SPRITE_DUMP_OPTIONS),
+			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_OPTIONS), SetDataTip(SPR_ARROW_DOWN, STR_NEWGRF_INSPECT_SPRITE_DUMP_OPTIONS),
 		EndContainer(),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_SPRITE_DUMP_UNOPT_SEL),
 			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_UNOPT), SetDataTip(STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT, STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT_TOOLTIP),
@@ -1080,8 +1204,9 @@ static const NWidgetPart _nested_newgrf_inspect_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_NGRFI_CAPTION), SetDataTip(STR_NEWGRF_INSPECT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NGRFI_PARENT), SetDataTip(STR_NEWGRF_INSPECT_PARENT_BUTTON, STR_NEWGRF_INSPECT_PARENT_TOOLTIP),
-		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_SPRITE_DUMP_GOTO_SEL),
-			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_GOTO), SetDataTip(STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO, STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO_TOOLTIP),
+		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_OPTIONS_SEL),
+			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_NGRFI_MAIN_OPTIONS), SetDataTip(SPR_ARROW_DOWN, STR_NEWGRF_INSPECT_SPRITE_DUMP_OPTIONS),
+			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_OPTIONS), SetDataTip(SPR_ARROW_DOWN, STR_NEWGRF_INSPECT_SPRITE_DUMP_OPTIONS),
 		EndContainer(),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_NGRFI_SPRITE_DUMP_UNOPT_SEL),
 			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_NGRFI_SPRITE_DUMP_UNOPT), SetDataTip(STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT, STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT_TOOLTIP),
@@ -1105,18 +1230,18 @@ static const NWidgetPart _nested_newgrf_inspect_widgets[] = {
 	EndContainer(),
 };
 
-static WindowDesc _newgrf_inspect_chain_desc(
+static WindowDesc _newgrf_inspect_chain_desc(__FILE__, __LINE__,
 	WDP_AUTO, "newgrf_inspect_chain", 400, 300,
 	WC_NEWGRF_INSPECT, WC_NONE,
 	0,
-	_nested_newgrf_inspect_chain_widgets, lengthof(_nested_newgrf_inspect_chain_widgets)
+	std::begin(_nested_newgrf_inspect_chain_widgets), std::end(_nested_newgrf_inspect_chain_widgets)
 );
 
-static WindowDesc _newgrf_inspect_desc(
+static WindowDesc _newgrf_inspect_desc(__FILE__, __LINE__,
 	WDP_AUTO, "newgrf_inspect", 400, 300,
 	WC_NEWGRF_INSPECT, WC_NONE,
 	0,
-	_nested_newgrf_inspect_widgets, lengthof(_nested_newgrf_inspect_widgets)
+	std::begin(_nested_newgrf_inspect_widgets), std::end(_nested_newgrf_inspect_widgets)
 );
 
 /**
@@ -1269,13 +1394,19 @@ struct SpriteAlignerWindow : Window {
 	Scrollbar *vscroll;
 	std::map<SpriteID, XyOffs> offs_start_map; ///< Mapping of starting offsets for the sprites which have been aligned in the sprite aligner window.
 
+	static inline ZoomLevel zoom = ZOOM_LVL_END;
 	static bool centre;
 	static bool crosshair;
 
 	SpriteAlignerWindow(WindowDesc *desc, WindowNumber wno) : Window(desc)
 	{
+		/* On first opening, set initial zoom to current zoom level. */
+		if (SpriteAlignerWindow::zoom == ZOOM_LVL_END) SpriteAlignerWindow::zoom = _gui_zoom;
+		SpriteAlignerWindow::zoom = Clamp(SpriteAlignerWindow::zoom, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_SA_SCROLLBAR);
+		this->vscroll->SetCount(_newgrf_debug_sprite_picker.sprites.size());
 		this->FinishInitNested(wno);
 
 		this->SetWidgetLoweredState(WID_SA_CENTRE, SpriteAlignerWindow::centre);
@@ -1283,6 +1414,8 @@ struct SpriteAlignerWindow : Window {
 
 		/* Oh yes, we assume there is at least one normal sprite! */
 		while (GetSpriteType(this->current_sprite) != SpriteType::Normal) this->current_sprite++;
+
+		this->InvalidateData(0, true);
 	}
 
 	void SetStringParameters(int widget) const override
@@ -1295,8 +1428,8 @@ struct SpriteAlignerWindow : Window {
 				break;
 
 			case WID_SA_OFFSETS_ABS:
-				SetDParam(0, spr->x_offs);
-				SetDParam(1, spr->y_offs);
+				SetDParam(0, UnScaleByZoom(spr->x_offs, SpriteAlignerWindow::zoom));
+				SetDParam(1, UnScaleByZoom(spr->y_offs, SpriteAlignerWindow::zoom));
 				break;
 
 			case WID_SA_OFFSETS_REL: {
@@ -1305,8 +1438,8 @@ struct SpriteAlignerWindow : Window {
 				 */
 				const auto key_offs_pair = this->offs_start_map.find(this->current_sprite);
 				if (key_offs_pair != this->offs_start_map.end()) {
-					SetDParam(0, spr->x_offs - key_offs_pair->second.first);
-					SetDParam(1, spr->y_offs - key_offs_pair->second.second);
+					SetDParam(0, UnScaleByZoom(spr->x_offs - key_offs_pair->second.first, SpriteAlignerWindow::zoom));
+					SetDParam(1, UnScaleByZoom(spr->y_offs - key_offs_pair->second.second, SpriteAlignerWindow::zoom));
 				} else {
 					SetDParam(0, 0);
 					SetDParam(1, 0);
@@ -1319,7 +1452,7 @@ struct SpriteAlignerWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SA_SPRITE:
@@ -1328,7 +1461,7 @@ struct SpriteAlignerWindow : Window {
 			case WID_SA_LIST:
 				SetDParamMaxDigits(0, 6);
 				size->width = GetStringBoundingBox(STR_JUST_COMMA).width + padding.width;
-				resize->height = FONT_HEIGHT_NORMAL + padding.height;
+				resize->height = GetCharacterHeight(FS_NORMAL) + padding.height;
 				resize->width  = 1;
 				fill->height = resize->height;
 				break;
@@ -1347,19 +1480,24 @@ struct SpriteAlignerWindow : Window {
 				int x;
 				int y;
 				if (SpriteAlignerWindow::centre) {
-					x = -UnScaleGUI(spr->x_offs) + (ir.Width() - UnScaleGUI(spr->width)) / 2;
-					y = -UnScaleGUI(spr->y_offs) + (ir.Height() - UnScaleGUI(spr->height)) / 2;
+					x = -UnScaleByZoom(spr->x_offs, SpriteAlignerWindow::zoom) + (ir.Width() - UnScaleByZoom(spr->width, SpriteAlignerWindow::zoom)) / 2;
+					y = -UnScaleByZoom(spr->y_offs, SpriteAlignerWindow::zoom) + (ir.Height() - UnScaleByZoom(spr->height, SpriteAlignerWindow::zoom)) / 2;
 				} else {
 					x = ir.Width() / 2;
 					y = ir.Height() / 2;
 				}
 
 				DrawPixelInfo new_dpi;
-				if (!FillDrawPixelInfo(&new_dpi, ir.left, ir.top, ir.Width(), ir.Height())) break;
+				if (!FillDrawPixelInfo(&new_dpi, ir)) break;
 				AutoRestoreBackup dpi_backup(_cur_dpi, &new_dpi);
 
-				DrawSprite(this->current_sprite, PAL_NONE, x, y, nullptr, ZOOM_LVL_GUI);
-				if (this->crosshair) {
+				DrawSprite(this->current_sprite, PAL_NONE, x, y, nullptr, SpriteAlignerWindow::zoom);
+
+				Rect outline = {0, 0, UnScaleByZoom(spr->width, SpriteAlignerWindow::zoom) - 1, UnScaleByZoom(spr->height, SpriteAlignerWindow::zoom) - 1};
+				outline = outline.Translate(x + UnScaleByZoom(spr->x_offs, SpriteAlignerWindow::zoom),y + UnScaleByZoom(spr->y_offs, SpriteAlignerWindow::zoom));
+				DrawRectOutline(outline.Expand(1), PC_LIGHT_BLUE, 1, 1);
+
+				if (SpriteAlignerWindow::crosshair) {
 					GfxDrawLine(x, 0, x, ir.Height() - 1, PC_WHITE, 1, 1);
 					GfxDrawLine(0, y, ir.Width() - 1, y, PC_WHITE, 1, 1);
 				}
@@ -1376,7 +1514,7 @@ struct SpriteAlignerWindow : Window {
 				Rect ir = r.Shrink(WidgetDimensions::scaled.matrix);
 				for (int i = this->vscroll->GetPosition(); i < max; i++) {
 					SetDParam(0, list[i]);
-					DrawString(ir, STR_JUST_COMMA, TC_BLACK, SA_RIGHT | SA_FORCE);
+					DrawString(ir, STR_JUST_COMMA, list[i] == this->current_sprite ? TC_WHITE : TC_BLACK, SA_RIGHT | SA_FORCE);
 					ir.top += step_size;
 				}
 				break;
@@ -1384,7 +1522,7 @@ struct SpriteAlignerWindow : Window {
 		}
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SA_PREVIOUS:
@@ -1444,12 +1582,13 @@ struct SpriteAlignerWindow : Window {
 				if (this->offs_start_map.count(this->current_sprite) == 0) {
 					this->offs_start_map[this->current_sprite] = XyOffs(spr->x_offs, spr->y_offs);
 				}
+				int amt = ScaleByZoom(_ctrl_pressed ? 8 : 1, SpriteAlignerWindow::zoom);
 				switch (widget) {
 					/* Move eight units at a time if ctrl is pressed. */
-					case WID_SA_UP:    spr->y_offs -= _ctrl_pressed ? 8 : 1; break;
-					case WID_SA_DOWN:  spr->y_offs += _ctrl_pressed ? 8 : 1; break;
-					case WID_SA_LEFT:  spr->x_offs -= _ctrl_pressed ? 8 : 1; break;
-					case WID_SA_RIGHT: spr->x_offs += _ctrl_pressed ? 8 : 1; break;
+					case WID_SA_UP:    spr->y_offs -= amt; break;
+					case WID_SA_DOWN:  spr->y_offs += amt; break;
+					case WID_SA_LEFT:  spr->x_offs -= amt; break;
+					case WID_SA_RIGHT: spr->x_offs += amt; break;
 				}
 				/* Of course, we need to redraw the sprite, but where is it used?
 				 * Everywhere is a safe bet. */
@@ -1474,6 +1613,13 @@ struct SpriteAlignerWindow : Window {
 				this->SetWidgetLoweredState(widget, SpriteAlignerWindow::crosshair);
 				this->SetDirty();
 				break;
+
+			default:
+				if (IsInsideBS(widget, WID_SA_ZOOM, ZOOM_LVL_SPR_COUNT)) {
+					SpriteAlignerWindow::zoom = ZoomLevel(widget - WID_SA_ZOOM);
+					this->InvalidateData(0, true);
+				}
+				break;
 		}
 	}
 
@@ -1494,13 +1640,19 @@ struct SpriteAlignerWindow : Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		if (data == 1) {
 			/* Sprite picker finished */
 			this->RaiseWidget(WID_SA_PICKER);
 			this->vscroll->SetCount(_newgrf_debug_sprite_picker.sprites.size());
+		}
+
+		SpriteAlignerWindow::zoom = Clamp(SpriteAlignerWindow::zoom, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+		for (ZoomLevel z = ZOOM_LVL_NORMAL; z < ZOOM_LVL_SPR_COUNT; z++) {
+			this->SetWidgetsDisabledState(z < _settings_client.gui.zoom_min || z > _settings_client.gui.zoom_max, WID_SA_ZOOM + z);
+			this->SetWidgetsLoweredState(SpriteAlignerWindow::zoom == z, WID_SA_ZOOM + z);
 		}
 	}
 
@@ -1521,61 +1673,73 @@ static const NWidgetPart _nested_sprite_aligner_widgets[] = {
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY),
-		NWidget(NWID_HORIZONTAL), SetPIP(0, 0, 10),
-			NWidget(NWID_VERTICAL), SetPIP(10, 5, 10),
-				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(10, 5, 10),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_PREVIOUS), SetDataTip(STR_SPRITE_ALIGNER_PREVIOUS_BUTTON, STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP), SetFill(1, 0),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_GOTO), SetDataTip(STR_SPRITE_ALIGNER_GOTO_BUTTON, STR_SPRITE_ALIGNER_GOTO_TOOLTIP), SetFill(1, 0),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_NEXT), SetDataTip(STR_SPRITE_ALIGNER_NEXT_BUTTON, STR_SPRITE_ALIGNER_NEXT_TOOLTIP), SetFill(1, 0),
+		NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_wide, 0), SetPadding(WidgetDimensions::unscaled.sparse_resize),
+			NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_sparse, 0),
+				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_PREVIOUS), SetDataTip(STR_SPRITE_ALIGNER_PREVIOUS_BUTTON, STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_GOTO), SetDataTip(STR_SPRITE_ALIGNER_GOTO_BUTTON, STR_SPRITE_ALIGNER_GOTO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_NEXT), SetDataTip(STR_SPRITE_ALIGNER_NEXT_BUTTON, STR_SPRITE_ALIGNER_NEXT_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 				EndContainer(),
-				NWidget(NWID_HORIZONTAL), SetPIP(10, 5, 10),
-					NWidget(NWID_SPACER), SetFill(1, 1),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(NWID_SPACER), SetFill(1, 1), SetResize(1, 0),
 					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_UP), SetDataTip(SPR_ARROW_UP, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
-					NWidget(NWID_SPACER), SetFill(1, 1),
+					NWidget(NWID_SPACER), SetFill(1, 1), SetResize(1, 0),
 				EndContainer(),
-				NWidget(NWID_HORIZONTAL_LTR), SetPIP(10, 5, 10),
+				NWidget(NWID_HORIZONTAL_LTR), SetPIP(0, WidgetDimensions::unscaled.hsep_wide, 0),
 					NWidget(NWID_VERTICAL),
-						NWidget(NWID_SPACER), SetFill(1, 1),
+						NWidget(NWID_SPACER), SetFill(1, 1), SetResize(0, 1),
 						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_LEFT), SetDataTip(SPR_ARROW_LEFT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
-						NWidget(NWID_SPACER), SetFill(1, 1),
+						NWidget(NWID_SPACER), SetFill(1, 1), SetResize(0, 1),
 					EndContainer(),
-					NWidget(WWT_PANEL, COLOUR_DARK_BLUE, WID_SA_SPRITE), SetDataTip(STR_NULL, STR_SPRITE_ALIGNER_SPRITE_TOOLTIP),
+					NWidget(WWT_PANEL, COLOUR_DARK_BLUE, WID_SA_SPRITE), SetDataTip(STR_NULL, STR_SPRITE_ALIGNER_SPRITE_TOOLTIP), SetResize(1, 1), SetFill(1, 1),
 					EndContainer(),
 					NWidget(NWID_VERTICAL),
-						NWidget(NWID_SPACER), SetFill(1, 1),
+						NWidget(NWID_SPACER), SetFill(1, 1), SetResize(0, 1),
 						NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_RIGHT), SetDataTip(SPR_ARROW_RIGHT, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
-						NWidget(NWID_SPACER), SetFill(1, 1),
+						NWidget(NWID_SPACER), SetFill(1, 1), SetResize(0, 1),
 					EndContainer(),
 				EndContainer(),
-				NWidget(NWID_HORIZONTAL), SetPIP(10, 5, 10),
-					NWidget(NWID_SPACER), SetFill(1, 1),
+				NWidget(NWID_HORIZONTAL),
+					NWidget(NWID_SPACER), SetFill(1, 1), SetResize(1, 0),
 					NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SA_DOWN), SetDataTip(SPR_ARROW_DOWN, STR_SPRITE_ALIGNER_MOVE_TOOLTIP), SetResize(0, 0), SetMinimalSize(11, 11),
-					NWidget(NWID_SPACER), SetFill(1, 1),
+					NWidget(NWID_SPACER), SetFill(1, 1), SetResize(1, 0),
 				EndContainer(),
-				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_ABS), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_ABS, STR_NULL), SetFill(1, 0), SetPadding(0, 10, 0, 10),
-				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_REL), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_REL, STR_NULL), SetFill(1, 0), SetPadding(0, 10, 0, 10),
-				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(10, 5, 10),
-					NWidget(WWT_TEXTBTN_2, COLOUR_GREY, WID_SA_CENTRE), SetDataTip(STR_SPRITE_ALIGNER_CENTRE_OFFSET, STR_NULL), SetFill(1, 0),
-					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_RESET_REL), SetDataTip(STR_SPRITE_ALIGNER_RESET_BUTTON, STR_SPRITE_ALIGNER_RESET_TOOLTIP), SetFill(1, 0),
-					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_CROSSHAIR), SetDataTip(STR_SPRITE_ALIGNER_CROSSHAIR, STR_NULL), SetFill(1, 0),
+				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_ABS), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_ABS, STR_NULL), SetFill(1, 0), SetResize(1, 0),
+				NWidget(WWT_LABEL, COLOUR_GREY, WID_SA_OFFSETS_REL), SetDataTip(STR_SPRITE_ALIGNER_OFFSETS_REL, STR_NULL), SetFill(1, 0), SetResize(1, 0),
+				NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+					NWidget(WWT_TEXTBTN_2, COLOUR_GREY, WID_SA_CENTRE), SetDataTip(STR_SPRITE_ALIGNER_CENTRE_OFFSET, STR_NULL), SetFill(1, 0), SetResize(1, 0),
+					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SA_RESET_REL), SetDataTip(STR_SPRITE_ALIGNER_RESET_BUTTON, STR_SPRITE_ALIGNER_RESET_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_CROSSHAIR), SetDataTip(STR_SPRITE_ALIGNER_CROSSHAIR, STR_NULL), SetFill(1, 0), SetResize(1, 0),
 				EndContainer(),
 			EndContainer(),
-			NWidget(NWID_VERTICAL), SetPIP(10, 5, 10),
+			NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_sparse, 0),
 				NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_PICKER), SetDataTip(STR_SPRITE_ALIGNER_PICKER_BUTTON, STR_SPRITE_ALIGNER_PICKER_TOOLTIP), SetFill(1, 0),
 				NWidget(NWID_HORIZONTAL),
 					NWidget(WWT_MATRIX, COLOUR_GREY, WID_SA_LIST), SetResize(1, 1), SetMatrixDataTip(1, 0, STR_NULL), SetFill(1, 1), SetScrollbar(WID_SA_SCROLLBAR),
 					NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SA_SCROLLBAR),
 				EndContainer(),
+				NWidget(NWID_VERTICAL),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_NORMAL), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_MIN, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_OUT_2X), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_IN_2X, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_OUT_4X), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_NORMAL, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_OUT_8X), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_OUT_2X, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_OUT_16X), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_OUT_4X, STR_NULL), SetFill(1, 0),
+					NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SA_ZOOM + ZOOM_LVL_OUT_32X), SetDataTip(STR_CONFIG_SETTING_ZOOM_LVL_OUT_8X, STR_NULL), SetFill(1, 0),
+				EndContainer(),
 			EndContainer(),
+		EndContainer(),
+		NWidget(NWID_HORIZONTAL),
+			NWidget(NWID_SPACER), SetFill(1, 0), SetResize(1, 0),
+			NWidget(WWT_RESIZEBOX, COLOUR_GREY), SetDataTip(RWV_HIDE_BEVEL, STR_TOOLTIP_RESIZE),
 		EndContainer(),
 	EndContainer(),
 };
 
-static WindowDesc _sprite_aligner_desc(
+static WindowDesc _sprite_aligner_desc(__FILE__, __LINE__,
 	WDP_AUTO, "sprite_aligner", 400, 300,
 	WC_SPRITE_ALIGNER, WC_NONE,
 	0,
-	_nested_sprite_aligner_widgets, lengthof(_nested_sprite_aligner_widgets)
+	std::begin(_nested_sprite_aligner_widgets), std::end(_nested_sprite_aligner_widgets)
 );
 
 /**

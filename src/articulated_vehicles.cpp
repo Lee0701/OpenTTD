@@ -319,19 +319,6 @@ CargoTypes GetUnionOfArticulatedRefitMasks(EngineID engine, bool include_initial
 }
 
 /**
- * Ands the refit_masks of all articulated parts.
- * @param engine the first part
- * @param include_initial_cargo_type if true the default cargo type of the vehicle is included; if false only the refit_mask
- * @return bit mask of CargoIDs which are a refit option for every articulated part (with default capacity > 0)
- */
-CargoTypes GetIntersectionOfArticulatedRefitMasks(EngineID engine, bool include_initial_cargo_type)
-{
-	CargoTypes union_mask, intersection_mask;
-	GetArticulatedRefitMasks(engine, include_initial_cargo_type, &union_mask, &intersection_mask);
-	return intersection_mask;
-}
-
-/**
  * Get cargo mask of all cargoes carried by an articulated vehicle.
  * Note: Vehicles not carrying anything are ignored
  * @param v the first vehicle in the chain
@@ -393,7 +380,7 @@ void CheckConsistencyOfArticulatedVehicle(const Vehicle *v)
 
 	CargoTypes real_refit_union = 0;
 	CargoTypes real_refit_intersection = ALL_CARGOTYPES;
-	CargoArray real_default_capacity{};
+	CargoTypes real_default_cargoes = 0;
 
 	do {
 		CargoTypes refit_mask = GetAvailableVehicleCargoTypes(v->engine_type, true);
@@ -401,17 +388,15 @@ void CheckConsistencyOfArticulatedVehicle(const Vehicle *v)
 		if (refit_mask != 0) real_refit_intersection &= refit_mask;
 
 		assert(v->cargo_type < NUM_CARGO || (v->type == VEH_TRAIN && Train::From(v)->IsVirtual()));
-		if (v->cargo_type < NUM_CARGO) {
-			real_default_capacity[v->cargo_type] += v->cargo_cap;
-		}
+		if (v->cargo_cap > 0) SetBit(real_default_cargoes, v->cargo_type);
 
 		v = v->HasArticulatedPart() ? v->GetNextArticulatedPart() : nullptr;
 	} while (v != nullptr);
 
 	/* Check whether the vehicle carries more cargoes than expected */
 	bool carries_more = false;
-	for (CargoID cid = 0; cid < NUM_CARGO; cid++) {
-		if (real_default_capacity[cid] != 0 && purchase_default_capacity[cid] == 0) {
+	for (CargoID cid : SetCargoBitIterator(real_default_cargoes)) {
+		if (purchase_default_capacity[cid] == 0) {
 			carries_more = true;
 			break;
 		}
@@ -554,6 +539,7 @@ void AddArticulatedParts(Vehicle *first)
 
 		if (flip_image) v->spritenum++;
 
+		if (v->type == VEH_TRAIN && TestVehicleBuildProbability(v, v->engine_type, BuildProbabilityType::Reversed)) SetBit(Train::From(v)->flags, VRF_REVERSE_DIRECTION);
 		v->UpdatePosition();
 	}
 }

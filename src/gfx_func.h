@@ -40,6 +40,7 @@
 #define GFX_FUNC_H
 
 #include "gfx_type.h"
+#include "palette_func.h"
 #include "strings_type.h"
 #include "string_type.h"
 #include <vector>
@@ -107,8 +108,8 @@ struct SpritePointerHolder;
 void DrawSpriteViewport(const SpritePointerHolder &sprite_store, const DrawPixelInfo *dpi, SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub = nullptr);
 void PrepareDrawSpriteViewportSpriteStore(SpritePointerHolder &sprite_store, const DrawPixelInfo *dpi, SpriteID img, PaletteID pal);
 void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub = nullptr, ZoomLevel zoom = ZOOM_LVL_GUI);
-void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, bool clicked, StringAlignment align); /* widget.cpp */
-std::unique_ptr<uint32[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel zoom = ZOOM_LVL_GUI);
+void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, StringAlignment align); /* widget.cpp */
+std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel zoom = ZOOM_LVL_GUI);
 
 int DrawString(int left, int right, int top, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL);
 int DrawString(int left, int right, int top, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL);
@@ -123,6 +124,7 @@ void GfxFillPolygon(const std::vector<Point> &shape, int colour, FillRectMode mo
 void GfxDrawLine(const DrawPixelInfo *dpi, int left, int top, int right, int bottom, int colour, int width = 1, int dash = 0);
 inline void GfxDrawLine(int left, int top, int right, int bottom, int colour, int width = 1, int dash = 0) { GfxDrawLine(_cur_dpi, left, top, right, bottom, colour, width, dash); }
 void DrawBox(const DrawPixelInfo *dpi, int x, int y, int dx1, int dy1, int dx2, int dy2, int dx3, int dy3);
+void DrawRectOutline(const Rect &r, int colour, int width = 1, int dash = 0);
 
 /* Versions of DrawString/DrawStringMultiLine that accept a Rect instead of separate left, right, top and bottom parameters. */
 static inline int DrawString(const Rect &r, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL)
@@ -168,10 +170,14 @@ void SetPendingDirtyBlocks(int left, int top, int right, int bottom);
 void UnsetDirtyBlocks(int left, int top, int right, int bottom);
 void MarkWholeScreenDirty();
 
-void GfxInitPalettes();
 void CheckBlitter();
 
 bool FillDrawPixelInfo(DrawPixelInfo *n, int left, int top, int width, int height);
+
+static inline bool FillDrawPixelInfo(DrawPixelInfo *n, const Rect &r)
+{
+	return FillDrawPixelInfo(n, r.left, r.top, r.Width(), r.Height());
+}
 
 /**
  * Determine where to draw a centred object inside a widget.
@@ -221,56 +227,5 @@ inline int GetCharacterHeight(FontSize size)
 {
 	return font_height_cache[size];
 }
-
-/** Height of characters in the small (#FS_SMALL) font. @note Some characters may be oversized. */
-#define FONT_HEIGHT_SMALL  (GetCharacterHeight(FS_SMALL))
-
-/** Height of characters in the normal (#FS_NORMAL) font. @note Some characters may be oversized. */
-#define FONT_HEIGHT_NORMAL (GetCharacterHeight(FS_NORMAL))
-
-/** Height of characters in the large (#FS_LARGE) font. @note Some characters may be oversized. */
-#define FONT_HEIGHT_LARGE  (GetCharacterHeight(FS_LARGE))
-
-/** Height of characters in the large (#FS_MONO) font. @note Some characters may be oversized. */
-#define FONT_HEIGHT_MONO  (GetCharacterHeight(FS_MONO))
-
-TextColour GetContrastColour(uint8 background, uint8 threshold = 128);
-
-/**
- * All 16 colour gradients
- * 8 colours per gradient from darkest (0) to lightest (7)
- */
-extern byte _colour_gradient[COLOUR_END][8];
-extern byte _colour_value[COLOUR_END];
-
-/**
- * Return the colour for a particular greyscale level.
- * @param level Intensity, 0 = black, 15 = white
- * @return colour
- */
-#define GREY_SCALE(level) (level)
-
-static const uint8 PC_BLACK              = GREY_SCALE(1);  ///< Black palette colour.
-static const uint8 PC_DARK_GREY          = GREY_SCALE(6);  ///< Dark grey palette colour.
-static const uint8 PC_GREY               = GREY_SCALE(10); ///< Grey palette colour.
-static const uint8 PC_WHITE              = GREY_SCALE(15); ///< White palette colour.
-
-static const uint8 PC_VERY_DARK_RED      = 0xB2;           ///< Almost-black red palette colour.
-static const uint8 PC_DARK_RED           = 0xB4;           ///< Dark red palette colour.
-static const uint8 PC_RED                = 0xB8;           ///< Red palette colour.
-
-static const uint8 PC_VERY_DARK_BROWN    = 0x56;           ///< Almost-black brown palette colour.
-
-static const uint8 PC_ORANGE             = 0xC2;           ///< Orange palette colour.
-
-static const uint8 PC_YELLOW             = 0xBF;           ///< Yellow palette colour.
-static const uint8 PC_LIGHT_YELLOW       = 0x44;           ///< Light yellow palette colour.
-static const uint8 PC_VERY_LIGHT_YELLOW  = 0x45;           ///< Almost-white yellow palette colour.
-
-static const uint8 PC_GREEN              = 0xD0;           ///< Green palette colour.
-
-static const uint8 PC_VERY_DARK_BLUE     = 0x9A;           ///< Almost-black blue palette colour.
-static const uint8 PC_DARK_BLUE          = 0x9D;           ///< Dark blue palette colour.
-static const uint8 PC_LIGHT_BLUE         = 0x98;           ///< Light blue palette colour.
 
 #endif /* GFX_FUNC_H */

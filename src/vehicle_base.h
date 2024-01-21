@@ -317,8 +317,8 @@ public:
 
 	/* Related to age and service time */
 	Year build_year;                    ///< Year the vehicle has been built.
-	Date age;                           ///< Age in days
-	Date max_age;                       ///< Maximum age
+	DateDelta age;                      ///< Age in days
+	DateDelta max_age;                  ///< Maximum age
 	Date date_of_last_service;          ///< Last date the vehicle had a service at a depot.
 	Date date_of_last_service_newgrf;   ///< Last date the vehicle had a service at a depot, unchanged by the date cheat to protect against unsafe NewGRF behavior.
 	uint16 reliability;                 ///< Reliability.
@@ -498,13 +498,13 @@ public:
 	 * Sets the expense type associated to this vehicle type
 	 * @param income whether this is income or (running) expenses of the vehicle
 	 */
-	virtual ExpensesType GetExpenseType(bool income) const { return EXPENSES_OTHER; }
+	virtual ExpensesType GetExpenseType([[maybe_unused]] bool income) const { return EXPENSES_OTHER; }
 
 	/**
 	 * Play the sound associated with leaving the station
 	 * @param force Should we play the sound even if sound effects are muted? (horn hotkey)
 	 */
-	virtual void PlayLeaveStationSound(bool force = false) const {}
+	virtual void PlayLeaveStationSound([[maybe_unused]] bool force = false) const {}
 
 	/**
 	 * Whether this is the primary vehicle in the chain.
@@ -518,7 +518,7 @@ public:
 	 * @param direction the direction the vehicle is facing
 	 * @param[out] result Vehicle sprite sequence.
 	 */
-	virtual void GetImage(Direction direction, EngineImageType image_type, VehicleSpriteSeq *result) const { result->Clear(); }
+	virtual void GetImage([[maybe_unused]] Direction direction, [[maybe_unused]] EngineImageType image_type, [[maybe_unused]] VehicleSpriteSeq *result) const { result->Clear(); }
 
 	Direction GetMapImageDirection() const { return this->direction; }
 
@@ -903,7 +903,7 @@ public:
 	 * @param station the station to make the next location of the vehicle.
 	 * @return the location (tile) to aim for.
 	 */
-	virtual TileIndex GetOrderStationLocation(StationID station) { return INVALID_TILE; }
+	virtual TileIndex GetOrderStationLocation([[maybe_unused]] StationID station) { return INVALID_TILE; }
 
 	/**
 	 * Find the closest depot for this vehicle and tell us the location,
@@ -1536,6 +1536,6 @@ void ClearVehicleTickCaches();
 void RemoveFromOtherVehicleTickCache(const Vehicle *v);
 void UpdateAllVehiclesIsDrawn();
 
-void ShiftVehicleDates(int interval);
+void ShiftVehicleDates(DateDelta interval);
 
 #endif /* VEHICLE_BASE_H */

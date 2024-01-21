@@ -349,7 +349,7 @@ bool Vehicle::NeedsAutomaticServicing() const
 	return NeedsServicing();
 }
 
-uint Vehicle::Crash(bool flooded)
+uint Vehicle::Crash(bool)
 {
 	assert((this->vehstatus & VS_CRASHED) == 0);
 	assert(this->Previous() == nullptr); // IsPrimaryVehicle fails for free-wagon-chains
@@ -2418,17 +2418,19 @@ void AgeVehicle(Vehicle *v)
 	/* Stop if a virtual vehicle */
 	if (HasBit(v->subtype, GVSF_VIRTUAL)) return;
 
-	if (v->age < MAX_DAY) {
+	if (v->age < MAX_DATE.AsDelta()) {
 		v->age++;
 		if (v->IsPrimaryVehicle() && v->age == VEHICLE_PROFIT_MIN_AGE + 1) GroupStatistics::VehicleReachedMinAge(v);
 	}
 
 	if (!v->IsPrimaryVehicle() && (v->type != VEH_TRAIN || !Train::From(v)->IsEngine())) return;
 
-	int age = v->age - v->max_age;
-	if (age == DAYS_IN_LEAP_YEAR * 0 || age == DAYS_IN_LEAP_YEAR * 1 ||
-			age == DAYS_IN_LEAP_YEAR * 2 || age == DAYS_IN_LEAP_YEAR * 3 || age == DAYS_IN_LEAP_YEAR * 4) {
-		v->reliability_spd_dec <<= 1;
+	DateDelta age = v->age - v->max_age;
+	for (int i = 0; i <= 4; i++) {
+		if (age == DateAtStartOfYear(i).AsDelta()) {
+			v->reliability_spd_dec <<= 1;
+			break;
+		}
 	}
 
 	SetWindowDirty(WC_VEHICLE_DETAILS, v->index);
@@ -2927,7 +2929,7 @@ bool CanBuildVehicleInfrastructure(VehicleType type, byte subtype)
 	UnitID max;
 	switch (type) {
 		case VEH_TRAIN:
-			if (!HasAnyRailtypesAvail(_local_company)) return false;
+			if (!HasAnyRailTypesAvail(_local_company)) return false;
 			max = _settings_game.vehicle.max_trains;
 			break;
 		case VEH_ROAD:
@@ -3385,8 +3387,7 @@ void Vehicle::CancelReservation(StationID next, Station *st)
 		VehicleCargoList &cargo = v->cargo;
 		if (cargo.ActionCount(VehicleCargoList::MTA_LOAD) > 0) {
 			DEBUG(misc, 1, "cancelling cargo reservation");
-			cargo.Return(UINT_MAX, &st->goods[v->cargo_type].CreateData().cargo, next);
-			cargo.SetTransferLoadPlace(st->xy);
+			cargo.Return(UINT_MAX, &st->goods[v->cargo_type].CreateData().cargo, next, v->tile);
 		}
 		cargo.KeepAll();
 	}
@@ -4478,7 +4479,7 @@ StringID GetVehicleCannotUseStationReason(const Vehicle *v, const Station *st)
 
 			for (; rs != nullptr; rs = rs->next) {
 				/* Articulated vehicles cannot use bay road stops, only drive-through. Make sure the vehicle can actually use this bay stop */
-				if (HasTileAnyRoadType(rs->xy, rv->compatible_roadtypes) && IsStandardRoadStopTile(rs->xy) && rv->HasArticulatedPart()) {
+				if (HasTileAnyRoadType(rs->xy, rv->compatible_roadtypes) && IsBayRoadStopTile(rs->xy) && rv->HasArticulatedPart()) {
 					err = STR_ERROR_NO_STOP_ARTICULATED_VEHICLE;
 					continue;
 				}
@@ -4648,47 +4649,26 @@ void DumpVehicleStats(char *buffer, const char *last)
 	buffer += seprintf(buffer, last, "  %10s: %5u\n", "total", (uint)Vehicle::GetNumItems());
 }
 
-void AdjustVehicleScaledTickBase(int64 delta)
+void AdjustVehicleScaledTickBase(DateTicksScaledDelta delta)
 {
 	for (Vehicle *v : Vehicle::Iterate()) {
-		v->last_loading_tick += delta;
+		if (v->timetable_start != 0) v->timetable_start += delta;
+	}
+
+	for (OrderList *order_list : OrderList::Iterate()) {
+		for (DispatchSchedule &ds : order_list->GetScheduledDispatchScheduleSet()) {
+			ds.SetScheduledDispatchStartTick(ds.GetScheduledDispatchStartTick() + delta);
+		}
 	}
 }
 
-void ShiftVehicleDates(int interval)
+void ShiftVehicleDates(DateDelta interval)
 {
 	for (Vehicle *v : Vehicle::Iterate()) {
-		v->date_of_last_service = std::max(v->date_of_last_service + interval, 0);
+		v->date_of_last_service = std::max<Date>(v->date_of_last_service + interval, 0);
 	}
 	/* date_of_last_service_newgrf is not updated here as it must stay stable
 	 * for vehicles outside of a depot. */
-}
-
-extern void VehicleDayLengthChanged(DateTicksScaled old_scaled_date_ticks, DateTicksScaled old_scaled_date_ticks_offset, uint8 old_day_length_factor)
-{
-	if (_settings_game.economy.day_length_factor == old_day_length_factor || !_settings_game.game_time.time_in_minutes) return;
-
-	for (Vehicle *v : Vehicle::Iterate()) {
-		if (v->timetable_start != 0) {
-			DateTicksScaled tt_start = ((int64)v->timetable_start * old_day_length_factor) + v->timetable_start_subticks + old_scaled_date_ticks_offset;
-			tt_start += (_scaled_date_ticks - old_scaled_date_ticks);
-			std::tie(v->timetable_start, v->timetable_start_subticks) = ScaledDateTicksToDateTicksAndSubTicks(tt_start);
-		}
-	}
-
-	for (OrderList *orderlist : OrderList::Iterate()) {
-		for (DispatchSchedule &ds : orderlist->GetScheduledDispatchScheduleSet()) {
-			if (ds.GetScheduledDispatchStartDatePart() >= 0) {
-				DateTicksScaled start = ((int64)ds.GetScheduledDispatchStartDatePart() * DAY_TICKS * old_day_length_factor) +
-						ds.GetScheduledDispatchStartDateFractPart() + old_scaled_date_ticks_offset;
-				start += (_scaled_date_ticks - old_scaled_date_ticks);
-				Date date;
-				uint16 full_date_fract;
-				std::tie(date, full_date_fract) = ScaledDateTicksToDateAndFullSubTicks(start);
-				ds.SetScheduledDispatchStartDate(date, full_date_fract);
-			}
-		}
-	}
 }
 
 /**

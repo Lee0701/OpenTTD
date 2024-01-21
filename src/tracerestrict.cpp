@@ -678,10 +678,24 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 						break;
 
 					case TRIT_LONG_RESERVE:
-						if (GetTraceRestrictValue(item)) {
-							out.flags &= ~TRPRF_LONG_RESERVE;
-						} else {
-							out.flags |= TRPRF_LONG_RESERVE;
+						switch (static_cast<TraceRestrictLongReserveValueField>(GetTraceRestrictValue(item))) {
+							case TRLRVF_LONG_RESERVE:
+								out.flags |= TRPRF_LONG_RESERVE;
+								break;
+
+							case TRLRVF_CANCEL_LONG_RESERVE:
+								out.flags &= ~TRPRF_LONG_RESERVE;
+								break;
+
+							case TRLRVF_LONG_RESERVE_UNLESS_STOPPING:
+								if (!(input.input_flags & TRPIF_PASSED_STOP)) {
+									out.flags |= TRPRF_LONG_RESERVE;
+								}
+								break;
+
+							default:
+								NOT_REACHED();
+								break;
 						}
 						break;
 
@@ -1734,6 +1748,15 @@ void TraceRestrictCheckRefreshSignals(const TraceRestrictProgram *prog, size_t o
 	}
 }
 
+void TraceRestrictCheckRefreshSingleSignal(const TraceRestrictProgram *prog, TraceRestrictRefId ref, TraceRestrictProgramActionsUsedFlags old_actions_used_flags)
+{
+	if (((old_actions_used_flags ^ prog->actions_used_flags) & TRPAUF_RESERVE_THROUGH_ALWAYS)) {
+		TileIndex tile = GetTraceRestrictRefIdTileIndex(ref);
+		Track track = GetTraceRestrictRefIdTrack(ref);
+		if (IsTileType(tile, MP_RAILWAY)) UpdateSignalReserveThroughBit(tile, track, true);
+	}
+}
+
 /**
  * Gets the signal program for the tile ref @p ref
  * An empty program will be constructed if none exists, and @p create_new is true, unless the pool is full
@@ -2189,6 +2212,7 @@ CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, u
 		if (prog->items.size() == 0 && prog->refcount == 1) {
 			// program is empty, and this tile is the only reference to it
 			// so delete it, as it's redundant
+			TraceRestrictCheckRefreshSingleSignal(prog, MakeTraceRestrictRefId(tile, track), old_actions_used_flags);
 			TraceRestrictRemoveProgramMapping(MakeTraceRestrictRefId(tile, track));
 		} else {
 			TraceRestrictCheckRefreshSignals(prog, old_size, old_actions_used_flags);
@@ -2313,6 +2337,7 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 			}
 
 			TraceRestrictCreateProgramMapping(self, source_prog);
+			TraceRestrictCheckRefreshSingleSignal(source_prog, self, static_cast<TraceRestrictProgramActionsUsedFlags>(0));
 			break;
 		}
 
@@ -2336,6 +2361,7 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 
 				new_prog->items.swap(items);
 				new_prog->Validate();
+				TraceRestrictCheckRefreshSingleSignal(new_prog, self, static_cast<TraceRestrictProgramActionsUsedFlags>(0));
 			}
 			break;
 		}
@@ -2357,17 +2383,17 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 
 int GetTraceRestrictTimeDateValue(TraceRestrictTimeDateValueField type)
 {
-	Minutes minutes = (_scaled_date_ticks / _settings_game.game_time.ticks_per_minute) + _settings_game.game_time.clock_offset;
+	const TickMinutes now = _settings_game.game_time.NowInTickMinutes();
 
 	switch (type) {
 		case TRTDVF_MINUTE:
-			return MINUTES_MINUTE(minutes);
+			return now.ClockMinute();
 
 		case TRTDVF_HOUR:
-			return MINUTES_HOUR(minutes);
+			return now.ClockHour();
 
 		case TRTDVF_HOUR_MINUTE:
-			return (MINUTES_HOUR(minutes) * 100) + MINUTES_MINUTE(minutes);
+			return now.ClockHHMM();
 
 		case TRTDVF_DAY:
 			return _cur_date_ymd.day;
@@ -2382,27 +2408,25 @@ int GetTraceRestrictTimeDateValue(TraceRestrictTimeDateValueField type)
 
 int GetTraceRestrictTimeDateValueFromDate(TraceRestrictTimeDateValueField type, DateTicksScaled scaled_date_ticks)
 {
-	Minutes minutes = (scaled_date_ticks / _settings_game.game_time.ticks_per_minute) + _settings_game.game_time.clock_offset;
+	const TickMinutes minutes = _settings_game.game_time.ToTickMinutes(scaled_date_ticks);
 
 	switch (type) {
 		case TRTDVF_MINUTE:
-			return MINUTES_MINUTE(minutes);
+			return minutes.ClockMinute();
 
 		case TRTDVF_HOUR:
-			return MINUTES_HOUR(minutes);
+			return minutes.ClockHour();
 
 		case TRTDVF_HOUR_MINUTE:
-			return (MINUTES_HOUR(minutes) * 100) + MINUTES_MINUTE(minutes);
+			return minutes.ClockHHMM();
 
 		case TRTDVF_DAY: {
-			YearMonthDay ymd;
-			ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks), &ymd);
+			YearMonthDay ymd = ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks));
 			return ymd.day;
 		}
 
 		case TRTDVF_MONTH: {
-			YearMonthDay ymd;
-			ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks), &ymd);
+			YearMonthDay ymd = ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks));
 			return ymd.month + 1;
 		}
 

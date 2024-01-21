@@ -268,6 +268,9 @@ STR_COLOUR_GREY                                                 :Griza
 STR_COLOUR_WHITE                                                :Blanka
 STR_COLOUR_RANDOM                                               :Hazarda
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
@@ -317,6 +320,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtroteksto:
@@ -500,31 +504,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :Travideblaj kon
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :Travideblaj signoj
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :Konservu ludon
 STR_FILE_MENU_LOAD_GAME                                         :Ŝarĝu ludon
 STR_FILE_MENU_QUIT_GAME                                         :Foriru de la ludo
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Fermu
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :Mondomapo
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Plia vidujo
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :Klarigeto de ŝarĝfluo
 STR_MAP_MENU_SIGN_LIST                                          :Listo de ŝildoj
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :Urba katalogo
 STR_TOWN_MENU_FOUND_TOWN                                        :Urbo troviĝas.
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Subvencioj
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :Gajna grafiko
 STR_GRAPH_MENU_INCOME_GRAPH                                     :Enspeza grafiko
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Liveriteca grafiko
@@ -533,57 +531,46 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Kompanivalora g
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Ŝarĝpaga grafiko
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :Kompaniara tabelo
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :Detala rendimento
 STR_GRAPH_MENU_HIGHSCORE                                        :Altpoentara tabelo
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :Industria katalogo
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Industriaj ĉenoj
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Fondu novan industrion
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Fervoja Konstruado
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Elektrofervoja konstruado
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Unurelfervoja konstruado
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Maglevfervoja konstruado
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Vojkonstruado
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Konstruado de tramvojo
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Konstruado de akvovojoj
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Flughavena konstruado
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Landaspektigi
 STR_LANDSCAPING_MENU_PLANT_TREES                                :Plantu arbojn
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Metu signon
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Sono/muziko
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :Lasta mesaĝo/novaĵo
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :Mesaĝa Historio
 STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :Forigu ĉiujn mesaĝojn
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Landkvadrataj informoj
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Baskuligi Konzolon
 STR_ABOUT_MENU_AI_DEBUG                                         :AI/Ludoskripta sencimigo
 STR_ABOUT_MENU_SCREENSHOT                                       :Ekranfoto
@@ -792,8 +779,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Alklaku 
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Alklaku muzikeron por viŝi el la nuna programo (nur propra)
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Superkompanioj kiuj atingis {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Kompania tabelo en {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Komercisto
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Entreprenisto
@@ -979,10 +964,6 @@ STR_NEWS_NEW_VEHICLE_TYPE                                       :{BIG_FONT}{BLAC
 STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}Nova {STRING} nun haveblas!  -  {ENGINE}
 
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}{STATION} ne plu akceptas {STRING.n}
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}{STATION} ne plu akceptas {STRING.n} aŭ {STRING.n}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}{STATION} nun akceptas {STRING.n}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}{STATION} nun akceptas {STRING.n} kaj {STRING.n}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Subvencia oferto ne plu validas:{}{}Transportado de {STRING} de {STRING} al {STRING} ne estos subvenciata.
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Subvencio retiriĝis:{}{}Servo de {STRING} de {STRING} al {STRING} ne plu estas subvenciata.
@@ -1129,7 +1110,6 @@ STR_GAME_OPTIONS_REFRESH_RATE_WARNING                           :{WHITE}Aktualig
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Baza grafikaro
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Selektu la uzendan bazgrafikaron
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} mankanta{P "" j}/koruptita{P "" j} dosiero{P "" j}
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Aldonaj informoj pri la baza grafikaro
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Baza sonaro
@@ -1138,8 +1118,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Aldonaj 
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Baza muzikaro.
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Elekti bazan muzikaron por uzi.
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} difektita{P "" j} dosiero{P "" j}
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Pluaj informoj pri la baza muzikaro.
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Ne eblis akiri liston de subtenataj distingivoj
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Plenekrana moduso fiaskis
@@ -1304,6 +1284,7 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :Maldekstre
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :Centre
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Dekstre
 
+
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maksimuma komenca prunto: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksimuma monsumo kiun kompanio povas prunti (sen enkalkulado de inflacio)
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
@@ -1466,6 +1447,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :neniu
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :reduktita
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :normala
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Permesu trairajn bushaltejojn sur urboposedataj stratoj: {STRING}
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Permesu konstrui trairajn strathaltejojn sur stratoj posedataj de urboj
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Permesu trairajn strathaltejojn sur stratoj posedataj de konkurantoj: {STRING}
@@ -1477,6 +1459,7 @@ STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE_HELPTEXT          :Kiam tiu ĉi ag
 
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR                      :Komenca kompania koloro: {STRING}
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR_HELPTEXT             :Elektu komencan koloron por la kompanio
+
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :Flughavenoj neniam antikviĝas: {STRING}
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS_HELPTEXT               :Se tiu ĉi agordo estas aktiva, ĉiuj tipoj de flughavenoj restos konstrueblaj por ĉiam post ekhaveblo
@@ -1512,8 +1495,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONEY                              :Minimuma mono p
 STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Minimuma monkvanto kiu devas resti en la banko antaŭ eventuala aŭtomata renovigo de veturiloj
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Daŭro de erarmesaĝo: {STRING}
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} sekundo{P 0 "" j}
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE.n                      :{COMMA} sekundo{P 0 "" j}n
 
 STR_CONFIG_SETTING_HOVER_DELAY                                  :Montri ŝpruchelpilojn: {STRING}
 STR_CONFIG_SETTING_HOVER_DELAY_VALUE                            :Ŝvebu dum {COMMA} milisekundo{P 0 "" j}
@@ -1667,9 +1648,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :Ne
 
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE                        :Fermu fenestron per dekstra klako: {STRING}
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE_HELPTEXT               :Fermas fenestron per dekstra klako ene de ĝi. Malebligas ŝpruchelpilon je dekstra klako!
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :Aŭtomata konservado: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Elektu intervalon inter aŭtomataj konservadoj de la ludo
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :Uzu la {STRING.n} datformon por nomoj de konservludoj.
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_HELPTEXT           :Dataranĝo en dosiernomoj de konservitaj ludoj
@@ -1697,7 +1676,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ebligu uzadon d
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Uzu ŝarg-indikilojn: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Elektu ĉu ŝarĝ-indikiloj estas montrataj sub ŝarĝataj aŭ malŝarĝataj veturiloj
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Montru horaron laŭ tikoj anstataŭ laŭ tagoj: {STRING}
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Montru alvenojn kaj forirojn sur horaroj: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Montru antaŭvidatajn alven- kaj forir-tempojn en horaroj
@@ -2166,6 +2145,8 @@ STR_QUIT_NO                                                     :{BLACK}Ne
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}Foriri de la ludo
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Ĉu vi certas ke vi volas foriri?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Ĉu vi certas ke vi volas forlasi ĉi tiun scenaron?
+
+# Help window
 
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Filudaĵoj
@@ -2638,7 +2619,6 @@ STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Baskulig
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK}Baskuligi travideblecon de pontoj. Ctrl+Klaku por ŝlosi
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Baskuligi travideblecon de aĵoj kiel lumturoj kaj antenoj. Ctrl+Klaku por ŝlosi
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Baskuligi travideblecon de katenarion. Ctrl+Klaku por ŝlosi
-STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Baskuligi travideblecon de ŝarĝindikiloj. Ctrl+Klaku por ŝlosi
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Igu objektojn nevideblaj anstataŭ travideblaj
 
 # Linkgraph legend window
@@ -4490,9 +4470,6 @@ STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(haltu dum {STR
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :(veturos dum {STRING}, sen horaro)
 STR_TIMETABLE_STAY_FOR                                          :kaj restu dum {STRING}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :kaj veturu dum {STRING}
-STR_TIMETABLE_DAYS                                              :{COMMA}{NBSP}tago{P "" j}
-STR_TIMETABLE_DAYS.n                                            :{COMMA}{NBSP}tago{P "" j}n
-STR_TIMETABLE_TICKS                                             :{COMMA}{NBSP}tiko{P "" j}
 
 STR_TIMETABLE_TOTAL_TIME                                        :{BLACK}Plenumi ĉi tiun horaron postulos {STRING.n}
 STR_TIMETABLE_TOTAL_TIME_INCOMPLETE                             :{BLACK}Ĉi tio horaro postulos alemnaŭ {STRING} plenigi (ne ĉiu horarita)
@@ -4501,9 +4478,8 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Ĉi tiu 
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}Ĉi tiu veturilo nun malfruas je {STRING}
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}Ĉi tiu veturilo nun fruas je {STRING}
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}Ĉi tiu horaro ankoraŭ ne komenciĝas.
-STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}Ĉi tiu horaro komenciĝos je {STRING}
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Komencodato
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Ŝanĝu tempon
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Ŝanĝu kiom da tempo devus postuli la markita ordono. Stir+Klak ŝanĝas la tempon por ĉiuj ordonoj
@@ -4527,8 +4503,6 @@ STR_TIMETABLE_EXPECTED                                          :{BLACK}Atendite
 STR_TIMETABLE_SCHEDULED                                         :{BLACK}Planite
 STR_TIMETABLE_EXPECTED_TOOLTIP                                  :{BLACK}Ŝalti inter atendite kaj planite
 
-STR_TIMETABLE_ARRIVAL                                           :A: {COLOUR}{DATE_TINY}
-STR_TIMETABLE_DEPARTURE                                         :E: {COLOUR}{DATE_TINY}
 
 
 # Date window (for timetable)
@@ -4626,7 +4600,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Faldu te
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Vidi legumin
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Ŝanĝarĥivo
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Licenco
-###length 4
+###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} legumin de {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING}-a ŝanĝarĥivo de {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING}-a licenco de {STRING}
@@ -4765,7 +4739,6 @@ STR_ERROR_TOO_CLOSE_TO_EDGE_OF_MAP_SUB                          :{WHITE}... tro 
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... tro proksime al alia urbo
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... tro da urboj
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... spaco mankas sur la mapo
-STR_ERROR_TOWN_EXPAND_WARN_NO_ROADS                             :{WHITE}La urbo ne konstruos stratojn. Vi povas ebligi stratkonstruadon per Avancitaj Agordoj->Ekonomio->Urboj
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}Aktivas vojprilaborado
 STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Ne eblas forviŝi ĉi tiun urbon...{}Stacidomo aŭ garaĝo havas referencon al la urbo, aŭ ne eblas forviŝi kahelon posedatan de la urbo
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... ne jen estas konvenan lokon por statuo en la centro de ĉi tiu urbo

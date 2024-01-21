@@ -159,7 +159,7 @@ uint32 IndustryTileResolverObject::GetDebugID() const
 	return GetIndustryTileSpec(gfx)->grf_prop.local_id;
 }
 
-static void IndustryDrawTileLayout(const TileInfo *ti, const TileLayoutSpriteGroup *group, byte rnd_colour, byte stage, IndustryGfx gfx)
+static void IndustryDrawTileLayout(const TileInfo *ti, const TileLayoutSpriteGroup *group, byte rnd_colour, byte stage)
 {
 	const DrawTileSprites *dts = group->ProcessRegisters(&stage);
 
@@ -212,7 +212,7 @@ bool DrawNewIndustryTile(TileInfo *ti, Industry *i, IndustryGfx gfx, const Indus
 	/* Limit the building stage to the number of stages supplied. */
 	const TileLayoutSpriteGroup *tlgroup = (const TileLayoutSpriteGroup *)group;
 	byte stage = GetIndustryConstructionStage(ti->tile);
-	IndustryDrawTileLayout(ti, tlgroup, i->random_colour, stage, gfx);
+	IndustryDrawTileLayout(ti, tlgroup, i->random_colour, stage);
 	return true;
 }
 
@@ -430,11 +430,6 @@ void AnalyseIndustryTileSpriteGroups()
 				const IndustryTileSpec &tilespec = _industry_tile_specs[gfx];
 				if (tilespec.grf_prop.spritegroup[0] == nullptr) continue;
 
-				if (HasBit(tilespec.callback_mask, CBM_INDT_ANIM_NEXT_FRAME)) {
-					/* There may be sound effects, or custom animation start/stop behaviour, don't inhibit */
-					continue;
-				}
-
 				anim_mask |= current;
 
 				AnalyseCallbackOperationIndustryTileData data;
@@ -443,6 +438,7 @@ void AnalyseIndustryTileSpriteGroups()
 				data.result_mask = &anim_mask;
 				data.layout_index = idx + 1;
 				data.anim_state_at_offset = false;
+				data.check_anim_next_frame_cb = HasBit(tilespec.callback_mask, CBM_INDT_ANIM_NEXT_FRAME);
 
 				AnalyseCallbackOperation op(ACOM_INDUSTRY_TILE);
 				op.data.indtile = &data;

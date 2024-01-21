@@ -14,9 +14,6 @@
 
 #include <memory>
 #include <mutex>
-#if defined(__MINGW32__)
-#include "../3rdparty/mingw-std-threads/mingw.mutex.h"
-#endif
 
 extern std::mutex _music_driver_mutex;
 
@@ -65,7 +62,8 @@ public:
 	/**
 	 * Get the currently active instance of the music driver.
 	 */
-	static MusicDriver *GetInstance() {
+	static MusicDriver *GetInstance()
+	{
 		std::unique_lock<std::mutex> lock(_music_driver_mutex);
 
 		return static_cast<MusicDriver*>(*DriverFactoryBase::GetActiveDriver(Driver::DT_MUSIC));

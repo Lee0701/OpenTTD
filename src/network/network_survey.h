@@ -12,10 +12,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#if defined(__MINGW32__)
-#include "../3rdparty/mingw-std-threads/mingw.condition_variable.h"
-#include "../3rdparty/mingw-std-threads/mingw.mutex.h"
-#endif
 #include "core/http.h"
 
 /**
@@ -24,7 +20,7 @@
 class NetworkSurveyHandler : public HTTPCallback {
 protected:
 	void OnFailure() override;
-	void OnReceiveData(const char *data, size_t length) override;
+	void OnReceiveData(UniqueBuffer<char> data) override;
 	bool IsCancelled() const override { return false; }
 
 public:
@@ -40,12 +36,12 @@ public:
 
 	constexpr static bool IsSurveyPossible()
 	{
-#if !(defined(WITH_NLOHMANN_JSON) && defined(SURVEY_KEY))
-		/* Without JSON library, we cannot send a payload; so we disable the survey. */
+#if !defined(SURVEY_KEY)
+		/* Without a survey key, we cannot send a payload; so we disable the survey. */
 		return false;
 #else
 		return true;
-#endif /* WITH_NLOHMANN_JSON */
+#endif /* SURVEY_KEY */
 	}
 
 private:

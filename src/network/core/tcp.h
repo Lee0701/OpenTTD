@@ -22,9 +22,6 @@
 #include <memory>
 #include <vector>
 #include <thread>
-#if defined(__MINGW32__)
-#include "3rdparty/mingw-std-threads/mingw.thread.h"
-#endif
 
 /** The states of sending the packets. */
 enum SendPacketsState {
@@ -137,7 +134,7 @@ public:
 	 * Callback when the connection succeeded.
 	 * @param s the socket that we opened
 	 */
-	virtual void OnConnect(SOCKET s) {}
+	virtual void OnConnect([[maybe_unused]] SOCKET s) {}
 
 	/**
 	 * Callback for when the connection attempt failed.

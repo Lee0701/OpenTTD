@@ -66,11 +66,11 @@ static const NWidgetPart _nested_departures_list[] = {
 	EndContainer(),
 };
 
-static WindowDesc _departures_desc(
-	WDP_AUTO, nullptr, 260, 246,
+static WindowDesc _departures_desc(__FILE__, __LINE__,
+	WDP_AUTO, "depatures", 260, 246,
 	WC_DEPARTURES_BOARD, WC_NONE,
 	0,
-	_nested_departures_list, lengthof(_nested_departures_list)
+	std::begin(_nested_departures_list), std::end(_nested_departures_list)
 );
 
 static uint cached_date_width = 0;         ///< The cached maximum width required to display a date.
@@ -295,7 +295,7 @@ public:
 
 	void SetupValues()
 	{
-		this->entry_height = 1 + FONT_HEIGHT_NORMAL + 1 + (_settings_client.gui.departure_larger_font ? FONT_HEIGHT_NORMAL : FONT_HEIGHT_SMALL) + 1 + 1;
+		this->entry_height = 1 + GetCharacterHeight(FS_NORMAL) + 1 + (_settings_client.gui.departure_larger_font ? GetCharacterHeight(FS_NORMAL) : GetCharacterHeight(FS_SMALL)) + 1 + 1;
 
 		if (cached_veh_type_width == 0) {
 			cached_veh_type_width = GetStringBoundingBox(STR_DEPARTURES_TYPE_PLANE).width;
@@ -328,9 +328,8 @@ public:
 			case WID_DB_SHOW_ROADVEHS:
 			case WID_DB_SHOW_SHIPS:
 			case WID_DB_SHOW_PLANES: {
-				uint64 params[1];
-				params[0] = STR_DEPARTURES_SHOW_TRAINS_TOOLTIP + (widget - WID_DB_SHOW_TRAINS);
-				GuiShowTooltips(this, STR_DEPARTURES_SHOW_TYPE_TOOLTIP_CTRL_SUFFIX, 1, params, close_cond);
+				SetDParam(0, STR_DEPARTURES_SHOW_TRAINS_TOOLTIP + (widget - WID_DB_SHOW_TRAINS));
+				GuiShowTooltips(this, STR_DEPARTURES_SHOW_TYPE_TOOLTIP_CTRL_SUFFIX, close_cond, 1);
 				return true;
 			}
 			default:
@@ -508,7 +507,7 @@ public:
 			this->ReInit();
 		}
 
-		uint new_height = 1 + FONT_HEIGHT_NORMAL + 1 + (_settings_client.gui.departure_larger_font ? FONT_HEIGHT_NORMAL : FONT_HEIGHT_SMALL) + 1 + 1;
+		uint new_height = 1 + GetCharacterHeight(FS_NORMAL) + 1 + (_settings_client.gui.departure_larger_font ? GetCharacterHeight(FS_NORMAL) : GetCharacterHeight(FS_SMALL)) + 1 + 1;
 
 		if (new_height != this->entry_height) {
 			this->entry_height = new_height;
@@ -679,7 +678,7 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 		max_departures = _settings_client.gui.max_departures;
 	}
 
-	const int small_font_size = _settings_client.gui.departure_larger_font ? FONT_HEIGHT_NORMAL : FONT_HEIGHT_SMALL;
+	const int small_font_size = _settings_client.gui.departure_larger_font ? GetCharacterHeight(FS_NORMAL) : GetCharacterHeight(FS_SMALL);
 
 	/* Draw the black background. */
 	GfxFillRect(r.left + 1, r.top, r.right - 1, r.bottom, PC_BLACK);
@@ -877,9 +876,8 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 						}
 
 						char buf[256] = "";
-						int64 args_array[] = { Waypoint::IsValidID(id) ? STR_WAYPOINT_NAME : STR_STATION_NAME, id, icon_via };
-						StringParameters tmp_params(args_array);
-						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_DESCRIPTOR, &tmp_params, lastof(buf));
+						auto tmp_params = MakeParameters(Waypoint::IsValidID(id) ? STR_WAYPOINT_NAME : STR_STATION_NAME, id, icon_via);
+						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_DESCRIPTOR, tmp_params, lastof(buf));
 						_temp_special_strings[temp_str].assign(buf, end);
 					};
 					get_single_via_string(0, via);
@@ -888,9 +886,8 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 						get_single_via_string(1, via2);
 
 						char buf[512] = "";
-						int64 args_array[] = { SPECSTR_TEMP_START, SPECSTR_TEMP_START + 1 };
-						StringParameters tmp_params(args_array);
-						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_AND, &tmp_params, lastof(buf));
+						auto tmp_params = MakeParameters(SPECSTR_TEMP_START, SPECSTR_TEMP_START + 1);
+						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_AND, tmp_params, lastof(buf));
 						_temp_special_strings[0].assign(buf, end);
 					}
 

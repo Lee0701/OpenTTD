@@ -281,7 +281,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(uint32 local_id, uint32 grfid
 				break;
 
 			/* Construction date */
-			case 0x42: return _date;
+			case 0x42: return _date.base();
 
 			/* Object founder information */
 			case 0x44: return _current_company;
@@ -325,7 +325,7 @@ static uint32 GetCountAndDistanceOfClosestInstance(uint32 local_id, uint32 grfid
 		case 0x41: return GetTileSlope(this->tile) << 8 | GetTerrainType(this->tile);
 
 		/* Construction date */
-		case 0x42: return this->obj->build_date;
+		case 0x42: return this->obj->build_date.base();
 
 		/* Animation counter */
 		case 0x43: return GetAnimationFrame(this->tile);
@@ -574,7 +574,6 @@ void DrawNewObjectTileInGUI(int x, int y, const ObjectSpec *spec, uint8 view)
  * @param spec     The specification of the object / the entry point.
  * @param o        The object to call the callback for.
  * @param tile     The tile the callback is called for.
- * @param extra_data Ignored.
  * @return The result of the callback.
  */
 uint16 StubGetObjectCallback(CallbackID callback, uint32 param1, uint32 param2, const ObjectSpec *spec, Object *o, TileIndex tile, int extra_data)
@@ -640,7 +639,7 @@ void TriggerObjectAnimation(Object *o, ObjectAnimationTrigger trigger, const Obj
 	}
 }
 
-void DumpObjectSpriteGroup(const ObjectSpec *spec, DumpSpriteGroupPrinter print)
+void DumpObjectSpriteGroup(const ObjectSpec *spec, SpriteGroupDumper &dumper)
 {
-	DumpSpriteGroup(spec->grf_prop.spritegroup[0], std::move(print));
+	dumper.DumpSpriteGroup(spec->grf_prop.spritegroup[0], 0);
 }

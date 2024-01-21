@@ -20,6 +20,7 @@
 #include "../timer/timer_game_tick.h"
 #include "../sl/saveload.h"
 #include "../date_func.h"
+#include "../string_func.h"
 
 #include "../currency.h"
 #include "../fontcache.h"
@@ -36,17 +37,13 @@
 #include "../base_media_base.h"
 #include "../blitter/factory.hpp"
 
-#ifdef WITH_NLOHMANN_JSON
-#include <nlohmann/json.hpp>
-#endif /* WITH_NLOHMANN_JSON */
+#include "../3rdparty/nlohmann/json.hpp"
 
 #include "../safeguards.h"
 
 extern std::string _savegame_id;
 
 NetworkSurveyHandler _survey = {};
-
-#ifdef WITH_NLOHMANN_JSON
 
 NLOHMANN_JSON_SERIALIZE_ENUM(NetworkSurveyHandler::Reason, {
 	{NetworkSurveyHandler::Reason::PREVIEW, "preview"},
@@ -113,8 +110,12 @@ static void SurveySettings(nlohmann::json &survey)
  */
 static void SurveyOpenTTD(nlohmann::json &survey)
 {
-	survey["version"] = std::string(_openttd_revision);
-	survey["newgrf_version"] = _openttd_newgrf_version;
+	survey["version"]["revision"] = std::string(_openttd_revision);
+	survey["version"]["modified"] = _openttd_revision_modified;
+	survey["version"]["tagged"] = _openttd_revision_tagged;
+	survey["version"]["hash"] = std::string(_openttd_revision_hash);
+	survey["version"]["newgrf"] = fmt::format("{:X}", _openttd_newgrf_version);
+	survey["version"]["content"] = std::string(_openttd_content_version);
 	survey["build_date"] = std::string(_openttd_build_date);
 	survey["bits"] =
 #ifdef POINTER_IS_64BIT
@@ -227,6 +228,19 @@ static void SurveyCompanies(nlohmann::json &survey)
 }
 
 /**
+ * Convert timer information to JSON.
+ *
+ * @param survey The JSON object.
+ */
+static void SurveyTimers(nlohmann::json &survey)
+{
+	survey["ticks"] = _scaled_tick_counter;
+	survey["seconds"] = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - _switch_mode_time).count();
+
+	survey["calendar"] = fmt::format("{:04}-{:02}-{:02} ({})", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract);
+}
+
+/**
  * Convert GRF information to JSON.
  *
  * @param survey The JSON object.
@@ -237,7 +251,7 @@ static void SurveyGrfs(nlohmann::json &survey)
 		auto grfid = fmt::format("{:08x}", BSWAP32(c->ident.grfid));
 		auto &grf = survey[grfid];
 
-		grf["md5sum"] = BytesToHexString(c->ident.md5sum.data(), c->ident.md5sum.size());
+		grf["md5sum"] = FormatArrayAsHex(c->ident.md5sum);
 		grf["status"] = c->status;
 
 		if ((c->palette & GRFP_GRF_MASK) == GRFP_GRF_UNSET) grf["palette"] = "unset";
@@ -297,8 +311,6 @@ std::string SurveyMemoryToText(uint64_t memory)
 	return fmt::format("{} MiB", Ceil(memory, 4));
 }
 
-#endif /* WITH_NLOHMANN_JSON */
-
 /**
  * Create the payload for the survey.
  *
@@ -308,9 +320,6 @@ std::string SurveyMemoryToText(uint64_t memory)
  */
 std::string NetworkSurveyHandler::CreatePayload(Reason reason, bool for_preview)
 {
-#ifndef WITH_NLOHMANN_JSON
-	return "";
-#else
 	nlohmann::json survey;
 
 	survey["schema"] = NETWORK_SURVEY_VERSION;
@@ -334,8 +343,7 @@ std::string NetworkSurveyHandler::CreatePayload(Reason reason, bool for_preview)
 
 	{
 		auto &game = survey["game"];
-		game["ticks"] = _scaled_tick_counter;
-		game["time"] = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - _switch_mode_time).count();
+		SurveyTimers(game["timers"]);
 		SurveyCompanies(game["companies"]);
 		SurveySettings(game["settings"]);
 		SurveyGrfs(game["grfs"]);
@@ -345,7 +353,6 @@ std::string NetworkSurveyHandler::CreatePayload(Reason reason, bool for_preview)
 	/* For preview, we indent with 4 whitespaces to make things more readable. */
 	int indent = for_preview ? 4 : -1;
 	return survey.dump(indent);
-#endif /* WITH_NLOHMANN_JSON */
 }
 
 /**
@@ -382,7 +389,7 @@ void NetworkSurveyHandler::OnFailure()
 	this->loaded.notify_all();
 }
 
-void NetworkSurveyHandler::OnReceiveData(const char *data, size_t length)
+void NetworkSurveyHandler::OnReceiveData(UniqueBuffer<char> data)
 {
 	if (data == nullptr) {
 		Debug(net, 1, "Survey: survey results sent");

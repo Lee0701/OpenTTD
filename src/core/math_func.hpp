@@ -10,6 +10,8 @@
 #ifndef MATH_FUNC_HPP
 #define MATH_FUNC_HPP
 
+#include "strong_typedef_type.hpp"
+
 #include <limits>
 #include <type_traits>
 
@@ -164,18 +166,18 @@ static inline uint ClampU(const uint a, const uint min, const uint max)
  * for the return type.
  * @see Clamp(int, int, int)
  */
-template <typename To, typename From>
+template <typename To, typename From, std::enable_if_t<std::is_integral<From>::value, int> = 0>
 constexpr To ClampTo(From value)
 {
 	static_assert(std::numeric_limits<To>::is_integer, "Do not clamp from non-integer values");
 	static_assert(std::numeric_limits<From>::is_integer, "Do not clamp to non-integer values");
 
-	if (sizeof(To) >= sizeof(From) && std::numeric_limits<To>::is_signed == std::numeric_limits<From>::is_signed) {
+	if constexpr (sizeof(To) >= sizeof(From) && std::numeric_limits<To>::is_signed == std::numeric_limits<From>::is_signed) {
 		/* Same signedness and To type is larger or equal than From type, no clamping is required. */
 		return static_cast<To>(value);
 	}
 
-	if (sizeof(To) > sizeof(From) && std::numeric_limits<To>::is_signed) {
+	if constexpr (sizeof(To) > sizeof(From) && std::numeric_limits<To>::is_signed) {
 		/* Signed destination and a larger To type, no clamping is required. */
 		return static_cast<To>(value);
 	}
@@ -213,6 +215,15 @@ constexpr To ClampTo(From value)
 
 	/* The input and output are unsigned, just clamp at the high side. */
 	return static_cast<To>(std::min<BiggerType>(value, std::numeric_limits<To>::max()));
+}
+
+/**
+ * Specialization of ClampTo for #StrongType::Typedef.
+ */
+template <typename To, typename From, std::enable_if_t<std::is_base_of<StrongTypedefBase, From>::value, int> = 0>
+constexpr To ClampTo(From value)
+{
+	return ClampTo<To>(value.base());
 }
 
 /**
@@ -256,10 +267,14 @@ static inline bool IsInsideBS(const T x, const size_t base, const size_t size)
  * @param max The maximum of the interval
  * @see IsInsideBS()
  */
-template <typename T>
-static inline constexpr bool IsInsideMM(const T x, const size_t min, const size_t max)
+template <typename T, std::enable_if_t<std::disjunction_v<std::is_convertible<T, size_t>, std::is_base_of<StrongTypedefBase, T>>, int> = 0>
+static constexpr inline bool IsInsideMM(const T x, const size_t min, const size_t max) noexcept
 {
-	return (size_t)(x - min) < (max - min);
+	if constexpr (std::is_base_of_v<StrongTypedefBase, T>) {
+		return (size_t)(x.base() - min) < (max - min);
+	} else {
+		return (size_t)(x - min) < (max - min);
+	}
 }
 
 /**

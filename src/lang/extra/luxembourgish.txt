@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :All Mount
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :All 3 Méint
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :All 6 Méint
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :All 12 Méint
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -14,6 +9,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Zich
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Stroossegefierer
 STR_VEHICLE_TYPE_SHIPS                                          :Schëffer
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Fligeren
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Autospäicheren: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Setz den Interval tëschend automateschen Späicherstänn
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Weis den Zäitplang an Ticken amplaz vun Deeg: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Weist d'Transportdauer an der Zäittafel als Gameticks un, amplaz an Deeg
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Wiesselt d'Transparenz fir d'Luedungsindikatoren. Ctrl+Klick fir festzesetzen
 
 # Tracerestrict GUI
 

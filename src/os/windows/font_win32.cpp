@@ -37,7 +37,8 @@ struct EFCParam {
 	MissingGlyphSearcher *callback;
 	std::vector<std::wstring> fonts;
 
-	bool Add(const std::wstring_view &font) {
+	bool Add(const std::wstring_view &font)
+	{
 		for (const auto &entry : this->fonts) {
 			if (font.compare(entry) == 0) return false;
 		}
@@ -87,7 +88,7 @@ static int CALLBACK EnumFontCallback(const ENUMLOGFONTEX *logfont, const NEWTEXT
 	return 0; // stop enumerating
 }
 
-bool SetFallbackFont(FontCacheSettings *settings, const std::string &language_isocode, int winlangid, MissingGlyphSearcher *callback)
+bool SetFallbackFont(FontCacheSettings *settings, const std::string &, int winlangid, MissingGlyphSearcher *callback)
 {
 	DEBUG(fontcache, 1, "Trying fallback fonts");
 	EFCParam langInfo;
@@ -125,7 +126,7 @@ bool SetFallbackFont(FontCacheSettings *settings, const std::string &language_is
 Win32FontCache::Win32FontCache(FontSize fs, const LOGFONT &logfont, int pixels) : TrueTypeFontCache(fs, pixels), logfont(logfont)
 {
 	this->dc = CreateCompatibleDC(nullptr);
-	this->SetFontSize(fs, pixels);
+	this->SetFontSize(pixels);
 }
 
 Win32FontCache::~Win32FontCache()
@@ -135,7 +136,7 @@ Win32FontCache::~Win32FontCache()
 	DeleteObject(this->font);
 }
 
-void Win32FontCache::SetFontSize(FontSize fs, int pixels)
+void Win32FontCache::SetFontSize(int pixels)
 {
 	if (pixels == 0) {
 		/* Try to determine a good height based on the minimal height recommended by the font. */
@@ -201,7 +202,7 @@ void Win32FontCache::SetFontSize(FontSize fs, int pixels)
 void Win32FontCache::ClearFontCache()
 {
 	/* GUI scaling might have changed, determine font size anew if it was automatically selected. */
-	if (this->font != nullptr) this->SetFontSize(this->fs, this->req_size);
+	if (this->font != nullptr) this->SetFontSize(this->req_size);
 
 	this->TrueTypeFontCache::ClearFontCache();
 }
@@ -228,7 +229,8 @@ void Win32FontCache::ClearFontCache()
 	GetGlyphOutline(this->dc, key, GGO_GLYPH_INDEX | (aa ? GGO_GRAY8_BITMAP : GGO_BITMAP), &gm, size, bmp, &mat);
 
 	/* GDI has rendered the glyph, now we allocate a sprite and copy the image into it. */
-	SpriteLoader::Sprite sprite;
+	SpriteLoader::SpriteCollection spritecollection;
+	SpriteLoader::Sprite &sprite = spritecollection[ZOOM_LVL_NORMAL];
 	sprite.AllocateData(ZOOM_LVL_NORMAL, width * height);
 	sprite.type = SpriteType::Font;
 	sprite.colours = (aa ? SCC_PAL | SCC_ALPHA : SCC_PAL);
@@ -268,7 +270,7 @@ void Win32FontCache::ClearFontCache()
 	}
 
 	GlyphEntry new_glyph;
-	new_glyph.sprite = BlitterFactory::GetCurrentBlitter()->Encode(&sprite, SimpleSpriteAlloc);
+	new_glyph.sprite = BlitterFactory::GetCurrentBlitter()->Encode(spritecollection, SimpleSpriteAlloc);
 	new_glyph.width = gm.gmCellIncX;
 
 	this->SetGlyphPtr(key, &new_glyph);
@@ -276,7 +278,7 @@ void Win32FontCache::ClearFontCache()
 	return new_glyph.sprite;
 }
 
-/* virtual */ GlyphID Win32FontCache::MapCharToGlyph(WChar key)
+/* virtual */ GlyphID Win32FontCache::MapCharToGlyph(char32_t key)
 {
 	assert(IsPrintable(key));
 

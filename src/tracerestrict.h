@@ -270,6 +270,15 @@ enum TraceRestrictTargetDirectionCondAuxField {
 };
 
 /**
+ * TraceRestrictItem value field, for TRIT_LONG_RESERVE
+ */
+enum TraceRestrictLongReserveValueField {
+	TRLRVF_LONG_RESERVE                 = 0,     ///< Long reserve
+	TRLRVF_CANCEL_LONG_RESERVE          = 1,     ///< Cancel long reserve
+	TRLRVF_LONG_RESERVE_UNLESS_STOPPING = 2,     ///< Long reserve (unless passed stop)
+};
+
+/**
  * TraceRestrictItem value field, for TRIT_WAIT_AT_PBS
  */
 enum TraceRestrictWaitAtPbsValueField {
@@ -467,6 +476,14 @@ enum TraceRestrictProgramInputSlotPermissions : uint8 {
 DECLARE_ENUM_AS_BIT_SET(TraceRestrictProgramInputSlotPermissions)
 
 /**
+ * Enumeration for TraceRestrictProgramInput::input_flags
+ */
+enum TraceRestrictProgramInputFlags : uint8 {
+	TRPIF_PASSED_STOP             = 1 << 0,  ///< Train has passed stop
+};
+DECLARE_ENUM_AS_BIT_SET(TraceRestrictProgramInputFlags)
+
+/**
  * Execution input of a TraceRestrictProgram
  */
 struct TraceRestrictProgramInput {
@@ -477,10 +494,12 @@ struct TraceRestrictProgramInput {
 	PreviousSignalProc *previous_signal_callback; ///< Callback to retrieve tile and direction of previous signal, may be nullptr
 	const void *previous_signal_ptr;              ///< Opaque pointer suitable to be passed to previous_signal_callback
 	TraceRestrictProgramInputSlotPermissions permitted_slot_operations; ///< Permitted slot operations
+	TraceRestrictProgramInputFlags input_flags;   ///< Input flags
 
 	TraceRestrictProgramInput(TileIndex tile_, Trackdir trackdir_, PreviousSignalProc *previous_signal_callback_, const void *previous_signal_ptr_)
 			: tile(tile_), trackdir(trackdir_), previous_signal_callback(previous_signal_callback_), previous_signal_ptr(previous_signal_ptr_),
-			permitted_slot_operations(static_cast<TraceRestrictProgramInputSlotPermissions>(0)) { }
+			permitted_slot_operations(static_cast<TraceRestrictProgramInputSlotPermissions>(0)),
+			input_flags(static_cast<TraceRestrictProgramInputFlags>(0)) { }
 };
 
 /**
@@ -697,7 +716,7 @@ enum TraceRestrictValueType {
 	TRVT_TILE_INDEX               = 8, ///< takes a TileIndex in the next item slot
 	TRVT_PF_PENALTY               = 9, ///< takes a pathfinder penalty value or preset index, as per the auxiliary field as type: TraceRestrictPathfinderPenaltyAuxField
 	TRVT_RESERVE_THROUGH          = 10,///< takes a value 0 = reserve through, 1 = cancel previous reserve through
-	TRVT_LONG_RESERVE             = 11,///< takes a value 0 = long reserve, 1 = cancel previous long reserve
+	TRVT_LONG_RESERVE             = 11,///< takes a TraceRestrictLongReserveValueField
 	TRVT_GROUP_INDEX              = 12,///< takes a GroupID
 	TRVT_WEIGHT                   = 13,///< takes a weight
 	TRVT_POWER                    = 14,///< takes a power

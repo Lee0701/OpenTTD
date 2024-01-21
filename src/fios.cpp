@@ -280,10 +280,9 @@ public:
 /**
  * Try to add a fios item set with the given filename.
  * @param filename        the full path to the file to read
- * @param basepath_length amount of characters to chop of before to get a relative filename
  * @return true if the file is added.
  */
-bool FiosFileScanner::AddFile(const std::string &filename, size_t basepath_length, const std::string &tar_filename)
+bool FiosFileScanner::AddFile(const std::string &filename, size_t, const std::string &)
 {
 	auto sep = filename.rfind('.');
 	if (sep == std::string::npos) return false;
@@ -385,8 +384,7 @@ static void FiosGetFileList(SaveLoadOperation fop, fios_getlist_callback_proc *c
 				fios->type = FIOS_TYPE_DIR;
 				fios->mtime = 0;
 				fios->name = d_name;
-				std::string dirname = fios->name + PATHSEP;
-				SetDParamStr(0, dirname);
+				SetDParamStr(0, fios->name + PATHSEP);
 				fios->title = GetString(STR_SAVELOAD_DIRECTORY);
 			}
 		}
@@ -661,7 +659,7 @@ public:
 		this->scanned = true;
 	}
 
-	bool AddFile(const std::string &filename, size_t basepath_length, const std::string &tar_filename) override
+	bool AddFile(const std::string &filename, size_t, const std::string &) override
 	{
 		FILE *f = FioFOpenFile(filename, "r", SCENARIO_DIR);
 		if (f == nullptr) return false;
@@ -741,7 +739,7 @@ void ScanScenarios()
 /**
  * Constructs FiosNumberedSaveName. Initial number is the most recent save, or -1 if not found.
  * @param prefix The prefix to use to generate a filename.
-*/
+ */
 FiosNumberedSaveName::FiosNumberedSaveName(const std::string &prefix) : prefix(prefix), number(-1)
 {
 	static std::optional<std::string> _autosave_path;
@@ -778,7 +776,7 @@ FiosNumberedSaveName::FiosNumberedSaveName(const std::string &prefix) : prefix(p
 /**
  * Generate a savegame name and number according to _settings_client.gui.max_num_autosaves.
  * @return A filename in format "<prefix><number>.sav".
-*/
+ */
 std::string FiosNumberedSaveName::Filename()
 {
 	return this->FilenameUsingMaxSaves(_settings_client.gui.max_num_autosaves);
@@ -802,7 +800,7 @@ std::string FiosNumberedSaveName::FilenameUsingNumber(int num, const char *suffi
 /**
  * Generate an extension for a savegame name.
  * @return An extension in format "-<prefix>.sav".
-*/
+ */
 std::string FiosNumberedSaveName::Extension()
 {
 	return stdstr_fmt("-%s.sav", this->prefix.c_str());

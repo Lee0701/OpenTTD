@@ -20,8 +20,6 @@
 typedef LinkGraph::BaseNode Node;
 typedef LinkGraph::BaseEdge Edge;
 
-const SettingDesc *GetSettingDescription(uint index);
-
 static uint16 _num_nodes;
 
 /**
@@ -41,9 +39,18 @@ SaveLoadTable GetLinkGraphDesc()
 
 void GetLinkGraphJobDayLengthScaleAfterLoad(LinkGraphJob *lgj)
 {
-	lgj->join_date_ticks *= DAY_TICKS;
+	lgj->join_date_ticks.edit_base() *= DAY_TICKS;
 	lgj->join_date_ticks += LinkGraphSchedule::SPAWN_JOIN_TICK;
-	lgj->start_date_ticks = lgj->join_date_ticks - (lgj->Settings().recalc_time * DAY_TICKS);
+
+	uint recalc_scale;
+	if (IsSavegameVersionBefore(SLV_LINKGRAPH_SECONDS) && SlXvIsFeatureMissing(XSLFI_LINKGRAPH_DAY_SCALE, 3)) {
+		/* recalc time is in days */
+		recalc_scale = DAY_TICKS;
+	} else {
+		/* recalc time is in seconds */
+		recalc_scale = DAY_TICKS / SECONDS_PER_DAY;
+	}
+	lgj->start_date_ticks = lgj->join_date_ticks - (lgj->Settings().recalc_time * recalc_scale);
 }
 
 /**
@@ -58,28 +65,21 @@ void GetLinkGraphJobDayLengthScaleAfterLoad(LinkGraphJob *lgj)
 SaveLoadTable GetLinkGraphJobDesc()
 {
 	static std::vector<SaveLoad> saveloads;
-	static const char *prefix = "linkgraph.";
 
 	/* Build the SaveLoad array on first call and don't touch it later on */
 	if (saveloads.size() == 0) {
 		size_t offset_gamesettings = cpp_offsetof(GameSettings, linkgraph);
 		size_t offset_component = cpp_offsetof(LinkGraphJob, settings);
 
-		size_t prefixlen = strlen(prefix);
-
-		int setting = 0;
-		const SettingDesc *desc = GetSettingDescription(setting);
-		while (desc != nullptr) {
-			if (desc->name != nullptr && strncmp(desc->name, prefix, prefixlen) == 0) {
-				SaveLoad sl = desc->save;
-				if (GetVarMemType(sl.conv) != SLE_VAR_NULL) {
-					char *&address = reinterpret_cast<char *&>(sl.address);
-					address -= offset_gamesettings;
-					address += offset_component;
-				}
-				saveloads.push_back(sl);
+		const SettingTable &linkgraph_table = GetLinkGraphSettingTable();
+		for (const auto &desc : linkgraph_table) {
+			SaveLoad sl = desc->save;
+			if (GetVarMemType(sl.conv) != SLE_VAR_NULL) {
+				char *&address = reinterpret_cast<char *&>(sl.address);
+				address -= offset_gamesettings;
+				address += offset_component;
 			}
-			desc = GetSettingDescription(++setting);
+			saveloads.push_back(sl);
 		}
 
 		const SaveLoad job_desc[] = {

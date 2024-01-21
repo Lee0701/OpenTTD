@@ -29,9 +29,9 @@
 enum WidgetDrawDistances {
 	/* WWT_IMGBTN(_2) */
 	WD_IMGBTN_LEFT    = 1,      ///< Left offset of the image in the button.
-	WD_IMGBTN_RIGHT   = 2,      ///< Right offset of the image in the button.
+	WD_IMGBTN_RIGHT   = 1,      ///< Right offset of the image in the button.
 	WD_IMGBTN_TOP     = 1,      ///< Top offset of image in the button.
-	WD_IMGBTN_BOTTOM  = 2,      ///< Bottom offset of image in the button.
+	WD_IMGBTN_BOTTOM  = 1,      ///< Bottom offset of image in the button.
 
 	/* WWT_INSET */
 	WD_INSET_LEFT  = 2,         ///< Left offset of string.
@@ -150,9 +150,14 @@ const WidgetDimensions WidgetDimensions::unscaled = {
 	{WD_CLOSEBOX_LEFT,     WD_CLOSEBOX_TOP,     WD_CLOSEBOX_RIGHT,     WD_CLOSEBOX_BOTTOM},     ///< closebox
 	{WD_CAPTIONTEXT_LEFT,  WD_CAPTIONTEXT_TOP,  WD_CAPTIONTEXT_RIGHT,  WD_CAPTIONTEXT_BOTTOM},  ///< captiontext
 	{WD_DROPDOWNTEXT_LEFT, WD_DROPDOWNTEXT_TOP, WD_DROPDOWNTEXT_RIGHT, WD_DROPDOWNTEXT_BOTTOM}, ///< dropdowntext
+	{WD_BEVEL_LEFT,        WD_BEVEL_TOP * 2,    WD_BEVEL_RIGHT,        WD_BEVEL_BOTTOM * 2},    ///< dropdownmenu
 	{20, 10, 20, 10},    ///< modalpopup
-	1,                   ///< pressed
+	{3, 3, 3, 3},        ///< picker
+	{10, 8, 10, 8},      ///< sparse window padding
+	{10, 8, 10, 0},      ///< resizable sparse window padding
+	1,                   ///< vsep_picker
 	WD_PAR_VSEP_NORMAL,  ///< vsep_normal
+	4,                   ///< vsep_sparse
 	WD_PAR_VSEP_WIDE,    ///< vsep_wide
 	2,                   ///< hsep_normal
 	6,                   ///< hsep_wide
@@ -220,9 +225,9 @@ void SetupWidgetDimensions()
 	WidgetDimensions::scaled.closebox     = ScaleGUITrad(WidgetDimensions::unscaled.closebox);
 	WidgetDimensions::scaled.captiontext  = ScaleGUITrad(WidgetDimensions::unscaled.captiontext);
 	WidgetDimensions::scaled.dropdowntext = ScaleGUITrad(WidgetDimensions::unscaled.dropdowntext);
+	WidgetDimensions::scaled.dropdownlist = ScaleGUITrad(WidgetDimensions::unscaled.dropdownlist);
 	WidgetDimensions::scaled.modalpopup   = ScaleGUITrad(WidgetDimensions::unscaled.modalpopup);
 
-	WidgetDimensions::scaled.pressed      = ScaleGUITrad(WidgetDimensions::unscaled.pressed);
 	WidgetDimensions::scaled.vsep_normal  = ScaleGUITrad(WidgetDimensions::unscaled.vsep_normal);
 	WidgetDimensions::scaled.vsep_wide    = ScaleGUITrad(WidgetDimensions::unscaled.vsep_wide);
 	WidgetDimensions::scaled.hsep_normal  = ScaleGUITrad(WidgetDimensions::unscaled.hsep_normal);
@@ -448,7 +453,7 @@ void DrawFrameRect(int left, int top, int right, int bottom, Colours colour, Fra
 	}
 }
 
-void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, bool clicked, StringAlignment align)
+void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, StringAlignment align)
 {
 	Point offset;
 	Dimension d = GetSpriteSize(img, &offset);
@@ -456,8 +461,7 @@ void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, bool cl
 	d.height -= offset.y;
 
 	Point p = GetAlignedPosition(r, d, align);
-	int o = clicked ? WidgetDimensions::scaled.pressed : 0;
-	DrawSprite(img, pal, p.x + o - offset.x, p.y + o - offset.y);
+	DrawSprite(img, pal, p.x - offset.x, p.y - offset.y);
 }
 
 /**
@@ -465,7 +469,7 @@ void DrawSpriteIgnorePadding(SpriteID img, PaletteID pal, const Rect &r, bool cl
  * @param r       Rectangle of the button.
  * @param type    Widget type (#WWT_IMGBTN or #WWT_IMGBTN_2).
  * @param colour  Colour of the button.
- * @param clicked Button is lowered.
+ * @param clicked Button is clicked.
  * @param img     Sprite to draw.
  * @param align   Alignment of the sprite.
  */
@@ -475,14 +479,14 @@ static inline void DrawImageButtons(const Rect &r, WidgetType type, Colours colo
 	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
 
 	if ((type & WWT_MASK) == WWT_IMGBTN_2 && clicked) img++; // Show different image when clicked for #WWT_IMGBTN_2.
-	DrawSpriteIgnorePadding(img, PAL_NONE, r, clicked, align);
+	DrawSpriteIgnorePadding(img, PAL_NONE, r, align);
 }
 
 /**
  * Draw the label-part of a widget.
  * @param r       Rectangle of the label background.
  * @param type    Widget type (#WWT_TEXTBTN, #WWT_TEXTBTN_2, or #WWT_LABEL).
- * @param clicked Label is rendered lowered.
+ * @param clicked Label is clicked.
  * @param colour  Colour of the text.
  * @param str     Text to draw.
  * @param align   Alignment of the text.
@@ -494,8 +498,7 @@ static inline void DrawLabel(const Rect &r, WidgetType type, bool clicked, TextC
 	if ((type & WWT_MASK) == WWT_TEXTBTN_2 && clicked) str++;
 	Dimension d = GetStringBoundingBox(str, fs);
 	Point p = GetAlignedPosition(r, d, align);
-	int o = clicked ? WidgetDimensions::scaled.pressed : 0;
-	DrawString(r.left + o, r.right + o, p.y + o, str, colour, align, false, fs);
+	DrawString(r.left, r.right, p.y, str, colour, align, false, fs);
 }
 
 /**
@@ -688,7 +691,7 @@ static inline void DrawFrame(const Rect &r, Colours colour, TextColour text_colo
 
 	/* If the frame has text, adjust the top bar to fit half-way through */
 	Rect inner = r.Shrink(ScaleGUITrad(1));
-	if (str != STR_NULL) inner.top = r.top + FONT_HEIGHT_NORMAL / 2;
+	if (str != STR_NULL) inner.top = r.top + GetCharacterHeight(FS_NORMAL) / 2;
 
 	Rect outer  = inner.Expand(WidgetDimensions::scaled.bevel);
 	Rect inside = inner.Shrink(WidgetDimensions::scaled.bevel);
@@ -774,11 +777,16 @@ static inline void DrawDebugBox(const Rect &r, Colours colour, bool clicked)
  * @param colour  Colour of the resize box.
  * @param at_left Resize box is at left-side of the window,
  * @param clicked Box is lowered.
+ * @param bevel   Draw bevel iff set.
  */
-static inline void DrawResizeBox(const Rect &r, Colours colour, bool at_left, bool clicked)
+static inline void DrawResizeBox(const Rect &r, Colours colour, bool at_left, bool clicked, bool bevel)
 {
-	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
-	DrawSpriteIgnorePadding(at_left ? SPR_WINDOW_RESIZE_LEFT : SPR_WINDOW_RESIZE_RIGHT, PAL_NONE, r.Shrink(ScaleGUITrad(2)), clicked, at_left ? (SA_LEFT | SA_BOTTOM | SA_FORCE) : (SA_RIGHT | SA_BOTTOM | SA_FORCE));
+	if (bevel) {
+		DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
+	} else if (clicked) {
+		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[colour][6]);
+	}
+	DrawSpriteIgnorePadding(at_left ? SPR_WINDOW_RESIZE_LEFT : SPR_WINDOW_RESIZE_RIGHT, PAL_NONE, r.Shrink(ScaleGUITrad(2)), at_left ? (SA_LEFT | SA_BOTTOM | SA_FORCE) : (SA_RIGHT | SA_BOTTOM | SA_FORCE));
 }
 
 /**
@@ -830,8 +838,8 @@ void DrawCaption(const Rect &r, Colours colour, Owner owner, TextColour text_col
  * Draw a button with a dropdown (#WWT_DROPDOWN and #NWID_BUTTON_DROPDOWN).
  * @param r                Rectangle containing the widget.
  * @param colour           Background colour of the widget.
- * @param clicked_button   The button-part is lowered.
- * @param clicked_dropdown The drop-down part is lowered.
+ * @param clicked_button   The button-part is clicked.
+ * @param clicked_dropdown The drop-down part is clicked.
  * @param str              Text of the button.
  * @param align            Alignment of the text within the dropdown.
  *
@@ -845,15 +853,13 @@ static inline void DrawButtonDropdown(const Rect &r, Colours colour, bool clicke
 		DrawFrameRect(r.left, r.top, r.right - dd_width, r.bottom, colour, clicked_button ? FR_LOWERED : FR_NONE);
 		DrawImageButtons(r.WithWidth(dd_width, true), WWT_DROPDOWN, colour, clicked_dropdown, SPR_ARROW_DOWN, SA_CENTER);
 		if (str != STR_NULL) {
-			int o = clicked_button ? WidgetDimensions::scaled.pressed : 0;
-			DrawString(r.left + WidgetDimensions::scaled.dropdowntext.left + o, r.right - dd_width - WidgetDimensions::scaled.dropdowntext.right + o, CenterBounds(r.top, r.bottom, FONT_HEIGHT_NORMAL) + o, str, TC_BLACK, align);
+			DrawString(r.left + WidgetDimensions::scaled.dropdowntext.left, r.right - dd_width - WidgetDimensions::scaled.dropdowntext.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)), str, TC_BLACK, align);
 		}
 	} else {
 		DrawFrameRect(r.left + dd_width, r.top, r.right, r.bottom, colour, clicked_button ? FR_LOWERED : FR_NONE);
 		DrawImageButtons(r.WithWidth(dd_width, false), WWT_DROPDOWN, colour, clicked_dropdown, SPR_ARROW_DOWN, SA_CENTER);
 		if (str != STR_NULL) {
-			int o = clicked_button ? WidgetDimensions::scaled.pressed : 0;
-			DrawString(r.left + dd_width + WidgetDimensions::scaled.dropdowntext.left + o, r.right - WidgetDimensions::scaled.dropdowntext.right + o, CenterBounds(r.top, r.bottom, FONT_HEIGHT_NORMAL) + o, str, TC_BLACK, align);
+			DrawString(r.left + dd_width + WidgetDimensions::scaled.dropdowntext.left, r.right - WidgetDimensions::scaled.dropdowntext.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)), str, TC_BLACK, align);
 		}
 	}
 }
@@ -903,7 +909,7 @@ void Window::DrawSortButtonState(int widget, SortButtonState state) const
 	/* Sort button uses the same sprites as vertical scrollbar */
 	Dimension dim = NWidgetScrollbar::GetVerticalDimension();
 
-	DrawSpriteIgnorePadding(state == SBS_DOWN ? SPR_ARROW_DOWN : SPR_ARROW_UP, PAL_NONE, r.WithWidth(dim.width, _current_text_dir == TD_LTR), this->IsWidgetLowered(widget), SA_CENTER);
+	DrawSpriteIgnorePadding(state == SBS_DOWN ? SPR_ARROW_DOWN : SPR_ARROW_UP, PAL_NONE, r.WithWidth(dim.width, _current_text_dir == TD_LTR), SA_CENTER);
 }
 
 /**
@@ -915,6 +921,14 @@ int Window::SortButtonWidth()
 	return NWidgetScrollbar::GetVerticalDimension().width + 1;
 }
 
+bool _draw_widget_outlines;
+
+static void DrawOutline(const Window *, const NWidgetBase *wid)
+{
+	if (!_draw_widget_outlines || wid->current_x == 0 || wid->current_y == 0) return;
+
+	DrawRectOutline(wid->GetCurrentRect(), PC_WHITE, 1, 4);
+}
 
 /**
  * @defgroup NestedWidgets Hierarchical widgets
@@ -981,7 +995,7 @@ NWidgetBase::NWidgetBase(WidgetType tp) : ZeroedMemoryAllocator()
 /* ~NWidgetContainer() takes care of #next and #prev data members. */
 
 /**
- * @fn void NWidgetBase::SetupSmallestSize(Window *w, bool init_array)
+ * @fn void NWidgetBase::SetupSmallestSize(Window *w)
  * Compute smallest size needed by the widget.
  *
  * The smallest size of a widget is the smallest size that a widget needs to
@@ -990,13 +1004,12 @@ NWidgetBase::NWidgetBase(WidgetType tp) : ZeroedMemoryAllocator()
  * background widget without child with a non-negative index.
  *
  * @param w          Window owning the widget.
- * @param init_array Initialize the \c w->nested_array.
  *
  * @note After the computation, the results can be queried by accessing the #smallest_x and #smallest_y data members of the widget.
  */
 
 /**
- * @fn void NWidgetBase::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+ * @fn void NWidgetBase::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl)
  * Assign size and position to the widget.
  * @param sizing       Type of resizing to perform.
  * @param x            Horizontal offset of the widget relative to the left edge of the window.
@@ -1139,7 +1152,43 @@ void NWidgetResizeBase::SetResize(uint resize_x, uint resize_y)
 }
 
 /**
+ * Try to set optimum widget size for a multiline text widget.
+ * The window will need to be reinited if the size is changed.
+ * @param str Multiline string contents that will fill the widget.
+ * @param max_line Maximum number of lines.
+ * @return true iff the widget minimum size has changed.
+ */
+bool NWidgetResizeBase::UpdateMultilineWidgetSize(const std::string &str, int max_lines)
+{
+	int y = GetStringHeight(str, this->current_x);
+	if (y > max_lines * GetCharacterHeight(FS_NORMAL)) {
+		/* Text at the current width is too tall, so try to guess a better width. */
+		Dimension d = GetStringBoundingBox(str);
+		d.height *= max_lines;
+		d.width /= 2;
+		return this->UpdateSize(d.width, d.height);
+	}
+	return this->UpdateVerticalSize(y);
+}
+
+/**
  * Set absolute (post-scaling) minimal size of the widget.
+ * The window will need to be reinited if the size is changed.
+ * @param min_x Horizontal minimal size of the widget.
+ * @param min_y Vertical minimal size of the widget.
+ * @return true iff the widget minimum size has changed.
+ */
+bool NWidgetResizeBase::UpdateSize(uint min_x, uint min_y)
+{
+	if (min_x == this->min_x && min_y == this->min_y) return false;
+	this->min_x = min_x;
+	this->min_y = min_y;
+	return true;
+}
+
+/**
+ * Set absolute (post-scaling) minimal size of the widget.
+ * The window will need to be reinited if the size is changed.
  * @param min_y Vertical minimal size of the widget.
  * @return true iff the widget minimum size has changed.
  */
@@ -1150,7 +1199,7 @@ bool NWidgetResizeBase::UpdateVerticalSize(uint min_y)
 	return true;
 }
 
-void NWidgetResizeBase::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetResizeBase::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool)
 {
 	this->StoreSizePosition(sizing, x, y, given_width, given_height);
 }
@@ -1307,6 +1356,37 @@ void NWidgetContainer::FillNestedArray(NWidgetBase **array, uint length)
 	}
 }
 
+void NWidgetContainer::Draw(const Window *w)
+{
+	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
+		child_wid->Draw(w);
+	}
+
+	DrawOutline(w, this);
+}
+
+NWidgetCore *NWidgetContainer::GetWidgetFromPos(int x, int y)
+{
+	if (!IsInsideBS(x, this->pos_x, this->current_x) || !IsInsideBS(y, this->pos_y, this->current_y)) return nullptr;
+
+	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
+		NWidgetCore *nwid = child_wid->GetWidgetFromPos(x, y);
+		if (nwid != nullptr) return nwid;
+	}
+	return nullptr;
+}
+
+void NWidgetContainer::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
+{
+	if (this->base_flags & WBF_DIRTY) {
+		dirty_widgets.push_back(this);
+	} else {
+		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
+			child_wid->FillDirtyWidgets(dirty_widgets);
+		}
+	}
+}
+
 /**
  * Widgets stacked on top of each other.
  */
@@ -1328,13 +1408,8 @@ void NWidgetStacked::AdjustPaddingForZoom()
 	NWidgetContainer::AdjustPaddingForZoom();
 }
 
-void NWidgetStacked::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetStacked::SetupSmallestSize(Window *w)
 {
-	if (this->index >= 0 && init_array) { // Fill w->nested_array[]
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
-
 	/* Zero size plane selected */
 	if (this->shown_plane >= SZSP_BEGIN) {
 		Dimension size    = {0, 0};
@@ -1364,7 +1439,7 @@ void NWidgetStacked::SetupSmallestSize(Window *w, bool init_array)
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; plane++, child_wid = child_wid->next) {
 		if (this->independent_planes && plane != this->shown_plane) continue;
 
-		child_wid->SetupSmallestSize(w, init_array);
+		child_wid->SetupSmallestSize(w);
 
 		this->smallest_x = std::max(this->smallest_x, child_wid->smallest_x + child_wid->padding.Horizontal());
 		this->smallest_y = std::max(this->smallest_y, child_wid->smallest_y + child_wid->padding.Vertical());
@@ -1375,7 +1450,7 @@ void NWidgetStacked::SetupSmallestSize(Window *w, bool init_array)
 	}
 }
 
-void NWidgetStacked::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetStacked::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl)
 {
 	assert(given_width >= this->smallest_x && given_height >= this->smallest_y);
 	this->StoreSizePosition(sizing, x, y, given_width, given_height);
@@ -1414,6 +1489,7 @@ void NWidgetStacked::Draw(const Window *w)
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; plane++, child_wid = child_wid->next) {
 		if (plane == this->shown_plane) {
 			child_wid->Draw(w);
+			DrawOutline(w, this);
 			return;
 		}
 	}
@@ -1453,10 +1529,13 @@ void NWidgetStacked::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
 /**
  * Select which plane to show (for #NWID_SELECTION only).
  * @param plane Plane number to display.
+ * @return true iff the shown plane changed.
  */
-void NWidgetStacked::SetDisplayedPlane(int plane)
+bool NWidgetStacked::SetDisplayedPlane(int plane)
 {
+	if (this->shown_plane == plane) return false;
 	this->shown_plane = plane;
+	return true;
 }
 
 NWidgetPIPContainer::NWidgetPIPContainer(WidgetType tp, NWidContainerFlags flags) : NWidgetContainer(tp)
@@ -1492,35 +1571,20 @@ void NWidgetPIPContainer::SetPIP(uint8 pip_pre, uint8 pip_inter, uint8 pip_post)
 	this->pip_post = ScaleGUITrad(this->uz_pip_post);
 }
 
-void NWidgetPIPContainer::Draw(const Window *w)
+/**
+ * Set additional pre/inter/post space for the container.
+ *
+ * @param pip_ratio_pre   Ratio of additional space in front of the first child widget (above
+ *                        for the vertical container, at the left for the horizontal container).
+ * @param pip_ratio_inter Ratio of additional space between two child widgets.
+ * @param pip_ratio_post  Ratio of additional space after the last child widget (below for the
+ *                        vertical container, at the right for the horizontal container).
+ */
+void NWidgetPIPContainer::SetPIPRatio(uint8_t pip_ratio_pre, uint8_t pip_ratio_inter, uint8_t pip_ratio_post)
 {
-	if (this->IsOutsideDrawArea()) return;
-	this->base_flags &= ~WBF_DIRTY;
-	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		child_wid->Draw(w);
-	}
-}
-
-NWidgetCore *NWidgetPIPContainer::GetWidgetFromPos(int x, int y)
-{
-	if (!IsInsideBS(x, this->pos_x, this->current_x) || !IsInsideBS(y, this->pos_y, this->current_y)) return nullptr;
-
-	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		NWidgetCore *nwid = child_wid->GetWidgetFromPos(x, y);
-		if (nwid != nullptr) return nwid;
-	}
-	return nullptr;
-}
-
-void NWidgetPIPContainer::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
-{
-	if (this->base_flags & WBF_DIRTY) {
-		dirty_widgets.push_back(this);
-	} else {
-		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-			child_wid->FillDirtyWidgets(dirty_widgets);
-		}
-	}
+	this->pip_ratio_pre = pip_ratio_pre;
+	this->pip_ratio_inter = pip_ratio_inter;
+	this->pip_ratio_post = pip_ratio_post;
 }
 
 /** Horizontal container widget. */
@@ -1528,7 +1592,7 @@ NWidgetHorizontal::NWidgetHorizontal(NWidContainerFlags flags) : NWidgetPIPConta
 {
 }
 
-void NWidgetHorizontal::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetHorizontal::SetupSmallestSize(Window *w)
 {
 	this->smallest_x = 0; // Sum of minimal size of all children.
 	this->smallest_y = 0; // Biggest child.
@@ -1536,16 +1600,19 @@ void NWidgetHorizontal::SetupSmallestSize(Window *w, bool init_array)
 	this->fill_y = 1;     // smallest common child fill step.
 	this->resize_x = 0;   // smallest non-zero child widget resize step.
 	this->resize_y = 1;   // smallest common child resize step.
+	this->gaps = 0;
 
 	/* 1a. Forward call, collect biggest nested array index, and longest/widest child length. */
 	uint longest = 0; // Longest child found.
 	uint max_vert_fill = 0; // Biggest vertical fill step.
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		child_wid->SetupSmallestSize(w, init_array);
+		child_wid->SetupSmallestSize(w);
 		longest = std::max(longest, child_wid->smallest_x);
 		max_vert_fill = std::max(max_vert_fill, child_wid->GetVerticalStepSize(ST_SMALLEST));
 		this->smallest_y = std::max(this->smallest_y, child_wid->smallest_y + child_wid->padding.Vertical());
+		if (child_wid->smallest_x != 0 || child_wid->fill_x != 0) this->gaps++;
 	}
+	if (this->gaps > 0) this->gaps--; // Number of gaps is number of widgets less one.
 	/* 1b. Make the container higher if needed to accommodate all children nicely. */
 	[[maybe_unused]] uint max_smallest = this->smallest_y + 3 * max_vert_fill; // Upper limit to computing smallest height.
 	uint cur_height = this->smallest_y;
@@ -1571,15 +1638,8 @@ void NWidgetHorizontal::SetupSmallestSize(Window *w, bool init_array)
 			if (child_wid->fill_x == 1) child_wid->smallest_x = longest;
 		}
 	}
-	/* 3. Move PIP space to the children, compute smallest, fill, and resize values of the container. */
-	if (this->head != nullptr) this->head->padding.left += this->pip_pre;
+	/* 3. Compute smallest, fill, and resize values of the container. */
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		if (child_wid->next != nullptr) {
-			child_wid->padding.right += this->pip_inter;
-		} else {
-			child_wid->padding.right += this->pip_post;
-		}
-
 		this->smallest_x += child_wid->smallest_x + child_wid->padding.Horizontal();
 		if (child_wid->fill_x > 0) {
 			if (this->fill_x == 0 || this->fill_x > child_wid->fill_x) this->fill_x = child_wid->fill_x;
@@ -1591,23 +1651,19 @@ void NWidgetHorizontal::SetupSmallestSize(Window *w, bool init_array)
 		}
 		this->resize_y = LeastCommonMultiple(this->resize_y, child_wid->resize_y);
 	}
-	/* We need to zero the PIP settings so we can re-initialize the tree. */
-	this->pip_pre = this->pip_inter = this->pip_post = 0;
+	if (this->fill_x == 0 && this->pip_ratio_pre + this->pip_ratio_inter + this->pip_ratio_post > 0) this->fill_x = 1;
+	/* 4. Increase by required PIP space. */
+	this->smallest_x += this->pip_pre + this->gaps * this->pip_inter + this->pip_post;
 }
 
-void NWidgetHorizontal::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetHorizontal::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl)
 {
 	assert(given_width >= this->smallest_x && given_height >= this->smallest_y);
 
 	/* Compute additional width given to us. */
-	uint additional_length = given_width;
-	if (sizing == ST_SMALLEST && (this->flags & NC_EQUALSIZE)) {
-		/* For EQUALSIZE containers this does not sum to smallest_x during initialisation */
-		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-			additional_length -= child_wid->smallest_x + child_wid->padding.Horizontal();
-		}
-	} else {
-		additional_length -= this->smallest_x;
+	uint additional_length = given_width - (this->pip_pre + this->gaps * this->pip_inter + this->pip_post);
+	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
+		if (child_wid->smallest_x != 0 || child_wid->fill_x != 0) additional_length -= child_wid->smallest_x + child_wid->padding.Horizontal();
 	}
 
 	this->StoreSizePosition(sizing, x, y, given_width, given_height);
@@ -1681,8 +1737,21 @@ void NWidgetHorizontal::AssignSizePosition(SizingType sizing, uint x, uint y, ui
 	}
 	assert(num_changing_childs == 0);
 
+	uint pre = this->pip_pre;
+	uint inter = this->pip_inter;
+
+	if (additional_length > 0) {
+		/* Allocate remaining space by pip ratios. If this doesn't round exactly, the unused space will fall into pip_post
+		 * which is never explicitly needed. */
+		int r = this->pip_ratio_pre + this->gaps * this->pip_ratio_inter + this->pip_ratio_post;
+		if (r > 0) {
+			pre += this->pip_ratio_pre * additional_length / r;
+			if (this->gaps > 0) inter += this->pip_ratio_inter * additional_length / r;
+		}
+	}
+
 	/* Third loop: Compute position and call the child. */
-	uint position = rtl ? this->current_x : 0; // Place to put next child relative to origin of the container.
+	uint position = rtl ? this->current_x - pre : pre; // Place to put next child relative to origin of the container.
 	NWidgetBase *child_wid = this->head;
 	while (child_wid != nullptr) {
 		uint child_width = child_wid->current_x;
@@ -1690,8 +1759,10 @@ void NWidgetHorizontal::AssignSizePosition(SizingType sizing, uint x, uint y, ui
 		uint child_y = y + child_wid->padding.top;
 
 		child_wid->AssignSizePosition(sizing, child_x, child_y, child_width, child_wid->current_y, rtl);
-		uint padded_child_width = child_width + child_wid->padding.Horizontal();
-		position = rtl ? position - padded_child_width : position + padded_child_width;
+		if (child_wid->current_x != 0) {
+			uint padded_child_width = child_width + child_wid->padding.Horizontal() + inter;
+			position = rtl ? position - padded_child_width : position + padded_child_width;
+		}
 
 		child_wid = child_wid->next;
 	}
@@ -1703,7 +1774,7 @@ NWidgetHorizontalLTR::NWidgetHorizontalLTR(NWidContainerFlags flags) : NWidgetHo
 	this->type = NWID_HORIZONTAL_LTR;
 }
 
-void NWidgetHorizontalLTR::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetHorizontalLTR::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool)
 {
 	NWidgetHorizontal::AssignSizePosition(sizing, x, y, given_width, given_height, false);
 }
@@ -1713,7 +1784,7 @@ NWidgetVertical::NWidgetVertical(NWidContainerFlags flags) : NWidgetPIPContainer
 {
 }
 
-void NWidgetVertical::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetVertical::SetupSmallestSize(Window *w)
 {
 	this->smallest_x = 0; // Biggest child.
 	this->smallest_y = 0; // Sum of minimal size of all children.
@@ -1721,16 +1792,19 @@ void NWidgetVertical::SetupSmallestSize(Window *w, bool init_array)
 	this->fill_y = 0;     // smallest non-zero child widget fill step.
 	this->resize_x = 1;   // smallest common child resize step.
 	this->resize_y = 0;   // smallest non-zero child widget resize step.
+	this->gaps = 0;
 
 	/* 1a. Forward call, collect biggest nested array index, and longest/widest child length. */
 	uint highest = 0; // Highest child found.
 	uint max_hor_fill = 0; // Biggest horizontal fill step.
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		child_wid->SetupSmallestSize(w, init_array);
+		child_wid->SetupSmallestSize(w);
 		highest = std::max(highest, child_wid->smallest_y);
 		max_hor_fill = std::max(max_hor_fill, child_wid->GetHorizontalStepSize(ST_SMALLEST));
 		this->smallest_x = std::max(this->smallest_x, child_wid->smallest_x + child_wid->padding.Horizontal());
+		if (child_wid->smallest_y != 0 || child_wid->fill_y != 0) this->gaps++;
 	}
+	if (this->gaps > 0) this->gaps--; // Number of gaps is number of widgets less one.
 	/* 1b. Make the container wider if needed to accommodate all children nicely. */
 	[[maybe_unused]] uint max_smallest = this->smallest_x + 3 * max_hor_fill; // Upper limit to computing smallest height.
 	uint cur_width = this->smallest_x;
@@ -1756,15 +1830,8 @@ void NWidgetVertical::SetupSmallestSize(Window *w, bool init_array)
 			if (child_wid->fill_y == 1) child_wid->smallest_y = highest;
 		}
 	}
-	/* 3. Move PIP space to the child, compute smallest, fill, and resize values of the container. */
-	if (this->head != nullptr) this->head->padding.top += this->pip_pre;
+	/* 3. Compute smallest, fill, and resize values of the container. */
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-		if (child_wid->next != nullptr) {
-			child_wid->padding.bottom += this->pip_inter;
-		} else {
-			child_wid->padding.bottom += this->pip_post;
-		}
-
 		this->smallest_y += child_wid->smallest_y + child_wid->padding.Vertical();
 		if (child_wid->fill_y > 0) {
 			if (this->fill_y == 0 || this->fill_y > child_wid->fill_y) this->fill_y = child_wid->fill_y;
@@ -1776,23 +1843,19 @@ void NWidgetVertical::SetupSmallestSize(Window *w, bool init_array)
 		}
 		this->resize_x = LeastCommonMultiple(this->resize_x, child_wid->resize_x);
 	}
-	/* We need to zero the PIP settings so we can re-initialize the tree. */
-	this->pip_pre = this->pip_inter = this->pip_post = 0;
+	if (this->fill_y == 0 && this->pip_ratio_pre + this->pip_ratio_inter + this->pip_ratio_post > 0) this->fill_y = 1;
+	/* 4. Increase by required PIP space. */
+	this->smallest_y += this->pip_pre + this->gaps * this->pip_inter + this->pip_post;
 }
 
-void NWidgetVertical::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetVertical::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl)
 {
 	assert(given_width >= this->smallest_x && given_height >= this->smallest_y);
 
 	/* Compute additional height given to us. */
-	uint additional_length = given_height;
-	if (sizing == ST_SMALLEST && (this->flags & NC_EQUALSIZE)) {
-		/* For EQUALSIZE containers this does not sum to smallest_y during initialisation */
-		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-			additional_length -= child_wid->smallest_y + child_wid->padding.Vertical();
-		}
-	} else {
-		additional_length -= this->smallest_y;
+	uint additional_length = given_height - (this->pip_pre + this->gaps * this->pip_inter + this->pip_post);
+	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
+		if (child_wid->smallest_y != 0 || child_wid->fill_y != 0) additional_length -= child_wid->smallest_y + child_wid->padding.Vertical();
 	}
 
 	this->StoreSizePosition(sizing, x, y, given_width, given_height);
@@ -1857,14 +1920,29 @@ void NWidgetVertical::AssignSizePosition(SizingType sizing, uint x, uint y, uint
 	}
 	assert(num_changing_childs == 0);
 
+	uint pre = this->pip_pre;
+	uint inter = this->pip_inter;
+
+	if (additional_length > 0) {
+		/* Allocate remaining space by pip ratios. If this doesn't round exactly, the unused space will fall into pip_post
+		 * which is never explicitly needed. */
+		int r = this->pip_ratio_pre + this->gaps * this->pip_ratio_inter + this->pip_ratio_post;
+		if (r > 0) {
+			pre += this->pip_ratio_pre * additional_length / r;
+			if (this->gaps > 0) inter += this->pip_ratio_inter * additional_length / r;
+		}
+	}
+
 	/* Third loop: Compute position and call the child. */
-	uint position = 0; // Place to put next child relative to origin of the container.
+	uint position = pre; // Place to put next child relative to origin of the container.
 	for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
 		uint child_x = x + (rtl ? child_wid->padding.right : child_wid->padding.left);
 		uint child_height = child_wid->current_y;
 
 		child_wid->AssignSizePosition(sizing, child_x, y + position + child_wid->padding.top, child_wid->current_x, child_height, rtl);
-		position += child_height + child_wid->padding.Vertical();
+		if (child_wid->current_y != 0) {
+			position += child_height + child_wid->padding.Vertical() + inter;
+		}
 	}
 }
 
@@ -1879,19 +1957,26 @@ NWidgetSpacer::NWidgetSpacer(int width, int height) : NWidgetResizeBase(NWID_SPA
 	this->SetResize(0, 0);
 }
 
-void NWidgetSpacer::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetSpacer::SetupSmallestSize(Window *)
 {
 	this->smallest_x = this->min_x;
 	this->smallest_y = this->min_y;
 }
 
-void NWidgetSpacer::FillNestedArray(NWidgetBase **array, uint length)
+void NWidgetSpacer::FillNestedArray(NWidgetBase **, uint)
 {
 }
 
 void NWidgetSpacer::Draw(const Window *w)
 {
-	/* Spacer widget is never visible. */
+	/* Spacer widget is never normally visible. */
+
+	if (_draw_widget_outlines && this->current_x != 0 && this->current_y != 0) {
+		/* Spacers indicate a potential design issue, so get extra highlighting. */
+		GfxFillRect(this->GetCurrentRect(), PC_WHITE, FILLRECT_CHECKER);
+
+		DrawOutline(w, this);
+	}
 }
 
 void NWidgetSpacer::SetDirty(Window *w)
@@ -1899,7 +1984,7 @@ void NWidgetSpacer::SetDirty(Window *w)
 	/* Spacer widget never need repainting. */
 }
 
-NWidgetCore *NWidgetSpacer::GetWidgetFromPos(int x, int y)
+NWidgetCore *NWidgetSpacer::GetWidgetFromPos(int, int)
 {
 	return nullptr;
 }
@@ -1973,21 +2058,16 @@ void NWidgetMatrix::SetScrollbar(Scrollbar *sb)
 	this->sb = sb;
 }
 
-void NWidgetMatrix::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetMatrix::SetupSmallestSize(Window *w)
 {
 	assert(this->head != nullptr);
 	assert(this->head->next == nullptr);
-
-	if (this->index >= 0 && init_array) { // Fill w->nested_array[]
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
 
 	/* Reset the widget number. */
 	NWidgetCore *nw = dynamic_cast<NWidgetCore *>(this->head);
 	assert(nw != nullptr);
 	SB(nw->index, 16, 16, 0);
-	this->head->SetupSmallestSize(w, init_array);
+	this->head->SetupSmallestSize(w);
 
 	Dimension padding = { (uint)this->pip_pre + this->pip_post, (uint)this->pip_pre + this->pip_post};
 	Dimension size    = {this->head->smallest_x + padding.width, this->head->smallest_y + padding.height};
@@ -2004,7 +2084,7 @@ void NWidgetMatrix::SetupSmallestSize(Window *w, bool init_array)
 	this->resize_y = resize.height;
 }
 
-void NWidgetMatrix::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetMatrix::AssignSizePosition(SizingType, int x, int y, uint given_width, uint given_height, bool)
 {
 	assert(given_width >= this->smallest_x && given_height >= this->smallest_y);
 
@@ -2079,45 +2159,50 @@ void NWidgetMatrix::FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets)
 	this->base_flags &= ~WBF_DIRTY;
 
 	/* Fill the background. */
-	GfxFillRect(this->pos_x, this->pos_y, this->pos_x + this->current_x - 1, this->pos_y + this->current_y - 1, _colour_gradient[this->colour & 0xF][5]);
+	GfxFillRect(this->GetCurrentRect(), _colour_gradient[this->colour & 0xF][5]);
 
 	/* Set up a clipping area for the previews. */
 	bool rtl = _current_text_dir == TD_RTL;
 	DrawPixelInfo tmp_dpi;
 	if (!FillDrawPixelInfo(&tmp_dpi, this->pos_x + (rtl ? this->pip_post : this->pip_pre), this->pos_y + this->pip_pre, this->current_x - this->pip_pre - this->pip_post, this->current_y - this->pip_pre - this->pip_post)) return;
-	AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
-	/* Get the appropriate offsets so we can draw the right widgets. */
-	NWidgetCore *child = dynamic_cast<NWidgetCore *>(this->head);
-	assert(child != nullptr);
-	int start_x, start_y, base_offs_x, base_offs_y;
-	this->GetScrollOffsets(start_x, start_y, base_offs_x, base_offs_y);
+	{
+		AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
-	int offs_y = base_offs_y;
-	for (int y = start_y; y < start_y + this->widgets_y + 1; y++, offs_y += this->widget_h) {
-		/* Are we within bounds? */
-		if (offs_y + child->smallest_y <= 0) continue;
-		if (offs_y >= (int)this->current_y) break;
+		/* Get the appropriate offsets so we can draw the right widgets. */
+		NWidgetCore *child = dynamic_cast<NWidgetCore *>(this->head);
+		assert(child != nullptr);
+		int start_x, start_y, base_offs_x, base_offs_y;
+		this->GetScrollOffsets(start_x, start_y, base_offs_x, base_offs_y);
 
-		/* We've passed our amount of widgets. */
-		if (y * this->widgets_x >= this->count) break;
-
-		int offs_x = base_offs_x;
-		for (int x = start_x; x < start_x + this->widgets_x + 1; x++, offs_x += rtl ? -this->widget_w : this->widget_w) {
+		int offs_y = base_offs_y;
+		for (int y = start_y; y < start_y + this->widgets_y + 1; y++, offs_y += this->widget_h) {
 			/* Are we within bounds? */
-			if (offs_x + child->smallest_x <= 0) continue;
-			if (offs_x >= (int)this->current_x) continue;
+			if (offs_y + child->smallest_y <= 0) continue;
+			if (offs_y >= (int)this->current_y) break;
 
-			/* Do we have this many widgets? */
-			int sub_wid = y * this->widgets_x + x;
-			if (sub_wid >= this->count) break;
+			/* We've passed our amount of widgets. */
+			if (y * this->widgets_x >= this->count) break;
 
-			child->AssignSizePosition(ST_RESIZE, offs_x, offs_y, child->smallest_x, child->smallest_y, rtl);
-			child->SetLowered(this->clicked == sub_wid);
-			SB(child->index, 16, 16, sub_wid);
-			child->Draw(w);
+			int offs_x = base_offs_x;
+			for (int x = start_x; x < start_x + this->widgets_x + 1; x++, offs_x += rtl ? -this->widget_w : this->widget_w) {
+				/* Are we within bounds? */
+				if (offs_x + child->smallest_x <= 0) continue;
+				if (offs_x >= (int)this->current_x) continue;
+
+				/* Do we have this many widgets? */
+				int sub_wid = y * this->widgets_x + x;
+				if (sub_wid >= this->count) break;
+
+				child->AssignSizePosition(ST_RESIZE, offs_x, offs_y, child->smallest_x, child->smallest_y, rtl);
+				child->SetLowered(this->clicked == sub_wid);
+				SB(child->index, 16, 16, sub_wid);
+				child->Draw(w);
+			}
 		}
 	}
+
+	DrawOutline(w, this);
 }
 
 /**
@@ -2204,20 +2289,34 @@ void NWidgetBackground::SetPIP(uint8 pip_pre, uint8 pip_inter, uint8 pip_post)
 	this->child->SetPIP(pip_pre, pip_inter, pip_post);
 }
 
+/**
+ * Set additional pre/inter/post space ratios for the background widget.
+ *
+ * @param pip_ratio_pre   Ratio of additional space in front of the first child widget (above
+ *                        for the vertical container, at the left for the horizontal container).
+ * @param pip_ratio_inter Ratio of additional space between two child widgets.
+ * @param pip_ratio_post  Ratio of additional space after the last child widget (below for the
+ *                        vertical container, at the right for the horizontal container).
+ * @note Using this function implies that the widget has (or will have) child widgets.
+ */
+void NWidgetBackground::SetPIPRatio(uint8_t pip_ratio_pre, uint8_t pip_ratio_inter, uint8_t pip_ratio_post)
+{
+	if (this->child == nullptr) {
+		this->child = new NWidgetVertical();
+	}
+	this->child->SetPIPRatio(pip_ratio_pre, pip_ratio_inter, pip_ratio_post);
+}
+
 void NWidgetBackground::AdjustPaddingForZoom()
 {
 	if (child != nullptr) child->AdjustPaddingForZoom();
 	NWidgetCore::AdjustPaddingForZoom();
 }
 
-void NWidgetBackground::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetBackground::SetupSmallestSize(Window *w)
 {
-	if (init_array && this->index >= 0) {
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
 	if (this->child != nullptr) {
-		this->child->SetupSmallestSize(w, init_array);
+		this->child->SetupSmallestSize(w);
 
 		this->smallest_x = this->child->smallest_x;
 		this->smallest_y = this->child->smallest_y;
@@ -2232,7 +2331,7 @@ void NWidgetBackground::SetupSmallestSize(Window *w, bool init_array)
 		if (this->type == WWT_FRAME) {
 			/* Account for the size of the frame's text if that exists */
 			this->child->padding     = WidgetDimensions::scaled.frametext;
-			this->child->padding.top = std::max<uint8>(WidgetDimensions::scaled.frametext.top, this->widget_data != STR_NULL ? FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.frametext.top / 2 : 0);
+			this->child->padding.top = std::max<uint8>(WidgetDimensions::scaled.frametext.top, this->widget_data != STR_NULL ? GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.frametext.top / 2 : 0);
 
 			this->smallest_x += this->child->padding.Horizontal();
 			this->smallest_y += this->child->padding.Vertical();
@@ -2277,7 +2376,7 @@ void NWidgetBackground::SetupSmallestSize(Window *w, bool init_array)
 	}
 }
 
-void NWidgetBackground::AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl)
+void NWidgetBackground::AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl)
 {
 	this->StoreSizePosition(sizing, x, y, given_width, given_height);
 
@@ -2333,6 +2432,8 @@ void NWidgetBackground::Draw(const Window *w)
 	if (this->IsDisabled()) {
 		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[this->colour & 0xF][2], FILLRECT_CHECKER);
 	}
+
+	DrawOutline(w, this);
 }
 
 NWidgetCore *NWidgetBackground::GetWidgetFromPos(int x, int y)
@@ -2367,12 +2468,8 @@ NWidgetViewport::NWidgetViewport(int index) : NWidgetCore(NWID_VIEWPORT, INVALID
 	this->SetIndex(index);
 }
 
-void NWidgetViewport::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetViewport::SetupSmallestSize(Window *)
 {
-	if (init_array && this->index >= 0) {
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
 	this->smallest_x = this->min_x;
 	this->smallest_y = this->min_y;
 }
@@ -2390,6 +2487,8 @@ void NWidgetViewport::Draw(const Window *w)
 	} else {
 		w->DrawViewport(this->disp_flags);
 	}
+
+	DrawOutline(w, this);
 }
 
 /**
@@ -2544,12 +2643,8 @@ NWidgetScrollbar::NWidgetScrollbar(WidgetType tp, Colours colour, int index) : N
 	}
 }
 
-void NWidgetScrollbar::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetScrollbar::SetupSmallestSize(Window *)
 {
-	if (init_array && this->index >= 0) {
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
 	this->min_x = 0;
 	this->min_y = 0;
 
@@ -2594,6 +2689,8 @@ void NWidgetScrollbar::Draw(const Window *w)
 	if (this->IsDisabled()) {
 		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[this->colour & 0xF][2], FILLRECT_CHECKER);
 	}
+
+	DrawOutline(w, this);
 }
 
 /* static */ void NWidgetScrollbar::InvalidateDimensionCache()
@@ -2694,7 +2791,7 @@ NWidgetLeaf::NWidgetLeaf(WidgetType tp, Colours colour, int index, uint32 data, 
 			this->SetFill(1, 0);
 			this->SetResize(1, 0);
 			this->SetMinimalSize(0, WD_CAPTION_HEIGHT);
-			this->SetMinimalTextLines(1, WidgetDimensions::unscaled.framerect.Vertical(), FS_NORMAL);
+			this->SetMinimalTextLines(1, WidgetDimensions::unscaled.captiontext.Vertical(), FS_NORMAL);
 			this->SetDataTip(data, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS);
 			break;
 
@@ -2725,7 +2822,7 @@ NWidgetLeaf::NWidgetLeaf(WidgetType tp, Colours colour, int index, uint32 data, 
 		case WWT_RESIZEBOX:
 			this->SetFill(0, 0);
 			this->SetMinimalSize(WD_RESIZEBOX_WIDTH, 12);
-			this->SetDataTip(STR_NULL, STR_TOOLTIP_RESIZE);
+			this->SetDataTip(RWV_SHOW_BEVEL, STR_TOOLTIP_RESIZE);
 			break;
 
 		case WWT_CLOSEBOX:
@@ -2766,13 +2863,8 @@ NWidgetLeaf::NWidgetLeaf(WidgetType tp, Colours colour, int index, uint32 data, 
 	NWidgetLeaf::closebox_dimension.height += WidgetDimensions::scaled.closebox.Vertical();
 }
 
-void NWidgetLeaf::SetupSmallestSize(Window *w, bool init_array)
+void NWidgetLeaf::SetupSmallestSize(Window *w)
 {
-	if (this->index >= 0 && init_array) { // Fill w->nested_array[]
-		assert(w->nested_array_size > (uint)this->index);
-		w->nested_array[this->index] = this;
-	}
-
 	Dimension padding = {0, 0};
 	Dimension size = {this->min_x, this->min_y};
 	Dimension fill = {this->fill_x, this->fill_y};
@@ -2949,6 +3041,10 @@ void NWidgetLeaf::Draw(const Window *w)
 	bool clicked = this->IsLowered();
 	switch (this->type) {
 		case WWT_EMPTY:
+			/* WWT_EMPTY used as a spacer indicates a potential design issue. */
+			if (this->index == -1 && _draw_widget_outlines) {
+				GfxFillRect(r, PC_BLACK, FILLRECT_CHECKER);
+			}
 			break;
 
 		case WWT_PUSHBTN:
@@ -3029,8 +3125,7 @@ void NWidgetLeaf::Draw(const Window *w)
 			break;
 
 		case WWT_RESIZEBOX:
-			assert(this->widget_data == 0);
-			DrawResizeBox(r, this->colour, this->pos_x < (w->width / 2), !!(w->flags & WF_SIZING));
+			DrawResizeBox(r, this->colour, this->pos_x < (w->width / 2), !!(w->flags & WF_SIZING), this->widget_data == 0);
 			break;
 
 		case WWT_CLOSEBOX:
@@ -3056,6 +3151,8 @@ void NWidgetLeaf::Draw(const Window *w)
 	if (this->IsDisabled()) {
 		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[this->colour & 0xF][2], FILLRECT_CHECKER);
 	}
+
+	DrawOutline(w, this);
 }
 
 /**
@@ -3086,71 +3183,69 @@ bool NWidgetLeaf::ButtonHit(const Point &pt)
  * settings that follow it, until encountering a #EndContainer, another
  * #NWidget, or the end of the parts array.
  *
- * @param parts Array with parts of the nested widget.
- * @param count Length of the \a parts array.
+ * @param nwid_begin Pointer to beginning of nested widget parts.
+ * @param nwid_end Pointer to ending of nested widget parts.
  * @param dest  Address of pointer to use for returning the composed widget.
  * @param fill_dest Fill the composed widget with child widgets.
  * @param biggest_index Pointer to biggest nested widget index in the tree encountered so far.
- * @return Number of widget part elements used to compose the widget.
+ * @return Pointer to remaining nested widget parts.
  * @pre \c biggest_index != nullptr.
  */
-static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, bool *fill_dest, int *biggest_index)
+static const NWidgetPart *MakeNWidget(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, NWidgetBase **dest, bool *fill_dest, int *biggest_index)
 {
-	int num_used = 0;
-
 	*dest = nullptr;
 	*fill_dest = false;
 
-	while (count > num_used) {
-		switch (parts->type) {
+	while (nwid_begin < nwid_end) {
+		switch (nwid_begin->type) {
 			case NWID_SPACER:
-				if (*dest != nullptr) return num_used;
+				if (*dest != nullptr) return nwid_begin;
 				*dest = new NWidgetSpacer(0, 0);
 				break;
 
 			case NWID_HORIZONTAL:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetHorizontal(parts->u.cont_flags);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetHorizontal(nwid_begin->u.cont_flags);
 				*fill_dest = true;
 				break;
 
 			case NWID_HORIZONTAL_LTR:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetHorizontalLTR(parts->u.cont_flags);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetHorizontalLTR(nwid_begin->u.cont_flags);
 				*fill_dest = true;
 				break;
 
 			case WWT_PANEL:
 			case WWT_INSET:
 			case WWT_FRAME:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetBackground(parts->type, parts->u.widget.colour, parts->u.widget.index);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetBackground(nwid_begin->type, nwid_begin->u.widget.colour, nwid_begin->u.widget.index);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				*fill_dest = true;
 				break;
 
 			case NWID_VERTICAL:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetVertical(parts->u.cont_flags);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetVertical(nwid_begin->u.cont_flags);
 				*fill_dest = true;
 				break;
 
 			case NWID_MATRIX: {
-				if (*dest != nullptr) return num_used;
+				if (*dest != nullptr) return nwid_begin;
 				NWidgetMatrix *nwm = new NWidgetMatrix();
 				*dest = nwm;
 				*fill_dest = true;
-				nwm->SetIndex(parts->u.widget.index);
-				nwm->SetColour(parts->u.widget.colour);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				nwm->SetIndex(nwid_begin->u.widget.index);
+				nwm->SetColour(nwid_begin->u.widget.colour);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				break;
 			}
 
 			case WPT_FUNCTION: {
-				if (*dest != nullptr) return num_used;
+				if (*dest != nullptr) return nwid_begin;
 				/* Ensure proper functioning even when the called code simply writes its largest index. */
 				int biggest = -1;
-				*dest = parts->u.func_ptr(&biggest);
+				*dest = nwid_begin->u.func_ptr(&biggest);
 				*biggest_index = std::max(*biggest_index, biggest);
 				*fill_dest = false;
 				break;
@@ -3159,8 +3254,8 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, 
 			case WPT_RESIZE: {
 				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
 				if (nwrb != nullptr) {
-					assert(parts->u.xy.x >= 0 && parts->u.xy.y >= 0);
-					nwrb->SetResize(parts->u.xy.x, parts->u.xy.y);
+					assert(nwid_begin->u.xy.x >= 0 && nwid_begin->u.xy.y >= 0);
+					nwrb->SetResize(nwid_begin->u.xy.x, nwid_begin->u.xy.y);
 				}
 				break;
 			}
@@ -3168,8 +3263,8 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, 
 			case WPT_MINSIZE: {
 				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
 				if (nwrb != nullptr) {
-					assert(parts->u.xy.x >= 0 && parts->u.xy.y >= 0);
-					nwrb->SetMinimalSize(parts->u.xy.x, parts->u.xy.y);
+					assert(nwid_begin->u.xy.x >= 0 && nwid_begin->u.xy.y >= 0);
+					nwrb->SetMinimalSize(nwid_begin->u.xy.x, nwid_begin->u.xy.y);
 				}
 				break;
 			}
@@ -3177,8 +3272,8 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, 
 			case WPT_MINTEXTLINES: {
 				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
 				if (nwrb != nullptr) {
-					assert(parts->u.text_lines.size >= FS_BEGIN && parts->u.text_lines.size < FS_END);
-					nwrb->SetMinimalTextLines(parts->u.text_lines.lines, parts->u.text_lines.spacing, parts->u.text_lines.size);
+					assert(nwid_begin->u.text_lines.size >= FS_BEGIN && nwid_begin->u.text_lines.size < FS_END);
+					nwrb->SetMinimalTextLines(nwid_begin->u.text_lines.lines, nwid_begin->u.text_lines.spacing, nwid_begin->u.text_lines.size);
 				}
 				break;
 			}
@@ -3186,7 +3281,7 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, 
 			case WPT_TEXTSTYLE: {
 				NWidgetCore *nwc = dynamic_cast<NWidgetCore *>(*dest);
 				if (nwc != nullptr) {
-					nwc->SetTextStyle(parts->u.text_style.colour, parts->u.text_style.size);
+					nwc->SetTextStyle(nwid_begin->u.text_style.colour, nwid_begin->u.text_style.size);
 				}
 				break;
 			}
@@ -3194,97 +3289,118 @@ static int MakeNWidget(const NWidgetPart *parts, int count, NWidgetBase **dest, 
 			case WPT_ALIGNMENT: {
 				NWidgetCore *nwc = dynamic_cast<NWidgetCore *>(*dest);
 				if (nwc != nullptr) {
-					nwc->SetAlignment(parts->u.align.align);
+					nwc->SetAlignment(nwid_begin->u.align.align);
 				}
 				break;
 			}
 
 			case WPT_FILL: {
 				NWidgetResizeBase *nwrb = dynamic_cast<NWidgetResizeBase *>(*dest);
-				if (nwrb != nullptr) nwrb->SetFill(parts->u.xy.x, parts->u.xy.y);
+				if (nwrb != nullptr) nwrb->SetFill(nwid_begin->u.xy.x, nwid_begin->u.xy.y);
 				break;
 			}
 
 			case WPT_DATATIP: {
 				NWidgetCore *nwc = dynamic_cast<NWidgetCore *>(*dest);
 				if (nwc != nullptr) {
-					nwc->widget_data = parts->u.data_tip.data;
-					nwc->tool_tip = parts->u.data_tip.tooltip;
+					nwc->widget_data = nwid_begin->u.data_tip.data;
+					nwc->tool_tip = nwid_begin->u.data_tip.tooltip;
 				}
 				break;
 			}
 
 			case WPT_PADDING:
-				if (*dest != nullptr) (*dest)->SetPadding(parts->u.padding);
+				if (*dest != nullptr) (*dest)->SetPadding(nwid_begin->u.padding);
 				break;
 
 			case WPT_PIPSPACE: {
 				NWidgetPIPContainer *nwc = dynamic_cast<NWidgetPIPContainer *>(*dest);
-				if (nwc != nullptr) nwc->SetPIP(parts->u.pip.pre, parts->u.pip.inter, parts->u.pip.post);
+				if (nwc != nullptr) nwc->SetPIP(nwid_begin->u.pip.pre, nwid_begin->u.pip.inter, nwid_begin->u.pip.post);
 
 				NWidgetBackground *nwb = dynamic_cast<NWidgetBackground *>(*dest);
-				if (nwb != nullptr) nwb->SetPIP(parts->u.pip.pre, parts->u.pip.inter, parts->u.pip.post);
+				if (nwb != nullptr) nwb->SetPIP(nwid_begin->u.pip.pre, nwid_begin->u.pip.inter, nwid_begin->u.pip.post);
+				break;
+			}
+
+			case WPT_PIPRATIO: {
+				NWidgetPIPContainer *nwc = dynamic_cast<NWidgetPIPContainer *>(*dest);
+				if (nwc != nullptr) nwc->SetPIPRatio(nwid_begin->u.pip.pre, nwid_begin->u.pip.inter, nwid_begin->u.pip.post);
+
+				NWidgetBackground *nwb = dynamic_cast<NWidgetBackground *>(*dest);
+				if (nwb != nullptr) nwb->SetPIPRatio(nwid_begin->u.pip.pre, nwid_begin->u.pip.inter, nwid_begin->u.pip.post);
+
+				if (unlikely(nwc == nullptr && nwb == nullptr)) throw std::runtime_error("WPT_PIPRATIO requires NWidgetPIPContainer or NWidgetBackground");
 				break;
 			}
 
 			case WPT_SCROLLBAR: {
 				NWidgetCore *nwc = dynamic_cast<NWidgetCore *>(*dest);
 				if (nwc != nullptr) {
-					nwc->scrollbar_index = parts->u.widget.index;
+					nwc->scrollbar_index = nwid_begin->u.widget.index;
 				}
 				break;
 			}
 
 			case WPT_ENDCONTAINER:
-				return num_used;
+				return nwid_begin;
 
 			case NWID_VIEWPORT:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetViewport(parts->u.widget.index);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetViewport(nwid_begin->u.widget.index);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				break;
 
 			case NWID_HSCROLLBAR:
 			case NWID_VSCROLLBAR:
-				if (*dest != nullptr) return num_used;
-				*dest = new NWidgetScrollbar(parts->type, parts->u.widget.colour, parts->u.widget.index);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				if (*dest != nullptr) return nwid_begin;
+				*dest = new NWidgetScrollbar(nwid_begin->type, nwid_begin->u.widget.colour, nwid_begin->u.widget.index);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				break;
 
 			case NWID_SELECTION: {
-				if (*dest != nullptr) return num_used;
+				if (*dest != nullptr) return nwid_begin;
 				NWidgetStacked *nws = new NWidgetStacked();
 				*dest = nws;
 				*fill_dest = true;
-				nws->SetIndex(parts->u.widget.index);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				nws->SetIndex(nwid_begin->u.widget.index);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				break;
 			}
 
 			default:
-				if (*dest != nullptr) return num_used;
-				assert((parts->type & WWT_MASK) < WWT_LAST || (parts->type & WWT_MASK) == NWID_BUTTON_DROPDOWN);
-				*dest = new NWidgetLeaf(parts->type, parts->u.widget.colour, parts->u.widget.index, 0x0, STR_NULL);
-				*biggest_index = std::max(*biggest_index, (int)parts->u.widget.index);
+				if (*dest != nullptr) return nwid_begin;
+				assert((nwid_begin->type & WWT_MASK) < WWT_LAST || (nwid_begin->type & WWT_MASK) == NWID_BUTTON_DROPDOWN);
+				*dest = new NWidgetLeaf(nwid_begin->type, nwid_begin->u.widget.colour, nwid_begin->u.widget.index, 0x0, STR_NULL);
+				*biggest_index = std::max(*biggest_index, (int)nwid_begin->u.widget.index);
 				break;
 		}
-		num_used++;
-		parts++;
+		nwid_begin++;
 	}
 
-	return num_used;
+	return nwid_begin;
+}
+
+/**
+ * Test if WidgetType is a container widget.
+ * @param tp WidgetType to test.
+ * @return True iff WidgetType is a container widget.
+ */
+bool IsContainerWidgetType(WidgetType tp)
+{
+	return tp == NWID_HORIZONTAL || tp == NWID_HORIZONTAL_LTR || tp == NWID_VERTICAL || tp == NWID_MATRIX
+		|| tp == WWT_PANEL || tp == WWT_FRAME || tp == WWT_INSET || tp == NWID_SELECTION;
 }
 
 /**
  * Build a nested widget tree by recursively filling containers with nested widgets read from their parts.
- * @param parts  Array with parts of the nested widgets.
- * @param count  Length of the \a parts array.
+ * @param nwid_begin Pointer to beginning of nested widget parts.
+ * @param nwid_end Pointer to ending of nested widget parts.
  * @param parent Pointer or container to use for storing the child widgets (*parent == nullptr or *parent == container or background widget).
  * @param biggest_index Pointer to biggest nested widget index in the tree.
- * @return Number of widget part elements used to fill the container.
+ * @return Pointer to remaining nested widget parts.
  * @post \c *biggest_index contains the largest widget index of the tree and \c -1 if no index is used.
  */
-static int MakeWidgetTree(const NWidgetPart *parts, int count, NWidgetBase **parent, int *biggest_index)
+static const NWidgetPart *MakeWidgetTree(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, NWidgetBase **parent, int *biggest_index)
 {
 	/* If *parent == nullptr, only the first widget is read and returned. Otherwise, *parent must point to either
 	 * a #NWidgetContainer or a #NWidgetBackground object, and parts are added as much as possible. */
@@ -3292,25 +3408,18 @@ static int MakeWidgetTree(const NWidgetPart *parts, int count, NWidgetBase **par
 	NWidgetBackground *nwid_parent = dynamic_cast<NWidgetBackground *>(*parent);
 	assert(*parent == nullptr || (nwid_cont != nullptr && nwid_parent == nullptr) || (nwid_cont == nullptr && nwid_parent != nullptr));
 
-	int total_used = 0;
 	for (;;) {
 		NWidgetBase *sub_widget = nullptr;
 		bool fill_sub = false;
-		int num_used = MakeNWidget(parts, count - total_used, &sub_widget, &fill_sub, biggest_index);
-		parts += num_used;
-		total_used += num_used;
+		nwid_begin = MakeNWidget(nwid_begin, nwid_end, &sub_widget, &fill_sub, biggest_index);
 
 		/* Break out of loop when end reached */
 		if (sub_widget == nullptr) break;
 
 		/* If sub-widget is a container, recursively fill that container. */
-		WidgetType tp = sub_widget->type;
-		if (fill_sub && (tp == NWID_HORIZONTAL || tp == NWID_HORIZONTAL_LTR || tp == NWID_VERTICAL || tp == NWID_MATRIX
-							|| tp == WWT_PANEL || tp == WWT_FRAME || tp == WWT_INSET || tp == NWID_SELECTION)) {
+		if (fill_sub && IsContainerWidgetType(sub_widget->type)) {
 			NWidgetBase *sub_ptr = sub_widget;
-			int num_used = MakeWidgetTree(parts, count - total_used, &sub_ptr, biggest_index);
-			parts += num_used;
-			total_used += num_used;
+			nwid_begin = MakeWidgetTree(nwid_begin, nwid_end, &sub_ptr, biggest_index);
 		}
 
 		/* Add sub_widget to parent container if available, otherwise return the widget to the caller. */
@@ -3318,21 +3427,21 @@ static int MakeWidgetTree(const NWidgetPart *parts, int count, NWidgetBase **par
 		if (nwid_parent != nullptr) nwid_parent->Add(sub_widget);
 		if (nwid_cont == nullptr && nwid_parent == nullptr) {
 			*parent = sub_widget;
-			return total_used;
+			return nwid_begin;
 		}
 	}
 
-	if (count == total_used) return total_used; // Reached the end of the array of parts?
+	if (nwid_begin == nwid_end) return nwid_begin; // Reached the end of the array of parts?
 
-	assert(total_used < count);
-	assert(parts->type == WPT_ENDCONTAINER);
-	return total_used + 1; // *parts is also 'used'
+	assert(nwid_begin < nwid_end);
+	assert(nwid_begin->type == WPT_ENDCONTAINER);
+	return nwid_begin + 1; // *nwid_begin is also 'used'
 }
 
 /**
  * Construct a nested widget tree from an array of parts.
- * @param parts Array with parts of the widgets.
- * @param count Length of the \a parts array.
+ * @param nwid_begin Pointer to beginning of nested widget parts.
+ * @param nwid_end Pointer to ending of nested widget parts.
  * @param biggest_index Pointer to biggest nested widget index collected in the tree.
  * @param container Container to add the nested widgets to. In case it is nullptr a vertical container is used.
  * @return Root of the nested widget tree, a vertical container containing the entire GUI.
@@ -3340,12 +3449,12 @@ static int MakeWidgetTree(const NWidgetPart *parts, int count, NWidgetBase **par
  * @pre \c biggest_index != nullptr
  * @post \c *biggest_index contains the largest widget index of the tree and \c -1 if no index is used.
  */
-NWidgetContainer *MakeNWidgets(const NWidgetPart *parts, int count, int *biggest_index, NWidgetContainer *container)
+NWidgetContainer *MakeNWidgets(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, int *biggest_index, NWidgetContainer *container)
 {
 	*biggest_index = -1;
 	if (container == nullptr) container = new NWidgetVertical();
 	NWidgetBase *cont_ptr = container;
-	MakeWidgetTree(parts, count, &cont_ptr, biggest_index);
+	MakeWidgetTree(nwid_begin, nwid_end, &cont_ptr, biggest_index);
 	return container;
 }
 
@@ -3353,8 +3462,8 @@ NWidgetContainer *MakeNWidgets(const NWidgetPart *parts, int count, int *biggest
  * Make a nested widget tree for a window from a parts array. Besides loading, it inserts a shading selection widget
  * between the title bar and the window body if the first widget in the parts array looks like a title bar (it is a horizontal
  * container with a caption widget) and has a shade box widget.
- * @param parts Array with parts of the widgets.
- * @param count Length of the \a parts array.
+ * @param nwid_begin Pointer to beginning of nested widget parts.
+ * @param nwid_end Pointer to ending of nested widget parts.
  * @param biggest_index Pointer to biggest nested widget index collected in the tree.
  * @param[out] shade_select Pointer to the inserted shade selection widget (\c nullptr if not unserted).
  * @return Root of the nested widget tree, a vertical container containing the entire GUI.
@@ -3362,20 +3471,18 @@ NWidgetContainer *MakeNWidgets(const NWidgetPart *parts, int count, int *biggest
  * @pre \c biggest_index != nullptr
  * @post \c *biggest_index contains the largest widget index of the tree and \c -1 if no index is used.
  */
-NWidgetContainer *MakeWindowNWidgetTree(const NWidgetPart *parts, int count, int *biggest_index, NWidgetStacked **shade_select)
+NWidgetContainer *MakeWindowNWidgetTree(const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, int *biggest_index, NWidgetStacked **shade_select)
 {
 	*biggest_index = -1;
 
 	/* Read the first widget recursively from the array. */
 	NWidgetBase *nwid = nullptr;
-	int num_used = MakeWidgetTree(parts, count, &nwid, biggest_index);
+	nwid_begin = MakeWidgetTree(nwid_begin, nwid_end, &nwid, biggest_index);
 	assert(nwid != nullptr);
-	parts += num_used;
-	count -= num_used;
 
 	NWidgetContainer *root = new NWidgetVertical;
 	root->Add(nwid);
-	if (count == 0) { // There is no body at all.
+	if (nwid_begin == nwid_end) { // There is no body at all.
 		*shade_select = nullptr;
 		return root;
 	}
@@ -3396,7 +3503,7 @@ NWidgetContainer *MakeWindowNWidgetTree(const NWidgetPart *parts, int count, int
 
 	/* Load the remaining parts into 'body'. */
 	int biggest2 = -1;
-	MakeNWidgets(parts, count, &biggest2, body);
+	MakeNWidgets(nwid_begin, nwid_end, &biggest2, body);
 
 	*biggest_index = std::max(*biggest_index, biggest2);
 	return root;

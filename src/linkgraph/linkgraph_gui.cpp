@@ -518,7 +518,7 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 				pt.y - 2 <= std::max(pta.y, ptb.y) &&
 				check_distance()) {
 
-			static char buf[1024 + 512];
+			char buf[2048];
 			char *buf_end = buf;
 			buf[0] = 0;
 
@@ -535,11 +535,24 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 				}
 			};
 
-			if (_ctrl_pressed) {
-				SetDParam(0, link.cargo);
-				SetDParam(1, link.capacity);
+			auto add_extra_info = [&](const LinkProperties &info_link) {
+				if (info_link.usage < info_link.planned) {
+					SetDParam(0, info_link.cargo);
+					SetDParam(1, info_link.usage);
+					buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_USAGE, lastof(buf));
+				} else if (info_link.planned < info_link.usage) {
+					SetDParam(0, info_link.cargo);
+					SetDParam(1, info_link.planned);
+					buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_PLANNED, lastof(buf));
+				}
+				SetDParam(0, info_link.cargo);
+				SetDParam(1, info_link.capacity);
 				buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY, lastof(buf));
-				add_travel_time(link.time);
+				add_travel_time(info_link.time);
+			};
+
+			if (_ctrl_pressed) {
+				add_extra_info(link);
 			}
 
 			/* Fill buf with more information if this is a bidirectional link. */
@@ -554,10 +567,7 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 						SetDParam(2, j->prop.Usage() * 100 / (j->prop.capacity + 1));
 						buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_RETURN_EXTENSION, lastof(buf));
 						if (_ctrl_pressed) {
-							SetDParam(0, j->prop.cargo);
-							SetDParam(1, j->prop.capacity);
-							buf_end = GetString(buf_end, STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY, lastof(buf));
-							add_travel_time(back_time);
+							add_extra_info(j->prop);
 						}
 					}
 					break;
@@ -586,11 +596,11 @@ bool LinkGraphOverlay::ShowTooltip(Point pt, TooltipCloseCondition close_cond)
 			SetDParam(3, i->to_id);
 			SetDParam(4, link.Usage() * 100 / (link.capacity + 1));
 			SetDParamStr(5, buf);
-			GuiShowTooltips(this->window, STR_LINKGRAPH_STATS_TOOLTIP, 0, nullptr, close_cond);
+			GuiShowTooltips(this->window, STR_LINKGRAPH_STATS_TOOLTIP, close_cond);
 			return true;
 		}
 	}
-	GuiShowTooltips(this->window, STR_NULL, 0, nullptr, close_cond);
+	GuiShowTooltips(this->window, STR_NULL, close_cond);
 	return false;
 }
 
@@ -679,7 +689,8 @@ NWidgetBase *MakeCargoesLegendLinkGraphGUI(int *biggest_index)
 		spc->SetResize(0, 0);
 		col->Add(spc);
 	}
-	panel->Add(col);
+	/* If there are no cargo specs defined, then col won't have been created so don't add it. */
+	if (col != nullptr) panel->Add(col);
 	*biggest_index = WID_LGL_CARGO_LAST;
 	return panel;
 }
@@ -718,11 +729,11 @@ static const NWidgetPart _nested_linkgraph_legend_widgets[] = {
 static_assert(WID_LGL_SATURATION_LAST - WID_LGL_SATURATION_FIRST ==
 		lengthof(LinkGraphOverlay::LINK_COLOURS[0]) - 1);
 
-static WindowDesc _linkgraph_legend_desc(
+static WindowDesc _linkgraph_legend_desc(__FILE__, __LINE__,
 	WDP_AUTO, "toolbar_linkgraph", 0, 0,
 	WC_LINKGRAPH_LEGEND, WC_NONE,
 	0,
-	_nested_linkgraph_legend_widgets, lengthof(_nested_linkgraph_legend_widgets)
+	std::begin(_nested_linkgraph_legend_widgets), std::end(_nested_linkgraph_legend_widgets)
 );
 
 /**
@@ -746,7 +757,8 @@ LinkGraphLegendWindow::LinkGraphLegendWindow(WindowDesc *desc, int window_number
  * Set the overlay belonging to this menu and import its company/cargo settings.
  * @param overlay New overlay for this menu.
  */
-void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay) {
+void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay)
+{
 	this->overlay = overlay;
 	CompanyMask companies = this->overlay->GetCompanyMask();
 	for (uint c = 0; c < MAX_COMPANIES; c++) {
@@ -760,7 +772,7 @@ void LinkGraphLegendWindow::SetOverlay(LinkGraphOverlay *overlay) {
 	}
 }
 
-void LinkGraphLegendWindow::UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+void LinkGraphLegendWindow::UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize)
 {
 	if (IsInsideMM(widget, WID_LGL_SATURATION_FIRST, WID_LGL_SATURATION_LAST + 1)) {
 		StringID str = STR_NULL;
@@ -790,7 +802,6 @@ void LinkGraphLegendWindow::UpdateWidgetSize(int widget, Dimension *size, const 
 void LinkGraphLegendWindow::DrawWidget(const Rect &r, int widget) const
 {
 	Rect br = r.Shrink(WidgetDimensions::scaled.bevel);
-	if (this->IsWidgetLowered(widget)) br = br.Translate(WidgetDimensions::scaled.pressed, WidgetDimensions::scaled.pressed);
 	if (IsInsideMM(widget, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST + 1)) {
 		if (this->IsWidgetDisabled(widget)) return;
 		CompanyID cid = (CompanyID)(widget - WID_LGL_COMPANY_FIRST);
@@ -809,33 +820,32 @@ void LinkGraphLegendWindow::DrawWidget(const Rect &r, int widget) const
 			str = STR_LINKGRAPH_LEGEND_SATURATED;
 		}
 		if (str != STR_NULL) {
-			DrawString(br.left, br.right, CenterBounds(br.top, br.bottom, FONT_HEIGHT_SMALL), str, GetContrastColour(colour) | TC_FORCED, SA_HOR_CENTER, false, FS_SMALL);
+			DrawString(br.left, br.right, CenterBounds(br.top, br.bottom, GetCharacterHeight(FS_SMALL)), str, GetContrastColour(colour) | TC_FORCED, SA_HOR_CENTER, false, FS_SMALL);
 		}
 	}
 	if (IsInsideMM(widget, WID_LGL_CARGO_FIRST, WID_LGL_CARGO_LAST + 1)) {
 		const CargoSpec *cargo = _sorted_cargo_specs[widget - WID_LGL_CARGO_FIRST];
 		GfxFillRect(br, cargo->legend_colour);
-		DrawString(br.left, br.right, CenterBounds(br.top, br.bottom, FONT_HEIGHT_SMALL), cargo->abbrev, GetContrastColour(cargo->legend_colour, 73), SA_HOR_CENTER, false, FS_SMALL);
+		DrawString(br.left, br.right, CenterBounds(br.top, br.bottom, GetCharacterHeight(FS_SMALL)), cargo->abbrev, GetContrastColour(cargo->legend_colour, 73), SA_HOR_CENTER, false, FS_SMALL);
 	}
 }
 
-bool LinkGraphLegendWindow::OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond)
+bool LinkGraphLegendWindow::OnTooltip([[maybe_unused]] Point, int widget, TooltipCloseCondition close_cond)
 {
 	if (IsInsideMM(widget, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST + 1)) {
 		if (this->IsWidgetDisabled(widget)) {
-			GuiShowTooltips(this, STR_LINKGRAPH_LEGEND_SELECT_COMPANIES, 0, nullptr, close_cond);
+			GuiShowTooltips(this, STR_LINKGRAPH_LEGEND_SELECT_COMPANIES, close_cond);
 		} else {
-			uint64 params[2];
 			CompanyID cid = (CompanyID)(widget - WID_LGL_COMPANY_FIRST);
-			params[0] = STR_LINKGRAPH_LEGEND_SELECT_COMPANIES;
-			params[1] = cid;
-			GuiShowTooltips(this, STR_LINKGRAPH_LEGEND_COMPANY_TOOLTIP, 2, params, close_cond);
+			SetDParam(0, STR_LINKGRAPH_LEGEND_SELECT_COMPANIES);
+			SetDParam(1, cid);
+			GuiShowTooltips(this, STR_LINKGRAPH_LEGEND_COMPANY_TOOLTIP, close_cond, 2);
 		}
 		return true;
 	}
 	if (IsInsideMM(widget, WID_LGL_CARGO_FIRST, WID_LGL_CARGO_LAST + 1)) {
 		const CargoSpec *cargo = _sorted_cargo_specs[widget - WID_LGL_CARGO_FIRST];
-		GuiShowTooltips(this, cargo->name, 0, nullptr, close_cond);
+		GuiShowTooltips(this, cargo->name, close_cond);
 		return true;
 	}
 	return false;
@@ -868,7 +878,7 @@ void LinkGraphLegendWindow::UpdateOverlayCargoes()
 	this->overlay->SetCargoMask(mask);
 }
 
-void LinkGraphLegendWindow::OnClick(Point pt, int widget, int click_count)
+void LinkGraphLegendWindow::OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count)
 {
 	/* Check which button is clicked */
 	if (IsInsideMM(widget, WID_LGL_COMPANY_FIRST, WID_LGL_COMPANY_LAST + 1)) {
@@ -900,7 +910,7 @@ void LinkGraphLegendWindow::OnClick(Point pt, int widget, int click_count)
  * @param data ignored
  * @param gui_scope ignored
  */
-void LinkGraphLegendWindow::OnInvalidateData(int data, bool gui_scope)
+void LinkGraphLegendWindow::OnInvalidateData([[maybe_unused]] int data, [[maybe_unused]] bool gui_scope)
 {
 	if (this->num_cargo != _sorted_cargo_specs.size()) {
 		this->Close();

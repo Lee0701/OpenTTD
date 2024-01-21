@@ -64,6 +64,7 @@ public:
 	 */
 	static size_t AppendToBuffer(CharType *buff, const CharType *buffer_last, WChar c)
 	{
+		assert(buff < buffer_last);
 		if (c >= 0x010000U) {
 			/* Character is encoded using surrogates in UTF-16. */
 			if (buff + 1 <= buffer_last) {
@@ -84,6 +85,7 @@ public:
 void MacOSResetScriptCache(FontSize size);
 void MacOSSetCurrentLocaleName(const char *iso_code);
 int MacOSStringCompare(std::string_view s1, std::string_view s2);
+int MacOSStringContains(const std::string_view str, const std::string_view value, bool case_insensitive);
 
 void MacOSRegisterExternalFont(const char *file_path);
 

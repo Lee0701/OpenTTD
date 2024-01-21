@@ -287,17 +287,29 @@ const Livery *GetParentLivery(const Group *g)
 	return &pg->livery;
 }
 
-static inline bool IsGroupDescendantOfGroup(const Group *g, const Group *top)
+static inline bool IsGroupDescendantOfGroupID(const Group *g, const GroupID top_gid, const Owner owner)
 {
-	if (g->owner != top->owner) return false;
+	if (g->owner != owner) return false;
 
 	while (true) {
+		if (g->parent == top_gid) return true;
 		if (g->parent == INVALID_GROUP) return false;
-		if (g->parent == top->index) return true;
 		g = Group::Get(g->parent);
 	}
 
 	NOT_REACHED();
+}
+
+static inline bool IsGroupDescendantOfGroup(const Group *g, const Group *top)
+{
+	return IsGroupDescendantOfGroupID(g, top->index, top->owner);
+}
+
+static inline bool IsGroupIDDescendantOfGroupID(const GroupID gid, const GroupID top_gid, const Owner owner)
+{
+	if (IsTopLevelGroupID(gid) || gid == INVALID_GROUP) return false;
+
+	return IsGroupDescendantOfGroupID(Group::Get(gid), top_gid, owner);
 }
 
 template <typename F>
@@ -317,15 +329,11 @@ void IterateDescendantsOfGroup(GroupID id_top, F func)
 	if (top != nullptr) IterateDescendantsOfGroup<F>(top, func);
 }
 
-/**
- * Propagate a livery change to a group's children.
- * @param g Group.
- */
-void PropagateChildLivery(const Group *g)
+static void PropagateChildLiveryResetVehicleCache(const Group *g)
 {
 	/* Company colour data is indirectly cached. */
 	for (Vehicle *v : Vehicle::Iterate()) {
-		if (v->group_id == g->index && (!v->IsGroundVehicle() || v->IsFrontEngine())) {
+		if (v->IsPrimaryVehicle() && (v->group_id == g->index || IsGroupIDDescendantOfGroupID(v->group_id, g->index, g->owner))) {
 			for (Vehicle *u = v; u != nullptr; u = u->Next()) {
 				u->colourmap = PAL_NONE;
 				u->InvalidateNewGRFCache();
@@ -333,13 +341,57 @@ void PropagateChildLivery(const Group *g)
 			}
 		}
 	}
-
-	IterateDescendantsOfGroup(g, [&](Group *cg) {
-		if (!HasBit(cg->livery.in_use, 0)) cg->livery.colour1 = g->livery.colour1;
-		if (!HasBit(cg->livery.in_use, 1)) cg->livery.colour2 = g->livery.colour2;
-	});
 }
 
+static void PropagateChildLivery(const GroupID top_gid, const Owner owner, const Livery &top_livery)
+{
+	for (Group *g : Group::Iterate()) {
+		if (g->owner != owner) continue;
+
+		Livery livery = g->livery;
+
+		const Group *pg = g;
+		bool is_descendant = (g->index == top_gid);
+		while (!is_descendant) {
+			if (pg->parent == top_gid) {
+				is_descendant = true;
+				break;
+			}
+			if (pg->parent == INVALID_GROUP) break;
+			pg = Group::Get(pg->parent);
+			if (!HasBit(livery.in_use, 0)) livery.colour1 = pg->livery.colour1;
+			if (!HasBit(livery.in_use, 1)) livery.colour2 = pg->livery.colour2;
+			livery.in_use |= pg->livery.in_use;
+		}
+		if (is_descendant) {
+			if (!HasBit(livery.in_use, 0)) livery.colour1 = top_livery.colour1;
+			if (!HasBit(livery.in_use, 1)) livery.colour2 = top_livery.colour2;
+			g->livery.colour1 = livery.colour1;
+			g->livery.colour2 = livery.colour2;
+		}
+	}
+}
+
+/**
+ * Propagate a livery change to a group's children, and optionally update cached vehicle colourmaps.
+ * @param g Group to propagate colours to children.
+ * @param reset_cache Reset colourmap of vehicles in this group.
+ */
+static void PropagateChildLivery(const Group *g, bool reset_cache)
+{
+	PropagateChildLivery(g->index, g->owner, g->livery);
+	if (reset_cache) PropagateChildLiveryResetVehicleCache(g);
+}
+
+/**
+ * Update group liveries for a company. This is called when the LS_DEFAULT scheme is changed, to update groups with
+ * colours set to default.
+ * @param c Company to update.
+ */
+void UpdateCompanyGroupLiveries(const Company *c)
+{
+	PropagateChildLivery(INVALID_GROUP, c->index, c->livery[LS_DEFAULT]);
+}
 
 Group::Group(Owner owner)
 {
@@ -509,12 +561,13 @@ CommandCost CmdAlterGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 			GroupStatistics::UpdateAutoreplace(g->owner);
 			if (g->vehicle_type == VEH_TRAIN) ReindexTemplateReplacementsRecursive();
 
-			if (g->livery.in_use == 0) {
+			if (!HasBit(g->livery.in_use, 0) || !HasBit(g->livery.in_use, 1)) {
+				/* Update livery with new parent's colours if either colour is default. */
 				const Livery *livery = GetParentLivery(g);
-				g->livery.colour1 = livery->colour1;
-				g->livery.colour2 = livery->colour2;
+				if (!HasBit(g->livery.in_use, 0)) g->livery.colour1 = livery->colour1;
+				if (!HasBit(g->livery.in_use, 1)) g->livery.colour2 = livery->colour2;
 
-				PropagateChildLivery(g);
+				PropagateChildLivery(g, true);
 				MarkWholeScreenDirty();
 			}
 		}
@@ -852,7 +905,7 @@ CommandCost CmdSetGroupLivery(TileIndex tile, DoCommandFlag flags, uint32 p1, ui
 			g->livery.colour2 = colour;
 		}
 
-		PropagateChildLivery(g);
+		PropagateChildLivery(g, true);
 		MarkWholeScreenDirty();
 	}
 
@@ -911,19 +964,6 @@ CommandCost CmdSetGroupFlag(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 
 	return CommandCost();
 }
-
-/**
- * Decrease the num_vehicle variable before delete an front engine from a group
- * @note Called in CmdSellRailWagon and DeleteLasWagon,
- * @param v     FrontEngine of the train we want to remove.
- */
-void RemoveVehicleFromGroup(const Vehicle *v)
-{
-	if (!v->IsPrimaryVehicle()) return;
-
-	if (!IsDefaultGroupID(v->group_id)) GroupStatistics::CountVehicle(v, -1);
-}
-
 
 /**
  * Affect the groupID of a train to new_g.

@@ -111,7 +111,7 @@ public:
 		int CountRuns() const override { return (uint)this->size();  }
 		const VisualRun &GetVisualRun(int run) const override { return this->at(run);  }
 
-		int GetInternalCharLength(WChar c) const override
+		int GetInternalCharLength(char32_t c) const override
 		{
 			/* Uniscribe uses UTF-16 internally which means we need to account for surrogate pairs. */
 			return c >= 0x010000U ? 2 : 1;
@@ -292,7 +292,7 @@ static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutF
 
 	/* Itemize text. */
 	std::vector<SCRIPT_ITEM> items = UniscribeItemizeString(buff, length);
-	if (items.size() == 0) return nullptr;
+	if (items.empty()) return nullptr;
 
 	/* Build ranges from the items and the font map. A range is a run of text
 	 * that is part of a single item and formatted using a single font style. */
@@ -376,7 +376,7 @@ static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutF
 		/* Walk backwards to find the last suitable breaking point. */
 		while (--num_chars > this->cur_range_offset && !log_attribs[num_chars].fSoftBreak && !log_attribs[num_chars].fWhiteSpace) {}
 
-		if (num_chars == this->cur_range_offset) {
+		if (num_chars <= this->cur_range_offset) {
 			/* Didn't find any suitable word break point, just break on the last cluster boundary. */
 			num_chars = last_cluster;
 		}
@@ -384,7 +384,9 @@ static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutF
 		/* Eat any whitespace characters before the breaking point. */
 		while (num_chars - 1 > this->cur_range_offset && log_attribs[num_chars - 1].fWhiteSpace) num_chars--;
 		/* Count whitespace after the breaking point. */
-		while (num_chars + whitespace_count < (int)log_attribs.size() && log_attribs[num_chars + whitespace_count].fWhiteSpace) whitespace_count++;
+		while (num_chars + whitespace_count >= 0 && num_chars + whitespace_count < (int)log_attribs.size() && log_attribs[num_chars + whitespace_count].fWhiteSpace) {
+			whitespace_count++;
+		}
 
 		/* Get last run that corresponds to the number of characters to show. */
 		for (std::vector<UniscribeRun>::iterator run = start_run; run != last_run; run++) {
@@ -535,7 +537,7 @@ const int *UniscribeParagraphLayout::UniscribeVisualRun::GetGlyphToCharMap() con
 	while (*s != '\0') {
 		size_t idx = s - string_base;
 
-		WChar c = Utf8Consume(&s);
+		char32_t c = Utf8Consume(&s);
 		if (c < 0x10000) {
 			utf16_str.push_back((wchar_t)c);
 		} else {
@@ -551,11 +553,11 @@ const int *UniscribeParagraphLayout::UniscribeVisualRun::GetGlyphToCharMap() con
 	/* Query Uniscribe for word and cluster break information. */
 	this->str_info.resize(utf16_to_utf8.size());
 
-	if (utf16_str.size() > 0) {
+	if (!utf16_str.empty()) {
 		/* Itemize string into language runs. */
 		std::vector<SCRIPT_ITEM> runs = UniscribeItemizeString(&utf16_str[0], (int32)utf16_str.size());
 
-		for (std::vector<SCRIPT_ITEM>::const_iterator run = runs.begin(); runs.size() > 0 && run != runs.end() - 1; run++) {
+		for (std::vector<SCRIPT_ITEM>::const_iterator run = runs.begin(); !runs.empty() && run != runs.end() - 1; run++) {
 			/* Get information on valid word and character break.s */
 			int len = (run + 1)->iCharPos - run->iCharPos;
 			std::vector<SCRIPT_LOGATTR> attr(len);

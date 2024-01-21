@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Каждый месяц
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Каждые 3 месяца
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Каждые 6 месяцев
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Каждый год
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :миль/ч
 STR_UNIT_NAME_VELOCITY_METRIC                                   :км/ч
 STR_UNIT_NAME_VELOCITY_SI                                       :м/с
@@ -17,6 +12,9 @@ STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Автотра�
 STR_VEHICLE_TYPE_SHIPS                                          :Водный транспорт
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Авиатранспорт
 
+STR_CONFIG_SETTING_AUTOSAVE                                     :Автосохранение: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Укажите интервал между автоматическими сохранениями
+
 STR_CONFIG_SETTING_SIMULATE_SIGNALS                             :Симуляция светофоров в туннелях и на мостах каждые: {STRING}
 STR_CONFIG_SETTING_SIMULATE_SIGNALS_VALUE                       :{COMMA} клет{P ку ки ок}
 
@@ -25,6 +23,11 @@ STR_CONFIG_SETTING_PAY_FOR_REPAIR_VEHICLE_HELPTEXT              :Если вкл
 
 STR_CONFIG_SETTING_REPAIR_COST                                  :Стоимость ремонта: 1/{STRING} полной стоимости тс
 STR_CONFIG_SETTING_REPAIR_COST_HELPTEXT                         :Стоимость ремонта одной поломки транспортного средства
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Графики движения в «тиках», а не днях: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Измерять время в графиках движения игровыми «тиками», а не днями. 1 день равен 74 «тикам».
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Переключение прозрачности индикаторов загрузки. Ctrl+щелчок - заблокировать.
 
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}Среднее время в пути: {STRING}
 STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY                            :{}Ёмкость: {CARGO_LONG}

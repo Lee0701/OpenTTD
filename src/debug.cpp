@@ -18,9 +18,6 @@
 #include "thread.h"
 #include <array>
 #include <mutex>
-#if defined(__MINGW32__)
-#include "3rdparty/mingw-std-threads/mingw.mutex.h"
-#endif
 
 #if defined(_WIN32)
 #include "os/windows/win32.h"
@@ -146,7 +143,7 @@ void debug_print(const char *dbg, const char *buf)
 	if (_debug_socket != INVALID_SOCKET) {
 		char buf2[1024 + 32];
 
-		seprintf(buf2, lastof(buf2), "%sdbg: [%s] %s\n", GetLogPrefix(), dbg, buf);
+		seprintf(buf2, lastof(buf2), "%sdbg: [%s] %s\n", log_prefix().GetLogPrefix(), dbg, buf);
 
 		/* Prevent sending a message concurrently, as that might cause interleaved messages. */
 		static std::mutex _debug_socket_mutex;
@@ -160,7 +157,7 @@ void debug_print(const char *dbg, const char *buf)
 	if (strcmp(dbg, "desync") == 0) {
 		static FILE *f = FioFOpenFile("commands-out.log", "wb", AUTOSAVE_DIR);
 		if (f != nullptr) {
-			fprintf(f, "%s%s\n", GetLogPrefix(), buf);
+			fprintf(f, "%s%s\n", log_prefix().GetLogPrefix(), buf);
 			fflush(f);
 		}
 #ifdef RANDOM_DEBUG
@@ -194,7 +191,7 @@ void debug_print(const char *dbg, const char *buf)
 	}
 
 	char buffer[512];
-	seprintf(buffer, lastof(buffer), "%sdbg: [%s] %s\n", GetLogPrefix(), dbg, buf);
+	seprintf(buffer, lastof(buffer), "%sdbg: [%s] %s\n", log_prefix().GetLogPrefix(), dbg, buf);
 
 	str_strip_colours(buffer);
 
@@ -326,15 +323,14 @@ std::string GetDebugString()
  * the date, otherwise it returns nothing.
  * @return the prefix for logs (do not free), never nullptr
  */
-const char *GetLogPrefix()
+const char *log_prefix::GetLogPrefix()
 {
-	static char _log_prefix[24];
 	if (_settings_client.gui.show_date_in_logs) {
-		LocalTime::Format(_log_prefix, lastof(_log_prefix), "[%Y-%m-%d %H:%M:%S] ");
+		LocalTime::Format(this->buffer, lastof(this->buffer), "[%Y-%m-%d %H:%M:%S] ");
 	} else {
-		*_log_prefix = '\0';
+		this->buffer[0] = '\0';
 	}
-	return _log_prefix;
+	return this->buffer;
 }
 
 struct DesyncMsgLogEntry {
@@ -402,13 +398,11 @@ void ClearDesyncMsgLog()
 char *DumpDesyncMsgLog(char *buffer, const char *last)
 {
 	buffer = _desync_msg_log.Dump(buffer, last, "Desync Msg Log", [](int display_num, char *buffer, const char *last, const DesyncMsgLogEntry &entry) -> int {
-		YearMonthDay ymd;
-		ConvertDateToYMD(entry.date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(entry.date);
 		return seprintf(buffer, last, "%5u | %4i-%02i-%02i, %2i, %3i | %s\n", display_num, ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter, entry.msg.c_str());
 	});
 	buffer = _remote_desync_msg_log.Dump(buffer, last, "Remote Client Desync Msg Log", [](int display_num, char *buffer, const char *last, const DesyncMsgLogEntry &entry) -> int {
-		YearMonthDay ymd;
-		ConvertDateToYMD(entry.date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(entry.date);
 		return seprintf(buffer, last, "%5u | Client %5u | %4i-%02i-%02i, %2i, %3i | %s\n", display_num, entry.src_id, ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter, entry.msg.c_str());
 	});
 	return buffer;

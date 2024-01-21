@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :ہر مہینے
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :ہر سہ ماہی
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :ہر شش ماہی
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :ہر سال
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :میل فی گھنٹھ
 STR_UNIT_NAME_VELOCITY_METRIC                                   :کلو میٹر فی گھنٹھ
 STR_UNIT_NAME_VELOCITY_SI                                       :میٹر فی سیکنڈ
@@ -13,6 +8,13 @@ STR_VEHICLE_TYPE_TRAINS                                         :ریل گاڑی
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :سڑک کی گاڑیاں
 STR_VEHICLE_TYPE_SHIPS                                          :کشتیاں
 STR_VEHICLE_TYPE_AIRCRAFT                                       :ہوایی جہاز
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Autosave: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :گیم بچانے کا وقفا چنیں
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :اوقات کا جدول دنوں کی بجائے ٹِکس میں دکھائیں: {STRING}
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}لوڈ کرنے کے نشانوں کی شفافیت کی تدویم کریں۔ محدوظ کرنے کے لئے Ctrl+Click دبائیں
 
 # Tracerestrict GUI
 

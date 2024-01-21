@@ -54,16 +54,10 @@
 
 	CargoArray cap = ::GetCapacityOfArticulatedParts(engine_id);
 
-	CargoID most_cargo = CT_INVALID;
-	uint amount = 0;
-	for (CargoID cid = 0; cid < NUM_CARGO; cid++) {
-		if (cap[cid] > amount) {
-			amount = cap[cid];
-			most_cargo = cid;
-		}
-	}
+	auto it = std::max_element(std::cbegin(cap), std::cend(cap));
+	if (*it == 0) return CT_INVALID;
 
-	return most_cargo;
+	return CargoID(std::distance(std::cbegin(cap), it));
 }
 
 /* static */ bool ScriptEngine::CanRefitCargo(EngineID engine_id, CargoID cargo_id)
@@ -93,9 +87,8 @@
 		case VEH_ROAD:
 		case VEH_TRAIN: {
 			CargoArray capacities = GetCapacityOfArticulatedParts(engine_id);
-			for (CargoID c = 0; c < NUM_CARGO; c++) {
-				if (capacities[c] == 0) continue;
-				return capacities[c];
+			for (uint &cap : capacities) {
+				if (cap != 0) return cap;
 			}
 			return -1;
 		}
@@ -138,7 +131,7 @@
 	if (!IsValidEngine(engine_id)) return -1;
 	if (GetVehicleType(engine_id) == ScriptVehicle::VT_RAIL && IsWagon(engine_id)) return -1;
 
-	return ::Engine::Get(engine_id)->GetLifeLengthInDays();
+	return ::Engine::Get(engine_id)->GetLifeLengthInDays().base();
 }
 
 /* static */ Money ScriptEngine::GetRunningCost(EngineID engine_id)
@@ -178,7 +171,7 @@
 {
 	if (!IsValidEngine(engine_id)) return ScriptDate::DATE_INVALID;
 
-	return (ScriptDate::Date)::Engine::Get(engine_id)->intro_date;
+	return (ScriptDate::Date)::Engine::Get(engine_id)->intro_date.base();
 }
 
 /* static */ ScriptVehicle::VehicleType ScriptEngine::GetVehicleType(EngineID engine_id)

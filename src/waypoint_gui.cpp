@@ -106,7 +106,7 @@ public:
 		this->OnInvalidateData(0);
 	}
 
-	void Close() override
+	void Close([[maybe_unused]] int data = 0) override
 	{
 		CloseWindowById(GetWindowClassForVehicleType(this->vt), VehicleListIdentifier(VL_STATION_LIST, this->vt, this->owner, this->window_number).Pack(), false);
 		SetViewportCatchmentWaypoint(Waypoint::Get(this->window_number), false);
@@ -127,7 +127,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_W_CENTER_VIEW: // scroll to location
@@ -166,7 +166,7 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		/* You can only change your own waypoints */
@@ -245,11 +245,11 @@ static const NWidgetPart _nested_waypoint_view_widgets[] = {
 };
 
 /** The description of the waypoint view. */
-static WindowDesc _waypoint_view_desc(
+static WindowDesc _waypoint_view_desc(__FILE__, __LINE__,
 	WDP_AUTO, "view_waypoint", 260, 118,
 	WC_WAYPOINT_VIEW, WC_NONE,
 	0,
-	_nested_waypoint_view_widgets, lengthof(_nested_waypoint_view_widgets)
+	std::begin(_nested_waypoint_view_widgets), std::end(_nested_waypoint_view_widgets)
 );
 
 /**

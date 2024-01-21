@@ -484,10 +484,10 @@ uint Engine::GetDisplayMaxTractiveEffort() const
  * Returns the vehicle's (not model's!) life length in days.
  * @return the life length
  */
-Date Engine::GetLifeLengthInDays() const
+DateDelta Engine::GetLifeLengthInDays() const
 {
 	/* Assume leap years; this gives the player a bit more than the given amount of years, but never less. */
-	return (this->info.lifelength + _settings_game.vehicle.extend_vehicle_life) * DAYS_IN_LEAP_YEAR;
+	return static_cast<int32_t>(this->info.lifelength + _settings_game.vehicle.extend_vehicle_life) * DAYS_IN_LEAP_YEAR;
 }
 
 /**
@@ -540,7 +540,7 @@ bool Engine::IsVariantHidden(CompanyID c) const
 	 * the last display variant rather than the actual parent variant. */
 	const Engine *re = this;
 	const Engine *ve = re->GetDisplayVariant();
-	while (!(ve->IsHidden(c)) && re->info.variant_id != INVALID_ENGINE && re->info.variant_id != re->index) {
+	while (!(ve->IsHidden(c)) && re->info.variant_id != INVALID_ENGINE) {
 		re = Engine::Get(re->info.variant_id);
 		ve = re->GetDisplayVariant();
 	}
@@ -651,8 +651,7 @@ static void ClearLastVariant(EngineID engine_id, VehicleType type)
 static void RetireEngineIfPossible(Engine *e, int age_threshold)
 {
 	if (_settings_game.vehicle.no_expire_vehicles_after > 0) {
-		YearMonthDay ymd;
-		ConvertDateToYMD(e->intro_date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(e->intro_date);
 		if ((ymd.year * 12) + ymd.month + age_threshold >= _settings_game.vehicle.no_expire_vehicles_after * 12) return;
 	}
 
@@ -669,7 +668,7 @@ void CalcEngineReliability(Engine *e, bool new_month)
 {
 	/* Get source engine for reliability age. This is normally our engine unless variant reliability syncing is requested. */
 	Engine *re = e;
-	while (re->info.variant_id != INVALID_ENGINE && re->info.variant_id != re->index && (re->info.extra_flags & ExtraEngineFlags::SyncReliability) != ExtraEngineFlags::None) {
+	while (re->info.variant_id != INVALID_ENGINE && (re->info.extra_flags & ExtraEngineFlags::SyncReliability) != ExtraEngineFlags::None) {
 		re = Engine::Get(re->info.variant_id);
 	}
 
@@ -725,8 +724,7 @@ void SetYearEngineAgingStops()
 		if (e->type == VEH_TRAIN && e->u.rail.railveh_type == RAILVEH_WAGON) continue;
 
 		/* Base year ending date on half the model life */
-		YearMonthDay ymd;
-		ConvertDateToYMD(ei->base_intro + (ei->lifelength * DAYS_IN_LEAP_YEAR) / 2, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(ei->base_intro + (static_cast<int32_t>(ei->lifelength) * DAYS_IN_LEAP_YEAR) / 2);
 
 		_year_engine_aging_stops = std::max(_year_engine_aging_stops, ymd.year);
 	}
@@ -752,7 +750,7 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed, Date no_introduce
 	SavedRandomSeeds saved_seeds;
 	SaveRandomSeeds(&saved_seeds);
 	SetRandomSeed(_settings_game.game_creation.generation_seed ^ seed ^
-	              ei->base_intro ^
+	              ei->base_intro.base() ^
 	              e->type ^
 	              e->GetGRFID());
 	uint32 r = Random();
@@ -760,33 +758,44 @@ void StartupOneEngine(Engine *e, Date aging_date, uint32 seed, Date no_introduce
 	/* Don't randomise the start-date in the first two years after gamestart to ensure availability
 	 * of engines in early starting games.
 	 * Note: TTDP uses fixed 1922 */
-	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : (Date)GB(r, 0, 9) + ei->base_intro;
+	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : (DateDelta)GB(r, 0, 9) + ei->base_intro;
 	if (e->intro_date <= _date && e->intro_date <= no_introduce_after_date) {
-		e->age = (aging_date - e->intro_date) >> 5;
+		e->age = (aging_date - e->intro_date).base() >> 5;
 		e->company_avail = MAX_UVALUE(CompanyMask);
 		e->flags |= ENGINE_AVAILABLE;
 	}
 
 	/* Get parent variant index for syncing reliability via random seed. */
 	const Engine *re = e;
-	while (re->info.variant_id != INVALID_ENGINE && re->info.variant_id != re->index && (re->info.extra_flags & ExtraEngineFlags::SyncReliability) != ExtraEngineFlags::None) {
+	while (re->info.variant_id != INVALID_ENGINE && (re->info.extra_flags & ExtraEngineFlags::SyncReliability) != ExtraEngineFlags::None) {
 		re = Engine::Get(re->info.variant_id);
 	}
 
 	SetRandomSeed(_settings_game.game_creation.generation_seed ^ seed ^
-	              (re->index << 16) ^ (re->info.base_intro << 12) ^ (re->info.decay_speed << 8) ^
+	              (re->index << 16) ^ (re->info.base_intro.base() << 12) ^ (re->info.decay_speed << 8) ^
 	              (re->info.lifelength << 4) ^ re->info.retire_early ^
 	              e->type ^
 	              e->GetGRFID());
 
-	r = Random();
-	e->reliability_start = GB(r, 16, 14) + 0x7AE0;
-	e->reliability_max   = GB(r,  0, 14) + 0xBFFF;
+	/* Base reliability defined as a percentage of UINT16_MAX. */
+	const uint16_t RELIABILITY_START = UINT16_MAX * 48 / 100;
+	const uint16_t RELIABILITY_MAX   = UINT16_MAX * 75 / 100;
+	const uint16_t RELIABILITY_FINAL = UINT16_MAX * 25 / 100;
+
+	static_assert(RELIABILITY_START == 0x7AE0);
+	static_assert(RELIABILITY_MAX   == 0xBFFF);
+	static_assert(RELIABILITY_FINAL == 0x3FFF);
 
 	r = Random();
-	e->reliability_final = GB(r, 16, 14) + 0x3FFF;
+	/* 14 bits gives a value between 0 and 16383, which is up to an additional 25%p reliability on top of the base reliability. */
+	e->reliability_start = GB(r, 16, 14) + RELIABILITY_START;
+	e->reliability_max   = GB(r,  0, 14) + RELIABILITY_MAX;
+
+	r = Random();
+	e->reliability_final = GB(r, 16, 14) + RELIABILITY_FINAL;
+
 	e->duration_phase_1 = GB(r, 0, 5) + 7;
-	e->duration_phase_2 = GB(r, 5, 4) + ei->base_life * 12 - 96;
+	e->duration_phase_2 = std::max(0, int(GB(r, 5, 4)) + ei->base_life * 12 - 96);
 	e->duration_phase_3 = GB(r, 9, 7) + 120;
 
 	RestoreRandomSeeds(saved_seeds);
@@ -829,7 +838,7 @@ void StartupEngines()
 
 	/* Update the bitmasks for the vehicle lists */
 	for (Company *c : Company::Iterate()) {
-		c->avail_railtypes = GetCompanyRailtypes(c->index);
+		c->avail_railtypes = GetCompanyRailTypes(c->index);
 		c->avail_roadtypes = GetCompanyRoadTypes(c->index);
 	}
 
@@ -853,7 +862,7 @@ static void EnableEngineForCompany(EngineID eid, CompanyID company)
 
 	SetBit(e->company_avail, company);
 	if (e->type == VEH_TRAIN) {
-		c->avail_railtypes = GetCompanyRailtypes(c->index);
+		c->avail_railtypes = GetCompanyRailTypes(c->index);
 	} else if (e->type == VEH_ROAD) {
 		c->avail_roadtypes = GetCompanyRoadTypes(c->index);
 	}
@@ -881,7 +890,7 @@ static void DisableEngineForCompany(EngineID eid, CompanyID company)
 
 	ClrBit(e->company_avail, company);
 	if (e->type == VEH_TRAIN) {
-		c->avail_railtypes = GetCompanyRailtypes(c->index);
+		c->avail_railtypes = GetCompanyRailTypes(c->index);
 	} else if (e->type == VEH_ROAD) {
 		c->avail_roadtypes = GetCompanyRoadTypes(c->index);
 	}

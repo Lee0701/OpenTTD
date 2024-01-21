@@ -1010,9 +1010,9 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 				}
 
 				switch (tracktype) {
-					case 0: _gted[e->index].railtypelabel = rvi->engclass >= 2 ? RAILTYPE_ELECTRIC_LABEL : RAILTYPE_RAIL_LABEL; break;
-					case 1: _gted[e->index].railtypelabel = RAILTYPE_MONO_LABEL; break;
-					case 2: _gted[e->index].railtypelabel = RAILTYPE_MAGLEV_LABEL; break;
+					case 0: _gted[e->index].railtypelabel = rvi->engclass >= 2 ? RAILTYPE_LABEL_ELECTRIC : RAILTYPE_LABEL_RAIL; break;
+					case 1: _gted[e->index].railtypelabel = RAILTYPE_LABEL_MONO; break;
+					case 2: _gted[e->index].railtypelabel = RAILTYPE_LABEL_MAGLEV; break;
 					default:
 						grfmsg(1, "RailVehicleChangeInfo: Invalid track type %d specified, ignoring", tracktype);
 						break;
@@ -1146,11 +1146,11 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 					break;
 				}
 
-				if (_cur.grffile->railtype_list.size() == 0) {
+				if (_cur.grffile->railtype_list.empty()) {
 					/* Use traction type to select between normal and electrified
 					 * rail only when no translation list is in place. */
-					if (_gted[e->index].railtypelabel == RAILTYPE_RAIL_LABEL     && engclass >= EC_ELECTRIC) _gted[e->index].railtypelabel = RAILTYPE_ELECTRIC_LABEL;
-					if (_gted[e->index].railtypelabel == RAILTYPE_ELECTRIC_LABEL && engclass  < EC_ELECTRIC) _gted[e->index].railtypelabel = RAILTYPE_RAIL_LABEL;
+					if (_gted[e->index].railtypelabel == RAILTYPE_LABEL_RAIL     && engclass >= EC_ELECTRIC) _gted[e->index].railtypelabel = RAILTYPE_LABEL_ELECTRIC;
+					if (_gted[e->index].railtypelabel == RAILTYPE_LABEL_ELECTRIC && engclass  < EC_ELECTRIC) _gted[e->index].railtypelabel = RAILTYPE_LABEL_RAIL;
 				}
 
 				rvi->engclass = engclass;
@@ -2646,12 +2646,9 @@ static ChangeInfoResult LoadTranslationTable(uint gvid, int numinfo, ByteReader 
  */
 static std::string ReadDWordAsString(ByteReader *reader)
 {
-	char output[5];
-	for (int i = 0; i < 4; i++) output[i] = reader->ReadByte();
-	output[4] = '\0';
-	StrMakeValidInPlace(output, lastof(output));
-
-	return std::string(output);
+	std::string output;
+	for (int i = 0; i < 4; i++) output.push_back(reader->ReadByte());
+	return StrMakeValid(output);
 }
 
 /**
@@ -3062,11 +3059,11 @@ static ChangeInfoResult CargoChangeInfo(uint cid, int numinfo, int prop, const G
 				break;
 
 			case 0x10: // Used for payment calculation
-				cs->transit_days[0] = buf->ReadByte();
+				cs->transit_periods[0] = buf->ReadByte();
 				break;
 
 			case 0x11: // Used for payment calculation
-				cs->transit_days[1] = buf->ReadByte();
+				cs->transit_periods[1] = buf->ReadByte();
 				break;
 
 			case 0x12: // Base cargo price
@@ -3336,12 +3333,12 @@ static ChangeInfoResult IndustrytilesChangeInfo(uint indtid, int numinfo, int pr
 
 			case 0x13: { // variable length cargo acceptance
 				byte num_cargoes = buf->ReadByte();
-				if (num_cargoes > lengthof(tsp->acceptance)) {
+				if (num_cargoes > std::size(tsp->acceptance)) {
 					GRFError *error = DisableGrf(STR_NEWGRF_ERROR_LIST_PROPERTY_TOO_LONG);
 					error->param_value[1] = prop;
 					return CIR_DISABLED;
 				}
-				for (uint i = 0; i < lengthof(tsp->acceptance); i++) {
+				for (uint i = 0; i < std::size(tsp->acceptance); i++) {
 					if (i < num_cargoes) {
 						tsp->accepts_cargo[i] = GetCargoTranslation(buf->ReadByte(), _cur.grffile);
 						/* Tile acceptance can be negative to counteract the INDTILE_SPECIAL_ACCEPTS_ALL_CARGO flag */
@@ -3631,13 +3628,13 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 							it.ti.x = (int8)GB(it.ti.x, 0, 8);
 							it.ti.y = (int8)GB(it.ti.y, 0, 8);
 
-							/* When there were only 256x256 maps, TileIndex was a uint16 and
-								* it.ti was just a TileIndexDiff that was added to it.
-								* As such negative "x" values were shifted into the "y" position.
-								*   x = -1, y = 1 -> x = 255, y = 0
-								* Since GRF version 8 the position is interpreted as pair of independent int8.
-								* For GRF version < 8 we need to emulate the old shifting behaviour.
-								*/
+							/* When there were only 256x256 maps, TileIndex was a uint16_t and
+							 * it.ti was just a TileIndexDiff that was added to it.
+							 * As such negative "x" values were shifted into the "y" position.
+							 *   x = -1, y = 1 -> x = 255, y = 0
+							 * Since GRF version 8 the position is interpreted as pair of independent int8.
+							 * For GRF version < 8 we need to emulate the old shifting behaviour.
+							 */
 							if (_cur.grffile->grf_version < 8 && it.ti.x < 0) it.ti.y += 1;
 						}
 					}
@@ -4449,7 +4446,7 @@ static ChangeInfoResult RailTypeChangeInfo(uint id, int numinfo, int prop, const
 {
 	ChangeInfoResult ret = CIR_SUCCESS;
 
-	extern RailtypeInfo _railtypes[RAILTYPE_END];
+	extern RailTypeInfo _railtypes[RAILTYPE_END];
 
 	if (id + numinfo > RAILTYPE_END) {
 		grfmsg(1, "RailTypeChangeInfo: Rail type %u is invalid, max %u, ignoring", id + numinfo, RAILTYPE_END);
@@ -4460,7 +4457,7 @@ static ChangeInfoResult RailTypeChangeInfo(uint id, int numinfo, int prop, const
 		RailType rt = _cur.grffile->railtype_map[id + i];
 		if (rt == INVALID_RAILTYPE) return CIR_INVALID_ID;
 
-		RailtypeInfo *rti = &_railtypes[rt];
+		RailTypeInfo *rti = &_railtypes[rt];
 
 		switch (prop) {
 			case 0x08: // Label of rail type
@@ -4609,7 +4606,7 @@ static ChangeInfoResult RailTypeReserveInfo(uint id, int numinfo, int prop, cons
 {
 	ChangeInfoResult ret = CIR_SUCCESS;
 
-	extern RailtypeInfo _railtypes[RAILTYPE_END];
+	extern RailTypeInfo _railtypes[RAILTYPE_END];
 
 	if (id + numinfo > RAILTYPE_END) {
 		grfmsg(1, "RailTypeReserveInfo: Rail type %u is invalid, max %u, ignoring", id + numinfo, RAILTYPE_END);
@@ -6043,9 +6040,9 @@ static void NewSpriteGroup(ByteReader *buf)
 				group->default_group = PruneTargetSpriteGroup(group->default_group);
 			}
 
-			group->error_group = ranges.size() > 0 ? ranges[0].group : group->default_group;
+			group->error_group = ranges.empty() ? group->default_group : ranges[0].group;
 			/* nvar == 0 is a special case -- we turn our value into a callback result */
-			group->calculated_result = ranges.size() == 0;
+			group->calculated_result = ranges.empty();
 
 			ProcessDeterministicSpriteGroupRanges(ranges, group->ranges, group->default_group);
 
@@ -6309,7 +6306,7 @@ static CargoID TranslateCargo(uint8 feature, uint8 ctype)
 	if ((feature == GSF_STATIONS || feature == GSF_ROADSTOPS) && ctype == 0xFE) return CT_DEFAULT_NA;
 	if (ctype == 0xFF) return CT_PURCHASE;
 
-	if (_cur.grffile->cargo_list.size() == 0) {
+	if (_cur.grffile->cargo_list.empty()) {
 		/* No cargo table, so use bitnum values */
 		if (ctype >= 32) {
 			grfmsg(1, "TranslateCargo: Cargo bitnum %d out of range (max 31), skipping.", ctype);
@@ -6756,10 +6753,10 @@ static void RailTypeMapSpriteGroup(ByteReader *buf, uint8 idcount)
 
 		if (ctype >= RTSG_END) continue;
 
-		extern RailtypeInfo _railtypes[RAILTYPE_END];
+		extern RailTypeInfo _railtypes[RAILTYPE_END];
 		for (uint i = 0; i < idcount; i++) {
 			if (railtypes[i] != INVALID_RAILTYPE) {
-				RailtypeInfo *rti = &_railtypes[railtypes[i]];
+				RailTypeInfo *rti = &_railtypes[railtypes[i]];
 
 				rti->grffile[ctype] = _cur.grffile;
 				rti->group[ctype] = GetGroupByID(groupid);
@@ -7406,7 +7403,7 @@ bool GetGlobalVariable(byte param, uint32 *value, const GRFFile *grffile)
 
 	switch (param) {
 		case 0x00: // current date
-			*value = std::max(_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0);
+			*value = std::max<DateDelta>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0).base();
 			return true;
 
 		case 0x01: // current year
@@ -7415,7 +7412,7 @@ bool GetGlobalVariable(byte param, uint32 *value, const GRFFile *grffile)
 
 		case 0x02: { // detailed date information: month of year (bit 0-7), day of month (bit 8-12), leap year (bit 15), day of year (bit 16-24)
 			Date start_of_year = ConvertYMDToDate(_cur_date_ymd.year, 0, 1);
-			*value = _cur_date_ymd.month | (_cur_date_ymd.day - 1) << 8 | (IsLeapYear(_cur_date_ymd.year) ? 1 << 15 : 0) | (_date - start_of_year) << 16;
+			*value = _cur_date_ymd.month | (_cur_date_ymd.day - 1) << 8 | (IsLeapYear(_cur_date_ymd.year) ? 1 << 15 : 0) | (_date - start_of_year).base() << 16;
 			return true;
 		}
 
@@ -7521,7 +7518,7 @@ bool GetGlobalVariable(byte param, uint32 *value, const GRFFile *grffile)
 			return true;
 
 		case 0x23: // long format date
-			*value = _date;
+			*value = _date.base();
 			return true;
 
 		case 0x24: // long format year
@@ -8507,7 +8504,7 @@ static void ParamSet(ByteReader *buf)
 			break;
 
 		case 0x8F: { // Rail track type cost factors
-			extern RailtypeInfo _railtypes[RAILTYPE_END];
+			extern RailTypeInfo _railtypes[RAILTYPE_END];
 			_railtypes[RAILTYPE_RAIL].cost_multiplier = GB(res, 0, 8);
 			if (_settings_game.vehicle.disable_elrails) {
 				_railtypes[RAILTYPE_ELECTRIC].cost_multiplier = GB(res, 0, 8);
@@ -10180,10 +10177,9 @@ static void Act14FeatureTest(ByteReader *buf)
 
 /**
  * Set the current NewGRF as unsafe for static use
- * @param buf Unused.
  * @note Used during safety scan on unsafe actions.
  */
-static void GRFUnsafe(ByteReader *buf)
+static void GRFUnsafe(ByteReader *)
 {
 	SetBit(_cur.grfconfig->flags, GCF_UNSAFE);
 
@@ -10496,19 +10492,18 @@ void ResetPersistentNewGRFData()
  */
 static void BuildCargoTranslationMap()
 {
-	memset(_cur.grffile->cargo_map, 0xFF, sizeof(_cur.grffile->cargo_map));
+	_cur.grffile->cargo_map.fill(UINT8_MAX);
 
-	for (CargoID c = 0; c < NUM_CARGO; c++) {
-		const CargoSpec *cs = CargoSpec::Get(c);
+	for (const CargoSpec *cs : CargoSpec::Iterate()) {
 		if (!cs->IsValid()) continue;
 
-		if (_cur.grffile->cargo_list.size() == 0) {
+		if (_cur.grffile->cargo_list.empty()) {
 			/* Default translation table, so just a straight mapping to bitnum */
-			_cur.grffile->cargo_map[c] = cs->bitnum;
+			_cur.grffile->cargo_map[cs->Index()] = cs->bitnum;
 		} else {
 			/* Check the translation table for this cargo's label */
 			int idx = find_index(_cur.grffile->cargo_list, {cs->label});
-			if (idx >= 0) _cur.grffile->cargo_map[c] = idx;
+			if (idx >= 0) _cur.grffile->cargo_map[cs->Index()] = idx;
 		}
 	}
 }
@@ -10723,20 +10718,13 @@ static void CalculateRefitMasks()
 		 * cargo type. Finally disable the vehicle, if there is still no cargo. */
 		if (ei->cargo_type == CT_INVALID && ei->refit_mask != 0) {
 			/* Figure out which CTT to use for the default cargo, if it is 'first refittable'. */
-			const uint8 *cargo_map_for_first_refittable = nullptr;
-			{
-				const GRFFile *file = _gted[engine].defaultcargo_grf;
-				if (file == nullptr) file = e->GetGRF();
-				if (file != nullptr && file->grf_version >= 8 && file->cargo_list.size() != 0) {
-					cargo_map_for_first_refittable = file->cargo_map;
-				}
-			}
-
-			if (cargo_map_for_first_refittable != nullptr) {
+			const GRFFile *file = _gted[engine].defaultcargo_grf;
+			if (file == nullptr) file = e->GetGRF();
+			if (file != nullptr && file->grf_version >= 8 && !file->cargo_list.empty()) {
 				/* Use first refittable cargo from cargo translation table */
-				byte best_local_slot = 0xFF;
+				byte best_local_slot = UINT8_MAX;
 				for (CargoID cargo_type : SetCargoBitIterator(ei->refit_mask)) {
-					byte local_slot = cargo_map_for_first_refittable[cargo_type];
+					byte local_slot = file->cargo_map[cargo_type];
 					if (local_slot < best_local_slot) {
 						best_local_slot = local_slot;
 						ei->cargo_type = cargo_type;
@@ -10780,12 +10768,9 @@ static void FinaliseEngineArray()
 			}
 		}
 
-		/* Do final mapping on variant engine ID and set appropriate flags on variant engine */
+		/* Do final mapping on variant engine ID. */
 		if (e->info.variant_id != INVALID_ENGINE) {
 			e->info.variant_id = GetNewEngineID(e->grf_prop.grffile, e->type, e->info.variant_id);
-			if (e->info.variant_id != INVALID_ENGINE) {
-				Engine::Get(e->info.variant_id)->display_flags |= EngineDisplayFlags::HasVariants | EngineDisplayFlags::IsFolded;
-			}
 		}
 
 		if (!HasBit(e->info.climates, _settings_game.game_creation.landscape)) continue;
@@ -10817,13 +10802,32 @@ static void FinaliseEngineArray()
 			}
 		}
 	}
+
+	/* Check engine variants don't point back on themselves (either directly or via a loop) then set appropriate flags
+	 * on variant engine. This is performed separately as all variant engines need to have been resolved. */
+	for (Engine *e : Engine::Iterate()) {
+		EngineID parent = e->info.variant_id;
+		while (parent != INVALID_ENGINE) {
+			parent = Engine::Get(parent)->info.variant_id;
+			if (parent != e->index) continue;
+
+			/* Engine looped back on itself, so clear the variant. */
+			e->info.variant_id = INVALID_ENGINE;
+
+			grfmsg(1, "FinaliseEngineArray: Variant of engine %X in '%s' loops back on itself", _engine_mngr[e->index].internal_id, e->GetGRF()->filename.c_str());
+			break;
+		}
+
+		if (e->info.variant_id != INVALID_ENGINE) {
+			Engine::Get(e->info.variant_id)->display_flags |= EngineDisplayFlags::HasVariants | EngineDisplayFlags::IsFolded;
+		}
+	}
 }
 
 /** Check for invalid cargoes */
 static void FinaliseCargoArray()
 {
-	for (CargoID c = 0; c < NUM_CARGO; c++) {
-		CargoSpec *cs = CargoSpec::Get(c);
+	for (CargoSpec *cs : CargoSpec::Iterate()) {
 		if (!cs->IsValid()) {
 			cs->name = cs->name_single = cs->units_volume = STR_NEWGRF_INVALID_CARGO;
 			cs->quantifier = STR_NEWGRF_INVALID_CARGO_QUANTITY;
@@ -10995,8 +10999,8 @@ static void FinaliseIndustriesArray()
 
 			StringID strid;
 			/* process the conversion of text at the end, so to be sure everything will be fine
-				* and available.  Check if it does not return undefind marker, which is a very good sign of a
-				* substitute industry who has not changed the string been examined, thus using it as such */
+			 * and available.  Check if it does not return undefind marker, which is a very good sign of a
+			 * substitute industry who has not changed the string been examined, thus using it as such */
 			strid = GetGRFStringID(indsp->grf_prop.grffile->grfid, indsp->name);
 			if (strid != STR_UNDEFINED) indsp->name = strid;
 
@@ -11014,7 +11018,7 @@ static void FinaliseIndustriesArray()
 
 			if (indsp->station_name != STR_NULL) {
 				/* STR_NULL (0) can be set by grf.  It has a meaning regarding assignation of the
-					* station's name. Don't want to lose the value, therefore, do not process. */
+				 * station's name. Don't want to lose the value, therefore, do not process. */
 				strid = GetGRFStringID(indsp->grf_prop.grffile->grfid, indsp->station_name);
 				if (strid != STR_UNDEFINED) indsp->station_name = strid;
 			}

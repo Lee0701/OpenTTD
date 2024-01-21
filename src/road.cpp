@@ -147,7 +147,7 @@ bool HasRoadTypeAvail(const CompanyID company, RoadType roadtype)
 		if (rti->label == 0) return false;
 
 		/* Not yet introduced at this date. */
-		if (IsInsideMM(rti->introduction_date, 0, MAX_DAY) && rti->introduction_date > _date) return false;
+		if (IsInsideMM(rti->introduction_date, 0, MAX_DATE.base()) && rti->introduction_date > _date) return false;
 
 		/*
 		 * Do not allow building hidden road types, except when a town may build it.
@@ -209,7 +209,7 @@ RoadTypes AddDateIntroducedRoadTypes(RoadTypes current, Date date)
 		if (rti->label == 0) continue;
 
 		/* Not date introduced. */
-		if (!IsInsideMM(rti->introduction_date, 0, MAX_DAY)) continue;
+		if (!IsInsideMM(rti->introduction_date, 0, MAX_DATE.base())) continue;
 
 		/* Not yet introduced at this date. */
 		if (rti->introduction_date > date) continue;
@@ -277,7 +277,7 @@ RoadTypes GetRoadTypes(bool introduces)
 		}
 	}
 
-	if (introduces) return AddDateIntroducedRoadTypes(rts, MAX_DAY);
+	if (introduces) return AddDateIntroducedRoadTypes(rts, MAX_DATE);
 	return rts;
 }
 
@@ -305,42 +305,6 @@ RoadType GetRoadTypeByLabel(RoadTypeLabel label, bool allow_alternate_labels)
 
 	/* No matching label was found, so it is invalid */
 	return INVALID_ROADTYPE;
-}
-
-/**
- * Returns the available RoadSubTypes for the provided RoadType
- * If the given company is valid then will be returned a list of the available sub types at the current date, while passing
- * a deity company will make all the sub types available
- * @param rt the RoadType to filter
- * @param c the company ID to check the roadtype against
- * @param any_date whether to return only currently introduced roadtypes or also future ones
- * @returns the existing RoadSubTypes
- */
-RoadTypes ExistingRoadTypes(CompanyID c)
-{
-	/* Check only players which can actually own vehicles, editor and gamescripts are considered deities */
-	if (c < OWNER_END) {
-		const Company *company = Company::GetIfValid(c);
-		if (company != nullptr) return company->avail_roadtypes;
-	}
-
-	RoadTypes known_roadtypes = ROADTYPES_NONE;
-
-	/* Find used roadtypes */
-	for (Engine *e : Engine::IterateType(VEH_ROAD)) {
-		/* Check if the roadtype can be used in the current climate */
-		if (!HasBit(e->info.climates, _settings_game.game_creation.landscape)) continue;
-
-		/* Check whether available for all potential companies */
-		if (e->company_avail != MAX_UVALUE(CompanyMask)) continue;
-
-		known_roadtypes |= GetRoadTypeInfo(e->u.road.roadtype)->introduces_roadtypes;
-	}
-
-	/* Get the date introduced roadtypes as well. */
-	known_roadtypes = AddDateIntroducedRoadTypes(known_roadtypes, MAX_DAY);
-
-	return known_roadtypes;
 }
 
 

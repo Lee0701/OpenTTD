@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Hver måned
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Hver 3. måned
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Hver 6. måned
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Hver 12. måned
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :miles/t
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -15,6 +10,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Toge
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Vejkøretøjer
 STR_VEHICLE_TYPE_SHIPS                                          :Skibe
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Fly
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Auto gem: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Vælg interval mellem automatisk gemte spil
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Vis køreplan i tik i stedet for dage: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Vis rejsetider i køreplaner i spil ticks i stedet for dage
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Slå gennemsigtighed til/fra for laste-indikatorer. CTRL+Klik for at låse værdi.
 
 # Tracerestrict GUI
 

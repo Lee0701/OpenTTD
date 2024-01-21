@@ -150,12 +150,16 @@ STR_COLOUR_BROWN                                                :Хӑмӑр
 STR_COLOUR_GREY                                                 :Сӑрӑ
 STR_COLOUR_WHITE                                                :Шурӑ
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL} мил/с
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL} км/с
 STR_UNITS_VELOCITY_SI                                           :{DECIMAL} м/ҫ
 
 STR_UNITS_POWER_SI                                              :{DECIMAL}кВт
+
 
 
 
@@ -231,55 +235,38 @@ STR_SETTINGS_MENU_GAME_OPTIONS                                  :Вӑййи ма
 STR_SETTINGS_MENU_NEWGRF_SETTINGS                               :NewGRF майлаштару
 
 # File menu
-###length 5
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Тух
 
 # Map menu
-###length 4
 
 # Town menu
-###length 2
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Грантсем
 
 # Graph menu
-###length 6
 
 # Company league menu
-###length 3
 
 # Industry menu
-###length 3
 
 # URailway construction menu
-###length 4
 
 # Road construction menu
-###length 2
 
 # Waterways construction menu
-###length 1
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Аэропорт ҫурт
 
 # Landscaping menu
-###length 3
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Сасӑ/Юрӑ-кӗвӗ
 
 # Message menu
-###length 3
 
 # About menu
-###length 10
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_SCREENSHOT                                       :Экран сӑнӗ
 STR_ABOUT_MENU_ABOUT_OPENTTD                                    :'OpenTTD' çинчен
 
@@ -488,7 +475,7 @@ STR_NEWS_MESSAGE_CAPTION                                        :{WHITE}Пӗлт
 
 
 ###length 42
-STR_GAME_OPTIONS_CURRENCY_RUR                                   :Вырӑсла тенкӗ (RUR)
+STR_GAME_OPTIONS_CURRENCY_RUR                                   :Вырӑсла тенкӗ
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Хӑй управ
 
@@ -502,6 +489,7 @@ STR_GAME_OPTIONS_FULLSCREEN                                     :{BLACK}Тулл
 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Экрана сӑнарлама пултарни
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :расна
+
 
 
 
@@ -584,6 +572,7 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :Сулахай�
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :Варринче
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Сылтӑмра
 
+
 ###setting-zero-is-special
 
 
@@ -639,6 +628,8 @@ STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD_NONE        :ҫук
 
 ###length 3
 STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :ҫук
+
+
 
 
 
@@ -713,7 +704,7 @@ STR_CONFIG_SETTING_SCROLLWHEEL_OFF                              :Сӳнтер
 ###length 3
 STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :Сӳнтер
 
-
+###length 3
 
 ###length 3
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_LONG               :вӑрӑм (2008 раш 31меш)
@@ -725,6 +716,7 @@ STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_ISO                :ISO (2008-12-31
 
 
 
+###length 3
 
 
 
@@ -875,6 +867,8 @@ STR_QUIT_NO                                                     :{BLACK}Ҫук
 
 # Abandon game
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}Вӑййи ан килӗш
+
+# Help window
 
 # Cheat window
 STR_CHEAT_CHANGE_DATE                                           :{LTBLUE}Тӳрлет кун: {ORANGE}{DATE_SHORT}
@@ -1579,6 +1573,7 @@ STR_ORDER_GO_TO_STATION                                         :{STRING} {STATI
 
 
 
+
 # Date window (for timetable)
 
 
@@ -1601,7 +1596,7 @@ STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORAN
 
 
 # Textfile window
-###length 4
+###length 5
 
 
 # Vehicle loading indicators

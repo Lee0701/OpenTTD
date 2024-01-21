@@ -13,10 +13,6 @@
 #include "video_driver.hpp"
 #include <mutex>
 #include <condition_variable>
-#if defined(__MINGW32__)
-#include "../3rdparty/mingw-std-threads/mingw.mutex.h"
-#include "../3rdparty/mingw-std-threads/mingw.condition_variable.h"
-#endif
 #include <vector>
 
 /** Base class for Windows video drivers. */
@@ -160,7 +156,7 @@ protected:
 	bool AllocateBackingStore(int w, int h, bool force = false) override;
 	void *GetVideoPointer() override;
 	void ReleaseVideoPointer() override;
-	void PaletteChanged(HWND hWnd) override {}
+	void PaletteChanged(HWND) override {}
 
 	const char *AllocateContext();
 	void DestroyContext();

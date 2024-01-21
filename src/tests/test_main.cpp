@@ -9,21 +9,6 @@
 
 #include "../stdafx.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #define CATCH_CONFIG_MAIN
 #define DO_NOT_USE_WMAIN
 #include "../3rdparty/catch2/catch.hpp"
-
-void CDECL error(const char *s, ...)
-{
-	va_list va;
-	char buffer[1024];
-
-	va_start(va, s);
-	vsnprintf(buffer, 1024, s, va);
-	va_end(va);
-
-	CATCH_RUNTIME_ERROR(buffer);
-}

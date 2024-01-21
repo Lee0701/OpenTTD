@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :щомісяця
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :кожні три місяці
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :кожні півроку
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :щороку
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :миль/год
 STR_UNIT_NAME_VELOCITY_METRIC                                   :км/год
 STR_UNIT_NAME_VELOCITY_SI                                       :м/с
@@ -14,6 +9,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Поїзди
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Авто
 STR_VEHICLE_TYPE_SHIPS                                          :Кораблі
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Авіація
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Автозбереження: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Оберіть проміжок між автоматичними збереженнями гри
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Показувати розклад в тіках замість днів: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Відображати час руху в розкладах в тіках замість днів
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Змінити прозорість індикаторів завантаження. Утримуйте Ctrl, щоб заблокувати
 
 # Tracerestrict GUI
 

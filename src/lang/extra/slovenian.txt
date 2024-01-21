@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Vsak mesec
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Vsake 3 mesece
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Vsakih 6 mesecev
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Vsakih 12 mesecev
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -13,6 +8,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Vlaki
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Cestna vozila
 STR_VEHICLE_TYPE_SHIPS                                          :Ladje
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Letala
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Samodejno shrani: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Izberi časovni interval samodejnega shranjevanja igre
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Prikaz urnikov v pikah namesto dneh: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Prikaži čase potovanja v časovnih tabelah kot enote igre namesto dni.
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Preklop na prosojnost za prikaz polnenja. Ctrl+Klik za zaklepanje
 
 # Tracerestrict GUI
 

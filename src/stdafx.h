@@ -42,11 +42,9 @@
  * does not have stdint.h.
  * For OSX the inclusion is already done in osx_stdafx.h. */
 #if !defined(__APPLE__) && (!defined(_MSC_VER) || _MSC_VER >= 1600)
-#	if !defined(SUNOS)
-#		define __STDC_LIMIT_MACROS
-#		define __STDC_FORMAT_MACROS
-#		include <stdint.h>
-#	endif
+#	define __STDC_LIMIT_MACROS
+#	define __STDC_FORMAT_MACROS
+#	include <stdint.h>
 #endif
 
 #include <algorithm>
@@ -65,7 +63,7 @@
 #	include <sys/types.h>
 #endif
 
-#if defined(SUNOS) || defined(HPUX) || defined(__CYGWIN__)
+#if defined(__CYGWIN__)
 #	include <alloca.h>
 #endif
 
@@ -115,6 +113,13 @@
 
 #if defined(_WIN32)
 #	define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#endif
+
+#if defined(_MSC_VER)
+	// See https://learn.microsoft.com/en-us/cpp/cpp/empty-bases?view=msvc-170
+#	define EMPTY_BASES __declspec(empty_bases)
+#else
+#	define EMPTY_BASES
 #endif
 
 /* Stuff for MSVC */
@@ -408,6 +413,7 @@ static_assert(SIZE_MAX >= UINT32_MAX);
 #	define GetString OTTD_GetString
 #	define DrawString OTTD_DrawString
 #	define CloseConnection OTTD_CloseConnection
+#	define DateDelta OTTD_DateDelta
 #endif /* __APPLE__ */
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -465,6 +471,10 @@ const char *assert_tile_info(uint32 tile);
 #	define dbg_assert_msg_tile(expression, tile, ...)
 #	define dbg_assert_tile(expression, tile)
 #endif
+
+/* Define JSON_ASSERT, which is used by nlohmann-json. Otherwise the header-file
+ * will re-include assert.h, and reset the assert macro. */
+#define JSON_ASSERT(x) assert(x)
 
 #if defined(MAX_PATH)
 	/* It's already defined, no need to override */

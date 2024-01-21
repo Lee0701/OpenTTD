@@ -16,7 +16,7 @@
 #include "../date_func.h"
 #include "../map_func.h"
 #include "../debug.h"
-#include "core/game_info.h"
+#include "core/network_game_info.h"
 #include "network_gamelist.h"
 #include "network_internal.h"
 #include "network_udp.h"
@@ -120,7 +120,7 @@ public:
 	virtual ~ClientNetworkUDPSocketHandler() = default;
 };
 
-void ClientNetworkUDPSocketHandler::Receive_SERVER_RESPONSE(Packet *p, NetworkAddress *client_addr)
+void ClientNetworkUDPSocketHandler::Receive_SERVER_RESPONSE(Packet *, NetworkAddress *client_addr)
 {
 	DEBUG(net, 3, "Server response from %s", NetworkAddressDumper().GetAddressAsString(client_addr));
 

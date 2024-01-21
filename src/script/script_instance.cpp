@@ -80,6 +80,10 @@ void ScriptInstance::Initialize(const std::string &main_script, const std::strin
 	/* Register the API functions and classes */
 	this->engine->SetGlobalPointer(this->engine);
 	this->RegisterAPI();
+	if (this->IsDead()) {
+		/* Failed to register API; a message has already been logged. */
+		return;
+	}
 
 	try {
 		ScriptObject::SetAllowDoCommand(false);
@@ -570,8 +574,7 @@ bool ScriptInstance::IsPaused()
 			byte len = SlReadByte();
 			static char buf[std::numeric_limits<decltype(len)>::max()];
 			SlArray(buf, len, SLE_CHAR);
-			StrMakeValidInPlace(buf, buf + len);
-			if (data != nullptr) data->push_back(std::string(buf));
+			if (data != nullptr) data->push_back(StrMakeValid(std::string_view(buf, len)));
 			return true;
 		}
 

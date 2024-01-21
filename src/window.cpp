@@ -94,22 +94,24 @@ std::bitset<WC_END> _present_window_types;
  * List of all WindowDescs.
  * This is a pointer to ensure initialisation order with the various static WindowDesc instances.
  */
-static std::vector<WindowDesc*> *_window_descs = nullptr;
+std::vector<WindowDesc*> *_window_descs = nullptr;
 
 /** Config file to store WindowDesc */
 std::string _windows_file;
 
 /** Window description constructor. */
-WindowDesc::WindowDesc(WindowPosition def_pos, const char *ini_key, int16 def_width_trad, int16 def_height_trad,
+WindowDesc::WindowDesc(const char * const file, const int line, WindowPosition def_pos, const char *ini_key, int16 def_width_trad, int16 def_height_trad,
 			WindowClass window_class, WindowClass parent_class, uint32 flags,
-			const NWidgetPart *nwid_parts, int16 nwid_length, HotkeyList *hotkeys, WindowDesc *ini_parent) :
+			const NWidgetPart *nwid_begin, const NWidgetPart *nwid_end, HotkeyList *hotkeys, WindowDesc *ini_parent) :
+	file(file),
+	line(line),
 	default_pos(def_pos),
 	cls(window_class),
 	parent_cls(parent_class),
 	ini_key(ini_key),
 	flags(flags),
-	nwid_parts(nwid_parts),
-	nwid_length(nwid_length),
+	nwid_begin(nwid_begin),
+	nwid_end(nwid_end),
 	hotkeys(hotkeys),
 	ini_parent(ini_parent),
 	prefs({ false, 0, 0 }),
@@ -117,6 +119,7 @@ WindowDesc::WindowDesc(WindowPosition def_pos, const char *ini_key, int16 def_wi
 	default_height_trad(def_height_trad)
 {
 	if (_window_descs == nullptr) _window_descs = new std::vector<WindowDesc*>();
+
 	_window_descs->push_back(this);
 }
 
@@ -232,7 +235,7 @@ void Window::DisableAllWidgetHighlight()
 
 		if (nwid->IsHighlighted()) {
 			nwid->SetHighlighted(TC_INVALID);
-			this->SetWidgetDirty(i);
+			nwid->SetDirty(this);
 		}
 	}
 
@@ -252,7 +255,7 @@ void Window::SetWidgetHighlight(byte widget_index, TextColour highlighted_colour
 	if (nwid == nullptr) return;
 
 	nwid->SetHighlighted(highlighted_colour);
-	this->SetWidgetDirty(widget_index);
+	nwid->SetDirty(this);
 
 	if (highlighted_colour != TC_INVALID) {
 		/* If we set a highlight, the window has a highlight */
@@ -369,40 +372,13 @@ void Window::UpdateQueryStringSize()
 }
 
 /**
- * Get the current input text if an edit box has the focus.
- * @return The currently focused input text or nullptr if no input focused.
+ * Get the current input text buffer.
+ * @return The currently focused input text buffer or nullptr if no input focused.
  */
-/* virtual */ const char *Window::GetFocusedText() const
+/* virtual */ const Textbuf *Window::GetFocusedTextbuf() const
 {
 	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) {
-		return this->GetQueryString(this->nested_focus->index)->GetText();
-	}
-
-	return nullptr;
-}
-
-/**
- * Get the string at the caret if an edit box has the focus.
- * @return The text at the caret or nullptr if no edit box is focused.
- */
-/* virtual */ const char *Window::GetCaret() const
-{
-	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) {
-		return this->GetQueryString(this->nested_focus->index)->GetCaret();
-	}
-
-	return nullptr;
-}
-
-/**
- * Get the range of the currently marked input text.
- * @param[out] length Length of the marked text.
- * @return Pointer to the start of the marked text or nullptr if no text is marked.
- */
-/* virtual */ const char *Window::GetMarkedText(size_t *length) const
-{
-	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) {
-		return this->GetQueryString(this->nested_focus->index)->GetMarkedText(length);
+		return &this->GetQueryString(this->nested_focus->index)->text;
 	}
 
 	return nullptr;
@@ -564,46 +540,6 @@ void Window::OnFocus(Window *previously_focused_window)
 void Window::OnFocusLost(bool closing, Window *newly_focused_window)
 {
 	if (this->nested_focus != nullptr && this->nested_focus->type == WWT_EDITBOX) VideoDriver::GetInstance()->EditBoxLostFocus();
-}
-
-/**
- * Sets the enabled/disabled status of a list of widgets.
- * By default, widgets are enabled.
- * On certain conditions, they have to be disabled.
- * @param disab_stat status to use ie: disabled = true, enabled = false
- * @param widgets list of widgets ended by WIDGET_LIST_END
- */
-void CDECL Window::SetWidgetsDisabledState(bool disab_stat, int widgets, ...)
-{
-	va_list wdg_list;
-
-	va_start(wdg_list, widgets);
-
-	while (widgets != WIDGET_LIST_END) {
-		SetWidgetDisabledState(widgets, disab_stat);
-		widgets = va_arg(wdg_list, int);
-	}
-
-	va_end(wdg_list);
-}
-
-/**
- * Sets the lowered/raised status of a list of widgets.
- * @param lowered_stat status to use ie: lowered = true, raised = false
- * @param widgets list of widgets ended by WIDGET_LIST_END
- */
-void CDECL Window::SetWidgetsLoweredState(bool lowered_stat, int widgets, ...)
-{
-	va_list wdg_list;
-
-	va_start(wdg_list, widgets);
-
-	while (widgets != WIDGET_LIST_END) {
-		SetWidgetLoweredState(widgets, lowered_stat);
-		widgets = va_arg(wdg_list, int);
-	}
-
-	va_end(wdg_list);
 }
 
 /**
@@ -833,11 +769,14 @@ static void DispatchRightClickEvent(Window *w, int x, int y)
 		if (w->OnRightClick(pt, wid->index)) return;
 	}
 
-	/* Right-click close is enabled and there is a closebox */
-	if (_settings_client.gui.right_mouse_wnd_close && (w->window_desc->flags & WDF_NO_CLOSE) == 0) {
+	/* Right-click close is enabled and there is a closebox. */
+	if (_settings_client.gui.right_click_wnd_close == RCC_YES && (w->window_desc->flags & WDF_NO_CLOSE) == 0) {
+		w->Close();
+	} else if (_settings_client.gui.right_click_wnd_close == RCC_YES_EXCEPT_STICKY && (w->flags & WF_STICKY) == 0 && (w->window_desc->flags & WDF_NO_CLOSE) == 0) {
+		/* Right-click close is enabled, but excluding sticky windows. */
 		w->Close();
 	} else if (_settings_client.gui.hover_delay_ms == 0 && !w->OnTooltip(pt, wid->index, TCC_RIGHT_CLICK) && wid->tool_tip != 0) {
-		GuiShowTooltips(w, wid->tool_tip, 0, nullptr, TCC_RIGHT_CLICK);
+		GuiShowTooltips(w, wid->tool_tip, TCC_RIGHT_CLICK);
 	}
 }
 
@@ -858,7 +797,7 @@ static void DispatchHoverEvent(Window *w, int x, int y)
 
 	/* Show the tooltip if there is any */
 	if (!w->OnTooltip(pt, wid->index, TCC_HOVER) && wid->tool_tip != 0) {
-		GuiShowTooltips(w, wid->tool_tip);
+		GuiShowTooltips(w, wid->tool_tip, TCC_HOVER);
 		return;
 	}
 
@@ -1039,12 +978,13 @@ void Window::ReInit(int rx, int ry, bool reposition)
 	this->SetDirtyAsBlocks(); // Mark whole current window as dirty.
 
 	/* Save current size. */
-	int window_width  = this->width;
-	int window_height = this->height;
+	int window_width  = this->width * _gui_scale / this->scale;
+	int window_height = this->height * _gui_scale / this->scale;
+	this->scale = _gui_scale;
 
 	this->OnInit();
-	/* Re-initialize the window from the ground up. No need to change the nested_array, as all widgets stay where they are. */
-	this->nested_root->SetupSmallestSize(this, false);
+	/* Re-initialize window smallest size. */
+	this->nested_root->SetupSmallestSize(this);
 	this->nested_root->AssignSizePosition(ST_SMALLEST, 0, 0, this->nested_root->smallest_x, this->nested_root->smallest_y, _current_text_dir == TD_RTL);
 	this->width  = this->nested_root->smallest_x;
 	this->height = this->nested_root->smallest_y;
@@ -1130,7 +1070,7 @@ void Window::CloseChildWindows(WindowClass wc) const
 /**
  * Hide the window and all its child windows, and mark them for a later deletion.
  */
-void Window::Close()
+void Window::Close([[maybe_unused]] int data)
 {
 	if (_thd.window_class == this->window_class &&
 			_thd.window_number == this->window_number) {
@@ -1207,6 +1147,20 @@ Window *FindWindowByClass(WindowClass cls)
 }
 
 /**
+ * Find any window by its token.
+ * @param token Window token
+ * @return Pointer to the found window, or \c nullptr if not available
+ */
+Window *FindWindowByToken(WindowToken token)
+{
+	for (Window *w : Window::IterateFromBack()) {
+		if (w->GetWindowToken() == token) return w;
+	}
+
+	return nullptr;
+}
+
+/**
  * Get the main window, i.e. FindWindowById(WC_MAIN_WINDOW, 0).
  * If the main window is not available, this function will trigger an assert.
  * @return Pointer to the main window.
@@ -1224,11 +1178,11 @@ Window *GetMainWindow()
  * @param number Number of the window within the window class
  * @param force force deletion; if false don't delete when stickied
  */
-void CloseWindowById(WindowClass cls, WindowNumber number, bool force)
+void CloseWindowById(WindowClass cls, WindowNumber number, bool force, int data)
 {
 	Window *w = FindWindowById(cls, number);
 	if (w != nullptr && (force || (w->flags & WF_STICKY) == 0)) {
-		w->Close();
+		w->Close(data);
 	}
 }
 
@@ -1238,14 +1192,14 @@ void CloseWindowById(WindowClass cls, WindowNumber number, bool force)
  * @param number Number of the window within the window class
  * @param force force deletion; if false don't delete when stickied
  */
-void CloseAllWindowsById(WindowClass cls, WindowNumber number, bool force)
+void CloseAllWindowsById(WindowClass cls, WindowNumber number, bool force, int data)
 {
 	if (cls < WC_END && !_present_window_types[cls]) return;
 
 	/* Note: the container remains stable, even when deleting windows. */
 	for (Window *w : Window::Iterate()) {
 		if (w->window_class == cls && w->window_number == number && (force || (w->flags & WF_STICKY) == 0)) {
-			w->Close();
+			w->Close(data);
 		}
 	}
 }
@@ -1254,14 +1208,14 @@ void CloseAllWindowsById(WindowClass cls, WindowNumber number, bool force)
  * Delete all windows of a given class
  * @param cls Window class of windows to delete
  */
-void CloseWindowByClass(WindowClass cls)
+void CloseWindowByClass(WindowClass cls, int data)
 {
 	if (cls < WC_END && !_present_window_types[cls]) return;
 
 	/* Note: the container remains stable, even when deleting windows. */
 	for (Window *w : Window::Iterate()) {
 		if (w->window_class == cls) {
-			w->Close();
+			w->Close(data);
 		}
 	}
 }
@@ -1372,15 +1326,20 @@ static uint GetWindowZPriority(WindowClass wc)
 	uint z_priority = 0;
 
 	switch (wc) {
+		case WC_TOOLTIPS:
+			++z_priority;
+			FALLTHROUGH;
+
+		case WC_ERRMSG:
+		case WC_CONFIRM_POPUP_QUERY:
+			++z_priority;
+			FALLTHROUGH;
+
 		case WC_ENDSCREEN:
 			++z_priority;
 			FALLTHROUGH;
 
 		case WC_HIGHSCORE:
-			++z_priority;
-			FALLTHROUGH;
-
-		case WC_TOOLTIPS:
 			++z_priority;
 			FALLTHROUGH;
 
@@ -1402,8 +1361,6 @@ static uint GetWindowZPriority(WindowClass wc)
 			++z_priority;
 			FALLTHROUGH;
 
-		case WC_ERRMSG:
-		case WC_CONFIRM_POPUP_QUERY:
 		case WC_NETWORK_ASK_RELAY:
 		case WC_MODAL_PROGRESS:
 		case WC_NETWORK_STATUS_WINDOW:
@@ -1551,13 +1508,8 @@ void Window::InitializeData(WindowNumber window_number)
 	this->window_number = window_number;
 
 	this->OnInit();
-	/* Initialize nested widget tree. */
-	if (this->nested_array == nullptr) {
-		this->nested_array = CallocT<NWidgetBase *>(this->nested_array_size);
-		this->nested_root->SetupSmallestSize(this, true);
-	} else {
-		this->nested_root->SetupSmallestSize(this, false);
-	}
+	/* Initialize smallest size. */
+	this->nested_root->SetupSmallestSize(this);
 	/* Initialize to smallest size. */
 	this->nested_root->AssignSizePosition(ST_SMALLEST, 0, 0, this->nested_root->smallest_x, this->nested_root->smallest_y, _current_text_dir == TD_RTL);
 
@@ -1789,7 +1741,7 @@ static Point GetAutoPlacePosition(int width, int height)
 	int left = rtl ? _screen.width - width : 0, top = toolbar_y;
 	const Dimension &closebox_dimension = NWidgetLeaf::GetCloseBoxDimension();
 	int offset_x = rtl ? -(int)closebox_dimension.width : (int)closebox_dimension.width;
-	int offset_y = std::max<int>(closebox_dimension.height, FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.captiontext.Vertical());
+	int offset_y = std::max<int>(closebox_dimension.height, GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.captiontext.Vertical());
 
 restart:
 	for (const Window *w : Window::IterateFromBack()) {
@@ -1856,7 +1808,7 @@ static Point LocalGetWindowPlacement(const WindowDesc *desc, int16 sm_width, int
 			 *  - X position: closebox on left/right, resizebox on right/left (depending on ltr/rtl)
 			 */
 			const Dimension &closebox_dimension = NWidgetLeaf::GetCloseBoxDimension();
-			int indent_y = std::max<int>(closebox_dimension.height, FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.captiontext.Vertical());
+			int indent_y = std::max<int>(closebox_dimension.height, GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.captiontext.Vertical());
 			if (w->top + 3 * indent_y < _screen.height) {
 				pt.y = w->top + indent_y;
 				int indent_close = closebox_dimension.width;
@@ -1908,16 +1860,14 @@ static Point LocalGetWindowPlacement(const WindowDesc *desc, int16 sm_width, int
  * @param fill_nested Fill the #nested_array (enabling is expensive!).
  * @note Filling the nested array requires an additional traversal through the nested widget tree, and is best performed by #FinishInitNested rather than here.
  */
-void Window::CreateNestedTree(bool fill_nested)
+void Window::CreateNestedTree()
 {
 	int biggest_index = -1;
-	this->nested_root = MakeWindowNWidgetTree(this->window_desc->nwid_parts, this->window_desc->nwid_length, &biggest_index, &this->shade_select);
+	this->nested_root = MakeWindowNWidgetTree(this->window_desc->nwid_begin, this->window_desc->nwid_end, &biggest_index, &this->shade_select);
 	this->nested_array_size = (uint)(biggest_index + 1);
 
-	if (fill_nested) {
-		this->nested_array = CallocT<NWidgetBase *>(this->nested_array_size);
-		this->nested_root->FillNestedArray(this->nested_array, this->nested_array_size);
-	}
+	this->nested_array = CallocT<NWidgetBase *>(this->nested_array_size);
+	this->nested_root->FillNestedArray(this->nested_array, this->nested_array_size);
 }
 
 /**
@@ -1939,7 +1889,7 @@ void Window::FinishInitNested(WindowNumber window_number)
  */
 void Window::InitNested(WindowNumber window_number)
 {
-	this->CreateNestedTree(false);
+	this->CreateNestedTree();
 	this->FinishInitNested(window_number);
 }
 
@@ -1947,8 +1897,11 @@ void Window::InitNested(WindowNumber window_number)
  * Empty constructor, initialization has been moved to #InitNested() called from the constructor of the derived class.
  * @param desc The description of the window.
  */
-Window::Window(WindowDesc *desc) : window_desc(desc), mouse_capture_widget(-1)
+Window::Window(WindowDesc *desc) : window_desc(desc), scale(_gui_scale), mouse_capture_widget(-1)
 {
+	static uint64_t last_window_token = 0;
+	last_window_token++;
+	this->window_token = WindowToken(last_window_token);
 }
 
 /**
@@ -1986,8 +1939,11 @@ void InitWindowSystem()
 	_scrolling_viewport_bound = { 0, 0, 0, 0 };
 	_mouse_hovering = false;
 
+	SetupWidgetDimensions();
 	NWidgetLeaf::InvalidateDimensionCache(); // Reset cached sizes of several widgets.
 	NWidgetScrollbar::InvalidateDimensionCache();
+
+	InitDepotWindowBlockSizes();
 
 	ShowFirstError();
 }
@@ -3813,7 +3769,7 @@ void RelocateAllWindows(int neww, int newh)
  * Hide the window and all its child windows, and mark them for a later deletion.
  * Always call ResetObjectToPlace() when closing a PickerWindow.
  */
-void PickerWindowBase::Close()
+void PickerWindowBase::Close([[maybe_unused]] int data)
 {
 	ResetObjectToPlace();
 	this->Window::Close();

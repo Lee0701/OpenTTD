@@ -502,6 +502,9 @@ STR_COLOUR_GREY                                                 :Шэры
 STR_COLOUR_WHITE                                                :Белы
 STR_COLOUR_RANDOM                                               :Выпадковы
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}мiл{P я i яў}/г
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}км/г
@@ -535,6 +538,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}фут{P "" ы аў}
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}м
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}м
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Фільтар:
@@ -708,31 +712,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :Празрыс�
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :Празрыстыя надпісы
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :Захаваць гульню
 STR_FILE_MENU_LOAD_GAME                                         :Загрузіць гульню
 STR_FILE_MENU_QUIT_GAME                                         :Да галоўнага мэню
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Выхад
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :Мапа сусьвету
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Дадатковае вакно прагляду
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :Леґенда грузаперавозак
 STR_MAP_MENU_SIGN_LIST                                          :Сьпіс таблічак
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :Сьпіс гарадоў
 STR_TOWN_MENU_FOUND_TOWN                                        :Заснаваць горад
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Субсыдыі
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :Ґрафік прыбытку
 STR_GRAPH_MENU_INCOME_GRAPH                                     :Ґрафік даходу
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Ґрафік дастаўленага грузу
@@ -741,57 +739,46 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Ґрафік в
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Ґрафік аплаты перавозак
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :Табліца фірмаў
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :Дэталізаваны рэйтынґ кампаніі
 STR_GRAPH_MENU_HIGHSCORE                                        :Табліца рэкордаў
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :Пералік прамысловасьці
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Вытворчыя ланцужкі
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Заснаваць новае прадпрыемства
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Будаўніцтва чыгункі
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Будаўніцтва электрыфікаванай чыгункі
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Будаўніцтва монарэйкавай дарогі
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Будаўніцтва маґлева
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Будаўніцтва дарогаў
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Будаўніцтва трамвайных каляiнаў
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Будаўніцтва водных камунікацыяў
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Будаўніцтва аэрапортаў
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Ляндшафт
 STR_LANDSCAPING_MENU_PLANT_TREES                                :Пасадзіць дрэвы
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Паставіць метку
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Гукі/музыка
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :Апошняе паведамленьне
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :Гісторыя паведамленьняў
 STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :Выдаліць усе паведамленьні
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Зьвесткі аб зямлі
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Кансоль
 STR_ABOUT_MENU_AI_DEBUG                                         :Наладка штучнага інтэлекту (ШІ/AI) / скрыптоў
 STR_ABOUT_MENU_SCREENSHOT                                       :Здымак экрана (Ctrl+S)
@@ -1001,8 +988,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Клік
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Клікніце па назьве трэка, каб выдаліць яго з уласнай праґрамы
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Найбуйнейшыя кампаніі, якія дасягнулі {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Табліца кампаніяў у {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Бізнэсоўца
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Прадпрымальнік
@@ -1188,10 +1173,6 @@ STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}З'яв�
 
 STR_NEWS_SHOW_VEHICLE_GROUP_TOOLTIP                             :{BLACK}Адчыніць акно групаў транспарта і абраць групу, да якой прыналежыць гэты транспартны сродак
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}{STATION} больш не прымае {STRING.acc}
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}{STATION} больш не прымае {STRING.acc} ды {STRING.acc}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}{STATION} цяпер прымае {STRING.acc}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}{STATION} цяпер прымае {STRING.acc} ды {STRING.acc}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Прапанова субсыдыі мінула:{}{}Перавозка {STRING.gen} па маршруце {STRING} — {STRING} субсыдыявацца больш ня будзе.
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Тэрмін субсыдыі сышоў:{}{}Перавозка {STRING.gen} па маршруце {STRING} — {STRING} больш не субсыдуецца.
@@ -1288,7 +1269,6 @@ STR_GAME_OPTIONS_REFRESH_RATE                                   :{BLACK}Чашч
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Набор базавай ґрафікі
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Выбар базавага набору ґрафічных аб'ектаў
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} адсутнічаюч{P ы ых ых}/пашкоджан{P ы ых ых} файл{P "" ы аў}
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Дадатковая інфармацыя аб базавым ґрафічным наборы
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Базавы набор гукаў
@@ -1297,8 +1277,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Дада
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Базавы набор музыкі
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Выберыце базавы музычны набор для выкарыстаньня
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} пашкоджан{P ы ых ых} файл{P 0 "" ы аў}
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Дадатковая інфармацыя аб базавым музычным наборы
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Не атрымалася атрымаць сьпіс падтрымліваемых разрозненьняў экрана
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Памылка поўнаэкраннага рэжыму
@@ -1455,6 +1435,7 @@ STR_CONFIG_SETTING_REALISTIC                                    :рэаліст�
 STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :леваруч
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :ў цэнтры
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :праваруч
+
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Максымальная сума пазыкі: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Максымальная сума пазыкі для кампаніі (без уліку інфляцыі)
@@ -1618,6 +1599,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :адсутні�
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :зьніжаная
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :звычайная
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Дазволіць будаўніцтва прыпынкаў Ro-Ro на дарогах гарадзкой уласнасьці: {STRING}
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Дазволіць пабудову на дарогах, якія належаць гораду, прыпынкаў, празь якія можна проста праехаць (не заязжаючы "унутар").
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Дазволіць будаўніцтва прыпынкаў Ro-Ro на дарогах канкурэнтаў: {STRING}
@@ -1628,6 +1610,7 @@ STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE                   :Утрыман�
 STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE_HELPTEXT          :Калі ўключана, інфраструктура патрабуе выдаткаў на ўтрыманьне. Кошт расьце прапарцыянальна памерам сеткі, таму гэта больш датычыць вялікіх кампаніяў, ніж малых.
 
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR                      :Фірмовы колер кампаніі: {STRING}
+
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :Малыя аэрапорты ніколі не састарэюць: {STRING}
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS_HELPTEXT               :Уключэньне гэтай наладкі робіць усе віды аэрапортаў даступнымі назаўжды.
@@ -1662,7 +1645,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Мінімал�
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Працягласьць паведамленняў аб памылцы: {STRING}
 STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Працялегласьць паказваньня паведамленьняў аб памылках у чырвоным вакне. Зазначце, што некаторыя (крытычныя) паведамленьні ня будуць аўтаматычна зьнікаць пасьля гэтага часу, але мусяць быць закрытымі уручную.
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} сэкунд{P а ы аў}
 
 STR_CONFIG_SETTING_HOVER_DELAY                                  :Паказваць падказкi: {STRING}
 STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Затрымка паміж навядзеньнем паказальніка мышы на элемент інтэрфейсу і з'яўленьнем падказкі. Калі гэта значэнне роўна 0, падказкі з'яўляюцца па пстрычцы правай кнопкі мышы.
@@ -1812,9 +1794,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :выключа�
 
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE                        :Зачыняць вокны пстрычкай ПКМ: {STRING}
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE_HELPTEXT               :Зачыняць акно пстрычкай правай кнопкай мышы ў яго межах. Пры гэтым адключаецца з'яўленне падказак па правай кнопцы.
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :Аўтазахаваньні: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Азначце інтэрвал паміж аўтаматычнымі захаваньнямі
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :Выкарыстоўваць {STRING} фармат даты для імёнаў захаваньняў
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_HELPTEXT           :Фармат даты ў назвах захаваных гульняў.
@@ -1840,8 +1820,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Дазволі�
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Паказваць індыкатар загрузкі: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Выбраць, ці будуць паказвацца індыкатары загрузкі над транспартам, які грузіцца ці разгружаецца.
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Паказваць расклад ў «ціках» замест дзён: {STRING}
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Паказваць у раскладзе час падарожжа ў гульнёвых "ціках" замест дзён.
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Паказваць у раскладах час прыбыцьця й адпраўленьня: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Паказваць верагодны час прыбыцьця й адпраўленьня ў раскладах.
@@ -2291,6 +2270,8 @@ STR_ABANDON_GAME_CAPTION                                        :{WHITE}У га�
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Вы сапраўды жадаеце пакінуць гульню?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Вы ўпэўнены, што хочаце пакінуць гэты сцэнар?
 
+# Help window
+
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Махлярства (чыты)
 STR_CHEATS_TOOLTIP                                              :{BLACK}Птушкі паказваюць, ці выкарыстоўвалі Вы гэты чыт раней
@@ -2718,7 +2699,6 @@ STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Пера
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK}Пераключыць празрыстасьць для мастоў. Ctrl+клік — заблякаваць.
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Пераключыць празрыстасьць для пабудоў кшталту маякоў і антэнаў. Ctrl+клік — заблякаваць.
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Пераключыць празрыстасьць для кантактнай сеткі. Ctrl+клік — заблякаваць.
-STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Пераключыць празрыстасьць для індыкатараў загрузкі. Ctrl+клік — заблякаваць.
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Зрабіць аб'екты не празрыстымі, а цалкам нябачнымі
 
 # Linkgraph legend window
@@ -4515,8 +4495,6 @@ STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(чакаць {
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :(у дарозе {STRING}, графік не складзены)
 STR_TIMETABLE_STAY_FOR                                          :і чакаць {STRING}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :і рухацца да {STRING}
-STR_TIMETABLE_DAYS                                              :{COMMA}{NBSP}д{P зень нi зён}
-STR_TIMETABLE_TICKS                                             :{COMMA}{NBSP}цiк{P "" i аў}
 
 STR_TIMETABLE_TOTAL_TIME                                        :{BLACK}Увесь маршрут зойме {STRING}
 STR_TIMETABLE_TOTAL_TIME_INCOMPLETE                             :{BLACK}Рух па маршруце зойме {STRING} (ня ўсё ўлічана)
@@ -4525,10 +4503,8 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Гэты
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}Гэты транспарт спазьняецца на {STRING}
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}Гэты транспарт апярэджвае ґрафік на {STRING}
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}Ґрафік руху яшчэ не ўсталяваны
-STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}Адлік часу пачнецца з {STRING}
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Пачатковая дата
-STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Выберыце пачатковую дату для гэтага ґрафіка. Ctrl+пстрычка ўсталюе пачатковую дату і раўнамерна разьмяркуе ўсе транспартныя сродкі, якія рухаюцца па гэтым маршруце, калі час руху па ім цалкам разьлічаны.
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Зьмяніць час
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Зьмяніць час для вылучанага заданьня
@@ -4639,7 +4615,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Пера
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Прагледзець iнструкцыю
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Журнал зьменаў
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Ліцэнзія
-###length 4
+###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} iнструкцыя {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} сьпiс зьменаў {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} ліцэнзія {STRING}
@@ -4774,7 +4750,6 @@ STR_ERROR_TOO_CLOSE_TO_EDGE_OF_MAP_SUB                          :{WHITE}... за
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... занадта блізка да іншага горада
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... занадта шмат гарадоў
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... няма месца на мапе
-STR_ERROR_TOWN_EXPAND_WARN_NO_ROADS                             :{WHITE}Гарады ня будуць будаваць дарогі самі. Вы можаце ўключыць будаўніцтва дарог у раздзеле «Наладкі -> Навак.{NBSP}асяроддзе -> Гарады».
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}Ідуць дарожныя работы...
 STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Немагчыма зьнішчыць горад:{}да яго адносіцца станцыя або дэпо, альбо немагчыма ачысьціць адну з занятых ім клетак.
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... у цэнтры горада няма месца для статуі

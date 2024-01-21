@@ -41,9 +41,14 @@ ZoomLevel _saved_scrollpos_zoom;
 
 void SaveViewportBeforeSaveGame()
 {
+	/* Don't use GetMainWindow() in case the window does not exist. */
 	const Window *w = FindWindowById(WC_MAIN_WINDOW, 0);
-
-	if (w != nullptr) {
+	if (w == nullptr || w->viewport == nullptr) {
+		/* Ensure saved position is clearly invalid. */
+		_saved_scrollpos_x = INT_MAX;
+		_saved_scrollpos_y = INT_MAX;
+		_saved_scrollpos_zoom = ZOOM_LVL_END;
+	} else {
 		_saved_scrollpos_x = w->viewport->scrollpos_x;
 		_saved_scrollpos_y = w->viewport->scrollpos_y;
 		_saved_scrollpos_zoom = w->viewport->zoom;
@@ -162,7 +167,7 @@ static void Check_DATE()
 {
 	SlGlobList(_date_check_desc);
 	if (IsSavegameVersionBefore(SLV_31)) {
-		_load_check_data.current_date += DAYS_TILL_ORIGINAL_BASE_YEAR;
+		_load_check_data.current_date += DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 	}
 }
 

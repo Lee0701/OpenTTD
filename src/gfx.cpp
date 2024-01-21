@@ -29,7 +29,6 @@
 #include "core/container_func.hpp"
 #include "viewport_func.h"
 
-#include "table/palettes.h"
 #include "table/string_colours.h"
 #include "table/sprites.h"
 #include "table/control_codes.h"
@@ -62,33 +61,11 @@ SwitchMode _switch_mode;  ///< The next mainloop command.
 std::chrono::steady_clock::time_point _switch_mode_time; ///< The time when the switch mode was requested.
 PauseMode _pause_mode;
 uint32 _pause_countdown;
-Palette _cur_palette;
-std::mutex _cur_palette_mutex;
 std::string _switch_baseset;
 static bool _adjust_gui_zoom_startup_done = false;
 
 static byte _stringwidth_table[FS_END][224]; ///< Cache containing width of often used characters. @see GetCharacterWidth()
 DrawPixelInfo *_cur_dpi;
-byte _colour_gradient[COLOUR_END][8];
-
-byte _colour_value[COLOUR_END] = {
-	133, // COLOUR_DARK_BLUE
-	 99, // COLOUR_PALE_GREEN,
-	 48, // COLOUR_PINK,
-	 68, // COLOUR_YELLOW,
-	184, // COLOUR_RED,
-	152, // COLOUR_LIGHT_BLUE,
-	209, // COLOUR_GREEN,
-	 95, // COLOUR_DARK_GREEN,
-	150, // COLOUR_BLUE,
-	 79, // COLOUR_CREAM,
-	134, // COLOUR_MAUVE,
-	174, // COLOUR_PURPLE,
-	195, // COLOUR_ORANGE,
-	116, // COLOUR_BROWN,
-	  6, // COLOUR_GREY,
-	 15, // COLOUR_WHITE,
-};
 
 struct GfxBlitterCtx {
 	const DrawPixelInfo *dpi;
@@ -487,6 +464,21 @@ void DrawBox(const DrawPixelInfo *dpi, int x, int y, int dx1, int dy1, int dx2, 
 }
 
 /**
+ * Draw the outline of a Rect
+ * @param r Rect to draw.
+ * @param colour Colour of the outline.
+ * @param width Width of the outline.
+ * @param dash Length of dashes for dashed lines. 0 means solid lines.
+ */
+void DrawRectOutline(const Rect &r, int colour, int width, int dash)
+{
+	GfxDrawLine(r.left,  r.top,    r.right, r.top,    colour, width, dash);
+	GfxDrawLine(r.left,  r.top,    r.left,  r.bottom, colour, width, dash);
+	GfxDrawLine(r.right, r.top,    r.right, r.bottom, colour, width, dash);
+	GfxDrawLine(r.left,  r.bottom, r.right, r.bottom, colour, width, dash);
+}
+
+/**
  * Set the colour remap to be for the given colour.
  * @param colour the new colour of the remap.
  */
@@ -557,7 +549,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 		 * another size would be chosen it won't have truncated too little for
 		 * the truncation dots.
 		 */
-		FontCache *fc = ((const Font*)line.GetVisualRun(0).GetFont())->fc;
+		FontCache *fc = line.GetVisualRun(0).GetFont()->fc;
 		GlyphID dot_glyph = fc->MapCharToGlyph('.');
 		dot_width = fc->GetGlyphWidth(dot_glyph);
 		dot_sprite = fc->GetGlyph(dot_glyph);
@@ -608,7 +600,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 	bool draw_shadow = false;
 	for (int run_index = 0; run_index < line.CountRuns(); run_index++) {
 		const ParagraphLayouter::VisualRun &run = line.GetVisualRun(run_index);
-		const Font *f = (const Font*)run.GetFont();
+		const Font *f = run.GetFont();
 
 		FontCache *fc = f->fc;
 		colour = f->colour;
@@ -659,7 +651,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 	}
 
 	if (underline) {
-		GfxFillRect(left, y + h, right, y + h, ctx.string_colourremap[1]);
+		GfxFillRect(left, y + h, right, y + h + WidgetDimensions::scaled.bevel.top - 1, ctx.string_colourremap[1]);
 	}
 
 	return (align & SA_HOR_MASK) == SA_RIGHT ? left : right;
@@ -685,7 +677,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 int DrawString(int left, int right, int top, std::string_view str, TextColour colour, StringAlignment align, bool underline, FontSize fontsize)
 {
 	/* The string may contain control chars to change the font, just use the biggest font for clipping. */
-	int max_height = std::max({FONT_HEIGHT_SMALL, FONT_HEIGHT_NORMAL, FONT_HEIGHT_LARGE, FONT_HEIGHT_MONO});
+	int max_height = std::max({GetCharacterHeight(FS_SMALL), GetCharacterHeight(FS_NORMAL), GetCharacterHeight(FS_LARGE), GetCharacterHeight(FS_MONO)});
 
 	/* Funny glyphs may extent outside the usual bounds, so relax the clipping somewhat. */
 	int extra = max_height / 2;
@@ -696,7 +688,7 @@ int DrawString(int left, int right, int top, std::string_view str, TextColour co
 	}
 
 	Layouter layout(str, INT32_MAX, colour, fontsize);
-	if (layout.size() == 0) return 0;
+	if (layout.empty()) return 0;
 
 	return DrawLayoutLine(*layout.front(), top, left, right, align, underline, true);
 }
@@ -733,6 +725,7 @@ int DrawString(int left, int right, int top, StringID str, TextColour colour, St
  */
 int GetStringHeight(std::string_view str, int maxw, FontSize fontsize)
 {
+	assert(maxw > 0);
 	Layouter layout(str, maxw, TC_FROMSTRING, fontsize);
 	return layout.GetBounds().height;
 }
@@ -949,7 +942,7 @@ ptrdiff_t GetCharAtPosition(std::string_view str, int x, FontSize start_fontsize
 	if (x < 0) return -1;
 
 	Layouter layout(str, INT32_MAX, TC_FROMSTRING, start_fontsize);
-	return layout.GetCharAtPosition(x);
+	return layout.GetCharAtPosition(x, 0);
 }
 
 /**
@@ -965,7 +958,7 @@ void DrawCharCentered(WChar c, const Rect &r, TextColour colour)
 	ctx.SetColourRemap(colour);
 	GfxMainBlitter(ctx, GetGlyph(FS_NORMAL, c),
 		CenterBounds(r.left, r.right, GetCharacterWidth(FS_NORMAL, c)),
-		CenterBounds(r.top, r.bottom, FONT_HEIGHT_NORMAL),
+		CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)),
 		BM_COLOUR_REMAP);
 }
 
@@ -1024,8 +1017,9 @@ void DrawSpriteViewport(const SpritePointerHolder &sprite_store, const DrawPixel
 	GfxBlitterCtx ctx(dpi);
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
-		ctx.colour_remap_ptr = sprite_store.GetRecolourSprite(GB(pal, 0, PALETTE_WIDTH)) + 1;
-		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, SpriteType::Normal), x, y, BM_TRANSPARENT, sub, real_sprite);
+		pal = GB(pal, 0, PALETTE_WIDTH);
+		ctx.colour_remap_ptr = sprite_store.GetRecolourSprite(pal) + 1;
+		GfxMainBlitterViewport(ctx, sprite_store.GetSprite(real_sprite, SpriteType::Normal), x, y, pal == PALETTE_TO_TRANSPARENT ? BM_TRANSPARENT : BM_TRANSPARENT_REMAP, sub, real_sprite);
 	} else if (pal != PAL_NONE) {
 		if (HasBit(pal, PALETTE_TEXT_RECOLOUR)) {
 			ctx.SetColourRemap((TextColour)GB(pal, 0, PALETTE_WIDTH));
@@ -1071,8 +1065,9 @@ void DrawSprite(SpriteID img, PaletteID pal, int x, int y, const SubSprite *sub,
 	GfxBlitterCtx ctx(_cur_dpi);
 	SpriteID real_sprite = GB(img, 0, SPRITE_WIDTH);
 	if (HasBit(img, PALETTE_MODIFIER_TRANSPARENT)) {
-		ctx.colour_remap_ptr = GetNonSprite(GB(pal, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1;
-		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom)), x, y, BM_TRANSPARENT, sub, real_sprite, zoom);
+		pal = GB(pal, 0, PALETTE_WIDTH);
+		ctx.colour_remap_ptr = GetNonSprite(pal, SpriteType::Recolour) + 1;
+		GfxMainBlitter(ctx, GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom)), x, y, pal == PALETTE_TO_TRANSPARENT ? BM_TRANSPARENT : BM_TRANSPARENT_REMAP, sub, real_sprite, zoom);
 	} else if (pal != PAL_NONE) {
 		if (HasBit(pal, PALETTE_TEXT_RECOLOUR)) {
 			ctx.SetColourRemap((TextColour)GB(pal, 0, PALETTE_WIDTH));
@@ -1294,151 +1289,6 @@ static void GfxMainBlitterViewport(const GfxBlitterCtx &ctx, const Sprite *sprit
 static void GfxMainBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub, SpriteID sprite_id, ZoomLevel zoom)
 {
 	GfxBlitter<1, true>(ctx, sprite, x, y, mode, sub, sprite_id, zoom);
-}
-
-void DoPaletteAnimations();
-
-Colour _water_palette[10];
-
-void GfxInitPalettes()
-{
-	MemCpyT<Colour>(_water_palette, (_settings_game.game_creation.landscape == LT_TOYLAND) ? _extra_palette_values.dark_water_toyland : _extra_palette_values.dark_water, 5);
-	const Colour *s = (_settings_game.game_creation.landscape == LT_TOYLAND) ? _extra_palette_values.glitter_water_toyland : _extra_palette_values.glitter_water;
-	for (int i = 0; i < 5; i++) {
-		_water_palette[i + 5] = s[i * 3];
-	}
-
-	std::lock_guard<std::mutex> lock_state(_cur_palette_mutex);
-	memcpy(&_cur_palette, &_palette, sizeof(_cur_palette));
-	DoPaletteAnimations();
-}
-
-#define EXTR(p, q) (((uint16)(palette_animation_counter * (p)) * (q)) >> 16)
-#define EXTR2(p, q) (((uint16)(~palette_animation_counter * (p)) * (q)) >> 16)
-
-void DoPaletteAnimations()
-{
-	/* Animation counter for the palette animation. */
-	static int palette_animation_counter = 0;
-	palette_animation_counter += 8;
-
-	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
-	const Colour *s;
-	const ExtraPaletteValues *ev = &_extra_palette_values;
-	Colour old_val[PALETTE_ANIM_SIZE];
-	const uint old_tc = palette_animation_counter;
-	uint j;
-
-	if (blitter != nullptr && blitter->UsePaletteAnimation() == Blitter::PALETTE_ANIMATION_NONE) {
-		palette_animation_counter = 0;
-	}
-
-	Colour *palette_pos = &_cur_palette.palette[PALETTE_ANIM_START];  // Points to where animations are taking place on the palette
-	/* Makes a copy of the current animation palette in old_val,
-	 * so the work on the current palette could be compared, see if there has been any changes */
-	memcpy(old_val, palette_pos, sizeof(old_val));
-
-	/* Fizzy Drink bubbles animation */
-	s = ev->fizzy_drink;
-	j = EXTR2(512, EPV_CYCLES_FIZZY_DRINK);
-	for (uint i = 0; i != EPV_CYCLES_FIZZY_DRINK; i++) {
-		*palette_pos++ = s[j];
-		j++;
-		if (j == EPV_CYCLES_FIZZY_DRINK) j = 0;
-	}
-
-	/* Oil refinery fire animation */
-	s = ev->oil_refinery;
-	j = EXTR2(512, EPV_CYCLES_OIL_REFINERY);
-	for (uint i = 0; i != EPV_CYCLES_OIL_REFINERY; i++) {
-		*palette_pos++ = s[j];
-		j++;
-		if (j == EPV_CYCLES_OIL_REFINERY) j = 0;
-	}
-
-	/* Radio tower blinking */
-	{
-		byte i = (palette_animation_counter >> 1) & 0x7F;
-		byte v;
-
-		if (i < 0x3f) {
-			v = 255;
-		} else if (i < 0x4A || i >= 0x75) {
-			v = 128;
-		} else {
-			v = 20;
-		}
-		palette_pos->r = v;
-		palette_pos->g = 0;
-		palette_pos->b = 0;
-		palette_pos++;
-
-		i ^= 0x40;
-		if (i < 0x3f) {
-			v = 255;
-		} else if (i < 0x4A || i >= 0x75) {
-			v = 128;
-		} else {
-			v = 20;
-		}
-		palette_pos->r = v;
-		palette_pos->g = 0;
-		palette_pos->b = 0;
-		palette_pos++;
-	}
-
-	/* Handle lighthouse and stadium animation */
-	s = ev->lighthouse;
-	j = EXTR(256, EPV_CYCLES_LIGHTHOUSE);
-	for (uint i = 0; i != EPV_CYCLES_LIGHTHOUSE; i++) {
-		*palette_pos++ = s[j];
-		j++;
-		if (j == EPV_CYCLES_LIGHTHOUSE) j = 0;
-	}
-
-	/* Dark blue water */
-	s = (_settings_game.game_creation.landscape == LT_TOYLAND) ? ev->dark_water_toyland : ev->dark_water;
-	j = EXTR(320, EPV_CYCLES_DARK_WATER);
-	for (uint i = 0; i != EPV_CYCLES_DARK_WATER; i++) {
-		*palette_pos++ = s[j];
-		j++;
-		if (j == EPV_CYCLES_DARK_WATER) j = 0;
-	}
-
-	/* Glittery water */
-	s = (_settings_game.game_creation.landscape == LT_TOYLAND) ? ev->glitter_water_toyland : ev->glitter_water;
-	j = EXTR(128, EPV_CYCLES_GLITTER_WATER);
-	for (uint i = 0; i != EPV_CYCLES_GLITTER_WATER / 3; i++) {
-		*palette_pos++ = s[j];
-		j += 3;
-		if (j >= EPV_CYCLES_GLITTER_WATER) j -= EPV_CYCLES_GLITTER_WATER;
-	}
-
-	if (blitter != nullptr && blitter->UsePaletteAnimation() == Blitter::PALETTE_ANIMATION_NONE) {
-		palette_animation_counter = old_tc;
-	} else {
-		if (memcmp(old_val, &_cur_palette.palette[PALETTE_ANIM_START], sizeof(old_val)) != 0 && _cur_palette.count_dirty == 0) {
-			/* Did we changed anything on the palette? Seems so.  Mark it as dirty */
-			_cur_palette.first_dirty = PALETTE_ANIM_START;
-			_cur_palette.count_dirty = PALETTE_ANIM_SIZE;
-		}
-	}
-}
-
-/**
- * Determine a contrasty text colour for a coloured background.
- * @param background Background colour.
- * @param threshold Background colour brightness threshold below which the background is considered dark and TC_WHITE is returned, range: 0 - 255, default 128.
- * @return TC_BLACK or TC_WHITE depending on what gives a better contrast.
- */
-TextColour GetContrastColour(uint8 background, uint8 threshold)
-{
-	Colour c = _cur_palette.palette[background];
-	/* Compute brightness according to http://www.w3.org/TR/AERT#color-contrast.
-	 * The following formula computes 1000 * brightness^2, with brightness being in range 0 to 255. */
-	uint sq1000_brightness = c.r * c.r * 299 + c.g * c.g * 587 + c.b * c.b * 114;
-	/* Compare with threshold brightness which defaults to 128 (50%) */
-	return sq1000_brightness < ((uint) threshold) * ((uint) threshold) * 1000 ? TC_WHITE : TC_BLACK;
 }
 
 /**
@@ -2329,22 +2179,22 @@ bool AdjustGUIZoom(AdjustGUIZoomMode mode)
 	ZoomLevel old_font_zoom = _font_zoom;
 	int old_scale = _gui_scale;
 	UpdateGUIZoom();
-	if (old_scale == _gui_scale) return false;
+	if (old_scale == _gui_scale && old_gui_zoom == _gui_zoom) return false;
 
-	/* Reload sprites if sprite zoom level has changed. */
+	/* Update cursors if sprite zoom level has changed. */
 	if (old_gui_zoom != _gui_zoom) {
-		GfxClearSpriteCache();
 		VideoDriver::GetInstance()->ClearSystemSprites();
 		UpdateCursorSize();
 		if (mode != AGZM_STARTUP) UpdateRouteStepSpriteSize();
-	} else if (old_font_zoom != _font_zoom) {
+	}
+	if (old_font_zoom != _font_zoom) {
 		GfxClearFontSpriteCache();
 	}
-
 	ClearFontCache();
 	UpdateFontHeightCache();
 	LoadStringWidthTable();
-	ReInitAllWindows(false);
+
+	SetupWidgetDimensions();
 	UpdateAllVirtCoords();
 	if (mode != AGZM_STARTUP) FixTitleGameZoom();
 
@@ -2358,11 +2208,9 @@ bool AdjustGUIZoom(AdjustGUIZoomMode mode)
 		if (mode == AGZM_AUTOMATIC) {
 			w->left   = (w->left   * _gui_scale) / old_scale;
 			w->top    = (w->top    * _gui_scale) / old_scale;
-			w->width  = (w->width  * _gui_scale) / old_scale;
-			w->height = (w->height * _gui_scale) / old_scale;
 		}
 		if (w->viewport != nullptr) {
-			w->viewport->zoom = Clamp(ZoomLevel(w->viewport->zoom - zoom_shift), _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+			w->viewport->zoom = static_cast<ZoomLevel>(Clamp(w->viewport->zoom - zoom_shift, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max));
 		}
 	}
 

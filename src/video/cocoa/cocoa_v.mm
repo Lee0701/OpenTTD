@@ -335,7 +335,7 @@ void VideoDriver_Cocoa::GameSizeChanged()
 	::GameSizeChanged();
 
 	/* We need to store the window size as non-Retina size in
-	* the config file to get same windows size on next start. */
+	 * the config file to get same windows size on next start. */
 	_cur_resolution.width = [ this->cocoaview frame ].size.width;
 	_cur_resolution.height = [ this->cocoaview frame ].size.height;
 }
@@ -635,7 +635,7 @@ NSView *VideoDriver_CocoaQuartz::AllocateDrawView()
 }
 
 /** Resize the window. */
-void VideoDriver_CocoaQuartz::AllocateBackingStore(bool force)
+void VideoDriver_CocoaQuartz::AllocateBackingStore(bool)
 {
 	if (this->window == nil || this->cocoaview == nil || this->setup) return;
 
@@ -665,7 +665,7 @@ void VideoDriver_CocoaQuartz::AllocateBackingStore(bool force)
 		kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host
 	);
 
-	assert(this->cgcontext != NULL);
+	assert(this->cgcontext != nullptr);
 	CGContextSetShouldAntialias(this->cgcontext, FALSE);
 	CGContextSetAllowsAntialiasing(this->cgcontext, FALSE);
 	CGContextSetInterpolationQuality(this->cgcontext, kCGInterpolationNone);

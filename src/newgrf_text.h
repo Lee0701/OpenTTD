@@ -49,11 +49,12 @@ bool CheckGrfLangID(byte lang_id, byte grf_version);
 
 void StartTextRefStackUsage(const struct GRFFile *grffile, byte numEntries, const uint32 *values = nullptr);
 void StopTextRefStackUsage();
-void RewindTextRefStack();
 bool UsingNewGRFTextStack();
 struct TextRefStack *CreateTextRefStackBackup();
 void RestoreTextRefStackBackup(struct TextRefStack *backup);
-uint RemapNewGRFStringControlCode(uint scc, char *buf_start, char **buff, const char **str, int64 *argv, uint argv_size, bool modify_argv);
+
+class StringParameters;
+uint RemapNewGRFStringControlCode(uint scc, char *buf_start, char **buff, const char **str, StringParameters &parameters, bool modify_parameters);
 
 /** Mapping of language data between a NewGRF and OpenTTD. */
 struct LanguageMap {

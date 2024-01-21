@@ -23,7 +23,7 @@ public:
 
 	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override {};
 	void DrawColourMappingRect(void *dst, int width, int height, PaletteID pal) override {};
-	Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator) override;
+	Sprite *Encode(const SpriteLoader::SpriteCollection &sprite, AllocatorProc *allocator) override;
 	void *MoveTo(void *video, int x, int y) override { return nullptr; };
 	void SetPixel(void *video, int x, int y, uint8 colour) override {};
 	void SetPixel32(void *video, int x, int y, uint8 colour, uint32 colour32) override {};
@@ -41,7 +41,6 @@ public:
 	Blitter::PaletteAnimation UsePaletteAnimation() override { return Blitter::PALETTE_ANIMATION_NONE; };
 
 	const char *GetName() override { return "null"; }
-	int GetBytesPerPixel() override { return 0; }
 };
 
 /** Factory for the blitter that does nothing. */

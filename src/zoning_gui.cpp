@@ -83,12 +83,12 @@ struct ZoningWindow : public Window {
 		this->InvalidateData();
 	}
 
-	virtual void OnPaint()
+	void OnPaint() override
 	{
 		this->DrawWidgets();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case ZTW_OUTER_DROPDOWN:
@@ -101,7 +101,7 @@ struct ZoningWindow : public Window {
 		}
 	}
 
-	virtual void OnDropdownSelect(int widget, int index)
+	void OnDropdownSelect(int widget, int index) override
 	{
 		switch(widget) {
 			case ZTW_OUTER_DROPDOWN:
@@ -115,7 +115,7 @@ struct ZoningWindow : public Window {
 		this->InvalidateData();
 	}
 
-	virtual void SetStringParameters(int widget) const
+	void SetStringParameters(int widget) const override
 	{
 		switch (widget) {
 			case ZTW_OUTER_DROPDOWN:
@@ -128,7 +128,7 @@ struct ZoningWindow : public Window {
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		const StringID *strs = nullptr;
 		switch (widget) {
@@ -146,7 +146,7 @@ struct ZoningWindow : public Window {
 			}
 		}
 		size->width += padding.width;
-		size->height = FONT_HEIGHT_NORMAL + WidgetDimensions::scaled.dropdowntext.Vertical();
+		size->height = GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.dropdowntext.Vertical();
 	}
 };
 
@@ -172,11 +172,11 @@ static const NWidgetPart _nested_zoning_widgets[] = {
 	EndContainer()
 };
 
-static WindowDesc _zoning_desc (
+static WindowDesc _zoning_desc (__FILE__, __LINE__,
 	WDP_CENTER, "zoning_gui", 0, 0,
 	WC_ZONING_TOOLBAR, WC_NONE,
 	0,
-	_nested_zoning_widgets, lengthof(_nested_zoning_widgets)
+	std::begin(_nested_zoning_widgets), std::end(_nested_zoning_widgets)
 );
 
 void ShowZoningToolbar()

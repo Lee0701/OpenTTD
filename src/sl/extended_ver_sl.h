@@ -42,7 +42,7 @@ enum SlXvFeatureIndex {
 	XSLFI_ADJACENT_CROSSINGS,                     ///< Adjacent level crossings closure patch
 	XSLFI_SAFER_CROSSINGS,                        ///< Safer level crossings
 	XSLFI_DEPARTURE_BOARDS,                       ///< Departure boards patch, in ticks mode
-	XSLFI_TIMETABLES_START_TICKS,                 ///< Timetable start time is in ticks, instead of days (from departure boards patch)
+	XSLFI_TIMETABLES_START_TICKS,                 ///< Timetable start time format: 1: is in ticks, instead of days, 2: also has subticks, 3: uses DateTicksScaled
 	XSLFI_TOWN_CARGO_ADJ,                         ///< Town cargo adjustment patch
 	XSLFI_SIG_TUNNEL_BRIDGE,                      ///< Signals on tunnels and bridges
 	XSLFI_IMPROVED_BREAKDOWNS,                    ///< Improved breakdowns patch
@@ -141,6 +141,7 @@ enum SlXvFeatureIndex {
 	XSLFI_LABEL_ORDERS,                           ///< Label orders
 	XSLFI_VARIABLE_TICK_RATE,                     ///< Variable tick rate
 	XSLFI_ROAD_VEH_FLAGS,                         ///< Road vehicle flags
+	XSLFI_STATION_TILE_CACHE_FLAGS,               ///< Station tile cache flags
 
 	XSLFI_SCRIPT_INT64,                           ///< See: SLV_SCRIPT_INT64
 	XSLFI_U64_TICK_COUNTER,                       ///< See: SLV_U64_TICK_COUNTER
@@ -155,6 +156,9 @@ enum SlXvFeatureIndex {
 	XSLFI_DISASTER_VEH_STATE,                     ///< See: SLV_DISASTER_VEH_STATE (PR #10798)
 	XSLFI_SAVEGAME_ID,                            ///< See: SLV_SAVEGAME_ID (PR #10719)
 	XSLFI_NEWGRF_LAST_SERVICE,                    ///< See: SLV_NEWGRF_LAST_SERVICE (PR #11124)
+	XSLFI_CARGO_TRAVELLED,                        ///< See: SLV_CARGO_TRAVELLED (PR #11283)
+
+	XSLFI_TABLE_PATS,                             ///< Use upstream table format for PATS
 
 	XSLFI_RIFF_HEADER_60_BIT,                     ///< Size field in RIFF chunk header is 60 bit
 	XSLFI_HEIGHT_8_BIT,                           ///< Map tile height is 8 bit instead of 4 bit, but savegame version may be before this became true in trunk

@@ -189,6 +189,9 @@ STR_COLOUR_BROWN                                                :Brown
 STR_COLOUR_GREY                                                 :Llwyd
 STR_COLOUR_WHITE                                                :Gwyn
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mph
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/h
@@ -227,6 +230,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}tr
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Hidlydd:
@@ -399,31 +403,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :Adeiladau trylo
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :Arwyddion tryloyw
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :Cadw Gêm
 STR_FILE_MENU_LOAD_GAME                                         :Llwytho Gêm
 STR_FILE_MENU_QUIT_GAME                                         :Rhoi'r gorau i'r Gêm
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Gadael
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :Map o'r Byd
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Ffenestr Olygfa Newydd
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :Allwedd Llif Cargo
 STR_MAP_MENU_SIGN_LIST                                          :Rhestr Arwyddion
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :Cyfeiriadur Trefi
 STR_TOWN_MENU_FOUND_TOWN                                        :Sefydlu tref
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Cymorthdaliadau
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :Graff Elw Gweithredol
 STR_GRAPH_MENU_INCOME_GRAPH                                     :Graff Incwm
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Graff Llwythi a Ddanfonwyd
@@ -432,56 +430,45 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Graff Gwerth Cw
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Cyfraddau Tâl Llwythi
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :Tabl Cynghrair Cwmnïau
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :Graddfa Fanwl Perfformiad
 STR_GRAPH_MENU_HIGHSCORE                                        :Tabl sgôr uchaf
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :Cyfeiriadur Diwydiannau
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Cadwyni diwydiant
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Ariannu diwydiant newydd
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Adeiladu rheilffordd
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Adeiladu rheilffordd drydan
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Adeiladu monoreilffordd
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Adeiladu maglef
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Adeiladu ffyrdd
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Adeiladu tramffordd
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Adeiladu camlesi
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Adeiladu maes awyr
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Tirweddu
 STR_LANDSCAPING_MENU_PLANT_TREES                                :Plannu coed
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Gosod arwydd
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Sain/cerddoriaeth
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :Neges/Adroddiad newyddion ddiwethaf
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :Hanes negeseuon
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Gwybodaeth ardal tir
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Toglu Consol
 STR_ABOUT_MENU_AI_DEBUG                                         :Dadnamu AI / Sgript Gêm
 STR_ABOUT_MENU_SCREENSHOT                                       :Ciplun
@@ -687,8 +674,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Cliciwch
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Cliciwch i dynnu trac cerddoriaeth o'r rhaglen gyfredol (Cyfaddas 1 Neu Cyfaddas 2 yn unig)
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Y Cwmnïau Brig a gyrhaeddodd Lefel {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Y Tabl Cynghrair Cwmnïau yn {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Rheolwr Busnes
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Entrepreneur
@@ -874,10 +859,6 @@ STR_NEWS_NEW_VEHICLE_TYPE                                       :{BIG_FONT}{BLAC
 STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}Mae {STRING} newydd yn awr ar gael!  -  {ENGINE}
 
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}Nid yw {STATION} bellach yn derbyn {STRING}
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}Nid yw {STATION} bellach yn derbyn {STRING} na {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}Mae {STATION} nawr yn derbyn {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}Mae {STATION} nawr yn derbyn {STRING} a {STRING}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Cynnig cymhorthdal ar ben:{}{}Ni fydd cludo {STRING} o {STRING} i {STRING} yn derbyn cymhorthdal bellach
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Cymhorthdal wedi'i dynnu'n ôl:{}{}Ni fydd gwasanaeth {STRING} o {STRING} i {STRING} yn derbyn cymhorthdal bellach
@@ -993,7 +974,6 @@ STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Graffeg
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Set raffeg sylfaenol
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Dewiswch y set raffeg sylfaenol i'w defnyddio
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} ffeil ar goll/llygredig
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Gwybodaeth ychwanegol am y set graffeg sylfaenol
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Set sain sylfaenol
@@ -1002,8 +982,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Gwybodae
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Set cerddoriaeth sylfaenol
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Dewisiwch y set cerddoriaeth sylfaenol i'w ddefnyddio
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} ffeil llygredig
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Gwybodaeth bellach am y set gerddoriaeth sylfaenol
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Methu nôl rhestr o cydraniadau cydnaws
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Methodd y modd sgrin llawn
@@ -1159,6 +1139,7 @@ STR_CONFIG_SETTING_REALISTIC                                    :Realistig
 STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :Chwith
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :Canol
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :De
+
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Benthyciad agoriadol uchafsymol: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Y swm uchaf y gall cwmni fenthyca (heb ustyried chwyddiant)
@@ -1325,6 +1306,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :Dim
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :Llai
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :Arferol
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Caniatáu arosfannau gyrru-trwodd ar ffyrdd sy'n eiddo i drefi: {STRING}
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Caniatáu adeiladu arosfannau gyrru-trwodd ar ffyrdd sy'n eiddo i drefi
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Caniatáu arosfannau gyrru-trwodd ar ffyrdd sy'n eiddo i gystadleuwyr: {STRING}
@@ -1335,6 +1317,7 @@ STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE                   :Cynnal a chadw 
 STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE_HELPTEXT          :Pan fo wedi'i alluogi, mae tanadeiledd yn creu costau cynnal a chadw. Mae'r cost yn codi'n gyflymach na'i gyfradd gyda thŵf y rhwydwaith, gan effeithio'n fwy ar gwmniau mawr na rhai bychan
 
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR_HELPTEXT             :Dewiswch liw dechreuol am y cwmni
+
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :Maes awyr ddim yn dibennu: {STRING}
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS_HELPTEXT               :Mae galluogi'r dewis yma'n peri i bob math o faes awyr aros ar gael am byth wedi ei gyflwyniad gyntaf
@@ -1369,7 +1352,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Lleiafswm arian
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Ystod neges gwall: {STRING}
 STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Amser i ddangos negeseuon gwall mewn ffenestr coch. Sylwer ni gaiff rhai negeseuon gwall (difrifol) eu cau'n ddiofyn
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} eiliad
 
 STR_CONFIG_SETTING_HOVER_DELAY                                  :Dangos cynghorion: {STRING}
 STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Oediad cyn y dangosir cynghorion wrth ddal y cyrchydd dros rhyw elfen rhyngwyneb. Fel arall rhwymir cynghorion at botwm dde'r llygoden pan fo'r gwerth yma'n 0.
@@ -1516,9 +1498,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :I ffwrdd
 
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE                        :Cau ffenest wrth dde-glicio: {STRING}
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE_HELPTEXT               :Cau ffenest wrth dde-glicio tu fewn iddo. Mae hyn yn analluogi dangos gwybodaeth ar dde-clicio!
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :Awtogadw: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Dewis pa mor aml y dylid awtogadw gemau
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :Defnyddio'r fformat dyddiad {STRING} ar gyfer enwau gemau wedi'u cadw
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_HELPTEXT           :Fformat y dyddiad mewn enwau ffeiliau cadw
@@ -1544,8 +1524,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Galluogi defnyd
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Dangos llwytho: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Dewis a fydd dangosyddion llwytho'n cael eu dangos uwch cerbydau sy'n llwytho neu dadlwytho
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Dangos amserlen fesul ticiau yn hytrach na dyddiau: {STRING}
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Dangos amseroedd teithio mewn amserlenni mewn ticiau yn hytrach na dyddiau
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Dangos cyrraedd a gadael mewn amserlenni: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Dangos amseroedd cyrraedd a gadael rhagdybiedig mewn amserlenni
@@ -1996,6 +1975,8 @@ STR_ABANDON_GAME_CAPTION                                        :{WHITE}Rhoi'r g
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Ydych chi'n siwr eich bod chi eisiau rhoi'r gorau i'r gêm?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Ydych chi'n siwr eich bod chi eisiau gadael y senario hwn?
 
+# Help window
+
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Twyllo
 STR_CHEATS_TOOLTIP                                              :{BLACK}Mae'r blychau marcio'n dangos os ydych chi wedi twyllo neu beidio, gan nodi sut
@@ -2416,7 +2397,6 @@ STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}Toglu tr
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK}Toglu tryloywder ar gyfer pontydd. Ctrl+Clic i gloi
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Toglu tryloywder ar gyfer adeiledau fel goleudai ac antenau. Ctrl+Clic i gloi
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Toglu tryloywder ar gyfer gwifrau. Ctrl+Clic i gloi
-STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Toglu tryloywder ar gyfer dangosyddion llwytho. Ctrl+Clic i gloi
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Gosod gwrthrychau'n anweledig yn hytrach nac yn dryloyw
 
 # Linkgraph legend window
@@ -4174,8 +4154,6 @@ STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(aros am {STRIN
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :(teithio am {STRING}, heb ei amserlennu)
 STR_TIMETABLE_STAY_FOR                                          :aros am {STRING}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :a theithio am {STRING}
-STR_TIMETABLE_DAYS                                              :{COMMA}{NBSP}diwrnod
-STR_TIMETABLE_TICKS                                             :{COMMA}{NBSP}tic
 
 STR_TIMETABLE_TOTAL_TIME                                        :{BLACK}Bydd yr amserlen hon yn cymryd {STRING} i'w chwblhau
 STR_TIMETABLE_TOTAL_TIME_INCOMPLETE                             :{BLACK}Bydd yr amserlen hon yn cymryd o leiaf {STRING} i'w chwblhau (heb ei hamserlennu'n llwyr)
@@ -4184,10 +4162,8 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Mae'r ce
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}Mae'r cerbyd hwn yn rhedeg {STRING} yn hwyr ar hyn o bryd
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}Mae'r cerbyd hwn yn rhedeg {STRING} yn gynnar ar hyn o bryd
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}Nid yw'r amserlen yma wedi dechrau
-STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}Bydd yr amserlen yma'n dechrau ar {STRING}
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Dyddiad dechrau
-STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Dewis dyddiad fel pwynt dechrau ar gyfer yr amserlen yma. Mae Ctrl+Clic yn gosod pwynt dechrau yr amselen yma ac yn dosbarthu'r holl gerbydau sy'n rhannu'r gorchymyn yma yn gyson yn ôl eu trefn cymharol, os yw'r gorchymyn wedi ei amserlennu'n llwyr
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Newid Amser
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Newid faint o amser y dylai'r gorchymyn a amlygwyd ei gymryd
@@ -4301,7 +4277,7 @@ STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Amlapio 
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Gweld dogfenyddiaeth
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Log Newidiadau
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Trwydded
-###length 4
+###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}Dogfenyddiaeth {STRING} {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Log newidiadau {STRING} {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}Trwydded {STRING} {STRING}
@@ -4439,7 +4415,6 @@ STR_ERROR_TOO_CLOSE_TO_EDGE_OF_MAP_SUB                          :{WHITE}... rhy 
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... rhy agos i dref arall
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... gormod o drefi
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... nid oes mwy o le ar y map
-STR_ERROR_TOWN_EXPAND_WARN_NO_ROADS                             :{WHITE}Ni fydd y dref yn adeiladu ffyrdd. Gallwch alluogi adeiladu ffyrdd yn Gosodiadau->Amgylchedd->Trefi
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}Mae gwaith yn cael ei wneud ar y ffordd
 STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Methu dileu'r dref...{}Mae gorsaf neu depo sy'n cyfeirio i'r dref neu deil ym mherchnogaeth y dref na ellir ei ddileu
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... nid oes man addas i'r cerflun yn nghanol y ddinas yma

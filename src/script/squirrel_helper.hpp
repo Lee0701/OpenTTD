@@ -45,7 +45,8 @@ namespace SQConvert {
 	template <> struct Return<HSQOBJECT>    { static inline int Set(HSQUIRRELVM vm, HSQOBJECT res)   { sq_pushobject(vm, res); return 1; } };
 
 	template <> struct Return<std::optional<std::string>> {
-		static inline int Set(HSQUIRRELVM vm, std::optional<std::string> res) {
+		static inline int Set(HSQUIRRELVM vm, std::optional<std::string> res)
+		{
 			if (res.has_value()) {
 				sq_pushstring(vm, res.value(), -1);
 			} else {
@@ -131,7 +132,7 @@ namespace SQConvert {
 
 	private:
 		template <size_t... i>
-		static int SQCall(void *instance, Tretval(*func)(Targs...), [[maybe_unused]] HSQUIRRELVM vm, std::index_sequence<i...>)
+		static int SQCall(void *, Tretval(*func)(Targs...), [[maybe_unused]] HSQUIRRELVM vm, std::index_sequence<i...>)
 		{
 			if constexpr (std::is_void_v<Tretval>) {
 				(*func)(
@@ -180,7 +181,7 @@ namespace SQConvert {
 		}
 
 		template <size_t... i>
-		static Tcls *SQConstruct(Tcls *, Tretval(Tcls:: *func)(Targs...), [[maybe_unused]] HSQUIRRELVM vm, std::index_sequence<i...>)
+		static Tcls *SQConstruct(Tcls *, Tretval(Tcls:: *)(Targs...), [[maybe_unused]] HSQUIRRELVM vm, std::index_sequence<i...>)
 		{
 			Tcls *inst = new Tcls(
 				Param<Targs>::Get(vm, 2 + i)...
@@ -321,7 +322,7 @@ namespace SQConvert {
 	 *  here as it has to be in the same scope as DefSQConstructorCallback.
 	 */
 	template <typename Tcls>
-	static SQInteger DefSQDestructorCallback(SQUserPointer p, SQInteger size)
+	static SQInteger DefSQDestructorCallback(SQUserPointer p, SQInteger)
 	{
 		/* Remove the real instance too */
 		if (p != nullptr) ((Tcls *)p)->Release();

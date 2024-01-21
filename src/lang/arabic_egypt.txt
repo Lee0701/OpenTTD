@@ -189,6 +189,9 @@ STR_COLOUR_BROWN                                                :بني
 STR_COLOUR_GREY                                                 :رمادي
 STR_COLOUR_WHITE                                                :ابيض
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}ميل/س
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}كم/س
@@ -224,6 +227,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP} قدم
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}م
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP} متر
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}تصفية القائمة:
@@ -399,31 +403,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :مباني شف
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :اسماء المحطات شفافة
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :حفظ
 STR_FILE_MENU_LOAD_GAME                                         :تحميل
 STR_FILE_MENU_QUIT_GAME                                         :اغلاق اللعبة
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :خروج
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :خريطة العالم
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :شاشة عرض اضافية
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :مفتاح تدفق البضائع
 STR_MAP_MENU_SIGN_LIST                                          :قائمة العلامات
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :دليل المدن
 STR_TOWN_MENU_FOUND_TOWN                                        :جد المدينة
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :العروض
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :مخطط التشغيل
 STR_GRAPH_MENU_INCOME_GRAPH                                     :مخطط الارباح
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :مخطط البضاعة المشحونة
@@ -432,57 +430,46 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :مخطط قيم
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :معدل تكلفة النقل
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :ترتيب الشركات
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :تقييم أداء مفصل
 STR_GRAPH_MENU_HIGHSCORE                                        :قائمه المتفوقين
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :دليل المصانع
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :سلاسل الصناعة
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :مول بناء مصنع
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :بناء سكة قطار حديدية
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :بناء سكة الحديد الكهربائية
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :بناء سكة قطار احادية
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :بناء سكة قطار ممغنطة
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :بناء الطرق
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :بناء الترام
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :بناء ممرات مائيه
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :بناء المطار
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :تصميم الخريطة
 STR_LANDSCAPING_MENU_PLANT_TREES                                :زراعة اشجار
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :وضع علامات
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :الموسيقى/الصوت
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :الرسالة الأخيرة/التقرير الجديد
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :الرسائل السابقة
 STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :احذف كل الرسائل
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :معلومات مربع في الخريطة
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :توقل كونسول
 STR_ABOUT_MENU_AI_DEBUG                                         :مكتشف اخطاء الذكاء الصناعي
 STR_ABOUT_MENU_SCREENSHOT                                       :صورة من الشاشة - Ctrl-S -
@@ -688,8 +675,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}اضغط
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}اضغط على المسار لازالته من القائمة
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}الشركات الكبرى التي وصلت لـ {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}ترتيب الشركات {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :رجل اعمال
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :مغامر
@@ -869,10 +854,6 @@ STR_NEWS_NEW_VEHICLE_TYPE                                       :{BIG_FONT}{BLAC
 STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}جديد {STRING} الآن متاح ! - {ENGINE}
 
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}{STATION} لم تعد تقبل {STRING}
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}{STATION}لم تعد تقبل {STRING} او {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}{STATION} الآن تقبل {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}{STATION}الآن تقبل {STRING} و {STRING}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK} اعلان عن انتهاء عرض{}{} نقل {STRING} من {STRING} الى {STRING} لن يعطي ارباح اضافية بعد الآن .
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK} تم سحب العرض{}{} نقل {STRING} من {STRING} الى {STRING} لم يعد معروض
@@ -982,7 +963,6 @@ STR_GAME_OPTIONS_REFRESH_RATE_WARNING                           :{WHITE}قد ت�
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK} الواجهة الرسومية الاساسية
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK} اختر مجموعة الواجهة الرسومية
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} ملف مفقود او غير صالح
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK} معلومات اضافية عن القاعدة الرسومية
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}قاعدة الاصوات الاساسية
@@ -991,8 +971,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}معلو
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}قاعده الموسيقى الاساسيه
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}اختر الموسيقى الاساسية التي تود استخدامها
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} ملف غير صالح
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}معلومات اضافية عن الموسيقى الاساسية
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}فشل في استرداد قائمة الدقة المدعومة
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}فشل تشغيل نمط الشاشة الكاملة
@@ -1139,6 +1119,7 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :يسار
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :متوسط
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :يمين
 
+
 ###setting-zero-is-special
 
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :سعر الفائدة على القرض يتحكم أيضًا في التضخم ، إذا تم تمكينه
@@ -1248,6 +1229,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :بدون
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :منخفض
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :طبيعي
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :السماح للعربات بالعبور خلال المواقف المملوكة داخل المدن: {STRING}
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :السماح بمرور العربات خلال المحطات المملوكة للمنافسين: {STRING}
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD_HELPTEXT             :السماح ببناء مواقف السيارات على الطرق المملوكة لشركات أخرى
@@ -1257,6 +1239,7 @@ STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE                   :صيانة ال
 
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR                      :لون الشركة البدائي: {STRING}
 STR_CONFIG_SETTING_COMPANY_STARTING_COLOUR_HELPTEXT             :اختر اللون البدائي للشركة
+
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :المطارات لا تنتهي صلاحيتها {STRING}
 
@@ -1279,7 +1262,6 @@ STR_CONFIG_SETTING_AUTORENEW_VEHICLE_HELPTEXT                   :عند التم
 
 STR_CONFIG_SETTING_AUTORENEW_MONEY                              :التجديد التلقائي عند توفر السيولة الدنيا للتجديد: {STRING}
 
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} ثانية
 
 ###setting-zero-is-special
 
@@ -1402,9 +1384,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_CONTROL                  :للتحكم
 STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :عدم استخدام
 
 STR_CONFIG_SETTING_RIGHT_MOUSE_WND_CLOSE_HELPTEXT               :تغلق النافذة عن طريق الطغط على الزر الأيمن في الماوس داخل النافذة. يعطل الملحوظة عند الطغط على الزر الأيمن في الماوس!
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :حفظ تلقائي : {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :اختر الوقت بين كل عملية حفظ اتوماتيكية
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :استخدم {STRING} نمط التاريخ لاسم اللعبة المحفوظة
 ###length 3
@@ -1426,7 +1406,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS                       :استخدام 
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :تفعيل مؤشر التحميل: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :حدد ما إذا كانت مؤشرات التحميل معروضة فوق تحميل المركبات أو تفريغها
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :عرض جدولة الأعمال بالمهام بدلا من الأيام: {STRING}
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :عرض الوصول و المغادرة في جدولة الاعمال: {STRING}
 
@@ -1775,6 +1755,8 @@ STR_QUIT_NO                                                     :{BLACK}لا
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}إغلاق اللعبه
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}أمتأكد من رغبتك فى إغلاق اللعبه؟
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}هل تريد الخروج من انشاء الخريطة
+
+# Help window
 
 # Cheat window
 STR_CHEATS                                                      :{WHITE}اسرار
@@ -2184,7 +2166,6 @@ STR_TRANSPARENT_BUILDINGS_TOOLTIP                               :{BLACK}بدل �
 STR_TRANSPARENT_BRIDGES_TOOLTIP                                 :{BLACK} بدل الشفافية للجسور. مفتاح كنترول للاغلاق.
 STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}بدل بين الشفافية للعلامات مثل المنارات الضوئية و هواائيات الارسال. مفتاح كنترول لالغلاق.
 STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK} غير شفافية سكك الحديد. مفتاح كنترول للاغلاق.
-STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}غير الشفافية لنسبة التحميل. مفتاح كنترول للاغلاق.
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}اخفاء الاجرام تماما بدلا من الشفافية
 
 # Linkgraph legend window
@@ -3882,8 +3863,6 @@ STR_TIMETABLE_TRAVEL_FOR_SPEED_ESTIMATED                        :سافر (إل�
 STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(البقاء ل{STRING}، ليس مجدول)
 STR_TIMETABLE_STAY_FOR                                          :ويبقى لـ {STRING}
 STR_TIMETABLE_AND_TRAVEL_FOR                                    :ويسافر لـ {STRING}
-STR_TIMETABLE_DAYS                                              :{COMMA}يوم
-STR_TIMETABLE_TICKS                                             :{COMMA} علامة
 
 STR_TIMETABLE_TOTAL_TIME                                        :{BLACK}جدولة الاوامر هذه ستأخذ {STRING} لنهاية
 STR_TIMETABLE_TOTAL_TIME_INCOMPLETE                             :{BLACK}جدولة الاوامر هذه ستأخذ على الاقل {STRING} لتكتمل (لايشمل كل الجدولة)
@@ -3892,10 +3871,8 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}هذه �
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}هذه العربه {STRING} مُتاخِرة حاليا عن الجدوله
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}هذه العربه {STRING} مُتَقَدِمه عن الجدوله
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}جدولة الاعمال لم تبدأ بعد
-STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}جدولة الاعمال ستبدأ فى {STRING}
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}تاريخ البدأ
-STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}حدد تاريخًا كنقطة بداية لهذا الجدول الزمني. Ctrl + Click يوزع جميع المركبات التي تشارك هذا الطلب بالتساوي من التاريخ المحدد بناءً على ترتيبها النسبي ، إذا كان الطلب محددًا بجدول زمني كامل
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}غير الوقت
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}غير مقدار الزمن الذي يستغرقه هذا الامر
@@ -4003,7 +3980,7 @@ STR_TEXTFILE_WRAP_TEXT                                          :{WHITE}التف
 STR_TEXTFILE_VIEW_README                                        :{BLACK}اعرض ملف التعليمات ريدمي
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}اعرض سجل التغييرات
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}الرخصة
-###length 4
+###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING}اقراني {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} سجل التغيير ل{STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING}رخصة {STRING}
@@ -4133,7 +4110,6 @@ STR_ERROR_TOO_CLOSE_TO_EDGE_OF_MAP_SUB                          :{WHITE}... قر
 STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... قريبة جدا من مدينة أخرى
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... المدن كثيرة جدا
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... لا يوجد فراغ في الخريطة
-STR_ERROR_TOWN_EXPAND_WARN_NO_ROADS                             :{WHITE}لن تبني البلدية طرق جديدة. بإمكانك تمكين بناء الطرق الجديدة عن طريق الاعدادات --> البيئة--> المدن
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}اعمال الطرق قيد التنفيذ
 STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}لا يمكن ازالة هذه المدينة{}محطة او ورشة مرتبطة بالمدينة او هناك مربع مملوك للمدينة لا يمكن لزالته
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... لا يوجد مكان مناسب للمجسم بداخل هذة المدينة/البلدة

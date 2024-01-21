@@ -206,7 +206,7 @@ Industry::~Industry()
  * Invalidating some stuff after removing item from the pool.
  * @param index index of deleted item
  */
-void Industry::PostDestructor(size_t index)
+void Industry::PostDestructor(size_t)
 {
 	InvalidateWindowData(WC_INDUSTRY_DIRECTORY, 0, IDIWD_FORCE_REBUILD);
 	SetWindowDirty(WC_BUILD_INDUSTRY, 0);
@@ -385,7 +385,7 @@ static void DrawTile_Industry(TileInfo *ti, DrawTileProcParams params)
 	}
 }
 
-static int GetSlopePixelZ_Industry(TileIndex tile, uint x, uint y, bool ground_vehicle)
+static int GetSlopePixelZ_Industry(TileIndex tile, uint, uint, bool)
 {
 	return GetTileMaxPixelZ(tile);
 }
@@ -415,22 +415,20 @@ static void AddAcceptedCargo_Industry(TileIndex tile, CargoArray &acceptance, Ca
 	const Industry *ind = Industry::GetByTile(tile);
 
 	/* Starting point for acceptance */
-	CargoID accepts_cargo[lengthof(itspec->accepts_cargo)];
-	int8 cargo_acceptance[lengthof(itspec->acceptance)];
-	MemCpyT(accepts_cargo, itspec->accepts_cargo, lengthof(accepts_cargo));
-	MemCpyT(cargo_acceptance, itspec->acceptance, lengthof(cargo_acceptance));
+	auto accepts_cargo = itspec->accepts_cargo;
+	auto cargo_acceptance = itspec->acceptance;
 
 	if (itspec->special_flags & INDTILE_SPECIAL_ACCEPTS_ALL_CARGO) {
 		/* Copy all accepted cargoes from industry itself */
-		for (uint i = 0; i < lengthof(ind->accepts_cargo); i++) {
-			CargoID *pos = std::find(accepts_cargo, endof(accepts_cargo), ind->accepts_cargo[i]);
-			if (pos == endof(accepts_cargo)) {
+		for (size_t i = 0; i < ind->accepts_cargo.size(); i++) {
+			auto pos = std::find(std::begin(accepts_cargo), std::end(accepts_cargo), ind->accepts_cargo[i]);
+			if (pos == std::end(accepts_cargo)) {
 				/* Not found, insert */
-				pos = std::find(accepts_cargo, endof(accepts_cargo), CT_INVALID);
-				if (pos == endof(accepts_cargo)) continue; // nowhere to place, give up on this one
+				pos = std::find(std::begin(accepts_cargo), std::end(accepts_cargo), CT_INVALID);
+				if (pos == std::end(accepts_cargo)) continue; // nowhere to place, give up on this one
 				*pos = ind->accepts_cargo[i];
 			}
-			cargo_acceptance[pos - accepts_cargo] += 8;
+			cargo_acceptance[std::distance(std::begin(accepts_cargo), pos)] += 8;
 		}
 	}
 
@@ -438,7 +436,7 @@ static void AddAcceptedCargo_Industry(TileIndex tile, CargoArray &acceptance, Ca
 		/* Try callback for accepts list, if success override all existing accepts */
 		uint16 res = GetIndustryTileCallback(CBID_INDTILE_ACCEPT_CARGO, 0, 0, gfx, Industry::GetByTile(tile), tile);
 		if (res != CALLBACK_FAILED) {
-			MemSetT(accepts_cargo, CT_INVALID, lengthof(accepts_cargo));
+			accepts_cargo.fill(CT_INVALID);
 			for (uint i = 0; i < 3; i++) accepts_cargo[i] = GetCargoTranslation(GB(res, i * 5, 5), itspec->grf_prop.grffile);
 		}
 	}
@@ -447,12 +445,12 @@ static void AddAcceptedCargo_Industry(TileIndex tile, CargoArray &acceptance, Ca
 		/* Try callback for acceptance list, if success override all existing acceptance */
 		uint16 res = GetIndustryTileCallback(CBID_INDTILE_CARGO_ACCEPTANCE, 0, 0, gfx, Industry::GetByTile(tile), tile);
 		if (res != CALLBACK_FAILED) {
-			MemSetT(cargo_acceptance, 0, lengthof(cargo_acceptance));
+			cargo_acceptance.fill(0);
 			for (uint i = 0; i < 3; i++) cargo_acceptance[i] = GB(res, i * 4, 4);
 		}
 	}
 
-	for (byte i = 0; i < lengthof(itspec->accepts_cargo); i++) {
+	for (byte i = 0; i < std::size(itspec->accepts_cargo); i++) {
 		CargoID a = accepts_cargo[i];
 		if (a == CT_INVALID || cargo_acceptance[i] <= 0) continue; // work only with valid cargoes
 
@@ -478,7 +476,7 @@ static void GetTileDesc_Industry(TileIndex tile, TileDesc *td)
 	td->owner[0] = i->owner;
 	td->str = is->name;
 	if (!IsIndustryCompleted(tile)) {
-		SetDParamX(td->dparam, 0, td->str);
+		td->dparam[0] = td->str;
 		td->str = STR_LAI_TOWN_INDUSTRY_DESCRIPTION_UNDER_CONSTRUCTION;
 	}
 
@@ -993,7 +991,7 @@ static bool ClickTile_Industry(TileIndex tile)
 	return true;
 }
 
-static TrackStatus GetTileTrackStatus_Industry(TileIndex tile, TransportType mode, uint sub_mode, DiagDirection side)
+static TrackStatus GetTileTrackStatus_Industry(TileIndex, TransportType, uint, DiagDirection)
 {
 	return 0;
 }
@@ -1140,10 +1138,9 @@ void PlantRandomFarmField(const Industry *i)
 /**
  * Search callback function for ChopLumberMillTrees
  * @param tile to test
- * @param user_data that is passed by the caller.  In this case, nothing
  * @return the result of the test
  */
-static bool SearchLumberMillTrees(TileIndex tile, void *user_data)
+static bool SearchLumberMillTrees(TileIndex tile, void *)
 {
 	if (IsTileType(tile, MP_TREES) && GetTreeGrowth(tile) > 2) { ///< 3 and up means all fully grown trees
 		/* found a tree */
@@ -1168,6 +1165,9 @@ static bool SearchLumberMillTrees(TileIndex tile, void *user_data)
  */
 static void ChopLumberMillTrees(Industry *i)
 {
+	/* Skip production if cargo slot is invalid. */
+	if (i->produced_cargo[0] == CT_INVALID) return;
+
 	/* We only want to cut trees if all tiles are completed. */
 	for (TileIndex tile_cur : i->location) {
 		if (i->TileBelongsToIndustry(tile_cur)) {
@@ -1184,6 +1184,7 @@ static void ChopLumberMillTrees(Industry *i)
 static void ProduceIndustryGoodsFromRate(Industry *i, bool scale)
 {
 	for (size_t j = 0; j < lengthof(i->produced_cargo_waiting); j++) {
+		if (i->produced_cargo[j] == CT_INVALID) continue;
 		uint amount = i->production_rate[j];
 		if (amount != 0 && scale) {
 			amount = ScaleQuantity(amount, _settings_game.economy.industry_cargo_scale_factor);
@@ -1291,10 +1292,9 @@ void OnTick_Industry()
 
 /**
  * Check the conditions of #CHECK_NOTHING (Always succeeds).
- * @param tile %Tile to perform the checking.
  * @return Succeeded or failed command.
  */
-static CommandCost CheckNewIndustry_NULL(TileIndex tile)
+static CommandCost CheckNewIndustry_NULL(TileIndex)
 {
 	return CommandCost();
 }
@@ -1660,7 +1660,7 @@ static bool CheckCanTerraformSurroundingTiles(TileIndex tile, uint height, int i
  * This function tries to flatten out the land below an industry, without
  *  damaging the surroundings too much.
  */
-static bool CheckIfCanLevelIndustryPlatform(TileIndex tile, DoCommandFlag flags, const IndustryTileLayout &layout, int type)
+static bool CheckIfCanLevelIndustryPlatform(TileIndex tile, DoCommandFlag flags, const IndustryTileLayout &layout)
 {
 	int max_x = 0;
 	int max_y = 0;
@@ -1833,17 +1833,9 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 	i->type = type;
 	Industry::IncIndustryTypeCount(type);
 
-	MemCpyT(i->produced_cargo,  indspec->produced_cargo,  lengthof(i->produced_cargo));
-	MemCpyT(i->production_rate, indspec->production_rate, lengthof(i->production_rate));
-	MemCpyT(i->accepts_cargo,   indspec->accepts_cargo,   lengthof(i->accepts_cargo));
-
-	MemSetT(i->produced_cargo_waiting,     0, lengthof(i->produced_cargo_waiting));
-	MemSetT(i->this_month_production,      0, lengthof(i->this_month_production));
-	MemSetT(i->this_month_transported,     0, lengthof(i->this_month_transported));
-	MemSetT(i->last_month_pct_transported, 0, lengthof(i->last_month_pct_transported));
-	MemSetT(i->last_month_transported,     0, lengthof(i->last_month_transported));
-	MemSetT(i->incoming_cargo_waiting,     0, lengthof(i->incoming_cargo_waiting));
-	MemSetT(i->last_cargo_accepted_at,     0, lengthof(i->last_cargo_accepted_at));
+	i->produced_cargo = indspec->produced_cargo;
+	i->production_rate = indspec->production_rate;
+	i->accepts_cargo = indspec->accepts_cargo;
 
 	/* Randomize inital production if non-original economy is used and there are no production related callbacks. */
 	if (!indspec->UsesOriginalEconomy()) {
@@ -1916,7 +1908,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 
 	if (HasBit(indspec->callback_mask, CBM_IND_INPUT_CARGO_TYPES)) {
 		/* Clear all input cargo types */
-		for (uint j = 0; j < lengthof(i->accepts_cargo); j++) i->accepts_cargo[j] = CT_INVALID;
+		for (size_t j = 0; j < i->accepts_cargo.size(); j++) i->accepts_cargo[j] = CT_INVALID;
 		/* Query actual types */
 		uint maxcargoes = (indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED) ? lengthof(i->accepts_cargo) : 3;
 		for (uint j = 0; j < maxcargoes; j++) {
@@ -1932,12 +1924,12 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 			 * and solve this by returning undefined cargo indexes. Skip these. */
 			if (cargo == CT_INVALID && !(indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED)) continue;
 			/* Verify valid cargo */
-			if (std::find(indspec->accepts_cargo, endof(indspec->accepts_cargo), cargo) == endof(indspec->accepts_cargo)) {
+			if (std::find(indspec->accepts_cargo.begin(), indspec->accepts_cargo.end(), cargo) == indspec->accepts_cargo.end()) {
 				/* Cargo not in spec, error in NewGRF */
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_INPUT_CARGO_TYPES, res);
 				break;
 			}
-			if (std::find(i->accepts_cargo, i->accepts_cargo + j, cargo) != i->accepts_cargo + j) {
+			if (std::find(i->accepts_cargo.begin(), i->accepts_cargo.begin() + j, cargo) != i->accepts_cargo.begin() + j) {
 				/* Duplicate cargo */
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_INPUT_CARGO_TYPES, res);
 				break;
@@ -1948,7 +1940,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 
 	if (HasBit(indspec->callback_mask, CBM_IND_OUTPUT_CARGO_TYPES)) {
 		/* Clear all output cargo types */
-		for (uint j = 0; j < lengthof(i->produced_cargo); j++) i->produced_cargo[j] = CT_INVALID;
+		for (size_t j = 0; j < i->produced_cargo.size(); j++) i->produced_cargo[j] = CT_INVALID;
 		/* Query actual types */
 		uint maxcargoes = (indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED) ? lengthof(i->produced_cargo) : 2;
 		for (uint j = 0; j < maxcargoes; j++) {
@@ -1962,12 +1954,12 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 			/* Allow older GRFs to skip slots. */
 			if (cargo == CT_INVALID && !(indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED)) continue;
 			/* Verify valid cargo */
-			if (std::find(indspec->produced_cargo, endof(indspec->produced_cargo), cargo) == endof(indspec->produced_cargo)) {
+			if (std::find(indspec->produced_cargo.begin(), indspec->produced_cargo.end(), cargo) == indspec->produced_cargo.end()) {
 				/* Cargo not in spec, error in NewGRF */
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_OUTPUT_CARGO_TYPES, res);
 				break;
 			}
-			if (std::find(i->produced_cargo, i->produced_cargo + j, cargo) != i->produced_cargo + j) {
+			if (std::find(i->produced_cargo.begin(), i->produced_cargo.begin() + j, cargo) != i->produced_cargo.begin() + j) {
 				/* Duplicate cargo */
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_OUTPUT_CARGO_TYPES, res);
 				break;
@@ -2074,7 +2066,7 @@ static CommandCost CreateNewIndustryHelper(TileIndex tile, IndustryType type, Do
 	if (ret.Failed()) return ret;
 
 	if (!custom_shape_check && _settings_game.game_creation.land_generator == LG_TERRAGENESIS && _generating_world &&
-			!_ignore_restrictions && !CheckIfCanLevelIndustryPlatform(tile, DC_NO_WATER, layout, type)) {
+			!_ignore_restrictions && !CheckIfCanLevelIndustryPlatform(tile, DC_NO_WATER, layout)) {
 		return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
 	}
 
@@ -2082,7 +2074,7 @@ static CommandCost CreateNewIndustryHelper(TileIndex tile, IndustryType type, Do
 
 	if (flags & DC_EXEC) {
 		*ip = new Industry(tile);
-		if (!custom_shape_check) CheckIfCanLevelIndustryPlatform(tile, DC_NO_WATER | DC_EXEC, layout, type);
+		if (!custom_shape_check) CheckIfCanLevelIndustryPlatform(tile, DC_NO_WATER | DC_EXEC, layout);
 		DoCreateNewIndustry(*ip, tile, type, layout, layout_index, t, founder, random_initial_bits);
 	}
 
@@ -2605,9 +2597,8 @@ void Industry::RecomputeProductionMultipliers()
 void Industry::FillCachedName() const
 {
 	char buf[256];
-	int64 args_array[] = { this->index };
-	StringParameters tmp_params(args_array);
-	char *end = GetStringWithArgs(buf, STR_INDUSTRY_NAME, &tmp_params, lastof(buf));
+	auto tmp_params = MakeParameters(this->index);
+	char *end = GetStringWithArgs(buf, STR_INDUSTRY_NAME, tmp_params, lastof(buf));
 	this->cached_name.assign(buf, end);
 }
 
@@ -2796,7 +2787,7 @@ static void CanCargoServiceIndustry(CargoID cargo, Industry *ind, bool *c_accept
  */
 int WhoCanServiceIndustry(Industry *ind)
 {
-	if (ind->stations_near.size() == 0) return 0; // No stations found at all => nobody services
+	if (ind->stations_near.empty()) return 0; // No stations found at all => nobody services
 
 	int result = 0;
 	for (const Vehicle *v : Vehicle::Iterate()) {

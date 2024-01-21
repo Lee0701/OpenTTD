@@ -407,7 +407,7 @@ static bool BindPersistentBufferExtensions()
 }
 
 /** Callback to receive OpenGL debug messages. */
-void APIENTRY DebugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+void APIENTRY DebugOutputCallback([[maybe_unused]] GLenum source, GLenum type, [[maybe_unused]] GLuint id, GLenum severity, [[maybe_unused]] GLsizei length, const GLchar *message, [[maybe_unused]] const void *userParam)
 {
 	/* Make severity human readable. */
 	const char *severity_str = "";
@@ -1267,23 +1267,23 @@ void OpenGLBackend::ReleaseAnimBuffer(const Rect &update_rect)
 	}
 }
 
-/* virtual */ Sprite *OpenGLBackend::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
+/* virtual */ Sprite *OpenGLBackend::Encode(const SpriteLoader::SpriteCollection &sprite, AllocatorProc *allocator)
 {
 	/* Allocate and construct sprite data. */
 	Sprite *dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + sizeof(OpenGLSprite));
 
 	OpenGLSprite *gl_sprite = (OpenGLSprite *)dest_sprite->data;
-	new (gl_sprite) OpenGLSprite(sprite->width, sprite->height, sprite->type == SpriteType::Font ? 1 : ZOOM_LVL_SPR_COUNT, sprite->colours);
+	new (gl_sprite) OpenGLSprite(sprite[ZOOM_LVL_NORMAL].width, sprite[ZOOM_LVL_NORMAL].height, sprite[ZOOM_LVL_NORMAL].type == SpriteType::Font ? 1 : ZOOM_LVL_SPR_COUNT, sprite[ZOOM_LVL_NORMAL].colours);
 
 	/* Upload texture data. */
-	for (int i = 0; i < (sprite->type == SpriteType::Font ? 1 : ZOOM_LVL_SPR_COUNT); i++) {
+	for (int i = 0; i < (sprite[ZOOM_LVL_NORMAL].type == SpriteType::Font ? 1 : ZOOM_LVL_SPR_COUNT); i++) {
 		gl_sprite->Update(sprite[i].width, sprite[i].height, i, sprite[i].data);
 	}
 
-	dest_sprite->height = sprite->height;
-	dest_sprite->width  = sprite->width;
-	dest_sprite->x_offs = sprite->x_offs;
-	dest_sprite->y_offs = sprite->y_offs;
+	dest_sprite->height = sprite[ZOOM_LVL_NORMAL].height;
+	dest_sprite->width  = sprite[ZOOM_LVL_NORMAL].width;
+	dest_sprite->x_offs = sprite[ZOOM_LVL_NORMAL].x_offs;
+	dest_sprite->y_offs = sprite[ZOOM_LVL_NORMAL].y_offs;
 	dest_sprite->next = nullptr;
 	dest_sprite->missing_zoom_levels = 0;
 
@@ -1328,7 +1328,7 @@ void OpenGLBackend::RenderOglSprite(OpenGLSprite *gl_sprite, PaletteID pal, int 
 	Dimension dim = gl_sprite->GetSize(zoom);
 	_glUseProgram(this->sprite_program);
 	_glUniform4f(this->sprite_sprite_loc, (float)x, (float)y, (float)dim.width, (float)dim.height);
-	_glUniform1f(this->sprite_zoom_loc, (float)(zoom - ZOOM_LVL_BEGIN));
+	_glUniform1f(this->sprite_zoom_loc, (float)zoom);
 	_glUniform2f(this->sprite_screen_loc, (float)_screen.width, (float)_screen.height);
 	_glUniform1i(this->sprite_rgb_loc, rgb ? 1 : 0);
 	_glUniform1i(this->sprite_crash_loc, pal == PALETTE_CRASH ? 1 : 0);

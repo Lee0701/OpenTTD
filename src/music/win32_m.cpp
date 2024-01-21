@@ -19,10 +19,6 @@
 #include "../base_media_base.h"
 #include "../core/mem_func.hpp"
 #include <mutex>
-#if defined(__MINGW32__)
-#include "../3rdparty/mingw-std-threads/mingw.mutex.h"
-#include "../3rdparty/mingw-std-threads/mingw.condition_variable.h"
-#endif
 
 #include "../safeguards.h"
 
@@ -63,7 +59,7 @@ static byte ScaleVolume(byte original, byte scale)
 }
 
 
-void CALLBACK MidiOutProc(HMIDIOUT hmo, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+void CALLBACK MidiOutProc(HMIDIOUT hmo, UINT wMsg, DWORD_PTR, DWORD_PTR dwParam1, DWORD_PTR)
 {
 	if (wMsg == MOM_DONE) {
 		MIDIHDR *hdr = (LPMIDIHDR)dwParam1;
@@ -112,7 +108,7 @@ static void TransmitStandardSysex(MidiSysexMessage msg)
  * Realtime MIDI playback service routine.
  * This is called by the multimedia timer.
  */
-void CALLBACK TimerCallback(UINT uTimerID, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR)
+void CALLBACK TimerCallback(UINT uTimerID, UINT, DWORD_PTR, DWORD_PTR, DWORD_PTR)
 {
 	/* Ensure only one timer callback is running at once, and prevent races on status flags */
 	std::unique_lock<std::mutex> mutex_lock(_midi.lock, std::defer_lock);

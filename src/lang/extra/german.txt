@@ -31,14 +31,7 @@ STR_ORDER_STOP_LOCATION_THROUGH                                 :[durchgehendes 
 STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :Extrem langsam
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :Sehr langsam
 
-STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Hilfstasten-Fenster
-
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Jeden Monat
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Alle 3 Monate
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Alle 6 Monate
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Alle 12 Monate
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_LABEL      :Eigener Zeitraum (Tage)
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Eigener Zeitraum (Echtzeitminuten)
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Alle {COMMA} Echtzeitminuten
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
@@ -84,11 +77,7 @@ STR_SMALLMAP_SCREENSHOT                                         :{BLACK}Screensh
 STR_NEWS_VEHICLE_NO_DEPOT_ORDER                                 :{WHITE}{VEHICLE} hat keinen Depotauftrag im Fahrplan
 STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE} konnte wegen zu hoher Geschwindigkeit nicht bei {STRING} anhalten
 
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM            :Alle {COMMA}{NBSP}Tage
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_SINGULAR   :Jeden Tag
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Alle {COMMA} Echtzeitminuten
-
-STR_GAME_OPTIONS_AUTOSAVE_DAYS_QUERY_CAPT                       :{WHITE}Autosicherungsintervall in Tagen
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Eigener Zeitraum (Echtzeitminuten)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Autosicherungsintervali in Echtzeitminuten
 
 STR_RIVERS_VERY_MANY                                            :{RED}Sehr viele
@@ -189,9 +178,6 @@ STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_IN_DETAILS_HELPTEXT       :Zeige die Fahrz
 STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS          :Zeige die Gewichtsverhältnisse von Zügen im Einzelheitenfenster: {STRING}
 STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS_HELPTEXT :Zeige die Gewichtsverhältnisse von Zügen im Fenster der Fahrzeugeinzelheiten.
 
-STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_DEF                      :Zeige beschränkte Lichtsignale in den Standard-Grafiken: {STRING}
-STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_DEF_HELPTEXT             :Zeige Lichtsignale mit Routing-Beschränkungen in den Standard-Grafiken mit blauem Pfosten anstelle von NewGRF-Grafiken, um diese zur leichteren Erkennbarkeit visuell hervorzuheben.
-
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF                             :Zeige alle Signale mit den Standardgrafiken: {STRING}
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF_HELPTEXT                    :Zeige alle Signale mit den Standardgrafiken anstatt Grafiken einer Signal-NewGRF. Dient dazu, den Typ und Status von Signalen besser erkennbar zu machen, falls die verwendete Signal-NewGRF schlecht erkennbare Signalgrafiken bereitstellt.
 
@@ -200,9 +186,6 @@ STR_CONFIG_SETTING_SHOW_ADV_TRACE_RESTRICT_FEATURES_HELPTEXT    :Zeige die erwei
 
 STR_CONFIG_SETTING_SHOW_PROGSIG_FEATURES                        :Zeige programmierbares Einfahrtssignal-Feature: {STRING}
 STR_CONFIG_SETTING_SHOW_PROGSIG_FEATURES_HELPTEXT               :Zeige das programmierbares Einfahrtssignal-Feature. Falls deaktiviert, werden die Bedienelemente zum Bau und zur Konfiguration von programmierbaren Einfahrtssignalen zwar nicht in der Oberfläche angezeigt, stehen aber dennoch allen Spielern zur Verfügung.
-
-STR_CONFIG_SETTING_SHOW_VEH_LIST_CARGO_FILTER                   :Zeige Filterung nach Frachtart in Fahrzeuglisten: {STRING}
-STR_CONFIG_SETTING_SHOW_VEH_LIST_CARGO_FILTER_HELPTEXT          :Zeige die Filterung nach Frachtart in Fahrzeuglisten. Falls aktiviert, beinhalten die Fahrzeuglisten-Fenster eine weitere Filteroption.
 
 STR_CONFIG_SETTING_SHOW_ADV_LOADING_MODE_FEATURES               :Zeige erweiterter Lademodus-Features: {STRING}
 STR_CONFIG_SETTING_SHOW_ADV_LOADING_MODE_FEATURES_HELPTEXT      :Zeige erweiterter Lademodus-Features (durchgehendes Laden/Entladen). Falls deaktiviert, werden einige erweiterte Lademodus-Features zwar nicht in der Oberfläche angezeigt, stehen aber dennoch allen Spielern zur Verfügung.
@@ -341,11 +324,8 @@ STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH                 :Zeichenstil der
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_VALUE           :gestrichelte Linie von {COMMA} Pixel{P "" n} Länge
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_DISABLED        :durchgezogene Linie
 
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_DAYS                         :Benutzerdefinierter Autosicherungsintervall in Tagen: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_DAYS_HELPTEXT                :Legt einen benutzerdefinierten Intervall für die Autosicherung in Tagen fest.
-
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_MINUTES                      :Benutzerdefinierter Autosicherungsintervall in Echtzeitminuten: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_MINUTES_HELPTEXT             :Legt eine Zeitspanne in Echtzeitminuten für den Abstand zwischen Autosicherungen fest.
+STR_CONFIG_SETTING_AUTOSAVE                                     :Autosicherung: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Intervall zwischen automatischen Speicherungen wählen
 
 STR_CONFIG_SETTING_AUTOSAVE_ON_NETWORK_DISCONNECT               :Autosichern bei Verbindungsabbruch: {STRING}
 STR_CONFIG_SETTING_AUTOSAVE_ON_NETWORK_DISCONNECT_HELPTEXT      :Falls aktiviert, sichern Multiplayer-Clients automatisch das Spiel, wenn die Verbindung zum Server abbricht
@@ -617,18 +597,21 @@ STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_ZONES_OFF              :Aus
 STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_ZONES_WITHIN_TOWN      :Innerhalb des Einzugsgebiets
 STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_ZONES_ANYWHERE         :Überall
 
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Fahrpläne in Ticks anstatt in Tagen anzeigen: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Zeige Fahrtzeiten in Fahrplänen in Ticks statt Tagen
+
 STR_CHEAT_EDIT_MONEY_QUERY_CAPT                                 :{WHITE}Erhöhe oder verringere das verfügbare Geld
 STR_CHEAT_INFLATION_COST                                        :{LTBLUE}Ändere Inflationsfaktor der Kosten: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_COST_QUERY_CAPT                             :{WHITE}Ändert den Faktor der Inflation der Kosten
 STR_CHEAT_INFLATION_INCOME                                      :{LTBLUE}Ändere Inflationsfaktor des Einkommens: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_INCOME_QUERY_CAPT                           :{WHITE}Ändert den Faktor der Inflation des Einkommens
-STR_CHEAT_STATION_RATING                                        :{LTBLUE}Stationsbewertung auf 100% fixieren: {ORANGE}{STRING}
 STR_CHEAT_TOWN_RATING                                           :{LTBLUE}Bewertung durch die Stadtverwaltung auf Hervorragend fixieren: {ORANGE}{STRING}
 
 STR_NETWORK_MESSAGE_GIVE_MONEY_RECEIVE                          :*** {STRING} gab der eigenen Firma {2:CURRENCY_LONG}
 STR_NETWORK_MESSAGE_GAVE_MONEY_AWAY                             :*** Die eigene Firma übergab {1:STRING} {2:CURRENCY_LONG}
 STR_NETWORK_MESSAGE_MONEY_GIVE_SRC_DESCRIPTION                  :{STRING} ({COMPANY})
 
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Transparenz für Ladestandsanzeige einstellen. Strg+Klick, um Umschalten zu verhindern bzw. wieder zu erlauben
 STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}Transparenz für Fahrzeuge innerhalb von Tunneln einstellen. Strg+Klick, um Umschalten zu verhindern bzw. wieder zu erlauben.
 
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}Durchschnittliche Reisezeit: {STRING}
@@ -1108,10 +1091,10 @@ STR_NEWGRF_INSPECT_SPRITE_DUMP                                  :{BLACK}S
 STR_NEWGRF_INSPECT_SPRITE_DUMP_TOOLTIP                          :{BLACK}Aktuelle Sprite-Reihe anzeigen
 STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT                            :{BLACK}U
 STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT_TOOLTIP                    :{BLACK}Zeige Sprite-Gruppe ohne jede Optimierung an.{}{}Wenn nicht vorher aktiviert, müssen NewGRFs erneut geladen werden (misc_debug 10).
-STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO                             :{BLACK}G
-STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO_TOOLTIP                     :{BLACK}Scrolle zum Sprite Nummer
-STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP                    :{BLACK}Klicke, um Sprite-Gruppe hervorzuheben{}Umschalt+Klick, um die Sprite-Gruppe zu schließen{}Strg+Klick, um temporäres Speicherregister hervorzuheben
-STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :Straßen(bahn)typ
+STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO                             :Scrolle zum Sprite Nummer
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT          :{BLACK}Klicke, um Sprite-Gruppe hervorzuheben
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_COLLAPSE           :{BLACK}Umschalt+Klick, um die Sprite-Gruppe zu schließen
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT_TEMP     :{BLACK}Strg+Klick, um temporäres Speicherregister hervorzuheben
 STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_SIGNALS                    :Signale
 
 STR_NEWGRF_TOO_MANY_STRINGS                                     :{WHITE}Nicht genügend String-IDs für alle NewGRFs vorhanden.
@@ -1787,3 +1770,5 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailliert
 
 STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
 STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}({COMMA})
+
+STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Hilfstasten-Fenster

@@ -47,6 +47,7 @@
 #include "infrastructure_func.h"
 #include "zoom_func.h"
 #include "group_gui_list.h"
+#include "newgrf_debug.h"
 #include "core/span_type.hpp"
 #include "3rdparty/cpp-btree/btree_map.h"
 
@@ -162,8 +163,8 @@ static const StringID _program_insert_str[] = {
 	STR_TRACE_RESTRICT_PF_PENALTY,
 	STR_TRACE_RESTRICT_RESERVE_THROUGH,
 	STR_TRACE_RESTRICT_LONG_RESERVE,
-	STR_TRACE_RESTRICT_WAIT_AT_PBS,
 	STR_TRACE_RESTRICT_SLOT_OP,
+	STR_TRACE_RESTRICT_WAIT_AT_PBS,
 	STR_TRACE_RESTRICT_REVERSE,
 	STR_TRACE_RESTRICT_SPEED_RESTRICTION,
 	STR_TRACE_RESTRICT_NEWS_CONTROL,
@@ -176,8 +177,7 @@ static const StringID _program_insert_str[] = {
 static const uint32 _program_insert_else_hide_mask    = 8;     ///< disable bitmask for else
 static const uint32 _program_insert_or_if_hide_mask   = 4;     ///< disable bitmask for orif
 static const uint32 _program_insert_else_if_hide_mask = 2;     ///< disable bitmask for elif
-static const uint32 _program_wait_pbs_hide_mask = 0x100;       ///< disable bitmask for wait at PBS
-static const uint32 _program_slot_hide_mask = 0x200;           ///< disable bitmask for slot
+static const uint32 _program_wait_pbs_hide_mask = 0x200;       ///< disable bitmask for wait at PBS
 static const uint32 _program_reverse_hide_mask = 0x400;        ///< disable bitmask for reverse
 static const uint32 _program_speed_res_hide_mask = 0x800;      ///< disable bitmask for speed restriction
 static const uint32 _program_counter_hide_mask = 0x2000;       ///< disable bitmask for counter
@@ -193,8 +193,8 @@ static const uint _program_insert_val[] = {
 	TRIT_PF_PENALTY,                                   // penalty
 	TRIT_RESERVE_THROUGH,                              // reserve through
 	TRIT_LONG_RESERVE,                                 // long reserve
-	TRIT_WAIT_AT_PBS,                                  // wait at PBS signal
 	TRIT_SLOT,                                         // slot operation
+	TRIT_WAIT_AT_PBS,                                  // wait at PBS signal
 	TRIT_REVERSE,                                      // reverse
 	TRIT_SPEED_RESTRICTION,                            // speed restriction
 	TRIT_NEWS_CONTROL,                                 // news control
@@ -242,11 +242,13 @@ static const TraceRestrictDropDownListSet _reserve_through_value = {
 static const StringID _long_reserve_value_str[] = {
 	STR_TRACE_RESTRICT_LONG_RESERVE,
 	STR_TRACE_RESTRICT_LONG_RESERVE_CANCEL,
+	STR_TRACE_RESTRICT_LONG_RESERVE_UNLESS_STOPPING,
 	INVALID_STRING_ID
 };
 static const uint _long_reserve_value_val[] = {
 	0,
 	1,
+	2,
 };
 
 /** value drop down list for long reserve types strings and values */
@@ -557,8 +559,8 @@ static span<const TraceRestrictDropDownListItem> GetTypeDropDownListItems(TraceR
 		{ TRIT_RESERVE_THROUGH,          STR_TRACE_RESTRICT_RESERVE_THROUGH,          TRDDLIF_NONE },
 		{ TRIT_LONG_RESERVE,             STR_TRACE_RESTRICT_LONG_RESERVE,             TRDDLIF_NONE },
 		{ TRIT_NEWS_CONTROL,             STR_TRACE_RESTRICT_NEWS_CONTROL,             TRDDLIF_NONE },
+		{ TRIT_SLOT,                     STR_TRACE_RESTRICT_SLOT_OP,                  TRDDLIF_NONE },
 		{ TRIT_WAIT_AT_PBS,              STR_TRACE_RESTRICT_WAIT_AT_PBS,              TRDDLIF_ADVANCED },
-		{ TRIT_SLOT,                     STR_TRACE_RESTRICT_SLOT_OP,                  TRDDLIF_ADVANCED },
 		{ TRIT_REVERSE,                  STR_TRACE_RESTRICT_REVERSE,                  TRDDLIF_ADVANCED },
 		{ TRIT_SPEED_RESTRICTION,        STR_TRACE_RESTRICT_SPEED_RESTRICTION,        TRDDLIF_ADVANCED },
 		{ TRIT_COUNTER,                  STR_TRACE_RESTRICT_COUNTER_OP,               TRDDLIF_ADVANCED },
@@ -587,9 +589,9 @@ static span<const TraceRestrictDropDownListItem> GetTypeDropDownListItems(TraceR
 		{ TRIT_COND_PHYS_RATIO | (TRPPRCAF_MAX_TE_WEIGHT << 16),      STR_TRACE_RESTRICT_VARIABLE_TRAIN_MAX_TE_WEIGHT_RATIO, TRDDLIF_NONE },
 		{ TRIT_COND_CATEGORY | (TRCCAF_ENGINE_CLASS << 16),           STR_TRACE_RESTRICT_VARIABLE_TRAIN_ENGINE_CLASS,        TRDDLIF_NONE },
 		{ TRIT_COND_TARGET_DIRECTION,                                 STR_TRACE_RESTRICT_VARIABLE_ORDER_TARGET_DIRECTION,    TRDDLIF_NONE },
-		{ TRIT_COND_TRAIN_IN_SLOT,                                    STR_TRACE_RESTRICT_VARIABLE_TRAIN_SLOT,                TRDDLIF_ADVANCED },
-		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_OCCUPANTS << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY,            TRDDLIF_ADVANCED },
-		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_REMAINING << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY_REMAINING,  TRDDLIF_ADVANCED },
+		{ TRIT_COND_TRAIN_IN_SLOT,                                    STR_TRACE_RESTRICT_VARIABLE_TRAIN_SLOT,                TRDDLIF_NONE },
+		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_OCCUPANTS << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY,            TRDDLIF_NONE },
+		{ TRIT_COND_SLOT_OCCUPANCY | (TRSOCAF_REMAINING << 16),       STR_TRACE_RESTRICT_VARIABLE_SLOT_OCCUPANCY_REMAINING,  TRDDLIF_NONE },
 		{ TRIT_COND_COUNTER_VALUE,                                    STR_TRACE_RESTRICT_VARIABLE_COUNTER_VALUE,             TRDDLIF_ADVANCED },
 		{ TRIT_COND_TIME_DATE_VALUE,                                  STR_TRACE_RESTRICT_VARIABLE_TIME_DATE_VALUE,           TRDDLIF_ADVANCED },
 		{ TRIT_COND_RESERVED_TILES,                                   STR_TRACE_RESTRICT_VARIABLE_RESERVED_TILES_AHEAD,      TRDDLIF_ADVANCED | TRDDLIF_REALISTIC_BRAKING },
@@ -1204,9 +1206,8 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 		} else {
 			auto insert_warning = [&](uint dparam_index, StringID warning) {
 				char buf[256];
-				int64 args_array[] = { (int64)GetDParam(dparam_index) };
-				StringParameters tmp_params(args_array);
-				char *end = GetStringWithArgs(buf, warning, &tmp_params, lastof(buf));
+				auto tmp_params = MakeParameters(GetDParam(dparam_index));
+				char *end = GetStringWithArgs(buf, warning, tmp_params, lastof(buf));
 				_temp_special_strings[0].assign(buf, end);
 				SetDParam(dparam_index, SPECSTR_TEMP_START);
 			};
@@ -1545,7 +1546,23 @@ static void DrawInstructionString(const TraceRestrictProgram *prog, TraceRestric
 				break;
 
 			case TRIT_LONG_RESERVE:
-				instruction_string = GetTraceRestrictValue(item) ? STR_TRACE_RESTRICT_LONG_RESERVE_CANCEL : STR_TRACE_RESTRICT_LONG_RESERVE;
+				switch (static_cast<TraceRestrictLongReserveValueField>(GetTraceRestrictValue(item))) {
+					case TRLRVF_LONG_RESERVE:
+						instruction_string = STR_TRACE_RESTRICT_LONG_RESERVE;
+						break;
+
+					case TRLRVF_CANCEL_LONG_RESERVE:
+						instruction_string = STR_TRACE_RESTRICT_LONG_RESERVE_CANCEL;
+						break;
+
+					case TRLRVF_LONG_RESERVE_UNLESS_STOPPING:
+						instruction_string = STR_TRACE_RESTRICT_LONG_RESERVE_UNLESS_STOPPING;
+						break;
+
+					default:
+						NOT_REACHED();
+						break;
+				}
 				break;
 
 			case TRIT_WAIT_AT_PBS:
@@ -1780,7 +1797,7 @@ public:
 		this->ReloadProgramme();
 	}
 
-	void Close() override
+	void Close(int data = 0) override
 	{
 		extern const TraceRestrictProgram *_viewport_highlight_tracerestrict_program;
 		if (_viewport_highlight_tracerestrict_program != nullptr) {
@@ -1877,7 +1894,7 @@ public:
 					}
 				}
 				if (!_settings_client.gui.show_adv_tracerestrict_features) {
-					hidden |= _program_slot_hide_mask | _program_wait_pbs_hide_mask | _program_reverse_hide_mask |
+					hidden |= _program_wait_pbs_hide_mask | _program_reverse_hide_mask |
 							_program_speed_res_hide_mask | _program_counter_hide_mask | _program_penalty_adj_hide_mask;
 				}
 				if (!_settings_client.gui.show_adv_tracerestrict_features || !_settings_game.vehicle.train_speed_adaptation) {
@@ -2049,9 +2066,12 @@ public:
 						this->ShowDropDownListWithValue(&_reserve_through_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
 						break;
 
-					case TRVT_LONG_RESERVE:
-						this->ShowDropDownListWithValue(&_long_reserve_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
+					case TRVT_LONG_RESERVE: {
+						uint hidden = 0;
+						if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) hidden |= 4;
+						this->ShowDropDownListWithValue(&_long_reserve_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, hidden);
 						break;
+					}
 
 					case TRVT_WAIT_AT_PBS:
 						this->ShowDropDownListWithValue(&_wait_at_pbs_value, GetTraceRestrictValue(item), false, TR_WIDGET_VALUE_DROPDOWN, 0, 0);
@@ -2575,7 +2595,7 @@ public:
 	{
 		switch (widget) {
 			case TR_WIDGET_INSTRUCTION_LIST:
-				resize->height = FONT_HEIGHT_NORMAL;
+				resize->height = GetCharacterHeight(FS_NORMAL);
 				size->height = 6 * resize->height + WidgetDimensions::scaled.framerect.Vertical();
 				break;
 
@@ -2709,20 +2729,20 @@ public:
 	{
 		switch (widget) {
 			case TR_WIDGET_SHARE: {
-				uint64 arg = STR_TRACE_RESTRICT_SHARE_TOOLTIP;
-				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				SetDParam(0, STR_TRACE_RESTRICT_SHARE_TOOLTIP);
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, close_cond, 1);
 				return true;
 			}
 
 			case TR_WIDGET_UNSHARE: {
-				uint64 arg = STR_TRACE_RESTRICT_UNSHARE_TOOLTIP;
-				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				SetDParam(0, STR_TRACE_RESTRICT_UNSHARE_TOOLTIP);
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, close_cond, 1);
 				return true;
 			}
 
 			case TR_WIDGET_SHARE_ONTO: {
-				uint64 arg = (this->base_share_plane == DPS_UNSHARE) ? STR_TRACE_RESTRICT_UNSHARE_TOOLTIP : STR_TRACE_RESTRICT_SHARE_TOOLTIP;
-				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, 1, &arg, close_cond);
+				SetDParam(0, (this->base_share_plane == DPS_UNSHARE) ? STR_TRACE_RESTRICT_UNSHARE_TOOLTIP : STR_TRACE_RESTRICT_SHARE_TOOLTIP);
+				GuiShowTooltips(this, STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA, close_cond, 1);
 				return true;
 			}
 
@@ -2735,6 +2755,16 @@ public:
 	{
 		this->UpdateButtonState();
 		return ES_NOT_HANDLED;
+	}
+
+	bool IsNewGRFInspectable() const override
+	{
+		return true;
+	}
+
+	void ShowNewGRFInspectWindow() const override
+	{
+		::ShowNewGRFInspectWindow(GSF_FAKE_TRACERESTRICT, MakeTraceRestrictRefId(this->tile, this->track));
 	}
 
 private:
@@ -3180,7 +3210,7 @@ private:
 							right_sel->SetDisplayedPlane(DPR_VALUE_DROPDOWN);
 							this->EnableWidget(TR_WIDGET_VALUE_DROPDOWN);
 							this->GetWidget<NWidgetCore>(TR_WIDGET_VALUE_DROPDOWN)->widget_data =
-									GetTraceRestrictValue(item) ? STR_TRACE_RESTRICT_LONG_RESERVE_CANCEL : STR_TRACE_RESTRICT_LONG_RESERVE;
+									GetDropDownStringByValue(&_long_reserve_value, GetTraceRestrictValue(item));
 							break;
 
 						case TRVT_WAIT_AT_PBS:
@@ -3500,6 +3530,7 @@ static const NWidgetPart _nested_program_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, TR_WIDGET_CAPTION), SetDataTip(STR_TRACE_RESTRICT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_DEBUGBOX, COLOUR_GREY),
 		NWidget(WWT_IMGBTN, COLOUR_GREY, TR_WIDGET_HIGHLIGHT), SetMinimalSize(12, 12), SetDataTip(SPR_SHARED_ORDERS_ICON, STR_TRACE_RESTRICT_HIGHLIGHT_TOOLTIP),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
@@ -3595,11 +3626,11 @@ static const NWidgetPart _nested_program_widgets[] = {
 	EndContainer(),
 };
 
-static WindowDesc _program_desc(
+static WindowDesc _program_desc(__FILE__, __LINE__,
 	WDP_AUTO, "trace_restrict_gui", 384, 100,
 	WC_TRACE_RESTRICT, WC_BUILD_SIGNAL,
 	WDF_CONSTRUCTION,
-	_nested_program_widgets, lengthof(_nested_program_widgets)
+	std::begin(_nested_program_widgets), std::end(_nested_program_widgets)
 );
 
 /**
@@ -3737,7 +3768,7 @@ private:
 	uint ComputeSlotInfoSize()
 	{
 		this->column_size[VGC_NAME] = GetStringBoundingBox(STR_GROUP_ALL_TRAINS);
-		this->column_size[VGC_NAME].width = std::max((170u * FONT_HEIGHT_NORMAL) / 10u, this->column_size[VGC_NAME].width);
+		this->column_size[VGC_NAME].width = std::max((170u * GetCharacterHeight(FS_NORMAL)) / 10u, this->column_size[VGC_NAME].width);
 		this->tiny_step_height = this->column_size[VGC_NAME].height;
 
 		SetDParamMaxValue(0, 9999, 3, FS_SMALL);
@@ -3812,8 +3843,6 @@ public:
 	{
 		this->CreateNestedTree();
 
-		this->CheckCargoFilterEnableState(WID_TRSL_FILTER_BY_CARGO_SEL, false);
-
 		this->vscroll = this->GetScrollbar(WID_TRSL_LIST_VEHICLE_SCROLLBAR);
 		this->slot_sb = this->GetScrollbar(WID_TRSL_LIST_SLOTS_SCROLLBAR);
 		this->sorting = &_sorting[GB_NONE].train;
@@ -3845,7 +3874,7 @@ public:
 		this->owner = vli.company;
 	}
 
-	void Close() override
+	void Close(int data = 0) override
 	{
 		*this->sorting = this->vehgroups.GetListing();
 		this->Window::Close();
@@ -3920,8 +3949,6 @@ public:
 			this->vli.index = ALL_TRAINS_TRACE_RESTRICT_SLOT_ID;
 		}
 
-		if (gui_scope) this->CheckCargoFilterEnableState(WID_TRSL_FILTER_BY_CARGO_SEL, true);
-
 		this->SetDirty();
 	}
 
@@ -3929,7 +3956,7 @@ public:
 	{
 		switch (widget) {
 			case WID_TRSL_FILTER_BY_CARGO:
-				SetDParam(0, this->cargo_filter_texts[this->cargo_filter_criteria]);
+				SetDParam(0, this->GetCargoFilterLabel(this->cargo_filter_criteria));
 				break;
 
 			case WID_TRSL_CAPTION:
@@ -3954,8 +3981,7 @@ public:
 		this->SetWidgetsDisabledState(this->vli.index == ALL_TRAINS_TRACE_RESTRICT_SLOT_ID || _local_company != this->vli.company,
 				WID_TRSL_DELETE_SLOT,
 				WID_TRSL_RENAME_SLOT,
-				WID_TRSL_SET_SLOT_MAX_OCCUPANCY,
-				WIDGET_LIST_END);
+				WID_TRSL_SET_SLOT_MAX_OCCUPANCY);
 
 		/* Disable remaining buttons for non-local companies
 		 * Needed while changing _local_company, eg. by cheats
@@ -3964,13 +3990,12 @@ public:
 		 *  so it doesn't have to be disabled
 		 */
 		this->SetWidgetsDisabledState(_local_company != this->vli.company,
-				WID_TRSL_CREATE_SLOT,
-				WIDGET_LIST_END);
+				WID_TRSL_CREATE_SLOT);
 
 		/* Set text of sort by dropdown */
 		this->GetWidget<NWidgetCore>(WID_TRSL_SORT_BY_DROPDOWN)->widget_data = this->vehicle_group_none_sorter_names[this->vehgroups.SortType()];
 
-		this->GetWidget<NWidgetCore>(WID_TRSL_FILTER_BY_CARGO)->widget_data = this->cargo_filter_texts[this->cargo_filter_criteria];
+		this->GetWidget<NWidgetCore>(WID_TRSL_FILTER_BY_CARGO)->widget_data = this->GetCargoFilterLabel(this->cargo_filter_criteria);
 
 		this->DrawWidgets();
 	}
@@ -4030,7 +4055,7 @@ public:
 				return;
 
 			case WID_TRSL_FILTER_BY_CARGO: // Cargo filter dropdown
-				ShowDropDownMenu(this, this->cargo_filter_texts, this->cargo_filter_criteria, WID_TRSL_FILTER_BY_CARGO, 0, 0);
+				ShowDropDownList(this, this->BuildCargoDropDownList(false), this->cargo_filter_criteria, widget);
 				break;
 
 			case WID_TRSL_ALL_VEHICLES: // All vehicles button
@@ -4176,7 +4201,7 @@ public:
 				break;
 
 			case WID_TRSL_FILTER_BY_CARGO: // Select a cargo filter criteria
-				this->SetCargoFilterIndex(index);
+				this->SetCargoFilter(index);
 				break;
 
 			default: NOT_REACHED();
@@ -4265,11 +4290,11 @@ public:
 	}
 };
 
-static WindowDesc _slot_window_desc(
-	WDP_AUTO, "list_groups_train", 525, 246,
+static WindowDesc _slot_window_desc(__FILE__, __LINE__,
+	WDP_AUTO, "list_tr_slots", 525, 246,
 	WC_TRACE_RESTRICT_SLOTS, WC_NONE,
 	0,
-	_nested_slot_widgets, lengthof(_nested_slot_widgets)
+	std::begin(_nested_slot_widgets), std::end(_nested_slot_widgets)
 );
 
 /**
@@ -4495,8 +4520,7 @@ public:
 		this->SetWidgetsDisabledState(this->selected == INVALID_TRACE_RESTRICT_COUNTER_ID || _local_company != this->ctr_company,
 				WID_TRCL_DELETE_COUNTER,
 				WID_TRCL_RENAME_COUNTER,
-				WID_TRCL_SET_COUNTER_VALUE,
-				WIDGET_LIST_END);
+				WID_TRCL_SET_COUNTER_VALUE);
 
 		/* Disable remaining buttons for non-local companies
 		 * Needed while changing _local_company, eg. by cheats
@@ -4505,8 +4529,7 @@ public:
 		 *  so it doesn't have to be disabled
 		 */
 		this->SetWidgetsDisabledState(_local_company != this->ctr_company,
-				WID_TRCL_CREATE_COUNTER,
-				WIDGET_LIST_END);
+				WID_TRCL_CREATE_COUNTER);
 
 		this->DrawWidgets();
 	}
@@ -4633,11 +4656,11 @@ public:
 	}
 };
 
-static WindowDesc _counter_window_desc(
+static WindowDesc _counter_window_desc(__FILE__, __LINE__,
 	WDP_AUTO, "list_tr_counters", 525, 246,
 	WC_TRACE_RESTRICT_COUNTERS, WC_NONE,
 	0,
-	_nested_counter_widgets, lengthof(_nested_counter_widgets)
+	std::begin(_nested_counter_widgets), std::end(_nested_counter_widgets)
 );
 
 /**

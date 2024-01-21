@@ -277,7 +277,7 @@ static bool DrawIMECompositionString()
 static void SetCompositionPos(HWND hwnd)
 {
 	HIMC hIMC = ImmGetContext(hwnd);
-	if (hIMC != NULL) {
+	if (hIMC != nullptr) {
 		COMPOSITIONFORM cf;
 		cf.dwStyle = CFS_POINT;
 
@@ -299,7 +299,7 @@ static void SetCompositionPos(HWND hwnd)
 static void SetCandidatePos(HWND hwnd)
 {
 	HIMC hIMC = ImmGetContext(hwnd);
-	if (hIMC != NULL) {
+	if (hIMC != nullptr) {
 		CANDIDATEFORM cf;
 		cf.dwIndex = 0;
 		cf.dwStyle = CFS_EXCLUDE;
@@ -334,7 +334,7 @@ static LRESULT HandleIMEComposition(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	HIMC hIMC = ImmGetContext(hwnd);
 
-	if (hIMC != NULL) {
+	if (hIMC != nullptr) {
 		if (lParam & GCS_RESULTSTR) {
 			/* Read result string from the IME. */
 			LONG len = ImmGetCompositionString(hIMC, GCS_RESULTSTR, nullptr, 0); // Length is always in bytes, even in UNICODE build.
@@ -393,7 +393,7 @@ static LRESULT HandleIMEComposition(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static void CancelIMEComposition(HWND hwnd)
 {
 	HIMC hIMC = ImmGetContext(hwnd);
-	if (hIMC != NULL) ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+	if (hIMC != nullptr) ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
 	ImmReleaseContext(hwnd, hIMC);
 	/* Clear any marked string from the current edit box. */
 	HandleTextInput(nullptr, true);
@@ -690,7 +690,7 @@ LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			/* Resize the window to match the new DPI setting. */
 			RECT *prcNewWindow = (RECT *)lParam;
 			SetWindowPos(hwnd,
-				NULL,
+				nullptr,
 				prcNewWindow->left,
 				prcNewWindow->top,
 				prcNewWindow->right - prcNewWindow->left,
@@ -945,7 +945,7 @@ void VideoDriver_Win32Base::EditBoxLostFocus()
 	SetCandidatePos(this->main_wnd);
 }
 
-static BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hDC, LPRECT rc, LPARAM data)
+static BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC, LPRECT, LPARAM data)
 {
 	auto &list = *reinterpret_cast<std::vector<int>*>(data);
 
@@ -1245,10 +1245,9 @@ static OGLProc GetOGLProcAddressCallback(const char *proc)
 /**
  * Set the pixel format of a window-
  * @param dc Device context to set the pixel format of.
- * @param fullscreen Should the pixel format be used for fullscreen drawing?
  * @return nullptr on success, error message otherwise.
  */
-static const char *SelectPixelFormat(HDC dc, bool fullscreen)
+static const char *SelectPixelFormat(HDC dc)
 {
 	PIXELFORMATDESCRIPTOR pfd = {
 		sizeof(PIXELFORMATDESCRIPTOR), // Size of this struct.
@@ -1267,7 +1266,7 @@ static const char *SelectPixelFormat(HDC dc, bool fullscreen)
 		0, 0, 0, 0                     // Ignored/reserved.
 	};
 
-	if (IsWindowsVistaOrGreater()) pfd.dwFlags |= PFD_SUPPORT_COMPOSITION; // Make OpenTTD compatible with Aero.
+	pfd.dwFlags |= PFD_SUPPORT_COMPOSITION; // Make OpenTTD compatible with Aero.
 
 	/* Choose a suitable pixel format. */
 	int format = ChoosePixelFormat(dc, &pfd);
@@ -1289,7 +1288,7 @@ static void LoadWGLExtensions()
 	HDC dc = GetDC(wnd);
 
 	/* Set pixel format of the window. */
-	if (SelectPixelFormat(dc, false) == nullptr) {
+	if (SelectPixelFormat(dc) == nullptr) {
 		/* Create rendering context. */
 		HGLRC rc = wglCreateContext(dc);
 		if (rc != nullptr) {
@@ -1404,7 +1403,7 @@ const char *VideoDriver_Win32OpenGL::AllocateContext()
 {
 	this->dc = GetDC(this->main_wnd);
 
-	const char *err = SelectPixelFormat(this->dc, this->fullscreen);
+	const char *err = SelectPixelFormat(this->dc);
 	if (err != nullptr) return err;
 
 	HGLRC rc = nullptr;

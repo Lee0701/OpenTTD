@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :每個月
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :每 3 個月
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :每 6 個月
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :每 12 個月
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :英里/小時
 STR_UNIT_NAME_VELOCITY_METRIC                                   :公里/小時
 STR_UNIT_NAME_VELOCITY_SI                                       :米/秒
@@ -13,6 +8,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :列車
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :公車／貨車
 STR_VEHICLE_TYPE_SHIPS                                          :船舶
 STR_VEHICLE_TYPE_AIRCRAFT                                       :飛機
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :自動儲存：{STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :選擇自動存檔的週期。
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :顯示時刻表時以刻度數目取代日為單位：{STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :在時刻表上以刻度數目取代日數顯示運行時間。
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}切換裝載進度指示是否透明。按住 CTRL 點選可鎖定
 
 # Tracerestrict GUI
 

@@ -36,6 +36,7 @@
 #include "order_backup.h"
 #include "core/ring_buffer.hpp"
 #include "core/checksum_func.hpp"
+#include "3rdparty/nlohmann/json.hpp"
 #include <array>
 
 #include "table/strings.h"
@@ -211,8 +212,8 @@ CommandProc CmdStoryPageButton;
 
 CommandProc CmdLevelLand;
 
-CommandProc CmdBuildSignalTrack;
-CommandProc CmdRemoveSignalTrack;
+CommandProcEx CmdBuildSignalTrack;
+CommandProcEx CmdRemoveSignalTrack;
 
 CommandProc CmdSetAutoReplace;
 
@@ -263,7 +264,7 @@ CommandProc CmdSetVehicleOnTime;
 CommandProc CmdAutofillTimetable;
 CommandProc CmdAutomateTimetable;
 CommandProc CmdTimetableSeparation;
-CommandProc CmdSetTimetableStart;
+CommandProcEx CmdSetTimetableStart;
 
 CommandProc CmdOpenCloseAirport;
 
@@ -664,8 +665,7 @@ static void DumpSubCommandLogEntry(char *&buffer, const char *last, const Comman
 			return (entry.log_flags & CLEF_SCRIPT_ASYNC) ? 'A' : 'a';
 		};
 
-		YearMonthDay ymd;
-		ConvertDateToYMD(entry.date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(entry.date);
 		buffer += seprintf(buffer, last, "%4i-%02i-%02i, %2i, %3i", ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter);
 		if (_networking) {
 			buffer += seprintf(buffer, last, ", %08X", entry.frame_counter);
@@ -1173,12 +1173,37 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 	if (!random_state.Check()) {
 		std::string msg = stdstr_fmt("Random seed changed in test command: company: %02x; tile: %06x (%u x %u); p1: %08x; p2: %08x; p3: " OTTD_PRINTFHEX64PAD "; cmd: %08x; \"%s\"%s (%s)",
 				(int)_current_company, tile, TileX(tile), TileY(tile), p1, p2, p3, cmd & ~CMD_NETWORK_COMMAND, text, aux_data != nullptr ? ", aux data present" : "", GetCommandName(cmd));
-		DEBUG(desync, 0, "msg: date{%08x; %02x; %02x}; %s", _date, _date_fract, _tick_skip_counter, msg.c_str());
+		DEBUG(desync, 0, "msg: %s; %s", debug_date_dumper().HexDate(), msg.c_str());
 		LogDesyncMsg(std::move(msg));
 	}
 
 	/* Make sure we're not messing things up here. */
 	assert(exec_as_spectator ? _current_company == COMPANY_SPECTATOR : cur_company.Verify());
+
+	auto log_desync_cmd = [&](const char *prefix) {
+		if (_debug_desync_level >= 1) {
+			std::string aux_str;
+			if (aux_data != nullptr) {
+				std::vector<byte> buffer;
+				CommandSerialisationBuffer serialiser(buffer, SHRT_MAX);
+				aux_data->Serialise(serialiser);
+				aux_str = FormatArrayAsHex(buffer);
+			}
+			std::string text_buf;
+			if (text != nullptr) {
+				nlohmann::json j_string = text;
+				text_buf = j_string.dump(-1, ' ', true);
+			} else {
+				text_buf = "\"\"";
+			}
+
+			/* Use stdstr_fmt and debug_print to avoid truncation limits of DEBUG, text/aux_data may be very large */
+			std::string dbg_info = stdstr_fmt("%s: %s; company: %02x; tile: %06x (%u x %u); p1: %08x; p2: %08x; p3: " OTTD_PRINTFHEX64PAD "; cmd: %08x; %s <%s> (%s)",
+					prefix, debug_date_dumper().HexDate(), (int)_current_company, tile, TileX(tile), TileY(tile), p1, p2, p3,
+					cmd & ~CMD_NETWORK_COMMAND, text_buf.c_str(), aux_str.c_str(), GetCommandName(cmd));
+			debug_print("desync", dbg_info.c_str());
+		}
+	};
 
 	/* If the command fails, we're doing an estimate
 	 * or the player does not have enough money
@@ -1190,8 +1215,7 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 		if (!_networking || _generating_world || (cmd & CMD_NETWORK_COMMAND) != 0) {
 			/* Log the failed command as well. Just to be able to be find
 			 * causes of desyncs due to bad command test implementations. */
-			DEBUG(desync, 1, "cmdf: date{%08x; %02x; %02x}; company: %02x; tile: %06x (%u x %u); p1: %08x; p2: %08x; p3: " OTTD_PRINTFHEX64PAD "; cmd: %08x; \"%s\"%s (%s)",
-					_date, _date_fract, _tick_skip_counter, (int)_current_company, tile, TileX(tile), TileY(tile), p1, p2, p3, cmd & ~CMD_NETWORK_COMMAND, text, aux_data != nullptr ? ", aux data present" : "", GetCommandName(cmd));
+			log_desync_cmd("cmdf");
 		}
 		cur_company.Restore();
 		return_dcpi(res);
@@ -1211,8 +1235,7 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 		 * reset the storages as we've not executed the command. */
 		return_dcpi(CommandCost());
 	}
-	DEBUG(desync, 1, "cmd: date{%08x; %02x; %02x}; company: %02x; tile: %06x (%u x %u); p1: %08x; p2: %08x; p3: " OTTD_PRINTFHEX64PAD "; cmd: %08x; \"%s\"%s(%s)",
-			_date, _date_fract, _tick_skip_counter, (int)_current_company, tile, TileX(tile), TileY(tile), p1, p2, p3, cmd & ~CMD_NETWORK_COMMAND, text, aux_data != nullptr ? ", aux data present" : "", GetCommandName(cmd));
+	log_desync_cmd("cmd");
 
 	/* Actually try and execute the command. If no cost-type is given
 	 * use the construction one */
@@ -1268,6 +1291,9 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32 p1, uint32 p2, uint64 p3, 
 	/* update signals if needed */
 	UpdateSignalsInBuffer();
 	if (_extra_aspects > 0) FlushDeferredAspectUpdates();
+
+	/* Record if there was a command issues during pause; ignore pause/other setting related changes. */
+	if (_pause_mode != PM_UNPAUSED && command.type != CMDT_SERVER_SETTING) _pause_mode |= PM_COMMAND_DURING_PAUSE;
 
 	return_dcpi(res2);
 }

@@ -188,6 +188,9 @@ STR_COLOUR_BROWN                                                :Brún
 STR_COLOUR_GREY                                                 :Griis
 STR_COLOUR_WHITE                                                :Wyt
 
+###length 17
+
+
 # Units used in OpenTTD
 STR_UNITS_VELOCITY_IMPERIAL                                     :{DECIMAL}{NBSP}mpo
 STR_UNITS_VELOCITY_METRIC                                       :{DECIMAL}{NBSP}km/o
@@ -221,6 +224,7 @@ STR_UNITS_FORCE_SI                                              :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}ft
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
+
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filter:
@@ -392,31 +396,25 @@ STR_SETTINGS_MENU_TRANSPARENT_BUILDINGS                         :Trochsichtige g
 STR_SETTINGS_MENU_TRANSPARENT_SIGNS                             :Trochsichtige nammen
 
 # File menu
-###length 5
 STR_FILE_MENU_SAVE_GAME                                         :Spul opslaan
 STR_FILE_MENU_LOAD_GAME                                         :Spul lade
 STR_FILE_MENU_QUIT_GAME                                         :Spul ferlitte
-STR_FILE_MENU_SEPARATOR                                         :
 STR_FILE_MENU_EXIT                                              :Ôfslute
 
 # Map menu
-###length 4
 STR_MAP_MENU_MAP_OF_WORLD                                       :Wrâldkaart
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Ekstra finster
 STR_MAP_MENU_LINGRAPH_LEGEND                                    :Frachtstreamleginda
 STR_MAP_MENU_SIGN_LIST                                          :Buordsjeslist
 
 # Town menu
-###length 2
 STR_TOWN_MENU_TOWN_DIRECTORY                                    :Stêdlist
 STR_TOWN_MENU_FOUND_TOWN                                        :In stêd stichte
 
 # Subsidies menu
-###length 1
 STR_SUBSIDIES_MENU_SUBSIDIES                                    :Subsydzjes
 
 # Graph menu
-###length 6
 STR_GRAPH_MENU_OPERATING_PROFIT_GRAPH                           :Fertsjinstengrafyk
 STR_GRAPH_MENU_INCOME_GRAPH                                     :Ynkomstengrafyk
 STR_GRAPH_MENU_DELIVERED_CARGO_GRAPH                            :Oflevere frachtgrafyk
@@ -425,56 +423,45 @@ STR_GRAPH_MENU_COMPANY_VALUE_GRAPH                              :Bedriuwsweardeg
 STR_GRAPH_MENU_CARGO_PAYMENT_RATES                              :Frachtprizengrafyk
 
 # Company league menu
-###length 3
 STR_GRAPH_MENU_COMPANY_LEAGUE_TABLE                             :Bedriuwskompetysjetabel
 STR_GRAPH_MENU_DETAILED_PERFORMANCE_RATING                      :Wiidweidiche prestaasjewurdearring
 STR_GRAPH_MENU_HIGHSCORE                                        :Topskoretabel
 
 # Industry menu
-###length 3
 STR_INDUSTRY_MENU_INDUSTRY_DIRECTORY                            :Yndustrylist
 STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Yndustrykeatlings
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Nije yndustry finansierje
 
 # URailway construction menu
-###length 4
 STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Spoarwei bouwe
 STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Elektifisearre spoarwei bouwe
 STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Monorail bouwe
 STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Maglev bouwe
 
 # Road construction menu
-###length 2
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Wegen bouwe
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Tramwei bouwe
 
 # Waterways construction menu
-###length 1
 STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Wetterwei bouwe
 
 # Aairport construction menu
-###length 1
 STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Fleanfjild bouwe
 
 # Landscaping menu
-###length 3
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Lânskipsfoarming
 STR_LANDSCAPING_MENU_PLANT_TREES                                :Plantsje beammen
 STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Buordsje delsette
 
 # Music menu
-###length 1
 STR_TOOLBAR_SOUND_MUSIC                                         :Lûd/musyk
 
 # Message menu
-###length 3
 STR_NEWS_MENU_LAST_MESSAGE_NEWS_REPORT                          :Lêtste (nijs)berjocht
 STR_NEWS_MENU_MESSAGE_HISTORY_MENU                              :Berjochtenskiednis
 
 # About menu
-###length 10
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Gebietsynformaasje
-STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Skeakel console oan/ût
 STR_ABOUT_MENU_AI_DEBUG                                         :AI/Gamescript debug
 STR_ABOUT_MENU_SCREENSHOT                                       :Skermôfbylding
@@ -680,8 +667,6 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Klik op 
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Klik op musyknûmmer om't út it aktive program it heljen (allinnich Oanpast1 of Oanpast2)
 
 # Highscore window
-STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Topbedriuwen dy't niveau {NUM} helle hawwe
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Bedriuwskompetysjetabel yn {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Sakeman
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Undernimmer
@@ -867,10 +852,6 @@ STR_NEWS_NEW_VEHICLE_TYPE                                       :{BIG_FONT}{BLAC
 STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}Neie {STRING} is no beskikber!  -  {ENGINE}
 
 
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO                        :{WHITE}{STATION} akseptearret gjin {STRING} mear
-STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_OR_CARGO               :{WHITE}{STATION} akseptearret gjin {STRING} en {STRING} mear
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO                              :{WHITE}{STATION} akseptearrret no {STRING}
-STR_NEWS_STATION_NOW_ACCEPTS_CARGO_AND_CARGO                    :{WHITE}{STATION} akseptearret no {STRING} en {STRING}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Subsydzje oanbieding ferrûn:{}{}{STRING} fan {STRING} nei {STRING} sil no net in subsydzje krije.
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Subsydzje ôfrûn:{}{}{STRING} tsjinst fan {STRING} nei {STRING} krijt gjin subsydzje mear.
@@ -976,7 +957,6 @@ STR_GAME_OPTIONS_REFRESH_RATE                                   :{BLACK}Byldferf
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Basisset for ôfbyldings
 STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Selektearje de basis ôfbyldingsset om te brûken
-STR_GAME_OPTIONS_BASE_GRF_STATUS                                :{RED}{NUM} ûntbrekke{P "" nde}/korrupt{P "" e} bestân
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Oanfoljende ynformaasje oer de basisset foar ôfbyldings
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Basisset foar lûdseffekten
@@ -985,8 +965,8 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Oanfolje
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Basisset foar musyk
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Selektearje de basisset foar musyk om te brûken
-STR_GAME_OPTIONS_BASE_MUSIC_STATUS                              :{RED}{NUM} korrupt{P "" e} bestân{P "" en}
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Oanfoljende ynformaasje oer de basisset foar musyk
+
 
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Koe gjin list mei brûkbere resolúsjes ophelje
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Folslein skermmodus mislearre
@@ -1144,6 +1124,7 @@ STR_CONFIG_SETTING_REALISTIC                                    :Realistysk
 STR_CONFIG_SETTING_HORIZONTAL_POS_LEFT                          :Lofts
 STR_CONFIG_SETTING_HORIZONTAL_POS_CENTER                        :Midden
 STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :Rjochts
+
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maksimale startersliening: {STRING}
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksimale bedrach hokker troch in bedriuw lient wurde kin (sûnder acht te slaan op de ynflaasje)
@@ -1304,6 +1285,7 @@ STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :Gjin
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :Minder
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :Gewoan
 
+
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Stean it bouwen fan haltes op troch de stêd behearde diken ta: {STRING}
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Stean it bouwen fan haltes op troch de stêd behearde diken ta
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Stean it bouwen fan haltes op troch in tsjinstanner behearde diken ta {STRING}
@@ -1312,6 +1294,7 @@ STR_CONFIG_SETTING_DYNAMIC_ENGINES_EXISTING_VEHICLES            :{WHITE}At der f
 
 STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE                   :Ynfrastruktuerûnderhâld: {STRING}
 STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE_HELPTEXT          :By ynskeakeljen binne der koster ferbûn oan it ûnderhâld fan ynfrastruktuer. De kosten wurde heger by gruttere netwurken wêrtoch gruttere bedriuwen hjir mear lêst fan hawwe
+
 
 
 STR_CONFIG_SETTING_NEVER_EXPIRE_AIRPORTS                        :Fleanfjilden ferrinne nea: {STRING}
@@ -1347,7 +1330,6 @@ STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Bedrach wat oer
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Doer flatermeldings: {STRING}
 STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Doer fan reade flatermeldings. Guon krityske flater wurde net automatysk ôfsluten
-STR_CONFIG_SETTING_ERRMSG_DURATION_VALUE                        :{COMMA} seconde{P "" s}
 
 STR_CONFIG_SETTING_HOVER_DELAY                                  :Arktips sjen litte: {STRING}
 STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Tiid wernei arktips sjen litten wurde at jo de mûs de boppe hâlde. Arktips kinne ek oan de rjochtermûsknop bûn wurde asto dizze wearde op 0 set
@@ -1483,9 +1465,7 @@ STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_COMMAND                  :Kommando+Klik
 STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_CONTROL                  :Ctrl+Klik
 STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_OFF                      :Ut
 
-
-STR_CONFIG_SETTING_AUTOSAVE                                     :Automatysk bewarje: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Selektearje de tiid tusken automatysk bewarje fan it spul
+###length 3
 
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES                    :Brûk it {STRING} datumformaat yn de nammen fan bewarre spullen
 STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_HELPTEXT           :Datumformaat foar de bestânsnammen fan bewarre spullen
@@ -1511,8 +1491,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Skeakelje de av
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Brûk laadyndikators: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :By ynskeakeljen sille ydikators sjen litten wurde boppe fiertugen dy't oan it yn- as útladen binne
 
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Toan tsjinstregeling yn tikken yn stee fan yn dagen: {STRING}
-STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Lit reistiden sjen in tikken yn stee fan yn dagen op tsjinstregelings
+###length 3
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Toan oankomst- en ofreistiid yn de tsjinstregeling: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Lit oankomst- en ôfriidtiden sjen yn tsjinstregelings
@@ -1905,6 +1884,8 @@ STR_QUIT_NO                                                     :{BLACK}Nee
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}Ferlit Spul
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Wolsto echt dit lânskip slúte?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Wolsto echt dit lânskip slúte?
+
+# Help window
 
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Falsk spielje
@@ -3783,14 +3764,12 @@ STR_TIMETABLE_TRAVEL_FOR_SPEED_ESTIMATED                        :Reizgje (foar {
 STR_TIMETABLE_STAY_FOR_ESTIMATED                                :(bliuw foar {STRING}, sûnder tjinstregeling)
 STR_TIMETABLE_AND_TRAVEL_FOR_ESTIMATED                          :(reizgje foar {STRING}, sûnder tjinstregeling)
 STR_TIMETABLE_STAY_FOR                                          :en bliuw foar{STRING}
-STR_TIMETABLE_DAYS                                              :{COMMA}{NBSP}{P dei dagen}
-STR_TIMETABLE_TICKS                                             :{COMMA}{NBSP}tik{P "" ken}
 
 
 STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Dit fiertûch is op tiid
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}Dit fiertûch is {STRING} te betiid
 
-STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Begjin datum
+
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Tiid Feroarje
 
@@ -3882,7 +3861,7 @@ STR_TEXTFILE_WRAP_TEXT                                          :{WHITE}Omwikkel
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Besjoch readme
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Feroarings
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Lisinsje
-###length 4
+###length 5
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} feroarings fan {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} lisinsje fan {STRING}
 

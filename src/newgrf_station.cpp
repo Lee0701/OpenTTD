@@ -24,9 +24,11 @@
 #include "newgrf_animation_base.h"
 #include "newgrf_class_func.h"
 #include "newgrf_extension.h"
+#include "core/checksum_func.hpp"
 
 #include "safeguards.h"
 
+uint64 _station_tile_cache_hash = 0;
 
 template <typename Tspec, typename Tid, Tid Tmax>
 /* static */ void NewGRFClass<Tspec, Tid, Tmax>::InsertDefaults()
@@ -39,7 +41,7 @@ template <typename Tspec, typename Tid, Tid Tmax>
 }
 
 template <typename Tspec, typename Tid, Tid Tmax>
-bool NewGRFClass<Tspec, Tid, Tmax>::IsUIAvailable(uint index) const
+bool NewGRFClass<Tspec, Tid, Tmax>::IsUIAvailable(uint) const
 {
 	return true;
 }
@@ -416,12 +418,7 @@ uint32 Station::GetNewGRFVariable(const ResolverObject &object, uint16 variable,
 {
 	switch (variable) {
 		case 0x48: { // Accepted cargo types
-			CargoID cargo_type;
-			uint32 value = 0;
-
-			for (cargo_type = 0; cargo_type < NUM_CARGO; cargo_type++) {
-				if (HasBit(this->goods[cargo_type].status, GoodsEntry::GES_ACCEPTANCE)) SetBit(value, cargo_type);
-			}
+			uint32_t value = GetAcceptanceMask(this);
 			return value;
 		}
 
@@ -450,7 +447,7 @@ uint32 Station::GetNewGRFVariable(const ResolverObject &object, uint16 variable,
 			case 0x60: return std::min<uint32>(ge->CargoTotalCount(), 4095);
 			case 0x61: return ge->HasVehicleEverTriedLoading() && ge->IsSupplyAllowed() ? ge->time_since_pickup : 0;
 			case 0x62: return ge->HasRating() ? ge->rating : 0xFFFFFFFF;
-			case 0x63: return ge->data != nullptr ? ge->data->cargo.DaysInTransit() : 0;
+			case 0x63: return ge->data != nullptr ? ge->data->cargo.PeriodsInTransit() : 0;
 			case 0x64: return ge->HasVehicleEverTriedLoading() && ge->IsSupplyAllowed() ? ge->last_speed | (ge->last_age << 8) : 0xFF00;
 			case 0x65: return GB(ge->status, GoodsEntry::GES_ACCEPTANCE, 1) << 3;
 			case 0x69: {
@@ -470,8 +467,8 @@ uint32 Station::GetNewGRFVariable(const ResolverObject &object, uint16 variable,
 			case 1: return GB(std::min(g->CargoTotalCount(), 4095u), 0, 4) | (GB(g->status, GoodsEntry::GES_ACCEPTANCE, 1) << 7);
 			case 2: return g->time_since_pickup;
 			case 3: return g->rating;
-			case 4: return g->data != nullptr ? g->data->cargo.Source() : INVALID_STATION;
-			case 5: return g->data != nullptr ? g->data->cargo.DaysInTransit() : 0;
+			case 4: return g->data != nullptr ? g->data->cargo.GetFirstStation() : INVALID_STATION;
+			case 5: return g->data != nullptr ? g->data->cargo.PeriodsInTransit() : 0;
 			case 6: return g->last_speed;
 			case 7: return g->last_age;
 		}
@@ -532,8 +529,8 @@ uint32 Waypoint::GetNewGRFVariable(const ResolverObject &object, uint16 variable
 			break;
 
 		case CT_DEFAULT:
-			for (CargoID cargo_type = 0; cargo_type < NUM_CARGO; cargo_type++) {
-				cargo += st->goods[cargo_type].CargoTotalCount();
+			for (const GoodsEntry &ge : st->goods) {
+				cargo += ge.CargoTotalCount();
 			}
 			break;
 
@@ -795,7 +792,7 @@ void DeallocateSpecFromStation(BaseStation *st, byte specindex)
 bool DrawStationTile(int x, int y, RailType railtype, Axis axis, StationClassID sclass, uint station)
 {
 	const DrawTileSprites *sprites = nullptr;
-	const RailtypeInfo *rti = GetRailTypeInfo(railtype);
+	const RailTypeInfo *rti = GetRailTypeInfo(railtype);
 	PaletteID palette = COMPANY_SPRITE_COLOUR(_local_company);
 	uint tile = 2;
 
@@ -870,46 +867,6 @@ const StationSpec *GetStationSpec(TileIndex t)
 	const BaseStation *st = BaseStation::GetByTile(t);
 	uint specindex = GetCustomStationSpecIndex(t);
 	return specindex < st->speclist.size() ? st->speclist[specindex].spec : nullptr;
-}
-
-
-/**
- * Check whether a rail station tile is NOT traversable.
- * @param tile %Tile to test.
- * @return Station tile is blocked.
- * @note This could be cached (during build) in the map array to save on all the dereferencing.
- */
-bool IsStationTileBlocked(TileIndex tile)
-{
-	const StationSpec *statspec = GetStationSpec(tile);
-
-	return statspec != nullptr && HasBit(statspec->blocked, GetStationGfx(tile));
-}
-
-/**
- * Check if a rail station tile shall have pylons when electrified.
- * @param tile %Tile to test.
- * @return Tile shall have pylons.
- * @note This could be cached (during build) in the map array to save on all the dereferencing.
- */
-bool CanStationTileHavePylons(TileIndex tile)
-{
-	const StationSpec *statspec = GetStationSpec(tile);
-	uint gfx = GetStationGfx(tile);
-	/* Default stations do not draw pylons under roofs (gfx >= 4) */
-	return statspec != nullptr ? HasBit(statspec->pylons, gfx) : gfx < 4;
-}
-
-/**
- * Check if a rail station tile shall have wires when electrified.
- * @param tile %Tile to test.
- * @return Tile shall have wires.
- * @note This could be cached (during build) in the map array to save on all the dereferencing.
- */
-bool CanStationTileHaveWires(TileIndex tile)
-{
-	const StationSpec *statspec = GetStationSpec(tile);
-	return statspec == nullptr || !HasBit(statspec->wires, GetStationGfx(tile));
 }
 
 /** Wrapper for animation control, see GetStationCallback. */
@@ -1002,15 +959,8 @@ void TriggerStationRandomisation(Station *st, TileIndex trigger_tile, StationRan
 	uint32 whole_reseed = 0;
 	ETileArea area = ETileArea(st, trigger_tile, tas[trigger]);
 
-	CargoTypes empty_mask = 0;
-	if (trigger == SRT_CARGO_TAKEN) {
-		/* Create a bitmask of completely empty cargo types to be matched */
-		for (CargoID i = 0; i < NUM_CARGO; i++) {
-			if (st->goods[i].CargoTotalCount() == 0) {
-				SetBit(empty_mask, i);
-			}
-		}
-	}
+	/* Bitmask of completely empty cargo types to be matched. */
+	CargoTypes empty_mask = (trigger == SRT_CARGO_TAKEN) ? GetEmptyMask(st) : 0;
 
 	/* Store triggers now for var 5F */
 	SetBit(st->waiting_triggers, trigger);
@@ -1082,7 +1032,7 @@ void StationUpdateCachedTriggers(BaseStation *st)
 	}
 }
 
-void DumpStationSpriteGroup(const StationSpec *statspec, BaseStation *st, DumpSpriteGroupPrinter print)
+void DumpStationSpriteGroup(const StationSpec *statspec, BaseStation *st, SpriteGroupDumper &dumper)
 {
 	char buffer[512];
 
@@ -1102,14 +1052,13 @@ void DumpStationSpriteGroup(const StationSpec *statspec, BaseStation *st, DumpSp
 			seprintf(buffer, lastof(buffer), "Cargo: %u", ro.station_scope.cargo_type);
 			break;
 	}
-	print(nullptr, DSGPO_PRINT, 0, buffer);
+	dumper.Print(buffer);
 
-	SpriteGroupDumper dumper(print);
 	dumper.DumpSpriteGroup(ro.root_spritegroup, 0);
 
 	for (uint i = 0; i < NUM_CARGO + 3; i++) {
 		if (statspec->grf_prop.spritegroup[i] != ro.root_spritegroup && statspec->grf_prop.spritegroup[i] != nullptr) {
-			print(nullptr, DSGPO_PRINT, 0, "");
+			dumper.Print("");
 			switch (i) {
 				case CT_DEFAULT:
 					seprintf(buffer, lastof(buffer), "OTHER SPRITE GROUP: CT_DEFAULT");
@@ -1124,8 +1073,47 @@ void DumpStationSpriteGroup(const StationSpec *statspec, BaseStation *st, DumpSp
 					seprintf(buffer, lastof(buffer), "OTHER SPRITE GROUP: Cargo: %u", i);
 					break;
 			}
-			print(nullptr, DSGPO_PRINT, 0, buffer);
+			dumper.Print(buffer);
 			dumper.DumpSpriteGroup(statspec->grf_prop.spritegroup[i], 0);
+		}
+	}
+}
+
+void UpdateStationTileCacheFlags(bool force_update)
+{
+	SimpleChecksum64 checksum;
+	for (uint i = 0; StationClass::IsClassIDValid((StationClassID)i); i++) {
+		StationClass *stclass = StationClass::Get((StationClassID)i);
+
+		checksum.Update(stclass->GetSpecCount());
+		for (uint j = 0; j < stclass->GetSpecCount(); j++) {
+			const StationSpec *statspec = stclass->GetSpec(j);
+			if (statspec == nullptr) continue;
+
+			checksum.Update(j);
+			checksum.Update(statspec->blocked);
+			checksum.Update(statspec->pylons);
+			checksum.Update(statspec->wires);
+		}
+	}
+
+	if (checksum.state != _station_tile_cache_hash || force_update) {
+		_station_tile_cache_hash = checksum.state;
+
+		for (TileIndex t = 0; t < MapSize(); t++) {
+			if (HasStationTileRail(t)) {
+				StationGfx gfx = GetStationGfx(t);
+				const StationSpec *statspec = GetStationSpec(t);
+
+				bool blocked = statspec != nullptr && HasBit(statspec->blocked, gfx);
+				/* Default stations do not draw pylons under roofs (gfx >= 4) */
+				bool pylons = statspec != nullptr ? HasBit(statspec->pylons, gfx) : gfx < 4;
+				bool wires = statspec == nullptr || !HasBit(statspec->wires, gfx);
+
+				SetStationTileBlocked(t, blocked);
+				SetStationTileHavePylons(t, pylons);
+				SetStationTileHaveWires(t, wires);
+			}
 		}
 	}
 }

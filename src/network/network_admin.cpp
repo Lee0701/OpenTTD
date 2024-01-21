@@ -10,7 +10,7 @@
 #include "../stdafx.h"
 #include "../strings_func.h"
 #include "../date_func.h"
-#include "core/game_info.h"
+#include "core/network_game_info.h"
 #include "network_admin.h"
 #include "network_base.h"
 #include "network_server.h"
@@ -21,6 +21,8 @@
 #include "../map_func.h"
 #include "../rev.h"
 #include "../game/game.hpp"
+
+#include <numeric>
 
 #include "../safeguards.h"
 
@@ -177,7 +179,7 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendWelcome()
 	p->Send_string(""); // Used to be map-name.
 	p->Send_uint32(_settings_game.game_creation.generation_seed);
 	p->Send_uint8 (_settings_game.game_creation.landscape);
-	p->Send_uint32(ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1));
+	p->Send_uint32(ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1).base());
 	p->Send_uint16(MapSizeX());
 	p->Send_uint16(MapSizeY());
 
@@ -207,7 +209,7 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendDate()
 {
 	Packet *p = new Packet(ADMIN_PACKET_SERVER_DATE);
 
-	p->Send_uint32(_date);
+	p->Send_uint32(_date.base());
 	this->SendPacket(p);
 
 	return NETWORK_RECV_STATUS_OKAY;
@@ -243,7 +245,7 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendClientInfo(const NetworkC
 	p->Send_string(cs == nullptr ? "" : const_cast<NetworkAddress &>(cs->client_address).GetHostname());
 	p->Send_string(ci->client_name);
 	p->Send_uint8 (0); // Used to be language
-	p->Send_uint32(ci->join_date);
+	p->Send_uint32(ci->join_date.base());
 	p->Send_uint8 (ci->client_playas);
 
 	this->SendPacket(p);
@@ -382,10 +384,7 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendCompanyEconomy()
 {
 	for (const Company *company : Company::Iterate()) {
 		/* Get the income. */
-		Money income = 0;
-		for (uint i = 0; i < lengthof(company->yearly_expenses[0]); i++) {
-			income -= company->yearly_expenses[0][i];
-		}
+		Money income = -std::reduce(std::begin(company->yearly_expenses[0]), std::end(company->yearly_expenses[0]));
 
 		Packet *p = new Packet(ADMIN_PACKET_SERVER_COMPANY_ECONOMY);
 
@@ -556,11 +555,6 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendConsole(const std::string
  */
 NetworkRecvStatus ServerNetworkAdminSocketHandler::SendGameScript(const std::string_view json)
 {
-	/* At the moment we cannot transmit anything larger than MTU. So we limit
-	 *  the maximum amount of json data that can be sent. Account also for
-	 *  the trailing \0 of the string */
-	if (json.size() + 1 >= NETWORK_GAMESCRIPT_JSON_LENGTH) return NETWORK_RECV_STATUS_OKAY;
-
 	Packet *p = new Packet(ADMIN_PACKET_SERVER_GAMESCRIPT);
 
 	p->Send_string(json);
@@ -670,7 +664,7 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::Receive_ADMIN_JOIN(Packet *p)
 	return this->SendProtocol();
 }
 
-NetworkRecvStatus ServerNetworkAdminSocketHandler::Receive_ADMIN_QUIT(Packet *p)
+NetworkRecvStatus ServerNetworkAdminSocketHandler::Receive_ADMIN_QUIT(Packet *)
 {
 	/* The admin is leaving nothing else to do */
 	return this->CloseConnection();

@@ -16,7 +16,7 @@
 #include "date_func.h"
 #include "vehicle_base.h"
 #include "rail_gui.h"
-#include "linkgraph/linkgraph.h"
+#include "linkgraph/linkgraphschedule.h"
 #include "sl/saveload.h"
 #include "newgrf_profiling.h"
 #include "console_func.h"
@@ -44,15 +44,15 @@ extern void ClearOutOfDateSignalSpeedRestrictions();
 
 void CheckScaledDateTicksWrap()
 {
-	DateTicksScaled tick_adjust = 0;
+	DateTicksScaledDelta tick_adjust = 0;
 	auto get_tick_adjust = [&](DateTicksScaled target) {
 		int32 rounding = _settings_time.time_in_minutes * 1440;
-		return target - (target % rounding);
+		return target.AsDelta() - (target.base() % rounding);
 	};
 	if (_scaled_date_ticks >= ((int64)1 << 60)) {
 		tick_adjust = get_tick_adjust(_scaled_date_ticks);
 	} else if (_scaled_date_ticks <= -((int64)1 << 60)) {
-		tick_adjust = -get_tick_adjust(-_scaled_date_ticks);
+		tick_adjust = -get_tick_adjust(-(_scaled_date_ticks.base()));
 	} else {
 		return;
 	}
@@ -60,13 +60,13 @@ void CheckScaledDateTicksWrap()
 	_scaled_date_ticks_offset -= tick_adjust;
 	_scaled_date_ticks -= tick_adjust;
 
-	extern void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaled delta);
+	extern void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaledDelta delta);
 	AdjustAllSignalSpeedRestrictionTickValues(-tick_adjust);
 
-	extern void AdjustVehicleScaledTickBase(int64 delta);
+	extern void AdjustVehicleScaledTickBase(DateTicksScaledDelta delta);
 	AdjustVehicleScaledTickBase(-tick_adjust);
 
-	extern void AdjustLinkGraphScaledTickBase(int64 delta);
+	extern void AdjustLinkGraphScaledTickBase(DateTicksScaledDelta delta);
 	AdjustLinkGraphScaledTickBase(-tick_adjust);
 }
 
@@ -90,11 +90,9 @@ void SetDate(Date date, DateFract fract, bool preserve_scaled_ticks)
 {
 	assert(fract < DAY_TICKS);
 
-	YearMonthDay ymd;
-
 	_date = date;
 	_date_fract = fract;
-	ConvertDateToYMD(date, &ymd);
+	YearMonthDay ymd = ConvertDateToYMD(date);
 	_cur_date_ymd = ymd;
 	if (preserve_scaled_ticks) {
 		RebaseScaledDateTicksBase();
@@ -106,7 +104,7 @@ void SetDate(Date date, DateFract fract, bool preserve_scaled_ticks)
 
 void SetScaledTickVariables()
 {
-	_scaled_date_ticks = ((((DateTicksScaled)_date * DAY_TICKS) + _date_fract) * _settings_game.economy.day_length_factor) + _tick_skip_counter + _scaled_date_ticks_offset;
+	_scaled_date_ticks = ((int64)(DateToDateTicks(_date, _date_fract).base()) * _settings_game.economy.day_length_factor) + _tick_skip_counter + _scaled_date_ticks_offset;
 }
 
 #define M(a, b) ((a << 5) | b)
@@ -153,15 +151,15 @@ static const uint16 _accum_days_for_month[] = {
  * @param date the date to convert from
  * @param ymd  the year, month and day to write to
  */
-void ConvertDateToYMD(Date date, YearMonthDay *ymd)
+YearMonthDay ConvertDateToYMD(Date date)
 {
 	/* Year determination in multiple steps to account for leap
 	 * years. First do the large steps, then the smaller ones.
 	 */
 
 	/* There are 97 leap years in 400 years */
-	Year yr = 400 * (date / (DAYS_IN_YEAR * 400 + 97));
-	int rem = date % (DAYS_IN_YEAR * 400 + 97);
+	Year yr = 400 * (date.base() / (DAYS_IN_YEAR * 400 + 97));
+	int rem = date.base() % (DAYS_IN_YEAR * 400 + 97);
 	uint16 x;
 
 	if (rem >= DAYS_IN_YEAR * 100 + 25) {
@@ -195,11 +193,14 @@ void ConvertDateToYMD(Date date, YearMonthDay *ymd)
 	/* Skip the 29th of February in non-leap years */
 	if (!IsLeapYear(yr) && rem >= ACCUM_MAR - 1) rem++;
 
-	ymd->year = yr;
+	YearMonthDay ymd;
+	ymd.year = yr;
 
 	x = _month_date_from_year_day[rem];
-	ymd->month = x >> 5;
-	ymd->day = x & 0x1F;
+	ymd.month = x >> 5;
+	ymd.day = x & 0x1F;
+
+	return ymd;
 }
 
 /**
@@ -216,7 +217,7 @@ Date ConvertYMDToDate(Year year, Month month, Day day)
 	/* Account for the missing of the 29th of February in non-leap years */
 	if (!IsLeapYear(year) && days >= ACCUM_MAR) days--;
 
-	return DAYS_TILL(year) + days;
+	return DateAtStartOfYear(year) + days;
 }
 
 /** Functions used by the IncreaseDate function */
@@ -238,16 +239,6 @@ extern void VehiclesYearlyLoop();
 extern void TownsYearlyLoop();
 
 extern void ShowEndGameChart();
-
-
-/** Available settings for autosave intervals. */
-static const Month _autosave_months[] = {
-	 0, ///< never
-	 1, ///< every month
-	 3, ///< every 3 months
-	 6, ///< every 6 months
-	12, ///< every 12 months
-};
 
 /**
  * Runs various procedures that have to be done yearly
@@ -276,7 +267,7 @@ static void OnNewYear()
 		_cur_date_ymd.year--;
 		days_this_year = IsLeapYear(_cur_date_ymd.year) ? DAYS_IN_LEAP_YEAR : DAYS_IN_YEAR;
 		_date -= days_this_year;
-		for (LinkGraph *lg : LinkGraph::Iterate()) lg->ShiftDates(-days_this_year);
+		LinkGraphSchedule::instance.ShiftDates(-days_this_year);
 		ShiftOrderDates(-days_this_year);
 		ShiftVehicleDates(-days_this_year);
 		_scaled_date_ticks_offset += ((int64)days_this_year) * (DAY_TICKS * _settings_game.economy.day_length_factor);
@@ -297,12 +288,6 @@ static void OnNewYear()
  */
 static void OnNewMonth()
 {
-	if (_settings_client.gui.autosave != 0 && _settings_client.gui.autosave < 5 && (_cur_date_ymd.month % _autosave_months[_settings_client.gui.autosave]) == 0) {
-		_do_autosave = true;
-		_check_special_modes = true;
-		SetWindowDirty(WC_STATUS_BAR, 0);
-	}
-
 	SetWindowClassesDirty(WC_CHEATS);
 	CompaniesMonthlyLoop();
 	EnginesMonthlyLoop();
@@ -319,12 +304,6 @@ static void OnNewMonth()
  */
 static void OnNewDay()
 {
-	if (_settings_client.gui.autosave == 5 && (_date % _settings_client.gui.autosave_custom_days) == 0) {
-		_do_autosave = true;
-		_check_special_modes = true;
-		SetWindowDirty(WC_STATUS_BAR, 0);
-	}
-
 	if (_network_server) NetworkServerDailyLoop();
 
 	DisasterDailyLoop();
@@ -367,8 +346,7 @@ void IncreaseDate()
 	/* increase day counter */
 	_date++;
 
-	YearMonthDay ymd;
-	ConvertDateToYMD(_date, &ymd);
+	YearMonthDay ymd = ConvertDateToYMD(_date);
 
 	/* check if we entered a new month? */
 	bool new_month = ymd.month != _cur_date_ymd.month;
@@ -389,4 +367,10 @@ void IncreaseDate()
 
 	/* yes, call various yearly loops */
 	if (new_year) OnNewYear();
+}
+
+const char *debug_date_dumper::HexDate(Date date, DateFract date_fract, uint8 tick_skip_counter)
+{
+	seprintf(this->buffer, lastof(this->buffer), "date{%08x; %02x; %02x}", date.base(), date_fract, tick_skip_counter);
+	return this->buffer;
 }

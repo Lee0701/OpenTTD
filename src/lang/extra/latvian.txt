@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :katru mēnesi
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :katrus 3 mēnešus
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :katrus 6 mēnešus
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :katrus 12 mēnešus
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :jūdzes stundā
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -14,6 +9,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Vilcieni
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Autotransporta līdzekļi
 STR_VEHICLE_TYPE_SHIPS                                          :Kuģi
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Lidaparāti
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Automātiskā saglabāšana: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Izvēlēties spēles automātiskās saglabāšanas starplaikus
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Kustības sarakstu rādīt mirkļos nevis dienās: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Kustības sarakstos laikus rādīt spēles mirkļos, nevis dienās
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Pārslēgt piekraušanas rādītāju caurspīdību. Ctrl+klikšķis, lai slēgtu
 
 # Tracerestrict GUI
 

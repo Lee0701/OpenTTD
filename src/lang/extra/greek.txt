@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Κάθε μήνα
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Κάθε 3 μήνες
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Κάθε 6 μήνες
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Κάθε 12 μήνες
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :μίλια/ώρα
 STR_UNIT_NAME_VELOCITY_METRIC                                   :χλμ/ώρα
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -13,6 +8,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Τρένα
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Οχήματα
 STR_VEHICLE_TYPE_SHIPS                                          :Πλοία
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Αεροσκάφη
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Αυτόματο σώσιμο: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Επιλέξτε το διάστημα ανάμεσα σε δυο διαδοχικά σωσίματα του παιχνιδιου
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Εμφάνιση δρομολογίων σε στιγμές αντί για ημέρες: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Εμφάνιση χρόνων ταξιδιού στα χρονοδιαγράμματα σε στιγμές αντί σε ημέρες
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Εναλλαγή διαφάνειας για τις ενδείξεις φόρτωσης. Ctrl+Κλικ για να την κλειδώσετε
 
 # Tracerestrict GUI
 

@@ -19,7 +19,6 @@ enum NetworkGameWidgets {
 	WID_NG_FILTER_LABEL,       ///< Label in front of the filter/search edit box.
 	WID_NG_FILTER,             ///< Panel with the edit box to enter the search text.
 
-	WID_NG_HEADER,             ///< Header container of the matrix.
 	WID_NG_NAME,               ///< 'Name' button.
 	WID_NG_CLIENTS,            ///< 'Clients' button.
 	WID_NG_MAPSIZE,            ///< 'Map size' button.
@@ -35,7 +34,6 @@ enum NetworkGameWidgets {
 	WID_NG_LASTJOINED_SPACER,  ///< Spacer after last joined server panel.
 
 	WID_NG_DETAILS,            ///< Panel with game details.
-	WID_NG_DETAILS_SPACER,     ///< Spacer for game actual details.
 	WID_NG_JOIN,               ///< 'Join game' button.
 	WID_NG_REFRESH,            ///< 'Refresh server' button.
 	WID_NG_NEWGRF,             ///< 'NewGRF Settings' button.

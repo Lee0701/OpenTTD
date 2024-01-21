@@ -35,7 +35,7 @@ static uint16 _waiting_acceptance;
 static uint32 _old_num_flows;
 static uint16 _cargo_source;
 static uint32 _cargo_source_xy;
-static uint8  _cargo_days;
+static uint8  _cargo_periods;
 static Money  _cargo_feeder_share;
 
 CargoPacketList _packets;
@@ -223,7 +223,7 @@ public:
 		SLEG_CONDVAR("cargo_source", _cargo_source,    SLE_FILE_U8 | SLE_VAR_U16,   SL_MIN_VERSION, SLV_7),
 		SLEG_CONDVAR("cargo_source", _cargo_source,    SLE_UINT16,                  SLV_7, SLV_68),
 		SLEG_CONDVAR("cargo_source_xy", _cargo_source_xy, SLE_UINT32,               SLV_44, SLV_68),
-		SLEG_CONDVAR("cargo_days", _cargo_days,        SLE_UINT8,                   SL_MIN_VERSION, SLV_68),
+		SLEG_CONDVAR("cargo_days", _cargo_periods,     SLE_UINT8,                   SL_MIN_VERSION, SLV_68),
 		     SLE_VAR(GoodsEntry, last_speed,           SLE_UINT8),
 		     SLE_VAR(GoodsEntry, last_age,             SLE_UINT8),
 		SLEG_CONDVAR("cargo_feeder_share", _cargo_feeder_share,  SLE_FILE_U32 | SLE_VAR_I64, SLV_14, SLV_65),
@@ -274,26 +274,26 @@ public:
 			/* Store the old persistent storage. The GRFID will be added later. */
 			assert(PersistentStorage::CanAllocateItem());
 			st->airport.psa = new PersistentStorage(0, 0, 0);
-			memcpy(st->airport.psa->storage, _old_st_persistent_storage.storage, sizeof(_old_st_persistent_storage.storage));
+			std::copy(std::begin(_old_st_persistent_storage.storage), std::end(_old_st_persistent_storage.storage), std::begin(st->airport.psa->storage));
 		}
 
 		size_t num_cargo = this->GetNumCargo();
 		for (size_t i = 0; i < num_cargo; i++) {
-			GoodsEntry *ge = &st->goods[i];
-			if (ge->data == nullptr) {
+			GoodsEntry &ge = st->goods[i];
+			if (ge.data == nullptr) {
 				if (spare_ged != nullptr) {
-					ge->data = std::move(spare_ged);
+					ge.data = std::move(spare_ged);
 				} else {
-					ge->data.reset(new GoodsEntryData());
+					ge.data.reset(new GoodsEntryData());
 				}
 			}
-			SlObject(ge, this->GetLoadDescription());
-			if (!IsSavegameVersionBefore(SLV_181)) ge->data->cargo.LoadSetReservedCount(_cargo_reserved_count);
+			SlObject(&ge, this->GetLoadDescription());
+			if (!IsSavegameVersionBefore(SLV_181)) ge.data->cargo.LoadSetReservedCount(_cargo_reserved_count);
 			if (IsSavegameVersionBefore(SLV_183)) {
-				SwapPackets(ge);
+				SwapPackets(&ge);
 			}
 			if (IsSavegameVersionBefore(SLV_68)) {
-				SB(ge->status, GoodsEntry::GES_ACCEPTANCE, 1, HasBit(_waiting_acceptance, 15));
+				SB(ge.status, GoodsEntry::GES_ACCEPTANCE, 1, HasBit(_waiting_acceptance, 15));
 				if (GB(_waiting_acceptance, 0, 12) != 0) {
 					/* In old versions, enroute_from used 0xFF as INVALID_STATION */
 					StationID source = (IsSavegameVersionBefore(SLV_7) && _cargo_source == 0xFF) ? INVALID_STATION : _cargo_source;
@@ -305,13 +305,13 @@ public:
 					assert(CargoPacket::CanAllocateItem());
 
 					/* Don't construct the packet with station here, because that'll fail with old savegames */
-					CargoPacket *cp = new CargoPacket(GB(_waiting_acceptance, 0, 12), _cargo_days, source, _cargo_source_xy, _cargo_source_xy, _cargo_feeder_share);
-					ge->data->cargo.Append(cp, INVALID_STATION);
-					SB(ge->status, GoodsEntry::GES_RATING, 1, 1);
+					CargoPacket *cp = new CargoPacket(GB(_waiting_acceptance, 0, 12), _cargo_periods, source, _cargo_source_xy, _cargo_feeder_share);
+					ge.data->cargo.Append(cp, INVALID_STATION);
+					SB(ge.status, GoodsEntry::GES_RATING, 1, 1);
 				}
 			}
-			if (ge->data->MayBeRemoved()) {
-				spare_ged = std::move(ge->data);
+			if (ge.data->MayBeRemoved()) {
+				spare_ged = std::move(ge.data);
 			}
 		}
 	}
@@ -320,15 +320,16 @@ public:
 	{
 		Station *st = Station::From(bst);
 
-		uint num_cargo = IsSavegameVersionBefore(SLV_55) ? 12 : IsSavegameVersionBefore(SLV_EXTEND_CARGOTYPES) ? 32 : NUM_CARGO;
-		for (CargoID i = 0; i < num_cargo; i++) {
-			GoodsEntry *ge = &st->goods[i];
+		size_t num_cargo = IsSavegameVersionBefore(SLV_55) ? 12 : IsSavegameVersionBefore(SLV_EXTEND_CARGOTYPES) ? 32 : NUM_CARGO;
+		auto end = std::next(std::begin(st->goods), std::min(num_cargo, std::size(st->goods)));
+		for (auto it = std::begin(st->goods); it != end; ++it) {
+			GoodsEntry &ge = *it;
 			if (IsSavegameVersionBefore(SLV_183)) {
-				SwapPackets(ge); // We have to swap back again to be in the format pre-183 expects.
-				SlObject(ge, this->GetDescription());
-				SwapPackets(ge);
+				SwapPackets(&ge); // We have to swap back again to be in the format pre-183 expects.
+				SlObject(&ge, this->GetDescription());
+				SwapPackets(&ge);
 			} else {
-				SlObject(ge, this->GetDescription());
+				SlObject(&ge, this->GetDescription());
 			}
 		}
 	}
@@ -444,13 +445,13 @@ public:
 	};
 	inline const static SaveLoadCompatTable compat_description = _station_normal_sl_compat;
 
-	void Save(BaseStation *bst) const
+	void Save(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) != 0) return;
 		SlObject(bst, this->GetDescription());
 	}
 
-	void Load(BaseStation *bst) const
+	void Load(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) != 0) return;
 		SlObject(bst, this->GetLoadDescription());
@@ -460,7 +461,7 @@ public:
 		}
 	}
 
-	void FixPointers(BaseStation *bst) const
+	void FixPointers(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) != 0) return;
 		SlObject(bst, this->GetDescription());
@@ -479,19 +480,19 @@ public:
 	};
 	inline const static SaveLoadCompatTable compat_description = _station_waypoint_sl_compat;
 
-	void Save(BaseStation *bst) const
+	void Save(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) == 0) return;
 		SlObject(bst, this->GetDescription());
 	}
 
-	void Load(BaseStation *bst) const
+	void Load(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) == 0) return;
 		SlObject(bst, this->GetLoadDescription());
 	}
 
-	void FixPointers(BaseStation *bst) const
+	void FixPointers(BaseStation *bst) const override
 	{
 		if ((bst->facilities & FACIL_WAYPOINT) == 0) return;
 		SlObject(bst, this->GetDescription());

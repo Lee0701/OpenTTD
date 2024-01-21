@@ -912,7 +912,7 @@ void SmallMapWindow::DrawTowns(const DrawPixelInfo *dpi) const
 		/* Check if the town sign is within bounds */
 		if (x + t->cache.sign.width_small > dpi->left &&
 				x < dpi->left + dpi->width &&
-				y + FONT_HEIGHT_SMALL > dpi->top &&
+				y + GetCharacterHeight(FS_SMALL) > dpi->top &&
 				y < dpi->top + dpi->height) {
 			/* And draw it. */
 			SetDParam(0, t->index);
@@ -1065,7 +1065,7 @@ void SmallMapWindow::SetupWidgetData()
 SmallMapWindow::SmallMapWindow(WindowDesc *desc, int window_number) : Window(desc), refresh(GUITimer())
 {
 	_smallmap_industry_highlight = INVALID_INDUSTRYTYPE;
-	this->overlay = new LinkGraphOverlay(this, WID_SM_MAP, 0, this->GetOverlayCompanyMask(), 1);
+	this->overlay = std::make_unique<LinkGraphOverlay>(this, WID_SM_MAP, 0, this->GetOverlayCompanyMask(), 1);
 	this->InitNested(window_number);
 	this->LowerWidget(this->map_type + WID_SM_CONTOUR);
 
@@ -1083,12 +1083,7 @@ SmallMapWindow::SmallMapWindow(WindowDesc *desc, int window_number) : Window(des
 	this->refresh.SetInterval(this->GetRefreshPeriod());
 }
 
-SmallMapWindow::~SmallMapWindow()
-{
-	delete this->overlay;
-}
-
-/* virtual */ void SmallMapWindow::Close()
+/* virtual */ void SmallMapWindow::Close([[maybe_unused]] int data)
 {
 	this->BreakIndustryChainLink();
 	this->Window::Close();
@@ -1175,10 +1170,10 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 	}
 
 	/* Width of the legend blob. */
-	this->legend_width = (FONT_HEIGHT_SMALL - ScaleGUITrad(1)) * 8 / 5;
+	this->legend_width = (GetCharacterHeight(FS_SMALL) - ScaleGUITrad(1)) * 9 / 6;
 
 	/* The width of a column is the minimum width of all texts + the size of the blob + some spacing */
-	this->column_width = min_width + this->legend_width + WidgetDimensions::scaled.framerect.Horizontal();
+	this->column_width = min_width + WidgetDimensions::scaled.hsep_normal + this->legend_width + WidgetDimensions::scaled.framerect.Horizontal();
 }
 
 /* virtual */ void SmallMapWindow::OnPaint()
@@ -1203,7 +1198,7 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 		case WID_SM_MAP: {
 			Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
 			DrawPixelInfo new_dpi;
-			if (!FillDrawPixelInfo(&new_dpi, ir.left, ir.top, ir.Width(), ir.Height())) return;
+			if (!FillDrawPixelInfo(&new_dpi, ir)) return;
 			this->DrawSmallMap(&new_dpi);
 			break;
 		}
@@ -1213,8 +1208,8 @@ void SmallMapWindow::RebuildColourIndexIfNecessary()
 			uint number_of_rows = this->GetNumberRowsLegend(columns);
 			bool rtl = _current_text_dir == TD_RTL;
 			uint i = 0; // Row counter for industry legend.
-			uint row_height = FONT_HEIGHT_SMALL;
-			int padding = WidgetDimensions::scaled.hsep_normal;
+			uint row_height = GetCharacterHeight(FS_SMALL);
+			int padding = ScaleGUITrad(1);
 
 			Rect origin = r.WithWidth(this->column_width, rtl).Shrink(WidgetDimensions::scaled.framerect).WithHeight(row_height);
 			Rect text = origin.Indent(this->legend_width + WidgetDimensions::scaled.hsep_normal, rtl);
@@ -1384,7 +1379,7 @@ void SmallMapWindow::SetOverlayCargoMask()
 int SmallMapWindow::GetPositionOnLegend(Point pt)
 {
 	const NWidgetBase *wi = this->GetWidget<NWidgetBase>(WID_SM_LEGEND);
-	uint line = (pt.y - wi->pos_y - WidgetDimensions::scaled.framerect.top) / FONT_HEIGHT_SMALL;
+	uint line = (pt.y - wi->pos_y - WidgetDimensions::scaled.framerect.top) / GetCharacterHeight(FS_SMALL);
 	uint columns = this->GetNumberColumnsLegend(wi->current_x);
 	uint number_of_rows = this->GetNumberRowsLegend(columns);
 	if (line >= number_of_rows) return -1;
@@ -1397,7 +1392,7 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
 	return (column * number_of_rows) + line;
 }
 
-/* virtual */ void SmallMapWindow::OnMouseOver(Point pt, int widget)
+/* virtual */ void SmallMapWindow::OnMouseOver([[maybe_unused]] Point pt, int widget)
 {
 	IndustryType new_highlight = INVALID_INDUSTRYTYPE;
 	if (widget == WID_SM_LEGEND && this->map_type == SMT_INDUSTRY) {
@@ -1414,7 +1409,7 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
 	}
 }
 
-/* virtual */ void SmallMapWindow::OnClick(Point pt, int widget, int click_count)
+/* virtual */ void SmallMapWindow::OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count)
 {
 	switch (widget) {
 		case WID_SM_MAP: { // Map window
@@ -1560,7 +1555,7 @@ int SmallMapWindow::GetPositionOnLegend(Point pt)
 	this->SetDirty();
 }
 
-/* virtual */ bool SmallMapWindow::OnRightClick(Point pt, int widget)
+/* virtual */ bool SmallMapWindow::OnRightClick([[maybe_unused]] Point pt, int widget)
 {
 	if (widget != WID_SM_MAP || _scrolling_viewport) return false;
 
@@ -1750,13 +1745,13 @@ public:
 		this->smallmap_window = nullptr;
 	}
 
-	void SetupSmallestSize(Window *w, bool init_array) override
+	void SetupSmallestSize(Window *w) override
 	{
 		NWidgetBase *display = this->head;
 		NWidgetBase *bar = display->next;
 
-		display->SetupSmallestSize(w, init_array);
-		bar->SetupSmallestSize(w, init_array);
+		display->SetupSmallestSize(w);
+		bar->SetupSmallestSize(w);
 
 		this->smallmap_window = dynamic_cast<SmallMapWindow *>(w);
 		assert(this->smallmap_window != nullptr);
@@ -1768,7 +1763,7 @@ public:
 		this->resize_y = std::min(display->resize_y, bar->resize_y);
 	}
 
-	void AssignSizePosition(SizingType sizing, uint x, uint y, uint given_width, uint given_height, bool rtl) override
+	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override
 	{
 		this->pos_x = x;
 		this->pos_y = y;
@@ -1790,30 +1785,6 @@ public:
 		uint display_height = given_height - bar_height;
 		display->AssignSizePosition(ST_RESIZE, x, y, given_width, display_height, rtl);
 		bar->AssignSizePosition(ST_RESIZE, x, y + display_height, given_width, bar_height, rtl);
-	}
-
-	NWidgetCore *GetWidgetFromPos(int x, int y) override
-	{
-		if (!IsInsideBS(x, this->pos_x, this->current_x) || !IsInsideBS(y, this->pos_y, this->current_y)) return nullptr;
-		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) {
-			NWidgetCore *widget = child_wid->GetWidgetFromPos(x, y);
-			if (widget != nullptr) return widget;
-		}
-		return nullptr;
-	}
-
-	void Draw(const Window *w) override
-	{
-		for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) child_wid->Draw(w);
-	}
-
-	void FillDirtyWidgets(std::vector<NWidgetBase *> &dirty_widgets) override
-	{
-		if (this->base_flags & WBF_DIRTY) {
-			dirty_widgets.push_back(this);
-		} else {
-			for (NWidgetBase *child_wid = this->head; child_wid != nullptr; child_wid = child_wid->next) child_wid->FillDirtyWidgets(dirty_widgets);
-		}
 	}
 };
 
@@ -1870,8 +1841,8 @@ static NWidgetBase *SmallMapDisplay(int *biggest_index)
 {
 	NWidgetContainer *map_display = new NWidgetSmallmapDisplay;
 
-	MakeNWidgets(_nested_smallmap_display, lengthof(_nested_smallmap_display), biggest_index, map_display);
-	MakeNWidgets(_nested_smallmap_bar, lengthof(_nested_smallmap_bar), biggest_index, map_display);
+	MakeNWidgets(std::begin(_nested_smallmap_display), std::end(_nested_smallmap_display), biggest_index, map_display);
+	MakeNWidgets(std::begin(_nested_smallmap_bar), std::end(_nested_smallmap_bar), biggest_index, map_display);
 	return map_display;
 }
 
@@ -1903,11 +1874,11 @@ static const NWidgetPart _nested_smallmap_widgets[] = {
 	EndContainer(),
 };
 
-static WindowDesc _smallmap_desc(
+static WindowDesc _smallmap_desc(__FILE__, __LINE__,
 	WDP_AUTO, "smallmap", 484, 314,
 	WC_SMALLMAP, WC_NONE,
 	0,
-	_nested_smallmap_widgets, lengthof(_nested_smallmap_widgets)
+	std::begin(_nested_smallmap_widgets), std::end(_nested_smallmap_widgets)
 );
 
 /**

@@ -134,12 +134,6 @@ char *CrashLog::LogCompiler(char *buffer, const char *last) const
 	return buffer;
 }
 
-/* virtual */ char *CrashLog::LogModules(char *buffer, const char *last) const
-{
-	/* Stub implementation; not all OSes support this. */
-	return buffer;
-}
-
 #ifdef USE_SCOPE_INFO
 /* virtual */ char *CrashLog::LogScopeInfo(char *buffer, const char *last) const
 {
@@ -490,8 +484,7 @@ char *CrashLog::LogRecentNews(char *buffer, const char *last) const
 
 	int i = 0;
 	for (NewsItem *news = _latest_news; i < 32 && news != nullptr; news = news->prev, i++) {
-		YearMonthDay ymd;
-		ConvertDateToYMD(news->date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(news->date);
 		buffer += seprintf(buffer, last, "(%i-%02i-%02i) StringID: %u, Type: %u, Ref1: %u, %u, Ref2: %u, %u\n",
 		                   ymd.year, ymd.month + 1, ymd.day, news->string_id, news->type,
 		                   news->reftype1, news->ref1, news->reftype2, news->ref2);
@@ -616,9 +609,6 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 	buffer = this->TryCrashLogFaultSection(buffer, last, "libraries", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogLibraries(buffer, last);
 	});
-	buffer = this->TryCrashLogFaultSection(buffer, last, "modules", [](CrashLog *self, char *buffer, const char *last) -> char * {
-		return self->LogModules(buffer, last);
-	});
 	buffer = this->TryCrashLogFaultSection(buffer, last, "gamelog", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogGamelog(buffer, last);
 	});
@@ -674,8 +664,7 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 		extern uint8  _last_sync_tick_skip_counter;
 		extern uint32 _last_sync_frame_counter;
 
-		YearMonthDay ymd;
-		ConvertDateToYMD(_last_sync_date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
 		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
 				ymd.year, ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter, _last_sync_frame_counter);
 	}
@@ -740,8 +729,7 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 		extern uint8  _last_sync_tick_skip_counter;
 		extern uint32 _last_sync_frame_counter;
 
-		YearMonthDay ymd;
-		ConvertDateToYMD(_last_sync_date, &ymd);
+		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
 		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
 				ymd.year, ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter, _last_sync_frame_counter);
 	}
@@ -954,12 +942,11 @@ void CrashLog::SendSurvey() const
  * Makes the crash log, writes it to a file and then subsequently tries
  * to make a crash dump and crash savegame. It uses DEBUG to write
  * information like paths to the console.
- * @return true when everything is made successfully.
  */
-bool CrashLog::MakeCrashLog(char *buffer, const char *last)
+void CrashLog::MakeCrashLog(char *buffer, const char *last)
 {
 	/* Don't keep looping logging crashes. */
-	if (CrashLog::HaveAlreadyCrashed()) return false;
+	if (CrashLog::HaveAlreadyCrashed()) return;
 	CrashLog::RegisterCrashed();
 
 	char *name_buffer_date = this->name_buffer + seprintf(this->name_buffer, lastof(this->name_buffer), "crash-");
@@ -986,18 +973,15 @@ bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 		printf("Failed to acquire gamelock before filling crash log\n\n");
 	}
 
-	char filename[MAX_PATH];
-	bool ret = true;
-
 	printf("Crash encountered, generating crash log...\n");
 
 	printf("Writing crash log to disk...\n");
-	bool bret = this->WriteCrashLog("", filename, lastof(filename), this->name_buffer, &(this->crash_file));
+	bool bret = this->WriteCrashLog("", this->crashlog_filename, lastof(this->crashlog_filename), this->name_buffer, &(this->crash_file));
 	if (bret) {
-		printf("Crash log written to %s. Please add this file to any bug reports.\n\n", filename);
+		printf("Crash log written to %s. Please add this file to any bug reports.\n\n", this->crashlog_filename);
 	} else {
 		printf("Writing crash log failed. Please attach the output above to any bug reports.\n\n");
-		ret = false;
+		seprintf(this->crashlog_filename, lastof(this->crashlog_filename), "(failed to write crash log)");
 	}
 	this->crash_buffer_write = buffer;
 
@@ -1007,12 +991,12 @@ bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 
 
 	/* Don't mention writing crash dumps because not all platforms support it. */
-	int dret = this->WriteCrashDump(filename, lastof(filename));
+	int dret = this->WriteCrashDump(this->crashdump_filename, lastof(this->crashdump_filename));
 	if (dret < 0) {
 		printf("Writing crash dump failed.\n\n");
-		ret = false;
 	} else if (dret > 0) {
-		printf("Crash dump written to %s. Please add this file to any bug reports.\n\n", filename);
+		printf("Crash dump written to %s. Please add this file to any bug reports.\n\n", this->crashdump_filename);
+		seprintf(this->crashdump_filename, lastof(this->crashdump_filename), "(failed to write crash dump)");
 	}
 
 	SetScreenshotAuxiliaryText("Crash Log", buffer);
@@ -1023,16 +1007,13 @@ bool CrashLog::MakeCrashLog(char *buffer, const char *last)
 		printf("Failed to acquire gamelock before writing crash savegame and screenshot, proceeding without lock as current owner is probably stuck\n\n");
 	}
 
-	bret = CrashLog::MakeCrashSavegameAndScreenshot();
-	if (!bret) ret = false;
-
-	return ret;
+	CrashLog::MakeCrashSavegameAndScreenshot();
 }
 
-bool CrashLog::MakeCrashLogWithStackBuffer()
+void CrashLog::MakeCrashLogWithStackBuffer()
 {
 	char buffer[65536 * 4];
-	return this->MakeCrashLog(buffer, lastof(buffer));
+	this->MakeCrashLog(buffer, lastof(buffer));
 }
 
 /**
@@ -1041,7 +1022,7 @@ bool CrashLog::MakeCrashLogWithStackBuffer()
  * information like paths to the console.
  * @return true when everything is made successfully.
  */
-bool CrashLog::MakeDesyncCrashLog(const std::string *log_in, std::string *log_out, const DesyncExtraInfo &info) const
+void CrashLog::MakeDesyncCrashLog(const std::string *log_in, std::string *log_out, const DesyncExtraInfo &info) const
 {
 	char filename[MAX_PATH];
 
@@ -1051,8 +1032,6 @@ bool CrashLog::MakeDesyncCrashLog(const std::string *log_in, std::string *log_ou
 		free(buffer);
 	});
 	const char * const last = buffer + length - 1;
-
-	bool ret = true;
 
 	const char *mode = _network_server ? "server" : "client";
 
@@ -1075,17 +1054,13 @@ bool CrashLog::MakeDesyncCrashLog(const std::string *log_in, std::string *log_ou
 		printf("Desync log written to %s. Please add this file to any bug reports.\n\n", filename);
 	} else {
 		printf("Writing desync log failed.\n\n");
-		ret = false;
 	}
 
 	if (info.defer_savegame_write != nullptr) {
 		info.defer_savegame_write->name_buffer = name_buffer;
 	} else {
-		bret = this->WriteDesyncSavegame(buffer, name_buffer);
-		if (!bret) ret = false;
+		this->WriteDesyncSavegame(buffer, name_buffer);
 	}
-
-	return ret;
 }
 
 /* static */ bool CrashLog::WriteDesyncSavegame(const char *log_data, const char *name_buffer)
@@ -1112,7 +1087,7 @@ bool CrashLog::MakeDesyncCrashLog(const std::string *log_in, std::string *log_ou
  * information like paths to the console.
  * @return true when everything is made successfully.
  */
-bool CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
+void CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
 {
 	char filename[MAX_PATH];
 
@@ -1122,8 +1097,6 @@ bool CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
 		free(buffer);
 	});
 	const char * const last = buffer + length - 1;
-
-	bool ret = true;
 
 	char name_buffer[64];
 	char *name_buffer_date = name_buffer + seprintf(name_buffer, lastof(name_buffer), "inconsistency-");
@@ -1137,7 +1110,6 @@ bool CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
 		printf("Inconsistency log written to %s. Please add this file to any bug reports.\n\n", filename);
 	} else {
 		printf("Writing inconsistency log failed.\n\n");
-		ret = false;
 	}
 
 	_savegame_DBGL_data = buffer;
@@ -1146,13 +1118,10 @@ bool CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
 	if (bret) {
 		printf("info savegame written to %s. Please add this file and the last (auto)save to any bug reports.\n\n", filename);
 	} else {
-		ret = false;
 		printf("Writing inconsistency savegame failed. Please attach the last (auto)save to any bug reports.\n\n");
 	}
 	_savegame_DBGL_data = nullptr;
 	_save_DBGC_data = false;
-
-	return ret;
 }
 
 /**
@@ -1160,12 +1129,11 @@ bool CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
  * information like paths to the console.
  * @return true when everything is made successfully.
  */
-bool CrashLog::MakeVersionInfoLog() const
+void CrashLog::MakeVersionInfoLog() const
 {
 	char buffer[65536];
 	this->FillVersionInfoLog(buffer, lastof(buffer));
 	printf("%s\n", buffer);
-	return true;
 }
 
 /**
@@ -1173,32 +1141,27 @@ bool CrashLog::MakeVersionInfoLog() const
  * information like paths to the console.
  * @return true when everything is made successfully.
  */
-bool CrashLog::MakeCrashSavegameAndScreenshot() const
+void CrashLog::MakeCrashSavegameAndScreenshot()
 {
-	char filename[MAX_PATH];
-	bool ret = true;
-
 	printf("Writing crash savegame...\n");
-	bool bret = this->WriteSavegame(filename, lastof(filename), this->name_buffer);
+	bool bret = this->WriteSavegame(this->savegame_filename, lastof(this->savegame_filename), this->name_buffer);
 	if (bret) {
-		printf("Crash savegame written to %s. Please add this file and the last (auto)save to any bug reports.\n\n", filename);
+		printf("Crash savegame written to %s. Please add this file and the last (auto)save to any bug reports.\n\n", this->savegame_filename);
 	} else {
-		ret = false;
 		printf("Writing crash savegame failed. Please attach the last (auto)save to any bug reports.\n\n");
+		seprintf(this->savegame_filename, lastof(this->savegame_filename), "(failed to write crash savegame)");
 	}
 
 	printf("Writing crash screenshot...\n");
-	bret = this->WriteScreenshot(filename, lastof(filename), this->name_buffer);
+	bret = this->WriteScreenshot(this->screenshot_filename, lastof(this->screenshot_filename), this->name_buffer);
 	if (bret) {
-		printf("Crash screenshot written to %s. Please add this file to any bug reports.\n\n", filename);
+		printf("Crash screenshot written to %s. Please add this file to any bug reports.\n\n", this->screenshot_filename);
 	} else {
-		ret = false;
 		printf("Writing crash screenshot failed.\n\n");
+		seprintf(this->screenshot_filename, lastof(this->screenshot_filename), "(failed to write crash screenshot)");
 	}
 
 	this->SendSurvey();
-
-	return ret;
 }
 
 /**

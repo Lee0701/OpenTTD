@@ -142,8 +142,6 @@ static inline uint32 GetVariable(const ResolverObject &object, ScopeResolver *sc
 
 /**
  * Store a value into the persistent storage area (PSA). Default implementation does nothing (for newgrf classes without storage).
- * @param reg Position to store into.
- * @param value Value to store.
  */
 /* virtual */ void ScopeResolver::StorePSA(uint reg, int32 value) {}
 
@@ -162,8 +160,6 @@ static inline uint32 GetVariable(const ResolverObject &object, ScopeResolver *sc
 
 /**
  * Get a resolver for the \a scope.
- * @param scope Scope to return.
- * @param relative Additional parameter for #VSG_SCOPE_RELATIVE.
  * @return The resolver for the requested scope.
  */
 /* virtual */ ScopeResolver *ResolverObject::GetScope(VarSpriteGroupScope scope, VarSpriteGroupScopeOffset relative)
@@ -257,6 +253,11 @@ static bool RangeHighComparator(const DeterministicSpriteGroupRange& range, uint
 
 const SpriteGroup *DeterministicSpriteGroup::Resolve(ResolverObject &object) const
 {
+	if ((this->sg_flags & SGF_SKIP_CB) != 0 && object.callback > 1) {
+		static CallbackResultSpriteGroup cbfail(CALLBACK_FAILED);
+		return &cbfail;
+	}
+
 	uint32 last_value = 0;
 	uint32 value = 0;
 
@@ -479,7 +480,7 @@ static char *GetAdjustOperationName(char *str, const char *last, DeterministicSp
 	return str + seprintf(str, last, "\?\?\?(0x%X)", operation);
 }
 
-static char *DumpSpriteGroupAdjust(char *p, const char *last, const DeterministicSpriteGroupAdjust &adjust, const char *padding, uint32 &highlight_tag, uint &conditional_indent)
+char *SpriteGroupDumper::DumpSpriteGroupAdjust(char *p, const char *last, const DeterministicSpriteGroupAdjust &adjust, const char *padding, uint32 &highlight_tag, uint &conditional_indent)
 {
 	if (adjust.variable == 0x7D) {
 		/* Temp storage load */
@@ -502,10 +503,10 @@ static char *DumpSpriteGroupAdjust(char *p, const char *last, const Deterministi
 		if (adjust.adjust_flags & DSGAF_SKIP_ON_LSB_SET) {
 			p += seprintf(p, last, ", skip on LSB set");
 		}
-		if (adjust.adjust_flags & DSGAF_LAST_VAR_READ && HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL)) {
+		if (adjust.adjust_flags & DSGAF_LAST_VAR_READ && this->more_details) {
 			p += seprintf(p, last, ", last var read");
 		}
-		if (adjust.adjust_flags & DSGAF_JUMP_INS_HINT && HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL)) {
+		if (adjust.adjust_flags & DSGAF_JUMP_INS_HINT && this->more_details) {
 			p += seprintf(p, last, ", jump ins hint");
 		}
 		if (adjust.adjust_flags & DSGAF_END_BLOCK) {
@@ -588,8 +589,6 @@ static char *DumpSpriteGroupAdjust(char *p, const char *last, const Deterministi
 	return p;
 }
 
-bool SpriteGroupDumper::use_shadows = false;
-
 void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *padding, uint flags)
 {
 	uint32 highlight_tag = 0;
@@ -619,7 +618,8 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 
 	char extra_info[64] = "";
 	if (sg->sg_flags & SGF_ACTION6) strecat(extra_info, " (action 6 modified)", lastof(extra_info));
-	if (HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL)) {
+	if (sg->sg_flags & SGF_SKIP_CB) strecat(extra_info, " (skip CB)", lastof(extra_info));
+	if (this->more_details) {
 		if (sg->sg_flags & SGF_INLINING) strecat(extra_info, " (inlining)", lastof(extra_info));
 	}
 
@@ -669,7 +669,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 			const std::vector<DeterministicSpriteGroupRange> *ranges = &(dsg->ranges);
 			bool calculated_result = dsg->calculated_result;
 
-			if (SpriteGroupDumper::use_shadows) {
+			if (this->use_shadows) {
 				auto iter = _deterministic_sg_shadows.find(dsg);
 				if (iter != _deterministic_sg_shadows.end()) {
 					default_group = iter->second.default_group;
@@ -719,7 +719,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 			char *p = this->buffer;
 			p += seprintf(p, lastof(this->buffer), "%sDeterministic (%s, %s)%s [%u]",
 					padding, get_scope_name(dsg->var_scope, dsg->var_scope_count), _sg_size_names[dsg->size], extra_info, dsg->nfo_line);
-			if (HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL)) {
+			if (this->more_details) {
 				if (dsg->dsg_flags & DSGF_NO_DSE) p += seprintf(p, lastof(this->buffer), ", NO_DSE");
 				if (dsg->dsg_flags & DSGF_VAR_TRACKING_PENDING) p += seprintf(p, lastof(this->buffer), ", VAR_PENDING");
 				if (dsg->dsg_flags & DSGF_REQUIRES_VAR1C) p += seprintf(p, lastof(this->buffer), ", REQ_1C");
@@ -735,7 +735,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 			sub_padding += "  ";
 			uint conditional_indent = 0;
 			for (const auto &adjust : (*adjusts)) {
-				DumpSpriteGroupAdjust(this->buffer, lastof(this->buffer), adjust, sub_padding.c_str(), highlight_tag, conditional_indent);
+				this->DumpSpriteGroupAdjust(this->buffer, lastof(this->buffer), adjust, sub_padding.c_str(), highlight_tag, conditional_indent);
 				print();
 				if (adjust.variable == 0x7E && adjust.subroutine != nullptr) {
 					std::string subroutine_padding(sub_padding);
@@ -761,7 +761,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 							p += seprintf(p, lastof(this->buffer), " (%s)", cb_name);
 						}
 					}
-					if (HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL) && range.group == dsg->error_group) {
+					if (this->more_details && range.group == dsg->error_group) {
 						p += seprintf(p, lastof(this->buffer), " (error_group)");
 					}
 					print();
@@ -770,7 +770,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 				if (default_group != nullptr) {
 					char *p = this->buffer;
 					p += seprintf(p, lastof(this->buffer), "%sdefault", padding);
-					if (HasBit(_misc_debug_flags, MDF_NEWGRF_SG_DUMP_MORE_DETAIL) && default_group == dsg->error_group) {
+					if (this->more_details && default_group == dsg->error_group) {
 						p += seprintf(p, lastof(this->buffer), " (error_group)");
 					}
 					print();
@@ -784,7 +784,7 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 
 			const std::vector<const SpriteGroup *> *groups = &(rsg->groups);
 
-			if (SpriteGroupDumper::use_shadows) {
+			if (this->use_shadows) {
 				auto iter = _randomized_sg_shadows.find(rsg);
 				if (iter != _randomized_sg_shadows.end()) {
 					groups = &(iter->second.groups);
@@ -927,10 +927,4 @@ void SpriteGroupDumper::DumpSpriteGroup(const SpriteGroup *sg, const char *paddi
 			break;
 		}
 	}
-}
-
-void DumpSpriteGroup(const SpriteGroup *sg, DumpSpriteGroupPrinter print)
-{
-	SpriteGroupDumper dumper(std::move(print));
-	dumper.DumpSpriteGroup(sg, 0);
 }

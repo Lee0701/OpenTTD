@@ -23,11 +23,6 @@
 #include <thread>
 #include <vector>
 #include <functional>
-#if defined(__MINGW32__)
-#include "../3rdparty/mingw-std-threads/mingw.mutex.h"
-#include "../3rdparty/mingw-std-threads/mingw.condition_variable.h"
-#include "../3rdparty/mingw-std-threads/mingw.thread.h"
-#endif
 
 extern std::string _ini_videodriver;
 extern std::vector<Dimension> _resolutions;
@@ -77,7 +72,7 @@ public:
 	 * Change the vsync setting.
 	 * @param vsync The new setting.
 	 */
-	virtual void ToggleVsync(bool vsync) {}
+	virtual void ToggleVsync([[maybe_unused]] bool vsync) {}
 
 	/**
 	 * Callback invoked after the blitter was changed.
@@ -204,7 +199,8 @@ public:
 	/**
 	 * Get the currently active instance of the video driver.
 	 */
-	static VideoDriver *GetInstance() {
+	static VideoDriver *GetInstance()
+	{
 		return static_cast<VideoDriver*>(*DriverFactoryBase::GetActiveDriver(Driver::DT_VIDEO));
 	}
 
@@ -269,7 +265,8 @@ protected:
 	 * Make sure the video buffer is ready for drawing.
 	 * @returns True if the video buffer has to be unlocked.
 	 */
-	virtual bool LockVideoBuffer() {
+	virtual bool LockVideoBuffer()
+	{
 		return false;
 	}
 

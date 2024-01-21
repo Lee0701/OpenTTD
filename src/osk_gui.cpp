@@ -101,7 +101,7 @@ struct OskWindow : public Window {
 		DrawCharCentered(_keyboard[this->shift][widget], r, TC_BLACK);
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
 	{
 		/* clicked a letter */
 		if (widget >= WID_OSK_LETTERS) {
@@ -185,12 +185,14 @@ struct OskWindow : public Window {
 
 	void OnEditboxChanged(int widget) override
 	{
-		this->SetWidgetDirty(WID_OSK_TEXT);
-		this->parent->OnEditboxChanged(this->text_btn);
-		this->parent->SetWidgetDirty(this->text_btn);
+		if (widget == WID_OSK_TEXT) {
+			this->SetWidgetDirty(WID_OSK_TEXT);
+			this->parent->OnEditboxChanged(this->text_btn);
+			this->parent->SetWidgetDirty(this->text_btn);
+		}
 	}
 
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		this->SetWidgetDirty(WID_OSK_TEXT);
@@ -334,11 +336,11 @@ static const NWidgetPart _nested_osk_widgets[] = {
 	EndContainer(),
 };
 
-static WindowDesc _osk_desc(
-	WDP_CENTER, "query_osk", 0, 0,
+static WindowDesc _osk_desc(__FILE__, __LINE__,
+	WDP_CENTER, nullptr, 0, 0,
 	WC_OSK, WC_NONE,
 	0,
-	_nested_osk_widgets, lengthof(_nested_osk_widgets)
+	std::begin(_nested_osk_widgets), std::end(_nested_osk_widgets)
 );
 
 /**

@@ -33,16 +33,7 @@ STR_ORDER_STOP_LOCATION_THROUGH                                 :[postupná nakl
 STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :extrémně pomalá
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :velmi pomalá
 
-STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Nástroj výběru
-
-STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Okno modifikačních kláves
-
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :Každý měsíc
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :Každé 3 měsíce
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :Každých 6 měsíců
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :Každých 12 měsíců
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_LABEL      :Vlastní interval (dny)
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Vlastní interval (minuty skutečného času)
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Každých {COMMA} minut skutečného času
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
@@ -96,11 +87,7 @@ STR_SMALLMAP_SCREENSHOT                                         :{BLACK}Snímek 
 STR_NEWS_VEHICLE_NO_DEPOT_ORDER                                 :{WHITE}{VEHICLE} nemá příkaz do depa
 STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE} nezvládl zastavit v {STRING} kvůli nepřiměřené rychlosti
 
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM            :Každých {COMMA}{NBSP}dnů
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_DAYS_CUSTOM_SINGULAR   :Každý den
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Každých {COMMA} minut skutečného času
-
-STR_GAME_OPTIONS_AUTOSAVE_DAYS_QUERY_CAPT                       :{WHITE}Interval automatického ukládání ve dnech
+STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Vlastní interval (minuty skutečného času)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Interval automatického ukládání v minutách skutečného času
 
 STR_RIVERS_VERY_MANY                                            :{RED}Velice mnoho
@@ -211,9 +198,6 @@ STR_CONFIG_SETTING_SHOW_VEHICLE_GROUP_IN_DETAILS_HELPTEXT       :Zobrazovat skup
 STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS          :Zobrazovat hmotnostní poměry vlaku v podrobnostech: {STRING}
 STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS_HELPTEXT :Zobrazovat poměr váhy vlaku k jeho výkonu a tažné síle v okně Detaily
 
-STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_DEF                      :Zobrazovat omezená optická návěstidla výchozí grafikou: {STRING}
-STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_DEF_HELPTEXT             :Zobrazovat návěstidla s omezením vyhledávání trasy pomocí výchozí grafiky světelných návěstidel s modrou značkou, namísto použití jakékoli jiné obsažené v NewGRF. Tato volba usnadní rozpoznání omezených návěstidel.
-
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF                             :Zobrazovat všechna návěstidla výchozí grafikou: {STRING}
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF_HELPTEXT                    :Zobrazovat všechna návěstidla pomocí výchozí grafiky namísto použití jakékoli jiné obsažené v NewGRF. Tato volba usnadní určení stavu a typu návěstidla, když NewGRF poskytuje nejasné nebo nedostupné vzhledy návěstidel.
 
@@ -225,9 +209,6 @@ STR_CONFIG_SETTING_SHOW_PROGSIG_FEATURES_HELPTEXT               :Zobrazovat prog
 
 STR_CONFIG_SETTING_SHOW_NOENTRYSIG_FEATURES                     :Návěstidlo zakazující jízdu: {STRING}
 STR_CONFIG_SETTING_SHOW_NOENTRYSIG_FEATURES_HELPTEXT            :Zobrazovat neproměnné návěstidlo zakazující jízdu. Pokud je vypnuto, nejsou tato návěstidla zobrazena, ale ostatním hráčům jsou stále dostupná.
-
-STR_CONFIG_SETTING_SHOW_VEH_LIST_CARGO_FILTER                   :Zobrazovat filtr typu nákladu v seznamech vozidel: {STRING}
-STR_CONFIG_SETTING_SHOW_VEH_LIST_CARGO_FILTER_HELPTEXT          :Zobrazovat filtr typu nákladu v seznamech vozidel. Pokud je zapnuto, okna seznamů vozidel obsahují další filtr.
 
 STR_CONFIG_SETTING_SHOW_ADV_LOADING_MODE_FEATURES               :Zpřístupnit pokročilé možnosti nakládky: {STRING}
 STR_CONFIG_SETTING_SHOW_ADV_LOADING_MODE_FEATURES_HELPTEXT      :Zpřístupní pokročilé možnosti příkazů k nakládce (postupná nakládka/vykládka nákladních vlaků, směr jízdy silničního vozidla). Pokud je vypnuto, některé možnosti nejsou v rozhraní zobrazeny, ale stále jsou dostupné ostatním hráčům.
@@ -273,9 +254,6 @@ STR_CONFIG_SETTING_DISABLE_WATER_ANIMATION_32X                  :při zoomu 32x 
 
 STR_CONFIG_SETTING_SHOW_ORDER_OCCUPANCY_BY_DEFAULT              :Zobrazovat obsazenost dle příkazů: {STRING}
 STR_CONFIG_SETTING_SHOW_ORDER_OCCUPANCY_BY_DEFAULT_HELPTEXT     :Po otevření seznamu příkazů vozidla bude zobrazovat, jak je toto vozidlo vytížené během plnění jednotlivých příkazů
-
-STR_CONFIG_SETTING_SHOW_ORDER_MANAGEMENT_BY_DEFAULT             :Zobrazit tlačítko správy příkazu: {STRING}
-STR_CONFIG_SETTING_SHOW_ORDER_MANAGEMENT_BY_DEFAULT_HELPTEXT    :Zobrazí tlačítko "Spravovat příkaz" v okně s příkazy pro vozidlo
 
 STR_CONFIG_SETTING_SHOW_GROUP_HIERARCHY_NAME                    :Ukazovat v názvu skupin jejich hierarchii: {STRING}
 STR_CONFIG_SETTING_SHOW_GROUP_HIERARCHY_NAME_HELPTEXT           :Je-li zapnuto, názvy skupin budou obsahovat úplnou posloupnost názvů svých nadřazených skupin
@@ -393,11 +371,8 @@ STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_HELPTEXT        :Upravuje způso
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_VALUE           :přerušovaná čára široká {COMMA} pixel{P "" y ů}
 STR_CONFIG_SETTING_VIEWPORT_MAP_DRAW_ROUTE_DASH_DISABLED        :plné čáry
 
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_DAYS                         :Vlastní interval automatického ukládání ve dnech: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_DAYS_HELPTEXT                :Vymez frekvenci automatického ukládání jako libovolný počet herních dnů
-
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_MINUTES                      :Vlastní interval automatického ukládání v minutách: {STRING}
-STR_CONFIG_SETTING_AUTOSAVE_CUSTOM_MINUTES_HELPTEXT             :Vymez frekvenci automatického ukládání jako libovolný počet minut skutečného času
+STR_CONFIG_SETTING_AUTOSAVE                                     :Automaticky ukládat: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Zvol frekvenci automatického ukládání
 
 STR_CONFIG_SETTING_AUTOSAVE_ON_NETWORK_DISCONNECT               :Automaticky uložit hru při ztrátě spojení: {STRING}
 STR_CONFIG_SETTING_AUTOSAVE_ON_NETWORK_DISCONNECT_HELPTEXT      :Pokud je zapnuto, hra se při ztrátě síťového spojení k serveru automaticky uloží
@@ -705,18 +680,21 @@ STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_ZONES_ANYWHERE         :všude
 STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED                   :{WHITE}Nelze změnit nastavení...
 STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED_NEWGRF            :{WHITE}...nastavení je sledováno souborem NewGRF
 
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Zobrazit jízdní řády v cyklech místo ve dnech: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Ukazuje cestovní časy v jízdních řádech
+
 STR_CHEAT_EDIT_MONEY_QUERY_CAPT                                 :{WHITE}Přidat nebo odebrat peníze
 STR_CHEAT_INFLATION_COST                                        :{LTBLUE}Změnit faktor inflace nákladů: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_COST_QUERY_CAPT                             :{WHITE}Změnit faktor inflace nákladů
 STR_CHEAT_INFLATION_INCOME                                      :{LTBLUE}Změnit faktor inflace příjmů: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_INCOME_QUERY_CAPT                           :{WHITE}Změnit faktor inflace příjmů
-STR_CHEAT_STATION_RATING                                        :{LTBLUE}Hodnocení stanic je vždy 100%: {ORANGE}{STRING}
 STR_CHEAT_TOWN_RATING                                           :{LTBLUE}Hodnocení společnosti samosprávou je vždy Úžasné: {ORANGE}{STRING}
 
 STR_NETWORK_MESSAGE_GIVE_MONEY_RECEIVE                          :*** {STRING} poslal(a) tvé společnosti {2:CURRENCY_LONG}
 STR_NETWORK_MESSAGE_GAVE_MONEY_AWAY                             :*** Poslal(a) jsi {1:STRING} {2:CURRENCY_LONG}
 STR_NETWORK_MESSAGE_MONEY_GIVE_SRC_DESCRIPTION                  :{STRING} ({COMPANY})
 
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Přepnout zobrazení ukazatelů naložení. Nastavení se zamkne Ctrl+kliknutím
 STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}Změna průhlednosti vozidel v tunelech. Nastavení se zamkne Ctrl+kliknutím
 
 STR_LINKGRAPH_STATS_TOOLTIP_TIME_EXTENSION_GENERAL              :{}Průměrný cestovní čas: {STRING}
@@ -1213,10 +1191,10 @@ STR_NEWGRF_INSPECT_SPRITE_DUMP                                  :{BLACK}S
 STR_NEWGRF_INSPECT_SPRITE_DUMP_TOOLTIP                          :{BLACK}Zobrazí aktuální posloupnost spritů
 STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT                            :{BLACK}U
 STR_NEWGRF_INSPECT_SPRITE_DUMP_UNOPT_TOOLTIP                    :{BLACK}Zobrazí skupiny spritů bez užití jakékoli optimalizace.{}{}Vyžaduje znovunačítání NewGRF, nebylo-li dříve zapnuto (misc_debug 10).
-STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO                             :{BLACK}P
-STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO_TOOLTIP                     :{BLACK}Přejít na číslo spritu...
-STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP                    :{BLACK}Kliknutí zvýrazní skupinu spritů{}Shift+kliknutí sbalí skupinu spritů{}Ctrl+kliknutí zvýrazní dočasný registr úložiště
-STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :Typ silnice/tramvajové tratě
+STR_NEWGRF_INSPECT_SPRITE_DUMP_GOTO                             :Přejít na číslo spritu...
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT          :{BLACK}Kliknutí zvýrazní skupinu spritů
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_COLLAPSE           :{BLACK}Shift+kliknutí sbalí skupinu spritů
+STR_NEWGRF_INSPECT_SPRITE_DUMP_PANEL_TOOLTIP_HIGHLIGHT_TEMP     :{BLACK}Ctrl+kliknutí zvýrazní dočasný registr úložiště
 STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_SIGNALS                    :Návěstidla
 STR_NEWGRF_ERROR_UNIMPLEMETED_MAPPED_FEATURE_ID                 :Neimplementované přemapované feature ID: název: {2:STRING}, mapováno na: {5:HEX} (sprite {3:NUM})
 STR_NEWGRF_ERROR_UNIMPLEMETED_MAPPED_PROPERTY                   :Neimplementované přemapované Action 0 property feature: {4:HEX}, název: {2:STRING}, mapováno na: {5:HEX} (sprite {3:NUM})
@@ -1491,8 +1469,6 @@ STR_VEHICLE_DETAILS_TRAIN_ENGINE_BUILT_AND_VALUE_AND_SPEED      :{LTBLUE}{ENGINE
 STR_VEHICLE_DETAILS_TRAIN_WAGON_VALUE_AND_SPEED                 :{LTBLUE}{ENGINE}{BLACK}   Hodnota: {LTBLUE}{CURRENCY_LONG} {BLACK}Max. rychlost: {LTBLUE}{VELOCITY}
 STR_VEHICLE_DETAILS_TRAIN_TOTAL_WEIGHT                          :{BLACK}Hmotnost: {LTBLUE}{WEIGHT_SHORT} {BLACK}(provozní) - {LTBLUE}{WEIGHT_SHORT} {BLACK}(celková)
 STR_VEHICLE_DETAILS_TRAIN_MAX_SPEED                             :{BLACK}Max. rychlost: {LTBLUE}{VELOCITY} {BLACK}(prázdný) - {LTBLUE}{VELOCITY} {BLACK}(plně obsazený)
-
-STR_ORDERS_TOGGLE_MANAGEMENT_BUTTON_TOOLTIP                     :{BLACK}Přepnout zobrazení tlačítka pro správu příkazů
 
 STR_ORDER_DROP_CARGO_TYPE_LOAD                                  :Naložit podle druhu
 STR_ORDER_DROP_CARGO_TYPE_UNLOAD                                :Vyložit podle druhu
@@ -2107,3 +2083,6 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :podrobná
 
 STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
 STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}({COMMA})
+
+STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Nástroj výběru
+STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Okno modifikačních kláves

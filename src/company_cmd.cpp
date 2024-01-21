@@ -309,14 +309,14 @@ void UpdateLandscapingLimits()
 }
 
 /**
- * Set the right DParams to get the name of an owner.
+ * Set the right DParams for STR_ERROR_OWNED_BY.
  * @param owner the owner to get the name of.
  * @param tile  optional tile to get the right town.
  * @pre if tile == 0, then owner can't be OWNER_TOWN.
  */
-void GetNameOfOwner(Owner owner, TileIndex tile)
+void SetDParamsForOwnedBy(Owner owner, TileIndex tile)
 {
-	SetDParam(2, owner);
+	SetDParam(OWNED_BY_OWNER_IN_PARAMETERS_OFFSET, owner);
 
 	if (owner != OWNER_TOWN) {
 		if (!Company::IsValidID(owner)) {
@@ -350,7 +350,7 @@ CommandCost CheckOwnership(Owner owner, TileIndex tile)
 
 	if (owner == _current_company) return CommandCost();
 
-	GetNameOfOwner(owner, tile);
+	SetDParamsForOwnedBy(owner, tile);
 	return_cmd_error(STR_ERROR_OWNED_BY);
 }
 
@@ -370,7 +370,7 @@ CommandCost CheckTileOwnership(TileIndex tile)
 	if (owner == _current_company) return CommandCost();
 
 	/* no need to get the name of the owner unless we're the local company (saves some time) */
-	if (IsLocalCompany()) GetNameOfOwner(owner, tile);
+	if (IsLocalCompany()) SetDParamsForOwnedBy(owner, tile);
 	return_cmd_error(STR_ERROR_OWNED_BY);
 }
 
@@ -597,7 +597,7 @@ Company *DoStartupNewCompany(DoStartupNewCompanyFlag flags, CompanyID company)
 
 	std::fill(c->share_owners.begin(), c->share_owners.end(), INVALID_OWNER);
 
-	c->avail_railtypes = GetCompanyRailtypes(c->index);
+	c->avail_railtypes = GetCompanyRailTypes(c->index);
 	c->avail_roadtypes = GetCompanyRoadTypes(c->index);
 	c->inaugurated_year = _cur_year;
 
@@ -825,8 +825,9 @@ void CompaniesYearlyLoop()
 {
 	/* Copy statistics */
 	for (Company *c : Company::Iterate()) {
-		memmove(&c->yearly_expenses[1], &c->yearly_expenses[0], sizeof(c->yearly_expenses) - sizeof(c->yearly_expenses[0]));
-		memset(&c->yearly_expenses[0], 0, sizeof(c->yearly_expenses[0]));
+		/* Move expenses to previous years. */
+		std::rotate(std::rbegin(c->yearly_expenses), std::rbegin(c->yearly_expenses) + 1, std::rend(c->yearly_expenses));
+		c->yearly_expenses[0] = {};
 		SetWindowDirty(WC_FINANCES, c->index);
 	}
 
@@ -948,7 +949,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			}
 
 			NetworkServerNewCompany(c, ci);
-			DEBUG(desync, 1, "new_company: date{%08x; %02x; %02x}, company_id: %u", _date, _date_fract, _tick_skip_counter, c->index);
+			DEBUG(desync, 1, "new_company: %s, company_id: %u", debug_date_dumper().HexDate(), c->index);
 			break;
 		}
 
@@ -966,7 +967,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			Company *c = DoStartupNewCompany(DSNC_AI, company_id);
 			if (c != nullptr) {
 				NetworkServerNewCompany(c, nullptr);
-				DEBUG(desync, 1, "new_company_ai: date{%08x; %02x; %02x}, company_id: %u", _date, _date_fract, _tick_skip_counter, c->index);
+				DEBUG(desync, 1, "new_company_ai: %s, company_id: %u", debug_date_dumper().HexDate(), c->index);
 			}
 			break;
 		}
@@ -983,7 +984,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 
 			if (!(flags & DC_EXEC)) return CommandCost();
 
-			DEBUG(desync, 1, "delete_company: date{%08x; %02x; %02x}, company_id: %u, reason: %u", _date, _date_fract, _tick_skip_counter, company_id, reason);
+			DEBUG(desync, 1, "delete_company: %s, company_id: %u, reason: %u", debug_date_dumper().HexDate(), company_id, reason);
 
 			CompanyNewsInformation *cni = new CompanyNewsInformation(c);
 
@@ -1060,6 +1061,20 @@ CommandCost CmdSetCompanyManagerFace(TileIndex tile, DoCommandFlag flags, uint32
 }
 
 /**
+ * Update liveries for a company. This is called when the LS_DEFAULT scheme is changed, to update schemes with colours
+ * set to default.
+ * @param c Company to update.
+ */
+void UpdateCompanyLiveries(Company *c)
+{
+	for (int i = 1; i < LS_END; i++) {
+		if (!HasBit(c->livery[i].in_use, 0)) c->livery[i].colour1 = c->livery[LS_DEFAULT].colour1;
+		if (!HasBit(c->livery[i].in_use, 1)) c->livery[i].colour2 = c->livery[LS_DEFAULT].colour2;
+	}
+	UpdateCompanyGroupLiveries(c);
+}
+
+/**
  * Change the company's company-colour
  * @param tile unused
  * @param flags operation to perform
@@ -1099,9 +1114,7 @@ CommandCost CmdSetCompanyColour(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 			/* If setting the first colour of the default scheme, adjust the
 			 * original and cached company colours too. */
 			if (scheme == LS_DEFAULT) {
-				for (int i = 1; i < LS_END; i++) {
-					if (!HasBit(c->livery[i].in_use, 0)) c->livery[i].colour1 = colour;
-				}
+				UpdateCompanyLiveries(c);
 				_company_colours[_current_company] = colour;
 				c->colour = colour;
 				CompanyAdminUpdate(c);
@@ -1112,9 +1125,7 @@ CommandCost CmdSetCompanyColour(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 			c->livery[scheme].colour2 = colour;
 
 			if (scheme == LS_DEFAULT) {
-				for (int i = 1; i < LS_END; i++) {
-					if (!HasBit(c->livery[i].in_use, 1)) c->livery[i].colour2 = colour;
-				}
+				UpdateCompanyGroupLiveries(c);
 			}
 		}
 

@@ -20,6 +20,9 @@ static uint32 _jokerpp_separation_mode;
 std::vector<OrderList *> _jokerpp_auto_separation;
 std::vector<OrderList *> _jokerpp_non_auto_separation;
 
+static uint16 _old_scheduled_dispatch_start_full_date_fract;
+btree::btree_map<DispatchSchedule *, uint16> _old_scheduled_dispatch_start_full_date_fract_map;
+
 /**
  * Converts this order from an old savegame's version;
  * it moves all bits to the new location.
@@ -263,8 +266,9 @@ SaveLoadTable GetDispatchScheduleDescription()
 	static const SaveLoad _order_extra_info_desc[] = {
 		SLE_VARVEC(DispatchSchedule, scheduled_dispatch,                    SLE_UINT32),
 		SLE_VAR(DispatchSchedule, scheduled_dispatch_duration,              SLE_UINT32),
-		SLE_VAR(DispatchSchedule, scheduled_dispatch_start_date,            SLE_INT32),
-		SLE_VAR(DispatchSchedule, scheduled_dispatch_start_full_date_fract, SLE_UINT16),
+		SLE_CONDVAR_X(DispatchSchedule, scheduled_dispatch_start_tick,      SLE_FILE_I32 | SLE_VAR_I64, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SCHEDULED_DISPATCH, 1, 4)),
+		SLEG_CONDVAR_X(_old_scheduled_dispatch_start_full_date_fract,       SLE_UINT16,                 SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SCHEDULED_DISPATCH, 1, 4)),
+		SLE_CONDVAR_X(DispatchSchedule, scheduled_dispatch_start_tick,      SLE_INT64,                  SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SCHEDULED_DISPATCH, 5)),
 		SLE_VAR(DispatchSchedule, scheduled_dispatch_last_dispatch,         SLE_INT32),
 		SLE_VAR(DispatchSchedule, scheduled_dispatch_max_delay,             SLE_INT32),
 		SLE_CONDSSTR_X(DispatchSchedule, name, 0, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SCHEDULED_DISPATCH, 4)),
@@ -303,8 +307,11 @@ static void Load_ORDL()
 {
 	_jokerpp_auto_separation.clear();
 	_jokerpp_non_auto_separation.clear();
-	int index;
 
+	_old_scheduled_dispatch_start_full_date_fract = 0;
+	_old_scheduled_dispatch_start_full_date_fract_map.clear();
+
+	int index;
 	while ((index = SlIterateArray()) != -1) {
 		/* set num_orders to 0 so it's a valid OrderList */
 		OrderList *list = new (index) OrderList(0);
@@ -321,6 +328,9 @@ static void Load_ORDL()
 			list->GetScheduledDispatchScheduleSet().resize(count);
 			for (DispatchSchedule &ds : list->GetScheduledDispatchScheduleSet()) {
 				SlObject(&ds, GetDispatchScheduleDescription());
+				if (SlXvIsFeaturePresent(XSLFI_SCHEDULED_DISPATCH, 1, 4) && _old_scheduled_dispatch_start_full_date_fract != 0) {
+					_old_scheduled_dispatch_start_full_date_fract_map[&ds] = _old_scheduled_dispatch_start_full_date_fract;
+				}
 			}
 		}
 	}
@@ -350,8 +360,9 @@ SaveLoadTable GetOrderBackupDescription()
 		SLE_CONDVAR_X(OrderBackup, cur_timetable_order_index, SLE_VEHORDERID,   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TIMETABLE_EXTRA)),
 		 SLE_CONDVAR(OrderBackup, current_order_time,       SLE_UINT32,                SLV_176, SL_MAX_VERSION),
 		 SLE_CONDVAR(OrderBackup, lateness_counter,         SLE_INT32,                 SLV_176, SL_MAX_VERSION),
-		 SLE_CONDVAR(OrderBackup, timetable_start,          SLE_INT32,                 SLV_176, SL_MAX_VERSION),
-		SLE_CONDVAR_X(OrderBackup,timetable_start_subticks, SLE_UINT16,         SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TIMETABLES_START_TICKS, 2)),
+		SLE_CONDVAR_X(OrderBackup, timetable_start,         SLE_FILE_I32 | SLE_VAR_I64, SLV_176, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TIMETABLES_START_TICKS, 0, 2)),
+		SLE_CONDVAR_X(OrderBackup, timetable_start,         SLE_INT64,                  SLV_176, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TIMETABLES_START_TICKS, 3)),
+		SLE_CONDNULL_X(2,                                                       SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TIMETABLES_START_TICKS, 2, 2)),
 		 SLE_CONDVAR(OrderBackup, vehicle_flags,            SLE_FILE_U8  | SLE_VAR_U32,  SLV_176, SLV_180),
 		SLE_CONDVAR_X(OrderBackup, vehicle_flags,           SLE_FILE_U16 | SLE_VAR_U32,          SLV_180, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VEHICLE_FLAGS_EXTRA, 0, 0)),
 		SLE_CONDVAR_X(OrderBackup, vehicle_flags,           SLE_UINT32,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VEHICLE_FLAGS_EXTRA, 1)),

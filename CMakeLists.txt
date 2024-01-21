@@ -120,7 +120,6 @@ find_package(LibLZMA)
 find_package(LZO)
 find_package(ZSTD 1.4)
 find_package(PNG)
-find_package(nlohmann_json)
 
 if(WIN32 OR EMSCRIPTEN)
     # Windows uses WinHttp for HTTP requests.
@@ -255,6 +254,12 @@ if(OPTION_PACKAGE_DEPENDENCIES)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 endif()
 
+if(OPTION_NO_SPLIT_LIB)
+    set(OPENTTD_LIB openttd)
+else()
+    set(OPENTTD_LIB openttd_lib)
+endif()
+
 include(CTest)
 include(SourceList)
 
@@ -265,12 +270,21 @@ include_directories(${CMAKE_SOURCE_DIR}/src/3rdparty/squirrel/include)
 
 include(MSVCFilters)
 
-add_executable(openttd WIN32 ${GENERATED_SOURCE_FILES})
-set_target_properties(openttd PROPERTIES OUTPUT_NAME "${BINARY_NAME}")
+if(OPTION_NO_SPLIT_LIB)
+    add_executable(openttd WIN32 ${GENERATED_SOURCE_FILES})
+else()
+    add_library(openttd_lib OBJECT ${GENERATED_SOURCE_FILES})
+    add_executable(openttd WIN32)
+    add_executable(openttd_test)
+    set_target_properties(openttd_test PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
 
-add_executable(openttd_test)
-set_target_properties(openttd_test PROPERTIES EXCLUDE_FROM_ALL TRUE)
+set_target_properties(openttd PROPERTIES OUTPUT_NAME "${BINARY_NAME}")
 # All other files are added via target_sources()
+
+if (MINGW)
+    target_link_libraries(${OPENTTD_LIB} mingw_stdthreads)
+endif()
 
 set(host_tools_list strgen settingsgen)
 
@@ -307,6 +321,14 @@ endif()
 if(MSVC)
     # Add DPI manifest to project; other WIN32 targets get this via ottdres.rc
     target_sources(openttd PRIVATE "${CMAKE_SOURCE_DIR}/os/windows/openttd.manifest")
+
+    # If target -static is used, switch our project to static (/MT) too.
+    # If the target ends on -static-md, it will remain dynamic (/MD).
+    if(VCPKG_TARGET_TRIPLET MATCHES "-static" AND NOT VCPKG_TARGET_TRIPLET MATCHES "-md")
+        set_property(TARGET openttd_lib PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET openttd PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET openttd_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+     endif()
 endif()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/bin)
@@ -324,18 +346,26 @@ endif()
 add_dependencies(openttd
     find_version)
 
-target_link_libraries(openttd
+if(NOT OPTION_NO_SPLIT_LIB)
+    target_link_libraries(openttd openttd_lib)
+
+    target_link_libraries(openttd_test PRIVATE openttd_lib)
+    include(Catch)
+    catch_discover_tests(openttd_test)
+endif()
+
+target_link_libraries(${OPENTTD_LIB}
     openttd::languages
     openttd::settings
-    openttd::media
-    openttd::basesets
     openttd::script_api
-    openttd::binfiles
     Threads::Threads
 )
-target_link_libraries(openttd_test)
-include(Catch)
-catch_discover_tests(openttd_test)
+
+target_link_libraries(openttd
+    openttd::media
+    openttd::basesets
+    openttd::binfiles
+)
 
 if(HAIKU)
     target_link_libraries(openttd "be" "network" "midi")
@@ -355,7 +385,6 @@ link_package(ZLIB TARGET ZLIB::ZLIB ENCOURAGED)
 link_package(LIBLZMA TARGET LibLZMA::LibLZMA ENCOURAGED)
 link_package(LZO)
 link_package(ZSTD TARGET ZSTD::ZSTD RECOMMENDED)
-link_package(nlohmann_json ENCOURAGED)
 
 if(NOT WIN32 AND NOT EMSCRIPTEN)
     link_package(CURL ENCOURAGED)
@@ -390,7 +419,7 @@ include(CheckAtomic)
 if(APPLE)
     link_package(Iconv TARGET Iconv::Iconv)
 
-    target_link_libraries(openttd
+    target_link_libraries(${OPENTTD_LIB}
         ${AUDIOTOOLBOX_LIBRARY}
         ${AUDIOUNIT_LIBRARY}
         ${COCOA_LIBRARY}
@@ -409,6 +438,7 @@ if(EMSCRIPTEN)
     target_link_libraries(WASM::WASM INTERFACE "-s ALLOW_MEMORY_GROWTH=1")
     target_link_libraries(WASM::WASM INTERFACE "-s INITIAL_MEMORY=33554432")
     target_link_libraries(WASM::WASM INTERFACE "-s DISABLE_EXCEPTION_CATCHING=0")
+    target_link_libraries(WASM::WASM INTERFACE "-s WASM_BIGINT")
     add_definitions(-s DISABLE_EXCEPTION_CATCHING=0)
 
     # Export functions to Javascript.
@@ -424,6 +454,23 @@ if(EMSCRIPTEN)
     target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_BINARY_DIR}/lang/english.lng@/lang/english.lng")
     target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/bin/ai@/ai")
     target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/bin/game@/game")
+    # Documentation files for the in-game text file viewer
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/README.md@/README.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/CREDITS.md@/CREDITS.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/CONTRIBUTING.md@/CONTRIBUTING.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/COPYING.md@/COPYING.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/known-bugs.txt@/known-bugs.txt")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/changelog.txt@/changelog.txt")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/admin_network.md@/docs/admin_network.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/debugging_desyncs.md@/docs/debugging_desyncs.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/desync.md@/docs/desync.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/directory_structure.md@/docs/directory_structure.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/eints.md@/docs/eints.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/linkgraph.md@/docs/linkgraph.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/logging_and_performance_metrics.md@/docs/logging_and_performance_metrics.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/multiplayer.md@/docs/multiplayer.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/savegame_format.md@/docs/savegame_format.md")
+    target_link_libraries(WASM::WASM INTERFACE "--preload-file ${CMAKE_SOURCE_DIR}/docs/symbol_server.md@/docs/symbol_server.md")
 
     # We use IDBFS for persistent storage.
     target_link_libraries(WASM::WASM INTERFACE "-lidbfs.js")
@@ -469,7 +516,7 @@ if(WIN32)
         -DPSAPI_VERSION=1
     )
 
-    target_link_libraries(openttd
+    target_link_libraries(${OPENTTD_LIB}
         ws2_32
         winmm
         imm32
@@ -483,8 +530,9 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_definitions(-DPOINTER_IS_64BIT)
 endif()
 
-include(CreateRegression)
-create_regression()
+enable_testing()
+
+add_subdirectory(regression)
 
 if(APPLE OR WIN32)
     find_package(Pandoc)
@@ -502,6 +550,7 @@ string(REGEX REPLACE "(^|;)-D" "\\1" CFG_DEFS "${CFG_DEFS}")
 get_property(CFG_DEFS_2 DIRECTORY . PROPERTY COMPILE_DEFINITIONS)
 list(APPEND CFG_DEFS ${CFG_DEFS_2})
 list(FILTER CFG_DEFS EXCLUDE REGEX "_DIR=")
+list(FILTER CFG_DEFS EXCLUDE REGEX "SURVEY_KEY=")
 
 # Generate a target to determine version, which is execute every 'make' run
 add_custom_target(find_version

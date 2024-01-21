@@ -395,7 +395,7 @@ static bool FixTTOEngines()
 		for (uint i = 0; i < lengthof(_orig_aircraft_vehicle_info); i++, j++) new (GetTempDataEngine(j)) Engine(VEH_AIRCRAFT, i);
 	}
 
-	Date aging_date = std::min(_date + DAYS_TILL_ORIGINAL_BASE_YEAR, ConvertYMDToDate(2050, 0, 1));
+	Date aging_date = std::min(_date + DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta(), ConvertYMDToDate(2050, 0, 1));
 
 	for (EngineID i = 0; i < 256; i++) {
 		int oi = ttd_to_tto[i];
@@ -403,17 +403,17 @@ static bool FixTTOEngines()
 
 		if (oi == 255) {
 			/* Default engine is used */
-			_date += DAYS_TILL_ORIGINAL_BASE_YEAR;
+			_date += DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 			StartupOneEngine(e, aging_date, 0, INT_MAX);
 			CalcEngineReliability(e, false);
-			e->intro_date -= DAYS_TILL_ORIGINAL_BASE_YEAR;
-			_date -= DAYS_TILL_ORIGINAL_BASE_YEAR;
+			e->intro_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
+			_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 
 			/* Make sure for example monorail and maglev are available when they should be */
 			if (_date >= e->intro_date && HasBit(e->info.climates, 0)) {
 				e->flags |= ENGINE_AVAILABLE;
 				e->company_avail = MAX_UVALUE(CompanyMask);
-				e->age = _date > e->intro_date ? (_date - e->intro_date) / 30 : 0;
+				e->age = _date > e->intro_date ? (_date - e->intro_date).base() / 30 : 0;
 			}
 		} else {
 			/* Using data from TTO savegame */
@@ -634,7 +634,7 @@ static bool LoadOldOrder(LoadgameState *ls, int num)
 	return true;
 }
 
-static bool LoadOldAnimTileList(LoadgameState *ls, int num)
+static bool LoadOldAnimTileList(LoadgameState *ls, int)
 {
 	TileIndex anim_list[256];
 	const OldChunks anim_chunk[] = {
@@ -679,14 +679,14 @@ static bool LoadOldDepot(LoadgameState *ls, int num)
 static StationID _current_station_id;
 static uint16 _waiting_acceptance;
 static uint8  _cargo_source;
-static uint8  _cargo_days;
+static uint8  _cargo_periods;
 
 static const OldChunks goods_chunk[] = {
 	OCL_VAR ( OC_UINT16, 1,          &_waiting_acceptance ),
 	OCL_SVAR(  OC_UINT8, GoodsEntry, time_since_pickup ),
 	OCL_SVAR(  OC_UINT8, GoodsEntry, rating ),
 	OCL_VAR (  OC_UINT8, 1,          &_cargo_source ),
-	OCL_VAR (  OC_UINT8, 1,          &_cargo_days ),
+	OCL_VAR (  OC_UINT8, 1,          &_cargo_periods ),
 	OCL_SVAR(  OC_UINT8, GoodsEntry, last_speed ),
 	OCL_SVAR(  OC_UINT8, GoodsEntry, last_age ),
 
@@ -706,7 +706,7 @@ static bool LoadOldGood(LoadgameState *ls, int num)
 	SB(ge->status, GoodsEntry::GES_ACCEPTANCE, 1, HasBit(_waiting_acceptance, 15));
 	SB(ge->status, GoodsEntry::GES_RATING, 1, _cargo_source != 0xFF);
 	if (GB(_waiting_acceptance, 0, 12) != 0 && CargoPacket::CanAllocateItem()) {
-		ge->CreateData().cargo.Append(new CargoPacket(GB(_waiting_acceptance, 0, 12), _cargo_days, (_cargo_source == 0xFF) ? INVALID_STATION : _cargo_source, 0, 0),
+		ge->CreateData().cargo.Append(new CargoPacket(GB(_waiting_acceptance, 0, 12), _cargo_periods, (_cargo_source == 0xFF) ? INVALID_STATION : _cargo_source, INVALID_TILE, 0),
 				INVALID_STATION);
 	}
 
@@ -889,7 +889,7 @@ static const OldChunks _company_economy_chunk[] = {
 	OCL_END()
 };
 
-static bool LoadOldCompanyEconomy(LoadgameState *ls, int num)
+static bool LoadOldCompanyEconomy(LoadgameState *ls, int)
 {
 	Company *c = Company::Get(_current_company_id);
 
@@ -1094,7 +1094,7 @@ static const OldChunks vehicle_empty_chunk[] = {
 	OCL_END()
 };
 
-static bool LoadOldVehicleUnion(LoadgameState *ls, int num)
+static bool LoadOldVehicleUnion(LoadgameState *ls, int)
 {
 	Vehicle *v = Vehicle::GetIfValid(_current_vehicle_id);
 	uint temp = ls->total_read;
@@ -1172,7 +1172,7 @@ static const OldChunks vehicle_chunk[] = {
 	OCL_VAR ( OC_TTD | OC_UINT16, 1, &_cargo_count ),
 	OCL_VAR ( OC_TTO | OC_FILE_U8 | OC_VAR_U16, 1, &_cargo_count ),
 	OCL_VAR (  OC_UINT8, 1,       &_cargo_source ),
-	OCL_VAR (  OC_UINT8, 1,       &_cargo_days ),
+	OCL_VAR (  OC_UINT8, 1,       &_cargo_periods ),
 
 	OCL_SVAR( OC_TTO | OC_UINT8, Vehicle, tick_counter ),
 
@@ -1352,8 +1352,8 @@ bool LoadOldVehicle(LoadgameState *ls, int num)
 
 		if (_cargo_count != 0 && CargoPacket::CanAllocateItem()) {
 			StationID source =    (_cargo_source == 0xFF) ? INVALID_STATION : _cargo_source;
-			TileIndex source_xy = (source != INVALID_STATION) ? Station::Get(source)->xy : 0;
-			v->cargo.Append(new CargoPacket(_cargo_count, _cargo_days, source, source_xy, source_xy));
+			TileIndex source_xy = (source != INVALID_STATION) ? Station::Get(source)->xy : (TileIndex)0;
+			v->cargo.Append(new CargoPacket(_cargo_count, _cargo_periods, source, source_xy, 0));
 		}
 	}
 
@@ -1464,7 +1464,7 @@ static const OldChunks game_difficulty_chunk[] = {
 	OCL_END()
 };
 
-static bool LoadOldGameDifficulty(LoadgameState *ls, int num)
+static bool LoadOldGameDifficulty(LoadgameState *ls, int)
 {
 	bool ret = LoadChunk(ls, &_settings_game.difficulty, game_difficulty_chunk);
 	_settings_game.difficulty.max_loan *= 1000;
@@ -1472,7 +1472,7 @@ static bool LoadOldGameDifficulty(LoadgameState *ls, int num)
 }
 
 
-static bool LoadOldMapPart1(LoadgameState *ls, int num)
+static bool LoadOldMapPart1(LoadgameState *ls, int)
 {
 	if (_savegame_type == SGT_TTO) {
 		AllocateMap(OLD_MAP_SIZE, OLD_MAP_SIZE);
@@ -1502,7 +1502,7 @@ static bool LoadOldMapPart1(LoadgameState *ls, int num)
 	return true;
 }
 
-static bool LoadOldMapPart2(LoadgameState *ls, int num)
+static bool LoadOldMapPart2(LoadgameState *ls, int)
 {
 	uint i;
 
@@ -1516,7 +1516,7 @@ static bool LoadOldMapPart2(LoadgameState *ls, int num)
 	return true;
 }
 
-static bool LoadTTDPatchExtraChunks(LoadgameState *ls, int num)
+static bool LoadTTDPatchExtraChunks(LoadgameState *ls, int)
 {
 	ReadTTDPatchFlags();
 

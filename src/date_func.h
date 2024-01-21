@@ -29,7 +29,7 @@ extern DateFract _game_load_date_fract;
 extern uint8 _game_load_tick_skip_counter;
 
 void SetDate(Date date, DateFract fract, bool preserve_scaled_ticks = true);
-void ConvertDateToYMD(Date date, YearMonthDay *ymd);
+YearMonthDay ConvertDateToYMD(Date date);
 Date ConvertYMDToDate(Year year, Month month, Day day);
 void SetScaledTickVariables();
 
@@ -38,7 +38,7 @@ inline Date ConvertYMDToDate(const YearMonthDay &ymd)
 	return ConvertYMDToDate(ymd.year, ymd.month, ymd.day);
 }
 
-#define _cur_year (static_cast<Year>(_cur_date_ymd.year))
+#define _cur_year (_cur_date_ymd.year)
 
 /**
  * Checks whether the given year is a leap year or not.
@@ -52,35 +52,61 @@ static inline bool IsLeapYear(Year yr)
 
 static inline Date ScaledDateTicksToDate(DateTicksScaled ticks)
 {
-	return (ticks - _scaled_date_ticks_offset) / (DAY_TICKS * _settings_game.economy.day_length_factor);
+	return (ticks.base() - _scaled_date_ticks_offset.base()) / (DAY_TICKS * _settings_game.economy.day_length_factor);
 }
 
 static inline DateTicksScaled DateToScaledDateTicks(Date date)
 {
-	return ((int64)date * DAY_TICKS * _settings_game.economy.day_length_factor) + _scaled_date_ticks_offset;
+	return ((int64)date.base() * DAY_TICKS * _settings_game.economy.day_length_factor) + _scaled_date_ticks_offset.base();
 }
 
 static inline DateTicks ScaledDateTicksToDateTicks(DateTicksScaled ticks)
 {
-	return (ticks - _scaled_date_ticks_offset) / _settings_game.economy.day_length_factor;
+	return (ticks.base() - _scaled_date_ticks_offset.base()) / _settings_game.economy.day_length_factor;
 }
 
 static inline DateTicksScaled DateTicksToScaledDateTicks(DateTicks date_ticks)
 {
-	return ((int64)date_ticks * _settings_game.economy.day_length_factor) + _scaled_date_ticks_offset;
+	return ((int64)date_ticks.base() * _settings_game.economy.day_length_factor) + _scaled_date_ticks_offset.base();
 }
 
-static inline std::pair<DateTicks, uint16> ScaledDateTicksToDateTicksAndSubTicks(DateTicksScaled ticks)
+/**
+ * Calculate the year of a given date.
+ * @param date The date to consider.
+ * @return the year.
+ */
+static constexpr Year DateToYear(Date date)
 {
-	ticks -= _scaled_date_ticks_offset;
-	return std::make_pair<DateTicks, uint16>(ticks / _settings_game.economy.day_length_factor, ticks % _settings_game.economy.day_length_factor);
+	return date.base() / DAYS_IN_LEAP_YEAR;
 }
 
-static inline std::pair<Date, uint16> ScaledDateTicksToDateAndFullSubTicks(DateTicksScaled ticks)
+static constexpr Year DateDeltaToYears(DateDelta date)
 {
-	ticks -= _scaled_date_ticks_offset;
-	const int full_date = _settings_game.economy.day_length_factor * DAY_TICKS;
-	return std::make_pair<Date, uint16>(ticks / full_date, ticks % full_date);
+	return date.base() / DAYS_IN_LEAP_YEAR;
 }
+
+static constexpr DateTicks DateToDateTicks(Date date, DateFract fract = 0)
+{
+	return (date.base() * DAY_TICKS) + fract;
+}
+
+static constexpr DateTicksDelta DateDeltaToDateTicksDelta(DateDelta date, DateFract fract = 0)
+{
+	return (date.base() * DAY_TICKS) + fract;
+}
+
+static inline DateTicks NowDateTicks()
+{
+	return DateToDateTicks(_date, _date_fract);
+}
+
+struct debug_date_dumper {
+	const char *HexDate(Date date, DateFract date_fract, uint8 tick_skip_counter);
+
+	inline const char *HexDate() { return this->HexDate(_date, _date_fract, _tick_skip_counter); }
+
+private:
+	char buffer[24];
+};
 
 #endif /* DATE_FUNC_H */

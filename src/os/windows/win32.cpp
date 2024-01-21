@@ -19,6 +19,7 @@
 #define NO_SHOBJIDL_SORTDIRECTION // Avoid multiple definition of SORT_ASCENDING
 #include <shlobj.h> /* SHGetFolderPath */
 #include <shellapi.h>
+#include <winnls.h>
 #include "win32.h"
 #include "../../fios.h"
 #include "../../core/alloc_func.hpp"
@@ -33,10 +34,6 @@
 #include <array>
 #include <map>
 #include <mutex>
-#if defined(__MINGW32__)
-#include "../../3rdparty/mingw-std-threads/mingw.mutex.h"
-#endif
-
 
 #include "../../safeguards.h"
 
@@ -94,7 +91,7 @@ void NORETURN DoOSAbort()
 	abort();
 }
 
-void OSOpenBrowser(const char *url)
+void OSOpenBrowser(const std::string &url)
 {
 	ShellExecute(GetActiveWindow(), L"open", OTTD2FS(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -269,37 +266,6 @@ std::optional<uint64_t> FiosGetDiskFreeSpace(const std::string &path)
 	return std::nullopt;
 }
 
-static int ParseCommandLine(char *line, char **argv, int max_argc)
-{
-	int n = 0;
-
-	do {
-		/* skip whitespace */
-		while (*line == ' ' || *line == '\t') line++;
-
-		/* end? */
-		if (*line == '\0') break;
-
-		/* special handling when quoted */
-		if (*line == '"') {
-			argv[n++] = ++line;
-			while (*line != '"') {
-				if (*line == '\0') return n;
-				line++;
-			}
-		} else {
-			argv[n++] = line;
-			while (*line != ' ' && *line != '\t') {
-				if (*line == '\0') return n;
-				line++;
-			}
-		}
-		*line++ = '\0';
-	} while (n != max_argc);
-
-	return n;
-}
-
 void CreateConsole()
 {
 	HANDLE hand;
@@ -357,7 +323,7 @@ void CreateConsole()
 static const char *_help_msg;
 
 /** Callback function to handle the window */
-static INT_PTR CALLBACK HelpDialogFunc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK HelpDialogFunc(HWND wnd, UINT msg, WPARAM wParam, LPARAM)
 {
 	switch (msg) {
 		case WM_INITDIALOG: {
@@ -416,45 +382,6 @@ void ShowInfo(const char *str)
 		}
 		MyShowCursor(old);
 	}
-}
-
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	int argc;
-	char *argv[64]; // max 64 command line arguments
-
-	/* Set system timer resolution to 1ms. */
-	timeBeginPeriod(1);
-
-	PerThreadSetupInit();
-	CrashLog::InitialiseCrashLog();
-
-	/* Convert the command line to UTF-8. */
-	std::string cmdline = FS2OTTD(GetCommandLine());
-
-	/* Set the console codepage to UTF-8. */
-	SetConsoleOutputCP(CP_UTF8);
-
-#if defined(_DEBUG)
-	CreateConsole();
-#endif
-
-	_set_error_mode(_OUT_TO_MSGBOX); // force assertion output to messagebox
-
-	/* setup random seed to something quite random */
-	SetRandomSeed(GetTickCount());
-
-	argc = ParseCommandLine(cmdline.data(), argv, lengthof(argv));
-
-	/* Make sure our arguments contain only valid UTF-8 characters. */
-	for (int i = 0; i < argc; i++) StrMakeValidInPlace(argv[i]);
-
-	openttd_main(argc, argv);
-
-	/* Restore system timer resolution. */
-	timeEndPeriod(1);
-
-	return 0;
 }
 
 char *getcwd(char *buf, size_t size)
@@ -713,6 +640,43 @@ int OTTDStringCompare(std::string_view s1, std::string_view s2)
 	convert_to_fs(s2, s2_buf, lengthof(s2_buf));
 
 	return CompareString(MAKELCID(_current_language->winlangid, SORT_DEFAULT), NORM_IGNORECASE, s1_buf, -1, s2_buf, -1);
+}
+
+/**
+ * Search if a string is contained in another string using the current locale.
+ *
+ * @param str String to search in.
+ * @param value String to search for.
+ * @param case_insensitive Search case-insensitive.
+ * @return 1 if value was found, 0 if it was not found, or -1 if not supported by the OS.
+ */
+int Win32StringContains(const std::string_view str, const std::string_view value, bool case_insensitive)
+{
+	typedef int (WINAPI *PFNFINDNLSSTRINGEX)(LPCWSTR, DWORD, LPCWSTR, int, LPCWSTR, int, LPINT, LPNLSVERSIONINFO, LPVOID, LPARAM);
+	static PFNFINDNLSSTRINGEX _FindNLSStringEx = nullptr;
+	static bool first_time = true;
+
+	if (first_time) {
+		_FindNLSStringEx = GetProcAddressT<PFNFINDNLSSTRINGEX>(GetModuleHandle(L"Kernel32"), "FindNLSStringEx");
+		first_time = false;
+	}
+
+	if (_FindNLSStringEx != nullptr) {
+		int len_str = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
+		int len_value = MultiByteToWideChar(CP_UTF8, 0, value.data(), (int)value.size(), nullptr, 0);
+
+		if (len_str != 0 && len_value != 0) {
+			std::wstring str_str(len_str, L'\0'); // len includes terminating null
+			std::wstring str_value(len_value, L'\0');
+
+			MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), str_str.data(), len_str);
+			MultiByteToWideChar(CP_UTF8, 0, value.data(), (int)value.size(), str_value.data(), len_value);
+
+			return _FindNLSStringEx(_cur_iso_locale, FIND_FROMSTART | (case_insensitive ? LINGUISTIC_IGNORECASE : 0), str_str.data(), -1, str_value.data(), -1, nullptr, nullptr, nullptr, 0) >= 0 ? 1 : 0;
+		}
+	}
+
+	return -1; // Failure indication.
 }
 
 static DWORD main_thread_id;

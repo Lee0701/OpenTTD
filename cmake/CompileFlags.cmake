@@ -4,25 +4,6 @@
 #
 macro(compile_flags)
     if(MSVC)
-        if(VCPKG_TARGET_TRIPLET MATCHES "-static" AND NOT VCPKG_TARGET_TRIPLET MATCHES "-md")
-            # Switch to MT (static) instead of MD (dynamic) binary
-
-            # For MSVC two generators are available
-            # - a command line generator (Ninja) using CMAKE_BUILD_TYPE to specify the
-            #   configuration of the build tree
-            # - an IDE generator (Visual Studio) using CMAKE_CONFIGURATION_TYPES to
-            #   specify all configurations that will be available in the generated solution
-            list(APPEND MSVC_CONFIGS "${CMAKE_BUILD_TYPE}" "${CMAKE_CONFIGURATION_TYPES}")
-
-            # Set usage of static runtime for all configurations
-            foreach(MSVC_CONFIG ${MSVC_CONFIGS})
-                string(TOUPPER "CMAKE_CXX_FLAGS_${MSVC_CONFIG}" MSVC_FLAGS)
-                string(REPLACE "/MD" "/MT" ${MSVC_FLAGS} "${${MSVC_FLAGS}}")
-                string(TOUPPER "CMAKE_C_FLAGS_${MSVC_CONFIG}" MSVC_FLAGS)
-                string(REPLACE "/MD" "/MT" ${MSVC_FLAGS} "${${MSVC_FLAGS}}")
-            endforeach()
-        endif()
-
         # "If /Zc:rvalueCast is specified, the compiler follows section 5.4 of the
         # C++11 standard". We need C++11 for the way we use threads.
         add_compile_options(/Zc:rvalueCast)
@@ -60,9 +41,13 @@ macro(compile_flags)
     #set(IS_STABLE_RELEASE "$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<BOOL:${OPTION_USE_ASSERTS}>>>")
 
     if(MSVC)
-        add_compile_options(/W3)
-        if(MSVC_VERSION GREATER 1929 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-            # Starting with version 19.30, there is an optimisation bug, see #9966 for details
+        add_compile_options(
+            /W3
+            #/w34100 # 'identifier' : unreferenced formal parameter
+            /w34189 # 'identifier' : local variable is initialized but not referenced
+        )
+        if(MSVC_VERSION GREATER 1929 AND MSVC_VERSION LESS 1937 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            # Starting with version 19.30 (fixed in version 19.37), there is an optimisation bug, see #9966 for details
             # This flag disables the broken optimisation to work around the bug
             add_compile_options(/d2ssa-rse-)
         endif()
@@ -81,6 +66,7 @@ macro(compile_flags)
             -Wformat=2
             -Winit-self
             "$<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>"
+            "$<$<COMPILE_LANGUAGE:CXX>:-Wsuggest-override>"
 
             # Often parameters are unused, which is fine.
             -Wno-unused-parameter
@@ -107,22 +93,6 @@ macro(compile_flags)
                 add_compile_options(-DNDEBUG)
             endif()
         endif(NOT CMAKE_BUILD_TYPE)
-
-        # When we are a stable release (Release build + USE_ASSERTS not set),
-        # assertations are off, which trigger a lot of warnings. We disable
-        # these warnings for these releases.
-        #if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        #    add_compile_options(
-        #        "$<${IS_STABLE_RELEASE}:-Wno-unused-variable>"
-        #        "$<${IS_STABLE_RELEASE}:-Wno-unused-but-set-parameter>"
-        #        "$<${IS_STABLE_RELEASE}:-Wno-unused-but-set-variable>"
-        #    )
-        #else (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        #    add_compile_options(
-        #        "$<${IS_STABLE_RELEASE}:-Wno-unused-variable>"
-        #        "$<${IS_STABLE_RELEASE}:-Wno-unused-parameter>"
-        #    )
-        #endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
         # Ninja processes the output so the output from the compiler
         # isn't directly to a terminal; hence, the default is

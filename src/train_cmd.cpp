@@ -81,7 +81,7 @@ enum ChooseTrainTrackFlags {
 };
 DECLARE_ENUM_AS_BIT_SET(ChooseTrainTrackFlags)
 
-std::unordered_map<SignalSpeedKey, SignalSpeedValue, SignalSpeedKeyHashFunc> _signal_speeds(1 << 16);
+btree::btree_map<SignalSpeedKey, SignalSpeedValue> _signal_speeds;
 
 static void TryLongReserveChooseTrainTrackFromReservationEnd(Train *v, bool no_reserve_vehicle_tile = false);
 static Track ChooseTrainTrack(Train *v, TileIndex tile, DiagDirection enterdir, TrackBits tracks, ChooseTrainTrackFlags flags, bool *p_got_reservation, ChooseTrainTrackLookAheadState lookahead_state = {});
@@ -114,19 +114,13 @@ static DateTicksScaled GetSpeedRestrictionTimeout(const Train *t)
 	return _scaled_date_ticks + ticks;
 }
 
-/** Checks if the timeout of the specified signal speed restriction value has passed */
-static bool IsOutOfDate(const SignalSpeedValue& value)
-{
-	return _scaled_date_ticks > value.time_stamp;
-}
-
 /** Removes all speed restrictions from all signals */
 void ClearAllSignalSpeedRestrictions()
 {
 	_signal_speeds.clear();
 }
 
-void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaled delta)
+void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaledDelta delta)
 {
 	for (auto &it : _signal_speeds) {
 		it.second.time_stamp += delta;
@@ -137,7 +131,7 @@ void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaled delta)
 void ClearOutOfDateSignalSpeedRestrictions()
 {
 	for (auto key_value_pair = _signal_speeds.begin(); key_value_pair != _signal_speeds.end(); ) {
-		if (IsOutOfDate(key_value_pair->second)) {
+		if (key_value_pair->second.IsOutOfDate()) {
 			key_value_pair = _signal_speeds.erase(key_value_pair);
 		} else {
 			++key_value_pair;
@@ -666,7 +660,7 @@ int Train::GetCurveSpeedLimit() const
 
 	if (max_speed != absolute_max_speed) {
 		/* Apply the current railtype's curve speed advantage */
-		const RailtypeInfo *rti = GetRailTypeInfo(GetRailTypeByTrackBit(this->tile, this->track));
+		const RailTypeInfo *rti = GetRailTypeInfo(GetRailTypeByTrackBit(this->tile, this->track));
 		max_speed += (max_speed / 2) * rti->curve_speed;
 
 		if (this->tcache.cached_tflags & TCF_TILT) {
@@ -972,6 +966,9 @@ static void ApplyLookAheadItem(const Train *v, const TrainReservationLookAheadIt
 		case TRLIT_CURVE_SPEED:
 			if (_settings_game.vehicle.train_acceleration_model != AM_ORIGINAL) limit_speed(item.start, item.data_id, item.z_pos);
 			break;
+
+		case TRLIT_SPEED_ADAPTATION:
+			break;
 	}
 }
 
@@ -1100,7 +1097,7 @@ Train::MaxSpeedInfo Train::GetCurrentMaxSpeedInfoInternal(bool update_state) con
 	if (this->signal_speed_restriction != 0 && _settings_game.vehicle.train_speed_adaptation && !HasBit(this->flags, VRF_SPEED_ADAPTATION_EXEMPT)) {
 		advisory_max_speed = std::min<int>(advisory_max_speed, this->signal_speed_restriction);
 	}
-	if (this->reverse_distance > 1) {
+	if (this->reverse_distance >= 1) {
 		advisory_max_speed = std::min<int>(advisory_max_speed, ReversingDistanceTargetSpeed(this));
 	}
 
@@ -1297,7 +1294,7 @@ int Train::GetDisplayImageWidth(Point *offset) const
 
 	if (offset != nullptr) {
 		if (HasBit(this->flags, VRF_REVERSE_DIRECTION) && !HasBit(EngInfo(this->engine_type)->misc_flags, EF_RAIL_FLIPS)) {
-			offset->x = ScaleSpriteTrad((this->gcache.cached_veh_length - VEHICLE_LENGTH / 2) * reference_width / VEHICLE_LENGTH);
+			offset->x = ScaleSpriteTrad(((int)this->gcache.cached_veh_length - (int)VEHICLE_LENGTH / 2) * reference_width / (int)VEHICLE_LENGTH);
 		} else {
 			offset->x = ScaleSpriteTrad(reference_width) / 2;
 		}
@@ -1489,6 +1486,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 
 		v->group_id = DEFAULT_GROUP;
 
+		if (TestVehicleBuildProbability(v, v->engine_type, BuildProbabilityType::Reversed)) SetBit(v->flags, VRF_REVERSE_DIRECTION);
 		AddArticulatedParts(v);
 
 		_new_vehicle_id = v->index;
@@ -1523,6 +1521,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 /** Move all free vehicles in the depot to the train */
 void NormalizeTrainVehInDepot(const Train *u)
 {
+	assert(u->IsEngine());
 	for (const Train *v : Train::Iterate()) {
 		if (v->IsFreeWagon() && v->tile == u->tile &&
 				v->track == TRACK_BIT_DEPOT &&
@@ -1566,6 +1565,7 @@ static void AddRearEngineToMultiheadedTrain(Train *v)
 	u->SetMultiheaded();
 	if (v->IsVirtual()) u->SetVirtual();
 	v->SetNext(u);
+	if (TestVehicleBuildProbability(u, u->engine_type, BuildProbabilityType::Reversed)) SetBit(u->flags, VRF_REVERSE_DIRECTION);
 	u->UpdatePosition();
 
 	/* Now we need to link the front and rear engines together */
@@ -1643,6 +1643,7 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		v->SetFrontEngine();
 		v->SetEngine();
 
+		if (TestVehicleBuildProbability(v, v->engine_type, BuildProbabilityType::Reversed)) SetBit(v->flags, VRF_REVERSE_DIRECTION);
 		v->UpdatePosition();
 
 		if (rvi->railveh_type == RAILVEH_MULTIHEAD) {
@@ -1701,7 +1702,7 @@ static void MakeTrainBackup(TrainList &list, Train *t)
 static void RestoreTrainBackup(TrainList &list)
 {
 	/* No train, nothing to do. */
-	if (list.size() == 0) return;
+	if (list.empty()) return;
 
 	Train *prev = nullptr;
 	/* Iterate over the list and rebuild it. */
@@ -4112,7 +4113,7 @@ static bool IsReservationLookAheadLongEnough(const Train *v, const ChooseTrainTr
 
 	if (HasBit(lookahead_state.flags, CTTLASF_STOP_FOUND) || HasBit(v->lookahead->flags, TRLF_DEPOT_END)) return true;
 
-	if (v->reverse_distance > 1) {
+	if (v->reverse_distance >= 1) {
 		if (v->lookahead->reservation_end_position >= v->lookahead->current_position + v->reverse_distance - 1) return true;
 	}
 
@@ -4179,7 +4180,7 @@ static bool LookaheadWithinCurrentTunnelBridge(const Train *t)
 	return t->lookahead->current_position >= t->lookahead->reservation_end_position - ((int)TILE_SIZE * t->lookahead->tunnel_bridge_reserved_tiles) && !HasBit(t->lookahead->flags, TRLF_TB_EXIT_FREE);
 }
 
-static bool HasLongReservePbsSignalOnTrackdir(Train* v, TileIndex tile, Trackdir trackdir, bool default_value)
+static bool HasLongReservePbsSignalOnTrackdir(Train* v, TileIndex tile, Trackdir trackdir, bool default_value, uint16 lookahead_state_flags)
 {
 	if (HasPbsSignalOnTrackdir(tile, trackdir)) {
 		if (IsNoEntrySignal(tile, TrackdirToTrack(trackdir))) return false;
@@ -4188,7 +4189,9 @@ static bool HasLongReservePbsSignalOnTrackdir(Train* v, TileIndex tile, Trackdir
 			if (prog && prog->actions_used_flags & TRPAUF_LONG_RESERVE) {
 				TraceRestrictProgramResult out;
 				if (default_value) out.flags |= TRPRF_LONG_RESERVE;
-				prog->Execute(v, TraceRestrictProgramInput(tile, trackdir, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr), out);
+				TraceRestrictProgramInput input(tile, trackdir, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr);
+				if (HasBit(lookahead_state_flags, CTTLASF_STOP_FOUND)) input.input_flags |= TRPIF_PASSED_STOP;
+				prog->Execute(v, input, out);
 				return (out.flags & TRPRF_LONG_RESERVE);
 			}
 		}
@@ -4249,6 +4252,7 @@ static void TryLongReserveChooseTrainTrack(Train *v, TileIndex tile, Trackdir td
 						TraceRestrictProgramResult out;
 						if (long_reserve) out.flags |= TRPRF_LONG_RESERVE;
 						TraceRestrictProgramInput input(exit_tile, exit_td, nullptr, nullptr);
+						if (HasBit(lookahead_state.flags, CTTLASF_STOP_FOUND)) input.input_flags |= TRPIF_PASSED_STOP;
 						input.permitted_slot_operations = TRPISP_ACQUIRE | TRPISP_ACQUIRE_ON_RES;
 						prog->Execute(v, input, out);
 						if (out.flags & TRPRF_WAIT_AT_PBS) {
@@ -4292,7 +4296,7 @@ static void TryLongReserveChooseTrainTrack(Train *v, TileIndex tile, Trackdir td
 	}
 
 	CFollowTrackRail ft(v);
-	if (ft.Follow(tile, td) && HasLongReservePbsSignalOnTrackdir(v, ft.m_new_tile, FindFirstTrackdir(ft.m_new_td_bits), !long_enough)) {
+	if (ft.Follow(tile, td) && HasLongReservePbsSignalOnTrackdir(v, ft.m_new_tile, FindFirstTrackdir(ft.m_new_td_bits), !long_enough, lookahead_state.flags)) {
 		// We reserved up to a LR signal, reserve past it as well. recursion
 		ChooseTrainTrack(v, ft.m_new_tile, ft.m_exitdir, TrackdirBitsToTrackBits(ft.m_new_td_bits), CTTF_NO_LOOKAHEAD_VALIDATE | (force_res ? CTTF_FORCE_RES : CTTF_NONE), nullptr, lookahead_state);
 	}
@@ -4412,7 +4416,7 @@ static Track ChooseTrainTrack(Train *v, TileIndex tile, DiagDirection enterdir, 
 				CFollowTrackRail ft(v);
 				if (ft.Follow(res_dest.tile, res_dest.trackdir)) {
 					Trackdir  new_td = FindFirstTrackdir(ft.m_new_td_bits);
-					long_reserve = HasLongReservePbsSignalOnTrackdir(v, ft.m_new_tile, new_td, _settings_game.vehicle.train_braking_model == TBM_REALISTIC);
+					long_reserve = HasLongReservePbsSignalOnTrackdir(v, ft.m_new_tile, new_td, _settings_game.vehicle.train_braking_model == TBM_REALISTIC, lookahead_state.flags);
 				}
 			}
 
@@ -4898,7 +4902,7 @@ static TrainMovedChangeSignalEnum TrainMovedChangeSignal(Train* v, TileIndex til
 			/* A PBS block with a non-PBS signal facing us? */
 			if (!IsPbsSignal(GetSignalType(tile, TrackdirToTrack(trackdir)))) return CHANGED_NORMAL_TO_PBS_BLOCK;
 
-			if (front && HasLongReservePbsSignalOnTrackdir(v, tile, trackdir, _settings_game.vehicle.train_braking_model == TBM_REALISTIC)) return CHANGED_LR_PBS;
+			if (front && HasLongReservePbsSignalOnTrackdir(v, tile, trackdir, _settings_game.vehicle.train_braking_model == TBM_REALISTIC, 0)) return CHANGED_LR_PBS;
 		}
 	}
 	if (IsTileType(tile, MP_TUNNELBRIDGE) && IsTunnelBridgeSignalSimulationExit(tile) && GetTunnelBridgeDirection(tile) == ReverseDiagDir(dir)) {
@@ -5394,10 +5398,6 @@ inline void DecreaseReverseDistance(Train *v)
 {
 	if (v->reverse_distance > 1) {
 		v->reverse_distance--;
-		if (unlikely(v->reverse_distance == 1 && v->cur_speed > 15 && _settings_game.vehicle.train_acceleration_model == AM_REALISTIC)) {
-			/* Train is still moving too fast, extend the reversing point */
-			v->reverse_distance++;
-		}
 	}
 }
 
@@ -5480,7 +5480,8 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 		direction_changed = true;
 	};
 
-	if (reverse && v->reverse_distance == 1) {
+	if (reverse && v->reverse_distance == 1 && (v->cur_speed <= 15 || !v->UsingRealisticBraking())) {
+		/* Train is not moving too fast and reversing distance has been reached */
 		goto reverse_train_direction;
 	}
 
@@ -7557,37 +7558,80 @@ int GetTrainEstimatedMaxAchievableSpeed(const Train *train, int mass, const int 
 
 void SetSignalTrainAdaptationSpeed(const Train *v, TileIndex tile, uint16 track)
 {
-	SignalSpeedKey speed_key = {
-		speed_key.signal_tile = tile,
-		speed_key.signal_track = track,
-		speed_key.last_passing_train_dir = v->GetVehicleTrackdir()
-	};
-	SignalSpeedValue speed_value = {
-		speed_value.train_speed = v->First()->cur_speed,
-		speed_value.time_stamp = GetSpeedRestrictionTimeout(v->First())
-	};
+	SignalSpeedKey speed_key = {};
+	speed_key.signal_tile = tile;
+	speed_key.signal_track = track;
+	speed_key.last_passing_train_dir = v->GetVehicleTrackdir();
+
+	SignalSpeedValue speed_value = {};
+	speed_value.train_speed = v->First()->cur_speed;
+	speed_value.time_stamp = GetSpeedRestrictionTimeout(v->First());
+
 	_signal_speeds[speed_key] = speed_value;
 }
 
-void ApplySignalTrainAdaptationSpeed(Train *v, TileIndex tile, uint16 track)
+static uint16 GetTrainAdaptationSpeed(TileIndex tile, uint16 track, Trackdir last_passing_train_dir)
 {
 	SignalSpeedKey speed_key = {
 		speed_key.signal_tile = tile,
 		speed_key.signal_track = track,
-		speed_key.last_passing_train_dir = v->GetVehicleTrackdir()
+		speed_key.last_passing_train_dir = last_passing_train_dir
 	};
 	const auto found_speed_restriction = _signal_speeds.find(speed_key);
 
 	if (found_speed_restriction != _signal_speeds.end()) {
-		if (IsOutOfDate(found_speed_restriction->second)) {
+		if (found_speed_restriction->second.IsOutOfDate()) {
 			_signal_speeds.erase(found_speed_restriction);
-			v->signal_speed_restriction = 0;
+			return 0;
 		} else {
-			v->signal_speed_restriction = std::max<uint16>(25, found_speed_restriction->second.train_speed);
+			return std::max<uint16>(25, found_speed_restriction->second.train_speed);
 		}
 	} else {
-		v->signal_speed_restriction = 0;
+		return 0;
 	}
+}
+
+void ApplySignalTrainAdaptationSpeed(Train *v, TileIndex tile, uint16 track)
+{
+	uint16 speed = GetTrainAdaptationSpeed(tile, track, v->GetVehicleTrackdir());
+
+	if (speed > 0 && v->lookahead != nullptr) {
+		for (const TrainReservationLookAheadItem &item : v->lookahead->items) {
+			if (item.type == TRLIT_SPEED_ADAPTATION && item.end + 1 < v->lookahead->reservation_end_position) {
+				uint16 signal_speed = GetLowestSpeedTrainAdaptationSpeedAtSignal(item.data_id, item.data_aux);
+
+				if (signal_speed == 0) {
+					/* unrestricted signal ahead, disregard speed adaptation at earlier signal */
+					v->signal_speed_restriction = 0;
+					return;
+				}
+				if (signal_speed > speed) {
+					/* signal ahead with higher speed adaptation speed, override speed adaptation at earlier signal */
+					speed = signal_speed;
+				}
+			}
+		}
+	}
+
+	v->signal_speed_restriction = speed;
+}
+
+uint16 GetLowestSpeedTrainAdaptationSpeedAtSignal(TileIndex tile, uint16 track)
+{
+	uint16 lowest_speed = 0;
+
+	SignalSpeedKey speed_key = { tile, track, (Trackdir)0 };
+	for (auto iter = _signal_speeds.lower_bound(speed_key); iter != _signal_speeds.end() && iter->first.signal_tile == tile && iter->first.signal_track == track;) {
+		if (iter->second.IsOutOfDate()) {
+			iter = _signal_speeds.erase(iter);
+		} else {
+			uint16 adapt_speed = std::max<uint16>(25, iter->second.train_speed);
+			if (lowest_speed == 0 || adapt_speed < lowest_speed) lowest_speed = adapt_speed;
+			++iter;
+		}
+	}
+
+	return lowest_speed;
 }
 
 uint16 Train::GetMaxWeight() const

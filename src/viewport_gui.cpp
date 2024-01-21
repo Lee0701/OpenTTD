@@ -95,7 +95,7 @@ public:
 		}
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_EV_ZOOM_IN: DoZoomInOutWindow(ZOOM_IN,  this); break;
@@ -141,7 +141,7 @@ public:
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
 	}
 
-	bool OnRightClick(Point pt, int widget) override
+	bool OnRightClick([[maybe_unused]] Point pt, int widget) override
 	{
 		return widget == WID_EV_VIEWPORT;
 	}
@@ -172,7 +172,7 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		/* Only handle zoom message if intended for us (msg ZOOM_IN/ZOOM_OUT) */
@@ -180,11 +180,11 @@ public:
 	}
 };
 
-static WindowDesc _extra_viewport_desc(
+static WindowDesc _extra_viewport_desc(__FILE__, __LINE__,
 	WDP_AUTO, "extra_viewport", 300, 268,
 	WC_EXTRA_VIEWPORT, WC_NONE,
 	0,
-	_nested_extra_viewport_widgets, lengthof(_nested_extra_viewport_widgets)
+	std::begin(_nested_extra_viewport_widgets), std::end(_nested_extra_viewport_widgets)
 );
 
 /**
@@ -269,7 +269,7 @@ void ShowTownNameTooltip(Window *w, const TileIndex tile)
 	} else {
 		tooltip_string = STR_JUST_STRING2;
 	}
-	GuiShowTooltips(w, tooltip_string, 0, nullptr, TCC_HOVER_VIEWPORT);
+	GuiShowTooltips(w, tooltip_string, TCC_HOVER_VIEWPORT);
 }
 
 void ShowWaypointViewportTooltip(Window *w, const TileIndex tile)
@@ -278,7 +278,7 @@ void ShowWaypointViewportTooltip(Window *w, const TileIndex tile)
 			(_settings_client.gui.waypoint_viewport_tooltip_name == WTNM_ON_IF_HIDDEN && HasBit(_display_opt, DO_SHOW_WAYPOINT_NAMES))) return;
 
 	SetDParam(0, GetStationIndex(tile));
-	GuiShowTooltips(w, STR_WAYPOINT_NAME, 0, nullptr, TCC_HOVER_VIEWPORT);
+	GuiShowTooltips(w, STR_WAYPOINT_NAME, TCC_HOVER_VIEWPORT);
 }
 
 void ShowStationViewportTooltip(Window *w, const TileIndex tile)
@@ -314,7 +314,7 @@ void ShowStationViewportTooltip(Window *w, const TileIndex tile)
 
 	if (!msg.empty()) {
 		_temp_special_strings[0] = std::move(msg);
-		GuiShowTooltips(w, SPECSTR_TEMP_START, 0, nullptr, TCC_HOVER_VIEWPORT);
+		GuiShowTooltips(w, SPECSTR_TEMP_START, TCC_HOVER_VIEWPORT);
 	}
 }
 

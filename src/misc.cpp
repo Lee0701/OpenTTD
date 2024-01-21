@@ -40,6 +40,7 @@
 #include "cargopacket.h"
 #include "tbtr_template_vehicle_func.h"
 #include "event_logs.h"
+#include "string_func.h"
 #include "3rdparty/monocypher/monocypher.h"
 
 #include "safeguards.h"
@@ -50,6 +51,8 @@ extern TileIndex _cur_tileloop_tile;
 extern TileIndex _aux_tileloop_tile;
 extern void ClearAllSignalSpeedRestrictions();
 extern void MakeNewgameSettingsLive();
+
+extern uint64 _station_tile_cache_hash;
 
 void InitializeSound();
 void InitializeMusic();
@@ -75,7 +78,6 @@ void InitializeOldNames();
 std::string GenerateUid(std::string_view subject)
 {
 	extern void NetworkRandomBytesWithFallback(void *buf, size_t n);
-	extern std::string BytesToHexString(const byte *data, size_t length);
 
 	uint8 random_bytes[32];
 	NetworkRandomBytesWithFallback(random_bytes, lengthof(random_bytes));
@@ -88,7 +90,7 @@ std::string GenerateUid(std::string_view subject)
 	crypto_blake2b_update(&ctx, (const byte *)subject.data(), subject.size());
 	crypto_blake2b_final (&ctx, digest);
 
-	return BytesToHexString(digest, lengthof(digest));
+	return FormatArrayAsHex({digest, lengthof(digest)});
 }
 
 /**
@@ -137,6 +139,7 @@ void InitializeGame(uint size_x, uint size_y, bool reset_date, bool reset_settin
 	_game_load_time = 0;
 	_extra_aspects = 0;
 	_aspect_cfg_hash = 0;
+	_station_tile_cache_hash = 0;
 	InitGRFGlobalVars();
 	_loadgame_DBGL_data.clear();
 	if (reset_settings) MakeNewgameSettingsLive();

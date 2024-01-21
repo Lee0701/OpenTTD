@@ -1,8 +1,3 @@
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_1_MONTH                :În fiecare lună
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_3_MONTHS               :La fiecare 3 luni
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_6_MONTHS               :La fiecare 6 luni
-STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_12_MONTHS              :La fiecare 12 luni
-
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -14,6 +9,14 @@ STR_VEHICLE_TYPE_TRAINS                                         :Trenuri
 STR_VEHICLE_TYPE_ROAD_VEHICLES                                  :Autovehicule
 STR_VEHICLE_TYPE_SHIPS                                          :Nave
 STR_VEHICLE_TYPE_AIRCRAFT                                       :Aeronave
+
+STR_CONFIG_SETTING_AUTOSAVE                                     :Autosalvare: {STRING}
+STR_CONFIG_SETTING_AUTOSAVE_HELPTEXT                            :Alege intervalul de timp dintre salvările automate
+
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Arată orarul pe programări în unități de timp interne în loc de zile: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Arată timpii de călătorie în tabela cu timpi a jocului folosind unități de timp interne în loc de zile
+
+STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Comută transparenţa pentru indicatorii de încarcare. Ctrl+Click pentru blocare
 
 # Tracerestrict GUI
 

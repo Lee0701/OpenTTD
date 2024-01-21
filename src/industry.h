@@ -61,21 +61,21 @@ DECLARE_ENUM_AS_BIT_SET(IndustryControlFlags);
  * Defines the internal data of a functional industry.
  */
 struct Industry : IndustryPool::PoolItem<&_industry_pool> {
-	TileArea location;                                     ///< Location of the industry
-	Town *town;                                            ///< Nearest town
-	Station *neutral_station;                              ///< Associated neutral station
-	CargoID produced_cargo[INDUSTRY_NUM_OUTPUTS];          ///< 16 production cargo slots
-	uint16 produced_cargo_waiting[INDUSTRY_NUM_OUTPUTS];   ///< amount of cargo produced per cargo
-	uint16 incoming_cargo_waiting[INDUSTRY_NUM_INPUTS];    ///< incoming cargo waiting to be processed
-	byte production_rate[INDUSTRY_NUM_OUTPUTS];            ///< production rate for each cargo
-	byte prod_level;                                       ///< general production level
-	CargoID accepts_cargo[INDUSTRY_NUM_INPUTS];            ///< 16 input cargo slots
-	uint16 this_month_production[INDUSTRY_NUM_OUTPUTS];    ///< stats of this month's production per cargo
-	uint16 this_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< stats of this month's transport per cargo
-	byte last_month_pct_transported[INDUSTRY_NUM_OUTPUTS]; ///< percentage transported per cargo in the last full month
-	uint16 last_month_production[INDUSTRY_NUM_OUTPUTS];    ///< total units produced per cargo in the last full month
-	uint16 last_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< total units transported per cargo in the last full month
+	TileArea location;                                          ///< Location of the industry
+	Town *town;                                                 ///< Nearest town
+	Station *neutral_station;                                   ///< Associated neutral station
+	std::array<CargoID, INDUSTRY_NUM_INPUTS> accepts_cargo{};
+	std::array<CargoID, INDUSTRY_NUM_OUTPUTS> produced_cargo{};             ///< 16 production cargo slots
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> produced_cargo_waiting{};     ///< amount of cargo produced per cargo
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> incoming_cargo_waiting{};     ///< incoming cargo waiting to be processed
+	std::array<byte,    INDUSTRY_NUM_OUTPUTS> production_rate{};            ///< production rate for each cargo
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> this_month_production{};      ///< stats of this month's production per cargo
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> this_month_transported{};     ///< stats of this month's transport per cargo
+	std::array<byte,    INDUSTRY_NUM_OUTPUTS> last_month_pct_transported{}; ///< percentage transported per cargo in the last full month
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> last_month_production{};      ///< total units produced per cargo in the last full month
+	std::array<uint16,  INDUSTRY_NUM_OUTPUTS> last_month_transported{};     ///< total units transported per cargo in the last full month
 	uint16 counter;                                        ///< used for animation and/or production (if available cargo)
+	byte prod_level;                                       ///< general production level
 
 	IndustryType type;                  ///< type of industry.
 	Owner owner;                        ///< owner of the industry.  Which SHOULD always be (imho) OWNER_NONE
@@ -119,36 +119,40 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 	inline int GetCargoProducedIndex(CargoID cargo) const
 	{
 		if (cargo == CT_INVALID) return -1;
-		const CargoID *pos = std::find(this->produced_cargo, endof(this->produced_cargo), cargo);
-		if (pos == endof(this->produced_cargo)) return -1;
-		return pos - this->produced_cargo;
+		auto pos = std::find(this->produced_cargo.begin(), this->produced_cargo.end(), cargo);
+		if (pos == this->produced_cargo.end()) return -1;
+		return pos - this->produced_cargo.begin();
 	}
 
 	inline int GetCargoAcceptedIndex(CargoID cargo) const
 	{
 		if (cargo == CT_INVALID) return -1;
-		const CargoID *pos = std::find(this->accepts_cargo, endof(this->accepts_cargo), cargo);
-		if (pos == endof(this->accepts_cargo)) return -1;
-		return pos - this->accepts_cargo;
+		auto pos = std::find(this->accepts_cargo.begin(), this->accepts_cargo.end(), cargo);
+		if (pos == this->accepts_cargo.end()) return -1;
+		return pos - this->accepts_cargo.begin();
 	}
 
-	/** Test if this industry accepts any cargo.
+	/**
+	 * Test if this industry accepts any cargo.
 	 * @return true iff the industry accepts any cargo.
 	 */
 	bool IsCargoAccepted() const { return std::any_of(std::begin(this->accepts_cargo), std::end(this->accepts_cargo), [](const auto &cargo) { return IsValidCargoID(cargo); }); }
 
-	/** Test if this industry produces any cargo.
+	/**
+	 * Test if this industry produces any cargo.
 	 * @return true iff the industry produces any cargo.
 	 */
 	bool IsCargoProduced() const { return std::any_of(std::begin(this->produced_cargo), std::end(this->produced_cargo), [](const auto &cargo) { return IsValidCargoID(cargo); }); }
 
-	/** Test if this industry accepts a specific cargo.
+	/**
+	 * Test if this industry accepts a specific cargo.
 	 * @param cargo Cargo type to test.
 	 * @return true iff the industry accepts the given cargo type.
 	 */
 	bool IsCargoAccepted(CargoID cargo) const { return std::any_of(std::begin(this->accepts_cargo), std::end(this->accepts_cargo), [&cargo](const auto &cid) { return cid == cargo; }); }
 
-	/** Test if this industry produces a specific cargo.
+	/**
+	 * Test if this industry produces a specific cargo.
 	 * @param cargo Cargo type to test.
 	 * @return true iff the industry produces the given cargo types.
 	 */

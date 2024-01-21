@@ -575,19 +575,11 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 				return (v->grf_cache.consist_cargo_information & 0xFF000000);
 			}
 			if (!HasBit(v->grf_cache.cache_valid, NCVV_CONSIST_CARGO_INFORMATION)) {
-				const Vehicle *u;
+				std::array<uint8_t, NUM_CARGO> common_cargoes{};
 				byte cargo_classes = 0;
-				uint8 common_cargoes[NUM_CARGO];
-				uint8 common_subtypes[256];
 				byte user_def_data = 0;
-				CargoID common_cargo_type = CT_INVALID;
-				uint8 common_subtype = 0xFF; // Return 0xFF if nothing is carried
 
-				/* Reset our arrays */
-				memset(common_cargoes, 0, sizeof(common_cargoes));
-				memset(common_subtypes, 0, sizeof(common_subtypes));
-
-				for (u = v; u != nullptr; u = u->Next()) {
+				for (const Vehicle *u = v; u != nullptr; u = u->Next()) {
 					if (v->type == VEH_TRAIN) user_def_data |= Train::From(u)->tcache.user_def_data;
 
 					/* Skip empty engines */
@@ -598,16 +590,13 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 				}
 
 				/* Pick the most common cargo type */
-				uint common_cargo_best_amount = 0;
-				for (CargoID cargo = 0; cargo < NUM_CARGO; cargo++) {
-					if (common_cargoes[cargo] > common_cargo_best_amount) {
-						common_cargo_best_amount = common_cargoes[cargo];
-						common_cargo_type = cargo;
-					}
-				}
+				auto cargo_it = std::max_element(std::begin(common_cargoes), std::end(common_cargoes));
+				/* Return CT_INVALID if nothing is carried */
+				CargoID common_cargo_type = (*cargo_it == 0) ? (CargoID)CT_INVALID : static_cast<CargoID>(std::distance(std::begin(common_cargoes), cargo_it));
 
 				/* Count subcargo types of common_cargo_type */
-				for (u = v; u != nullptr; u = u->Next()) {
+				std::array<uint8_t, UINT8_MAX + 1> common_subtypes{};
+				for (const Vehicle *u = v; u != nullptr; u = u->Next()) {
 					/* Skip empty engines and engines not carrying common_cargo_type */
 					if (u->cargo_type != common_cargo_type || !u->GetEngine()->CanCarryCargo()) continue;
 
@@ -615,13 +604,9 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 				}
 
 				/* Pick the most common subcargo type*/
-				uint common_subtype_best_amount = 0;
-				for (uint i = 0; i < lengthof(common_subtypes); i++) {
-					if (common_subtypes[i] > common_subtype_best_amount) {
-						common_subtype_best_amount = common_subtypes[i];
-						common_subtype = i;
-					}
-				}
+				auto subtype_it = std::max_element(std::begin(common_subtypes), std::end(common_subtypes));
+				/* Return UINT8_MAX if nothing is carried */
+				uint8_t common_subtype = (*subtype_it == 0) ? UINT8_MAX : static_cast<uint8_t>(std::distance(std::begin(common_subtypes), subtype_it));
 
 				/* Note: We have to store the untranslated cargotype in the cache as the cache can be read by different NewGRFs,
 				 *       which will need different translations */
@@ -724,7 +709,7 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 						return 0x1FF | ((GetRailTypeInfo(Train::From(v)->railtype)->flags & RTFB_CATENARY) ? 0x200 : 0);
 					}
 					RailType rt = GetTileRailTypeByTrackBit(v->tile, Train::From(v)->track);
-					const RailtypeInfo *rti = GetRailTypeInfo(rt);
+					const RailTypeInfo *rti = GetRailTypeInfo(rt);
 					return ((rti->flags & RTFB_CATENARY) ? 0x200 : 0) |
 						(HasPowerOnRail(Train::From(v)->railtype, rt) ? 0x100 : 0) |
 						GetReverseRailTypeTranslation(rt, object->ro.grffile);
@@ -744,7 +729,7 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 			}
 
 		case 0x4B: // Long date of last service
-			return v->date_of_last_service_newgrf;
+			return v->date_of_last_service_newgrf.base();
 
 		case 0x4C: // Current maximum speed in NewGRF units
 			if (!v->IsPrimaryVehicle()) return 0;
@@ -983,8 +968,8 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 		case 0x3B: return GB(v->cargo_cap, 8, 8);
 		case 0x3C: return ClampTo<uint16_t>(v->cargo.StoredCount());
 		case 0x3D: return GB(ClampTo<uint16_t>(v->cargo.StoredCount()), 8, 8);
-		case 0x3E: return v->cargo.Source();
-		case 0x3F: return ClampTo<uint8_t>(v->cargo.DaysInTransit());
+		case 0x3E: return v->cargo.GetFirstStation();
+		case 0x3F: return ClampTo<uint8_t>(v->cargo.PeriodsInTransit());
 		case 0x40: return ClampTo<uint16_t>(v->age);
 		case 0x41: return GB(ClampTo<uint16_t>(v->age), 8, 8);
 		case 0x42: return ClampTo<uint16_t>(v->max_age);
@@ -1133,7 +1118,7 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 			}
 			case 0x48: return Engine::Get(this->self_type)->flags; // Vehicle Type Info
 			case 0x49: return _cur_year; // 'Long' format build year
-			case 0x4B: return _date; // Long date of last service
+			case 0x4B: return _date.base(); // Long date of last service
 			case 0x92: return ClampTo<uint16>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR); // Date of last service
 			case 0x93: return GB(ClampTo<uint16>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR), 8, 8);
 			case 0xC4: return Clamp(_cur_year, ORIGINAL_BASE_YEAR, ORIGINAL_MAX_YEAR) - ORIGINAL_BASE_YEAR; // Build year
@@ -1377,6 +1362,20 @@ int GetEngineProperty(EngineID engine, PropertyID property, int orig_value, cons
 	return orig_value;
 }
 
+/**
+ * Test for vehicle build probablity type.
+ * @param v Vehicle whose build probability to test.
+ * @param type Build probability type to test for.
+ * @returns True iff the probability result says so.
+ */
+bool TestVehicleBuildProbability(Vehicle *v, EngineID engine, BuildProbabilityType type)
+{
+	uint16_t p = GetVehicleCallback(CBID_VEHICLE_BUILD_PROBABILITY, std::underlying_type<BuildProbabilityType>::type(type), 0, engine, v);
+	if (p == CALLBACK_FAILED) return false;
+
+	const uint16_t PROBABILITY_RANGE = 100;
+	return p + RandomRange(PROBABILITY_RANGE) >= PROBABILITY_RANGE;
+}
 
 static void DoTriggerVehicle(Vehicle *v, VehicleTrigger trigger, uint16 base_random_bits, bool first)
 {
@@ -1661,7 +1660,7 @@ void AnalyseEngineCallbacks()
 	}
 }
 
-void DumpVehicleSpriteGroup(const Vehicle *v, DumpSpriteGroupPrinter print)
+void DumpVehicleSpriteGroup(const Vehicle *v, SpriteGroupDumper &dumper)
 {
 	char buffer[512];
 	const Engine *e = Engine::Get(v->engine_type);
@@ -1671,7 +1670,7 @@ void DumpVehicleSpriteGroup(const Vehicle *v, DumpSpriteGroupPrinter print)
 		root_spritegroup = GetWagonOverrideSpriteSet(v->engine_type, v->cargo_type, v->GetGroundVehicleCache()->first_engine);
 		if (root_spritegroup != nullptr) {
 			seprintf(buffer, lastof(buffer), "Wagon Override for cargo: %u, engine type: %u", v->cargo_type, v->GetGroundVehicleCache()->first_engine);
-			print(nullptr, DSGPO_PRINT, 0, buffer);
+			dumper.Print(buffer);
 		}
 	}
 
@@ -1685,15 +1684,14 @@ void DumpVehicleSpriteGroup(const Vehicle *v, DumpSpriteGroupPrinter print)
 			root_spritegroup = e->grf_prop.spritegroup[CT_DEFAULT];
 			seprintf(buffer, lastof(buffer), "CT_DEFAULT");
 		}
-		print(nullptr, DSGPO_PRINT, 0, buffer);
+		dumper.Print(buffer);
 	}
 
-	SpriteGroupDumper dumper(print);
 	dumper.DumpSpriteGroup(root_spritegroup, 0);
 
 	for (uint i = 0; i < NUM_CARGO + 2; i++) {
 		if (e->grf_prop.spritegroup[i] != root_spritegroup && e->grf_prop.spritegroup[i] != nullptr) {
-			print(nullptr, DSGPO_PRINT, 0, "");
+			dumper.Print("");
 			switch (i) {
 				case CT_DEFAULT:
 					seprintf(buffer, lastof(buffer), "OTHER SPRITE GROUP: CT_DEFAULT");
@@ -1705,14 +1703,14 @@ void DumpVehicleSpriteGroup(const Vehicle *v, DumpSpriteGroupPrinter print)
 					seprintf(buffer, lastof(buffer), "OTHER SPRITE GROUP: Cargo: %u", i);
 					break;
 			}
-			print(nullptr, DSGPO_PRINT, 0, buffer);
+			dumper.Print(buffer);
 			dumper.DumpSpriteGroup(e->grf_prop.spritegroup[i], 0);
 		}
 	}
 	for (const WagonOverride &wo : e->overrides) {
 		if (wo.group != root_spritegroup && wo.group != nullptr) {
-			print(nullptr, DSGPO_PRINT, 0, "");
-			print(nullptr, DSGPO_PRINT, 0, "OTHER SPRITE GROUP: Wagon override");
+			dumper.Print("");
+			dumper.Print("OTHER SPRITE GROUP: Wagon override");
 			dumper.DumpSpriteGroup(wo.group, 0);
 		}
 	}

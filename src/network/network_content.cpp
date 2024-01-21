@@ -608,17 +608,21 @@ void ClientNetworkContentSocketHandler::OnFailure()
 	}
 }
 
-void ClientNetworkContentSocketHandler::OnReceiveData(const char *data, size_t length)
+void ClientNetworkContentSocketHandler::OnReceiveData(UniqueBuffer<char> data)
 {
-	assert(data == nullptr || length != 0);
+	assert(data.get() == nullptr || data.size() != 0);
 
 	/* Ignore any latent data coming from a connection we closed. */
-	if (this->http_response_index == -2) return;
+	if (this->http_response_index == -2) {
+		return;
+	}
+
+	this->lastActivity = std::chrono::steady_clock::now();
 
 	if (this->http_response_index == -1) {
 		if (data != nullptr) {
 			/* Append the rest of the response. */
-			this->http_response.insert(this->http_response.end(), data, data + length);
+			this->http_response.insert(this->http_response.end(), data.get(), data.get() + data.size());
 			return;
 		} else {
 			/* Make sure the response is properly terminated. */
@@ -631,13 +635,14 @@ void ClientNetworkContentSocketHandler::OnReceiveData(const char *data, size_t l
 
 	if (data != nullptr) {
 		/* We have data, so write it to the file. */
-		if (fwrite(data, 1, length, this->curFile) != length) {
+		if (fwrite(data.get(), 1, data.size(), this->curFile) != data.size()) {
 			/* Writing failed somehow, let try via the old method. */
 			this->OnFailure();
 		} else {
 			/* Just received the data. */
-			this->OnDownloadProgress(this->curInfo, (int)length);
+			this->OnDownloadProgress(this->curInfo, (int)data.size());
 		}
+
 		/* Nothing more to do now. */
 		return;
 	}
@@ -798,7 +803,7 @@ void ClientNetworkContentSocketHandler::Connect()
 /**
  * Disconnect from the content server.
  */
-NetworkRecvStatus ClientNetworkContentSocketHandler::CloseConnection(bool error)
+NetworkRecvStatus ClientNetworkContentSocketHandler::CloseConnection(bool)
 {
 	this->isCancelled = true;
 	NetworkContentSocketHandler::CloseConnection();

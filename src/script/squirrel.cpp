@@ -34,7 +34,7 @@
  * If changing the call paths into the scripting engine, define this symbol to enable full debugging of allocations.
  * This lets you track whether the allocator context is being switched correctly in all call paths.
 #define SCRIPT_DEBUG_ALLOCATIONS
-*/
+ */
 
 struct ScriptAllocator {
 	size_t allocated_size;   ///< Sum of allocated data size
@@ -177,7 +177,7 @@ struct ScriptAllocator {
 	~ScriptAllocator()
 	{
 #ifdef SCRIPT_DEBUG_ALLOCATIONS
-		assert(this->allocations.size() == 0);
+		assert(this->allocations.empty());
 #endif
 	}
 };
