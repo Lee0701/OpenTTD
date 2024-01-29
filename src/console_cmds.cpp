@@ -3741,7 +3741,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		line++;
 		/* Skip comments and empty lines. */
 		if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') continue;
-		
+
 		/* Read edge coords. */
 		if (!have_edges) {
 			if (sscanf(buf, "%lg,%lg,%lg,%lg", &top.latitude, &top.longitude, &bottom.latitude, &bottom.longitude) != 4) {
@@ -3844,6 +3844,114 @@ DEF_CONSOLE_CMD(ConImportTowns)
 		}
 	}
 	IConsolePrintF(CC_DEFAULT, "Founded %d towns, failed to found %d", founded, failed);
+	FioFCloseFile(fp);
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConImportIndustries)
+{
+	if (argc == 0) {
+		IConsoleHelp("Import map and industry data from a CSV file in OpenTTD's base directory to found industries at the appropriate coordinates. Usage: 'import_industries <file>'");
+		IConsoleHelp("File Format:");
+		IConsoleHelp("First line: Coordinates of map edges: north,east,south,west");
+		IConsoleHelp("Other lines: Type,latitude,longitude");
+		IConsoleHelp("Lines starting with # are ignored");
+		IConsoleHelp("Coordinates are positive or negative values, with no direction suffix");
+		return true;
+	}
+
+	if (_game_mode != GM_EDITOR) {
+		IConsolePrintF(CC_ERROR, "This function is only available in the scenario editor");
+		return true;
+	}
+
+	if (argc != 2) return false;
+
+	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
+	if (fp == NULL) {
+		IConsolePrintF(CC_ERROR, "Could not open file %s: %s", argv[1], strerror(errno));
+		return true;
+	}
+
+	char buf[512];
+	struct coord top, bottom, industry_loc;
+	double long_per_tile = 0, lat_per_tile = 0;
+	bool have_edges = false;
+	int line = 0, failed = 0, founded = 0;
+	IndustryType industry_type;
+	while (fgets(buf, sizeof buf, fp)) {
+		line++;
+		/* Skip comments and empty lines. */
+		if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') continue;
+
+		/* Read edge coords. */
+		if (!have_edges) {
+			if (sscanf(buf, "%lg,%lg,%lg,%lg", &top.latitude, &top.longitude, &bottom.latitude, &bottom.longitude) != 4) {
+				IConsolePrintF(CC_ERROR, "Error reading edge coordinates at %s:%d", argv[1], line);
+				return true;
+			}
+			if (top.latitude < bottom.latitude || top.longitude < bottom.longitude) {
+				IConsolePrintF(CC_ERROR, "Invalid edge coordinates.");
+				return true;
+			}
+			/* Calculate longitude and latitude per tile. */
+			long_per_tile = (bottom.longitude - top.longitude) / MapSizeX();
+			lat_per_tile = (top.latitude - bottom.latitude) / MapSizeY();
+			have_edges = true;
+			continue;
+		}
+
+		/* Scan type and coords. */
+		if (sscanf(buf, "%hhu,%lg,%lg", &industry_type, &industry_loc.latitude, &industry_loc.longitude) != 3) {
+			IConsolePrintF(CC_ERROR, "Syntax error at %s:%d (%s)", argv[1], line, buf);
+			return true;
+		}
+
+		/* Found industry. */
+		if (industry_loc.latitude > bottom.latitude && industry_loc.latitude < top.latitude && industry_loc.longitude > bottom.longitude && industry_loc.longitude < top.longitude) {
+			/* Found the industry, trying tiles around it if it fails. */
+			TileIndex tile = TileXY((industry_loc.longitude - top.longitude) / long_per_tile, MapSizeY() - ((industry_loc.latitude - bottom.latitude) / lat_per_tile));
+			TileIndex off_tile = tile;
+			bool success = false;
+			if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
+				success = DoCommandP(off_tile, industry_type, InteractiveRandom(), CMD_BUILD_INDUSTRY);
+				if (!success) {
+					for (int x = -1; x <= 1; x++) {
+						for (int y = -1; y <= 1; y++) {
+							if (x == 0 && y == 0) continue;
+							off_tile = TILE_ADDXY(tile, x, y);
+							if(IsTileType(off_tile, MP_CLEAR) || !IsTileType(off_tile, MP_TREES)) {
+								success = DoCommandP(off_tile, industry_type, InteractiveRandom(), CMD_BUILD_INDUSTRY);
+							}
+							if (success) break;
+						}
+						if (success) break;
+					}
+				}
+			}
+
+			if (success) {
+				tile = off_tile;
+				Industry *industry = nullptr;
+				for (int x = -1; x <= 1; x++) {
+					for (int y = -1; y <= 1; y++) {
+						off_tile = TILE_ADDXY(tile, x, y);
+						if(!(IsTileType(off_tile, MP_HOUSE) || (IsTileType(off_tile, MP_ROAD) && !IsRoadDepot(off_tile)))) continue;
+						industry = Industry::GetByTile(off_tile);
+						if(industry != nullptr) break;
+					}
+					if (industry != nullptr) break;
+				}
+				founded++;
+			} else {
+				failed++;
+				IConsolePrintF(CC_ERROR, "Could not found %d at 0x%X", industry_type, tile);
+			}
+		} else {
+			IConsolePrintF(CC_ERROR, "Industry out of bounds: %d", industry_type);
+		}
+	}
+	IConsolePrintF(CC_DEFAULT, "Founded %d industries, failed to found %d", founded, failed);
 	FioFCloseFile(fp);
 	return true;
 }
@@ -3995,6 +4103,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("rescan_newgrf",           ConRescanNewGRF);
 	IConsole::CmdRegister("list_dirs",               ConListDirs);
  	IConsole::CmdRegister("import_towns",            ConImportTowns);
+ 	IConsole::CmdRegister("import_industries",       ConImportIndustries);
 
 	IConsole::AliasRegister("dir",                   "ls");
 	IConsole::AliasRegister("del",                   "rm %+");
