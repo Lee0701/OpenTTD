@@ -3902,7 +3902,7 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 		}
 
 		/* Scan type and coords. */
-		if (sscanf(buf, "%hhu,%lg,%lg", &industry_type, &industry_loc.latitude, &industry_loc.longitude) != 3) {
+		if (sscanf(buf, "%u,%lg,%lg", &industry_type, &industry_loc.latitude, &industry_loc.longitude) != 3) {
 			IConsolePrintF(CC_ERROR, "Syntax error at %s:%d (%s)", argv[1], line, buf);
 			return true;
 		}
@@ -3953,6 +3953,16 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 	}
 	IConsolePrintF(CC_DEFAULT, "Founded %d industries, failed to found %d", founded, failed);
 	FioFCloseFile(fp);
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConIndustryTypes) {
+	char buf[128];
+	for(IndustryType i = 0 ; i < NUM_INDUSTRYTYPES ; i++) {
+		const IndustrySpec *spec = GetIndustrySpec(i);
+		GetString(buf, spec->name, lastof(buf));
+		IConsolePrintF(CC_DEFAULT, "%d: %s", i, buf);
+	}
 	return true;
 }
 
@@ -4104,6 +4114,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("list_dirs",               ConListDirs);
  	IConsole::CmdRegister("import_towns",            ConImportTowns);
  	IConsole::CmdRegister("import_industries",       ConImportIndustries);
+ 	IConsole::CmdRegister("list_industry_types",     ConIndustryTypes);
 
 	IConsole::AliasRegister("dir",                   "ls");
 	IConsole::AliasRegister("del",                   "rm %+");
