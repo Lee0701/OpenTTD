@@ -89,13 +89,13 @@ Dimension GetLargestCargoIconSize()
  * Get the cargo ID of a default cargo, if present.
  * @param l Landscape
  * @param ct Default cargo type.
- * @return ID number if the cargo exists, else #CT_INVALID
+ * @return ID number if the cargo exists, else #INVALID_CARGO
  */
 CargoID GetDefaultCargoID(LandscapeID l, CargoType ct)
 {
 	assert(l < lengthof(_default_climate_cargo));
 
-	if (ct == CT_INVALID) return CT_INVALID;
+	if (ct == CT_INVALID) return INVALID_CARGO;
 
 	assert(ct < lengthof(_default_climate_cargo[0]));
 	CargoLabel cl = _default_climate_cargo[l][ct];
@@ -110,7 +110,7 @@ CargoID GetDefaultCargoID(LandscapeID l, CargoType ct)
 /**
  * Get the cargo ID by cargo label.
  * @param cl Cargo type to get.
- * @return ID number if the cargo exists, else #CT_INVALID
+ * @return ID number if the cargo exists, else #INVALID_CARGO
  */
 CargoID GetCargoIDByLabel(CargoLabel cl)
 {
@@ -119,25 +119,25 @@ CargoID GetCargoIDByLabel(CargoLabel cl)
 	}
 
 	/* No matching label was found, so it is invalid */
-	return CT_INVALID;
+	return INVALID_CARGO;
 }
 
 
 /**
  * Find the CargoID of a 'bitnum' value.
  * @param bitnum 'bitnum' to find.
- * @return First CargoID with the given bitnum, or #CT_INVALID if not found or if the provided \a bitnum is invalid.
+ * @return First CargoID with the given bitnum, or #INVALID_CARGO if not found or if the provided \a bitnum is invalid.
  */
-CargoID GetCargoIDByBitnum(uint8 bitnum)
+CargoID GetCargoIDByBitnum(uint8_t bitnum)
 {
-	if (bitnum == INVALID_CARGO_BITNUM) return CT_INVALID;
+	if (bitnum == INVALID_CARGO_BITNUM) return INVALID_CARGO;
 
 	for (const CargoSpec *cs : CargoSpec::Iterate()) {
 		if (cs->bitnum == bitnum) return cs->Index();
 	}
 
 	/* No matching label was found, so it is invalid */
-	return CT_INVALID;
+	return INVALID_CARGO;
 }
 
 /**
@@ -157,9 +157,9 @@ SpriteID CargoSpec::GetCargoIcon() const
 	return sprite;
 }
 
-std::array<uint8_t, NUM_CARGO> _sorted_cargo_types;   ///< Sort order of cargoes by cargo ID.
-std::vector<const CargoSpec *> _sorted_cargo_specs;   ///< Cargo specifications sorted alphabetically by name.
-span<const CargoSpec *> _sorted_standard_cargo_specs; ///< Standard cargo specifications sorted alphabetically by name.
+std::array<uint8_t, NUM_CARGO> _sorted_cargo_types;        ///< Sort order of cargoes by cargo ID.
+std::vector<const CargoSpec *> _sorted_cargo_specs;        ///< Cargo specifications sorted alphabetically by name.
+std::span<const CargoSpec *> _sorted_standard_cargo_specs; ///< Standard cargo specifications sorted alphabetically by name.
 
 /** Sort cargo specifications by their name. */
 static bool CargoSpecNameSorter(const CargoSpec * const &a, const CargoSpec * const &b)
@@ -209,7 +209,7 @@ void InitializeSortedCargoSpecs()
 
 	/* Count the number of standard cargos and fill the mask. */
 	_standard_cargo_mask = 0;
-	uint8 nb_standard_cargo = 0;
+	uint8_t nb_standard_cargo = 0;
 	for (const auto &cargo : _sorted_cargo_specs) {
 		if (cargo->classes & CC_SPECIAL) break;
 		nb_standard_cargo++;
@@ -220,7 +220,7 @@ void InitializeSortedCargoSpecs()
 	_sorted_standard_cargo_specs = { _sorted_cargo_specs.data(), nb_standard_cargo };
 }
 
-uint64 CargoSpec::WeightOfNUnitsInTrain(uint32 n) const
+uint64_t CargoSpec::WeightOfNUnitsInTrain(uint32_t n) const
 {
 	if (this->is_freight) n *= _settings_game.vehicle.freight_trains;
 	return this->WeightOfNUnits(n);

@@ -35,6 +35,9 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :Moi lento
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Cada {COMMA} minutos reais
 
+STR_RIVERS_VERY_MANY                                            :{RED}Moitísimos
+STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extremadamente moitos
+
 STR_COMMA_SEPARATOR                                             :,{SP}
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
@@ -91,9 +94,6 @@ STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Intervalo personalizado (minutos reais)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Intervalo de autogardado en minutos reais
-
-STR_RIVERS_VERY_MANY                                            :{RED}Moitísimos
-STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extremadamente moitos
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :Aconsellámoste deixar esta opción no valor por defecto
 
@@ -163,7 +163,6 @@ STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE                     :Evitar a colisi
 STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE_HELPTEXT            :Cando se habilita, os barcos intentaran evitar pasar xunto a outro. Os mellores resultados obtéñense cando os xiros de 90º están prohibidos.
 
 STR_CONFIG_SETTING_CHUNNEL                                      :Permitir a construción de túneis baixo a auga: {STRING}
-STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :Cando se habilita, pódense construír tunéis baixo masas de auga ao nivel do mar. Isto require que o final do tunel remate polo menos a 3 cadros de distancia da costa.
 
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :Os trens das distintas compañías non poden chocar entre si: {STRING}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :Esta opción é básicamente para previr que xogadores que non son de confianza deliberadamente causen accidentes con trens de outras comopañías en multixogador con infraestrutura ferroviaria compartida.
@@ -499,12 +498,6 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :Sen límite
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :As vilas poden construír pontes: {STRING}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :Habilitar isto permite as vilas construír pontes
 
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR                            :Factor de xeración de carga das vilas (menos < 0 < máis): {STRING}
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR_HELPTEXT                   :Os pasaxeiros, correo e outras cargas de produción nas vilas escálanse aproximadamente por 2^factor (exponencial)
-
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR                        :Factor de xeración de carga das industrias (menos < 0 < máis): {STRING}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR_HELPTEXT               :A produción de carga das industrias primarias escálanse aproximadamente por 2^factor (exponencial). Isto exclúe as industrias de tala de árbores.{}Isto non garantiza ser completamente compatible con todos os NewGRFs de industria.
-
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :Sen vilas por enriba da altitude: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :Non se constrúen vilas por enriba da altitude especificada durante a creación do mapa.
 
@@ -601,14 +594,12 @@ STR_CONFIG_SETTING_INTERFACE_WALLCLOCK                          :{ORANGE}Reloxo 
 STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}Opcións do cliente
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}Opcións da partida
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}Horarios
-STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}Sinais (avanzado)
+STR_CONFIG_SETTING_INTERFACE_SIGNALS                            :{ORANGE}Sinais
 STR_CONFIG_SETTING_INTERFACE_SAVE                               :{ORANGE}Gardado e autogardado
 STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS                    :{ORANGE}Ventás dos vehículos
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}Ríos e lagoas
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}Distribución de carga - por anulacións de carga
-STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}Árbores
 STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS                         :{ORANGE}Modo do mapa
-STR_CONFIG_SETTING_VIEWPORT_SIGNALS                             :{ORANGE}Sinais
 STR_CONFIG_SETTING_VEHICLE_ROUTE_OVERLAY                        :{ORANGE}Capa superposta da ruta do vehículo
 STR_CONFIG_SETTING_SHARING                                      :{ORANGE}Compartición de infraestrutura
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}Editor de escenarios
@@ -863,7 +854,6 @@ STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL                     :Control adaptat
 STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL                          :Control do modo de sinal
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT                            :Adquirir ou agardar
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE                             :Intentar adquirir
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ON_RES                      :Intentar adquirir (en reserva)
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT                           :Liberar (diante)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK                            :Liberar (detrás)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT                :Fin PBS: Adquirir ou agardar
@@ -871,7 +861,6 @@ STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE                 :Fin PBS: Intent
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE                     :Fin PBS: Liberar
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT_ITEM                       :Adquirir slot: {STRING}{BLACK}{STRING}, ou agardar no sinal de ruta PBS
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM                        :Intentar adquirir slot: {STRING}{BLACK}{STRING}, ou continuar de calquera xeito
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM_RES_ONLY               :Intentar adquirir (en reserva de ruta PBS) slot: {STRING}{BLACK}{STRING}, ou continuar de calquera xeito
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT_ITEM                      :Liberar slot: {STRING}{BLACK}{STRING} (diante do tren)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK_ITEM                       :Liberar slot: {STRING}{BLACK}{STRING} (detrás do tren)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT_ITEM           :Reserva de ruta PBS remata aqui: Adquirir slot: {STRING}{BLACK}{STRING}, ou agardar no sinal de ruta PBS
@@ -1767,7 +1756,7 @@ STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}O númer
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}A pont é demasiado baixa para unha estación
 STR_ERROR_BRIDGE_PILLARS_OBSTRUCT_STATION                       :{WHITE}Os piares da ponte obstrúen a estación
 STR_ERROR_CHUNNEL_THROUGH_MAP_BORDER                            :{WHITE}O túnel baixo a auga remataría fora do mapa
-STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... só se permite a lonxitude de rampa entre 5 e {NUM} cadros para túneis baixo a auga.
+STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... só se permite a lonxitude de rampa entre {NUM} e {NUM} cadros para túneis baixo a auga.
 STR_ERROR_TUNNEL_TOO_MANY                                       :{WHITE}... demasiados túneis
 STR_ERROR_NO_DRILLING_ABOVE_CHUNNEL                             :{WHITE}Non se permiten pozos petrolíferos por riba de túneis baixo a auga.
 STR_ERROR_ANOTHER_TUNNEL_IN_THE_WAY_FOR_CHUNNEL                 :{WHITE}Necesítanse 3 cadros para pasar baixo o outro túnel.

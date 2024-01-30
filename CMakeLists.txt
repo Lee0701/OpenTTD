@@ -36,7 +36,7 @@ set_directory_options()
 include(Static)
 set_static_if_needed()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
@@ -282,7 +282,7 @@ endif()
 set_target_properties(openttd PROPERTIES OUTPUT_NAME "${BINARY_NAME}")
 # All other files are added via target_sources()
 
-if (MINGW)
+if (MINGW AND OPTION_MINGW_STDTHREADS)
     target_link_libraries(${OPENTTD_LIB} mingw_stdthreads)
 endif()
 
@@ -388,6 +388,7 @@ link_package(ZSTD TARGET ZSTD::ZSTD RECOMMENDED)
 
 if(NOT WIN32 AND NOT EMSCRIPTEN)
     link_package(CURL ENCOURAGED)
+    target_link_libraries(openttd_lib ${CMAKE_DL_LIBS})
 endif()
 
 if(NOT OPTION_DEDICATED)

@@ -29,7 +29,7 @@
 #include "safeguards.h"
 
 /* Extra Viewport Window Stuff */
-static const NWidgetPart _nested_extra_viewport_widgets[] = {
+static constexpr NWidgetPart _nested_extra_viewport_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_EV_CAPTION), SetDataTip(STR_EXTRA_VIEWPORT_TITLE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -85,7 +85,7 @@ public:
 		this->viewport->map_type = (ViewportMapType) _settings_client.gui.default_viewport_map_mode;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_EV_CAPTION:
@@ -95,7 +95,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_EV_ZOOM_IN: DoZoomInOutWindow(ZOOM_IN,  this); break;
@@ -141,7 +141,7 @@ public:
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
 	}
 
-	bool OnRightClick([[maybe_unused]] Point pt, int widget) override
+	bool OnRightClick([[maybe_unused]] Point pt, WidgetID widget) override
 	{
 		return widget == WID_EV_VIEWPORT;
 	}
@@ -157,7 +157,7 @@ public:
 		}
 	}
 
-	virtual void OnMouseOver(Point pt, int widget) override
+	virtual void OnMouseOver(Point pt, WidgetID widget) override
 	{
 		if (pt.x != -1 && IsViewportMouseHoverActive()) {
 			/* Show tooltip with last month production or town name */
@@ -220,19 +220,19 @@ void ShowExtraViewportWindowForTileUnderCursor()
 	ShowExtraViewportWindow(pt.x != -1 ? TileVirtXY(pt.x, pt.y) : INVALID_TILE);
 }
 
-enum TownNameTooltipMode : uint8 {
+enum TownNameTooltipMode : uint8_t {
 	TNTM_OFF,
 	TNTM_ON_IF_HIDDEN,
 	TNTM_ALWAYS_ON
 };
 
-enum WaypointTooltipNameMode : uint8 {
+enum WaypointTooltipNameMode : uint8_t {
 	WTNM_OFF,
 	WTNM_ON_IF_HIDDEN,
 	WTNM_ALWAYS_ON
 };
 
-enum StationTooltipNameMode : uint8 {
+enum StationTooltipNameMode : uint8_t {
 	STNM_OFF,
 	STNM_ON_IF_HIDDEN,
 	STNM_ALWAYS_ON

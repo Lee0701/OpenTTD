@@ -75,9 +75,6 @@ INSTANTIATE_POOL_METHODS(TraceRestrictSlot)
 TraceRestrictCounterPool _tracerestrictcounter_pool("TraceRestrictCounter");
 INSTANTIATE_POOL_METHODS(TraceRestrictCounter)
 
-std::vector<TraceRestrictSlotID> TraceRestrictSlot::veh_temporarily_added;
-std::vector<TraceRestrictSlotID> TraceRestrictSlot::veh_temporarily_removed;
-
 /**
  * TraceRestrictRefId --> TraceRestrictProgramID (Pool ID) mapping
  * The indirection is mainly to enable shared programs
@@ -89,7 +86,7 @@ TraceRestrictMapping _tracerestrictprogram_mapping;
  * List of pre-defined pathfinder penalty values
  * This is indexed by TraceRestrictPathfinderPenaltyPresetIndex
  */
-const uint16 _tracerestrict_pathfinder_penalty_preset_values[] = {
+const uint16_t _tracerestrict_pathfinder_penalty_preset_values[] = {
 	500,
 	2000,
 	8000,
@@ -245,9 +242,12 @@ static bool TestStationCondition(StationID station, TraceRestrictItem item)
  */
 void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInput &input, TraceRestrictProgramResult& out) const
 {
-	// static to avoid needing to re-alloc/resize on each execution
+	/* static to avoid needing to re-alloc/resize on each execution */
 	static std::vector<TraceRestrictCondStackFlags> condstack;
 	condstack.clear();
+
+	/* Only for use with TRPISP_PBS_RES_END_ACQ_DRY and TRPAUF_PBS_RES_END_SIMULATE */
+	static TraceRestrictSlotTemporaryState pbs_res_end_acq_dry_slot_temporary_state;
 
 	byte have_previous_signal = 0;
 	TileIndex previous_signal_tile[3];
@@ -273,7 +273,7 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 					condstack.pop_back();
 				}
 			} else {
-				uint16 condvalue = GetTraceRestrictValue(item);
+				uint16_t condvalue = GetTraceRestrictValue(item);
 				bool result = false;
 				switch(type) {
 					case TRIT_COND_UNDEFINED:
@@ -658,7 +658,7 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 								break;
 
 							case TRPPAF_PRESET: {
-								uint16 index = GetTraceRestrictValue(item);
+								uint16_t index = GetTraceRestrictValue(item);
 								assert(index < TRPPPI_END);
 								out.penalty += _tracerestrict_pathfinder_penalty_preset_values[index];
 								break;
@@ -727,31 +727,45 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 						if (!input.permitted_slot_operations) break;
 						TraceRestrictSlot *slot = TraceRestrictSlot::GetIfValid(GetTraceRestrictValue(item));
 						if (slot == nullptr || slot->vehicle_type != v->type) break;
-						switch (static_cast<TraceRestrictSlotCondOpField>(GetTraceRestrictCondOp(item))) {
+						switch (static_cast<TraceRestrictSlotSubtypeField>(GetTraceRestrictCombinedAuxCondOpField(item))) {
 							case TRSCOF_ACQUIRE_WAIT:
 								if (input.permitted_slot_operations & TRPISP_ACQUIRE) {
-									if (!slot->Occupy(v->index)) out.flags |= TRPRF_WAIT_AT_PBS;
+									if (!slot->Occupy(v)) out.flags |= TRPRF_WAIT_AT_PBS;
+								} else if (input.permitted_slot_operations & TRPISP_ACQUIRE_TEMP_STATE) {
+									if (!slot->OccupyUsingTemporaryState(v->index, TraceRestrictSlotTemporaryState::GetCurrent())) out.flags |= TRPRF_WAIT_AT_PBS;
 								}
 								break;
 
 							case TRSCOF_ACQUIRE_TRY:
-								if (input.permitted_slot_operations & TRPISP_ACQUIRE) slot->Occupy(v->index);
+								if (input.permitted_slot_operations & TRPISP_ACQUIRE) {
+									slot->Occupy(v);
+								} else if (input.permitted_slot_operations & TRPISP_ACQUIRE_TEMP_STATE) {
+									slot->OccupyUsingTemporaryState(v->index, TraceRestrictSlotTemporaryState::GetCurrent());
+								}
+								break;
+
+							case TRSCOF_RELEASE_ON_RESERVE:
+								if (input.permitted_slot_operations & TRPISP_ACQUIRE) {
+									slot->Vacate(v);
+								} else if (input.permitted_slot_operations & TRPISP_ACQUIRE_TEMP_STATE) {
+									slot->VacateUsingTemporaryState(v->index, TraceRestrictSlotTemporaryState::GetCurrent());
+								}
 								break;
 
 							case TRSCOF_RELEASE_BACK:
-								if (input.permitted_slot_operations & TRPISP_RELEASE_BACK) slot->Vacate(v->index);
+								if (input.permitted_slot_operations & TRPISP_RELEASE_BACK) slot->Vacate(v);
 								break;
 
 							case TRSCOF_RELEASE_FRONT:
-								if (input.permitted_slot_operations & TRPISP_RELEASE_FRONT) slot->Vacate(v->index);
+								if (input.permitted_slot_operations & TRPISP_RELEASE_FRONT) slot->Vacate(v);
 								break;
 
 							case TRSCOF_PBS_RES_END_ACQ_WAIT:
 								if (input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQUIRE) {
-									if (!slot->Occupy(v->index)) out.flags |= TRPRF_PBS_RES_END_WAIT;
+									if (!slot->Occupy(v)) out.flags |= TRPRF_PBS_RES_END_WAIT;
 								} else if (input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQ_DRY) {
 									if (this->actions_used_flags & TRPAUF_PBS_RES_END_SIMULATE) {
-										if (!slot->OccupyDryRunUsingTemporaryState(v->index)) out.flags |= TRPRF_PBS_RES_END_WAIT;
+										if (!slot->OccupyUsingTemporaryState(v->index, &pbs_res_end_acq_dry_slot_temporary_state)) out.flags |= TRPRF_PBS_RES_END_WAIT;
 									} else {
 										if (!slot->OccupyDryRun(v->index)) out.flags |= TRPRF_PBS_RES_END_WAIT;
 									}
@@ -760,22 +774,18 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 
 							case TRSCOF_PBS_RES_END_ACQ_TRY:
 								if (input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQUIRE) {
-									slot->Occupy(v->index);
+									slot->Occupy(v);
 								} else if ((input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQ_DRY) && (this->actions_used_flags & TRPAUF_PBS_RES_END_SIMULATE)) {
-									slot->OccupyDryRunUsingTemporaryState(v->index);
+									slot->OccupyUsingTemporaryState(v->index, &pbs_res_end_acq_dry_slot_temporary_state);
 								}
 								break;
 
 							case TRSCOF_PBS_RES_END_RELEASE:
-								if (input.permitted_slot_operations & TRPISP_PBS_RES_END_RELEASE) {
-									slot->Vacate(v->index);
+								if (input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQUIRE) {
+									slot->Vacate(v);
 								} else if ((input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQ_DRY) && (this->actions_used_flags & TRPAUF_PBS_RES_END_SIMULATE)) {
-									slot->VacateUsingTemporaryState(v->index);
+									slot->VacateUsingTemporaryState(v->index, &pbs_res_end_acq_dry_slot_temporary_state);
 								}
-								break;
-
-							case TRSCOF_ACQUIRE_TRY_ON_RESERVE:
-								if (input.permitted_slot_operations & TRPISP_ACQUIRE_ON_RES) slot->Occupy(v->index);
 								break;
 
 							default:
@@ -895,7 +905,7 @@ void TraceRestrictProgram::Execute(const Train* v, const TraceRestrictProgramInp
 		}
 	}
 	if ((input.permitted_slot_operations & TRPISP_PBS_RES_END_ACQ_DRY) && (this->actions_used_flags & TRPAUF_PBS_RES_END_SIMULATE)) {
-		TraceRestrictSlot::RevertTemporaryChanges(v->index);
+		pbs_res_end_acq_dry_slot_temporary_state.RevertTemporaryChanges(v->index);
 	}
 	assert(condstack.empty());
 }
@@ -972,7 +982,7 @@ CommandCost TraceRestrictProgram::Validate(const std::vector<TraceRestrictItem> 
 	// static to avoid needing to re-alloc/resize on each execution
 	static std::vector<TraceRestrictCondStackFlags> condstack;
 	condstack.clear();
-	actions_used_flags = static_cast<TraceRestrictProgramActionsUsedFlags>(0);
+	actions_used_flags = TRPAUF_NONE;
 
 	static std::vector<TraceRestrictSlotID> pbs_res_end_released_slots;
 	pbs_res_end_released_slots.clear();
@@ -1283,6 +1293,7 @@ CommandCost TraceRestrictProgram::Validate(const std::vector<TraceRestrictItem> 
 
 				case TRIT_COND_TRAIN_IN_SLOT:
 				case TRIT_COND_SLOT_OCCUPANCY:
+					actions_used_flags |= TRPAUF_SLOT_CONDITIONALS;
 					if (find_index(pbs_res_end_released_slots, GetTraceRestrictValue(item)) >= 0 || find_index(pbs_res_end_acquired_slots, GetTraceRestrictValue(item)) >= 0) {
 						actions_used_flags |= TRPAUF_PBS_RES_END_SIMULATE;
 					}
@@ -1345,12 +1356,16 @@ CommandCost TraceRestrictProgram::Validate(const std::vector<TraceRestrictItem> 
 					break;
 
 				case TRIT_SLOT:
-					switch (static_cast<TraceRestrictSlotCondOpField>(GetTraceRestrictCondOp(item))) {
+					switch (static_cast<TraceRestrictSlotSubtypeField>(GetTraceRestrictCombinedAuxCondOpField(item))) {
 						case TRSCOF_ACQUIRE_WAIT:
-							actions_used_flags |= TRPAUF_SLOT_ACQUIRE | TRPAUF_WAIT_AT_PBS;
+							actions_used_flags |= TRPAUF_SLOT_ACQUIRE | TRPAUF_SLOT_CONDITIONALS | TRPAUF_WAIT_AT_PBS;
 							break;
 
 						case TRSCOF_ACQUIRE_TRY:
+							actions_used_flags |= TRPAUF_SLOT_ACQUIRE;
+							break;
+
+						case TRSCOF_RELEASE_ON_RESERVE:
 							actions_used_flags |= TRPAUF_SLOT_ACQUIRE;
 							break;
 
@@ -1363,7 +1378,7 @@ CommandCost TraceRestrictProgram::Validate(const std::vector<TraceRestrictItem> 
 							break;
 
 						case TRSCOF_PBS_RES_END_ACQ_WAIT:
-							actions_used_flags |= TRPAUF_PBS_RES_END_SLOT | TRPAUF_PBS_RES_END_WAIT;
+							actions_used_flags |= TRPAUF_PBS_RES_END_SLOT | TRPAUF_PBS_RES_END_WAIT | TRPAUF_SLOT_CONDITIONALS ;
 							if (find_index(pbs_res_end_released_slots, GetTraceRestrictValue(item)) >= 0) actions_used_flags |= TRPAUF_PBS_RES_END_SIMULATE;
 							include(pbs_res_end_acquired_slots, GetTraceRestrictValue(item));
 							break;
@@ -1377,10 +1392,6 @@ CommandCost TraceRestrictProgram::Validate(const std::vector<TraceRestrictItem> 
 						case TRSCOF_PBS_RES_END_RELEASE:
 							actions_used_flags |= TRPAUF_PBS_RES_END_SLOT;
 							include(pbs_res_end_released_slots, GetTraceRestrictValue(item));
-							break;
-
-						case TRSCOF_ACQUIRE_TRY_ON_RESERVE:
-							actions_used_flags |= TRPAUF_SLOT_ACQUIRE_ON_RES;
 							break;
 
 						default:
@@ -1602,7 +1613,7 @@ void SetTraceRestrictValueDefault(TraceRestrictItem &item, TraceRestrictValueTyp
 /**
  * Set the type field of a TraceRestrictItem, and resets any other fields which are no longer valid/meaningful to sensible defaults
  */
-void SetTraceRestrictTypeAndNormalise(TraceRestrictItem &item, TraceRestrictItemType type, uint8 aux_data)
+void SetTraceRestrictTypeAndNormalise(TraceRestrictItem &item, TraceRestrictItemType type, uint8_t aux_data)
 {
 	if (item != 0) {
 		assert(GetTraceRestrictType(item) != TRIT_NULL);
@@ -1736,7 +1747,7 @@ void TraceRestrictCheckRefreshSignals(const TraceRestrictProgram *prog, size_t o
 		}
 	}
 
-	if (_network_dedicated) return;
+	if (IsHeadless()) return;
 
 	if (!((old_actions_used_flags ^ prog->actions_used_flags) & (TRPAUF_RESERVE_THROUGH_ALWAYS | TRPAUF_REVERSE))) return;
 
@@ -1816,9 +1827,9 @@ void TraceRestrictNotifySignalRemoval(TileIndex tile, Track track)
 /**
  * Helper function to perform parameter bit-packing and call DoCommandP, for instruction modification actions
  */
-void TraceRestrictDoCommandP(TileIndex tile, Track track, TraceRestrictDoCommandType type, uint32 offset, uint32 value, StringID error_msg)
+void TraceRestrictDoCommandP(TileIndex tile, Track track, TraceRestrictDoCommandType type, uint32_t offset, uint32_t value, StringID error_msg)
 {
-	uint32 p1 = 0;
+	uint32_t p1 = 0;
 	SB(p1, 0, 3, track);
 	SB(p1, 3, 5, type);
 	assert(offset < (1 << 16));
@@ -1868,7 +1879,7 @@ static CommandCost TraceRestrictCheckTileIsUsable(TileIndex tile, Track track)
  * Returns an appropriate default value for the second item of a dual-item instruction
  * @p item is the first item of the instruction
  */
-static uint32 GetDualInstructionInitialValue(TraceRestrictItem item)
+static uint32_t GetDualInstructionInitialValue(TraceRestrictItem item)
 {
 	switch (GetTraceRestrictType(item)) {
 		case TRIT_COND_PBS_ENTRY_SIGNAL:
@@ -1898,7 +1909,7 @@ template <typename T> void InstructionIteratorAdvance(T &iter)
 	iter = InstructionIteratorNext(iter);
 }
 
-CommandCost TraceRestrictProgramRemoveItemAt(std::vector<TraceRestrictItem> &items, uint32 offset, bool shallow_mode)
+CommandCost TraceRestrictProgramRemoveItemAt(std::vector<TraceRestrictItem> &items, uint32_t offset, bool shallow_mode)
 {
 	TraceRestrictItem old_item = *TraceRestrictProgram::InstructionAt(items, offset);
 	if (IsTraceRestrictConditional(old_item) && GetTraceRestrictCondFlags(old_item) != TRCF_OR) {
@@ -1913,7 +1924,7 @@ CommandCost TraceRestrictProgramRemoveItemAt(std::vector<TraceRestrictItem> &ite
 			}
 		}
 
-		uint32 recursion_depth = 1;
+		uint32_t recursion_depth = 1;
 		std::vector<TraceRestrictItem>::iterator remove_start = TraceRestrictProgram::InstructionAt(items, offset);
 		std::vector<TraceRestrictItem>::iterator remove_end = InstructionIteratorNext(remove_start);
 
@@ -1984,7 +1995,7 @@ static CommandCost AdvanceItemEndIteratorForBlock(const std::vector<TraceRestric
 		}
 		if (GetTraceRestrictCondFlags(old_item) != 0) {
 			if (allow_elif) {
-				uint32 recursion_depth = 0;
+				uint32_t recursion_depth = 0;
 				for (; move_end != items.end(); InstructionIteratorAdvance(move_end)) {
 					TraceRestrictItem current_item = *move_end;
 					if (IsTraceRestrictConditional(current_item)) {
@@ -2009,7 +2020,7 @@ static CommandCost AdvanceItemEndIteratorForBlock(const std::vector<TraceRestric
 			return CMD_ERROR;
 		}
 
-		uint32 recursion_depth = 1;
+		uint32_t recursion_depth = 1;
 		// iterate until matching end block found
 		for (; move_end != items.end(); InstructionIteratorAdvance(move_end)) {
 			TraceRestrictItem current_item = *move_end;
@@ -2035,7 +2046,7 @@ static CommandCost AdvanceItemEndIteratorForBlock(const std::vector<TraceRestric
 	return CommandCost();
 }
 
-CommandCost TraceRestrictProgramMoveItemAt(std::vector<TraceRestrictItem> &items, uint32 &offset, bool up, bool shallow_mode)
+CommandCost TraceRestrictProgramMoveItemAt(std::vector<TraceRestrictItem> &items, uint32_t &offset, bool up, bool shallow_mode)
 {
 	std::vector<TraceRestrictItem>::iterator move_start = TraceRestrictProgram::InstructionAt(items, offset);
 	std::vector<TraceRestrictItem>::iterator move_end = InstructionIteratorNext(move_start);
@@ -2057,7 +2068,7 @@ CommandCost TraceRestrictProgramMoveItemAt(std::vector<TraceRestrictItem> &items
 	return CommandCost();
 }
 
-CommandCost TraceRestrictProgramDuplicateItemAt(std::vector<TraceRestrictItem> &items, uint32 offset)
+CommandCost TraceRestrictProgramDuplicateItemAt(std::vector<TraceRestrictItem> &items, uint32_t offset)
 {
 	std::vector<TraceRestrictItem>::iterator dup_start = TraceRestrictProgram::InstructionAt(items, offset);
 	std::vector<TraceRestrictItem>::iterator dup_end = InstructionIteratorNext(dup_start);
@@ -2074,7 +2085,7 @@ CommandCost TraceRestrictProgramDuplicateItemAt(std::vector<TraceRestrictItem> &
 	return CommandCost();
 }
 
-bool TraceRestrictProgramDuplicateItemAtDryRun(const std::vector<TraceRestrictItem> &items, uint32 offset)
+bool TraceRestrictProgramDuplicateItemAtDryRun(const std::vector<TraceRestrictItem> &items, uint32_t offset)
 {
 	std::vector<TraceRestrictItem>::iterator dup_start = TraceRestrictProgram::InstructionAt(const_cast<std::vector<TraceRestrictItem> &>(items), offset);
 	std::vector<TraceRestrictItem>::iterator dup_end = InstructionIteratorNext(dup_start);
@@ -2092,7 +2103,7 @@ bool TraceRestrictProgramDuplicateItemAtDryRun(const std::vector<TraceRestrictIt
  * @param p2 Item, for insert and modify operations. Flags for instruction move operations
  * @return the cost of this operation (which is free), or an error
  */
-CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictDoCommandType type = static_cast<TraceRestrictDoCommandType>(GB(p1, 3, 5));
 
@@ -2101,7 +2112,7 @@ CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, u
 	}
 
 	Track track = static_cast<Track>(GB(p1, 0, 3));
-	uint32 offset = GB(p1, 8, 16);
+	uint32_t offset = GB(p1, 8, 16);
 	TraceRestrictItem item = static_cast<TraceRestrictItem>(p2);
 
 	CommandCost ret = TraceRestrictCheckTileIsUsable(tile, track);
@@ -2116,7 +2127,7 @@ CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, u
 		return_cmd_error(STR_TRACE_RESTRICT_ERROR_NO_PROGRAM);
 	}
 
-	uint32 offset_limit_exclusive = ((type == TRDCT_INSERT_ITEM) ? 1 : 0);
+	uint32_t offset_limit_exclusive = ((type == TRDCT_INSERT_ITEM) ? 1 : 0);
 	if (prog) offset_limit_exclusive += (uint)prog->items.size();
 
 	if (offset >= offset_limit_exclusive) {
@@ -2231,7 +2242,7 @@ CommandCost CmdProgramSignalTraceRestrict(TileIndex tile, DoCommandFlag flags, u
 void TraceRestrictProgMgmtWithSourceDoCommandP(TileIndex tile, Track track, TraceRestrictDoCommandType type,
 		TileIndex source_tile, Track source_track, StringID error_msg)
 {
-	uint32 p1 = 0;
+	uint32_t p1 = 0;
 	SB(p1, 0, 3, track);
 	SB(p1, 3, 5, type);
 	SB(p1, 8, 3, source_track);
@@ -2246,7 +2257,7 @@ void TraceRestrictProgMgmtWithSourceDoCommandP(TileIndex tile, Track track, Trac
  * @param p2 Source tile, for share/copy operations
  * @return the cost of this operation (which is free), or an error
  */
-CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictDoCommandType type = static_cast<TraceRestrictDoCommandType>(GB(p1, 3, 5));
 	Track track = static_cast<Track>(GB(p1, 0, 3));
@@ -2301,7 +2312,7 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 				prog->items = source_prog->items; // copy
 				prog->Validate();
 
-				TraceRestrictCheckRefreshSignals(prog, 0, static_cast<TraceRestrictProgramActionsUsedFlags>(0));
+				TraceRestrictCheckRefreshSignals(prog, 0, TRPAUF_NONE);
 			}
 			break;
 		}
@@ -2337,7 +2348,7 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 			}
 
 			TraceRestrictCreateProgramMapping(self, source_prog);
-			TraceRestrictCheckRefreshSingleSignal(source_prog, self, static_cast<TraceRestrictProgramActionsUsedFlags>(0));
+			TraceRestrictCheckRefreshSingleSignal(source_prog, self, TRPAUF_NONE);
 			break;
 		}
 
@@ -2361,7 +2372,7 @@ CommandCost CmdProgramSignalTraceRestrictProgMgmt(TileIndex tile, DoCommandFlag 
 
 				new_prog->items.swap(items);
 				new_prog->Validate();
-				TraceRestrictCheckRefreshSingleSignal(new_prog, self, static_cast<TraceRestrictProgramActionsUsedFlags>(0));
+				TraceRestrictCheckRefreshSingleSignal(new_prog, self, TRPAUF_NONE);
 			}
 			break;
 		}
@@ -2439,7 +2450,7 @@ int GetTraceRestrictTimeDateValueFromDate(TraceRestrictTimeDateValueField type, 
  * This is called when a station, waypoint or depot is about to be deleted
  * Scan program pool and change any references to it to the invalid station ID, to avoid dangling references
  */
-void TraceRestrictRemoveDestinationID(TraceRestrictOrderCondAuxField type, uint16 index)
+void TraceRestrictRemoveDestinationID(TraceRestrictOrderCondAuxField type, uint16_t index)
 {
 	for (TraceRestrictProgram *prog : TraceRestrictProgram::Iterate()) {
 		for (size_t i = 0; i < prog->items.size(); i++) {
@@ -2527,20 +2538,17 @@ void TraceRestrictUpdateCompanyID(CompanyID old_company, CompanyID new_company)
 static btree::btree_multimap<VehicleID, TraceRestrictSlotID> slot_vehicle_index;
 
 /**
- * Add vehicle ID to occupants if possible and not already an occupant
- * @param id Vehicle ID
+ * Add vehicle to occupants if possible and not already an occupant
+ * @param v Vehicle
  * @param force Add the vehicle even if the slot is at/over capacity
- * @return whether vehicle ID is now an occupant
+ * @return whether vehicle is now an occupant
  */
-bool TraceRestrictSlot::Occupy(VehicleID id, bool force)
+bool TraceRestrictSlot::Occupy(const Vehicle *v, bool force)
 {
-	if (this->IsOccupant(id)) return true;
+	if (this->IsOccupant(v->index)) return true;
 	if (this->occupants.size() >= this->max_occupancy && !force) return false;
-	this->occupants.push_back(id);
-	slot_vehicle_index.insert({ id, this->index });
-	SetBit(Vehicle::Get(id)->vehicle_flags, VF_HAVE_SLOT);
-	SetWindowDirty(WC_VEHICLE_DETAILS, id);
-	InvalidateWindowClassesData(WC_TRACE_RESTRICT_SLOTS);
+	this->occupants.push_back(v->index);
+	this->AddIndex(v);
 	this->UpdateSignals();
 	return true;
 }
@@ -2558,32 +2566,33 @@ bool TraceRestrictSlot::OccupyDryRun(VehicleID id)
 }
 
 /**
- * Dry-run adding vehicle ID to occupants if possible and not already an occupant, record any changes in the temporary state to be reverted later
+ * Add vehicle ID to occupants if possible and not already an occupant, record any changes in the temporary state to be reverted later
  * @param id Vehicle ID
+ * @param state Temporary state
  * @return whether vehicle ID is now an occupant
  */
-bool TraceRestrictSlot::OccupyDryRunUsingTemporaryState(VehicleID id)
+bool TraceRestrictSlot::OccupyUsingTemporaryState(VehicleID id, TraceRestrictSlotTemporaryState *state)
 {
 	if (this->IsOccupant(id)) return true;
 	if (this->occupants.size() >= this->max_occupancy) return false;
 
 	this->occupants.push_back(id);
 
-	if (find_index(veh_temporarily_removed, this->index) < 0) {
-		include(veh_temporarily_added, this->index);
+	if (find_index(state->veh_temporarily_removed, this->index) < 0) {
+		include(state->veh_temporarily_added, this->index);
 	}
 
 	return true;
 }
 
 /**
- * Remove vehicle ID from occupants
- * @param id Vehicle ID
+ * Remove vehicle from occupants
+ * @param v Vehicle
  */
-void TraceRestrictSlot::Vacate(VehicleID id)
+void TraceRestrictSlot::Vacate(const Vehicle *v)
 {
-	if (container_unordered_remove(this->occupants, id)) {
-		this->DeIndex(id);
+	if (container_unordered_remove(this->occupants, v->index)) {
+		this->DeIndex(v->index, v);
 		this->UpdateSignals();
 	}
 }
@@ -2591,12 +2600,13 @@ void TraceRestrictSlot::Vacate(VehicleID id)
 /**
  * Remove vehicle ID from occupants, record any changes in the temporary state to be reverted later
  * @param id Vehicle ID
+ * @param state Temporary state
  */
-void TraceRestrictSlot::VacateUsingTemporaryState(VehicleID id)
+void TraceRestrictSlot::VacateUsingTemporaryState(VehicleID id, TraceRestrictSlotTemporaryState *state)
 {
 	if (container_unordered_remove(this->occupants, id)) {
-		if (find_index(veh_temporarily_added, this->index) < 0) {
-			include(veh_temporarily_removed, this->index);
+		if (find_index(state->veh_temporarily_added, this->index) < 0) {
+			include(state->veh_temporarily_removed, this->index);
 		}
 	}
 }
@@ -2605,7 +2615,7 @@ void TraceRestrictSlot::VacateUsingTemporaryState(VehicleID id)
 void TraceRestrictSlot::Clear()
 {
 	for (VehicleID id : this->occupants) {
-		this->DeIndex(id);
+		this->DeIndex(id, nullptr);
 	}
 	this->occupants.clear();
 }
@@ -2617,7 +2627,25 @@ void TraceRestrictSlot::UpdateSignals() {
 	}
 }
 
-void TraceRestrictSlot::DeIndex(VehicleID id)
+/**
+ * Add vehicle to vehicle slot index
+ * @param v Vehicle pointer
+ */
+void TraceRestrictSlot::AddIndex(const Vehicle *v)
+{
+	slot_vehicle_index.insert({ v->index, this->index });
+	SetBit(const_cast<Vehicle *>(v)->vehicle_flags, VF_HAVE_SLOT);
+	SetWindowDirty(WC_VEHICLE_DETAILS, v->index);
+	InvalidateWindowClassesData(WC_TRACE_RESTRICT_SLOTS);
+
+}
+
+/**
+ * Remove vehicle from vehicle slot index
+ * @param id Vehicle ID
+ * @param v Vehicle pointer (optional) or nullptr
+ */
+void TraceRestrictSlot::DeIndex(VehicleID id, const Vehicle *v)
 {
 	auto start = slot_vehicle_index.lower_bound(id);
 	for (auto it = start; it != slot_vehicle_index.end() && it->first == id; ++it) {
@@ -2628,7 +2656,8 @@ void TraceRestrictSlot::DeIndex(VehicleID id)
 
 			if (is_first_in_range && (next == slot_vehicle_index.end() || next->first != id)) {
 				/* Only one item, which we've just erased, clear the vehicle flag */
-				ClrBit(Vehicle::Get(id)->vehicle_flags, VF_HAVE_SLOT);
+				if (v == nullptr) v = Vehicle::Get(id);
+				ClrBit(const_cast<Vehicle *>(v)->vehicle_flags, VF_HAVE_SLOT);
 			}
 			break;
 		}
@@ -2687,19 +2716,76 @@ void TraceRestrictSlot::PreCleanPool()
 	slot_vehicle_index.clear();
 }
 
+std::vector<TraceRestrictSlotTemporaryState *> TraceRestrictSlotTemporaryState::change_stack;
+
 /** Revert any temporary changes */
-void TraceRestrictSlot::RevertTemporaryChanges(VehicleID veh)
+void TraceRestrictSlotTemporaryState::RevertTemporaryChanges(VehicleID veh)
 {
-	for (TraceRestrictSlotID id : veh_temporarily_added) {
+	for (TraceRestrictSlotID id : this->veh_temporarily_added) {
 		TraceRestrictSlot *slot = TraceRestrictSlot::Get(id);
 		container_unordered_remove(slot->occupants, veh);
 	}
-	for (TraceRestrictSlotID id : veh_temporarily_removed) {
+	for (TraceRestrictSlotID id : this->veh_temporarily_removed) {
 		TraceRestrictSlot *slot = TraceRestrictSlot::Get(id);
 		include(slot->occupants, veh);
 	}
-	veh_temporarily_added.clear();
-	veh_temporarily_removed.clear();
+	this->veh_temporarily_added.clear();
+	this->veh_temporarily_removed.clear();
+}
+
+/** Apply any temporary changes */
+void TraceRestrictSlotTemporaryState::ApplyTemporaryChanges(const Vehicle *v)
+{
+	VehicleID veh = v->index;
+	for (TraceRestrictSlotID id : this->veh_temporarily_added) {
+		TraceRestrictSlot *slot = TraceRestrictSlot::Get(id);
+		if (slot->IsOccupant(veh)) {
+			slot->AddIndex(v);
+			slot->UpdateSignals();
+		}
+	}
+	for (TraceRestrictSlotID id : this->veh_temporarily_removed) {
+		TraceRestrictSlot *slot = TraceRestrictSlot::Get(id);
+		if (!slot->IsOccupant(veh)) {
+			slot->DeIndex(v->index, v);
+			slot->UpdateSignals();
+		}
+	}
+
+	this->veh_temporarily_added.clear();
+	this->veh_temporarily_removed.clear();
+}
+
+/** Apply any temporary changes to a parent temporary state */
+void TraceRestrictSlotTemporaryState::ApplyTemporaryChangesToParent(VehicleID veh, TraceRestrictSlotTemporaryState *parent)
+{
+	for (TraceRestrictSlotID id : this->veh_temporarily_added) {
+		if (find_index(parent->veh_temporarily_removed, id) < 0) {
+			include(parent->veh_temporarily_added, id);
+		}
+	}
+	for (TraceRestrictSlotID id : this->veh_temporarily_removed) {
+		if (find_index(parent->veh_temporarily_added, id) < 0) {
+			include(parent->veh_temporarily_removed, id);
+		}
+	}
+
+	this->veh_temporarily_added.clear();
+	this->veh_temporarily_removed.clear();
+}
+
+/** Pop from change stack and apply any temporary changes (to the parent temporary state if present) */
+void TraceRestrictSlotTemporaryState::PopFromChangeStackApplyTemporaryChanges(const Vehicle *v)
+{
+	assert(this->change_stack.back() == this);
+	this->change_stack.pop_back();
+	this->is_active = false;
+
+	if (this->change_stack.empty()) {
+		this->ApplyTemporaryChanges(v);
+	} else {
+		this->ApplyTemporaryChangesToParent(v->index, this->change_stack.back());
+	}
 }
 
 /** Remove vehicle ID from all slot occupants */
@@ -2778,7 +2864,7 @@ void TraceRestrictRemoveSlotID(TraceRestrictSlotID index)
 			o->GetXDataRef() = INVALID_TRACE_RESTRICT_SLOT_ID;
 			changed_order = true;
 		}
-		if (o->IsType(OT_RELEASE_SLOT) && o->GetDestination() == index) {
+		if (o->IsType(OT_SLOT) && o->GetDestination() == index) {
 			o->SetDestination(INVALID_TRACE_RESTRICT_SLOT_ID);
 			changed_order = true;
 		}
@@ -2817,7 +2903,7 @@ static bool IsUniqueSlotName(const char *name)
  * @param text new slot name
  * @return the cost of this operation or an error
  */
-CommandCost CmdCreateTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdCreateTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	if (!TraceRestrictSlot::CanAllocateItem()) return CMD_ERROR;
 	if (StrEmpty(text)) return CMD_ERROR;
@@ -2853,7 +2939,7 @@ CommandCost CmdCreateTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdDeleteTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdDeleteTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictSlot *slot = TraceRestrictSlot::GetIfValid(p1);
 	if (slot == nullptr || slot->owner != _current_company) return CMD_ERROR;
@@ -2884,7 +2970,7 @@ CommandCost CmdDeleteTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint
  * @param text the new name
  * @return the cost of this operation or an error
  */
-CommandCost CmdAlterTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAlterTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictSlot *slot = TraceRestrictSlot::GetIfValid(GB(p1, 0, 16));
 	if (slot == nullptr || slot->owner != _current_company) return CMD_ERROR;
@@ -2932,7 +3018,7 @@ CommandCost CmdAlterTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint3
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdAddVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAddVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictSlot *slot = TraceRestrictSlot::GetIfValid(p1);
 	Vehicle *v = Vehicle::GetIfValid(p2);
@@ -2941,7 +3027,7 @@ CommandCost CmdAddVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, 
 	if (v->type != slot->vehicle_type || !v->IsPrimaryVehicle()) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {
-		slot->Occupy(v->index, true);
+		slot->Occupy(v, true);
 	}
 
 	return CommandCost();
@@ -2958,7 +3044,7 @@ CommandCost CmdAddVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, 
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdRemoveVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRemoveVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictSlot *slot = TraceRestrictSlot::GetIfValid(p1);
 	Vehicle *v = Vehicle::GetIfValid(p2);
@@ -2966,15 +3052,15 @@ CommandCost CmdRemoveVehicleTraceRestrictSlot(TileIndex tile, DoCommandFlag flag
 	if (v == nullptr) return CMD_ERROR; // permit removing vehicles of other owners from your own slot
 
 	if (flags & DC_EXEC) {
-		slot->Vacate(v->index);
+		slot->Vacate(v);
 	}
 
 	return CommandCost();
 }
 
-void TraceRestrictCounter::UpdateValue(int32 new_value)
+void TraceRestrictCounter::UpdateValue(int32_t new_value)
 {
-	new_value = std::max<int32>(0, new_value);
+	new_value = std::max<int32_t>(0, new_value);
 	if (new_value != this->value) {
 		this->value = new_value;
 		InvalidateWindowClassesData(WC_TRACE_RESTRICT_COUNTERS);
@@ -2985,17 +3071,17 @@ void TraceRestrictCounter::UpdateValue(int32 new_value)
 	}
 }
 
-int32 TraceRestrictCounter::ApplyValue(int32 current, TraceRestrictCounterCondOpField op, int32 value)
+int32_t TraceRestrictCounter::ApplyValue(int32_t current, TraceRestrictCounterCondOpField op, int32_t value)
 {
 	switch (op) {
 		case TRCCOF_INCREASE:
-			return std::max<int32>(0, current + value);
+			return std::max<int32_t>(0, current + value);
 
 		case TRCCOF_DECREASE:
-			return std::max<int32>(0, current - value);
+			return std::max<int32_t>(0, current - value);
 
 		case TRCCOF_SET:
-			return std::max<int32>(0, value);
+			return std::max<int32_t>(0, value);
 
 		default:
 			NOT_REACHED();
@@ -3065,7 +3151,7 @@ void TraceRestrictRemoveCounterID(TraceRestrictCounterID index)
  * @param text new counter name
  * @return the cost of this operation or an error
  */
-CommandCost CmdCreateTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdCreateTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	if (!TraceRestrictCounter::CanAllocateItem()) return CMD_ERROR;
 	if (StrEmpty(text)) return CMD_ERROR;
@@ -3098,7 +3184,7 @@ CommandCost CmdCreateTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, u
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdDeleteTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdDeleteTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictCounter *ctr = TraceRestrictCounter::GetIfValid(p1);
 	if (ctr == nullptr || ctr->owner != _current_company) return CMD_ERROR;
@@ -3129,7 +3215,7 @@ CommandCost CmdDeleteTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, u
  * @param text the new name
  * @return the cost of this operation or an error
  */
-CommandCost CmdAlterTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAlterTraceRestrictCounter(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	TraceRestrictCounter *ctr = TraceRestrictCounter::GetIfValid(GB(p1, 0, 16));
 	if (ctr == nullptr || ctr->owner != _current_company) return CMD_ERROR;

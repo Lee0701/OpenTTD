@@ -257,6 +257,7 @@ STR_UNITS_HEIGHT_SI                                             :{DECIMAL} m
 
 STR_UNITS_DAYS                                                  :{COMMA}{NBSP}dag{P "" s}
 STR_UNITS_SECONDS                                               :{COMMA}{NBSP}sekund{P "" er}
+STR_UNITS_TICKS                                                 :{COMMA}{NBSP}tick{P "" s}
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtrer udtryk:
@@ -958,7 +959,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Valg af 
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Britiske Pund
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikanske dollars
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1001,6 +1002,7 @@ STR_GAME_OPTIONS_CURRENCY_HKD                                   :Hong Kong Dolla
 STR_GAME_OPTIONS_CURRENCY_INR                                   :Indisk rupi
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Indonesisk Rupiah
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Malaysisk Ringgit
+STR_GAME_OPTIONS_CURRENCY_LVL                                   :lettiske lats
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Automatisk gemning
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Vælg interval imellem automatisk gemning
@@ -1041,6 +1043,11 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Marker d
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Skalere facetter
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Marker dette afkrydsningsfelt for at skalere facetter efter grænsefladestørrelse
+
+STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}Brug traditionel sprite-skrifttype
+STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Marker dette felt, hvis du foretrækker at bruge den traditionelle sprite-skrifttype med fast størrelse.
+STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Anti-alias skrifttyper
+STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Marker dette felt for at skrifttyper, der kan ændres størrelse, kan udlignes.
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1664,6 +1671,7 @@ STR_CONFIG_SETTING_TIMETABLE_MODE_HELPTEXT                      :Vælg de tidsen
 ###length 3
 STR_CONFIG_SETTING_TIMETABLE_MODE_DAYS                          :Dage
 STR_CONFIG_SETTING_TIMETABLE_MODE_SECONDS                       :Sekunder
+STR_CONFIG_SETTING_TIMETABLE_MODE_TICKS                         :Ticks
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Vis ankomst og afgang i tidsplaner: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Vis forventede ankomst-og afgangstider i tidsplaner
@@ -1774,6 +1782,9 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Deaktiveret
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Slå service fra, når nedbrud er sat til ingen: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Når tilladt, bliver køretøjer ikke serviceret, hvis de ikke kan bryde ned
+
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY               :Læsningshastighedsstraf for tog, der er længere end stationen: {STRING}
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY_HELPTEXT      :Når den er aktiveret, læsser et tog, der er for lange til stationen, langsommere end et tog, der passer til stationen. Denne indstilling påvirker ikke stifinding.
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktiver hastighedsbegrænsning for vogne: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Når tilladt, brug også fartgrænse på vogne, for at bestemme makshastigheden på tog
@@ -2050,14 +2061,17 @@ STR_CONFIG_SETTING_ACCOUNTING                                   :Regnskab
 STR_CONFIG_SETTING_VEHICLES                                     :Køretøjer
 STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :Fysik / Tilstand
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :Ruteplanlægning
+STR_CONFIG_SETTING_VEHICLES_ORDERS                              :Ordre
 STR_CONFIG_SETTING_LIMITATIONS                                  :Begrænsninger
 STR_CONFIG_SETTING_ACCIDENTS                                    :Katastrofer / Ulykker
 STR_CONFIG_SETTING_GENWORLD                                     :Verden generation
 STR_CONFIG_SETTING_ENVIRONMENT                                  :Miljø
+STR_CONFIG_SETTING_ENVIRONMENT_TIME                             :tid
 STR_CONFIG_SETTING_ENVIRONMENT_AUTHORITIES                      :Myndigheder
 STR_CONFIG_SETTING_ENVIRONMENT_TOWNS                            :Byer
 STR_CONFIG_SETTING_ENVIRONMENT_INDUSTRIES                       :Industrier
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST                        :Fragtdistribution
+STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :Træer
 STR_CONFIG_SETTING_AI                                           :Modstandere
 STR_CONFIG_SETTING_AI_NPC                                       :Computerstyrede spillere
 STR_CONFIG_SETTING_NETWORK                                      :Netværk
@@ -2201,6 +2215,7 @@ STR_LIVERY_AIRCRAFT_GROUP_TOOLTIP                               :{BLACK}Vis farv
 STR_LIVERY_PRIMARY_TOOLTIP                                      :{BLACK}Vælg den primære farve for det valgte farveskema. Ctrl+Click vil sætte denne farve for alle farveskemaer
 STR_LIVERY_SECONDARY_TOOLTIP                                    :{BLACK}Vælg den sekundære farve for det valgte farveskema. Ctrl+Click vil sætte denne farve for alle farveskemaer
 STR_LIVERY_PANEL_TOOLTIP                                        :{BLACK}Vælg et farveskema, som skal ændres, eller flere farveskemaer vha. CTRL+klik. Klik på boksen for at slå brug af farveskemaet til/fra
+STR_LIVERY_TRAIN_GROUP_EMPTY                                    :Der er ikke oprettet toggrupper
 STR_LIVERY_ROAD_VEHICLE_GROUP_EMPTY                             :Der er ikke oprettet grupper af vejkøretøjer
 STR_LIVERY_SHIP_GROUP_EMPTY                                     :Der er ikke oprettet skibsgrupper
 STR_LIVERY_AIRCRAFT_GROUP_EMPTY                                 :Der er ikke oprettet flygrupper
@@ -2716,7 +2731,7 @@ STR_RAIL_TOOLBAR_TOOLTIP_BUILD_AUTORAIL                         :{BLACK}Byg jern
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_TRAIN_DEPOT_FOR_BUILDING         :{BLACK}Byg en remise (til køb og servicering af tog). Shift skifter mellem at bygge og vise prisoverslag.
 STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_TO_WAYPOINT               :{BLACK}Ombyg jernbane til rutepunkt. Ctrl muliggør sammenslutning af rutepunkt. Shift skifter mellem at bygge og vise prisoverslag.
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_STATION                 :{BLACK}Byg en banegård. Ctrl muliggør sammenslutning af stationer. Shift skifter mellem at bygge og vise prisoverslag.
-STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_SIGNALS                 :{BLACK}Byg jernbanesignaler. Ctrl skifter mellem semaforer og lyssignaler.{}Hvis musen trækkes langs en lige strækning, bygges signaler med jævne mellemrum. Hold Ctrl nede for at bygge signaler indtil næste kryds.{}Ctrl+klik skifter mellem at åbne eller ikke åbne signalvælgeren. Shift skifter mellem at bygge og vise prisoverslag.
+STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_SIGNALS                 :{BLACK}Byg signal på jernbane. Ctrl skifter semafor-/lyssignaler{}Hvis du trækker, opbygges signaler langs en lige jernbanestrækning. Ctrl bygger signaler op til næste vejkryds eller signal{}Ctrl+klik skifter til at åbne vinduet til valg af signal. Shift skifter mellem at bygge/vise omkostningsestimat
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_BRIDGE                  :{BLACK}Byg jernbanebro. Shift skifter mellem at bygge og vise prisoverslag.
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TUNNEL                  :{BLACK}Byg jernbanetunnel. Shift skifter mellem at bygge og vise prisoverslag.
 STR_RAIL_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR                :{BLACK}Skift mellem at bygge og fjerne jernbaneskinner, signaler, rutepunkter og stationer. Hold Ctrl nede for også at fjerne togspor fra rutepunkter og stationer.
@@ -2804,7 +2819,7 @@ STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_VEHICLE_DEPOT               :{BLACK}Byg vær
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRAM_VEHICLE_DEPOT               :{BLACK}Byg sporvognsremise (til køb og serviceing af sporvogne). Shift skifter mellem at bygge og vise prisoverslag.
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_BUS_STATION                      :{BLACK}Byg en rutebilstation. Ctrl muliggør sammenslutning af stationer. Shift skifter mellem at bygge og vise prisoverslag.
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_PASSENGER_TRAM_STATION           :{BLACK}Byg en passager-sporvognsstation. Ctrl muliggør sammenslutning af stationer. Shift skifter mellem at bygge og vise prisoverslag.
-STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRUCK_LOADING_BAY                :{BLACK}Byg en fragtcentral. Ctrl muliggør sammenslutning af stationer. Shift skifter mellem at bygge og vise prisoverslag.
+STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRUCK_LOADING_BAY                :{BLACK}Byg lastbilstation. Ctrl gør det muligt at tilslutte stationer. Shift skifter mellem at bygge/vise omkostningsestimat
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_CARGO_TRAM_STATION               :{BLACK}Byg en fragt-sporvognsstation. Ctrl muliggør sammenslutning af stationer. Shift skifter mellem at bygge og vise prisoverslag.
 STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_ONE_WAY_ROAD                    :{BLACK}Aktiver/Deaktiver ensrettede veje
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_BRIDGE                      :{BLACK}Byg en bro. Shift skifter mellem at bygge og vise prisoverslag.
@@ -3007,7 +3022,7 @@ STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Ejer af 
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Lokal myndighed: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :Ingen
 STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Koordinater: {LTBLUE}{NUM}x{NUM}x{NUM} ({STRING})
-STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Produceret: {LTBLUE}{DATE_LONG}
+STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Bygget/renoveret: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Stationsklasse: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Stationstype: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_AIRPORT_CLASS                         :{BLACK}Lufthavnsklasse: {LTBLUE}{STRING}
@@ -3073,7 +3088,7 @@ STR_LAI_TREE_NAME_CACTUS_PLANTS                                 :Kaktusplanter
 STR_LAI_STATION_DESCRIPTION_RAILROAD_STATION                    :Banegård
 STR_LAI_STATION_DESCRIPTION_AIRCRAFT_HANGAR                     :Flyhangar
 STR_LAI_STATION_DESCRIPTION_AIRPORT                             :Lufthavn
-STR_LAI_STATION_DESCRIPTION_TRUCK_LOADING_AREA                  :Fragtcentral
+STR_LAI_STATION_DESCRIPTION_TRUCK_LOADING_AREA                  :Lastbil station
 STR_LAI_STATION_DESCRIPTION_BUS_STATION                         :Rutebilstation
 STR_LAI_STATION_DESCRIPTION_SHIP_DOCK                           :Havn
 STR_LAI_STATION_DESCRIPTION_BUOY                                :Bøje

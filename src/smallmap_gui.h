@@ -55,30 +55,31 @@ void BuildOwnerLegend();
 
 /** Structure for holding relevant data for legends in small map */
 struct LegendAndColour {
-	uint8 colour;              ///< Colour of the item on the map.
+	uint8_t colour;            ///< Colour of the item on the map.
 	StringID legend;           ///< String corresponding to the coloured item.
 	IndustryType type;         ///< Type of industry. Only valid for industry entries.
-	uint8 height;              ///< Height in tiles. Only valid for height legend entries.
+	uint8_t height;            ///< Height in tiles. Only valid for height legend entries.
 	CompanyID company;         ///< Company to display. Only valid for company entries of the owner legend.
 	bool show_on_map;          ///< For filtering industries, if \c true, industry is shown on the map in colour.
 	bool end;                  ///< This is the end of the list.
 	bool col_break;            ///< Perform a column break and go further at the next column.
 };
 
+/** Types of legends in the #WID_SM_LEGEND widget. */
+enum SmallMapType : byte {
+	SMT_CONTOUR,
+	SMT_VEHICLES,
+	SMT_INDUSTRY,
+	SMT_LINKSTATS,
+	SMT_ROUTES,
+	SMT_VEGETATION,
+	SMT_OWNER,
+};
+DECLARE_ENUM_AS_ADDABLE(SmallMapType)
+
 /** Class managing the smallmap window. */
 class SmallMapWindow : public Window {
 protected:
-	/** Types of legends in the #WID_SM_LEGEND widget. */
-	enum SmallMapType {
-		SMT_CONTOUR,
-		SMT_VEHICLES,
-		SMT_INDUSTRY,
-		SMT_LINKSTATS,
-		SMT_ROUTES,
-		SMT_VEGETATION,
-		SMT_OWNER,
-	};
-
 	/** Available kinds of zoomlevel changes. */
 	enum ZoomLevelChange {
 		ZLC_INITIALIZE, ///< Initialize zoom level.
@@ -90,7 +91,7 @@ protected:
 	static bool show_towns;       ///< Display town names in the smallmap.
 	static int map_height_limit;  ///< Currently used/cached map height limit.
 
-	static const uint INDUSTRY_MIN_NUMBER_OF_COLUMNS = 2; ///< Minimal number of columns in the #WID_SM_LEGEND widget for the #SMT_INDUSTRY legend.
+	static const uint INDUSTRY_MIN_NUMBER_OF_COLUMNS = 2;     ///< Minimal number of columns in the #WID_SM_LEGEND widget for the #SMT_INDUSTRY legend.
 	static const uint FORCE_REFRESH_PERIOD = 930;             ///< map is redrawn after that many milliseconds (default).
 	static const uint FORCE_REFRESH_PERIOD_VEH = 240;         ///< map is redrawn after that many milliseconds (modes with vehicles).
 	static const uint FORCE_REFRESH_PERIOD_LINK_GRAPH = 2850; ///< map is redrawn after that many milliseconds (link graph mode).
@@ -101,11 +102,11 @@ protected:
 	uint column_width;             ///< Width of a column in the #WID_SM_LEGEND widget.
 	uint legend_width;             ///< Width of legend 'blob'.
 
-	int32 scroll_x;  ///< Horizontal world coordinate of the base tile left of the top-left corner of the smallmap display.
-	int32 scroll_y;  ///< Vertical world coordinate of the base tile left of the top-left corner of the smallmap display.
-	int tile_zoom;   ///< Tile zoom level. Bigger number means more zoom-out (further away).
-	int ui_zoom;     ///< UI (pixel doubling) Zoom level. Bigger number means more zoom-in (closer).
-	int zoom = 1;    ///< Zoom level. Bigger number means more zoom-out (further away).
+	int32_t scroll_x;  ///< Horizontal world coordinate of the base tile left of the top-left corner of the smallmap display.
+	int32_t scroll_y;  ///< Vertical world coordinate of the base tile left of the top-left corner of the smallmap display.
+	int tile_zoom;     ///< Tile zoom level. Bigger number means more zoom-out (further away).
+	int ui_zoom;       ///< UI (pixel doubling) Zoom level. Bigger number means more zoom-in (closer).
+	int zoom = 1;      ///< Zoom level. Bigger number means more zoom-out (further away).
 
 	GUITimer refresh; ///< Refresh timer.
 	std::unique_ptr<LinkGraphOverlay> overlay;
@@ -192,7 +193,7 @@ protected:
 	void SetZoomLevel(ZoomLevelChange change, const Point *zoom_pt);
 	void SetOverlayCargoMask();
 	void SetupWidgetData();
-	uint32 GetTileColours(const TileArea &ta) const;
+	uint32_t GetTileColours(const TileArea &ta) const;
 
 	int GetPositionOnLegend(Point pt);
 
@@ -207,17 +208,17 @@ public:
 	Point GetStationMiddle(const Station *st) const;
 
 	void Close([[maybe_unused]] int data = 0) override;
-	void SetStringParameters(int widget) const override;
+	void SetStringParameters(WidgetID widget) const override;
 	void OnInit() override;
 	void OnPaint() override;
-	void DrawWidget(const Rect &r, int widget) const override;
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override;
+	void DrawWidget(const Rect &r, WidgetID widget) const override;
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override;
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override;
-	bool OnRightClick(Point pt, int widget) override;
+	bool OnRightClick(Point pt, WidgetID widget) override;
 	void OnMouseWheel(int wheel) override;
 	void OnRealtimeTick(uint delta_ms) override;
 	void OnScroll(Point delta) override;
-	void OnMouseOver(Point pt, int widget) override;
+	void OnMouseOver(Point pt, WidgetID widget) override;
 
 	void TakeScreenshot();
 	void ScreenshotCallbackHandler(void *buf, uint y, uint pitch, uint n);

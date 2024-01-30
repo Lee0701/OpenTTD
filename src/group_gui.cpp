@@ -37,7 +37,7 @@
 
 #include "safeguards.h"
 
-static const NWidgetPart _nested_group_widgets[] = {
+static constexpr NWidgetPart _nested_group_widgets[] = {
 	NWidget(NWID_HORIZONTAL), // Window header
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_GL_CAPTION),
@@ -168,7 +168,7 @@ private:
 
 	Money money_this_year;
 	Money money_last_year;
-	uint32 occupancy_ratio;
+	uint32_t occupancy_ratio;
 
 	void AddChildren(GUIGroupList &source, GroupID parent, int indent)
 	{
@@ -388,7 +388,7 @@ private:
 	{
 		Money this_year = 0;
 		Money last_year = 0;
-		uint32 occupancy = 0;
+		uint32_t occupancy = 0;
 		uint vehicle_count = (uint)this->vehicles.size();
 
 		for (uint i = 0; i < vehicle_count; i++) {
@@ -400,7 +400,7 @@ private:
 			occupancy += v->trip_occupancy;
 		}
 
-		uint32 occupancy_ratio = vehicle_count ? occupancy / vehicle_count : 0;
+		uint32_t occupancy_ratio = vehicle_count ? occupancy / vehicle_count : 0;
 
 		bool ret = (this->money_this_year != this_year) || (this->money_last_year != last_year) || (occupancy_ratio != this->occupancy_ratio);
 		this->money_this_year = this_year;
@@ -450,7 +450,7 @@ public:
 		this->Window::Close();
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_GL_LIST_GROUP:
@@ -533,7 +533,7 @@ public:
 		this->SetDirty();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 
@@ -609,7 +609,7 @@ public:
 				WID_GL_AVAILABLE_VEHICLES);
 
 		/* If not a default group and the group has replace protection, show an enabled replace sprite. */
-		uint16 protect_sprite = SPR_GROUP_REPLACE_OFF_TRAIN;
+		uint16_t protect_sprite = SPR_GROUP_REPLACE_OFF_TRAIN;
 		if (!IsDefaultGroupID(this->vli.index) && !IsAllGroupID(this->vli.index) && HasBit(Group::Get(this->vli.index)->flags, GroupFlags::GF_REPLACE_PROTECTION)) protect_sprite = SPR_GROUP_REPLACE_ON_TRAIN;
 		this->GetWidget<NWidgetCore>(WID_GL_REPLACE_PROTECTION)->widget_data = protect_sprite + this->vli.vtype;
 
@@ -622,7 +622,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GL_ALL_VEHICLES:
@@ -707,7 +707,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_GL_SORT_BY_ORDER: // Flip sorting method ascending/descending
@@ -899,7 +899,7 @@ public:
 		}
 	}
 
-	void OnDragDrop_Group(Point pt, int widget)
+	void OnDragDrop_Group(Point pt, WidgetID widget)
 	{
 		const Group *g = Group::GetIfValid(this->group_sel);
 		if (g == nullptr) {
@@ -937,7 +937,7 @@ public:
 		}
 	}
 
-	void OnDragDrop_Vehicle(Point pt, int widget)
+	void OnDragDrop_Vehicle(Point pt, WidgetID widget)
 	{
 		switch (widget) {
 			case WID_GL_DEFAULT_VEHICLES: // Ungrouped vehicles
@@ -983,7 +983,7 @@ public:
 
 					case GB_SHARED_ORDERS: {
 						if (!VehicleClicked(vehgroup)) {
-							const Vehicle* v = vehgroup.vehicles_begin[0];
+							const Vehicle *v = vehgroup.vehicles_begin[0];
 							if (vindex == v->index) {
 								if (vehgroup.NumVehicles() == 1) {
 									ShowVehicleViewWindow(v);
@@ -1009,14 +1009,19 @@ public:
 
 				std::string name = GenerateAutoNameForVehicleGroup(v);
 
-				DoCommandP(0, VehicleListIdentifier(_ctrl_pressed ? VL_SHARED_ORDERS : VL_SINGLE_VEH, v->type, v->owner, v->index).Pack(), CF_ANY, CMD_CREATE_GROUP_FROM_LIST | CMD_MSG(STR_ERROR_GROUP_CAN_T_CREATE), nullptr, name.c_str());
+				VehicleListType vli_type = VL_SINGLE_VEH;
+				if (_ctrl_pressed) {
+					vli_type = VL_SHARED_ORDERS;
+					v = v->FirstShared();
+				}
+				DoCommandP(0, VehicleListIdentifier(vli_type, v->type, v->owner, v->index).Pack(), CargoFilterCriteria::CF_ANY, CMD_CREATE_GROUP_FROM_LIST | CMD_MSG(STR_ERROR_GROUP_CAN_T_CREATE), nullptr, name.c_str());
 
 				break;
 			}
 		}
 	}
 
-	void OnDragDrop(Point pt, int widget) override
+	void OnDragDrop(Point pt, WidgetID widget) override
 	{
 		if (this->vehicle_sel != INVALID_VEHICLE) OnDragDrop_Vehicle(pt, widget);
 		if (this->group_sel != INVALID_GROUP) OnDragDrop_Group(pt, widget);
@@ -1036,7 +1041,7 @@ public:
 		this->vscroll->SetCapacityFromWidget(this, WID_GL_LIST_VEHICLE);
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_GL_GROUP_BY_DROPDOWN:
@@ -1142,7 +1147,7 @@ public:
 		}
 	}
 
-	void OnMouseDrag(Point pt, int widget) override
+	void OnMouseDrag(Point pt, WidgetID widget) override
 	{
 		if (this->vehicle_sel == INVALID_VEHICLE && this->group_sel == INVALID_GROUP) return;
 
@@ -1304,7 +1309,7 @@ static inline VehicleGroupWindow *FindVehicleGroupWindow(VehicleType vt, Owner o
  * @param cmd Unused.
  * @see CmdCreateGroup
  */
-void CcCreateGroup(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcCreateGroup(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 	assert(p1 <= VEH_AIRCRAFT);
@@ -1321,7 +1326,7 @@ void CcCreateGroup(const CommandCost &result, TileIndex tile, uint32 p1, uint32 
  * @param p2 Bit 0-19: Vehicle ID.
  * @param cmd Unused.
  */
-void CcAddVehicleNewGroup(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcAddVehicleNewGroup(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 	assert(Vehicle::IsValidID(GB(p2, 0, 20)));

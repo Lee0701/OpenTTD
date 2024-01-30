@@ -38,11 +38,11 @@ static std::vector<TileIndex> _path_tile;
 
 namespace upstream_sl {
 
-static uint8  _cargo_periods;
-static uint16 _cargo_source;
-static uint32 _cargo_source_xy;
-static uint16 _cargo_count;
-static uint16 _cargo_paid_for;
+static uint8_t  _cargo_periods;
+static uint16_t _cargo_source;
+static uint32_t _cargo_source_xy;
+static uint16_t _cargo_count;
+static uint16_t _cargo_paid_for;
 static Money  _cargo_feeder_share;
 
 class SlVehicleCommon : public DefaultSaveLoadHandler<SlVehicleCommon, Vehicle> {
@@ -178,7 +178,7 @@ public:
 
 		SLE_CONDVAR(Vehicle, current_order_time,    SLE_UINT32,                  SLV_67, SLV_TIMETABLE_TICKS_TYPE),
 		SLE_CONDVAR(Vehicle, current_order_time,    SLE_FILE_I32 | SLE_VAR_U32,  SLV_TIMETABLE_TICKS_TYPE, SL_MAX_VERSION),
-		SLE_CONDVAR(Vehicle, last_loading_tick,     SLE_UINT64,                   SLV_LAST_LOADING_TICK, SL_MAX_VERSION),
+		SLE_CONDVAR(Vehicle, last_loading_tick,     SLE_FILE_U64 | SLE_VAR_I64,  SLV_LAST_LOADING_TICK, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, lateness_counter,      SLE_INT32,                   SLV_67, SL_MAX_VERSION),
 	};
 #if defined(_MSC_VER) && (_MSC_VER == 1915 || _MSC_VER == 1916)
@@ -271,7 +271,7 @@ public:
 		if (!_path_td.empty() && _path_td.size() <= RV_PATH_CACHE_SEGMENTS && _path_td.size() == _path_tile.size()) {
 			RoadVehicle *rv = RoadVehicle::From(v);
 			rv->cached_path.reset(new RoadVehPathCache());
-			rv->cached_path->count = (uint8)_path_td.size();
+			rv->cached_path->count = (uint8_t)_path_td.size();
 			for (size_t i = 0; i < _path_td.size(); i++) {
 				rv->cached_path->td[i] = _path_td[i];
 				rv->cached_path->tile[i] = _path_tile[i];
@@ -309,13 +309,9 @@ public:
 		if (v->type != VEH_SHIP) return;
 		SlObject(v, this->GetLoadDescription());
 
-		if (!_path_td.empty() && _path_td.size() <= SHIP_PATH_CACHE_LENGTH) {
+		if (!_path_td.empty()) {
 			Ship *s = Ship::From(v);
-			s->cached_path.reset(new ShipPathCache());
-			s->cached_path->count = (uint8)_path_td.size();
-			for (size_t i = 0; i < _path_td.size(); i++) {
-				s->cached_path->td[i] = _path_td[i];
-			}
+			s->cached_path.insert(s->cached_path.end(), _path_td.begin(), _path_td.end());
 		}
 		_path_td.clear();
 	}

@@ -38,7 +38,7 @@
 #include "table/sprites.h"
 #include "table/strings.h"
 
-static const NWidgetPart _nested_departures_list[] = {
+static constexpr NWidgetPart _nested_departures_list[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_DB_CAPTION), SetDataTip(STR_DEPARTURES_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -95,7 +95,7 @@ protected:
 	bool departures_invalid;   ///< The departures and arrivals list are currently invalid.
 	bool vehicles_invalid;     ///< The vehicles list is currently invalid.
 	uint entry_height;         ///< The height of an entry in the departures list.
-	uint64 elapsed_ms;         ///< The number of milliseconds that have elapsed since the window was created. Used for scrolling text.
+	uint64_t elapsed_ms;       ///< The number of milliseconds that have elapsed since the window was created. Used for scrolling text.
 	int calc_tick_countdown;   ///< The number of ticks to wait until recomputing the departure list. Signed in case it goes below zero.
 	bool show_types[4];        ///< The vehicle types to show in the departure list.
 	bool departure_types[3];   ///< The types of departure to show in the departure list.
@@ -116,7 +116,7 @@ protected:
 	virtual void DrawDeparturesListItems(const Rect &r) const;
 	void DeleteDeparturesList(DepartureList* list);
 
-	void ToggleCargoFilter(int widget, bool &flag)
+	void ToggleCargoFilter(WidgetID widget, bool &flag)
 	{
 		flag = !flag;
 		this->SetWidgetLoweredState(widget, flag);
@@ -211,7 +211,7 @@ protected:
 		}
 
 		for (GroupID gid : groups) {
-			SetDParam(0, (uint64)(gid | GROUP_NAME_HIERARCHY));
+			SetDParam(0, (uint64_t)(gid | GROUP_NAME_HIERARCHY));
 			int width = (GetStringBoundingBox(STR_DEPARTURES_GROUP)).width + 4;
 			if (width > this->group_width) this->group_width = width;
 		}
@@ -302,7 +302,7 @@ public:
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	virtual void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_DB_LIST:
@@ -313,7 +313,7 @@ public:
 		}
 	}
 
-	virtual void SetStringParameters(int widget) const override
+	virtual void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_DB_CAPTION) {
 			const Station *st = Station::Get(this->station);
@@ -321,7 +321,7 @@ public:
 		}
 	}
 
-	virtual bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	virtual bool OnTooltip(Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
 	{
 		switch (widget) {
 			case WID_DB_SHOW_TRAINS:
@@ -337,7 +337,7 @@ public:
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_DB_SHOW_TRAINS:   // Show trains to this station
@@ -401,7 +401,7 @@ public:
 				if (this->departures_invalid) return;
 
 				/* We need to find the departure corresponding to where the user clicked. */
-				uint32 id_v = (pt.y - this->GetWidget<NWidgetBase>(WID_DB_LIST)->pos_y) / this->entry_height;
+				uint32_t id_v = (pt.y - this->GetWidget<NWidgetBase>(WID_DB_LIST)->pos_y) / this->entry_height;
 
 				if (id_v >= this->vscroll->GetCapacity()) return; // click out of bounds
 
@@ -532,7 +532,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const override
+	virtual void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_DB_LIST:
@@ -875,20 +875,16 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 							}
 						}
 
-						char buf[256] = "";
 						auto tmp_params = MakeParameters(Waypoint::IsValidID(id) ? STR_WAYPOINT_NAME : STR_STATION_NAME, id, icon_via);
-						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_DESCRIPTOR, tmp_params, lastof(buf));
-						_temp_special_strings[temp_str].assign(buf, end);
+						_temp_special_strings[temp_str] = GetStringWithArgs(STR_DEPARTURES_VIA_DESCRIPTOR, tmp_params);
 					};
 					get_single_via_string(0, via);
 
 					if (via2 != INVALID_STATION) {
 						get_single_via_string(1, via2);
 
-						char buf[512] = "";
 						auto tmp_params = MakeParameters(SPECSTR_TEMP_START, SPECSTR_TEMP_START + 1);
-						char *end = GetStringWithArgs(buf, STR_DEPARTURES_VIA_AND, tmp_params, lastof(buf));
-						_temp_special_strings[0].assign(buf, end);
+						_temp_special_strings[0] = GetStringWithArgs(STR_DEPARTURES_VIA_AND, tmp_params);
 					}
 
 					SetDParam(offset, SPECSTR_TEMP_START);
@@ -963,7 +959,7 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 			const int group_left = ltr ? text_right - PadWidth(toc_width) - group_width : text_left + PadWidth(toc_width);
 			const int group_right = ltr ? text_right - PadWidth(toc_width) : text_left + PadWidth(toc_width) + group_width;
 
-			SetDParam(0, (uint64)(d->vehicle->group_id | GROUP_NAME_HIERARCHY));
+			SetDParam(0, (uint64_t)(d->vehicle->group_id | GROUP_NAME_HIERARCHY));
 			DrawString(group_left, group_right, y + 1, STR_DEPARTURES_GROUP);
 		}
 
@@ -972,7 +968,7 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 			const int toc_left = ltr ? text_right - toc_width : text_left;
 			const int toc_right = ltr ? text_right : text_left + toc_width;
 
-			SetDParam(0, (uint64)(d->vehicle->owner));
+			SetDParam(0, (uint64_t)(d->vehicle->owner));
 			DrawString(toc_left, toc_right, y + 1, STR_DEPARTURES_TOC, TC_FROMSTRING, SA_RIGHT);
 		}
 
@@ -987,11 +983,11 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 		/* RTL languages can be handled in the language file, e.g. by having the following: */
 		/* STR_DEPARTURES_CALLING_AT_STATION      :{STATION}, {RAW_STRING} */
 		/* STR_DEPARTURES_CALLING_AT_LAST_STATION :{STATION} & {RAW_STRING}*/
-		char buffer[512], scratch[512];
+		std::string buffer;
 
 		if (d->calling_at.size() != 0) {
 			SetDParam(0, (d->calling_at[0]).station);
-			GetString(scratch, STR_DEPARTURES_CALLING_AT_FIRST_STATION, lastof(scratch));
+			std::string calling_at_buffer = GetString(STR_DEPARTURES_CALLING_AT_FIRST_STATION);
 
 			StationID continues_to = INVALID_STATION;
 
@@ -1008,29 +1004,25 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 						continues_to = d->calling_at[d->calling_at.size() - 1].station;
 						break;
 					}
-					SetDParamStr(0, scratch);
+					SetDParamStr(0, std::move(calling_at_buffer));
 					SetDParam(1, s);
-					GetString(buffer, STR_DEPARTURES_CALLING_AT_STATION, lastof(buffer));
-					strncpy(scratch, buffer, sizeof(scratch));
+					calling_at_buffer = GetString(STR_DEPARTURES_CALLING_AT_STATION);
 				}
 
 				/* Finally, finish off with " and <station>". */
-				SetDParamStr(0, scratch);
+				SetDParamStr(0, std::move(calling_at_buffer));
 				SetDParam(1, d->calling_at[i].station);
-				GetString(buffer, STR_DEPARTURES_CALLING_AT_LAST_STATION, lastof(buffer));
-				strncpy(scratch, buffer, sizeof(scratch));
+				calling_at_buffer = GetString(STR_DEPARTURES_CALLING_AT_LAST_STATION);
 			}
 
-			SetDParamStr(1, scratch);
+			SetDParamStr(1, std::move(calling_at_buffer));
 			if (continues_to == INVALID_STATION) {
 				SetDParam(0, STR_DEPARTURES_CALLING_AT_LIST);
 			} else {
 				SetDParam(0, STR_DEPARTURES_CALLING_AT_LIST_SMART_TERMINUS);
 				SetDParam(2, continues_to);
 			}
-			GetString(buffer, size_prefix, lastof(buffer));
-		} else {
-			buffer[0] = 0;
+			buffer = GetString(size_prefix);
 		}
 
 		int list_width = (GetStringBoundingBox(buffer, _settings_client.gui.departure_larger_font ? FS_NORMAL : FS_SMALL)).width;
@@ -1052,7 +1044,7 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 			AutoRestoreBackup dpi_backup(_cur_dpi, &tmp_dpi);
 
 			/* The scrolling text starts out of view at the right of the screen and finishes when it is out of view at the left of the screen. */
-			int64 elapsed_scroll_px = this->elapsed_ms / 27;
+			int64_t elapsed_scroll_px = this->elapsed_ms / 27;
 			int pos = ltr
 				? text_right - (elapsed_scroll_px % (list_width + text_right - text_left))
 				:  text_left + (elapsed_scroll_px % (list_width + text_right - text_left));

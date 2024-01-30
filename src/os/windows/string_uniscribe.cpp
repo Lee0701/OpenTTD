@@ -55,7 +55,7 @@ struct UniscribeRun {
 };
 
 /** Break a string into language formatting ranges. */
-static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutFactory::CharType *buff, int32 length);
+static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutFactory::CharType *buff, int32_t length);
 /** Generate and place glyphs for a run of characters. */
 static bool UniscribeShapeRun(const UniscribeParagraphLayoutFactory::CharType *buff, UniscribeRun &range);
 
@@ -75,7 +75,7 @@ public:
 	class UniscribeVisualRun : public ParagraphLayouter::VisualRun {
 	private:
 		std::vector<GlyphID> glyphs;
-		std::vector<float> positions;
+		std::vector<Point> positions;
 		std::vector<WORD> char_to_glyph;
 
 		int start_pos;
@@ -83,19 +83,15 @@ public:
 		int num_glyphs;
 		Font *font;
 
-		mutable int *glyph_to_char = nullptr;
+		mutable std::vector<int> glyph_to_char;
 
 	public:
 		UniscribeVisualRun(const UniscribeRun &range, int x);
 		UniscribeVisualRun(UniscribeVisualRun &&other) noexcept;
-		~UniscribeVisualRun() override
-		{
-			free(this->glyph_to_char);
-		}
 
-		const GlyphID *GetGlyphs() const override { return &this->glyphs[0]; }
-		const float *GetPositions() const override { return &this->positions[0]; }
-		const int *GetGlyphToCharMap() const override;
+		const std::vector<GlyphID> &GetGlyphs() const override { return this->glyphs; }
+		const std::vector<Point> &GetPositions() const override { return this->positions; }
+		const std::vector<int> &GetGlyphToCharMap() const override;
 
 		const Font *GetFont() const override { return this->font;  }
 		int GetLeading() const override { return this->font->fc->GetHeight(); }
@@ -195,9 +191,11 @@ static bool UniscribeShapeRun(const UniscribeParagraphLayoutFactory::CharType *b
 				for (int i = 0; i < range.len; i++) {
 					if (buff[range.pos + i] >= SCC_SPRITE_START && buff[range.pos + i] <= SCC_SPRITE_END) {
 						auto pos = range.char_to_glyph[i];
-						range.ft_glyphs[pos] = range.font->fc->MapCharToGlyph(buff[range.pos + i]);
-						range.offsets[pos].dv = (range.font->fc->GetHeight() - ScaleSpriteTrad(FontCache::GetDefaultFontHeight(range.font->fc->GetSize()))) / 2; // Align sprite font to centre
-						range.advances[pos] = range.font->fc->GetGlyphWidth(range.ft_glyphs[pos]);
+						if (range.ft_glyphs[pos] == 0) { // Font doesn't have our special glyph, so remap.
+							range.ft_glyphs[pos] = range.font->fc->MapCharToGlyph(buff[range.pos + i]);
+							range.offsets[pos].dv = (range.font->fc->GetHeight() - ScaleSpriteTrad(FontCache::GetDefaultFontHeight(range.font->fc->GetSize()))) / 2; // Align sprite font to centre
+							range.advances[pos] = range.font->fc->GetGlyphWidth(range.ft_glyphs[pos]);
+						}
 					}
 				}
 
@@ -248,7 +246,7 @@ static bool UniscribeShapeRun(const UniscribeParagraphLayoutFactory::CharType *b
 	return true;
 }
 
-static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutFactory::CharType *buff, int32 length)
+static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutFactory::CharType *buff, int32_t length)
 {
 	/* Itemize text. */
 	SCRIPT_CONTROL control;
@@ -281,7 +279,7 @@ static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutF
 
 /* static */ ParagraphLayouter *UniscribeParagraphLayoutFactory::GetParagraphLayout(CharType *buff, CharType *buff_end, FontMap &fontMapping)
 {
-	int32 length = buff_end - buff;
+	int32_t length = buff_end - buff;
 	/* Can't layout an empty string. */
 	if (length == 0) return nullptr;
 
@@ -418,7 +416,7 @@ static std::vector<SCRIPT_ITEM> UniscribeItemizeString(UniscribeParagraphLayoutF
 		UniscribeRun run = *i_run;
 
 		/* Partial run after line break (either start or end)? Reshape run to get the first/last glyphs right. */
-		if (i_run == last_run - 1 && remaining_offset < (last_run - 1)->len) {
+		if (i_run == last_run - 1 && remaining_offset <= (last_run - 1)->len) {
 			run.len = remaining_offset - 1;
 
 			if (!UniscribeShapeRun(this->text_buffer, run)) return nullptr;
@@ -479,30 +477,29 @@ int UniscribeParagraphLayout::UniscribeLine::GetWidth() const
 UniscribeParagraphLayout::UniscribeVisualRun::UniscribeVisualRun(const UniscribeRun &range, int x) : glyphs(range.ft_glyphs), char_to_glyph(range.char_to_glyph), start_pos(range.pos), total_advance(range.total_advance), font(range.font)
 {
 	this->num_glyphs = (int)glyphs.size();
-	this->positions.resize(this->num_glyphs * 2 + 2);
+	this->positions.reserve(this->num_glyphs + 1);
 
-	int advance = 0;
+	int advance = x;
 	for (int i = 0; i < this->num_glyphs; i++) {
-		this->positions[i * 2 + 0] = range.offsets[i].du + advance + x;
-		this->positions[i * 2 + 1] = range.offsets[i].dv;
+		this->positions.emplace_back(range.offsets[i].du + advance, range.offsets[i].dv);
 
 		advance += range.advances[i];
 	}
-	this->positions[this->num_glyphs * 2] = advance + x;
+	/* End-of-run position. */
+	this->positions.emplace_back(advance, 0);
 }
 
 UniscribeParagraphLayout::UniscribeVisualRun::UniscribeVisualRun(UniscribeVisualRun&& other) noexcept
 								: glyphs(std::move(other.glyphs)), positions(std::move(other.positions)), char_to_glyph(std::move(other.char_to_glyph)),
-								  start_pos(other.start_pos), total_advance(other.total_advance), num_glyphs(other.num_glyphs), font(other.font)
+								  start_pos(other.start_pos), total_advance(other.total_advance), num_glyphs(other.num_glyphs), font(other.font),
+								  glyph_to_char(std::move(other.glyph_to_char))
 {
-	this->glyph_to_char = other.glyph_to_char;
-	other.glyph_to_char = nullptr;
 }
 
-const int *UniscribeParagraphLayout::UniscribeVisualRun::GetGlyphToCharMap() const
+const std::vector<int> &UniscribeParagraphLayout::UniscribeVisualRun::GetGlyphToCharMap() const
 {
-	if (this->glyph_to_char == nullptr) {
-		this->glyph_to_char = CallocT<int>(this->GetGlyphCount());
+	if (this->glyph_to_char.empty()) {
+		this->glyph_to_char.resize(this->GetGlyphCount());
 
 		/* The char to glyph array contains the first glyph index of the cluster that is associated
 		 * with each character. It is possible for a cluster to be formed of several chars. */
@@ -555,7 +552,7 @@ const int *UniscribeParagraphLayout::UniscribeVisualRun::GetGlyphToCharMap() con
 
 	if (!utf16_str.empty()) {
 		/* Itemize string into language runs. */
-		std::vector<SCRIPT_ITEM> runs = UniscribeItemizeString(&utf16_str[0], (int32)utf16_str.size());
+		std::vector<SCRIPT_ITEM> runs = UniscribeItemizeString(&utf16_str[0], (int32_t)utf16_str.size());
 
 		for (std::vector<SCRIPT_ITEM>::const_iterator run = runs.begin(); !runs.empty() && run != runs.end() - 1; run++) {
 			/* Get information on valid word and character break.s */

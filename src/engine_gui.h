@@ -21,7 +21,7 @@ struct GUIEngineListItem {
 	EngineID engine_id;       ///< Engine to display in build purchase list
 	EngineID variant_id;      ///< Variant group of the engine.
 	EngineDisplayFlags flags; ///< Flags for toggling/drawing (un)folded status and controlling indentation.
-	int8 indent;              ///< Display indentation level.
+	int8_t indent;            ///< Display indentation level.
 
 	GUIEngineListItem(EngineID engine_id, EngineID variant_id, EngineDisplayFlags flags, int indent) : engine_id(engine_id), variant_id(variant_id), flags(flags), indent(indent) {}
 
@@ -52,6 +52,6 @@ extern const StringID _engine_sort_listing[][14];
 extern EngList_SortTypeFunction * const _engine_sort_functions[][13];
 
 uint GetEngineListHeight(VehicleType type);
-void DisplayVehicleSortDropDown(Window *w, VehicleType vehicle_type, int selected, int button);
+void DisplayVehicleSortDropDown(Window *w, VehicleType vehicle_type, int selected, WidgetID button);
 
 #endif /* ENGINE_GUI_H */

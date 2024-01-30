@@ -18,7 +18,7 @@ STR_ORDER_CONDITIONAL_ACCEPTANCE_DROPDOWN                       :Akzeptierte Fra
 STR_ORDER_CONDITIONAL_FREE_PLATFORMS                            :Freie Bahnsteige
 STR_ORDER_CONDITIONAL_PERCENT                                   :Prozent der Fälle
 STR_ORDER_CONDITIONAL_SLOT_OCCUPANCY                            :Slotauslastung
-STR_ORDER_CONDITIONAL_TRAIN_IN_SLOT                             :Zug im Zeitfenster
+STR_ORDER_CONDITIONAL_TRAIN_IN_SLOT                             :Zug im Slot
 STR_ORDER_CONDITIONAL_CARGO_LOAD_PERCENTAGE                     :Frachtladezustand (Prozent)
 STR_ORDER_CONDITIONAL_CARGO_WAITING_AMOUNT                      :Wartende Frachtmenge
 STR_ORDER_CONDITIONAL_COUNTER_VALUE                             :Zählerwert
@@ -32,6 +32,9 @@ STR_CONFIG_SETTING_TOWN_GROWTH_EXTREME_SLOW                     :Extrem langsam
 STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :Sehr langsam
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Alle {COMMA} Echtzeitminuten
+
+STR_RIVERS_VERY_MANY                                            :{RED}Sehr viele
+STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extrem viele
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
@@ -79,9 +82,6 @@ STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Eigener Zeitraum (Echtzeitminuten)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Autosicherungsintervali in Echtzeitminuten
-
-STR_RIVERS_VERY_MANY                                            :{RED}Sehr viele
-STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extrem viele
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :Es ist empfohlen, diese Einstellung auf dem Standardwert zu belassen
 
@@ -139,7 +139,6 @@ STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE                     :Schiffe vermeid
 STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE_HELPTEXT            :Falls aktiviert, versuchen Schiffe, das durcheinander hindurch fahren zu vermeiden. Schiffen müssen dazu 90°-Kurven verboten sein.
 
 STR_CONFIG_SETTING_CHUNNEL                                      :Erlaube den Bau von Unterwassertunneln: {STRING}
-STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :Wenn aktiviert, können Tunnel unter Wasserflächen auf Meeresniveau gebaut werden. Hierzu müssen beide Enden des Tunnels mindestens 3 Kacheln von der Küste entfernt liegen.
 
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :Züge verschiedener Firmen stoßen nicht mehr zusammen: {STRING}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :Diese Einstellung ist in erster Linie dafür da um zu verhindern, dass Spielern denen man nicht vertraut bewusst Zusammenstöße mit Zügen anderer Firmen in Multiplayer-Spielen mit Infrastructure Sharing provozieren.
@@ -418,12 +417,6 @@ STR_CONFIG_SETTING_SIMULATE_SIGNALS_VALUE                       :{COMMA} Kachel{
 STR_CONFIG_SETTING_DAY_LENGTH_FACTOR                            :Faktor für Tageslänge: {STRING}
 STR_CONFIG_SETTING_DAY_LENGTH_FACTOR_HELPTEXT                   :Die Spielgeschwindigkeit wird um diesen Faktor reduziert.
 
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR                            :Faktor für die Erzeugung von städtischer Fracht (weniger < 0 < mehr): {STRING}
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR_HELPTEXT                   :Passagiere, Post und andere städtische Frachtproduktion wird um ungefähr 2^Faktor (exponentiell) skaliert.
-
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR                        :Faktor für die Erzeugung von Fracht durch Industrien (weniger < 0 < mehr): {STRING}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR_HELPTEXT               :Die Frachterzeugung von Rohstoff-Industrien wird etwa um 2^Faktor skaliert (exponentiell). Ausgenommen sind Holz-erntende Industrien.{}Es wird keine Kompatibilität mit allen Industrie-NewGRFs garantiert.
-
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :Keine Städte in einer Höhe über: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :Während der Spielfelderstellung werden keine Städte oberhalb der angegebenen Höhe platziert.
 
@@ -507,10 +500,9 @@ STR_CONFIG_SETTING_INTERFACE_WALLCLOCK                          :{ORANGE}Uhr
 STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}Client-Einstellungen
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}Spielstand-Einstellungen
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}Fahrpläne
-STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}Signale (erweitert)
+STR_CONFIG_SETTING_INTERFACE_SIGNALS                            :{ORANGE}Signale
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}Flüsse & Seen
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}Warenverteilung - Überschreibungen nach Frachtart
-STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}Bäume
 STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS                         :{ORANGE}Zusätzliche Kartenansicht
 STR_CONFIG_SETTING_SHARING                                      :{ORANGE}Infrastruktur-Sharing
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}Szenarieneditor
@@ -747,7 +739,6 @@ STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL                     :Konfiguration d
 STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL                          :Konfiguration der Signalmodi
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT                            :erwerbe oder warte
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE                             :versuche zu erwerben
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ON_RES                      :versuche zu erwerben (bei Reservierung)
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT                           :löse (davor)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK                            :löse (dahinter)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT                :Pfadende: erwerbe oder warte
@@ -755,7 +746,6 @@ STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE                 :Pfadende: versu
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE                     :Pfadende: löse
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT_ITEM                       :Erwerbe Slot {STRING}{BLACK}{STRING}, oder warte am Pfadsignal
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM                        :Versuche Slot {STRING}{BLACK}{STRING} zu erwerben, oder fahre weiter
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM_RES_ONLY               :Versuche Slot {STRING}{BLACK}{STRING} zu erwerben (bei Reservierung), oder fahre weiter
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT_ITEM                      :Löse Slot {STRING}{BLACK}{STRING} (vor dem Zug)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK_ITEM                       :Löse Slot {STRING}{BLACK}{STRING} (hinter dem Zug)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT_ITEM           :Pfadreservierung endet hier: Erwerbe Slot: {STRING}{BLACK}{STRING}, oder warte am Beginn
@@ -1332,7 +1322,7 @@ STR_ORDER_REVERSE_TOOLTIP                                       :{BLACK}Ändere 
 
 STR_ORDER_DROP_SELL_DEPOT                                       :Fahrzeug verkaufen
 
-STR_ORDER_CONDITIONAL_VEHICLE_IN_SLOT                           :Fahrzeug im Zeitfenster
+STR_ORDER_CONDITIONAL_VEHICLE_IN_SLOT                           :Fahrzeug im Slot
 
 STR_ORDER_CONDITIONAL_NEXT_STATION                              :nächste Station
 STR_ORDER_CONDITIONAL_CARGO_TOOLTIP                             :{BLACK}Frachtart, die mit der Stationsinformation verglichen wird
@@ -1370,7 +1360,7 @@ STR_ORDERS_MANAGE_LIST_TOOLTIP                                  :{BLACK}Verwalte
 STR_ORDER_REVERSE_ORDER_LIST                                    :Kehre Auftragsliste um
 STR_ORDER_APPEND_REVERSED_ORDER_LIST                            :Füge umgekehrte Auftragsliste an
 
-STR_ORDER_RELEASE_SLOT_BUTTON                                   :Zeitfenster freigeben
+STR_ORDER_RELEASE_SLOT_BUTTON                                   :Slot freigeben
 STR_ORDER_RELEASE_SLOT_TOOLTIP                                  :{BLACK}Der freizugebende Zug-Slot
 
 STR_ORDERS_OCCUPANCY_BUTTON                                     :{BLACK}{STRING}%
@@ -1557,7 +1547,7 @@ STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}Anzahl d
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}Die Brücke ist zu niedrig für die Haltestelle
 STR_ERROR_BRIDGE_PILLARS_OBSTRUCT_STATION                       :{WHITE}Die Brückenpfeiler behindern die Haltestelle
 STR_ERROR_CHUNNEL_THROUGH_MAP_BORDER                            :{WHITE}Unterwassertunnel würde außerhalb der Karte enden
-STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... nur eine Rampenlänge zwischen 5 und {NUM} Kacheln ist für Unterwassertunnel erlaubt.
+STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... nur eine Rampenlänge zwischen {NUM} und {NUM} Kacheln ist für Unterwassertunnel erlaubt.
 STR_ERROR_TUNNEL_TOO_MANY                                       :{WHITE}... zu viele Tunnel
 STR_ERROR_NO_DRILLING_ABOVE_CHUNNEL                             :{WHITE}Keine Ölplattformen über Unterwassertunneln erlaubt
 STR_ERROR_ANOTHER_TUNNEL_IN_THE_WAY_FOR_CHUNNEL                 :{WHITE}Drei Kacheln sind notwendig, um einen Tunnel unter dem anderen hindurch zu führen

@@ -14,7 +14,7 @@
 #include "core/math_func.hpp"
 
 /**
- * 1 day is 74 ticks; _date_fract used to be uint16 and incremented by 885. On
+ * 1 day is 74 ticks; _date_fract used to be uint16_t and incremented by 885. On
  *                    an overflow the new day begun and 65535 / 885 = 74.
  * 1 tick is approximately 27 ms.
  * 1 day is thus about 2 seconds (74 * 27 = 1998) on a machine that can run OpenTTD normally
@@ -26,12 +26,12 @@ static const int MONTHS_IN_YEAR    =  12; ///< months per year
 
 static const int SECONDS_PER_DAY   = 2;   ///< approximate seconds per day, not for precise calculations
 
-typedef uint16 DateFract; ///< The fraction of a date we're in, i.e. the number of ticks since the last date changeover
-typedef int32  Ticks;     ///< The type to store ticks in
+typedef uint16_t DateFract; ///< The fraction of a date we're in, i.e. the number of ticks since the last date changeover
+typedef int32_t  Ticks;     ///< The type to store ticks in
 
-typedef int32  Year;  ///< Type for the year, note: 0 based, i.e. starts at the year 0.
-typedef uint8  Month; ///< Type for the month, note: 0 based, i.e. 0 = January, 11 = December.
-typedef uint8  Day;   ///< Type for the day of the month, note: 1 based, first day of a month is 1.
+typedef int32_t  Year;  ///< Type for the year, note: 0 based, i.e. starts at the year 0.
+typedef uint8_t  Month; ///< Type for the month, note: 0 based, i.e. 0 = January, 11 = December.
+typedef uint8_t  Day;   ///< Type for the day of the month, note: 1 based, first day of a month is 1.
 
 /* The type to store our dates in */
 using DateDelta = StrongType::Typedef<int32_t, struct DateDeltaTag, StrongType::Compare, StrongType::IntegerScalable>;
@@ -51,8 +51,8 @@ struct DateTicksOperations {
 };
 
 /* The type to store dates in when tick-precision is required */
-using DateTicksDelta = StrongType::Typedef<int32_t, struct DateTicksDeltaTag, StrongType::Compare, StrongType::IntegerScalable>;
-using DateTicks = StrongType::Typedef<int32_t, struct DateTicksTag, StrongType::Compare, StrongType::IntegerDelta<DateTicksDelta>, DateTicksOperations>;
+using DateTicksDelta = StrongType::Typedef<int64_t, struct DateTicksDeltaTag, StrongType::Compare, StrongType::IntegerScalable>;
+using DateTicks = StrongType::Typedef<int64_t, struct DateTicksTag, StrongType::Compare, StrongType::IntegerDelta<DateTicksDelta>, DateTicksOperations>;
 
 /* Mixin for DateTicksScaledDelta */
 struct DateTicksScaledDeltaOperations {
@@ -62,7 +62,10 @@ struct DateTicksScaledDeltaOperations {
 		TBaseType GetBase() const { return static_cast<const TType &>(*this).base(); }
 
 	public:
-		Ticks AsTicks() const { return (Ticks)this->GetBase(); }
+		template<typename T>
+		T AsTicksT() const { return ClampTo<T>(this->GetBase()); }
+
+		Ticks AsTicks() const { return this->AsTicksT<Ticks>(); }
 	};
 };
 
@@ -71,11 +74,21 @@ using DateTicksScaledDelta = StrongType::Typedef<int64_t, struct DateTicksScaled
 using DateTicksScaled = StrongType::Typedef<int64_t, struct DateTicksScaledTag, StrongType::Compare, StrongType::IntegerDelta<DateTicksScaledDelta>>;
 
 /* Mixin for TickMinutes, ClockFaceMinutes */
+template <bool TNegativeCheck>
 struct MinuteOperations {
 	template <typename TType, typename TBaseType>
 	struct mixin {
 	private:
-		TBaseType GetBase() const { return static_cast<const TType &>(*this).base(); }
+		TBaseType GetBase() const
+		{
+			TBaseType value = static_cast<const TType &>(*this).base();
+			if constexpr (TNegativeCheck) {
+				if (value < 0) {
+					value = (value % 1440) + 1440;
+				}
+			}
+			return value;
+		}
 
 	public:
 		int ClockMinute() const { return this->GetBase() % 60; }
@@ -96,7 +109,7 @@ struct ClockFaceMinuteOperations {
 };
 
 /* The type to store general clock-face minutes in (i.e. 0..1440) */
-using ClockFaceMinutes = StrongType::Typedef<int, struct ClockFaceMinutesTag, StrongType::Compare, StrongType::Integer, MinuteOperations, ClockFaceMinuteOperations>;
+using ClockFaceMinutes = StrongType::Typedef<int, struct ClockFaceMinutesTag, StrongType::Compare, StrongType::Integer, MinuteOperations<false>, ClockFaceMinuteOperations>;
 
 /* Mixin for TickMinutes */
 struct TickMinuteOperations {
@@ -122,7 +135,7 @@ struct TickMinuteOperations {
 };
 
 /* The type to store DateTicksScaled-based minutes in */
-using TickMinutes = StrongType::Typedef<int64_t, struct TickMinutesTag, StrongType::Compare, StrongType::Integer, MinuteOperations, TickMinuteOperations>;
+using TickMinutes = StrongType::Typedef<int64_t, struct TickMinutesTag, StrongType::Compare, StrongType::Integer, MinuteOperations<true>, TickMinuteOperations>;
 
 #define DATE_UNIT_SIZE (_settings_time.time_in_minutes ? _settings_time.ticks_per_minute : (DAY_TICKS * _settings_game.economy.day_length_factor))
 
@@ -155,7 +168,7 @@ static constexpr Year ORIGINAL_MAX_YEAR  = 2090;
  */
 static constexpr Date DateAtStartOfYear(Year year)
 {
-	int32 year_as_int = year;
+	int32_t year_as_int = year;
 	uint number_of_leap_years = (year == 0) ? 0 : ((year_as_int - 1) / 4 - (year_as_int - 1) / 100 + (year_as_int - 1) / 400 + 1);
 
 	/* Hardcode the number of days in a year because we can't access CalendarTime from here. */

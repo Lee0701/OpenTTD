@@ -845,7 +845,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Gjaldmi�
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Val á gjaldmiðli
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Sterlingspund
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Bandaríkjadalur
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Evra
@@ -897,6 +897,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Smelltu 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Skjáupplausn
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Stilla skjáupplausn
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :annað
+
 
 
 
@@ -1517,6 +1518,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Óvirkt
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Sleppa viðhaldi þegar bilanir eru óvirkar: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Ef þessi stilling er virk eru farartæki ekki þjónustuð ef þau geta ekki bilað
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Leyfa hraðatakmarkanir vagna: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Ef þessi stilling er virk er hámarkshraði á vögnum einnig notaður til að ákvarða hámarks hraða á járnbrautalestum

@@ -1019,7 +1019,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}A haszn�
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Angol Font
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikai Dollár
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euró
@@ -1102,6 +1102,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Jelöld 
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Élek méretezése
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Jelöld be ezt a négyzetet hogy az interfész méretéhez igazítsd az éleket
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1829,6 +1830,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :kikapcsolva
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Ne legyen javítás ha lerobbanások sincsenek: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Bekapcsolva a járművek nem kerülnek javításra, ha nem tudnak lerobbanni
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :A vagonok sebessége korlátozható: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Bekapcsolva a szerelvényben lévő vasúti kocsik maximális sebessége is korlátozza a vonat maximális sebességét

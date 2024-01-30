@@ -27,6 +27,8 @@
  * Version: Bytes:  Description:
  *   all      1       the version of this packet's structure
  *
+ *   7+       8       amount of ticks this game has been running unpaused.
+ *
  *   6+       1       type of storage for the NewGRFs below:
  *                      0 = NewGRF ID and MD5 checksum.
  *                          Used as default for version 5 and below, and for
@@ -94,8 +96,9 @@ struct NetworkServerGameInfo {
 	GRFConfig *grfconfig;        ///< List of NewGRF files used
 	Date start_date;             ///< When the game started
 	Date game_date;              ///< Current date
-	uint32 map_width;            ///< Map width
-	uint32 map_height;           ///< Map height
+	uint64_t ticks_playing;      ///< Amount of ticks the game has been running unpaused.
+	uint32_t map_width;          ///< Map width
+	uint32_t map_height;         ///< Map height
 	std::string server_name;     ///< Server name
 	std::string server_revision; ///< The version number the server is using (e.g.: 'r304' or 0.5.0)
 	bool dedicated;              ///< Is this a dedicated server?
@@ -128,7 +131,7 @@ struct NamedGRFIdentifier {
 	std::string name;    ///< The name of the NewGRF.
 };
 /** Lookup table for the GameInfo in case of #NST_LOOKUP_ID. */
-typedef std::unordered_map<uint32, NamedGRFIdentifier> GameInfoNewGRFLookupTable;
+typedef std::unordered_map<uint32_t, NamedGRFIdentifier> GameInfoNewGRFLookupTable;
 
 extern NetworkServerGameInfo _network_game_info;
 
@@ -146,6 +149,6 @@ void SerializeGRFIdentifier(Packet *p, const GRFIdentifier *grf);
 void DeserializeNetworkGameInfo(Packet *p, NetworkGameInfo *info, const GameInfoNewGRFLookupTable *newgrf_lookup_table = nullptr);
 void DeserializeNetworkGameInfoExtended(Packet *p, NetworkGameInfo *info);
 void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, bool send_newgrf_names = true);
-void SerializeNetworkGameInfoExtended(Packet *p, const NetworkServerGameInfo *info, uint16 flags, uint16 version, bool send_newgrf_names = true);
+void SerializeNetworkGameInfoExtended(Packet *p, const NetworkServerGameInfo *info, uint16_t flags, uint16_t version, bool send_newgrf_names = true);
 
 #endif /* NETWORK_CORE_GAME_INFO_H */

@@ -960,7 +960,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Para bir
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Sterlin
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikan Doları
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Avro
@@ -1043,6 +1043,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Arayüz 
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Eğimi ayarla
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Eğimi arayüz boyutuna göre ayarlamak için bu kutucuğu işaretleyin
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1776,6 +1777,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Etkisiz
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Bozulmalar kapalıysa sevisler kapalı olsun: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Etkinleştirildiğinde, araçlar bozulmuyorlarsa bakıma gönderilmezler
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Vagonların treni yavaşlatması izinli: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Etkinleştirildiğinde, bir trenin azami hızına karar verirken vagonların hız limitleri de göz önünde bulundurulur

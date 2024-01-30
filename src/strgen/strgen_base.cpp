@@ -16,6 +16,7 @@
 
 #include "strgen.h"
 
+#include <bit>
 
 #include "../table/strgen_tables.h"
 
@@ -109,7 +110,7 @@ LangString *StringData::Find(const std::string_view s)
 uint StringData::VersionHashStr(uint hash, const char *s) const
 {
 	for (; *s != '\0'; s++) {
-		hash = ROL(hash, 3) ^ *s;
+		hash = std::rotl(hash, 3) ^ *s;
 		hash = (hash & 1 ? hash >> 1 ^ 0xDEADBEEF : hash >> 1);
 	}
 	return hash;
@@ -183,7 +184,7 @@ struct Buffer : std::vector<byte> {
 	 * Add an Unicode character encoded in UTF-8 to the buffer.
 	 * @param value The character to add.
 	 */
-	void AppendUtf8(uint32 value)
+	void AppendUtf8(uint32_t value)
 	{
 		if (value < 0x80) {
 			this->push_back(value);
@@ -207,7 +208,7 @@ struct Buffer : std::vector<byte> {
 
 size_t Utf8Validate(const char *s)
 {
-	uint32 c;
+	uint32_t c;
 
 	if (!HasBit(s[0], 7)) {
 		/* 1 byte */
@@ -429,7 +430,7 @@ static uint ResolveCaseName(const char *str, size_t len)
 	memcpy(case_str, str, len);
 	case_str[len] = '\0';
 
-	uint8 case_idx = _lang.GetCaseIndex(case_str);
+	uint8_t case_idx = _lang.GetCaseIndex(case_str);
 	if (case_idx >= MAX_NUM_CASES) strgen_fatal("Invalid case-name '%s'", case_str);
 	return case_idx + 1;
 }
@@ -657,7 +658,7 @@ void StringReader::HandleString(char *str)
 		size_t len = Utf8Validate(tmp);
 		if (len == 0) strgen_fatal("Invalid UTF-8 sequence in '%s'", s);
 
-		WChar c;
+		char32_t c;
 		Utf8Decode(&c, tmp);
 		if (c <= 0x001F || // ASCII control character range
 				c == 0x200B || // Zero width space

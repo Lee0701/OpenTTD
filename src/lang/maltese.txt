@@ -397,7 +397,7 @@ STR_NEWS_VEHICLE_IS_LOST                                        :{WHITE}{VEHICLE
 
 
 
-###length 42
+###length 43
 
 
 # Autosave dropdown
@@ -406,6 +406,7 @@ STR_NEWS_VEHICLE_IS_LOST                                        :{WHITE}{VEHICLE
 
 
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oħrajn
+
 
 
 
@@ -646,6 +647,7 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uz
 
 
 ###setting-zero-is-special
+
 
 
 

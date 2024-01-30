@@ -37,9 +37,9 @@ static const int MS_TO_REFTIME = 1000 * 10; ///< DirectMusic time base is 100 ns
 static const int MIDITIME_TO_REFTIME = 10;  ///< Time base of the midi file reader is 1 us.
 
 
-#define FOURCC_INFO  mmioFOURCC('I','N','F','O')
-#define FOURCC_fmt   mmioFOURCC('f','m','t',' ')
-#define FOURCC_data  mmioFOURCC('d','a','t','a')
+#define FOURCC_INFO  mmioFOURCC('I', 'N', 'F', 'O')
+#define FOURCC_fmt   mmioFOURCC('f', 'm', 't', ' ')
+#define FOURCC_data  mmioFOURCC('d', 'a', 't', 'a')
 
 /** A DLS file. */
 struct DLSFile {
@@ -116,7 +116,7 @@ PACK_N(struct WAVE_DOWNLOAD {
 }, 2);
 
 struct PlaybackSegment {
-	uint32 start, end;
+	uint32_t start, end;
 	size_t start_block;
 	bool loop;
 };
@@ -651,6 +651,9 @@ static void MidiThreadProc()
 				TransmitNotesOff(_buffer, block_time, cur_time);
 
 				MemSetT<byte>(channel_volumes, 127, lengthof(channel_volumes));
+				/* Invalidate current volume. */
+				current_volume = UINT8_MAX;
+				last_volume_time = 0;
 
 				/* Take the current time plus the preload time as the music start time. */
 				clock->GetTime(&playback_start_time);
@@ -723,7 +726,7 @@ static void MidiThreadProc()
 				REFERENCE_TIME playback_time = current_time - playback_start_time;
 				if (block.realtime * MIDITIME_TO_REFTIME > playback_time +  3 *_playback.preload_time * MS_TO_REFTIME) {
 					/* Stop the thread loop until we are at the preload time of the next block. */
-					next_timeout = Clamp(((int64)block.realtime * MIDITIME_TO_REFTIME - playback_time) / MS_TO_REFTIME - _playback.preload_time, 0, 1000);
+					next_timeout = Clamp(((int64_t)block.realtime * MIDITIME_TO_REFTIME - playback_time) / MS_TO_REFTIME - _playback.preload_time, 0, 1000);
 					DEBUG(driver, 9, "DMusic thread: Next event in %lu ms (music %u, ref " OTTD_PRINTF64 ")", next_timeout, block.realtime * MIDITIME_TO_REFTIME, playback_time);
 					break;
 				}

@@ -74,13 +74,15 @@ public:
 	}
 
 	/**
-	 * Wait till the queue is dequeued.
+	 * Wait till the queue is dequeued, or a condition is met.
+	 * @param condition Condition functor.
 	 */
-	void WaitTillEmpty()
+	template <typename T>
+	void WaitTillEmptyOrCondition(T condition)
 	{
 		std::unique_lock<std::mutex> lock(this->mutex);
 
-		while (!queue.empty()) {
+		while (!(queue.empty() || condition())) {
 			this->queue_cv.wait(lock);
 		}
 	}

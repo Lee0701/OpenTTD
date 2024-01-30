@@ -14,6 +14,7 @@
 #include "string_func.h"
 #include "rail_map.h"
 #include "tunnelbridge_map.h"
+#include "pathfinder/water_regions.h"
 #include "3rdparty/cpp-btree/btree_map.h"
 #include "core/ring_buffer.hpp"
 #include <array>
@@ -133,6 +134,8 @@ void AllocateMap(uint size_x, uint size_y)
 
 	_m = reinterpret_cast<Tile *>(buf);
 	_me = reinterpret_cast<TileExtended *>(buf + (_map_size * sizeof(Tile)));
+
+	InitializeWaterRegions();
 }
 
 
@@ -441,8 +444,8 @@ bool EnoughContiguousTilesMatchingCondition(TileIndex tile, uint threshold, Test
 
 	static_assert(MAX_MAP_TILES_BITS <= 30);
 
-	btree::btree_set<uint32> processed_tiles;
-	ring_buffer<uint32> candidates;
+	btree::btree_set<uint32_t> processed_tiles;
+	ring_buffer<uint32_t> candidates;
 	uint matching_count = 0;
 
 	auto process_tile = [&](TileIndex t, DiagDirection exclude_onward_dir) {
@@ -466,13 +469,46 @@ bool EnoughContiguousTilesMatchingCondition(TileIndex tile, uint threshold, Test
 	process_tile(tile, INVALID_DIAGDIR);
 
 	while (matching_count < threshold && !candidates.empty()) {
-		uint32 next = candidates.front();
+		uint32_t next = candidates.front();
 		candidates.pop_front();
 		TileIndex t = GB(next, 0, 30);
 		DiagDirection exclude_onward_dir = (DiagDirection)GB(next, 30, 2);
 		process_tile(t, exclude_onward_dir);
 	}
 	return matching_count >= threshold;
+}
+
+void IterateCurvedCircularTileArea(TileIndex centre_tile, uint diameter, TileIteratorProc proc, void *user_data)
+{
+	const uint radius_sq = ((diameter * diameter) + 2) / 4;
+	const uint centre_radius = (diameter + 1) / 2;
+
+	const int centre_x = TileX(centre_tile);
+	const int centre_y = TileY(centre_tile);
+
+	/* Centre row */
+	for (int x = std::max<int>(0, centre_x - centre_radius); x <= std::min<int>(MapMaxX(), centre_x + centre_radius); x++) {
+		proc(TileXY(x, centre_y), user_data);
+	}
+
+	/* Other (shorter) rows */
+	for (uint offset = 1; offset <= centre_radius; offset++) {
+		const uint offset_sq = offset * offset;
+		uint half_width = 0;
+		while (offset_sq + (half_width * half_width) < radius_sq) {
+			half_width++;
+		}
+		const int x_left = std::max<int>(0, centre_x - half_width);
+		const int x_right = std::min<int>(MapMaxX(), centre_x + half_width);
+		auto iterate_row = [&](int y) {
+			if (y < 0 || y > (int)MapMaxY()) return;
+			for (int x = x_left; x <= x_right; x++) {
+				proc(TileXY(x, y), user_data);
+			}
+		};
+		iterate_row(centre_y - offset);
+		iterate_row(centre_y + offset);
+	}
 }
 
 /**
@@ -501,8 +537,8 @@ uint GetClosestWaterDistance(TileIndex tile, bool water)
 
 		/* going counter-clockwise around this square */
 		for (DiagDirection dir = DIAGDIR_BEGIN; dir < DIAGDIR_END; dir++) {
-			static const int8 ddx[DIAGDIR_END] = { -1,  1,  1, -1};
-			static const int8 ddy[DIAGDIR_END] = {  1,  1, -1, -1};
+			static const int8_t ddx[DIAGDIR_END] = { -1,  1,  1, -1};
+			static const int8_t ddy[DIAGDIR_END] = {  1,  1, -1, -1};
 
 			int dx = ddx[dir];
 			int dy = ddy[dir];

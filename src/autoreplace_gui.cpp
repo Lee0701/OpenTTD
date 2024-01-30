@@ -30,7 +30,7 @@
 
 #include "safeguards.h"
 
-void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_list, uint16 min, uint16 max, EngineID selected_id, bool show_count, GroupID selected_group);
+void DrawEngineList(VehicleType type, const Rect &r, const GUIEngineList &eng_list, uint16_t min, uint16_t max, EngineID selected_id, bool show_count, GroupID selected_group);
 
 static bool EngineNumberSorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
@@ -315,7 +315,7 @@ public:
 		this->sel_group = id_g;
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_RV_SORT_ASCENDING_DESCENDING: {
@@ -402,7 +402,7 @@ public:
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_RV_CAPTION:
@@ -457,7 +457,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_RV_SORT_ASCENDING_DESCENDING:
@@ -541,7 +541,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_RV_SORT_ASCENDING_DESCENDING:
@@ -656,7 +656,7 @@ public:
 		}
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_RV_SORT_DROPDOWN:
@@ -698,7 +698,7 @@ public:
 		}
 	}
 
-	bool OnTooltip([[maybe_unused]] Point pt, int widget, TooltipCloseCondition close_cond) override
+	bool OnTooltip([[maybe_unused]] Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
 	{
 		if (widget != WID_RV_TRAIN_WAGONREMOVE_TOGGLE) return false;
 
@@ -733,7 +733,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_replace_rail_vehicle_widgets[] = {
+static constexpr NWidgetPart _nested_replace_rail_vehicle_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_RV_CAPTION), SetDataTip(STR_REPLACE_VEHICLES_WHITE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -797,7 +797,7 @@ static WindowDesc _replace_rail_vehicle_desc(__FILE__, __LINE__,
 	std::begin(_nested_replace_rail_vehicle_widgets), std::end(_nested_replace_rail_vehicle_widgets)
 );
 
-static const NWidgetPart _nested_replace_road_vehicle_widgets[] = {
+static constexpr NWidgetPart _nested_replace_road_vehicle_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_RV_CAPTION), SetDataTip(STR_REPLACE_VEHICLES_WHITE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -855,7 +855,7 @@ static WindowDesc _replace_road_vehicle_desc(__FILE__, __LINE__,
 	std::begin(_nested_replace_road_vehicle_widgets), std::end(_nested_replace_road_vehicle_widgets)
 );
 
-static const NWidgetPart _nested_replace_vehicle_widgets[] = {
+static constexpr NWidgetPart _nested_replace_vehicle_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_RV_CAPTION), SetMinimalSize(433, 14), SetDataTip(STR_REPLACE_VEHICLES_WHITE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

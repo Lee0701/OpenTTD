@@ -14,6 +14,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <vector>
+#include <windows.h>
 
 /** Base class for Windows video drivers. */
 class VideoDriver_Win32Base : public VideoDriver {
@@ -61,7 +62,7 @@ protected:
 	void ClientSizeChanged(int w, int h, bool force = false);
 
 	/** Get screen depth to use for fullscreen mode. */
-	virtual uint8 GetFullscreenBpp();
+	virtual uint8_t GetFullscreenBpp();
 	/** (Re-)create the backing store. */
 	virtual bool AllocateBackingStore(int w, int h, bool force = false) = 0;
 	/** Get a pointer to the video buffer. */
@@ -149,7 +150,7 @@ protected:
 	HGLRC  gl_rc;       ///< OpenGL context.
 	std::string driver_info; ///< Information string about selected driver.
 
-	uint8 GetFullscreenBpp() override { return 32; } // OpenGL is always 32 bpp.
+	uint8_t GetFullscreenBpp() override { return 32; } // OpenGL is always 32 bpp.
 
 	void Paint() override;
 

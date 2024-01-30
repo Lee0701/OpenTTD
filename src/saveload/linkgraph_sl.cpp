@@ -24,7 +24,7 @@ namespace upstream_sl {
 typedef LinkGraph::BaseNode Node;
 typedef LinkGraph::BaseEdge Edge;
 
-static uint16 _num_nodes;
+static uint16_t _num_nodes;
 static LinkGraph *_linkgraph; ///< Contains the current linkgraph being saved/loaded.
 static NodeID _linkgraph_from; ///< Contains the current "from" node being saved/loaded.
 static NodeID _edge_dest_node;
@@ -50,7 +50,7 @@ public:
 
 	void Load(Node *bn) const override
 	{
-		uint16 max_size = _linkgraph->Size();
+		uint16_t max_size = _linkgraph->Size();
 
 		if (IsSavegameVersionBefore(SLV_191)) {
 			NOT_REACHED();
@@ -109,7 +109,7 @@ public:
 	{
 		_linkgraph = lg;
 
-		uint16 length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? _num_nodes : (uint16)SlGetStructListLength(UINT16_MAX);
+		uint16_t length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? _num_nodes : (uint16_t)SlGetStructListLength(UINT16_MAX);
 		lg->Init(length);
 		for (NodeID from = 0; from < length; ++from) {
 			_linkgraph_from = from;
@@ -180,7 +180,7 @@ SaveLoadTable GetLinkGraphJobDesc()
 		SLE_VAR2(LinkGraphJob, "linkgraph.demand_size",           settings.demand_size,           SLE_UINT8),
 		SLE_VAR2(LinkGraphJob, "linkgraph.short_path_saturation", settings.short_path_saturation, SLE_UINT8),
 
-		SLE_VAR2(LinkGraphJob, "join_date", join_date_ticks,        SLE_INT32),
+		SLE_VAR2(LinkGraphJob, "join_date", join_date_ticks,        SLE_FILE_I32 | SLE_VAR_I64),
 		SLE_VAR(LinkGraphJob, link_graph.index, SLE_UINT16),
 		SLEG_STRUCT("linkgraph", SlLinkgraphJobProxy),
 	};

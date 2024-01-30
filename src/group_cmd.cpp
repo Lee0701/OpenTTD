@@ -35,16 +35,6 @@ GroupID _new_group_id;
 GroupPool _group_pool("Group");
 INSTANTIATE_POOL_METHODS(Group)
 
-GroupStatistics::GroupStatistics()
-{
-	this->num_engines = CallocT<uint16>(Engine::GetPoolSize());
-}
-
-GroupStatistics::~GroupStatistics()
-{
-	free(this->num_engines);
-}
-
 /**
  * Clear all caches.
  */
@@ -55,9 +45,20 @@ void GroupStatistics::Clear()
 	this->num_vehicle_min_age = 0;
 	this->profit_last_year_min_age = 0;
 
-	/* This is also called when NewGRF change. So the number of engines might have changed. Reallocate. */
-	free(this->num_engines);
-	this->num_engines = CallocT<uint16>(Engine::GetPoolSize());
+	/* This is also called when NewGRF change. So the number of engines might have changed. Reset. */
+	this->num_engines.clear();
+}
+
+/**
+ * Get number of vehicles of a specific engine ID.
+ * @param engine Engine ID.
+ * @returns number of vehicles of this engine ID.
+ */
+uint16_t GroupStatistics::GetNumEngines(EngineID engine) const
+{
+	auto found = this->num_engines.find(engine);
+	if (found != std::end(this->num_engines)) return found->second;
+	return 0;
 }
 
 /**
@@ -409,7 +410,7 @@ Group::Group(Owner owner)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdCreateGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdCreateGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	VehicleType vt = Extract<VehicleType, 0, 3>(p1);
 	if (!IsCompanyBuildableVehicleType(vt)) return CMD_ERROR;
@@ -461,7 +462,7 @@ CommandCost CmdCreateGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdDeleteGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdDeleteGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Group *g = Group::GetIfValid(p1);
 	if (g == nullptr || g->owner != _current_company) return CMD_ERROR;
@@ -522,7 +523,7 @@ CommandCost CmdDeleteGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
  * @param text the new name or an empty string when resetting to the default
  * @return the cost of this operation or an error
  */
-CommandCost CmdAlterGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAlterGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Group *g = Group::GetIfValid(GB(p1, 0, 16));
 	if (g == nullptr || g->owner != _current_company) return CMD_ERROR;
@@ -595,7 +596,7 @@ CommandCost CmdAlterGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
  * @param text the new name or an empty string when setting to the default
  * @return the cost of this operation or an error
  */
-CommandCost CmdCreateGroupFromList(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdCreateGroupFromList(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	VehicleListIdentifier vli;
 	VehicleList list;
@@ -676,7 +677,7 @@ static void AddVehicleToGroup(Vehicle *v, GroupID new_g)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdAddVehicleGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAddVehicleGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Vehicle *v = Vehicle::GetIfValid(GB(p2, 0, 20));
 	GroupID new_g = p1;
@@ -787,20 +788,20 @@ std::string GenerateAutoNameForVehicleGroup(const Vehicle *v)
 
 	CargoTypes cargoes = GetVehicleCargoList(v);
 
-	char group_name[512];
+	StringID str;
 	if (town_from == town_to || town_to == nullptr) {
 		SetDParam(0, town_from->index);
 		SetDParam(1, (cargoes != 0) ? STR_VEHICLE_AUTO_GROUP_CARGO_LIST : STR_EMPTY);
 		SetDParam(2, cargoes);
-		GetString(group_name, STR_VEHICLE_AUTO_GROUP_LOCAL_ROUTE, lastof(group_name));
+		str = STR_VEHICLE_AUTO_GROUP_LOCAL_ROUTE;
 	} else {
 		SetDParam(0, town_from->index);
 		SetDParam(1, town_to->index);
 		SetDParam(2, (cargoes != 0) ? STR_VEHICLE_AUTO_GROUP_CARGO_LIST : STR_EMPTY);
 		SetDParam(3, cargoes);
-		GetString(group_name, STR_VEHICLE_AUTO_GROUP_ROUTE, lastof(group_name));
+		str = STR_VEHICLE_AUTO_GROUP_ROUTE;
 	}
-	return std::string(group_name);
+	return GetString(str);
 }
 
 /**
@@ -813,7 +814,7 @@ std::string GenerateAutoNameForVehicleGroup(const Vehicle *v)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdAddSharedVehicleGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdAddSharedVehicleGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	VehicleType type = Extract<VehicleType, 0, 3>(p2);
 	GroupID id_g = p1;
@@ -850,7 +851,7 @@ CommandCost CmdAddSharedVehicleGroup(TileIndex tile, DoCommandFlag flags, uint32
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdRemoveAllVehiclesGroup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRemoveAllVehiclesGroup(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	GroupID old_g = p1;
 	Group *g = Group::GetIfValid(old_g);
@@ -884,7 +885,7 @@ CommandCost CmdRemoveAllVehiclesGroup(TileIndex tile, DoCommandFlag flags, uint3
  * - p2 bit  8      Set secondary instead of primary colour
  * - p2 bit 16-23   Colour.
  */
-CommandCost CmdSetGroupLivery(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdSetGroupLivery(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Group *g = Group::GetIfValid(p1);
 	bool primary = !HasBit(p2, 8);
@@ -945,7 +946,7 @@ static void SetGroupFlag(Group *g, GroupFlags flag, bool set, bool children)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdSetGroupFlag(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdSetGroupFlag(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Group *g = Group::GetIfValid(GB(p1, 0, 16));
 	if (g == nullptr || g->owner != _current_company) return CMD_ERROR;
@@ -1032,9 +1033,9 @@ uint GetGroupNumEngines(CompanyID company, GroupID id_g, EngineID id_e)
 	uint count = 0;
 	const Engine *e = Engine::Get(id_e);
 	IterateDescendantsOfGroup(id_g, [&](Group *g) {
-		count += GroupStatistics::Get(company, g->index, e->type).num_engines[id_e];
+		count += GroupStatistics::Get(company, g->index, e->type).GetNumEngines(id_e);
 	});
-	return count + GroupStatistics::Get(company, id_g, e->type).num_engines[id_e];
+	return count + GroupStatistics::Get(company, id_g, e->type).GetNumEngines(id_e);
 }
 
 /**

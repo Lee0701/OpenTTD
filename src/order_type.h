@@ -12,11 +12,11 @@
 
 #include "core/enum_type.hpp"
 
-typedef uint16 VehicleOrderID;  ///< The index of an order within its current vehicle (not pool related)
-typedef uint32 OrderID;
-typedef uint16 OrderListID;
-typedef uint16 DestinationID;
-typedef uint32 TimetableTicks;
+typedef uint16_t VehicleOrderID;  ///< The index of an order within its current vehicle (not pool related)
+typedef uint32_t OrderID;
+typedef uint16_t OrderListID;
+typedef uint16_t DestinationID;
+typedef uint32_t TimetableTicks;
 
 /** Invalid vehicle order index (sentinel) */
 static const VehicleOrderID INVALID_VEH_ORDER_ID = 0xFFFF;
@@ -32,6 +32,9 @@ static const OrderID INVALID_ORDER = 0xFFFFFF;
  */
 static const uint IMPLICIT_ORDER_ONLY_CAP = 32;
 
+/** Invalid scheduled dispatch offset from current schedule */
+static const int32_t INVALID_SCHEDULED_DISPATCH_OFFSET = INT32_MIN;
+
 /** Order types. It needs to be 8bits, because we save and load it as such */
 enum OrderType : byte {
 	OT_BEGIN         = 0,
@@ -46,10 +49,15 @@ enum OrderType : byte {
 	OT_IMPLICIT      = 8,
 	OT_WAITING       = 9,
 	OT_LOADING_ADVANCE = 10,
-	OT_RELEASE_SLOT  = 11,
+	OT_SLOT          = 11,
 	OT_COUNTER       = 12,
 	OT_LABEL         = 13,
 	OT_END
+};
+
+enum OrderSlotSubType : byte {
+	OSST_RELEASE               = 0,
+	OSST_TRY_ACQUIRE           = 1,
 };
 
 enum OrderLabelSubType : byte {
@@ -260,12 +268,24 @@ enum OrderTimetableConditionMode {
 	OTCM_END
 };
 
-enum OrderScheduledDispatchSlotConditionMode {
-	OSDSCM_NEXT_FIRST        = 0, ///< Test if next departure is first slot
-	OSDSCM_NEXT_LAST         = 1, ///< Test if next departure is last slot
-	OSDSCM_LAST_FIRST        = 2, ///< Test if last departure was first slot
-	OSDSCM_LAST_LAST         = 3, ///< Test if last departure was last slot
-	OSDSCM_END
+enum OrderDispatchConditionBits {
+	ODCB_LAST_DISPATCHED     = 1,
+	ODCB_MODE_START          = 8,
+	ODCB_MODE_COUNT          = 3,
+};
+
+enum OrderDispatchConditionModes : uint8_t {
+	ODCM_FIRST_LAST          = 0,
+	OCDM_TAG                 = 1,
+};
+
+enum OrderDispatchFirstLastConditionBits {
+	ODFLCB_LAST_SLOT         = 0,
+};
+
+enum OrderDispatchTagConditionBits {
+	ODFLCB_TAG_START         = 4,
+	ODFLCB_TAG_COUNT         = 2,
 };
 
 /**

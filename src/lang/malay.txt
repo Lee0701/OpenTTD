@@ -850,7 +850,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unit kew
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Pilihan unit kewangan
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Paun British
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dolar Amerika
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -901,6 +901,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Tanda ko
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Resolusi Skrin
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Pilih resolusi skrin untuk digunakan
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :lain
+
 
 
 
@@ -1451,6 +1452,7 @@ STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}ha
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Dilumpuhkan
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Servis tidak diperlukan apabila kerosakan kenderaan ditetapkan kepada tiada: {STRING}
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Benarkan had kelajuan untuk gerabak: {STRING}
 

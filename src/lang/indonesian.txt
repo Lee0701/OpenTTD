@@ -955,7 +955,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Pilih ma
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Poundsterling
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dollar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1038,6 +1038,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Pilih ko
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Skala bevel
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Pilih kotak ini untuk pengaturan perbandingan ukuran bevel dengan ukuran antarmuka
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1766,6 +1767,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Di non-aktifkan
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Tidak perlu perbaikan jika tidak pernah mogok: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Jika diaktifkan, kendaraan tidak akan diperbaiki jika tidak pernah mogok
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktifkan batas kecepatan gerbong: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Jika diaktifkan, batas kecepatan gerbong juga digunakan untuk menentukan kecepatan maksimum kereta

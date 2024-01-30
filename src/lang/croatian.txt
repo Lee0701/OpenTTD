@@ -989,7 +989,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Novčane
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Izbor novčanih jedinica
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Funte
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Američki Dolar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1051,6 +1051,7 @@ STR_GAME_OPTIONS_RESOLUTION_ITEM                                :{NUM}x{NUM}
 
 
 STR_GAME_OPTIONS_VIDEO_VSYNC                                    :{BLACK}VSync
+
 
 
 
@@ -1720,6 +1721,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Isključeno
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Isključi servisiranje kada su kvarovi postavljeni na nula: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Kada je uključeno, vozila se ne servisiraju kada se ne mogu pokvariti
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Omogući ograničenje brzine za vagone: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Kada je uključeno, koristiti će se i limit brzine vagona kod određivanja najveće brzine nekog vlaka

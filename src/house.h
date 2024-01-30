@@ -68,7 +68,7 @@ static_assert(HZB_END == 5);
 
 DECLARE_POSTFIX_INCREMENT(HouseZonesBits)
 
-enum HouseZones {                  ///< Bit  Value       Meaning
+enum HouseZones : uint16_t {        ///< Bit  Value       Meaning
 	HZ_NOZNS             = 0x0000,  ///<       0          This is just to get rid of zeros, meaning none
 	HZ_ZON1              = 1U << HZB_TOWN_EDGE,    ///< 0..4 1,2,4,8,10  which town zones the building can be built in, Zone1 been the further suburb
 	HZ_ZON2              = 1U << HZB_TOWN_OUTSKIRT,
@@ -109,7 +109,7 @@ struct HouseSpec {
 	byte population;                          ///< population (Zero on other tiles in multi tile house.)
 	byte removal_cost;                        ///< cost multiplier for removing it
 	StringID building_name;                   ///< building name
-	uint16 remove_rating_decrease;            ///< rating decrease if removed
+	uint16_t remove_rating_decrease;          ///< rating decrease if removed
 	byte mail_generation;                     ///< mail generation multiplier (tile based, as the acceptances below)
 	byte cargo_acceptance[HOUSE_NUM_ACCEPTS]; ///< acceptance level for the cargo slots
 	CargoID accepts_cargo[HOUSE_NUM_ACCEPTS]; ///< input cargo slots
@@ -119,7 +119,7 @@ struct HouseSpec {
 
 	/* NewHouses properties */
 	GRFFileProps grf_prop;                    ///< Properties related the the grf file
-	uint16 callback_mask;                     ///< Bitmask of house callbacks that have to be called
+	uint16_t callback_mask;                   ///< Bitmask of house callbacks that have to be called
 	byte random_colour[4];                    ///< 4 "random" colours
 	byte probability;                         ///< Relative probability of appearing (16 is the standard value)
 	HouseExtraFlags extra_flags;              ///< some more flags
@@ -145,7 +145,7 @@ struct HouseSpec {
  * @param hid the HouseID to get the override for.
  * @return the HouseID to actually work with.
  */
-static inline HouseID GetTranslatedHouseID(HouseID hid)
+inline HouseID GetTranslatedHouseID(HouseID hid)
 {
 	const HouseSpec *hs = HouseSpec::Get(hid);
 	return hs->grf_prop.override == INVALID_HOUSE_ID ? hid : hs->grf_prop.override;

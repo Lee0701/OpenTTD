@@ -242,6 +242,7 @@ add_files(
     league_gui.h
     league_gui.cpp
     league_type.h
+    library_loader.h
     livery.h
     load_check.h
     main_gui.cpp
@@ -463,6 +464,8 @@ add_files(
     subsidy_func.h
     subsidy_gui.cpp
     subsidy_type.h
+    survey.cpp
+    survey.h
     tar_type.h
     tbtr_template_gui_main.cpp
     tbtr_template_gui_create.cpp
@@ -543,6 +546,7 @@ add_files(
     vehicle_type.h
     vehiclelist.cpp
     vehiclelist.h
+    vehiclelist_func.h
     viewport.cpp
     viewport_func.h
     viewport_gui.cpp

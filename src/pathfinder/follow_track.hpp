@@ -38,10 +38,10 @@ struct CFollowTrackT
 	};
 
 	const VehicleType  *m_veh;           ///< moving vehicle
-	Owner               m_veh_owner;     ///< owner of the vehicle
 	TileIndex           m_old_tile;      ///< the origin (vehicle moved from) before move
-	Trackdir            m_old_td;        ///< the trackdir (the vehicle was on) before move
 	TileIndex           m_new_tile;      ///< the new tile (the vehicle has entered)
+	Owner               m_veh_owner;     ///< owner of the vehicle
+	Trackdir            m_old_td;        ///< the trackdir (the vehicle was on) before move
 	TrackdirBits        m_new_td_bits;   ///< the new set of available trackdirs
 	DiagDirection       m_exitdir;       ///< exit direction (leaving the old tile)
 	bool                m_is_tunnel;     ///< last turn passed tunnel
@@ -473,12 +473,12 @@ public:
 		}
 		/* Check for speed limit imposed by railtype */
 		if (IsRailTT()) {
-			uint16 rail_speed = GetRailTypeInfo(GetRailTypeByTrack(m_old_tile, TrackdirToTrack(m_old_td)))->max_speed;
+			uint16_t rail_speed = GetRailTypeInfo(GetRailTypeByTrack(m_old_tile, TrackdirToTrack(m_old_td)))->max_speed;
 			if (rail_speed > 0) max_speed = std::min<int>(max_speed, rail_speed);
 		}
 		if (IsRoadTT()) {
 			/* max_speed is already in roadvehicle units, no need to further modify (divide by 2) */
-			uint16 road_speed = GetRoadTypeInfo(GetRoadType(m_old_tile, GetRoadTramType(RoadVehicle::From(m_veh)->roadtype)))->max_speed;
+			uint16_t road_speed = GetRoadTypeInfo(GetRoadType(m_old_tile, GetRoadTramType(RoadVehicle::From(m_veh)->roadtype)))->max_speed;
 			if (road_speed > 0) max_speed = std::min<int>(max_speed, road_speed);
 		}
 

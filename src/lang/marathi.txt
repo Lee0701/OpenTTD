@@ -688,7 +688,7 @@ STR_NEWS_NEW_VEHICLE_TYPE                                       :{BIG_FONT}{BLAC
 
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :पौंड
 STR_GAME_OPTIONS_CURRENCY_USD                                   :डोल्लर
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :युरो
@@ -723,6 +723,7 @@ STR_GAME_OPTIONS_LANGUAGE                                       :{BLACK}भा�
 
 
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :अन्य
+
 
 
 
@@ -952,6 +953,7 @@ STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_ACTIONS              :सर्व �
 
 
 ###setting-zero-is-special
+
 
 
 

@@ -45,7 +45,7 @@
  */
 
 /** Nested widget definition for train depots. */
-static const NWidgetPart _nested_train_depot_widgets[] = {
+static constexpr NWidgetPart _nested_train_depot_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_D_SHOW_RENAME), // rename button
@@ -122,7 +122,7 @@ extern void DepotSortList(VehicleList *list);
  * @param p2 unused
  * @param cmd unused
  */
-void CcCloneVehicle(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcCloneVehicle(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 
@@ -260,7 +260,7 @@ struct DepotWindow : Window {
 	VehicleID vehicle_over; ///< Rail vehicle over which another one is dragged, \c INVALID_VEHICLE if none.
 	VehicleType type;
 	bool generate_list;
-	int hovered_widget; ///< Index of the widget being hovered during drag/drop. -1 if no drag is in progress.
+	WidgetID hovered_widget; ///< Index of the widget being hovered during drag/drop. -1 if no drag is in progress.
 	VehicleList vehicle_list;
 	VehicleList wagon_list;
 	uint unitnumber_digits;
@@ -365,7 +365,7 @@ struct DepotWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_D_MATRIX) return;
 
@@ -400,7 +400,7 @@ struct DepotWindow : Window {
 			}
 		}
 
-		uint16 rows_in_display = wid->current_y / wid->resize_y;
+		uint16_t rows_in_display = wid->current_y / wid->resize_y;
 
 		uint num = this->vscroll->GetPosition() * this->num_columns;
 		uint maxval = static_cast<uint>(std::min<size_t>(this->vehicle_list.size(), num + (rows_in_display * this->num_columns)));
@@ -423,7 +423,7 @@ struct DepotWindow : Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_D_CAPTION) return;
 
@@ -655,7 +655,7 @@ struct DepotWindow : Window {
 		this->flag_size = maxdim(GetScaledSpriteSize(SPR_FLAG_VEH_STOPPED), GetScaledSpriteSize(SPR_FLAG_VEH_RUNNING));
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_D_MATRIX: {
@@ -759,7 +759,7 @@ struct DepotWindow : Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_D_MATRIX: // List
@@ -841,7 +841,7 @@ struct DepotWindow : Window {
 		DoCommandP(0, this->GetDepotIndex(), 0, CMD_RENAME_DEPOT | CMD_MSG(STR_ERROR_CAN_T_RENAME_DEPOT), nullptr, str);
 	}
 
-	bool OnRightClick([[maybe_unused]] Point pt, int widget) override
+	bool OnRightClick([[maybe_unused]] Point pt, WidgetID widget) override
 	{
 		if (widget != WID_D_MATRIX) return false;
 
@@ -991,7 +991,7 @@ struct DepotWindow : Window {
 		}
 	}
 
-	void OnMouseDrag(Point pt, int widget) override
+	void OnMouseDrag(Point pt, WidgetID widget) override
 	{
 		if (this->sel == INVALID_VEHICLE) return;
 		if (widget != this->hovered_widget) {
@@ -1042,7 +1042,7 @@ struct DepotWindow : Window {
 		this->SetWidgetDirty(widget);
 	}
 
-	void OnDragDrop(Point pt, int widget) override
+	void OnDragDrop(Point pt, WidgetID widget) override
 	{
 		switch (widget) {
 			case WID_D_MATRIX: {
@@ -1135,7 +1135,7 @@ struct DepotWindow : Window {
 	 * In the case of airports, this is the station ID.
 	 * @return Depot or station ID of this window.
 	 */
-	inline uint16 GetDepotIndex() const
+	inline uint16_t GetDepotIndex() const
 	{
 		return (this->type == VEH_AIRCRAFT) ? ::GetStationIndex(this->window_number) : ::GetDepotIndex(this->window_number);
 	}
@@ -1191,7 +1191,7 @@ void DeleteDepotHighlightOfVehicle(const Vehicle *v)
 	}
 }
 
-enum DepotTooltipMode : uint8 {
+enum DepotTooltipMode : uint8_t {
 	DTM_OFF,
 	DTM_SIMPLE,
 	DTM_DETAILED

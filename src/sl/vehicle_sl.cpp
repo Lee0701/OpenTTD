@@ -22,6 +22,7 @@
 #include "../string_func.h"
 #include "../error.h"
 #include "../strings_func.h"
+#include "../economy_base.h"
 #include "../3rdparty/cpp-btree/btree_map.h"
 #include "../core/format.hpp"
 
@@ -203,6 +204,19 @@ void UpdateOldAircraft()
 			/* set new position x,y,z */
 			GetAircraftFlightLevelBounds(a, &a->z_pos, nullptr);
 			SetAircraftPosition(a, gp.x, gp.y, GetAircraftFlightLevel(a));
+		}
+	}
+
+	/* Clear aircraft from loading vehicles, if we bumped them into the air. */
+	for (Station *st : Station::Iterate()) {
+		for (auto iter = st->loading_vehicles.begin(); iter != st->loading_vehicles.end(); /* nothing */) {
+			Vehicle *v = *iter;
+			if (v->type == VEH_AIRCRAFT && !v->current_order.IsType(OT_LOADING)) {
+				iter = st->loading_vehicles.erase(iter);
+				delete v->cargo_payment;
+			} else {
+				++iter;
+			}
 		}
 	}
 }
@@ -441,7 +455,12 @@ void AfterLoadVehicles(bool part_of_load)
 					for (RoadVehicle *u = rv; u != nullptr; u = u->Next()) {
 						u->roadtype = rv->roadtype;
 						u->compatible_roadtypes = rv->compatible_roadtypes;
-						if (GetRoadType(u->tile, GetRoadTramType(u->roadtype)) == INVALID_ROADTYPE) is_invalid = true;
+						if (IsSavegameVersionBefore(SLV_62)) {
+							/* Use simplified check before trams were introduced */
+							if (!MayTileTypeHaveRoad(GetTileType(u->tile))) is_invalid = true;
+						} else {
+							if (!MayHaveRoad(u->tile) || GetRoadType(u->tile, GetRoadTramType(u->roadtype)) == INVALID_ROADTYPE) is_invalid = true;
+						}
 					}
 
 					if (is_invalid && part_of_load) {
@@ -635,22 +654,22 @@ void FixupTrainLengths()
 	}
 }
 
-static uint8  _cargo_periods;
-static uint16 _cargo_source;
-static uint32 _cargo_source_xy;
-static uint16 _cargo_count;
-static uint16 _cargo_paid_for;
+static uint8_t  _cargo_periods;
+static uint16_t _cargo_source;
+static uint32_t _cargo_source_xy;
+static uint16_t _cargo_count;
+static uint16_t _cargo_paid_for;
 static Money  _cargo_feeder_share;
 CargoPacketList _cpp_packets;
 std::map<VehicleID, CargoPacketList> _veh_cpp_packets;
 static std::vector<Trackdir> _path_td;
 static std::vector<TileIndex> _path_tile;
-static uint32 _path_layout_ctr;
+static uint32_t _path_layout_ctr;
 
-static uint32 _old_ahead_separation;
-static uint16 _old_timetable_start_subticks;
+static uint32_t _old_ahead_separation;
+static uint16_t _old_timetable_start_subticks;
 
-btree::btree_map<VehicleID, uint16> _old_timetable_start_subticks_map;
+btree::btree_map<VehicleID, uint16_t> _old_timetable_start_subticks_map;
 
 /**
  * Make it possible to make the saveload tables "friends" of other classes.
@@ -715,10 +734,10 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 
 		     SLE_VAR(Vehicle, day_counter,           SLE_UINT8),
 		     SLE_VAR(Vehicle, tick_counter,          SLE_UINT8),
-		SLE_CONDVAR_X(Vehicle, running_ticks,        SLE_FILE_U8  | SLE_VAR_U16,  SLV_88, SL_MAX_VERSION, SlXvFeatureTest([](uint16 version, bool version_in_range, const std::array<uint16, XSLFI_SIZE> &feature_versions) -> bool {
+		SLE_CONDVAR_X(Vehicle, running_ticks,        SLE_FILE_U8  | SLE_VAR_U16,  SLV_88, SL_MAX_VERSION, SlXvFeatureTest([](uint16_t version, bool version_in_range, const std::array<uint16_t, XSLFI_SIZE> &feature_versions) -> bool {
 			return version_in_range && !(SlXvIsFeaturePresent(feature_versions, XSLFI_SPRINGPP, 3) || SlXvIsFeaturePresent(feature_versions, XSLFI_JOKERPP) || SlXvIsFeaturePresent(feature_versions, XSLFI_CHILLPP) || SlXvIsFeaturePresent(feature_versions, XSLFI_VARIABLE_DAY_LENGTH, 2));
 		})),
-		SLE_CONDVAR_X(Vehicle, running_ticks,        SLE_UINT16,                  SLV_88, SL_MAX_VERSION, SlXvFeatureTest([](uint16 version, bool version_in_range, const std::array<uint16, XSLFI_SIZE> &feature_versions) -> bool {
+		SLE_CONDVAR_X(Vehicle, running_ticks,        SLE_UINT16,                  SLV_88, SL_MAX_VERSION, SlXvFeatureTest([](uint16_t version, bool version_in_range, const std::array<uint16_t, XSLFI_SIZE> &feature_versions) -> bool {
 			return version_in_range && (SlXvIsFeaturePresent(feature_versions, XSLFI_SPRINGPP, 2) || SlXvIsFeaturePresent(feature_versions, XSLFI_JOKERPP) || SlXvIsFeaturePresent(feature_versions, XSLFI_CHILLPP) || SlXvIsFeaturePresent(feature_versions, XSLFI_VARIABLE_DAY_LENGTH, 2));
 		})),
 
@@ -813,7 +832,7 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		 SLE_CONDVAR(Vehicle, current_order_time,    SLE_UINT32,                  SLV_67, SL_MAX_VERSION),
 		SLE_CONDVAR_X(Vehicle, current_loading_time, SLE_UINT32,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AUTO_TIMETABLE)),
 		SLE_CONDVAR_X(Vehicle, current_loading_time, SLE_UINT32,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_JOKERPP, SL_JOKER_1_23)),
-		SLE_CONDVAR_X(Vehicle, last_loading_tick,    SLE_UINT64,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_LAST_LOADING_TICK)),
+		SLE_CONDVAR_X(Vehicle, last_loading_tick,    SLE_INT64,                    SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_LAST_LOADING_TICK)),
 		SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SPRINGPP)),
 		 SLE_CONDVAR(Vehicle, lateness_counter,      SLE_INT32,                   SLV_67, SL_MAX_VERSION),
 
@@ -881,7 +900,7 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 		SLE_WRITEBYTE(Vehicle, type),
 		SLE_VEH_INCLUDE(),
 		      SLE_VAR(Ship, state,                     SLE_UINT8),
-		SLEG_CONDVARVEC(_path_td,                      SLE_UINT8,                  SLV_SHIP_PATH_CACHE, SL_MAX_VERSION),
+		 SLE_CONDRING(Ship, cached_path,               SLE_UINT8,                SLV_SHIP_PATH_CACHE, SL_MAX_VERSION),
 		  SLE_CONDVAR(Ship, rotation,                  SLE_UINT8,                  SLV_SHIP_ROTATION, SL_MAX_VERSION),
 		SLE_CONDVAR_X(Ship, lost_count,                SLE_UINT8,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SHIP_LOST_COUNTER)),
 		SLE_CONDVAR_X(Ship, critical_breakdown_count,  SLE_UINT8,                     SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_IMPROVED_BREAKDOWNS, 8)),
@@ -1047,17 +1066,6 @@ static void Save_VEHS()
 				}
 				_path_layout_ctr = rv->cached_path->layout_ctr;
 			}
-		} else if (v->type == VEH_SHIP) {
-			_path_td.clear();
-
-			Ship *s = Ship::From(v);
-			if (s->cached_path != nullptr && !s->cached_path->empty()) {
-				uint idx = s->cached_path->start;
-				for (uint i = 0; i < s->cached_path->size(); i++) {
-					_path_td.push_back(s->cached_path->td[idx]);
-					idx = (idx + 1) & SHIP_PATH_CACHE_MASK;
-				}
-			}
 		}
 		SlSetArrayIndex(v->index);
 		SlObjectSaveFiltered(v, GetVehicleDescriptionFiltered(v->type));
@@ -1139,19 +1147,12 @@ void Load_VEHS()
 		if (vtype == VEH_ROAD && !_path_td.empty() && _path_td.size() <= RV_PATH_CACHE_SEGMENTS && _path_td.size() == _path_tile.size()) {
 			RoadVehicle *rv = RoadVehicle::From(v);
 			rv->cached_path.reset(new RoadVehPathCache());
-			rv->cached_path->count = (uint8)_path_td.size();
+			rv->cached_path->count = (uint8_t)_path_td.size();
 			for (size_t i = 0; i < _path_td.size(); i++) {
 				rv->cached_path->td[i] = _path_td[i];
 				rv->cached_path->tile[i] = _path_tile[i];
 			}
 			rv->cached_path->layout_ctr = _path_layout_ctr;
-		} else if (vtype == VEH_SHIP && !_path_td.empty() && _path_td.size() <= SHIP_PATH_CACHE_LENGTH) {
-			Ship *s = Ship::From(v);
-			s->cached_path.reset(new ShipPathCache());
-			s->cached_path->count = (uint8)_path_td.size();
-			for (size_t i = 0; i < _path_td.size(); i++) {
-				s->cached_path->td[i] = _path_td[i];
-			}
 		}
 	}
 }
@@ -1232,13 +1233,13 @@ struct train_venc {
 	VehicleID id;
 	GroundVehicleCache gvcache;
 	int cached_curve_speed_mod;
-	uint8 cached_tflags;
-	uint8 cached_num_engines;
-	uint16 cached_centre_mass;
-	uint16 cached_braking_length;
-	uint16 cached_veh_weight;
-	uint16 cached_uncapped_decel;
-	uint8 cached_deceleration;
+	uint8_t cached_tflags;
+	uint8_t cached_num_engines;
+	uint16_t cached_centre_mass;
+	uint16_t cached_braking_length;
+	uint16_t cached_veh_weight;
+	uint16_t cached_uncapped_decel;
+	uint8_t cached_deceleration;
 	byte user_def_data;
 	int cached_max_curve_speed;
 };
@@ -1250,7 +1251,7 @@ struct roadvehicle_venc {
 
 struct aircraft_venc {
 	VehicleID id;
-	uint16 cached_max_range;
+	uint16_t cached_max_range;
 };
 
 static std::vector<vehicle_venc> _vehicle_vencs;
@@ -1479,13 +1480,13 @@ void SlProcessVENC()
 		if (a == nullptr) continue;
 		if (a->acache.cached_max_range != venc.cached_max_range) {
 			a->acache.cached_max_range = venc.cached_max_range;
-			a->acache.cached_max_range_sqr = venc.cached_max_range * venc.cached_max_range;
+			a->acache.cached_max_range_sqr = (uint32_t)venc.cached_max_range * (uint32_t)venc.cached_max_range;
 			LogVehicleVENCMessage(a, "cached_max_range");
 		}
 	}
 }
 
-static ChunkSaveLoadSpecialOpResult Special_VENC(uint32 chunk_id, ChunkSaveLoadSpecialOp op)
+static ChunkSaveLoadSpecialOpResult Special_VENC(uint32_t chunk_id, ChunkSaveLoadSpecialOp op)
 {
 	switch (op) {
 		case CSLSO_SHOULD_SAVE_CHUNK:
@@ -1546,11 +1547,11 @@ const SaveLoadTable GetVehicleLookAheadCurveDescription()
 static void RealSave_VLKA(TrainReservationLookAhead *lookahead)
 {
 	SlObject(lookahead, GetVehicleLookAheadDescription());
-	SlWriteUint32((uint32)lookahead->items.size());
+	SlWriteUint32((uint32_t)lookahead->items.size());
 	for (TrainReservationLookAheadItem &item : lookahead->items) {
 		SlObject(&item, GetVehicleLookAheadItemDescription());
 	}
-	SlWriteUint32((uint32)lookahead->curves.size());
+	SlWriteUint32((uint32_t)lookahead->curves.size());
 	for (TrainReservationLookAheadCurve &curve : lookahead->curves) {
 		SlObject(&curve, GetVehicleLookAheadCurveDescription());
 	}
@@ -1574,12 +1575,12 @@ void Load_VLKA()
 		assert(t != nullptr);
 		t->lookahead.reset(new TrainReservationLookAhead());
 		SlObject(t->lookahead.get(), GetVehicleLookAheadDescription());
-		uint32 items = SlReadUint32();
+		uint32_t items = SlReadUint32();
 		t->lookahead->items.resize(items);
 		for (uint i = 0; i < items; i++) {
 			SlObject(&t->lookahead->items[i], GetVehicleLookAheadItemDescription());
 		}
-		uint32 curves = SlReadUint32();
+		uint32_t curves = SlReadUint32();
 		t->lookahead->curves.resize(curves);
 		for (uint i = 0; i < curves; i++) {
 			SlObject(&t->lookahead->curves[i], GetVehicleLookAheadCurveDescription());

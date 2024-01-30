@@ -1079,7 +1079,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Aonadan 
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Tagh aonadan airgeadra
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Not Breatannach
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dolar Aimeireaganach
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Eòro
@@ -1131,6 +1131,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Cuir cro
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Dùmhlachd-bhreacaidh na sgrìn
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Tagh dùmhlachd-bhreacaidh na sgrìn a chleachdas tu
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :Gnàthaichte
+
 
 
 
@@ -1784,6 +1785,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :À comas
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Cuir obair-chàraidh à comas ma chaidh briseadh a chur gu “Cha tachair seo idir”: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Ma tha seo air, chan fhaigh carbadan obair-chàraidh mur urrainn dhaibh briseadh
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Cuir crìochan-luaiths nan carbadan-rèile an comas: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Ma tha seo air, cleachd crìochan-luaiths nan carbadan cuideachd gus an luaths as motha aig trèan a shuidheachadh

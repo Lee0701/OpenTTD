@@ -1812,10 +1812,17 @@ function Regression::Vehicle()
 	print("    GetLastErrorString():  " + AIError.GetLastErrorString());
 
 	local list = AIVehicleList();
+	local in_depot = AIVehicleList(AIVehicle.IsInDepot);
+	local IsType = function(vehicle_id, type) {
+		return AIVehicle.GetVehicleType(vehicle_id) == type;
+	}
+	local rv_list = AIVehicleList(IsType, AIVehicle.VT_ROAD);
 
 	print("");
 	print("--VehicleList--");
 	print("  Count():             " + list.Count());
+	print("  InDepot Count():     " + in_depot.Count());
+	print("  RoadVehicle Count(): " + rv_list.Count());
 	list.Valuate(AIVehicle.GetLocation);
 	print("  Location ListDump:");
 	for (local i = list.Begin(); !list.IsEnd(); i = list.Next()) {
@@ -2017,5 +2024,12 @@ function Regression::Start()
 	print("  IsEventWaiting:        false");
 
 	this.Math();
+
+	/* Check Valuate() is actually limited, MUST BE THE LAST TEST. */
+	print("--Valuate() with excessive CPU usage--")
+	local list = AIList();
+	list.AddItem(0, 0);
+	local Infinite = function(id) { while(true); }
+	list.Valuate(Infinite);
 }
 

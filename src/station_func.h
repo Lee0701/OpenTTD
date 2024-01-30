@@ -47,7 +47,7 @@ void UpdateAirportsNoise();
 
 bool SplitGroundSpriteForOverlay(const TileInfo *ti, SpriteID *ground, RailTrackOffset *overlay_offset);
 
-void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint capacity, uint usage, uint32 time, EdgeUpdateMode mode);
+void IncreaseStats(Station *st, CargoID cargo, StationID next_station_id, uint capacity, uint usage, uint32_t time, EdgeUpdateMode mode);
 void RerouteCargo(Station *st, CargoID c, StationID avoid, StationID avoid2);
 void RerouteCargoFromSource(Station *st, CargoID c, StationID source, StationID avoid, StationID avoid2);
 
@@ -58,7 +58,7 @@ void FreeTrainStationPlatformReservation(const Train *v);
  * @param num Number of station tiles.
  * @return Total cost.
  */
-static inline Money StationMaintenanceCost(uint32 num)
+inline Money StationMaintenanceCost(uint32_t num)
 {
 	return (_price[PR_INFRASTRUCTURE_STATION] * num * (1 + IntSqrt(num))) >> 7; // 7 bits scaling.
 }

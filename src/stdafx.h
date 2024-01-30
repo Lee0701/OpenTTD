@@ -56,6 +56,7 @@
 #include <climits>
 #include <cassert>
 #include <memory>
+#include <span>
 #include <string>
 #include <inttypes.h>
 
@@ -120,6 +121,14 @@
 #	define EMPTY_BASES __declspec(empty_bases)
 #else
 #	define EMPTY_BASES
+#endif
+
+#if defined(_MSC_VER) && _MSC_VER >= 1929
+#	define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#elif defined(__has_cpp_attribute) && __has_cpp_attribute(no_unique_address)
+#	define NO_UNIQUE_ADDRESS [[no_unique_address]]
+#else
+#	define NO_UNIQUE_ADDRESS
 #endif
 
 /* Stuff for MSVC */
@@ -330,15 +339,6 @@ typedef uint8_t byte;
 	typedef unsigned int uint;
 #endif
 
-typedef uint8_t  uint8;
-typedef  int8_t   int8;
-typedef uint16_t uint16;
-typedef  int16_t  int16;
-typedef uint32_t uint32;
-typedef  int32_t  int32;
-typedef uint64_t uint64;
-typedef  int64_t  int64;
-
 #if !defined(WITH_PERSONAL_DIR)
 #	define PERSONAL_DIR ""
 #endif
@@ -349,10 +349,10 @@ typedef  int64_t  int64;
 #endif
 
 /* Check if the types have the bitsizes like we are using them */
-static_assert(sizeof(uint64) == 8);
-static_assert(sizeof(uint32) == 4);
-static_assert(sizeof(uint16) == 2);
-static_assert(sizeof(uint8)  == 1);
+static_assert(sizeof(uint64_t) == 8);
+static_assert(sizeof(uint32_t) == 4);
+static_assert(sizeof(uint16_t) == 2);
+static_assert(sizeof(uint8_t)  == 1);
 static_assert(SIZE_MAX >= UINT32_MAX);
 
 #ifndef M_PI_2
@@ -427,13 +427,13 @@ static_assert(SIZE_MAX >= UINT32_MAX);
 #endif /* __GNUC__ || __clang__ */
 
 #if defined(__GNUC__) || defined(__clang__)
-__attribute__((aligned(1))) typedef uint16 unaligned_uint16;
-__attribute__((aligned(1))) typedef uint32 unaligned_uint32;
-__attribute__((aligned(1))) typedef uint64 unaligned_uint64;
+__attribute__((aligned(1))) typedef uint16_t unaligned_uint16;
+__attribute__((aligned(1))) typedef uint32_t unaligned_uint32;
+__attribute__((aligned(1))) typedef uint64_t unaligned_uint64;
 #else
-typedef uint16 unaligned_uint16;
-typedef uint32 unaligned_uint32;
-typedef uint64 unaligned_uint64;
+typedef uint16_t unaligned_uint16;
+typedef uint32_t unaligned_uint32;
+typedef uint64_t unaligned_uint64;
 #endif /* __GNUC__ || __clang__ */
 
 /* For the FMT library we only want to use the headers, not link to some library. */
@@ -442,7 +442,9 @@ typedef uint64 unaligned_uint64;
 void NORETURN CDECL usererror(const char *str, ...) WARN_FORMAT(1, 2);
 void NORETURN CDECL error(const char *str, ...) WARN_FORMAT(1, 2);
 void NORETURN CDECL assert_msg_error(int line, const char *file, const char *expr, const char *extra, const char *str, ...) WARN_FORMAT(5, 6);
-const char *assert_tile_info(uint32 tile);
+void NORETURN assert_str_error(int line, const char *file, const char *expr, const char *str);
+void NORETURN assert_str_error(int line, const char *file, const char *expr, const std::string &str);
+const char *assert_tile_info(uint32_t tile);
 #define NOT_REACHED() error("NOT_REACHED triggered at line %i of %s", __LINE__, __FILE__)
 
 /* Asserts are enabled if NDEBUG isn't defined or WITH_ASSERT is defined. */
@@ -452,12 +454,14 @@ const char *assert_tile_info(uint32 tile);
 #	define assert_msg(expression, ...) if (unlikely(!(expression))) assert_msg_error(__LINE__, __FILE__, #expression, nullptr, __VA_ARGS__);
 #	define assert_msg_tile(expression, tile, ...) if (unlikely(!(expression))) assert_msg_error(__LINE__, __FILE__, #expression, assert_tile_info(tile), __VA_ARGS__);
 #	define assert_tile(expression, tile) if (unlikely(!(expression))) error("Assertion failed at line %i of %s: %s\n\t%s", __LINE__, __FILE__, #expression, assert_tile_info(tile));
+#	define assert_str(expression, str) if (unlikely(!(expression))) assert_str_error(__LINE__, __FILE__, #expression, str);
 #else
 #	undef assert
 #	define assert(expression)
 #	define assert_msg(expression, ...)
 #	define assert_msg_tile(expression, tile, ...)
 #	define assert_tile(expression, tile)
+#	define assert_str(expression, str)
 #endif
 #if (!defined(NDEBUG) || defined(WITH_ASSERT)) && !defined(FEWER_ASSERTS)
 #	define WITH_FULL_ASSERTS
@@ -490,7 +494,7 @@ const char *assert_tile_info(uint32 tile);
  * Version of the standard free that accepts const pointers.
  * @param ptr The data to free.
  */
-static inline void free(const void *ptr)
+inline void free(const void *ptr)
 {
 	free(const_cast<void *>(ptr));
 }
@@ -537,10 +541,20 @@ static inline void free(const void *ptr)
 	#define PREFETCH_NTA(address)
 #endif
 
-#if !defined(DISABLE_SCOPE_INFO) && (__cplusplus >= 201103L || defined(__STDCXX_VERSION__) || defined(__GXX_EXPERIMENTAL_CXX0X__) || defined(__GXX_EXPERIMENTAL_CPP0X__))
+#if !defined(DISABLE_SCOPE_INFO)
 #define USE_SCOPE_INFO
 #endif
 
 #define SINGLE_ARG(...) __VA_ARGS__
+
+#if defined(DEDICATED)
+inline constexpr bool IsHeadless() { return true; }
+#else
+inline bool IsHeadless()
+{
+	extern bool _network_dedicated;
+	return _network_dedicated;
+}
+#endif
 
 #endif /* STDAFX_H */

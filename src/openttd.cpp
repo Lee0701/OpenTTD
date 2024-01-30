@@ -93,6 +93,7 @@
 #include "timer/timer_game_realtime.h"
 #include "timer/timer_game_tick.h"
 #include "network/network_sync.h"
+#include "plans_func.h"
 
 #include "linkgraph/linkgraphschedule.h"
 #include "tracerestrict.h"
@@ -127,7 +128,7 @@ extern void RebuildTownCaches(bool cargo_update_required, bool old_map_position)
 extern void ShowOSErrorBox(const char *buf, bool system);
 extern void NORETURN DoOSAbort();
 extern std::string _config_file;
-extern uint64 _station_tile_cache_hash;
+extern uint64_t _station_tile_cache_hash;
 
 bool _save_config = false;
 bool _request_newgrf_scan = false;
@@ -138,6 +139,22 @@ SimpleChecksum64 _state_checksum;
 std::mutex _music_driver_mutex;
 static std::string _music_driver_params;
 static std::atomic<bool> _music_inited;
+
+void NORETURN usererror_str(const char *msg)
+{
+	ShowOSErrorBox(msg, false);
+	if (VideoDriver::GetInstance() != nullptr) VideoDriver::GetInstance()->Stop();
+
+#ifdef __EMSCRIPTEN__
+	emscripten_exit_pointerlock();
+	/* In effect, the game ends here. As emscripten_set_main_loop() caused
+	 * the stack to be unwound, the code after MainLoop() in
+	 * openttd_main() is never executed. */
+	EM_ASM(if (window["openttd_abort"]) openttd_abort());
+#endif
+
+	_exit(1);
+}
 
 /**
  * Error handling for fatal user errors.
@@ -153,18 +170,18 @@ void CDECL usererror(const char *s, ...)
 	vseprintf(buf, lastof(buf), s, va);
 	va_end(va);
 
-	ShowOSErrorBox(buf, false);
-	if (VideoDriver::GetInstance() != nullptr) VideoDriver::GetInstance()->Stop();
+	usererror_str(buf);
+}
 
-#ifdef __EMSCRIPTEN__
-	emscripten_exit_pointerlock();
-	/* In effect, the game ends here. As emscripten_set_main_loop() caused
-	 * the stack to be unwound, the code after MainLoop() in
-	 * openttd_main() is never executed. */
-	EM_ASM(if (window["openttd_abort"]) openttd_abort());
-#endif
+static void NORETURN fatalerror_common(const char *msg)
+{
+	if (VideoDriver::GetInstance() == nullptr || VideoDriver::GetInstance()->HasGUI()) {
+		ShowOSErrorBox(msg, true);
+	}
 
-	_exit(1);
+	/* Set the error message for the crash log and then invoke it. */
+	CrashLog::SetErrorMessage(msg);
+	DoOSAbort();
 }
 
 /**
@@ -183,13 +200,14 @@ void CDECL error(const char *s, ...)
 	vseprintf(buf, lastof(buf), s, va);
 	va_end(va);
 
-	if (VideoDriver::GetInstance() == nullptr || VideoDriver::GetInstance()->HasGUI()) {
-		ShowOSErrorBox(buf, true);
-	}
+	fatalerror_common(buf);
+}
 
-	/* Set the error message for the crash log and then invoke it. */
-	CrashLog::SetErrorMessage(buf);
-	DoOSAbort();
+void fatalerror_str(const char *msg)
+{
+	if (CrashLog::HaveAlreadyCrashed()) DoOSAbort();
+
+	fatalerror_common(msg);
 }
 
 void CDECL assert_msg_error(int line, const char *file, const char *expr, const char *extra, const char *str, ...)
@@ -210,16 +228,22 @@ void CDECL assert_msg_error(int line, const char *file, const char *expr, const 
 	vseprintf(b, lastof(buf), str, va);
 	va_end(va);
 
-	if (VideoDriver::GetInstance() == nullptr || VideoDriver::GetInstance()->HasGUI()) {
-		ShowOSErrorBox(buf, true);
-	}
-
-	/* Set the error message for the crash log and then invoke it. */
-	CrashLog::SetErrorMessage(buf);
-	DoOSAbort();
+	fatalerror_common(buf);
 }
 
-const char *assert_tile_info(uint32 tile) {
+void assert_str_error(int line, const char *file, const char *expr, const char *str)
+{
+	char buf[2048];
+	seprintf(buf, lastof(buf), "Assertion failed at line %i of %s: %s\n%s", line, file, expr, str);
+	fatalerror_common(buf);
+}
+
+void assert_str_error(int line, const char *file, const char *expr, const std::string &str)
+{
+	assert_str_error(line, file, expr, str.c_str());
+}
+
+const char *assert_tile_info(uint32_t tile) {
 	static char buffer[128];
 	DumpTileInfo(buffer, lastof(buffer), tile);
 	return buffer;
@@ -236,7 +260,7 @@ void CDECL ShowInfoF(const char *str, ...)
 	va_start(va, str);
 	vseprintf(buf, lastof(buf), str, va);
 	va_end(va);
-	ShowInfo(buf);
+	ShowInfoI(buf);
 }
 
 /**
@@ -267,7 +291,6 @@ static void ShowHelp()
 		"  -p password         = Password to join server\n"
 		"  -P password         = Password to join company\n"
 		"  -D [host][:port]    = Start dedicated server\n"
-		"  -l host[:port]      = Redirect DEBUG()\n"
 #if !defined(_WIN32)
 		"  -f                  = Fork into the background (dedicated only)\n"
 #endif
@@ -320,7 +343,7 @@ static void ShowHelp()
 #if !defined(_WIN32)
 	printf("%s\n", buf);
 #else
-	ShowInfo(buf);
+	ShowInfoI(buf);
 #endif
 }
 
@@ -329,7 +352,7 @@ static void WriteSavegameInfo(const char *name)
 	extern SaveLoadVersion _sl_version;
 	extern std::string _sl_xv_version_label;
 	extern SaveLoadVersion _sl_xv_upstream_version;
-	uint32 last_ottd_rev = 0;
+	uint32_t last_ottd_rev = 0;
 	byte ever_modified = 0;
 	bool removed_newgrfs = false;
 
@@ -379,7 +402,7 @@ static void WriteSavegameInfo(const char *name)
 #if !defined(_WIN32)
 	printf("%s\n", buf);
 #else
-	ShowInfo(buf);
+	ShowInfoI(buf);
 #endif
 }
 
@@ -422,7 +445,7 @@ static void WriteSavegameDebugData(const char *name)
 #if !defined(_WIN32)
 	printf("%s\n", buf);
 #else
-	ShowInfo(buf);
+	ShowInfoI(buf);
 #endif
 	free(buf);
 }
@@ -485,6 +508,7 @@ static void ShutdownGame()
 	ClearAllSignalSpeedRestrictions();
 
 	ClearZoningCaches();
+	InvalidatePlanCaches();
 	ClearOrderDestinationRefcountMap();
 
 	/* No NewGRFs were loaded when it was still bootstrapping. */
@@ -577,9 +601,6 @@ void MakeNewgameSettingsLive()
 		_settings_game.ai_config[c] = nullptr;
 		if (_settings_newgame.ai_config[c] != nullptr) {
 			_settings_game.ai_config[c] = new AIConfig(_settings_newgame.ai_config[c]);
-			if (!AIConfig::GetConfig(c, AIConfig::SSS_FORCE_GAME)->HasScript()) {
-				AIConfig::GetConfig(c, AIConfig::SSS_FORCE_GAME)->Change(std::nullopt);
-			}
 		}
 	}
 	_settings_game.game_config = nullptr;
@@ -593,21 +614,21 @@ void MakeNewgameSettingsLive()
 void OpenBrowser(const std::string &url)
 {
 	/* Make sure we only accept urls that are sure to open a browser. */
-	if (StrStartsWith(url, "http://") || StrStartsWith(url, "https://")) {
+	if (url.starts_with("http://") || url.starts_with("https://")) {
 		OSOpenBrowser(url);
 	}
 }
 
 /** Callback structure of statements to be executed after the NewGRF scan. */
 struct AfterNewGRFScan : NewGRFScanCallback {
-	Year startyear = INVALID_YEAR;              ///< The start year.
-	uint32 generation_seed = GENERATE_NEW_SEED; ///< Seed for the new game.
-	std::string dedicated_host;                 ///< Hostname for the dedicated server.
-	uint16 dedicated_port = 0;                  ///< Port for the dedicated server.
-	std::string connection_string;              ///< Information about the server to connect to
-	std::string join_server_password;           ///< The password to join the server with.
-	std::string join_company_password;          ///< The password to join the company with.
-	bool save_config = true;                    ///< The save config setting.
+	Year startyear = INVALID_YEAR;                ///< The start year.
+	uint32_t generation_seed = GENERATE_NEW_SEED; ///< Seed for the new game.
+	std::string dedicated_host;                   ///< Hostname for the dedicated server.
+	uint16_t dedicated_port = 0;                  ///< Port for the dedicated server.
+	std::string connection_string;                ///< Information about the server to connect to
+	std::string join_server_password;             ///< The password to join the server with.
+	std::string join_company_password;            ///< The password to join the company with.
+	bool save_config = true;                      ///< The save config setting.
 
 	/**
 	 * Create a new callback.
@@ -709,7 +730,6 @@ static const OptionData _options[] = {
 	 GETOPT_SHORT_VALUE('b'),
 	GETOPT_SHORT_OPTVAL('D'),
 	 GETOPT_SHORT_VALUE('n'),
-	 GETOPT_SHORT_VALUE('l'),
 	 GETOPT_SHORT_VALUE('p'),
 	 GETOPT_SHORT_VALUE('P'),
 #if !defined(_WIN32)
@@ -754,7 +774,6 @@ int openttd_main(int argc, char *argv[])
 	Dimension resolution = {0, 0};
 	std::unique_ptr<AfterNewGRFScan> scanner(new AfterNewGRFScan());
 	bool dedicated = false;
-	char *debuglog_conn = nullptr;
 	bool only_local_path = false;
 
 	extern bool _dedicated_forks;
@@ -782,7 +801,7 @@ int openttd_main(int argc, char *argv[])
 			videodriver = "dedicated";
 			blitter = "null";
 			dedicated = true;
-			SetDebugString("net=3", ShowInfo);
+			SetDebugString("net=3", ShowInfoI);
 			if (mgo.opt != nullptr) {
 				scanner->dedicated_host = ParseFullConnectionString(mgo.opt, scanner->dedicated_port);
 			}
@@ -790,9 +809,6 @@ int openttd_main(int argc, char *argv[])
 		case 'f': _dedicated_forks = true; break;
 		case 'n':
 			scanner->connection_string = mgo.opt; // host:port#company parameter
-			break;
-		case 'l':
-			debuglog_conn = mgo.opt;
 			break;
 		case 'p':
 			scanner->join_server_password = mgo.opt;
@@ -806,7 +822,7 @@ int openttd_main(int argc, char *argv[])
 #if defined(_WIN32)
 				CreateConsole();
 #endif
-				if (mgo.opt != nullptr) SetDebugString(mgo.opt, ShowInfo);
+				if (mgo.opt != nullptr) SetDebugString(mgo.opt, ShowInfoI);
 				break;
 			}
 		case 'e': _switch_mode = (_switch_mode == SM_LOAD_GAME || _switch_mode == SM_LOAD_SCENARIO ? SM_LOAD_SCENARIO : SM_EDITOR); break;
@@ -853,10 +869,11 @@ int openttd_main(int argc, char *argv[])
 				fprintf(stderr, "Failed to open savegame\n");
 				if (_load_check_data.HasErrors()) {
 					InitializeLanguagePacks(); // A language pack is needed for GetString()
-					char buf[256];
+					std::string buf;
 					SetDParamStr(0, _load_check_data.error_msg);
-					GetString(buf, _load_check_data.error, lastof(buf));
-					fprintf(stderr, "%s\n", buf);
+					GetString(StringBuilder(buf), _load_check_data.error);
+					buf += '\n';
+					fputs(buf.c_str(), stderr);
 				}
 				return ret;
 			}
@@ -1003,10 +1020,6 @@ int openttd_main(int argc, char *argv[])
 	AdjustGUIZoom(AGZM_STARTUP);
 
 	NetworkStartUp(); // initialize network-core
-
-	if (debuglog_conn != nullptr && _network_available) {
-		NetworkStartDebugLog(debuglog_conn);
-	}
 
 	if (!HandleBootstrap()) {
 		ShutdownGame();
@@ -1491,8 +1504,8 @@ void WriteVehicleInfo(char *&p, const char *last, const Vehicle *u, const Vehicl
 	p += seprintf(p, last, ": type %i, vehicle %i (%i), company %i, unit number %i, wagon %i, engine: ",
 			(int)u->type, u->index, v->index, (int)u->owner, v->unitnumber, length);
 	SetDParam(0, u->engine_type);
-	p = GetString(p, STR_ENGINE_NAME, last);
-	uint32 grfid = u->GetGRFID();
+	p = strecpy(p, GetString(STR_ENGINE_NAME).c_str(), last, true);
+	uint32_t grfid = u->GetGRFID();
 	if (grfid) {
 		p += seprintf(p, last, ", GRF: %08X", BSWAP32(grfid));
 		GRFConfig *grfconfig = GetGRFConfig(grfid);
@@ -1814,7 +1827,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 			length = 0;
 			for (const Vehicle *u = v; u != nullptr; u = u->Next()) {
 				FillNewGRFVehicleCache(u);
-				if (memcmp(&grf_cache[length], &u->grf_cache, sizeof(NewGRFCache)) != 0) {
+				if (grf_cache[length] != u->grf_cache) {
 					CCLOGV("newgrf cache mismatch");
 				}
 				if (veh_cache[length].cached_max_speed != u->vcache.cached_max_speed || veh_cache[length].cached_cargo_age_period != u->vcache.cached_cargo_age_period ||
@@ -1926,7 +1939,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 		for (Vehicle *v : Vehicle::Iterate()) {
 			Money old_feeder_share = v->cargo.GetFeederShare();
 			uint old_count = v->cargo.TotalCount();
-			uint64 old_cargo_periods_in_transit = v->cargo.CargoPeriodsInTransit();
+			uint64_t old_cargo_periods_in_transit = v->cargo.CargoPeriodsInTransit();
 
 			v->cargo.InvalidateCache();
 
@@ -1947,7 +1960,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 				if (st->goods[c].data == nullptr) continue;
 
 				uint old_count = st->goods[c].data->cargo.TotalCount();
-				uint64 old_cargo_periods_in_transit = st->goods[c].data->cargo.CargoPeriodsInTransit();
+				uint64_t old_cargo_periods_in_transit = st->goods[c].data->cargo.CargoPeriodsInTransit();
 
 				st->goods[c].data->cargo.InvalidateCache();
 
@@ -1981,9 +1994,11 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 			}
 		}
 
+#ifdef WITH_ASSERT
 		for (OrderList *order_list : OrderList::Iterate()) {
 			order_list->DebugCheckSanity();
 		}
+#endif
 
 		extern void ValidateVehicleTickCaches();
 		ValidateVehicleTickCaches();
@@ -2011,7 +2026,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 		if (!CargoPacket::ValidateDeferredCargoPayments()) CCLOG("Cargo packets deferred payments validation failed");
 
 		if (_order_destination_refcount_map_valid) {
-			btree::btree_map<uint32, uint32> saved_order_destination_refcount_map = std::move(_order_destination_refcount_map);
+			btree::btree_map<uint32_t, uint32_t> saved_order_destination_refcount_map = std::move(_order_destination_refcount_map);
 			for (auto iter = saved_order_destination_refcount_map.begin(); iter != saved_order_destination_refcount_map.end();) {
 				if (iter->second == 0) {
 					iter = saved_order_destination_refcount_map.erase(iter);
@@ -2024,6 +2039,11 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 		} else {
 			CCLOG("Order destination refcount map not valid");
 		}
+	}
+
+	if (flags & CHECK_CACHE_WATER_REGIONS) {
+		extern void WaterRegionCheckCaches(std::function<void(const char *)> log);
+		WaterRegionCheckCaches(log);
 	}
 
 	if ((flags & CHECK_CACHE_EMIT_LOG) && !saved_messages.empty()) {
@@ -2049,7 +2069,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdDesyncCheck(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdDesyncCheck(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	if (flags & DC_EXEC) {
 		CheckCaches(true, nullptr, CHECK_CACHE_ALL | CHECK_CACHE_EMIT_LOG);
@@ -2093,6 +2113,15 @@ void StateGameLoop()
 
 	if (_game_mode == GM_EDITOR) {
 		BasePersistentStorageArray::SwitchMode(PSM_ENTER_GAMELOOP);
+
+		/* _scaled_date_ticks and _scaled_date_ticks_offset must update in lockstep here,
+		 * as _date, _tick_skip_counter, etc are not updated in the scenario editor,
+		 * but _scaled_date_ticks should still update in case there are vehicles running,
+		 * to avoid problems with timetables and train speed adaptation
+		 */
+		_scaled_date_ticks++;
+		_scaled_date_ticks_offset++;
+
 		RunTileLoop();
 		CallVehicleTicks();
 		CallLandscapeTick();
@@ -2163,7 +2192,7 @@ void StateGameLoop()
 		if (_networking) {
 			RecordSyncEvent(NSRE_PRE_COMPANY_STATE);
 			for (Company *c : Company::Iterate()) {
-				DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64)c->money);
+				DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64_t)c->money);
 				UpdateStateChecksum(c->money);
 
 				for (uint i = 0; i < ROADTYPE_END; i++) {

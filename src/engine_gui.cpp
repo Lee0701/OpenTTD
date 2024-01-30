@@ -50,7 +50,7 @@ StringID GetEngineCategoryName(EngineID engine)
 	}
 }
 
-static const NWidgetPart _nested_engine_preview_widgets[] = {
+static constexpr NWidgetPart _nested_engine_preview_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_LIGHT_BLUE),
 		NWidget(WWT_CAPTION, COLOUR_LIGHT_BLUE), SetDataTip(STR_ENGINE_PREVIEW_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -77,7 +77,7 @@ struct EnginePreviewWindow : Window {
 		this->flags |= WF_STICKY;
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_EP_QUESTION) return;
 
@@ -104,7 +104,7 @@ struct EnginePreviewWindow : Window {
 		size->height += GetStringHeight(GetEngineInfoString(engine), size->width);
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_EP_QUESTION) return;
 
@@ -122,7 +122,7 @@ struct EnginePreviewWindow : Window {
 		DrawStringMultiLine(r.left, r.right, y, r.bottom, GetEngineInfoString(engine), TC_FROMSTRING, SA_CENTER);
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_EP_YES:
@@ -169,29 +169,27 @@ uint GetTotalCapacityOfArticulatedParts(EngineID engine)
 
 static StringID GetEngineInfoCapacityString(EngineID engine)
 {
-	char buffer[1024];
-
 	CargoArray cap = GetCapacityOfArticulatedParts(engine);
 	if (cap.GetSum<uint>() == 0) {
 		/* no cargo at all */
-		auto tmp_params = MakeParameters(CT_INVALID, 0);
-		GetStringWithArgs(buffer, STR_JUST_CARGO, tmp_params, lastof(buffer));
+		auto tmp_params = MakeParameters(INVALID_CARGO, 0);
+		_temp_special_strings[1] = GetStringWithArgs(STR_JUST_CARGO, tmp_params);
 	} else {
-		char *b = buffer;
+		std::string buffer;
 		for (uint i = 0; i < NUM_CARGO; i++) {
 			if (cap[i] == 0) continue;
 
-			if (b != buffer) {
+			if (!buffer.empty()) {
 				auto tmp_params = MakeParameters();
-				b = GetStringWithArgs(b, STR_COMMA_SEPARATOR, tmp_params, lastof(buffer));
+				GetStringWithArgs(StringBuilder(buffer), STR_COMMA_SEPARATOR, tmp_params);
 			}
 
 			auto tmp_params = MakeParameters(i, cap[i]);
-			b = GetStringWithArgs(b, STR_JUST_CARGO, tmp_params, lastof(buffer));
+			GetStringWithArgs(StringBuilder(buffer), STR_JUST_CARGO, tmp_params);
 		}
+		_temp_special_strings[1] = std::move(buffer);
 	}
 
-	_temp_special_strings[1].assign(buffer);
 	return SPECSTR_TEMP_START + 1;
 }
 
@@ -222,9 +220,9 @@ static StringID GetTrainEngineInfoString(const Engine *e)
 static StringID GetAircraftEngineInfoString(const Engine *e)
 {
 	CargoID cargo = e->GetDefaultCargoType();
-	uint16 mail_capacity;
+	uint16_t mail_capacity;
 	uint capacity = e->GetDisplayDefaultCapacity(&mail_capacity);
-	uint16 range = e->GetRange();
+	uint16_t range = e->GetRange();
 
 	uint i = 0;
 	SetDParam(i++, e->GetCost());

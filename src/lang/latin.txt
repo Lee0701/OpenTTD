@@ -1070,7 +1070,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unitates
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Electio unitatum nummi
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Libra Britannica
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dollarium CFA
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1123,6 +1123,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Optione 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Resolutio scrinii
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Eligere resolutio scrinii adhibenda
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :alia
+
 
 
 
@@ -1782,6 +1783,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Neglectum
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Neglegere ministrationem cum nullae sunt defectiones vehiculorum: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Electa, vehicula non ministrantur defectionibus vetatis
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Annuere currus ferriviarios habere velocitates maximas: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Electa, velocitates maximae curruum afficiunt velocitatem maximam traminis

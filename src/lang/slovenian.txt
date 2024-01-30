@@ -1030,7 +1030,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valute
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Izbira valut
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Funt
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dolar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1083,6 +1083,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Označi 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Ločljivost
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Izberi ločljivost zaslona
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :drugo
+
 
 
 
@@ -1734,6 +1735,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Onemogočeno
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Onemogoči servisiranje, če so onemogočene okvare: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Če je omogočeno, se vozila ne servisirajo, če ni okvar.
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Omogoči omejitve hitrosti vagonov: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Če je omogočeno, se upošteva tudi omejitve hitrosti posameznih vagonov pri najvišji hitrosti vlaka.

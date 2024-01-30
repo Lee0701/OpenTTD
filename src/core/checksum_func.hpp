@@ -20,22 +20,27 @@
 #include "../fileio_func.h"
 #include "../date_func.h"
 #include "../debug.h"
+#include <bit>
 #endif /* RANDOM_DEBUG */
 
 struct SimpleChecksum64 {
-	uint64 state = 0;
+	uint64_t state = 0;
 
-	void Update(uint64 input)
+	void Update(uint64_t input)
 	{
-		this->state = ROL(this->state, 1) ^ input ^ 0x123456789ABCDEF7ULL;
+		this->state = std::rotl(this->state, 1) ^ input ^ 0x123456789ABCDEF7ULL;
 	}
 };
 
 extern SimpleChecksum64 _state_checksum;
 
-inline void UpdateStateChecksum(uint64 input)
+inline void UpdateStateChecksum(uint64_t input)
 {
+#if defined(DEDICATED)
+	_state_checksum.Update(input);
+#else
 	if (_networking) _state_checksum.Update(input);
+#endif
 }
 
 #ifdef RANDOM_DEBUG

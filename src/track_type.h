@@ -91,6 +91,8 @@ enum Trackdir : byte {
 	INVALID_TRACKDIR  = 0xFF,       ///< Flag for an invalid trackdir
 };
 
+/** Allow incrementing of Trackdir variables */
+DECLARE_POSTFIX_INCREMENT(Trackdir)
 /** Define basic enum properties */
 template <> struct EnumPropsT<Trackdir> : MakeEnumPropsT<Trackdir, byte, TRACKDIR_BEGIN, TRACKDIR_END, INVALID_TRACKDIR, 4> {};
 
@@ -100,7 +102,7 @@ template <> struct EnumPropsT<Trackdir> : MakeEnumPropsT<Trackdir, byte, TRACKDI
  * These are a combination of tracks and directions. Values are 0-5 in one
  * direction (corresponding to the Track enum) and 8-13 in the other direction.
  */
-enum TrackdirBits : uint16 {
+enum TrackdirBits : uint16_t {
 	TRACKDIR_BIT_NONE     = 0U,                     ///< No track build
 	TRACKDIR_BIT_X_NE     = 1U << TRACKDIR_X_NE,    ///< Track x-axis, direction north-east
 	TRACKDIR_BIT_Y_SE     = 1U << TRACKDIR_Y_SE,    ///< Track y-axis, direction south-east
@@ -120,6 +122,6 @@ enum TrackdirBits : uint16 {
 };
 DECLARE_ENUM_AS_BIT_SET(TrackdirBits)
 
-typedef uint32 TrackStatus;
+typedef uint32_t TrackStatus;
 
 #endif /* TRACK_TYPE_H */

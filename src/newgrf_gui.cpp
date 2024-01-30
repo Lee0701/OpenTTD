@@ -221,7 +221,7 @@ struct NewGRFParametersWindow : public Window {
 		return this->HasParameterInfo(nr) ? this->grf_config->param_info[nr].value() : GetDummyParameterInfo(nr);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_NP_NUMPAR_DEC:
@@ -264,7 +264,7 @@ struct NewGRFParametersWindow : public Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_NP_NUMPAR:
@@ -273,7 +273,7 @@ struct NewGRFParametersWindow : public Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget == WID_NP_DESCRIPTION) {
 			if (!this->HasParameterInfo(this->clicked_row)) return;
@@ -295,7 +295,7 @@ struct NewGRFParametersWindow : public Window {
 		int text_y_offset = (this->line_height - GetCharacterHeight(FS_NORMAL)) / 2;
 		for (uint i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && i < this->vscroll->GetCount(); i++) {
 			GRFParameterInfo &par_info = this->GetParameterInfo(i);
-			uint32 current_value = par_info.GetValue(this->grf_config);
+			uint32_t current_value = par_info.GetValue(this->grf_config);
 			bool selected = (i == this->clicked_row);
 
 			if (par_info.type == PTYPE_BOOL) {
@@ -342,7 +342,7 @@ struct NewGRFParametersWindow : public Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_NP_NUMPAR_DEC:
@@ -382,7 +382,7 @@ struct NewGRFParametersWindow : public Window {
 				GRFParameterInfo &par_info = this->GetParameterInfo(num);
 
 				/* One of the arrows is clicked */
-				uint32 old_val = par_info.GetValue(this->grf_config);
+				uint32_t old_val = par_info.GetValue(this->grf_config);
 				if (par_info.type != PTYPE_BOOL && IsInsideMM(x, 0, SETTING_BUTTON_WIDTH) && par_info.complete_labels) {
 					if (this->clicked_dropdown) {
 						/* unclick the dropdown */
@@ -404,7 +404,7 @@ struct NewGRFParametersWindow : public Window {
 							this->closing_dropdown = false;
 
 							DropDownList list;
-							for (uint32 i = par_info.min_value; i <= par_info.max_value; i++) {
+							for (uint32_t i = par_info.min_value; i <= par_info.max_value; i++) {
 								list.push_back(std::make_unique<DropDownListStringItem>(GetGRFStringFromGRFText(par_info.value_names.find(i)->second), i, false));
 							}
 
@@ -412,7 +412,7 @@ struct NewGRFParametersWindow : public Window {
 						}
 					}
 				} else if (IsInsideMM(x, 0, SETTING_BUTTON_WIDTH)) {
-					uint32 val = old_val;
+					uint32_t val = old_val;
 					if (par_info.type == PTYPE_BOOL) {
 						val = !val;
 					} else {
@@ -457,14 +457,14 @@ struct NewGRFParametersWindow : public Window {
 	void OnQueryTextFinished(char *str) override
 	{
 		if (StrEmpty(str)) return;
-		int32 value = atoi(str);
+		int32_t value = atoi(str);
 		GRFParameterInfo &par_info = this->GetParameterInfo(this->clicked_row);
-		uint32 val = Clamp<uint32>(value, par_info.min_value, par_info.max_value);
+		uint32_t val = Clamp<uint32_t>(value, par_info.min_value, par_info.max_value);
 		par_info.SetValue(this->grf_config, val);
 		this->SetDirty();
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_NP_SETTING_DROPDOWN) return;
 		assert(this->clicked_dropdown);
@@ -473,7 +473,7 @@ struct NewGRFParametersWindow : public Window {
 		this->SetDirty();
 	}
 
-	void OnDropdownClose(Point, int widget, int, bool) override
+	void OnDropdownClose(Point, WidgetID widget, int, bool) override
 	{
 		if (widget != WID_NP_SETTING_DROPDOWN) return;
 		/* We cannot raise the dropdown button just yet. OnClick needs some hint, whether
@@ -521,7 +521,7 @@ struct NewGRFParametersWindow : public Window {
 GRFParameterInfo NewGRFParametersWindow::dummy_parameter_info(0);
 
 
-static const NWidgetPart _nested_newgrf_parameter_widgets[] = {
+static constexpr NWidgetPart _nested_newgrf_parameter_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_NP_CAPTION),
@@ -573,11 +573,13 @@ struct NewGRFTextfileWindow : public TextfileWindow {
 
 	NewGRFTextfileWindow(TextfileType file_type, const GRFConfig *c) : TextfileWindow(file_type), grf_config(c)
 	{
+		this->ConstructWindow();
+
 		const char *textfile = this->grf_config->GetTextfile(file_type);
 		this->LoadTextfile(textfile, NEWGRF_DIR);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TF_CAPTION) {
 			SetDParam(0, STR_CONTENT_TYPE_NEWGRF);
@@ -592,7 +594,7 @@ void ShowNewGRFTextfileWindow(TextfileType file_type, const GRFConfig *c)
 	new NewGRFTextfileWindow(file_type, c);
 }
 
-typedef std::map<uint32, const GRFConfig *> GrfIdMap; ///< Map of grfid to the grf config.
+typedef std::map<uint32_t, const GRFConfig *> GrfIdMap; ///< Map of grfid to the grf config.
 
 /**
  * Add all grf configs from \a c into the map.
@@ -602,7 +604,7 @@ typedef std::map<uint32, const GRFConfig *> GrfIdMap; ///< Map of grfid to the g
 static void FillGrfidMap(const GRFConfig *c, GrfIdMap *grfid_map)
 {
 	while (c != nullptr) {
-		std::pair<uint32, const GRFConfig *> p(c->ident.grfid, c);
+		std::pair<uint32_t, const GRFConfig *> p(c->ident.grfid, c);
 		grfid_map->insert(p);
 		c = c->next;
 	}
@@ -756,7 +758,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_NS_FILE_LIST:
@@ -814,7 +816,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		this->vscroll2->SetCapacityFromWidget(this, WID_NS_AVAIL_LIST);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_NS_PRESET_LIST:
@@ -863,7 +865,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		return pal;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_NS_FILE_LIST: {
@@ -955,7 +957,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget >= WID_NS_NEWGRF_TEXTFILE && widget < WID_NS_NEWGRF_TEXTFILE + TFT_CONTENT_END) {
 			if (this->active_sel == nullptr && this->avail_sel == nullptr) return;
@@ -1197,7 +1199,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		this->CloseChildWindows(WC_QUERY_STRING); // Remove the parameter query window
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_NS_PRESET_LIST) return;
 		if (!this->editable) return;
@@ -1348,7 +1350,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 			has_missing    |= c->status == GCS_NOT_FOUND;
 			has_compatible |= HasBit(c->flags, GCF_COMPATIBLE);
 		}
-		uint32 widget_data;
+		uint32_t widget_data;
 		StringID tool_tip;
 		if (has_missing || has_compatible) {
 			widget_data = STR_NEWGRF_SETTINGS_FIND_MISSING_CONTENT_BUTTON;
@@ -1365,7 +1367,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		this->SetWidgetDisabledState(WID_NS_PRESET_SAVE, has_missing);
 	}
 
-	EventState OnKeyPress(WChar key, uint16 keycode) override
+	EventState OnKeyPress(char32_t key, uint16_t keycode) override
 	{
 		if (!this->editable) return ES_NOT_HANDLED;
 
@@ -1383,7 +1385,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		return ES_HANDLED;
 	}
 
-	void OnEditboxChanged(int widget) override
+	void OnEditboxChanged(WidgetID widget) override
 	{
 		if (!this->editable) return;
 
@@ -1395,7 +1397,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		}
 	}
 
-	void OnDragDrop(Point pt, int widget) override
+	void OnDragDrop(Point pt, WidgetID widget) override
 	{
 		if (!this->editable) return;
 
@@ -1443,7 +1445,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 		}
 	}
 
-	void OnMouseDrag(Point pt, int widget) override
+	void OnMouseDrag(Point pt, WidgetID widget) override
 	{
 		if (!this->editable) return;
 
@@ -1622,27 +1624,22 @@ NewGRFWindow::GUIGRFConfigList::FilterFunction * const NewGRFWindow::filter_func
  * - two column mode, put the #acs and the #avs underneath each other and the #inf next to it, or
  * - three column mode, put the #avs, #acs, and #inf each in its own column.
  */
-class NWidgetNewGRFDisplay : public NWidgetContainer {
+class NWidgetNewGRFDisplay : public NWidgetBase {
 public:
 	static const uint MAX_EXTRA_INFO_WIDTH;    ///< Maximal additional width given to the panel.
 	static const uint MIN_EXTRA_FOR_3_COLUMNS; ///< Minimal additional width needed before switching to 3 columns.
 
-	NWidgetBase *avs; ///< Widget with the available grfs list and buttons.
-	NWidgetBase *acs; ///< Widget with the active grfs list and buttons.
-	NWidgetBase *inf; ///< Info panel.
+	std::unique_ptr<NWidgetBase> avs; ///< Widget with the available grfs list and buttons.
+	std::unique_ptr<NWidgetBase> acs; ///< Widget with the active grfs list and buttons.
+	std::unique_ptr<NWidgetBase> inf; ///< Info panel.
 	bool editable;    ///< Editable status of the parent NewGRF window (if \c false, drop all widgets that make the window editable).
 
-	NWidgetNewGRFDisplay(NWidgetBase *avs, NWidgetBase *acs, NWidgetBase *inf) : NWidgetContainer(NWID_HORIZONTAL)
+	NWidgetNewGRFDisplay(std::unique_ptr<NWidgetBase> &&avs, std::unique_ptr<NWidgetBase> &&acs, std::unique_ptr<NWidgetBase> &&inf) : NWidgetBase(NWID_CUSTOM)
+		, avs(std::move(avs))
+		, acs(std::move(acs))
+		, inf(std::move(inf))
+		, editable(true) // Temporary setting, 'real' value is set in SetupSmallestSize().
 	{
-		this->avs = avs;
-		this->acs = acs;
-		this->inf = inf;
-
-		this->Add(this->avs);
-		this->Add(this->acs);
-		this->Add(this->inf);
-
-		this->editable = true; // Temporary setting, 'real' value is set in SetupSmallestSize().
 	}
 
 	void SetupSmallestSize(Window *w) override
@@ -1807,6 +1804,13 @@ public:
 		}
 	}
 
+	void FillWidgetLookup(WidgetLookup &widget_lookup) override
+	{
+		this->avs->FillWidgetLookup(widget_lookup);
+		this->acs->FillWidgetLookup(widget_lookup);
+		this->inf->FillWidgetLookup(widget_lookup);
+	}
+
 	NWidgetCore *GetWidgetFromPos(int x, int y) override
 	{
 		if (!IsInsideBS(x, this->pos_x, this->current_x) || !IsInsideBS(y, this->pos_y, this->current_y)) return nullptr;
@@ -1839,7 +1843,7 @@ public:
 const uint NWidgetNewGRFDisplay::MAX_EXTRA_INFO_WIDTH    = 150;
 const uint NWidgetNewGRFDisplay::MIN_EXTRA_FOR_3_COLUMNS = 50;
 
-static const NWidgetPart _nested_newgrf_actives_widgets[] = {
+static constexpr NWidgetPart _nested_newgrf_actives_widgets[] = {
 	NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
 		/* Left side, presets. */
 		NWidget(NWID_VERTICAL),
@@ -1894,7 +1898,7 @@ static const NWidgetPart _nested_newgrf_actives_widgets[] = {
 	EndContainer(),
 };
 
-static const NWidgetPart _nested_newgrf_availables_widgets[] = {
+static constexpr NWidgetPart _nested_newgrf_availables_widgets[] = {
 	NWidget(WWT_FRAME, COLOUR_MAUVE), SetDataTip(STR_NEWGRF_SETTINGS_INACTIVE_LIST, STR_NULL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
 		/* Left side, available grfs, filter edit box. */
 		NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_wide, 0),
@@ -1927,7 +1931,7 @@ static const NWidgetPart _nested_newgrf_availables_widgets[] = {
 	EndContainer(),
 };
 
-static const NWidgetPart _nested_newgrf_infopanel_widgets[] = {
+static constexpr NWidgetPart _nested_newgrf_infopanel_widgets[] = {
 	NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
 		/* Right side, info panel. */
 		NWidget(WWT_PANEL, COLOUR_MAUVE),
@@ -1970,22 +1974,17 @@ static const NWidgetPart _nested_newgrf_infopanel_widgets[] = {
 };
 
 /** Construct nested container widget for managing the lists and the info panel of the NewGRF GUI. */
-NWidgetBase* NewGRFDisplay(int *biggest_index)
+std::unique_ptr<NWidgetBase> NewGRFDisplay()
 {
-	NWidgetBase *avs = MakeNWidgets(std::begin(_nested_newgrf_availables_widgets), std::end(_nested_newgrf_availables_widgets), biggest_index, nullptr);
+	std::unique_ptr<NWidgetBase> avs = MakeNWidgets(std::begin(_nested_newgrf_availables_widgets), std::end(_nested_newgrf_availables_widgets), nullptr);
+	std::unique_ptr<NWidgetBase> acs = MakeNWidgets(std::begin(_nested_newgrf_actives_widgets), std::end(_nested_newgrf_actives_widgets), nullptr);
+	std::unique_ptr<NWidgetBase> inf = MakeNWidgets(std::begin(_nested_newgrf_infopanel_widgets), std::end(_nested_newgrf_infopanel_widgets), nullptr);
 
-	int biggest2;
-	NWidgetBase *acs = MakeNWidgets(std::begin(_nested_newgrf_actives_widgets), std::end(_nested_newgrf_actives_widgets), &biggest2, nullptr);
-	*biggest_index = std::max(*biggest_index, biggest2);
-
-	NWidgetBase *inf = MakeNWidgets(std::begin(_nested_newgrf_infopanel_widgets), std::end(_nested_newgrf_infopanel_widgets), &biggest2, nullptr);
-	*biggest_index = std::max(*biggest_index, biggest2);
-
-	return new NWidgetNewGRFDisplay(avs, acs, inf);
+	return std::make_unique<NWidgetNewGRFDisplay>(std::move(avs), std::move(acs), std::move(inf));
 }
 
 /* Widget definition of the manage newgrfs window */
-static const NWidgetPart _nested_newgrf_widgets[] = {
+static constexpr NWidgetPart _nested_newgrf_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE), SetDataTip(STR_NEWGRF_SETTINGS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -2068,7 +2067,7 @@ void ShowNewGRFSettings(bool editable, bool show_params, bool exec_changes, GRFC
 }
 
 /** Widget parts of the save preset window. */
-static const NWidgetPart _nested_save_preset_widgets[] = {
+static constexpr NWidgetPart _nested_save_preset_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_SAVE_PRESET_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -2137,7 +2136,7 @@ struct SavePresetWindow : public Window {
 		if (initial_text != nullptr) this->presetname_editbox.text.Assign(initial_text);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SVP_PRESET_LIST: {
@@ -2154,7 +2153,7 @@ struct SavePresetWindow : public Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SVP_PRESET_LIST: {
@@ -2178,7 +2177,7 @@ struct SavePresetWindow : public Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SVP_PRESET_LIST: {
@@ -2222,7 +2221,7 @@ static void ShowSavePresetWindow(const char *initial_text)
 }
 
 /** Widgets for the progress window. */
-static const NWidgetPart _nested_scan_progress_widgets[] = {
+static constexpr NWidgetPart _nested_scan_progress_widgets[] = {
 	NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_NEWGRF_SCAN_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 	NWidget(WWT_PANEL, COLOUR_GREY),
 		NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0), SetPadding(WidgetDimensions::unscaled.modalpopup),
@@ -2252,7 +2251,7 @@ struct ScanProgressWindow : public Window {
 		this->InitNested(1);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SP_PROGRESS_BAR: {
@@ -2275,7 +2274,7 @@ struct ScanProgressWindow : public Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SP_PROGRESS_BAR: {

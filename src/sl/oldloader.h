@@ -85,7 +85,7 @@ typedef bool OldChunkProc(LoadgameState *ls, int num);
 
 struct OldChunks {
 	OldChunkType type;   ///< Type of field
-	uint32 amount;       ///< Amount of fields
+	uint32_t amount;     ///< Amount of fields
 
 	void *ptr;           ///< Pointer where to save the data (may only be set if offset is 0)
 	uint offset;         ///< Offset from basepointer (may only be set if ptr is nullptr)
@@ -102,15 +102,15 @@ bool LoadChunk(LoadgameState *ls, void *base, const OldChunks *chunks);
 bool LoadTTDMain(LoadgameState *ls);
 bool LoadTTOMain(LoadgameState *ls);
 
-static inline uint16 ReadUint16(LoadgameState *ls)
+inline uint16_t ReadUint16(LoadgameState *ls)
 {
 	byte x = ReadByte(ls);
 	return x | ReadByte(ls) << 8;
 }
 
-static inline uint32 ReadUint32(LoadgameState *ls)
+inline uint32_t ReadUint32(LoadgameState *ls)
 {
-	uint16 x = ReadUint16(ls);
+	uint16_t x = ReadUint16(ls);
 	return x | ReadUint16(ls) << 16;
 }
 

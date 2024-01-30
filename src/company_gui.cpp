@@ -45,9 +45,6 @@
 #include "safeguards.h"
 
 
-/** Company GUI constants. */
-#define EXP_SPACING (WidgetDimensions::scaled.vsep_normal * 2)
-
 static void DoSelectCompanyManagerFace(Window *parent);
 static void ShowCompanyInfrastructure(CompanyID company);
 
@@ -278,7 +275,7 @@ static void DrawYearColumn(const Rect &r, int year, const Expenses &tbl)
 	DrawPrice(sum, r.left, r.right, y, TC_WHITE);
 }
 
-static const NWidgetPart _nested_company_finances_widgets[] = {
+static constexpr NWidgetPart _nested_company_finances_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_CF_CAPTION), SetDataTip(STR_FINANCES_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -344,7 +341,7 @@ struct CompanyFinancesWindow : Window {
 		this->owner = (Owner)this->window_number;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_CF_CAPTION:
@@ -385,7 +382,7 @@ struct CompanyFinancesWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_CF_EXPS_CATEGORY:
@@ -412,7 +409,7 @@ struct CompanyFinancesWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_CF_EXPS_CATEGORY:
@@ -481,7 +478,7 @@ struct CompanyFinancesWindow : Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_CF_TOGGLE_SIZE: // toggle size
@@ -550,7 +547,7 @@ struct CompanyFinancesWindow : Window {
 		}
 	}
 
-	bool OnTooltip(Point pt, int widget, TooltipCloseCondition close_cond) override
+	bool OnTooltip(Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
 	{
 		switch (widget) {
 			case WID_CF_INCREASE_LOAN: {
@@ -636,7 +633,7 @@ public:
 /** Company livery colour scheme window. */
 struct SelectCompanyLiveryWindow : public Window {
 private:
-	uint32 sel;
+	uint32_t sel;
 	LiveryClass livery_class;
 	Dimension square;
 	uint rows;
@@ -645,9 +642,9 @@ private:
 	std::vector<int> indents;
 	Scrollbar *vscroll;
 
-	void ShowColourDropDownMenu(uint32 widget)
+	void ShowColourDropDownMenu(uint32_t widget)
 	{
-		uint32 used_colours = 0;
+		uint32_t used_colours = 0;
 		const Livery *livery, *default_livery = nullptr;
 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
 		byte default_col = 0;
@@ -771,7 +768,7 @@ public:
 
 	void SetSelectedGroup(CompanyID company, GroupID group)
 	{
-		this->RaiseWidget(this->livery_class + WID_SCL_CLASS_GENERAL);
+		this->RaiseWidget(WID_SCL_CLASS_GENERAL + this->livery_class);
 		const Group *g = Group::Get(group);
 		switch (g->vehicle_type) {
 			case VEH_TRAIN: this->livery_class = LC_GROUP_RAIL; break;
@@ -781,7 +778,7 @@ public:
 			default: NOT_REACHED();
 		}
 		this->sel = group;
-		this->LowerWidget(this->livery_class + WID_SCL_CLASS_GENERAL);
+		this->LowerWidget(WID_SCL_CLASS_GENERAL + this->livery_class);
 
 		this->groups.ForceRebuild();
 		this->BuildGroupList(company);
@@ -796,7 +793,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SCL_SPACER_DROPDOWN: {
@@ -862,7 +859,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SCL_CAPTION:
@@ -902,7 +899,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_SCL_MATRIX) return;
 
@@ -974,7 +971,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			/* Livery Class buttons */
@@ -987,9 +984,9 @@ public:
 			case WID_SCL_GROUPS_ROAD:
 			case WID_SCL_GROUPS_SHIP:
 			case WID_SCL_GROUPS_AIRCRAFT:
-				this->RaiseWidget(this->livery_class + WID_SCL_CLASS_GENERAL);
+				this->RaiseWidget(WID_SCL_CLASS_GENERAL + this->livery_class);
 				this->livery_class = (LiveryClass)(widget - WID_SCL_CLASS_GENERAL);
-				this->LowerWidget(this->livery_class + WID_SCL_CLASS_GENERAL);
+				this->LowerWidget(WID_SCL_CLASS_GENERAL + this->livery_class);
 
 				/* Select the first item in the list */
 				if (this->livery_class < LC_GROUP_RAIL) {
@@ -1053,7 +1050,7 @@ public:
 		this->vscroll->SetCapacityFromWidget(this, WID_SCL_MATRIX);
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		bool local = (CompanyID)this->window_number == _local_company;
 		if (!local) return;
@@ -1121,7 +1118,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_select_company_livery_widgets[] = {
+static constexpr NWidgetPart _nested_select_company_livery_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SCL_CAPTION), SetDataTip(STR_LIVERY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1216,7 +1213,7 @@ void DrawCompanyManagerFace(CompanyManagerFace cmf, int colour, const Rect &r)
 }
 
 /** Nested widget description for the company manager face selection dialog */
-static const NWidgetPart _nested_select_company_manager_face_widgets[] = {
+static constexpr NWidgetPart _nested_select_company_manager_face_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SCMF_CAPTION), SetDataTip(STR_FACE_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1392,7 +1389,7 @@ class SelectCompanyManagerFaceWindow : public Window
 	 * @param val            the value which will be displayed
 	 * @param is_bool_widget is it a bool button
 	 */
-	void SetFaceStringParameters(byte widget_index, uint8 val, bool is_bool_widget) const
+	void SetFaceStringParameters(WidgetID widget_index, uint8_t val, bool is_bool_widget) const
 	{
 		const NWidgetCore *nwi_widget = this->GetWidget<NWidgetCore>(widget_index);
 		if (nwi_widget->IsDisabled()) {
@@ -1476,7 +1473,7 @@ public:
 		this->number_dim = number_dim;
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SCMF_HAS_MOUSTACHE_EARRING_TEXT:
@@ -1579,7 +1576,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SCMF_HAS_MOUSTACHE_EARRING:
@@ -1640,7 +1637,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SCMF_FACE:
@@ -1649,7 +1646,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			/* Toggle size, advanced/simple face selection */
@@ -1795,7 +1792,7 @@ static void DoSelectCompanyManagerFace(Window *parent)
 	new SelectCompanyManagerFaceWindow(&_select_company_manager_face_desc, parent);
 }
 
-static const NWidgetPart _nested_company_infrastructure_widgets[] = {
+static constexpr NWidgetPart _nested_company_infrastructure_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_CI_CAPTION), SetDataTip(STR_COMPANY_INFRASTRUCTURE_VIEW_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1876,14 +1873,14 @@ struct CompanyInfrastructureWindow : Window
 		const Company *c = Company::Get((CompanyID)this->window_number);
 		Money total;
 
-		uint32 rail_total = c->infrastructure.GetRailTotal();
+		uint32_t rail_total = c->infrastructure.GetRailTotal();
 		for (RailType rt = RAILTYPE_BEGIN; rt != RAILTYPE_END; rt++) {
 			if (HasBit(this->railtypes, rt)) total += RailMaintenanceCost(rt, c->infrastructure.rail[rt], rail_total);
 		}
 		total += SignalMaintenanceCost(c->infrastructure.signal);
 
-		uint32 road_total = c->infrastructure.GetRoadTotal();
-		uint32 tram_total = c->infrastructure.GetTramTotal();
+		uint32_t road_total = c->infrastructure.GetRoadTotal();
+		uint32_t tram_total = c->infrastructure.GetTramTotal();
 		for (RoadType rt = ROADTYPE_BEGIN; rt != ROADTYPE_END; rt++) {
 			if (HasBit(this->roadtypes, rt)) total += RoadMaintenanceCost(rt, c->infrastructure.road[rt], RoadTypeIsRoad(rt) ? road_total : tram_total);
 		}
@@ -1895,7 +1892,7 @@ struct CompanyInfrastructureWindow : Window
 		return total;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_CI_CAPTION:
@@ -1904,7 +1901,7 @@ struct CompanyInfrastructureWindow : Window
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		const Company *c = Company::Get((CompanyID)this->window_number);
 
@@ -1951,10 +1948,10 @@ struct CompanyInfrastructureWindow : Window
 
 				size->width += padding.width;
 
-				uint total_height = ((rail_lines + road_lines + tram_lines + 2 + 3) * GetCharacterHeight(FS_NORMAL)) + (4 * EXP_SPACING);
+				uint total_height = ((rail_lines + road_lines + tram_lines + 2 + 3) * GetCharacterHeight(FS_NORMAL)) + (4 * WidgetDimensions::scaled.vsep_sparse);
 
 				/* Set height of the total line. */
-				if (_settings_game.economy.infrastructure_maintenance) total_height += EXP_SPACING + WidgetDimensions::scaled.vsep_normal + GetCharacterHeight(FS_NORMAL);
+				if (_settings_game.economy.infrastructure_maintenance) total_height += WidgetDimensions::scaled.vsep_sparse + WidgetDimensions::scaled.vsep_normal + GetCharacterHeight(FS_NORMAL);
 
 				this->vscroll->SetCount(total_height);
 
@@ -1966,17 +1963,17 @@ struct CompanyInfrastructureWindow : Window
 
 			case WID_CI_COUNT: {
 				/* Find the maximum count that is displayed. */
-				uint32 max_val = 1000;  // Some random number to reserve enough space.
+				uint32_t max_val = 1000;  // Some random number to reserve enough space.
 				Money max_cost = 10000; // Some random number to reserve enough space.
-				uint32 rail_total = c->infrastructure.GetRailTotal();
+				uint32_t rail_total = c->infrastructure.GetRailTotal();
 				for (RailType rt = RAILTYPE_BEGIN; rt < RAILTYPE_END; rt++) {
 					max_val = std::max(max_val, c->infrastructure.rail[rt]);
 					max_cost = std::max(max_cost, RailMaintenanceCost(rt, c->infrastructure.rail[rt], rail_total));
 				}
 				max_val = std::max(max_val, c->infrastructure.signal);
 				max_cost = std::max(max_cost, SignalMaintenanceCost(c->infrastructure.signal));
-				uint32 road_total = c->infrastructure.GetRoadTotal();
-				uint32 tram_total = c->infrastructure.GetTramTotal();
+				uint32_t road_total = c->infrastructure.GetRoadTotal();
+				uint32_t tram_total = c->infrastructure.GetTramTotal();
 				for (RoadType rt = ROADTYPE_BEGIN; rt < ROADTYPE_END; rt++) {
 					max_val = std::max(max_val, c->infrastructure.road[rt]);
 					max_cost = std::max(max_cost, RoadMaintenanceCost(rt, c->infrastructure.road[rt], RoadTypeIsRoad(rt) ? road_total : tram_total));
@@ -2026,7 +2023,7 @@ struct CompanyInfrastructureWindow : Window
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_CI_DESC && widget != WID_CI_COUNT) return;
 
@@ -2062,7 +2059,7 @@ struct CompanyInfrastructureWindow : Window
 					DrawString(offs_left, width - offs_right, y += GetCharacterHeight(FS_NORMAL), STR_COMPANY_VIEW_INFRASTRUCTURE_NONE);
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				DrawString(0, width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_ROAD_SECT);
 
@@ -2074,7 +2071,7 @@ struct CompanyInfrastructureWindow : Window
 					}
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				DrawString(0, width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_TRAM_SECT);
 
@@ -2086,12 +2083,12 @@ struct CompanyInfrastructureWindow : Window
 					}
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				DrawString(0, width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_WATER_SECT);
 				DrawString(offs_left, width - offs_right, y += GetCharacterHeight(FS_NORMAL), STR_COMPANY_INFRASTRUCTURE_VIEW_CANALS);
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				DrawString(0, width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_STATION_SECT);
 				DrawString(offs_left, width - offs_right, y += GetCharacterHeight(FS_NORMAL), STR_COMPANY_INFRASTRUCTURE_VIEW_STATIONS);
@@ -2102,7 +2099,7 @@ struct CompanyInfrastructureWindow : Window
 
 			case WID_CI_COUNT: {
 				/* Draw infrastructure count for each valid railtype. */
-				uint32 rail_total = c->infrastructure.GetRailTotal();
+				uint32_t rail_total = c->infrastructure.GetRailTotal();
 				for (const auto &rt : _sorted_railtypes) {
 					if (HasBit(this->railtypes, rt)) {
 						this->DrawCountLine(width, y, c->infrastructure.rail[rt], RailMaintenanceCost(rt, c->infrastructure.rail[rt], rail_total));
@@ -2112,35 +2109,35 @@ struct CompanyInfrastructureWindow : Window
 					this->DrawCountLine(width, y, c->infrastructure.signal, SignalMaintenanceCost(c->infrastructure.signal));
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
-				uint32 road_total = c->infrastructure.GetRoadTotal();
+				uint32_t road_total = c->infrastructure.GetRoadTotal();
 				for (const auto &rt : _sorted_roadtypes) {
 					if (HasBit(this->roadtypes, rt) && RoadTypeIsRoad(rt)) {
 						this->DrawCountLine(width, y, c->infrastructure.road[rt], RoadMaintenanceCost(rt, c->infrastructure.road[rt], road_total));
 					}
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
-				uint32 tram_total = c->infrastructure.GetTramTotal();
+				uint32_t tram_total = c->infrastructure.GetTramTotal();
 				for (const auto &rt : _sorted_roadtypes) {
 					if (HasBit(this->roadtypes, rt) && RoadTypeIsTram(rt)) {
 						this->DrawCountLine(width, y, c->infrastructure.road[rt], RoadMaintenanceCost(rt, c->infrastructure.road[rt], tram_total));
 					}
 				}
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				this->DrawCountLine(width, y, c->infrastructure.water, CanalMaintenanceCost(c->infrastructure.water));
 
-				y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+				y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 
 				this->DrawCountLine(width, y, c->infrastructure.station, StationMaintenanceCost(c->infrastructure.station));
 				this->DrawCountLine(width, y, c->infrastructure.airport, AirportMaintenanceCost(c->index));
 
 				if (_settings_game.economy.infrastructure_maintenance) {
-					y += GetCharacterHeight(FS_NORMAL) + EXP_SPACING;
+					y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_sparse;
 					int left = _current_text_dir == TD_RTL ? width - this->total_width : 0;
 					GfxFillRect(left, y, left + this->total_width, y + WidgetDimensions::scaled.bevel.top - 1, PC_WHITE);
 					y += WidgetDimensions::scaled.vsep_normal;
@@ -2196,7 +2193,7 @@ static void ShowCompanyInfrastructure(CompanyID company)
 	AllocateWindowDescFront<CompanyInfrastructureWindow>(&_company_infrastructure_desc, company);
 }
 
-static const NWidgetPart _nested_company_widgets[] = {
+static constexpr NWidgetPart _nested_company_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_C_CAPTION), SetDataTip(STR_COMPANY_VIEW_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -2384,7 +2381,7 @@ struct CompanyWindow : Window
 		this->DrawWidgets();
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_C_FACE:
@@ -2523,7 +2520,7 @@ struct CompanyWindow : Window
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		const Company *c = Company::Get((CompanyID)this->window_number);
 		switch (widget) {
@@ -2576,7 +2573,7 @@ struct CompanyWindow : Window
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_C_CAPTION:
@@ -2594,7 +2591,7 @@ struct CompanyWindow : Window
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_C_NEW_FACE: DoSelectCompanyManagerFace(this); break;
@@ -2823,7 +2820,7 @@ struct BuyCompanyWindow : Window {
 		this->Window::Close();
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_BC_FACE:
@@ -2839,7 +2836,7 @@ struct BuyCompanyWindow : Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_BC_CAPTION:
@@ -2849,7 +2846,7 @@ struct BuyCompanyWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_BC_FACE: {
@@ -2868,7 +2865,7 @@ struct BuyCompanyWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_BC_NO:
@@ -2902,7 +2899,7 @@ private:
 	Money company_value; ///< The value of the company for which the user can buy it.
 };
 
-static const NWidgetPart _nested_buy_company_widgets[] = {
+static constexpr NWidgetPart _nested_buy_company_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_LIGHT_BLUE),
 		NWidget(WWT_CAPTION, COLOUR_LIGHT_BLUE, WID_BC_CAPTION), SetDataTip(STR_ERROR_MESSAGE_CAPTION_OTHER_COMPANY, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

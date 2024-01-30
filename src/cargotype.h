@@ -16,11 +16,10 @@
 #include "strings_type.h"
 #include "landscape_type.h"
 #include "core/bitmath_func.hpp"
-#include "core/span_type.hpp"
 #include <vector>
 
 /** Globally unique label of a cargo type. */
-typedef uint32 CargoLabel;
+typedef uint32_t CargoLabel;
 
 /** Town growth effect when delivering cargo. */
 enum TownEffect {
@@ -55,29 +54,29 @@ static const byte INVALID_CARGO_BITNUM = 0xFF; ///< Constant representing invali
 
 /** Specification of a cargo type. */
 struct CargoSpec {
-	CargoLabel label;                ///< Unique label of the cargo type.
-	uint8 bitnum{INVALID_CARGO_BITNUM}; ///< Cargo bit number, is #INVALID_CARGO_BITNUM for a non-used spec.
-	uint8 legend_colour;
-	uint8 rating_colour;
-	uint8 weight;                    ///< Weight of a single unit of this cargo type in 1/16 ton (62.5 kg).
-	uint16 multiplier{0x100};        ///< Capacity multiplier for vehicles. (8 fractional bits)
-	uint16 classes;                  ///< Classes of this cargo type. @see CargoClass
-	int32 initial_payment;           ///< Initial payment rate before inflation is applied.
-	uint8 transit_periods[2];
+	CargoLabel label;                     ///< Unique label of the cargo type.
+	uint8_t bitnum{INVALID_CARGO_BITNUM}; ///< Cargo bit number, is #INVALID_CARGO_BITNUM for a non-used spec.
+	uint8_t legend_colour;
+	uint8_t rating_colour;
+	uint8_t weight;                       ///< Weight of a single unit of this cargo type in 1/16 ton (62.5 kg).
+	uint16_t multiplier{0x100};           ///< Capacity multiplier for vehicles. (8 fractional bits)
+	uint16_t classes;                     ///< Classes of this cargo type. @see CargoClass
+	int32_t initial_payment;              ///< Initial payment rate before inflation is applied.
+	uint8_t transit_periods[2];
 
-	bool is_freight;                 ///< Cargo type is considered to be freight (affects train freight multiplier).
-	TownEffect town_effect;          ///< The effect that delivering this cargo type has on towns. Also affects destination of subsidies.
-	uint8 callback_mask;             ///< Bitmask of cargo callbacks that have to be called
+	bool is_freight;                      ///< Cargo type is considered to be freight (affects train freight multiplier).
+	TownEffect town_effect;               ///< The effect that delivering this cargo type has on towns. Also affects destination of subsidies.
+	uint8_t callback_mask;                ///< Bitmask of cargo callbacks that have to be called
 
-	StringID name;                   ///< Name of this type of cargo.
-	StringID name_single;            ///< Name of a single entity of this type of cargo.
-	StringID units_volume;           ///< Name of a single unit of cargo of this type.
-	StringID quantifier;             ///< Text for multiple units of cargo of this type.
-	StringID abbrev;                 ///< Two letter abbreviation for this cargo type.
+	StringID name;                        ///< Name of this type of cargo.
+	StringID name_single;                 ///< Name of a single entity of this type of cargo.
+	StringID units_volume;                ///< Name of a single unit of cargo of this type.
+	StringID quantifier;                  ///< Text for multiple units of cargo of this type.
+	StringID abbrev;                      ///< Two letter abbreviation for this cargo type.
 
-	SpriteID sprite;                 ///< Icon to display this cargo type, may be \c 0xFFF (which means to resolve an action123 chain).
+	SpriteID sprite;                      ///< Icon to display this cargo type, may be \c 0xFFF (which means to resolve an action123 chain).
 
-	const struct GRFFile *grffile;   ///< NewGRF where #group belongs to.
+	const struct GRFFile *grffile;        ///< NewGRF where #group belongs to.
 	const struct SpriteGroup *group;
 
 	Money current_payment;
@@ -132,12 +131,12 @@ struct CargoSpec {
 
 	SpriteID GetCargoIcon() const;
 
-	inline uint64 WeightOfNUnits(uint32 n) const
+	inline uint64_t WeightOfNUnits(uint32_t n) const
 	{
 		return n * this->weight / 16u;
 	}
 
-	uint64 WeightOfNUnitsInTrain(uint32 n) const;
+	uint64_t WeightOfNUnitsInTrain(uint32_t n) const;
 
 	/**
 	 * Iterator to iterate all valid CargoSpec
@@ -186,6 +185,7 @@ private:
 	static CargoSpec array[NUM_CARGO]; ///< Array holding all CargoSpecs
 
 	friend void SetupCargoForClimate(LandscapeID l);
+	friend void FinaliseCargoArray();
 };
 
 extern CargoTypes _cargo_mask;
@@ -193,14 +193,14 @@ extern CargoTypes _standard_cargo_mask;
 
 void SetupCargoForClimate(LandscapeID l);
 CargoID GetCargoIDByLabel(CargoLabel cl);
-CargoID GetCargoIDByBitnum(uint8 bitnum);
+CargoID GetCargoIDByBitnum(uint8_t bitnum);
 CargoID GetDefaultCargoID(LandscapeID l, CargoType ct);
 Dimension GetLargestCargoIconSize();
 
 void InitializeSortedCargoSpecs();
 extern std::array<uint8_t, NUM_CARGO> _sorted_cargo_types;
 extern std::vector<const CargoSpec *> _sorted_cargo_specs;
-extern span<const CargoSpec *> _sorted_standard_cargo_specs;
+extern std::span<const CargoSpec *> _sorted_standard_cargo_specs;
 
 uint ConvertCargoQuantityToDisplayQuantity(CargoID cargo, uint quantity);
 uint ConvertDisplayQuantityToCargoQuantity(CargoID cargo, uint quantity);
@@ -211,7 +211,7 @@ uint ConvertDisplayQuantityToCargoQuantity(CargoID cargo, uint quantity);
  * @param cc Cargo class.
  * @return The type fits in the class.
  */
-static inline bool IsCargoInClass(CargoID c, CargoClass cc)
+inline bool IsCargoInClass(CargoID c, CargoClass cc)
 {
 	return (CargoSpec::Get(c)->classes & cc) != 0;
 }

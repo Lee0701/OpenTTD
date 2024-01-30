@@ -44,6 +44,8 @@ struct ContentTextfileWindow : public TextfileWindow {
 
 	ContentTextfileWindow(TextfileType file_type, const ContentInfo *ci) : TextfileWindow(file_type), ci(ci)
 	{
+		this->ConstructWindow();
+
 		const char *textfile = this->ci->GetTextfile(file_type);
 		this->LoadTextfile(textfile, GetContentInfoSubDir(this->ci->type));
 	}
@@ -65,7 +67,7 @@ struct ContentTextfileWindow : public TextfileWindow {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TF_CAPTION) {
 			SetDParam(0, this->GetTypeString());
@@ -81,7 +83,7 @@ void ShowContentTextfileWindow(TextfileType file_type, const ContentInfo *ci)
 }
 
 /** Nested widgets for the download window. */
-static const NWidgetPart _nested_network_content_download_status_window_widgets[] = {
+static constexpr NWidgetPart _nested_network_content_download_status_window_widgets[] = {
 	NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_CONTENT_DOWNLOAD_TITLE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 	NWidget(WWT_PANEL, COLOUR_GREY),
 		NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0), SetPadding(WidgetDimensions::unscaled.modalpopup),
@@ -115,7 +117,7 @@ void BaseNetworkContentDownloadStatusWindow::Close([[maybe_unused]] int data)
 	this->Window::Close();
 }
 
-void BaseNetworkContentDownloadStatusWindow::UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize)
+void BaseNetworkContentDownloadStatusWindow::UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize)
 {
 	switch (widget) {
 		case WID_NCDS_PROGRESS_BAR:
@@ -134,14 +136,14 @@ void BaseNetworkContentDownloadStatusWindow::UpdateWidgetSize(int widget, Dimens
 	}
 }
 
-void BaseNetworkContentDownloadStatusWindow::DrawWidget(const Rect &r, int widget) const
+void BaseNetworkContentDownloadStatusWindow::DrawWidget(const Rect &r, WidgetID widget) const
 {
 	switch (widget) {
 		case WID_NCDS_PROGRESS_BAR: {
 			/* Draw the % complete with a bar and a text */
 			DrawFrameRect(r, COLOUR_GREY, FR_BORDERONLY | FR_LOWERED);
 			Rect ir = r.Shrink(WidgetDimensions::scaled.bevel);
-			DrawFrameRect(ir.WithWidth((uint64)ir.Width() * this->downloaded_bytes / this->total_bytes, false), COLOUR_MAUVE, FR_NONE);
+			DrawFrameRect(ir.WithWidth((uint64_t)ir.Width() * this->downloaded_bytes / this->total_bytes, false), COLOUR_MAUVE, FR_NONE);
 			SetDParam(0, this->downloaded_bytes);
 			SetDParam(1, this->total_bytes);
 			SetDParam(2, this->downloaded_bytes * 100LL / this->total_bytes);
@@ -286,7 +288,7 @@ public:
 		this->BaseNetworkContentDownloadStatusWindow::Close();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget == WID_NCDS_CANCELOK) {
 			if (this->downloaded_bytes != this->total_bytes) {
@@ -585,7 +587,7 @@ public:
 		this->checkbox_size = maxdim(maxdim(GetSpriteSize(SPR_BOX_EMPTY), GetSpriteSize(SPR_BOX_CHECKED)), GetSpriteSize(SPR_BLOT));
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_NCL_CHECKBOX:
@@ -609,7 +611,7 @@ public:
 	}
 
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_NCL_DETAILS:
@@ -745,8 +747,7 @@ public:
 
 		if (!this->selected->dependencies.empty()) {
 			/* List dependencies */
-			char buf[DRAW_STRING_BUFFER] = "";
-			char *p = buf;
+			std::string buf;
 			for (auto &cid : this->selected->dependencies) {
 				/* Try to find the dependency */
 				ConstContentIterator iter = _network_content_client.Begin();
@@ -754,22 +755,23 @@ public:
 					const ContentInfo *ci = *iter;
 					if (ci->id != cid) continue;
 
-					p += seprintf(p, lastof(buf), p == buf ? "%s" : ", %s", (*iter)->name.c_str());
+					if (!buf.empty()) buf += ", ";
+					buf += (*iter)->name;
 					break;
 				}
 			}
-			SetDParamStr(0, buf);
+			SetDParamStr(0, std::move(buf));
 			tr.top = DrawStringMultiLine(tr, STR_CONTENT_DETAIL_DEPENDENCIES);
 		}
 
 		if (!this->selected->tags.empty()) {
 			/* List all tags */
-			char buf[DRAW_STRING_BUFFER] = "";
-			char *p = buf;
+			std::string buf;
 			for (auto &tag : this->selected->tags) {
-				p += seprintf(p, lastof(buf), p == buf ? "%s" : ", %s", tag.c_str());
+				if (!buf.empty()) buf += ", ";
+				buf += tag;
 			}
-			SetDParamStr(0, buf);
+			SetDParamStr(0, std::move(buf));
 			tr.top = DrawStringMultiLine(tr, STR_CONTENT_DETAIL_TAGS);
 		}
 
@@ -778,21 +780,21 @@ public:
 			ConstContentVector tree;
 			_network_content_client.ReverseLookupTreeDependency(tree, this->selected);
 
-			char buf[DRAW_STRING_BUFFER] = "";
-			char *p = buf;
+			std::string buf;
 			for (const ContentInfo *ci : tree) {
 				if (ci == this->selected || ci->state != ContentInfo::SELECTED) continue;
 
-				p += seprintf(p, lastof(buf), buf == p ? "%s" : ", %s", ci->name.c_str());
+				if (!buf.empty()) buf += ", ";
+				buf += ci->name;
 			}
-			if (p != buf) {
-				SetDParamStr(0, buf);
+			if (!buf.empty()) {
+				SetDParamStr(0, std::move(buf));
 				tr.top = DrawStringMultiLine(tr, STR_CONTENT_DETAIL_SELECTED_BECAUSE_OF);
 			}
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget >= WID_NCL_TEXTFILE && widget < WID_NCL_TEXTFILE + TFT_CONTENT_END) {
 			if (this->selected == nullptr || this->selected->state != ContentInfo::ALREADY_HERE) return;
@@ -877,7 +879,7 @@ public:
 		}
 	}
 
-	EventState OnKeyPress(WChar key, uint16 keycode) override
+	EventState OnKeyPress(char32_t key, uint16_t keycode) override
 	{
 		if (this->vscroll->UpdateListPositionOnKeyPress(this->list_pos, keycode) == ES_NOT_HANDLED) {
 			switch (keycode) {
@@ -925,7 +927,7 @@ public:
 		return ES_HANDLED;
 	}
 
-	void OnEditboxChanged(int wid) override
+	void OnEditboxChanged(WidgetID wid) override
 	{
 		if (wid == WID_NCL_FILTER) {
 			this->filter_data.string_filter.SetFilterTerm(this->filter_editbox.text.buf);
@@ -1036,7 +1038,7 @@ void BuildContentTypeStringList()
 }
 
 /** The widgets for the content list. */
-static const NWidgetPart _nested_network_content_list_widgets[] = {
+static constexpr NWidgetPart _nested_network_content_list_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_LIGHT_BLUE),
 		NWidget(WWT_CAPTION, COLOUR_LIGHT_BLUE), SetDataTip(STR_CONTENT_TITLE, STR_NULL),

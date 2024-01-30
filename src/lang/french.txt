@@ -772,7 +772,7 @@ STR_SMALLMAP_LEGENDA_AIRCRAFT                                   :{TINY_FONT}{BLA
 STR_SMALLMAP_LEGENDA_TRANSPORT_ROUTES                           :{TINY_FONT}{BLACK}Routes de transport
 STR_SMALLMAP_LEGENDA_FOREST                                     :{TINY_FONT}{BLACK}Forêts
 STR_SMALLMAP_LEGENDA_RAILROAD_STATION                           :{TINY_FONT}{BLACK}Gares ferroviaires
-STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Aires de chargement
+STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Aire de chargement
 STR_SMALLMAP_LEGENDA_BUS_STATION                                :{TINY_FONT}{BLACK}Arrêts d'autobus
 STR_SMALLMAP_LEGENDA_AIRPORT_HELIPORT                           :{TINY_FONT}{BLACK}Aéroports/Héliports
 STR_SMALLMAP_LEGENDA_DOCK                                       :{TINY_FONT}{BLACK}Ports maritimes
@@ -960,7 +960,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Sélecti
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Livre
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dollar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1003,6 +1003,7 @@ STR_GAME_OPTIONS_CURRENCY_HKD                                   :Dollar de Hong 
 STR_GAME_OPTIONS_CURRENCY_INR                                   :Roupie indienne
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Roupie indonésienne
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Malaysian Ringgit
+STR_GAME_OPTIONS_CURRENCY_LVL                                   :Lats letton
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Sauvegarde automatique
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Sélectionner l'intervalle de temps entre les sauvegardes automatiques
@@ -1020,7 +1021,7 @@ STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :{BLACK}Sélecti
 STR_GAME_OPTIONS_LANGUAGE_PERCENTAGE                            :{STRING} ({NUM}{NBSP}% terminé{P "" s})
 
 STR_GAME_OPTIONS_FULLSCREEN                                     :{BLACK}Plein écran
-STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Cocher cette case pour jouer à OpenTTD en plein écran
+STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}Cochez cette case pour jouer à OpenTTD en plein écran
 
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Résolution
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Sélectionner la résolution d'écran à utiliser
@@ -1043,6 +1044,11 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Cochez c
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Mettre à l’échelle les bordures
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Cochez cette case pour mettre les bordures à l'échelle avec la taille de l'interface
+
+STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}Utiliser la police d'écriture par défaut
+STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Cochez cette case si vous préferez utiliser la police d'écriture par défaut.
+STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Polices d'écriture supportant l'anti-crénelage
+STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Cochez cette case pour activer l'anti-crénelage sur les polices d'écriture à taille variable.
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1688,10 +1694,10 @@ STR_CONFIG_SETTING_PERSISTENT_BUILDINGTOOLS                     :Conserver les o
 STR_CONFIG_SETTING_PERSISTENT_BUILDINGTOOLS_HELPTEXT            :Garde les outils de construction de ponts, tunnels, etc. ouverts après usage
 
 STR_CONFIG_SETTING_AUTO_REMOVE_SIGNALS                          :Retire automatiquement les signaux durant la construction de la voie ferrée: {STRING}
-STR_CONFIG_SETTING_AUTO_REMOVE_SIGNALS_HELPTEXT                 :Retire automatiquement les signaux durant la construction de la voie ferrée si les signaux sont sur le chemin. A noter que ça peut potentiellement mener à des accidents de trains.
+STR_CONFIG_SETTING_AUTO_REMOVE_SIGNALS_HELPTEXT                 :Retire automatiquement les signaux durant la construction de la voie ferrée si les signaux sont sur le chemin. Il est à noter que cela peut potentiellement mener à des accidents de trains.
 
 STR_CONFIG_SETTING_FAST_FORWARD_SPEED_LIMIT                     :Seuil de vitesse d'avancement rapide: {STRING}
-STR_CONFIG_SETTING_FAST_FORWARD_SPEED_LIMIT_HELPTEXT            :Limite de la vitesse du jeu lorsque l'avance rapide est activée. 0 = pas de limite (aussi rapidement que votre ordinateur le permet). Les valeurs inférieures à 100% ralentissent le jeu. Le limites supérieure dépend des spécifications de votre ordinateur et peut varier en fonction du jeu
+STR_CONFIG_SETTING_FAST_FORWARD_SPEED_LIMIT_HELPTEXT            :Limite de la vitesse du jeu lorsque l'avance rapide est activée. 0 = pas de limite (aussi rapidement que votre ordinateur le permet). Les valeurs inférieures à 100% ralentissent le jeu. Les limites supérieures dépendent des spécifications de votre ordinateur et peuvent varier en fonction du jeu.
 STR_CONFIG_SETTING_FAST_FORWARD_SPEED_LIMIT_VAL                 :{NUM}% de la vitesse normal
 ###setting-zero-is-special
 STR_CONFIG_SETTING_FAST_FORWARD_SPEED_LIMIT_ZERO                :Aucune limite (aussi rapidement que votre ordinateur le permet)
@@ -1777,6 +1783,9 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Désactivé
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Désactiver l'entretien quand les pannes sont inactives{NBSP}: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Lorsqu'il est activé, les véhicules ne sont pas entretenus s'ils ne peuvent pas tomber en panne
+
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY               :Pénalité de vitesse de chargement pour les trains plus long que les stations: {STRING}
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY_HELPTEXT      :Quand activé, un train qui est trop long pour une station se charge plus lentement qu'un train qui a la même taille que la station. Ce paramètre n'affecte pas la recherche de chemin.
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Activer la vitesse limite des wagons{NBSP}: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Lorsqu'il est activé, utiliser la vitesse limite des wagons pour déterminer la vitesse maximum d'un train
@@ -2053,14 +2062,17 @@ STR_CONFIG_SETTING_ACCOUNTING                                   :Comptabilité
 STR_CONFIG_SETTING_VEHICLES                                     :Véhicules
 STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :Physique
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :Routage
+STR_CONFIG_SETTING_VEHICLES_ORDERS                              :Ordres
 STR_CONFIG_SETTING_LIMITATIONS                                  :Limitations
 STR_CONFIG_SETTING_ACCIDENTS                                    :Catastrophes / Accidents
 STR_CONFIG_SETTING_GENWORLD                                     :Création du terrain
 STR_CONFIG_SETTING_ENVIRONMENT                                  :Environnement
+STR_CONFIG_SETTING_ENVIRONMENT_TIME                             :Temps
 STR_CONFIG_SETTING_ENVIRONMENT_AUTHORITIES                      :Autorités
 STR_CONFIG_SETTING_ENVIRONMENT_TOWNS                            :Villes
 STR_CONFIG_SETTING_ENVIRONMENT_INDUSTRIES                       :Industries
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST                        :Distribution des marchandises
+STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :Arbres
 STR_CONFIG_SETTING_AI                                           :Compétiteurs
 STR_CONFIG_SETTING_AI_NPC                                       :Intelligence artificielle
 STR_CONFIG_SETTING_NETWORK                                      :Réseau
@@ -2197,12 +2209,20 @@ STR_LIVERY_TRAIN_TOOLTIP                                        :{BLACK}Montrer 
 STR_LIVERY_ROAD_VEHICLE_TOOLTIP                                 :{BLACK}Montrer les livrées de véhicules routiers
 STR_LIVERY_SHIP_TOOLTIP                                         :{BLACK}Montrer les livrées de navires
 STR_LIVERY_AIRCRAFT_TOOLTIP                                     :{BLACK}Montrer les livrées d'aéronefs
+STR_LIVERY_TRAIN_GROUP_TOOLTIP                                  :{BLACK}Afficher les couleurs des groupes de trains
+STR_LIVERY_ROAD_VEHICLE_GROUP_TOOLTIP                           :{BLACK}Afficher les couleurs des groupes de véhicules
+STR_LIVERY_SHIP_GROUP_TOOLTIP                                   :{BLACK}Afficher les couleurs des groupes de bateaux
+STR_LIVERY_AIRCRAFT_GROUP_TOOLTIP                               :{BLACK}Afficher les couleurs des groupes d'avions
 STR_LIVERY_PRIMARY_TOOLTIP                                      :{BLACK}Choisir la couleur primaire de la livrée sélectionnée. Ctrl-clic appliquera cette couleur à toutes les livrées.
 STR_LIVERY_SECONDARY_TOOLTIP                                    :{BLACK}Choisir la couleur secondaire de la livrée sélectionnée. Ctrl-clic appliquera cette couleur à toutes les livrées.
 STR_LIVERY_PANEL_TOOLTIP                                        :{BLACK}Sélectionner la livrée à modifier ou plusieurs d'entre elles par Ctrl-clic. Cliquer sur la case à cocher pour en activer l'utilisation ou non.
+STR_LIVERY_TRAIN_GROUP_EMPTY                                    :Aucun groupe de trains
+STR_LIVERY_ROAD_VEHICLE_GROUP_EMPTY                             :Aucun groupe de véhicules
+STR_LIVERY_SHIP_GROUP_EMPTY                                     :Aucun groupe de bateaux
+STR_LIVERY_AIRCRAFT_GROUP_EMPTY                                 :Aucun groupe d'avions
 
 ###length 23
-STR_LIVERY_DEFAULT                                              :Livrée standard
+STR_LIVERY_DEFAULT                                              :Livrée par défaut
 STR_LIVERY_STEAM                                                :Locomotive à vapeur
 STR_LIVERY_DIESEL                                               :Locomotive Diesel
 STR_LIVERY_ELECTRIC                                             :Locomotive électrique
@@ -3003,7 +3023,7 @@ STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Proprié
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Municipalité{NBSP}: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :Aucune
 STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Coordonnées{NBSP}: {LTBLUE}{NUM} × {NUM} × {NUM} ({STRING})
-STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Construit le{NBSP}: {LTBLUE}{DATE_LONG}
+STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Construit/rénové le{NBSP}: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Type de station{NBSP}: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Type de station{NBSP}: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_AIRPORT_CLASS                         :{BLACK}Type d'aéroport{NBSP}: {LTBLUE}{STRING}
@@ -4654,9 +4674,9 @@ STR_AI_DEBUG_MATCH_CASE                                         :{BLACK}Respecte
 STR_AI_DEBUG_MATCH_CASE_TOOLTIP                                 :{BLACK}Activer/Désactiver le respect de la casse pour comparer les messages d'IA avec la chaîne d'arrêt
 STR_AI_DEBUG_CONTINUE                                           :{BLACK}Continuer
 STR_AI_DEBUG_CONTINUE_TOOLTIP                                   :{BLACK}Reprendre la partie et continuer l'IA
-STR_AI_DEBUG_SELECT_AI_TOOLTIP                                  :{BLACK}Afficher la sortie de débogage de cette IA
+STR_AI_DEBUG_SELECT_AI_TOOLTIP                                  :{BLACK}Afficher la sortie de débogage de cette IA. Ctrl+Click pour ouvrir dans une nouvelle fenêtre
 STR_AI_GAME_SCRIPT                                              :{BLACK}Script de jeu
-STR_AI_GAME_SCRIPT_TOOLTIP                                      :{BLACK}Examiner le journal du script de jeu
+STR_AI_GAME_SCRIPT_TOOLTIP                                      :{BLACK}Examiner le journal du script de jeu. Ctrl+Click pour ouvrir dans une nouvelle fenêtre
 
 STR_ERROR_AI_NO_AI_FOUND                                        :Aucune IA n'a été trouvée.{}Cette IA est factice et ne fera rien.{}Vous pouvez télécharger diverses IA via le système de «{NBSP}Contenu en ligne{NBSP}».
 STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}L'un des scripts a rencontré un problème. Merci de rapporter ceci à l'auteur du script avec une capture d'écran de la fenêtre de débogage de scripts.

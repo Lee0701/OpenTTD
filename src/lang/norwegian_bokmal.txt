@@ -911,7 +911,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valutaen
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Velg valutaenhet som skal brukes
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Britisk pund
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikansk dollar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -980,6 +980,7 @@ STR_GAME_OPTIONS_VIDEO_ACCELERATION_RESTART                     :{WHITE}Innstill
 
 STR_GAME_OPTIONS_VIDEO_VSYNC                                    :{BLACK}VSync
 STR_GAME_OPTIONS_VIDEO_VSYNC_TOOLTIP                            :{BLACK}Merk av i denne boksen for å v-synkronisere skjermen. Endring av innstillinger krever omstart av spillet. Fungerer bare med maskinvareakselerasjon aktivert
+
 
 
 
@@ -1681,6 +1682,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Deaktivert
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Deaktiver vedlikehold når havarier er slått av: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Når aktivert, vil kjøretøy ikke bli vedlikeholdt hvis de ikke kan bryte sammen
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktiver fartsgrenser for vogner: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Når aktivert, brukes også fartsgrenser til vogner for å avgjøre den maksimale hastigheten til et tog

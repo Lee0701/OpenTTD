@@ -31,11 +31,16 @@
 #include <sys/stat.h>
 #include "../../language.h"
 #include "../../thread.h"
+#include "../../library_loader.h"
 #include <array>
 #include <map>
 #include <mutex>
 
 #include "../../safeguards.h"
+
+#if defined(__MINGW32__) && !defined(__MINGW64__) && !(_WIN32_IE >= 0x0500)
+#define SHGFP_TYPE_CURRENT 0
+#endif /* __MINGW32__ */
 
 static bool _has_console;
 static bool _cursor_disable = true;
@@ -51,30 +56,6 @@ bool MyShowCursor(bool show, bool toggle)
 	ShowCursor(show);
 
 	return !show;
-}
-
-/**
- * Helper function needed by dynamically loading libraries
- */
-bool LoadLibraryList(Function proc[], const char *dll)
-{
-	while (*dll != '\0') {
-		HMODULE lib;
-		lib = LoadLibrary(OTTD2FS(dll).c_str());
-
-		if (lib == nullptr) return false;
-		for (;;) {
-			Function p;
-
-			while (*dll++ != '\0') { /* Nothing */ }
-			if (*dll == '\0') break;
-			p = GetProcAddressT<Function>(lib, dll);
-			if (p == nullptr) return false;
-			*proc++ = p;
-		}
-		dll++;
-	}
-	return true;
 }
 
 void ShowOSErrorBox(const char *buf, bool system)
@@ -233,16 +214,16 @@ void FiosGetDrives(FileList &file_list)
 bool FiosIsValidFile(const char *path, const struct dirent *ent, struct stat *sb)
 {
 	/* hectonanoseconds between Windows and POSIX epoch */
-	static const int64 posix_epoch_hns = 0x019DB1DED53E8000LL;
+	static const int64_t posix_epoch_hns = 0x019DB1DED53E8000LL;
 	const WIN32_FIND_DATA *fd = &ent->dir->fd;
 
-	sb->st_size  = ((uint64) fd->nFileSizeHigh << 32) + fd->nFileSizeLow;
+	sb->st_size  = ((uint64_t) fd->nFileSizeHigh << 32) + fd->nFileSizeLow;
 	/* UTC FILETIME to seconds-since-1970 UTC
 	 * we just have to subtract POSIX epoch and scale down to units of seconds.
 	 * http://www.gamedev.net/community/forums/topic.asp?topic_id=294070&whichpage=1&#1860504
 	 * XXX - not entirely correct, since filetimes on FAT aren't UTC but local,
 	 * this won't entirely be correct, but we use the time only for comparison. */
-	sb->st_mtime = (time_t)((*(const uint64*)&fd->ftLastWriteTime - posix_epoch_hns) / 1E7);
+	sb->st_mtime = (time_t)((*(const uint64_t*)&fd->ftLastWriteTime - posix_epoch_hns) / 1E7);
 	sb->st_mode  = (fd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)? S_IFDIR : S_IFREG;
 
 	return true;
@@ -293,7 +274,7 @@ void CreateConsole()
 		_close(fd);
 		CloseHandle(hand);
 
-		ShowInfo("Unable to open an output handle to the console. Check known-bugs.txt for details.");
+		ShowInfoI("Unable to open an output handle to the console. Check known-bugs.txt for details.");
 		return;
 	}
 
@@ -358,7 +339,7 @@ static INT_PTR CALLBACK HelpDialogFunc(HWND wnd, UINT msg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-void ShowInfo(const char *str)
+void ShowInfoI(const char *str)
 {
 	if (_has_console) {
 		fprintf(stderr, "%s\n", str);
@@ -614,7 +595,8 @@ int OTTDStringCompare(std::string_view s1, std::string_view s2)
 #endif
 
 	if (first_time) {
-		_CompareStringEx = GetProcAddressT<PFNCOMPARESTRINGEX>(GetModuleHandle(L"Kernel32"), "CompareStringEx");
+		static LibraryLoader _kernel32("Kernel32.dll");
+		_CompareStringEx = _kernel32.GetFunction("CompareStringEx");
 		first_time = false;
 	}
 
@@ -657,7 +639,8 @@ int Win32StringContains(const std::string_view str, const std::string_view value
 	static bool first_time = true;
 
 	if (first_time) {
-		_FindNLSStringEx = GetProcAddressT<PFNFINDNLSSTRINGEX>(GetModuleHandle(L"Kernel32"), "FindNLSStringEx");
+		static LibraryLoader _kernel32("Kernel32.dll");
+		_FindNLSStringEx = _kernel32.GetFunction("FindNLSStringEx");
 		first_time = false;
 	}
 
@@ -704,7 +687,8 @@ void PerThreadSetup()
 
 void PerThreadSetupInit()
 {
-	LoadLibraryList((Function*)&_SetThreadStackGuarantee, "kernel32.dll\0SetThreadStackGuarantee\0\0");
+	static LibraryLoader _kernel32("Kernel32.dll");
+	_SetThreadStackGuarantee = _kernel32.GetFunction("SetThreadStackGuarantee");
 }
 
 bool IsMainThread()

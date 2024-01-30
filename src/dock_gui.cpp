@@ -39,7 +39,7 @@ static void ShowBuildDocksDepotPicker(Window *parent);
 
 static Axis _ship_depot_direction;
 
-void CcBuildDocks(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcBuildDocks(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 
@@ -47,7 +47,7 @@ void CcBuildDocks(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p
 	if (!_settings_client.gui.persistent_buildingtools) ResetObjectToPlace();
 }
 
-void CcPlaySound_CONSTRUCTION_WATER(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcPlaySound_CONSTRUCTION_WATER(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Succeeded() && _settings_client.sound.confirm) SndPlayTileFx(SND_02_CONSTRUCTION_WATER, tile);
 }
@@ -146,7 +146,7 @@ struct BuildDocksToolbarWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_DT_CANAL: // Build canal button
@@ -207,7 +207,7 @@ struct BuildDocksToolbarWindow : Window {
 				break;
 
 			case WID_DT_STATION: { // Build station button
-				uint32 p2 = (uint32)INVALID_STATION << 16; // no station to join
+				uint32_t p2 = (uint32_t)INVALID_STATION << 16; // no station to join
 
 				/* tile is always the land tile, so need to evaluate _thd.pos */
 				CommandContainer cmdcont = NewCommandContainerBasic(tile, _ctrl_pressed, p2, CMD_BUILD_DOCK | CMD_MSG(STR_ERROR_CAN_T_BUILD_DOCK_HERE), CcBuildDocks);
@@ -307,7 +307,7 @@ static EventState DockToolbarGlobalHotkeys(int hotkey)
 	return w->OnHotkey(hotkey);
 }
 
-const uint16 _dockstoolbar_aqueduct_keys[] = {'B', '8', 0};
+const uint16_t _dockstoolbar_aqueduct_keys[] = {'B', '8', 0};
 
 static Hotkey dockstoolbar_hotkeys[] = {
 	Hotkey('1', "canal", WID_DT_CANAL),
@@ -326,7 +326,7 @@ HotkeyList BuildDocksToolbarWindow::hotkeys("dockstoolbar", dockstoolbar_hotkeys
  * Nested widget parts of docks toolbar, game version.
  * Position of #WID_DT_RIVER widget has changed.
  */
-static const NWidgetPart _nested_build_docks_toolbar_widgets[] = {
+static constexpr NWidgetPart _nested_build_docks_toolbar_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_WATERWAYS_TOOLBAR_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -374,7 +374,7 @@ Window *ShowBuildDocksToolbar()
  * Nested widget parts of docks toolbar, scenario editor version.
  * Positions of #WID_DT_DEPOT, #WID_DT_STATION, and #WID_DT_BUOY widgets have changed.
  */
-static const NWidgetPart _nested_build_docks_scen_toolbar_widgets[] = {
+static constexpr NWidgetPart _nested_build_docks_scen_toolbar_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_WATERWAYS_TOOLBAR_CAPTION_SE, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -457,7 +457,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case BDSW_LT_OFF:
@@ -479,7 +479,7 @@ public:
 };
 
 /** Nested widget parts of a build dock station window. */
-static const NWidgetPart _nested_build_dock_station_widgets[] = {
+static constexpr NWidgetPart _nested_build_dock_station_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_STATION_BUILD_DOCK_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -525,11 +525,11 @@ public:
 	BuildDocksDepotWindow(WindowDesc *desc, Window *parent) : PickerWindowBase(desc, parent)
 	{
 		this->InitNested(TRANSPORT_WATER);
-		this->LowerWidget(_ship_depot_direction + WID_BDD_X);
+		this->LowerWidget(WID_BDD_X + _ship_depot_direction);
 		UpdateDocksDirection();
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_BDD_X:
@@ -540,7 +540,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		DrawPixelInfo tmp_dpi;
 
@@ -564,14 +564,14 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_BDD_X:
 			case WID_BDD_Y:
-				this->RaiseWidget(_ship_depot_direction + WID_BDD_X);
+				this->RaiseWidget(WID_BDD_X + _ship_depot_direction);
 				_ship_depot_direction = (widget == WID_BDD_X ? AXIS_X : AXIS_Y);
-				this->LowerWidget(_ship_depot_direction + WID_BDD_X);
+				this->LowerWidget(WID_BDD_X + _ship_depot_direction);
 				if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 				UpdateDocksDirection();
 				this->SetDirty();
@@ -580,7 +580,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_build_docks_depot_widgets[] = {
+static constexpr NWidgetPart _nested_build_docks_depot_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_DEPOT_BUILD_SHIP_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

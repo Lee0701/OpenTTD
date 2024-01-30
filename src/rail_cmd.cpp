@@ -40,6 +40,7 @@
 #include "news_func.h"
 #include "scope.h"
 #include "newgrf_newsignals.h"
+#include "pathfinder/water_regions.h"
 
 #include "table/strings.h"
 #include "table/railtypes.h"
@@ -70,7 +71,7 @@ void ResetRailTypes()
 	_railtypes_hidden_mask = RAILTYPES_NONE;
 }
 
-void ResolveRailTypeGUISignalSprites(RailTypeInfo *rti, uint8 style, PalSpriteID signals[SIGTYPE_END][2][2])
+void ResolveRailTypeGUISignalSprites(RailTypeInfo *rti, uint8_t style, PalSpriteID signals[SIGTYPE_END][2][2])
 {
 	/* Array of default GUI signal sprite numbers. */
 	const SpriteID _signal_lookup[2][SIGTYPE_END] = {
@@ -90,7 +91,7 @@ void ResolveRailTypeGUISignalSprites(RailTypeInfo *rti, uint8 style, PalSpriteID
 				spr += SPR_DUP_PROGSIGNAL_BASE - SPR_PROGSIGNAL_BASE;
 			} else if (type == SIGTYPE_NO_ENTRY) {
 				spr += SPR_DUP_EXTRASIGNAL_BASE - SPR_EXTRASIGNAL_BASE;
-			} else if (var == SIG_ELECTRIC && type == SIGTYPE_NORMAL) {
+			} else if (var == SIG_ELECTRIC && type == SIGTYPE_BLOCK) {
 				spr += SPR_DUP_ORIGINAL_SIGNALS_BASE - SPR_ORIGINAL_SIGNALS_BASE;
 			} else {
 				spr += SPR_DUP_SIGNALS_BASE - SPR_SIGNALS_BASE;
@@ -99,7 +100,7 @@ void ResolveRailTypeGUISignalSprites(RailTypeInfo *rti, uint8 style, PalSpriteID
 		return spr;
 	};
 
-	for (SignalType type = SIGTYPE_NORMAL; type < SIGTYPE_END; type = (SignalType)(type + 1)) {
+	for (SignalType type = SIGTYPE_BLOCK; type < SIGTYPE_END; type = (SignalType)(type + 1)) {
 		for (SignalVariant var = SIG_ELECTRIC; var <= SIG_SEMAPHORE; var = (SignalVariant)(var + 1)) {
 			PalSpriteID red   = GetCustomSignalSprite(rti, INVALID_TILE, type, var, 0, CSSC_GUI, style).sprite;
 			if (red.sprite != 0) {
@@ -213,7 +214,7 @@ void UpdateRailGuiSprites()
 		ResolveRailTypeGUISprites(&_railtypes[rt]);
 	}
 
-	for (uint8 style = 0; style < _num_new_signal_styles; style++) {
+	for (uint8_t style = 0; style < _num_new_signal_styles; style++) {
 		ResolveRailTypeGUISignalSprites(nullptr, style + 1, _new_signal_styles[style].signals);
 	}
 }
@@ -659,7 +660,7 @@ static inline bool ValParamTrackOrientation(Track track)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	RailType railtype = Extract<RailType, 0, 6>(p1);
 	Track track = Extract<Track, 0, 3>(p2);
@@ -928,7 +929,7 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Track track = Extract<Track, 0, 3>(p2);
 	CommandCost cost(EXPENSES_CONSTRUCTION);
@@ -1171,7 +1172,7 @@ bool FloodHalftile(TileIndex t)
 		TrackBits to_remove = lower_track & rail_bits;
 		if (to_remove != 0) {
 			Backup<CompanyID> cur_company(_current_company, OWNER_WATER, FILE_LINE);
-			flooded = DoCommand(t, 0, FIND_FIRST_BIT(to_remove), DC_EXEC, CMD_REMOVE_SINGLE_RAIL).Succeeded();
+			flooded = DoCommand(t, 0, FindFirstBit(to_remove), DC_EXEC, CMD_REMOVE_SINGLE_RAIL).Succeeded();
 			cur_company.Restore();
 			if (!flooded) return flooded; // not yet floodable
 			rail_bits = rail_bits & ~to_remove;
@@ -1273,7 +1274,7 @@ static CommandCost ValidateAutoDrag(Trackdir *trackdir, TileIndex start, TileInd
  * @param text unused
  * @return the cost of this operation or an error
  */
-static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	CommandCost total_cost(EXPENSES_CONSTRUCTION);
 	RailType railtype = Extract<RailType, 0, 6>(p2);
@@ -1345,7 +1346,7 @@ static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint3
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
  */
-CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	return CmdRailTrackHelper(tile, flags, p1, ClrBit(p2, 9), text);
 }
@@ -1368,7 +1369,7 @@ CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
  */
-CommandCost CmdRemoveRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRemoveRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	return CmdRailTrackHelper(tile, flags, p1, SetBit(p2, 9), text);
 }
@@ -1385,7 +1386,7 @@ CommandCost CmdRemoveRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p
  * @todo When checking for the tile slope,
  * distinguish between "Flat land required" and "land sloped in wrong direction"
  */
-CommandCost CmdBuildTrainDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildTrainDepot(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	/* check railtype and valid direction for depot (0 through 3), 4 in total */
 	RailType railtype = Extract<RailType, 0, 6>(p1);
@@ -1488,7 +1489,7 @@ static void ReReserveTrainPath(Train *v)
  * @return the cost of this operation or an error
  * @todo p2 should be replaced by two bits for "along" and "against" the track.
  */
-CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Track track = Extract<Track, 0, 3>(p1);
 	bool ctrl_pressed = HasBit(p1, 3); // was the CTRL button pressed
@@ -1521,7 +1522,7 @@ CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1,
 	CommandCost ret = CheckTileOwnership(tile);
 	if (ret.Failed()) return ret;
 
-	auto is_style_usable = [](SignalVariant sigvar, uint8 style_id, uint8 mask) {
+	auto is_style_usable = [](SignalVariant sigvar, uint8_t style_id, uint8_t mask) {
 		if (style_id == 0) return true;
 
 		const NewSignalStyle &style = _new_signal_styles[style_id - 1];
@@ -1571,8 +1572,8 @@ CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1,
 			const bool is_semaphore = IsTunnelBridgeSemaphore(tile);
 			bool will_be_semaphore = is_semaphore;
 			bool will_be_pbs = IsTunnelBridgePBS(tile);
-			const uint8 is_style = GetTunnelBridgeSignalStyle(tile);
-			uint8 will_be_style = is_style;
+			const uint8_t is_style = GetTunnelBridgeSignalStyle(tile);
+			uint8_t will_be_style = is_style;
 			if (!p2_active) {
 				if (convert_signal) {
 					will_be_bidi = bidirectional && !ctrl_pressed;
@@ -1741,10 +1742,10 @@ CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1,
 		} else if (convert_signal) {
 			/* convert button pressed */
 			if (ctrl_pressed || GetSignalVariant(tile, track) != sigvar || signal_style != GetSignalStyle(tile, track)) {
-				/* convert electric <-> semaphore and/or change style */
+				/* it costs money to change signal variant (light or semaphore) */
 				cost = CommandCost(EXPENSES_CONSTRUCTION, _price[PR_BUILD_SIGNALS] + _price[PR_CLEAR_SIGNALS]);
 			} else {
-				/* it is free to change signal type: normal-pre-exit-combo */
+				/* it is free to change signal type (block, exit, entry, combo, path, etc) */
 				cost = CommandCost();
 			}
 
@@ -1763,7 +1764,7 @@ CommandCost CmdBuildSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1,
 				if (!is_style_usable(GetSignalVariant(tile, track), GetSignalStyle(tile, track), 1 << new_sigtype)) return_cmd_error(STR_ERROR_UNSUITABLE_SIGNAL_TYPE);
 			}
 
-			/* it is free to change orientation/pre-exit-combo signals */
+			/* it is free to change orientation or number of signals on the tile (for block/presignals which allow signals in both directions) */
 			cost = CommandCost();
 		}
 	}
@@ -1988,7 +1989,7 @@ static bool CheckSignalAutoFill(TileIndex &tile, Trackdir &trackdir, int &signal
  * @param text unused
  * @return the cost of this operation or an error
  */
-static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text)
+static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, uint64_t p3, const char *text)
 {
 	CommandCost total_cost(EXPENSES_CONSTRUCTION);
 	TileIndex start_tile = tile;
@@ -2000,7 +2001,7 @@ static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uin
 	bool autofill = HasBit(p2, 6);
 	bool minimise_gaps = HasBit(p2, 10);
 	byte signal_density = GB(p2, 24, 8);
-	uint8 signal_style = GB(p2, 11, 4);
+	uint8_t signal_style = GB(p2, 11, 4);
 	bool allow_station = HasBit(p3, 0);
 
 	if (p1 >= MapSize() || !ValParamTrackOrientation(track)) return CMD_ERROR;
@@ -2037,7 +2038,7 @@ static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uin
 
 		sigtype = GetSignalType(tile, track);
 		/* Don't but copy entry or exit-signal type */
-		if (sigtype == SIGTYPE_ENTRY || sigtype == SIGTYPE_EXIT) sigtype = SIGTYPE_NORMAL;
+		if (sigtype == SIGTYPE_ENTRY || sigtype == SIGTYPE_EXIT) sigtype = SIGTYPE_BLOCK;
 
 		signal_style = GetSignalStyle(tile, track);
 	} else { // no signals exist, drag a two-way signal stretch
@@ -2083,7 +2084,7 @@ static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uin
 
 		/* only build/remove signals with the specified density */
 		if (tile_ok && (remove || minimise_gaps || signal_ctr % signal_density == 0 || IsTileType(tile, MP_TUNNELBRIDGE))) {
-			uint32 param1 = GB(TrackdirToTrack(trackdir), 0, 3);
+			uint32_t param1 = GB(TrackdirToTrack(trackdir), 0, 3);
 			SB(param1, 3, 1, mode);
 			SB(param1, 4, 1, semaphores);
 			SB(param1, 5, 3, sigtype);
@@ -2189,7 +2190,7 @@ static CommandCost CmdSignalTrackHelper(TileIndex tile, DoCommandFlag flags, uin
  * @return the cost of this operation or an error
  * @see CmdSignalTrackHelper
  */
-CommandCost CmdBuildSignalTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, const CommandAuxiliaryBase *aux_data)
+CommandCost CmdBuildSignalTrack(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, uint64_t p3, const char *text, const CommandAuxiliaryBase *aux_data)
 {
 	return CmdSignalTrackHelper(tile, flags, p1, p2, p3, text);
 }
@@ -2206,7 +2207,7 @@ CommandCost CmdBuildSignalTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, 
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdRemoveSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdRemoveSingleSignal(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	Track track = Extract<Track, 0, 3>(p1);
 	Money cost = _price[PR_CLEAR_SIGNALS];
@@ -2344,7 +2345,7 @@ CommandCost CmdRemoveSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1
  * @return the cost of this operation or an error
  * @see CmdSignalTrackHelper
  */
-CommandCost CmdRemoveSignalTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, uint64 p3, const char *text, const CommandAuxiliaryBase *aux_data)
+CommandCost CmdRemoveSignalTrack(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, uint64_t p3, const char *text, const CommandAuxiliaryBase *aux_data)
 {
 	return CmdSignalTrackHelper(tile, flags, p1, SetBit(p2, 5), p3, text); // bit 5 is remove bit
 }
@@ -2464,7 +2465,7 @@ CommandCost EnsureNoIncompatibleRailtypeTrainOnTrackBits(TileIndex tile, TrackBi
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	RailType totype = Extract<RailType, 0, 6>(p2);
 	TileIndex area_start = p1;
@@ -2738,7 +2739,7 @@ CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdConvertRailTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdConvertRailTrack(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	const RailType totype = Extract<RailType, 0, 6>(p2);
 	const TileIndex end_tile = p1;
@@ -3133,6 +3134,7 @@ static CommandCost ClearTile_Track(TileIndex tile, DoCommandFlag flags)
 					bool remove = IsDockingTile(tile);
 					DoClearSquare(tile);
 					if (remove) RemoveDockingTile(tile);
+					InvalidateWaterRegion(tile);
 				}
 				cost.AddCost(_price[PR_CLEAR_WATER]);
 			}
@@ -3200,8 +3202,8 @@ void DrawRestrictedSignal(SignalType type, SpriteID sprite, int x, int y, int z,
 		static const SubSprite lower_part_plain = { -50,  -5, 50,  50 };
 		static const SubSprite upper_part_plain = { -50, -50, 50, -6 };
 
-		AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE + 2, x, y, 1, 1, dz, z, false, 0, 0, bb_offset_z, (type == SIGTYPE_NORMAL) ? &lower_part_plain : &lower_part);
-		AddSortableSpriteToDraw(sprite,                   PAL_NONE, x, y, 1, 1, dz, z, false, 0, 0, bb_offset_z, (type == SIGTYPE_NORMAL) ? &upper_part_plain : &upper_part);
+		AddSortableSpriteToDraw(sprite, SPR_TRACERESTRICT_BASE + 2, x, y, 1, 1, dz, z, false, 0, 0, bb_offset_z, (type == SIGTYPE_BLOCK) ? &lower_part_plain : &lower_part);
+		AddSortableSpriteToDraw(sprite,                   PAL_NONE, x, y, 1, 1, dz, z, false, 0, 0, bb_offset_z, (type == SIGTYPE_BLOCK) ? &upper_part_plain : &upper_part);
 	} else if (type == SIGTYPE_PBS || type == SIGTYPE_PBS_ONEWAY) {
 		static const SubSprite lower_part = { -50, -10, 50,  50 };
 		static const SubSprite upper_part = { -50, -50, 50, -11 };
@@ -3220,7 +3222,7 @@ void DrawSingleSignal(TileIndex tile, const RailTypeInfo *rti, Track track, Sign
 
 	if (type == SIGTYPE_NO_ENTRY) pos ^= 1;
 
-	uint8 style = 0;
+	uint8_t style = 0;
 	if (_num_new_signal_styles > 0) {
 		switch (context) {
 			case CSSC_TRACK:
@@ -3240,7 +3242,7 @@ void DrawSingleSignal(TileIndex tile, const RailTypeInfo *rti, Track track, Sign
 	uint x, y;
 	GetSignalXY(tile, pos, HasBit(_signal_style_masks.signal_opposite_side, style), x, y);
 
-	uint8 aspect;
+	uint8_t aspect;
 	if (condition == SIGNAL_STATE_GREEN) {
 		aspect = 1;
 		if (_extra_aspects > 0) {
@@ -3294,7 +3296,7 @@ void DrawSingleSignal(TileIndex tile, const RailTypeInfo *rti, Track track, Sign
 		is_custom_sprite = !(file != nullptr && file->flags & SFF_PROGSIG);
 	} else {
 		/* Normal electric signals are stored in a different sprite block than all other signals. */
-		sprite = (type == SIGTYPE_NORMAL && variant == SIG_ELECTRIC) ? SPR_ORIGINAL_SIGNALS_BASE : SPR_SIGNALS_BASE - 16;
+		sprite = (type == SIGTYPE_BLOCK && variant == SIG_ELECTRIC) ? SPR_ORIGINAL_SIGNALS_BASE : SPR_SIGNALS_BASE - 16;
 		sprite += type * 16 + variant * 64 + image * 2 + condition + (IsSignalSpritePBS(type) ? 64 : 0);
 
 		SpriteFile *file = GetOriginFile(sprite);
@@ -3318,7 +3320,7 @@ void DrawSingleSignal(TileIndex tile, const RailTypeInfo *rti, Track track, Sign
 				sprite = SPR_DUP_EXTRASIGNAL_BASE + 8 + image;
 			}
 		} else {
-			sprite = (type == SIGTYPE_NORMAL && variant == SIG_ELECTRIC) ? SPR_DUP_ORIGINAL_SIGNALS_BASE : SPR_DUP_SIGNALS_BASE - 16;
+			sprite = (type == SIGTYPE_BLOCK && variant == SIG_ELECTRIC) ? SPR_DUP_ORIGINAL_SIGNALS_BASE : SPR_DUP_SIGNALS_BASE - 16;
 			sprite += type * 16 + variant * 64 + image * 2 + condition + (IsSignalSpritePBS(type) ? 64 : 0);
 		}
 		pal = PAL_NONE;
@@ -3347,7 +3349,7 @@ static void DrawSingleSignal(TileIndex tile, const RailTypeInfo *rti, Track trac
 
 static void GetSignalXYByTrackdir(TileIndex tile, Trackdir td, bool opposite, uint &x, uint &y)
 {
-	static const uint8 trackdir_to_pos[TRACKDIR_END] = {
+	static const uint8_t trackdir_to_pos[TRACKDIR_END] = {
 		8,  // TRACKDIR_X_NE
 		10, // TRACKDIR_Y_SE
 		4,  // TRACKDIR_UPPER_E
@@ -3412,7 +3414,7 @@ void MarkSingleSignalDirtyAtZ(TileIndex tile, Trackdir td, bool opposite_side, u
 	});
 }
 
-static uint32 _drawtile_track_palette;
+static uint32_t _drawtile_track_palette;
 
 
 
@@ -4131,7 +4133,7 @@ void DrawTrainDepotSprite(int x, int y, int dir, RailType railtype)
 	const DrawTileSprites *dts = &_depot_gfx_table[dir];
 	const RailTypeInfo *rti = GetRailTypeInfo(railtype);
 	SpriteID image = rti->UsesOverlay() ? SPR_FLAT_GRASS_TILE : dts->ground.sprite;
-	uint32 offset = rti->GetRailtypeSpriteOffset();
+	uint32_t offset = rti->GetRailtypeSpriteOffset();
 
 	if (image != SPR_FLAT_GRASS_TILE) image += offset;
 	PaletteID palette = COMPANY_SPRITE_COLOUR(_local_company);
@@ -4545,7 +4547,7 @@ static void GetTileDesc_Track(TileIndex tile, TileDesc *td)
 			td->str = STR_LAI_RAIL_DESCRIPTION_TRAIN_DEPOT;
 			if (_settings_game.vehicle.train_acceleration_model != AM_ORIGINAL) {
 				if (td->rail_speed > 0) {
-					td->rail_speed = std::min<uint16>(td->rail_speed, _settings_game.vehicle.rail_depot_speed_limit);
+					td->rail_speed = std::min<uint16_t>(td->rail_speed, _settings_game.vehicle.rail_depot_speed_limit);
 				} else {
 					td->rail_speed = _settings_game.vehicle.rail_depot_speed_limit;
 				}
@@ -4594,7 +4596,7 @@ static void ChangeTileOwner_Track(TileIndex tile, Owner old_owner, Owner new_own
 
 static const byte _fractcoords_behind[4] = { 0x8F, 0x8, 0x80, 0xF8 };
 static const byte _fractcoords_enter[4] = { 0x8A, 0x48, 0x84, 0xA8 };
-static const int8 _deltacoord_leaveoffset[8] = {
+static const int8_t _deltacoord_leaveoffset[8] = {
 	-1,  0,  1,  0, /* x */
 	 0,  1,  0, -1  /* y */
 };

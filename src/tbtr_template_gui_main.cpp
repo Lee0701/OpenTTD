@@ -99,7 +99,7 @@ enum TemplateReplaceWindowWidgets {
 	TRW_WIDGET_SEL_TMPL_DISPLAY_CREATE,
 };
 
-static const NWidgetPart _widgets[] = {
+static constexpr NWidgetPart _widgets[] = {
 	// Title bar
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
@@ -260,7 +260,7 @@ public:
 		this->Window::Close();
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	virtual void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case TRW_WIDGET_TOP_MATRIX:
@@ -312,7 +312,7 @@ public:
 		}
 	}
 
-	virtual void SetStringParameters(int widget) const override
+	virtual void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case TRW_CAPTION:
@@ -321,7 +321,7 @@ public:
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const override
+	virtual void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case TRW_WIDGET_TOP_MATRIX: {
@@ -404,7 +404,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		if (this->editInProgress) return;
 
@@ -414,7 +414,7 @@ public:
 		switch (widget) {
 			case TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_REUSE: {
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size())) {
-					uint32 template_index = ((this->templates)[selected_template_index])->index;
+					uint32_t template_index = ((this->templates)[selected_template_index])->index;
 
 					DoCommandP(0, template_index, 0, CMD_TOGGLE_REUSE_DEPOT_VEHICLES, nullptr);
 				}
@@ -422,7 +422,7 @@ public:
 			}
 			case TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_KEEP: {
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size())) {
-					uint32 template_index = ((this->templates)[selected_template_index])->index;
+					uint32_t template_index = ((this->templates)[selected_template_index])->index;
 
 					DoCommandP(0, template_index, 0, CMD_TOGGLE_KEEP_REMAINING_VEHICLES, nullptr);
 				}
@@ -431,7 +431,7 @@ public:
 			case TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_REFIT_AS_TEMPLATE:
 			case TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_REFIT_AS_INCOMING: {
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size())) {
-					uint32 template_index = ((this->templates)[selected_template_index])->index;
+					uint32_t template_index = ((this->templates)[selected_template_index])->index;
 
 					DoCommandP(0, template_index, (widget == TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_REFIT_AS_TEMPLATE) ? 1 : 0, CMD_SET_REFIT_AS_TEMPLATE, nullptr);
 				}
@@ -439,7 +439,7 @@ public:
 			}
 			case TRW_WIDGET_TMPL_BUTTONS_CONFIGTMPL_OLD_ONLY: {
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size())) {
-					uint32 template_index = ((this->templates)[selected_template_index])->index;
+					uint32_t template_index = ((this->templates)[selected_template_index])->index;
 
 					DoCommandP(0, template_index, 0, CMD_TOGGLE_TMPL_REPLACE_OLD_ONLY, nullptr);
 				}
@@ -474,7 +474,7 @@ public:
 			case TRW_WIDGET_TMPL_BUTTONS_DELETE:
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size()) && !editInProgress) {
 
-					uint32 template_index = ((this->templates)[selected_template_index])->index;
+					uint32_t template_index = ((this->templates)[selected_template_index])->index;
 
 					bool succeeded = DoCommandP(0, template_index, 0, CMD_DELETE_TEMPLATE_VEHICLE, nullptr);
 
@@ -495,7 +495,7 @@ public:
 				ShowDropDownList(this, GetRailTypeDropDownList(true, true), this->sel_railtype, TRW_WIDGET_TRAIN_RAILTYPE_DROPDOWN);
 				break;
 			case TRW_WIDGET_TOP_MATRIX: {
-				uint16 newindex = (uint16)((pt.y - this->nested_array[TRW_WIDGET_TOP_MATRIX]->pos_y) / (GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.matrix.Vertical()) ) + this->vscroll[0]->GetPosition();
+				uint16_t newindex = (uint16_t)((pt.y - this->GetWidget<NWidgetBase>(TRW_WIDGET_TOP_MATRIX)->pos_y) / (GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.matrix.Vertical()) ) + this->vscroll[0]->GetPosition();
 				if (newindex == this->selected_group_index || newindex >= this->groups.size()) {
 					this->selected_group_index = -1;
 				} else if (newindex < this->groups.size()) {
@@ -505,7 +505,7 @@ public:
 				break;
 			}
 			case TRW_WIDGET_BOTTOM_MATRIX: {
-				uint16 newindex = (uint16)((pt.y - this->nested_array[TRW_WIDGET_BOTTOM_MATRIX]->pos_y) / this->bottom_matrix_item_size) + this->vscroll[1]->GetPosition();
+				uint16_t newindex = (uint16_t)((pt.y - this->GetWidget<NWidgetBase>(TRW_WIDGET_BOTTOM_MATRIX)->pos_y) / this->bottom_matrix_item_size) + this->vscroll[1]->GetPosition();
 				if (newindex == this->selected_template_index || newindex >= templates.size()) {
 					this->selected_template_index = -1;
 				} else if (newindex < templates.size()) {
@@ -519,7 +519,7 @@ public:
 			case TRW_WIDGET_START: {
 				if ((this->selected_template_index >= 0) && (this->selected_template_index < (int)this->templates.size()) &&
 						(this->selected_group_index >= 0) && (this->selected_group_index < (int)this->groups.size())) {
-					uint32 tv_index = ((this->templates)[selected_template_index])->index;
+					uint32_t tv_index = ((this->templates)[selected_template_index])->index;
 					int current_group_index = (this->groups)[this->selected_group_index]->index;
 
 					DoCommandP(0, current_group_index, tv_index, CMD_ISSUE_TEMPLATE_REPLACEMENT, nullptr);
@@ -560,7 +560,7 @@ public:
 		this->RaiseButtons();
 	}
 
-	virtual void OnDropdownSelect(int widget, int index) override
+	virtual void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		RailType temp = (RailType) index;
 		if (temp == this->sel_railtype) return; // we didn't select a new one. No need to change anything
@@ -609,7 +609,7 @@ public:
 	{
 		if (tid == INVALID_TEMPLATE) return -1;
 
-		for (uint32 i = 0; i < this->templates.size(); ++i) {
+		for (uint32_t i = 0; i < this->templates.size(); ++i) {
 			if (templates[i]->index == tid) {
 				return i;
 			}
@@ -748,7 +748,7 @@ public:
 			v = (this->templates)[i];
 
 			/* Fill the background of the current cell in a darker tone for the currently selected template */
-			if (this->selected_template_index == (int32) i) {
+			if (this->selected_template_index == (int32_t) i) {
 				GfxFillRect(r.left + 1, y, r.right, y + this->bottom_matrix_item_size, _colour_gradient[COLOUR_GREY][3]);
 			}
 

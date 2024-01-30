@@ -41,7 +41,7 @@ static CargoTypes _legend_excluded_cargo;
 static const OverflowSafeInt64 INVALID_DATAPOINT(INT64_MAX); // Value used for a datapoint that shouldn't be drawn.
 static const uint INVALID_DATAPOINT_POS = UINT_MAX;  // Used to determine if the previous point was drawn.
 
-uint8 _cargo_payment_x_mode;
+uint8_t _cargo_payment_x_mode;
 
 /****************/
 /* GRAPH LEGEND */
@@ -53,15 +53,15 @@ struct GraphLegendWindow : Window {
 		this->InitNested(window_number);
 
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!HasBit(_legend_excluded_companies, c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
+			if (!HasBit(_legend_excluded_companies, c)) this->LowerWidget(WID_GL_FIRST_COMPANY + c);
 
 			this->OnInvalidateData(c);
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
-		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
+		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, WID_GL_FIRST_COMPANY + MAX_COMPANIES)) return;
 
 		CompanyID cid = (CompanyID)(widget - WID_GL_FIRST_COMPANY);
 
@@ -79,9 +79,9 @@ struct GraphLegendWindow : Window {
 		DrawString(tr.left, tr.right, CenterBounds(tr.top, tr.bottom, GetCharacterHeight(FS_NORMAL)), STR_COMPANY_NAME_COMPANY_NUM, HasBit(_legend_excluded_companies, cid) ? TC_BLACK : TC_WHITE);
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
-		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
+		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, WID_GL_FIRST_COMPANY + MAX_COMPANIES)) return;
 
 		ToggleBit(_legend_excluded_companies, widget - WID_GL_FIRST_COMPANY);
 		this->ToggleWidgetLoweredState(widget);
@@ -110,29 +110,26 @@ struct GraphLegendWindow : Window {
 
 /**
  * Construct a vertical list of buttons, one for each company.
- * @param biggest_index Storage for collecting the biggest index used in the returned tree.
  * @return Panel with company buttons.
- * @post \c *biggest_index contains the largest used index in the tree.
  */
-static NWidgetBase *MakeNWidgetCompanyLines(int *biggest_index)
+static std::unique_ptr<NWidgetBase> MakeNWidgetCompanyLines()
 {
-	NWidgetVertical *vert = new NWidgetVertical(NC_EQUALSIZE);
+	auto vert = std::make_unique<NWidgetVertical>(NC_EQUALSIZE);
 	vert->SetPadding(2, 2, 2, 2);
 	uint sprite_height = GetSpriteSize(SPR_COMPANY_ICON, nullptr, ZOOM_LVL_OUT_4X).height;
 
-	for (int widnum = WID_GL_FIRST_COMPANY; widnum <= WID_GL_LAST_COMPANY; widnum++) {
-		NWidgetBackground *panel = new NWidgetBackground(WWT_PANEL, COLOUR_BROWN, widnum);
+	for (WidgetID widnum = WID_GL_FIRST_COMPANY; widnum <= WID_GL_LAST_COMPANY; widnum++) {
+		auto panel = std::make_unique<NWidgetBackground>(WWT_PANEL, COLOUR_BROWN, widnum);
 		panel->SetMinimalSize(246, sprite_height + WidgetDimensions::unscaled.framerect.Vertical());
 		panel->SetMinimalTextLines(1, WidgetDimensions::unscaled.framerect.Vertical(), FS_NORMAL);
 		panel->SetFill(1, 1);
 		panel->SetDataTip(0x0, STR_GRAPH_KEY_COMPANY_SELECTION_TOOLTIP);
-		vert->Add(panel);
+		vert->Add(std::move(panel));
 	}
-	*biggest_index = WID_GL_LAST_COMPANY;
 	return vert;
 }
 
-static const NWidgetPart _nested_graph_legend_widgets[] = {
+static constexpr NWidgetPart _nested_graph_legend_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_KEY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -181,7 +178,7 @@ protected:
 	static const int MIN_GRAPH_NUM_LINES_Y  =   9; ///< Minimal number of horizontal lines to draw.
 	static const int MIN_GRID_PIXEL_SIZE    =  20; ///< Minimum distance between graph lines.
 
-	uint64 excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
+	uint64_t excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
 	byte num_dataset;
 	byte num_on_x_axis;
 	byte num_vert_lines;
@@ -194,10 +191,10 @@ protected:
 
 	/* These values are used if the graph is being plotted against values
 	 * rather than the dates specified by month and year. */
-	uint16 x_values_start;
-	uint16 x_values_increment;
+	uint16_t x_values_start;
+	uint16_t x_values_increment;
 
-	int graph_widget;
+	WidgetID graph_widget;
 	StringID format_str_y_axis;
 	byte colours[GRAPH_MAX_DATASETS];
 	OverflowSafeInt64 cost[GRAPH_MAX_DATASETS][GRAPH_NUM_MONTHS]; ///< Stored costs for the last #GRAPH_NUM_MONTHS months
@@ -237,7 +234,7 @@ protected:
 		double abs_higher = (current_interval.highest < 0) ? 0 : (double)current_interval.highest;
 
 		int num_pos_grids;
-		int64 grid_size;
+		int64_t grid_size;
 
 		if (abs_lower != 0 || abs_higher != 0) {
 			/* The number of grids to reserve for the positive part is: */
@@ -248,8 +245,8 @@ protected:
 			if (num_pos_grids == num_hori_lines && abs_lower != 0) num_pos_grids--;
 
 			/* Get the required grid size for each side and use the maximum one. */
-			int64 grid_size_higher = (abs_higher > 0) ? ((int64)abs_higher + num_pos_grids - 1) / num_pos_grids : 0;
-			int64 grid_size_lower = (abs_lower > 0) ? ((int64)abs_lower + num_hori_lines - num_pos_grids - 1) / (num_hori_lines - num_pos_grids) : 0;
+			int64_t grid_size_higher = (abs_higher > 0) ? ((int64_t)abs_higher + num_pos_grids - 1) / num_pos_grids : 0;
+			int64_t grid_size_lower = (abs_lower > 0) ? ((int64_t)abs_lower + num_hori_lines - num_pos_grids - 1) / (num_hori_lines - num_pos_grids) : 0;
 			grid_size = std::max(grid_size_higher, grid_size_lower);
 		} else {
 			/* If both values are zero, show an empty graph. */
@@ -270,8 +267,8 @@ protected:
 	uint GetYLabelWidth(ValuesInterval current_interval, int num_hori_lines) const
 	{
 		/* draw text strings on the y axis */
-		int64 y_label = current_interval.highest;
-		int64 y_label_separation = (current_interval.highest - current_interval.lowest) / num_hori_lines;
+		int64_t y_label = current_interval.highest;
+		int64_t y_label_separation = (current_interval.highest - current_interval.lowest) / num_hori_lines;
 
 		uint max_width = 0;
 
@@ -287,13 +284,13 @@ protected:
 		return max_width;
 	}
 
-	virtual StringID PrepareXAxisText(uint16 label) const
+	virtual StringID PrepareXAxisText(uint16_t label) const
 	{
 		SetDParam(0, label);
 		return STR_JUST_COMMA;
 	}
 
-	virtual StringID PrepareXAxisMaxSizeText(uint16 label) const
+	virtual StringID PrepareXAxisMaxSizeText(uint16_t label) const
 	{
 		SetDParamMaxValue(0, label, 0, FS_SMALL);
 		return STR_JUST_COMMA;
@@ -380,8 +377,8 @@ protected:
 		assert(this->num_on_x_axis > 0);
 
 		/* draw text strings on the y axis */
-		int64 y_label = interval.highest;
-		int64 y_label_separation = abs(interval.highest - interval.lowest) / num_hori_lines;
+		int64_t y_label = interval.highest;
+		int64_t y_label_separation = abs(interval.highest - interval.lowest) / num_hori_lines;
 
 		y = r.top - GetCharacterHeight(FS_SMALL) / 2;
 
@@ -419,7 +416,7 @@ protected:
 			/* Draw x-axis labels for graphs not based on quarterly performance (cargo payment rates). */
 			x = r.left;
 			y = r.bottom + ScaleGUITrad(2);
-			uint16 label = this->x_values_start;
+			uint16_t label = this->x_values_start;
 
 			for (int i = 0; i < this->num_on_x_axis; i++) {
 				StringID str = this->PrepareXAxisText(label);
@@ -458,7 +455,7 @@ protected:
 						 * integer, so at about 31 bits because of the sign bit, the
 						 * least significant bits are removed.
 						 */
-						int mult_range = FindLastBit<uint64>(x_axis_offset) + FindLastBit<uint64>(abs(datapoint));
+						int mult_range = FindLastBit<uint32_t>(x_axis_offset) + FindLastBit<uint64_t>(abs(datapoint));
 						int reduce_range = std::max(mult_range - 31, 0);
 
 						/* Handle negative values differently (don't shift sign) */
@@ -489,7 +486,7 @@ protected:
 	}
 
 
-	BaseGraphWindow(WindowDesc *desc, int widget, StringID format_str_y_axis) :
+	BaseGraphWindow(WindowDesc *desc, WidgetID widget, StringID format_str_y_axis) :
 			Window(desc),
 			format_str_y_axis(format_str_y_axis)
 	{
@@ -513,7 +510,7 @@ protected:
 	}
 
 public:
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != this->graph_widget) return;
 
@@ -549,7 +546,7 @@ public:
 		size->height = std::max<uint>(size->height, size->width / 3);
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != this->graph_widget) return;
 
@@ -561,7 +558,7 @@ public:
 		return INVALID_DATAPOINT;
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		/* Clicked on legend? */
 		if (widget == WID_CV_KEY_BUTTON) ShowGraphLegend();
@@ -654,7 +651,7 @@ struct OperatingProfitGraphWindow : BaseGraphWindow {
 	}
 };
 
-static const NWidgetPart _nested_operating_profit_widgets[] = {
+static constexpr NWidgetPart _nested_operating_profit_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_OPERATING_PROFIT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -705,7 +702,7 @@ struct IncomeGraphWindow : BaseGraphWindow {
 	}
 };
 
-static const NWidgetPart _nested_income_graph_widgets[] = {
+static constexpr NWidgetPart _nested_income_graph_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_INCOME_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -747,7 +744,7 @@ struct ExcludingCargoBaseGraphWindow : BaseGraphWindow {
 	Scrollbar *vscroll; ///< Cargo list scrollbar.
 	uint legend_width;  ///< Width of legend 'blob'.
 
-	ExcludingCargoBaseGraphWindow(WindowDesc *desc, int widget, StringID format_str_y_axis):
+	ExcludingCargoBaseGraphWindow(WindowDesc *desc, WidgetID widget, StringID format_str_y_axis):
 			BaseGraphWindow(desc, widget, format_str_y_axis)
 	{}
 
@@ -757,7 +754,7 @@ struct ExcludingCargoBaseGraphWindow : BaseGraphWindow {
 		this->legend_width = (GetCharacterHeight(FS_SMALL) - ScaleGUITrad(1)) * 9 / 6;
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	virtual void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget != WID_ECBG_MATRIX) {
 			BaseGraphWindow::UpdateWidgetSize(widget, size, padding, fill, resize);
@@ -779,7 +776,7 @@ struct ExcludingCargoBaseGraphWindow : BaseGraphWindow {
 		resize->height = this->line_height;
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const override
+	virtual void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_ECBG_MATRIX) {
 			BaseGraphWindow::DrawWidget(r, widget);
@@ -816,7 +813,7 @@ struct ExcludingCargoBaseGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_CV_KEY_BUTTON:
@@ -897,7 +894,7 @@ struct DeliveredCargoGraphWindow : ExcludingCargoBaseGraphWindow {
 		this->SetDirty();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_DCG_BY_COMPANY:
@@ -998,7 +995,7 @@ struct DeliveredCargoGraphWindow : ExcludingCargoBaseGraphWindow {
 	}
 };
 
-static const NWidgetPart _nested_delivered_cargo_graph_widgets[] = {
+static constexpr NWidgetPart _nested_delivered_cargo_graph_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_CARGO_DELIVERED_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1060,14 +1057,14 @@ struct PerformanceHistoryGraphWindow : BaseGraphWindow {
 		return c->old_economy[j].performance_history;
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget == WID_PHG_DETAILED_PERFORMANCE) ShowPerformanceRatingDetail();
 		this->BaseGraphWindow::OnClick(pt, widget, click_count);
 	}
 };
 
-static const NWidgetPart _nested_performance_history_widgets[] = {
+static constexpr NWidgetPart _nested_performance_history_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_COMPANY_PERFORMANCE_RATINGS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1117,7 +1114,7 @@ struct CompanyValueGraphWindow : BaseGraphWindow {
 	}
 };
 
-static const NWidgetPart _nested_company_value_graph_widgets[] = {
+static constexpr NWidgetPart _nested_company_value_graph_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_COMPANY_VALUES_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1181,7 +1178,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 
 	void SetXAxis()
 	{
-		uint16 x_scale = 10;
+		uint16_t x_scale = 10;
 		if (_cargo_payment_x_mode) {
 			switch (_settings_game.locale.units_velocity) {
 				case 2:
@@ -1198,7 +1195,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->x_values_increment = x_scale;
 	}
 
-	std::pair<uint, uint> ProcessXAxisValue(uint16 label) const
+	std::pair<uint, uint> ProcessXAxisValue(uint16_t label) const
 	{
 		uint val = label;
 		uint decimals;
@@ -1231,7 +1228,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		return { val, decimals };
 	}
 
-	StringID PrepareXAxisText(uint16 label) const override
+	StringID PrepareXAxisText(uint16_t label) const override
 	{
 		auto val = this->ProcessXAxisValue(label);
 
@@ -1240,7 +1237,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		return STR_JUST_DECIMAL;
 	}
 
-	StringID PrepareXAxisMaxSizeText(uint16 label) const override
+	StringID PrepareXAxisMaxSizeText(uint16_t label) const override
 	{
 		auto val = this->ProcessXAxisValue(label);
 
@@ -1266,7 +1263,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_CPR_MATRIX) {
 			BaseGraphWindow::UpdateWidgetSize(widget, size, padding, fill, resize);
@@ -1290,7 +1287,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		resize->height = this->line_height;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_CPR_MATRIX) {
 			BaseGraphWindow::DrawWidget(r, widget);
@@ -1327,7 +1324,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_CPR_ENABLE_CARGOES:
@@ -1412,7 +1409,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		this->num_dataset = i;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_CPR_FOOTER:
@@ -1447,7 +1444,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	}
 };
 
-static const NWidgetPart _nested_cargo_payment_rates_widgets[] = {
+static constexpr NWidgetPart _nested_cargo_payment_rates_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1534,7 +1531,7 @@ struct PerformanceRatingDetailWindow : Window {
 	uint score_detail_left;
 	uint score_detail_right;
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_PRD_SCORE_FIRST:
@@ -1592,7 +1589,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		/* No need to draw when there's nothing to draw */
 		if (this->company == INVALID_COMPANY) return;
@@ -1614,8 +1611,8 @@ struct PerformanceRatingDetailWindow : Window {
 		int colour_notdone = _colour_gradient[COLOUR_RED][4];
 
 		/* Draw all the score parts */
-		int64 val    = _score_part[company][score_type];
-		int64 needed = _score_info[score_type].needed;
+		int64_t val    = _score_part[company][score_type];
+		int64_t needed = _score_info[score_type].needed;
 		int   score  = _score_info[score_type].score;
 
 		/* SCORE_TOTAL has its own rules ;) */
@@ -1634,7 +1631,7 @@ struct PerformanceRatingDetailWindow : Window {
 		DrawString(this->score_info_left, this->score_info_right, text_top, STR_JUST_COMMA, TC_BLACK, SA_RIGHT);
 
 		/* Calculate the %-bar */
-		uint x = Clamp<int64>(val, 0, needed) * this->bar_width / needed;
+		uint x = Clamp<int64_t>(val, 0, needed) * this->bar_width / needed;
 		bool rtl = _current_text_dir == TD_RTL;
 		if (rtl) {
 			x = this->bar_right - x;
@@ -1647,7 +1644,7 @@ struct PerformanceRatingDetailWindow : Window {
 		if (x != this->bar_right) GfxFillRect(x,              bar_top, this->bar_right, bar_top + this->bar_height - 1, rtl ? colour_done : colour_notdone);
 
 		/* Draw it */
-		SetDParam(0, Clamp<int64>(val, 0, needed) * 100 / needed);
+		SetDParam(0, Clamp<int64_t>(val, 0, needed) * 100 / needed);
 		DrawString(this->bar_left, this->bar_right, text_top, STR_PERFORMANCE_DETAIL_PERCENT, TC_FROMSTRING, SA_HOR_CENTER);
 
 		/* SCORE_LOAN is inversed */
@@ -1670,15 +1667,15 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		/* Check which button is clicked */
 		if (IsInsideMM(widget, WID_PRD_COMPANY_FIRST, WID_PRD_COMPANY_LAST + 1)) {
 			/* Is it no on disable? */
 			if (!this->IsWidgetDisabled(widget)) {
-				this->RaiseWidget(this->company + WID_PRD_COMPANY_FIRST);
+				this->RaiseWidget(WID_PRD_COMPANY_FIRST + this->company);
 				this->company = (CompanyID)(widget - WID_PRD_COMPANY_FIRST);
-				this->LowerWidget(this->company + WID_PRD_COMPANY_FIRST);
+				this->LowerWidget(WID_PRD_COMPANY_FIRST + this->company);
 				this->SetDirty();
 			}
 		}
@@ -1703,13 +1700,13 @@ struct PerformanceRatingDetailWindow : Window {
 		if (!gui_scope) return;
 		/* Disable the companies who are not active */
 		for (CompanyID i = COMPANY_FIRST; i < MAX_COMPANIES; i++) {
-			this->SetWidgetDisabledState(i + WID_PRD_COMPANY_FIRST, !Company::IsValidID(i));
+			this->SetWidgetDisabledState(WID_PRD_COMPANY_FIRST + i, !Company::IsValidID(i));
 		}
 
 		/* Check if the currently selected company is still active. */
 		if (this->company != INVALID_COMPANY && !Company::IsValidID(this->company)) {
 			/* Raise the widget for the previous selection. */
-			this->RaiseWidget(this->company + WID_PRD_COMPANY_FIRST);
+			this->RaiseWidget(WID_PRD_COMPANY_FIRST + this->company);
 			this->company = INVALID_COMPANY;
 		}
 
@@ -1721,7 +1718,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 
 		/* Make sure the widget is lowered */
-		this->LowerWidget(this->company + WID_PRD_COMPANY_FIRST);
+		this->LowerWidget(WID_PRD_COMPANY_FIRST + this->company);
 	}
 };
 
@@ -1729,11 +1726,9 @@ CompanyID PerformanceRatingDetailWindow::company = INVALID_COMPANY;
 
 /**
  * Make a vertical list of panels for outputting score details.
- * @param biggest_index Storage for collecting the biggest index used in the returned tree.
  * @return Panel with performance details.
- * @post \c *biggest_index contains the largest used index in the tree.
  */
-static NWidgetBase *MakePerformanceDetailPanels(int *biggest_index)
+static std::unique_ptr<NWidgetBase> MakePerformanceDetailPanels()
 {
 	const StringID performance_tips[] = {
 		STR_PERFORMANCE_DETAIL_VEHICLES_TOOLTIP,
@@ -1750,24 +1745,23 @@ static NWidgetBase *MakePerformanceDetailPanels(int *biggest_index)
 
 	static_assert(lengthof(performance_tips) == SCORE_END - SCORE_BEGIN);
 
-	NWidgetVertical *vert = new NWidgetVertical(NC_EQUALSIZE);
-	for (int widnum = WID_PRD_SCORE_FIRST; widnum <= WID_PRD_SCORE_LAST; widnum++) {
-		NWidgetBackground *panel = new NWidgetBackground(WWT_PANEL, COLOUR_BROWN, widnum);
+	auto vert = std::make_unique<NWidgetVertical>(NC_EQUALSIZE);
+	for (WidgetID widnum = WID_PRD_SCORE_FIRST; widnum <= WID_PRD_SCORE_LAST; widnum++) {
+		auto panel = std::make_unique<NWidgetBackground>(WWT_PANEL, COLOUR_BROWN, widnum);
 		panel->SetFill(1, 1);
 		panel->SetDataTip(0x0, performance_tips[widnum - WID_PRD_SCORE_FIRST]);
-		vert->Add(panel);
+		vert->Add(std::move(panel));
 	}
-	*biggest_index = WID_PRD_SCORE_LAST;
 	return vert;
 }
 
 /** Make a number of rows with buttons for each company for the performance rating detail window. */
-NWidgetBase *MakeCompanyButtonRowsGraphGUI(int *biggest_index)
+std::unique_ptr<NWidgetBase> MakeCompanyButtonRowsGraphGUI()
 {
-	return MakeCompanyButtonRows(biggest_index, WID_PRD_COMPANY_FIRST, WID_PRD_COMPANY_LAST, COLOUR_BROWN, 8, STR_PERFORMANCE_DETAIL_SELECT_COMPANY_TOOLTIP);
+	return MakeCompanyButtonRows(WID_PRD_COMPANY_FIRST, WID_PRD_COMPANY_LAST, COLOUR_BROWN, 8, STR_PERFORMANCE_DETAIL_SELECT_COMPANY_TOOLTIP);
 }
 
-static const NWidgetPart _nested_performance_rating_detail_widgets[] = {
+static constexpr NWidgetPart _nested_performance_rating_detail_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_PERFORMANCE_DETAIL, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1812,7 +1806,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 	StationCargoGraphWindow(WindowDesc *desc, WindowNumber window) :
 		BaseGraphWindow(desc, WID_SCG_GRAPH, STR_JUST_COMMA)
 	{
-		station_id = static_cast<uint16>(window);
+		station_id = static_cast<uint16_t>(window);
 
 		this->num_on_x_axis = MAX_STATION_CARGO_HISTORY_DAYS; // Four weeks
 		this->num_vert_lines = MAX_STATION_CARGO_HISTORY_DAYS;
@@ -1836,7 +1830,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		this->legend_excluded_cargo = 0;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_SCG_CAPTION) {
 			SetDParam(0, this->station_id);
@@ -1850,7 +1844,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 	{
 		this->excluded_data = 0;
 
-		uint8 i = 0;
+		uint8_t i = 0;
 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (!HasBit(this->present_cargoes, cs->Index())) continue;
 			if (HasBit(legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
@@ -1858,7 +1852,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget < WID_SCG_MATRIX) {
 			BaseGraphWindow::UpdateWidgetSize(widget, size, padding, fill, resize);
@@ -1880,7 +1874,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		resize->height = this->line_height;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget < WID_SCG_MATRIX) {
 			BaseGraphWindow::DrawWidget(r, widget);
@@ -1921,7 +1915,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		}
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_SCG_ENABLE_CARGOES:
@@ -1993,7 +1987,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 
 		this->UpdateExcludedData();
 
-		uint8 i = 0;
+		uint8_t i = 0;
 		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
 			if (!HasBit(this->present_cargoes, cs->Index())) continue;
 			this->colours[i] = cs->legend_colour;
@@ -2016,7 +2010,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 };
 
 
-static const NWidgetPart _nested_station_cargo_widgets[] = {
+static constexpr NWidgetPart _nested_station_cargo_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SCG_CAPTION), SetDataTip(STR_GRAPH_STATION_CARGO_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

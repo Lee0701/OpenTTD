@@ -27,7 +27,7 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 
-static const NWidgetPart _nested_plans_widgets[] = {
+static constexpr NWidgetPart _nested_plans_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_PLN_CAPTION), SetDataTip(STR_PLANS_CAPTION, STR_NULL),
@@ -108,7 +108,7 @@ struct PlansWindow : Window {
 		this->Window::Close();
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_PLN_NEW:
@@ -222,7 +222,7 @@ struct PlansWindow : Window {
 		}
 	}
 
-	virtual void OnDropdownSelect(int widget, int index) override
+	virtual void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_PLN_COLOUR:
@@ -262,7 +262,7 @@ struct PlansWindow : Window {
 		this->DrawWidgets();
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const override
+	virtual void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_PLN_LIST: {
@@ -280,7 +280,7 @@ struct PlansWindow : Window {
 				uint text_right = (rtl ? btn_left - 4 : ir.right);
 				const_cast<PlansWindow*>(this)->vis_btn_left = btn_left;
 
-				for (uint16 i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && i < this->vscroll->GetCount(); i++) {
+				for (uint16_t i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && i < this->vscroll->GetCount(); i++) {
 					Plan *p = Plan::Get(list[i].plan_id);
 
 					if (i == this->selected) GfxFillRect(r.left + 1, y, r.right, y + this->resize.step_height, PC_DARK_GREY);
@@ -316,7 +316,7 @@ struct PlansWindow : Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_PLN_COLOUR:
@@ -330,7 +330,7 @@ struct PlansWindow : Window {
 		this->vscroll->SetCapacityFromWidget(this, WID_PLN_LIST, WidgetDimensions::scaled.framerect.Vertical());
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	virtual void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_PLN_LIST:
@@ -353,7 +353,7 @@ struct PlansWindow : Window {
 
 			case WID_PLN_COLOUR: {
 				Dimension dim = GetStringBoundingBox(STR_PLANS_COLOUR);
-				for (uint8 colour = COLOUR_BEGIN; colour != COLOUR_END; ++colour) {
+				for (uint8_t colour = COLOUR_BEGIN; colour != COLOUR_END; ++colour) {
 					dim = maxdim(dim, GetStringBoundingBox(STR_COLOUR_DARK_BLUE + colour));
 				}
 				*size = adddim(dim, padding);
@@ -491,7 +491,7 @@ void ShowPlansWindow()
  * Only the creator of a plan executes this function.
  * The other players should not be bothered with these changes.
  */
-void CcAddPlan(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcAddPlan(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 

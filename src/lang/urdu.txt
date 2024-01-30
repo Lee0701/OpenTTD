@@ -843,7 +843,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}کرنس
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}کرنسی کی اکائی اختیار کریں
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :برطانوی پاونڈ
 STR_GAME_OPTIONS_CURRENCY_USD                                   :امریکی ڈالر
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :یورو
@@ -893,6 +893,7 @@ STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :{BLACK}مُکم
 STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}اسکرین کی resolution
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}اسکرین کی resolution اختیار کریں
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :دیگر
+
 
 
 
@@ -1335,6 +1336,7 @@ STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :مرمتی وق
 ###setting-zero-is-special
 
 STR_CONFIG_SETTING_NOSERVICE                                    :گاڑیوں کی خرابی غیر فعال ہونے کی صورت میں مرمت بھی غیر فعال کر دیں: {STRING}
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :مال گاڑی کی حد رفتار فعال کریں: {STRING}
 

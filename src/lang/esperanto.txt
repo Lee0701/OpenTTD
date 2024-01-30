@@ -1009,7 +1009,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Monunuoj
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Elekto de monunuoj
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Brita Pundo
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Usona Dolaro
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Eŭro
@@ -1086,6 +1086,7 @@ STR_GAME_OPTIONS_VIDEO_DRIVER_INFO                              :{BLACK}Nuna pel
 
 STR_GAME_OPTIONS_GUI_SCALE_FRAME                                :{BLACK}Interfacgrandeco
 STR_GAME_OPTIONS_GUI_SCALE_AUTO                                 :{BLACK}Aŭtomate rekonu grandecon
+
 
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
@@ -1783,6 +1784,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Malaktiva
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Malŝaltu prizorgadon se rompiĝoj ne okazas: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Kiam tiu ĉi agordo estas aktiva, veturiloj kiuj ne povas panei ne estos priservataj
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Aktivigu vagonajn rapideclimojn: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Kiam ebligita, ankaŭ uzu rapideco-limigojn de vagonoj por decidi la maksimuman rapidecon de trajno

@@ -26,7 +26,7 @@ struct ScreenshotWindow : Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		ScreenshotType st;
 		switch (widget) {
@@ -45,7 +45,7 @@ struct ScreenshotWindow : Window {
 	}
 };
 
-static const NWidgetPart _nested_screenshot[] = {
+static constexpr NWidgetPart _nested_screenshot[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_SCREENSHOT_CAPTION, 0),

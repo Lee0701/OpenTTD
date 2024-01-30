@@ -100,7 +100,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_PLT_BACKGROUND) return;
 
@@ -127,7 +127,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_PLT_BACKGROUND) return;
 
@@ -186,7 +186,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_performance_league_widgets[] = {
+static constexpr NWidgetPart _nested_performance_league_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_COMPANY_LEAGUE_TABLE_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -302,7 +302,7 @@ public:
 		this->InitNested(table);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_SLT_CAPTION) return;
 		SetDParamStr(0, this->title);
@@ -313,7 +313,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_SLT_BACKGROUND) return;
 
@@ -355,7 +355,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_SLT_BACKGROUND) return;
 
@@ -395,7 +395,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget != WID_SLT_BACKGROUND) return;
 
@@ -419,14 +419,14 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_script_league_widgets[] = {
+static constexpr NWidgetPart _nested_script_league_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_SLT_CAPTION), SetDataTip(STR_JUST_RAW_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_BROWN),
 		NWidget(WWT_STICKYBOX, COLOUR_BROWN),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_BROWN, WID_SLT_BACKGROUND), SetMinimalSize(400, 0), SetMinimalTextLines(15, WidgetDimensions::scaled.framerect.Vertical()),
+	NWidget(WWT_PANEL, COLOUR_BROWN, WID_SLT_BACKGROUND), SetMinimalSize(400, 0), SetMinimalTextLines(15, WidgetDimensions::unscaled.framerect.Vertical()),
 	EndContainer(),
 };
 

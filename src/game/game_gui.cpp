@@ -29,7 +29,7 @@
 
 
 /** Widgets for the configure GS window. */
-static const NWidgetPart _nested_gs_config_widgets[] = {
+static constexpr NWidgetPart _nested_gs_config_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE), SetDataTip(STR_AI_CONFIG_CAPTION_GAMESCRIPT, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -142,7 +142,7 @@ struct GSConfigWindow : public Window {
 		this->vscroll->SetCount(this->visible_settings.size());
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_GSC_SETTINGS:
@@ -168,7 +168,7 @@ struct GSConfigWindow : public Window {
 		return UserIsAllowedToChangeGameScript() || Game::GetInstance() != nullptr;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GSC_GSLIST: {
@@ -250,7 +250,7 @@ struct GSConfigWindow : public Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget >= WID_GSC_TEXTFILE && widget < WID_GSC_TEXTFILE + TFT_CONTENT_END) {
 			if (GameConfig::GetConfig() == nullptr) return;
@@ -376,18 +376,18 @@ struct GSConfigWindow : public Window {
 	void OnQueryTextFinished(char *str) override
 	{
 		if (StrEmpty(str)) return;
-		int32 value = atoi(str);
+		int32_t value = atoi(str);
 		SetValue(value);
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_GSC_SETTING_DROPDOWN) return;
 		assert(this->clicked_dropdown);
 		SetValue(index);
 	}
 
-	void OnDropdownClose(Point, int widget, int, bool) override
+	void OnDropdownClose(Point, WidgetID widget, int, bool) override
 	{
 		if (widget != WID_GSC_SETTING_DROPDOWN) return;
 		/* We cannot raise the dropdown button just yet. OnClick needs some hint, whether

@@ -634,6 +634,9 @@ STR_UNITS_HEIGHT_IMPERIAL                                       :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}m
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}m
 
+STR_UNITS_DAYS                                                  :{COMMA}{NBSP}d{P zień ni ni}
+STR_UNITS_SECONDS                                               :{COMMA}{NBSP}sekund{P a y ""}
+STR_UNITS_TICKS                                                 :{COMMA}{NBSP}tyknię{P cie cia ć}
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Filtr:
@@ -1098,6 +1101,7 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_ADD_TRACK                         :{BLACK}Kliknij 
 STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Kliknij na ścieżce muzycznej aby usunąć ją z wybranego programu (Wlasny1 lub Wlasny2)
 
 # Highscore window
+STR_HIGHSCORE_TOP_COMPANIES                                     :{BIG_FONT}{BLACK}Najlepsze firmy
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Biznesmen
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Przedsiębiorca
@@ -1147,7 +1151,7 @@ STR_SMALLMAP_LEGENDA_TRANSPORT_ROUTES                           :{TINY_FONT}{BLA
 STR_SMALLMAP_LEGENDA_FOREST                                     :{G=m}{TINY_FONT}{BLACK}Las
 STR_SMALLMAP_LEGENDA_FOREST.d                                   :{TINY_FONT}{BLACK}Lasu
 STR_SMALLMAP_LEGENDA_RAILROAD_STATION                           :{TINY_FONT}{BLACK}Stacja kolejowa
-STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Załadunek ciężarówek
+STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Stacja ciężarówek
 STR_SMALLMAP_LEGENDA_BUS_STATION                                :{TINY_FONT}{BLACK}Przystanek
 STR_SMALLMAP_LEGENDA_AIRPORT_HELIPORT                           :{TINY_FONT}{BLACK}Lotnisko
 STR_SMALLMAP_LEGENDA_DOCK                                       :{TINY_FONT}{BLACK}Port
@@ -1335,7 +1339,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Wybór w
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Funt brytyjski
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dolar amerykański
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1378,6 +1382,7 @@ STR_GAME_OPTIONS_CURRENCY_HKD                                   :Dolar hongkońs
 STR_GAME_OPTIONS_CURRENCY_INR                                   :Rupia Indyjska
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Rupia Indonezyjska
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Ringgit malezyjski
+STR_GAME_OPTIONS_CURRENCY_LVL                                   :Łat łotewski
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Autozapis
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Częstotliwość automatycznego zapisu stanu gry
@@ -1418,6 +1423,11 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Zaznacz 
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Skaluj fazy krawędzi
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Zaznacz to pole, aby skalować fazy krawędzi zgodnie z rozmiarem interfejsu
+
+STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}Użyj tradycyjnego fonta typu sprite
+STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Zaznacz to pole, jeśli wolisz używać tradycyjnego fonta typu sprite o stałym rozmiarze.
+STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Antyaliasing fontów
+STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Zaznacz to pole, aby wygładzać fonty o zmiennym rozmiarze.
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1744,7 +1754,7 @@ STR_CONFIG_SETTING_SHOWFINANCES_HELPTEXT                        :Jeśli włączo
 STR_CONFIG_SETTING_NONSTOP_BY_DEFAULT                           :Nowe polecenia są domyślnie „bez zatrzymywania się”: {STRING}
 STR_CONFIG_SETTING_NONSTOP_BY_DEFAULT_HELPTEXT                  :Normalnie pojazd zatrzyma się na każdej stacji, przez którą przejeżdża. Po włączeniu tej opcji, pojazd przejedzie do swojego celu bez zatrzymywania się. Zwróć uwagę na to, że to ustawienie ma wpływ tylko na nowe polecenia. Pojedyncze polecenia mogą być ustalane bez względu na wartość tej opcji
 
-STR_CONFIG_SETTING_STOP_LOCATION                                :Nowe rozkazy pociągu kończą się domyślnie na {STRING} peronu
+STR_CONFIG_SETTING_STOP_LOCATION                                :Nowe polecenia pociągu domyślnie kończą się na {STRING} peronu
 STR_CONFIG_SETTING_STOP_LOCATION_HELPTEXT                       :Miejsce, w którym pociąg domyślnie zatrzyma się na peronie. „Początek” oznacza blisko wjazdu, „środek” oznacza środkową część peronu, a „koniec” oznacza daleko od wjazdu. Pamiętaj, że to ustawienie określa tylko domyślną wartość dla nowych poleceń. Miejsce zatrzymania poszczególnych poleceń można ustawić, klikając na tekst danego polecenia
 ###length 3
 STR_CONFIG_SETTING_STOP_LOCATION_NEAR_END                       :początku
@@ -1813,7 +1823,7 @@ STR_CONFIG_SETTING_WARN_LOST_VEHICLE                            :Ostrzeż, jeśl
 STR_CONFIG_SETTING_WARN_LOST_VEHICLE_HELPTEXT                   :Pokazuj wiadomości o pojazdach, które nie są w stanie znaleźć ścieżki do swoich wyznaczonych celów
 
 STR_CONFIG_SETTING_ORDER_REVIEW                                 :Kontroluj polecenia pojazdów: {STRING}
-STR_CONFIG_SETTING_ORDER_REVIEW_HELPTEXT                        :Kiedy włączone, rozkazy wszystkich pojazdów są sprawdzane co jakiś czas, a wykryte nieprawidłowości są zgłaszane w oknach wiadomości
+STR_CONFIG_SETTING_ORDER_REVIEW_HELPTEXT                        :Kiedy włączone, polecenia wszystkich pojazdów są sprawdzane co jakiś czas, a wykryte nieprawidłowości są zgłaszane w oknach wiadomości
 ###length 3
 STR_CONFIG_SETTING_ORDER_REVIEW_OFF                             :Nie
 STR_CONFIG_SETTING_ORDER_REVIEW_EXDEPOT                         :Tak, ale wyklucz zatrzymane
@@ -1867,7 +1877,7 @@ STR_CONFIG_SETTING_LAND_GENERATOR_ORIGINAL                      :Oryginalny
 STR_CONFIG_SETTING_LAND_GENERATOR_TERRA_GENESIS                 :TerraGenesis
 
 STR_CONFIG_SETTING_TERRAIN_TYPE                                 :Typ terenu: {STRING}
-STR_CONFIG_SETTING_TERRAIN_TYPE_HELPTEXT                        :Określa ukształtowanie terenu (tylko dla TerraGenesis)
+STR_CONFIG_SETTING_TERRAIN_TYPE_HELPTEXT                        :Wybierz wysokość wzgórz i gór w krajobrazie
 
 STR_CONFIG_SETTING_INDUSTRY_DENSITY                             :Liczba przedsiębiorstw: {STRING}
 STR_CONFIG_SETTING_INDUSTRY_DENSITY_HELPTEXT                    :Określa liczbę przedsiębiorstw na początku i w trakcie gry
@@ -1876,18 +1886,18 @@ STR_CONFIG_SETTING_OIL_REF_EDGE_DISTANCE                        :Maksymalna odle
 STR_CONFIG_SETTING_OIL_REF_EDGE_DISTANCE_HELPTEXT               :Rafinerie są budowane tylko w pobliżu krawędzi map, to znaczy na wybrzeżach dla map wyspiarskich. To ustawienie pozwala ograniczyć jak daleko od krawędzi mapy mogą być budowane rafinerie i platformy wiertnicze. Na mapach większych niż 256 pól, wartość ta jest skalowana w górę.
 
 STR_CONFIG_SETTING_SNOWLINE_HEIGHT                              :Wysokość granicy wiecznych śniegów: {STRING}
-STR_CONFIG_SETTING_SNOWLINE_HEIGHT_HELPTEXT                     :Wysokość linii śniegu w klimacie arktycznym. Poziom pokrywy śnieżnej wpływa na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Może być zmodyfikowana poprzez Edytor Scenariuszy, w innym przypadku jest obliczana za pomocą ustawienia „pokrycie śniegiem”
+STR_CONFIG_SETTING_SNOWLINE_HEIGHT_HELPTEXT                     :Wybierz, na jakiej wysokości zaczyna zalegać śnieg w krajobrazie arktycznym. Poziom pokrywy śnieżnej wpływa na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Może być zmodyfikowana poprzez Edytor Scenariuszy, w innym przypadku jest obliczana za pomocą ustawienia „pokrycie śniegiem”
 
 STR_CONFIG_SETTING_SNOW_COVERAGE                                :Pokrycie śniegiem: {STRING}
-STR_CONFIG_SETTING_SNOW_COVERAGE_HELPTEXT                       :Ustawia przybliżoną ilość śniegu w krajobrazie arktycznym. Śnieg wpływa również wpływa na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Używane tylko podczas generowania mapy. Teren tuż ponad poziomem morza jest zawsze bez śniegu
+STR_CONFIG_SETTING_SNOW_COVERAGE_HELPTEXT                       :Wybierz przybliżoną ilość śniegu w krajobrazie arktycznym. Śnieg wpływa również wpływa na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Używane tylko podczas generowania mapy. Teren tuż ponad poziomem morza jest zawsze bez śniegu
 STR_CONFIG_SETTING_SNOW_COVERAGE_VALUE                          :{NUM}%
 
 STR_CONFIG_SETTING_DESERT_COVERAGE                              :Pokrycie pustynią: {STRING}
-STR_CONFIG_SETTING_DESERT_COVERAGE_HELPTEXT                     :Ustawia przybliżoną ilość pustyni w krajobrazie tropikalnym. Pustynia wpływa również wpływa na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Używane tylko podczas generowania mapy.
+STR_CONFIG_SETTING_DESERT_COVERAGE_HELPTEXT                     :Wybierz przybliżoną ilość pustyni w krajobrazie tropikalnym. Pustynia wpływa również na rozmieszczenie przedsiębiorstw i na warunki rozwoju miast. Używane tylko podczas generowania mapy
 STR_CONFIG_SETTING_DESERT_COVERAGE_VALUE                        :{NUM}%
 
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN                         :Gładkość terenu: {STRING}
-STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_HELPTEXT                :(Tylko dla TerraGenesis) Określa liczbę wzgórz na mapie. Łagodne krajobrazy posiadają nieliczne, bardzo rozległe wzgórza, natomiast na terenach pofałdowanych jest ich znacznie więcej i mogą wyglądać podobnie
+STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_HELPTEXT                :Wybierz kształt i ilość wzniesień. Łagodny teren ma mniejszą liczbę szerszych wzniesień, natomiast teren pofałdowany ma więcej mniejszych wzniesień.
 ###length 4
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_SMOOTH             :Bardzo łagodny
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_SMOOTH                  :Łagodny
@@ -1895,7 +1905,7 @@ STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_ROUGH                   :Pofałdowany
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_ROUGH              :Bardzo pofałdowany
 
 STR_CONFIG_SETTING_VARIETY                                      :Różnorodność terenu: {STRING}
-STR_CONFIG_SETTING_VARIETY_HELPTEXT                             :(Tylko dla TerraGenesis) Umożliwia jednoczesne występowanie obszarów górskich i płaskich. Działa na zasadzie obniżania powierzchni, dlatego inny parametr powinien definiować teren górzysty
+STR_CONFIG_SETTING_VARIETY_HELPTEXT                             :Wybierz, czy mapa ma zawierać zarówno obszary górskie, jak i płaskie. Im większa różnorodność, tym większe różnice wysokości między obszarami górskimi i płaskimi.
 
 STR_CONFIG_SETTING_RIVER_AMOUNT                                 :Liczba rzek: {STRING}
 STR_CONFIG_SETTING_RIVER_AMOUNT_HELPTEXT                        :Określa liczbę rzek na mapie
@@ -1915,6 +1925,7 @@ STR_CONFIG_SETTING_ROAD_SIDE_LEFT                               :Jazda po lewej
 STR_CONFIG_SETTING_ROAD_SIDE_RIGHT                              :Jazda po prawej
 
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION                           :Obrót mapy wysokości: {STRING}
+STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_TOOLTIP                   :Wybierz kierunek obrotu mapy wysokości, aby dopasować ją do świata gry
 ###length 2
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_COUNTER_CLOCKWISE         :Przeciwnie do wsk. zegara
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_CLOCKWISE                 :Zgodnie ze wsk. zegara
@@ -2035,7 +2046,12 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Wlącz obsług�
 STR_CONFIG_SETTING_LOADING_INDICATORS                           :Pokazuj wskaźniki załadunku: {STRING}
 STR_CONFIG_SETTING_LOADING_INDICATORS_HELPTEXT                  :Wybierz, czy wskaźnik załadunku pokazuje się nad ładowanym/rozładowywanym pojazdem
 
+STR_CONFIG_SETTING_TIMETABLE_MODE                               :Jednostki czasu w rozkładach jazdy: {STRING}
+STR_CONFIG_SETTING_TIMETABLE_MODE_HELPTEXT                      :Wybierz jednostki czasu używane w rozkładach jazdy pojazdów
 ###length 3
+STR_CONFIG_SETTING_TIMETABLE_MODE_DAYS                          :Dni
+STR_CONFIG_SETTING_TIMETABLE_MODE_SECONDS                       :Sekundy
+STR_CONFIG_SETTING_TIMETABLE_MODE_TICKS                         :Tyknięcia
 
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE             :Pokazuj przyjazdy i odjazdy w rozkładach: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_SHOW_ARRIVAL_DEPARTURE_HELPTEXT    :Wyświetlanie przewidywanego przyjazdu i odjazdu w rozkładach
@@ -2146,6 +2162,9 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Wyłączone
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Wyłącz serwisowanie jeśli awarie pojazdów są wyłączone: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Kiedy włączone, pojazdy nie są serwisowane, jeśli nie mogą się popsuć
+
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY               :Obniżenie prędkości załadunku pociągów dłuższych niż stacja: {STRING}
+STR_CONFIG_SETTING_STATION_LENGTH_LOADING_PENALTY_HELPTEXT      :Gdy opcja ta jest włączona, pociągi dłuższe od stacji ładują się wolniej niż pociągi, które mieszczą się na stacji. To ustawienie nie wpływa na znajdowanie tras.
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Włącz limity prędkości wagonów: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Kiedy włączone, użyj także ograniczenia prędkości dla wagonów do obliczenia maksymalnej prędkości pociągu
@@ -2422,14 +2441,17 @@ STR_CONFIG_SETTING_ACCOUNTING                                   :Finanse
 STR_CONFIG_SETTING_VEHICLES                                     :Pojazdy
 STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :Fizyka
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :Wyznaczanie trasy
+STR_CONFIG_SETTING_VEHICLES_ORDERS                              :Polecenia
 STR_CONFIG_SETTING_LIMITATIONS                                  :Ograniczenia
 STR_CONFIG_SETTING_ACCIDENTS                                    :Awarie i katastrofy
 STR_CONFIG_SETTING_GENWORLD                                     :Tworzenie mapy
 STR_CONFIG_SETTING_ENVIRONMENT                                  :Środowisko
+STR_CONFIG_SETTING_ENVIRONMENT_TIME                             :Czas
 STR_CONFIG_SETTING_ENVIRONMENT_AUTHORITIES                      :Władze lokalne
 STR_CONFIG_SETTING_ENVIRONMENT_TOWNS                            :Miasta
 STR_CONFIG_SETTING_ENVIRONMENT_INDUSTRIES                       :Przedsiębiorstwa
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST                        :Dystrybucja ładunków
+STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :Drzewa
 STR_CONFIG_SETTING_AI                                           :Rywale
 STR_CONFIG_SETTING_AI_NPC                                       :Gracze komputerowi
 STR_CONFIG_SETTING_NETWORK                                      :Sieć
@@ -2566,12 +2588,20 @@ STR_LIVERY_TRAIN_TOOLTIP                                        :{BLACK}Pokaż s
 STR_LIVERY_ROAD_VEHICLE_TOOLTIP                                 :{BLACK}Pokaż schematy koloru pojazdów
 STR_LIVERY_SHIP_TOOLTIP                                         :{BLACK}Pokaż schematy koloru statków
 STR_LIVERY_AIRCRAFT_TOOLTIP                                     :{BLACK}Pokaż schematy koloru samolotów
+STR_LIVERY_TRAIN_GROUP_TOOLTIP                                  :{BLACK}Pokaż kolory grup pociągów
+STR_LIVERY_ROAD_VEHICLE_GROUP_TOOLTIP                           :{BLACK}Pokaż kolory grup pojazdów
+STR_LIVERY_SHIP_GROUP_TOOLTIP                                   :{BLACK}Pokaż kolory grup statków
+STR_LIVERY_AIRCRAFT_GROUP_TOOLTIP                               :{BLACK}Pokaż kolory grup samolotów
 STR_LIVERY_PRIMARY_TOOLTIP                                      :{BLACK}Wybierz główny kolor dla wybranego schematu. Ctrl+klik ustawi ten kolor dla wszystkich schematów
 STR_LIVERY_SECONDARY_TOOLTIP                                    :{BLACK}Wybierz dodatkowy kolor dla wybranego schematu. Ctrl+klik ustawi ten kolor dla wszystkich schematów
 STR_LIVERY_PANEL_TOOLTIP                                        :{BLACK}Wybierz schemat kolorów do zmiany, albo wiele schematów z CTRL+klik. Kliknij na okienku aby wł./wył. używanie schematu.
+STR_LIVERY_TRAIN_GROUP_EMPTY                                    :Nie utworzono żadnych grup pociągów
+STR_LIVERY_ROAD_VEHICLE_GROUP_EMPTY                             :Nie utworzono żadnych grup pojazdów
+STR_LIVERY_SHIP_GROUP_EMPTY                                     :Nie utworzono żadnych grup statków
+STR_LIVERY_AIRCRAFT_GROUP_EMPTY                                 :Nie utworzono żadnych grup samolotów
 
 ###length 23
-STR_LIVERY_DEFAULT                                              :Standardowy wygląd
+STR_LIVERY_DEFAULT                                              :Domyślne malowanie
 STR_LIVERY_STEAM                                                :Parowóz
 STR_LIVERY_DIESEL                                               :Lokomotywa spalinowa
 STR_LIVERY_ELECTRIC                                             :Lokomotywa elektryczna
@@ -2724,7 +2754,7 @@ STR_NETWORK_START_SERVER_NEW_GAME_NAME_TOOLTIP                  :{BLACK}Nazwa gr
 STR_NETWORK_START_SERVER_SET_PASSWORD                           :{BLACK}Ustaw hasło
 STR_NETWORK_START_SERVER_PASSWORD_TOOLTIP                       :{BLACK}Zabezpiecz grę hasłem jeśli nie chcesz, by była publicznie dostępna
 
-STR_NETWORK_START_SERVER_VISIBILITY_LABEL                       :{BLACK}Widoczność
+STR_NETWORK_START_SERVER_VISIBILITY_LABEL                       :{BLACK}Widoczność:
 STR_NETWORK_START_SERVER_VISIBILITY_TOOLTIP                     :{BLACK}Czy inni ludzie mogą zobaczyć twój serwer na publicznej liście
 STR_NETWORK_START_SERVER_CLIENTS_SELECT                         :{BLACK}{NUM} klient{P "" ów ów}
 STR_NETWORK_START_SERVER_NUMBER_OF_CLIENTS                      :{BLACK}Dopuszczalna liczba klientów:
@@ -3079,9 +3109,9 @@ STR_RAIL_TOOLBAR_MAGLEV_CONSTRUCTION_CAPTION                    :Konstrukcja lin
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TRACK                   :{BLACK}Budowa torów kolejowych. Ctrl przełącza buduj/usuń dla konstrukcji kolejowych. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_AUTORAIL                         :{BLACK}Zbuduj tory kolejowe za pomocą trybu Autotory. Ctrl przełącza buduj/usuń dla konstrukcji kolejowych. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_TRAIN_DEPOT_FOR_BUILDING         :{BLACK}Budowa warsztatów (do kupowania i serwisowania pociągów). Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
-STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_TO_WAYPOINT               :{BLACK}Zamiana torów na posterunek. Ctrl umożliwia łączenie posterunków. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
+STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_TO_WAYPOINT               :{BLACK}Zbuduj posterunek na torach. Ctrl umożliwia łączenie posterunków. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_STATION                 :{BLACK}Zbuduj stację kolejową. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
-STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_SIGNALS                 :{BLACK}Zbuduj sygnały kolejowe. Ctrl przełącza semafory/sygnały świetlne{}Przeciągnięcie pozwala na budowę sygnałów wzdłuż prostej linii torów. Ctrl pozwala na budowę sygnałów do następnego skrzyżowania{}Ctrl+klik przełącza do okna wyboru sygnałów. Shift przełącza pomiędzy budowaniem a szacowaniem kosztów
+STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_SIGNALS                 :{BLACK}Zbuduj sygnały na torach. Ctrl przełącza semafory/sygnały świetlne{}Przeciąganie buduje sygnały wzdłuż prostej linii torów, z Ctrl buduje sygnały aż do najbliższego skrzyżowania lub sygnału{}Ctrl+klik przełącza wyświetlanie okna wyboru sygnałów. Shift przełącza pomiędzy budowaniem a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_BRIDGE                  :{BLACK}Zbuduj most kolejowy. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TUNNEL                  :{BLACK}Zbuduj tunel kolejowy. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_RAIL_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR                :{BLACK}Przełącz buduj/usuń dla torów kolejowych, sygnałów, posterunków i stacji. Przetrzymanie Ctrl usuwa także tory kolejowe z posterunków i stacji
@@ -3169,7 +3199,7 @@ STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_VEHICLE_DEPOT               :{BLACK}Wybuduj 
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRAM_VEHICLE_DEPOT               :{BLACK}Wybuduj zajezdnię tramwajową (do kupowania i serwisowania pojazdów). Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_BUS_STATION                      :{BLACK}Zbuduj przystanek autobusowy. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_PASSENGER_TRAM_STATION           :{BLACK}Zbuduj pasażerski przystanek tramwajowy. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
-STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRUCK_LOADING_BAY                :{BLACK}Zbuduj stację załadunku ciężarówek. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
+STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRUCK_LOADING_BAY                :{BLACK}Zbuduj stację ciężarówek. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_CARGO_TRAM_STATION               :{BLACK}Zbuduj tramwajową stację załadunkową. Ctrl umożliwia łączenie stacji. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
 STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_ONE_WAY_ROAD                    :{BLACK}Włącz/wyłącz drogi jednokierunkowe
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_BRIDGE                      :{BLACK}Zbuduj most drogowy. Shift przełącza pomiędzy trybem budowania a szacowaniem jego kosztów
@@ -3194,7 +3224,7 @@ STR_BUILD_DEPOT_TRAM_ORIENTATION_SELECT_TOOLTIP                 :{BLACK}Wybierz 
 STR_STATION_BUILD_BUS_ORIENTATION                               :{WHITE}Ukierunkowanie przystanku
 STR_STATION_BUILD_BUS_ORIENTATION_TOOLTIP                       :{BLACK}Wybierz ukierunkowanie przystanku
 STR_STATION_BUILD_TRUCK_ORIENTATION                             :{WHITE}Ukierunkowanie stacji załadunku ciężarówek
-STR_STATION_BUILD_TRUCK_ORIENTATION_TOOLTIP                     :{BLACK}Wybierz ukierunkowanie stacji załadunku ciężarówek
+STR_STATION_BUILD_TRUCK_ORIENTATION_TOOLTIP                     :{BLACK}Wybierz ukierunkowanie stacji ciężarówek
 STR_STATION_BUILD_PASSENGER_TRAM_ORIENTATION                    :{WHITE}Ukierunkowanie przystanku tramwajowego
 STR_STATION_BUILD_PASSENGER_TRAM_ORIENTATION_TOOLTIP            :{BLACK}Wybierz ukierunkowanie przystanku tramwajowego
 STR_STATION_BUILD_CARGO_TRAM_ORIENTATION                        :{WHITE}Ukierunkowanie tramwajowej stacji załadunkowej
@@ -3372,7 +3402,7 @@ STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Właści
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Lokalne władze: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :Brak
 STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Współrzędne: {LTBLUE}{NUM} x {NUM} x {NUM} ({STRING})
-STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Zbudowano: {LTBLUE}{DATE_LONG}
+STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Zbudowano/odnowiono: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Rodzaj stacji: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Typ stacji: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_AIRPORT_CLASS                         :{BLACK}Rodzaj lotniska: {LTBLUE}{STRING}
@@ -3438,7 +3468,7 @@ STR_LAI_TREE_NAME_CACTUS_PLANTS                                 :Kaktusy
 STR_LAI_STATION_DESCRIPTION_RAILROAD_STATION                    :Stacja kolejowa
 STR_LAI_STATION_DESCRIPTION_AIRCRAFT_HANGAR                     :Hangar
 STR_LAI_STATION_DESCRIPTION_AIRPORT                             :Lotnisko
-STR_LAI_STATION_DESCRIPTION_TRUCK_LOADING_AREA                  :Stacja załadunku ciężarówek
+STR_LAI_STATION_DESCRIPTION_TRUCK_LOADING_AREA                  :Stacja ciężarówek
 STR_LAI_STATION_DESCRIPTION_BUS_STATION                         :Przystanek
 STR_LAI_STATION_DESCRIPTION_SHIP_DOCK                           :Port
 STR_LAI_STATION_DESCRIPTION_BUOY                                :Boja
@@ -3579,11 +3609,15 @@ STR_MAPGEN_MAPSIZE                                              :{BLACK}Rozmiar 
 STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Wybierz rozmiar mapy w kwadratach. Liczba dostępnych kwadratów będzie nieco mniejsza
 STR_MAPGEN_BY                                                   :{BLACK}*
 STR_MAPGEN_NUMBER_OF_TOWNS                                      :{BLACK}Liczba miast:
+STR_MAPGEN_NUMBER_OF_TOWNS_TOOLTIP                              :{BLACK}Wybierz gęstość rozmieszczenia miast lub podaj ich określoną liczbę
 STR_MAPGEN_TOWN_NAME_LABEL                                      :{BLACK}Nazwy miast:
 STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP                           :{BLACK}Wybierz styl nazw miast
 STR_MAPGEN_DATE                                                 :{BLACK}Data:
+STR_MAPGEN_DATE_TOOLTIP                                         :{BLACK}Wybierz datę początkową
 STR_MAPGEN_NUMBER_OF_INDUSTRIES                                 :{BLACK}Liczba przedsiębiorstw:
+STR_MAPGEN_NUMBER_OF_INDUSTRIES_TOOLTIP                         :{BLACK}Wybierz gęstość rozmieszczenia przedsiębiorstw lub podaj ich określoną liczbę
 STR_MAPGEN_HEIGHTMAP_HEIGHT                                     :{BLACK}Najwyższy szczyt:
+STR_MAPGEN_HEIGHTMAP_HEIGHT_TOOLTIP                             :{BLACK}Wybierz najwyższy szczyt, który gra spróbuje utworzyć, mierzony wysokością nad poziomem morza
 STR_MAPGEN_HEIGHTMAP_HEIGHT_UP                                  :{BLACK}Zwiększ wysokość najwyższego szczytu na mapie o jeden poziom
 STR_MAPGEN_HEIGHTMAP_HEIGHT_DOWN                                :{BLACK}Zmniejsz wysokość najwyższego szczytu na mapie o jeden poziom
 STR_MAPGEN_SNOW_COVERAGE                                        :{BLACK}Pokrycie śniegiem:
@@ -3595,11 +3629,13 @@ STR_MAPGEN_DESERT_COVERAGE_UP                                   :{BLACK}Zwiększ
 STR_MAPGEN_DESERT_COVERAGE_DOWN                                 :{BLACK}Zmniejsz pokrycie pustynią o 10%
 STR_MAPGEN_DESERT_COVERAGE_TEXT                                 :{BLACK}{NUM}%
 STR_MAPGEN_TERRAIN_TYPE                                         :{BLACK}Typ terenu:
-STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Poziom wody:
+STR_MAPGEN_SEA_LEVEL                                            :{BLACK}Poziom morza:
+STR_MAPGEN_SEA_LEVEL_TOOLTIP                                    :{BLACK}Określ wysokość poziomu morza
 STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Liczba rzek:
 STR_MAPGEN_SMOOTHNESS                                           :{BLACK}Gładkość:
 STR_MAPGEN_VARIETY                                              :{BLACK}Różnorodność:
 STR_MAPGEN_GENERATE                                             :{WHITE}Stwórz
+STR_MAPGEN_GENERATE_TOOLTIP                                     :{BLACK}Stwórz świat i graj w OpenTTD!
 STR_MAPGEN_NEWGRF_SETTINGS                                      :{BLACK}Ustawienia NewGRF
 STR_MAPGEN_NEWGRF_SETTINGS_TOOLTIP                              :{BLACK}Wyświetl ustawienia NewGRF
 STR_MAPGEN_AI_SETTINGS                                          :{BLACK}Ustawienia SI
@@ -3632,6 +3668,7 @@ STR_MAPGEN_TOWN_NAME_CATALAN                                    :Katalońskie
 
 # Strings for map borders at game generation
 STR_MAPGEN_BORDER_TYPE                                          :{BLACK}Krańce mapy:
+STR_MAPGEN_BORDER_TYPE_TOOLTIP                                  :{BLACK}Wybierz obrzeża świata gry
 STR_MAPGEN_NORTHWEST                                            :{BLACK}Płn.-zach.
 STR_MAPGEN_NORTHEAST                                            :{BLACK}Płn.-wsch.
 STR_MAPGEN_SOUTHEAST                                            :{BLACK}Płd.-wsch.
@@ -3644,7 +3681,9 @@ STR_MAPGEN_BORDER_MANUAL                                        :{BLACK}Użytkow
 
 STR_MAPGEN_HEIGHTMAP_ROTATION                                   :{BLACK}Obrót mapy wysokości:
 STR_MAPGEN_HEIGHTMAP_NAME                                       :{BLACK}Nazwa mapy wysokosci:
+STR_MAPGEN_HEIGHTMAP_NAME_TOOLTIP                               :{BLACK}Nazwa pliku obrazu mapy wysokości
 STR_MAPGEN_HEIGHTMAP_SIZE_LABEL                                 :{BLACK}Rozmiar:
+STR_MAPGEN_HEIGHTMAP_SIZE_LABEL_TOOLTIP                         :{BLACK}Rozmiar źródłowego obrazu mapy wysokości. Aby uzyskać najlepsze wyniki, każda krawędź powinna odpowiadać dostępnej długości krawędzi mapy w OpenTTD, takiej jak 256, 512, 1024 itd.
 STR_MAPGEN_HEIGHTMAP_SIZE                                       :{ORANGE}{NUM} x {NUM}
 
 STR_MAPGEN_TERRAIN_TYPE_QUERY_CAPT                              :{WHITE}Żądana wysokość najwyższego szczytu
@@ -3659,6 +3698,7 @@ STR_SE_MAPGEN_FLAT_WORLD                                        :{WHITE}Płaski 
 STR_SE_MAPGEN_FLAT_WORLD_TOOLTIP                                :{BLACK}Stwórz płaski świat
 STR_SE_MAPGEN_RANDOM_LAND                                       :{WHITE}Losowy teren
 STR_SE_MAPGEN_FLAT_WORLD_HEIGHT                                 :{BLACK}Wysokość płaskiego świata:
+STR_SE_MAPGEN_FLAT_WORLD_HEIGHT_TOOLTIP                         :{BLACK}Wybierz wysokość terenu nad poziomem morza
 STR_SE_MAPGEN_FLAT_WORLD_HEIGHT_DOWN                            :{BLACK}Obniż wysokość terenu o jeden w dół
 STR_SE_MAPGEN_FLAT_WORLD_HEIGHT_UP                              :{BLACK}Podnieś wysokość terenu o jeden w górę
 
@@ -4925,21 +4965,21 @@ STR_ORDER_STOP_LOCATION_FAR_END                                 :[dalszy koniec]
 
 STR_ORDER_OUT_OF_RANGE                                          :{RED} (Kolejny punkt docelowy jest poza zasięgiem)
 
-STR_ORDER_CONDITIONAL_UNCONDITIONAL                             :Skocz do rozkazu {COMMA}
-STR_ORDER_CONDITIONAL_NUM                                       :Skocz do rozkazu {COMMA} kiedy {STRING} {STRING} {COMMA}
-STR_ORDER_CONDITIONAL_TRUE_FALSE                                :Skocz do rozkazu {0:COMMA} kiedy {2:STRING} że {1:STRING}
+STR_ORDER_CONDITIONAL_UNCONDITIONAL                             :Skocz do polecenia {COMMA}
+STR_ORDER_CONDITIONAL_NUM                                       :Skocz do polecenia {COMMA}, kiedy {STRING} {STRING} {COMMA}
+STR_ORDER_CONDITIONAL_TRUE_FALSE                                :Skocz do polecenia {0:COMMA}, kiedy {2:STRING}, że {1:STRING}
 
 STR_INVALID_ORDER                                               :{RED} (Błędne polecenie)
 
 # Time table window
 STR_TIMETABLE_TITLE                                             :{WHITE}{VEHICLE} (Rozkład jazdy)
-STR_TIMETABLE_ORDER_VIEW                                        :{BLACK}Rozkazy
+STR_TIMETABLE_ORDER_VIEW                                        :{BLACK}Polecenia
 STR_TIMETABLE_ORDER_VIEW_TOOLTIP                                :{BLACK}Przełącz do okna poleceń
 
 STR_TIMETABLE_TOOLTIP                                           :{BLACK}Rozkład jazdy - kliknij na poleceniu aby je zaznaczyć
 
 STR_TIMETABLE_NO_TRAVEL                                         :Nie podróżuje
-STR_TIMETABLE_NOT_TIMETABLEABLE                                 :Podróż (automatycznie; zaplanowana przez następny ręczny rozkaz)
+STR_TIMETABLE_NOT_TIMETABLEABLE                                 :Podróż (automatycznie; zaplanowana przez następne ręczne polecenie)
 STR_TIMETABLE_TRAVEL_NOT_TIMETABLED                             :Przejazd (bez ustalonego czasu)
 STR_TIMETABLE_TRAVEL_NOT_TIMETABLED_SPEED                       :Podróżuj (poza rozkładem) z maksymalną prędkością {2:VELOCITY}
 STR_TIMETABLE_TRAVEL_FOR                                        :Przejazd przez {STRING}
@@ -4958,8 +4998,13 @@ STR_TIMETABLE_STATUS_ON_TIME                                    :{BLACK}Ten poja
 STR_TIMETABLE_STATUS_LATE                                       :{BLACK}Ten pojazd jest teraz spóźniony o {STRING}
 STR_TIMETABLE_STATUS_EARLY                                      :{BLACK}Ten pojazd spieszy się teraz o {STRING}
 STR_TIMETABLE_STATUS_NOT_STARTED                                :{BLACK}Ten rozkład jazdy jeszcze się nie rozpoczął
+STR_TIMETABLE_STATUS_START_AT_DATE                              :{BLACK}Ten rozkład jazdy rozpocznie się {STRING}
+STR_TIMETABLE_STATUS_START_IN_SECONDS                           :{BLACK}Ten rozkład jazdy rozpocznie się za {COMMA} sekund{P ę y ""}
 
+STR_TIMETABLE_START                                             :{BLACK}Początek rozkładu
+STR_TIMETABLE_START_TOOLTIP                                     :{BLACK}Wybierz moment rozpoczęcia tego rozkładu jazdy. Ctrl+klik rozłoży równomiernie momenty startu wszystkich pojazdów współdzielących te polecenia w oparciu o ich względną kolejność, o ile rozkład jest w pełni zaplanowany
 
+STR_TIMETABLE_START_SECONDS_QUERY                               :Sekundy do uruchomienia rozkładu jazdy
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Zmień czas
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Zmień ilość czasu, jaką powinno zająć zaznaczone polecenie. Ctrl+klik ustala czas dla wszystkich poleceń
@@ -4983,6 +5028,10 @@ STR_TIMETABLE_EXPECTED                                          :{BLACK}Wymagany
 STR_TIMETABLE_SCHEDULED                                         :{BLACK}Zaplanowany
 STR_TIMETABLE_EXPECTED_TOOLTIP                                  :{BLACK}Przełącz między spodziewanymi i zaplanowanymi
 
+STR_TIMETABLE_ARRIVAL_DATE                                      :P: {COLOUR}{DATE_TINY}
+STR_TIMETABLE_DEPARTURE_DATE                                    :O: {COLOUR}{DATE_TINY}
+STR_TIMETABLE_ARRIVAL_SECONDS_IN_FUTURE                         :P: {COLOUR}{COMMA} s
+STR_TIMETABLE_DEPARTURE_SECONDS_IN_FUTURE                       :O: {COLOUR}{COMMA} s
 
 
 # Date window (for timetable)
@@ -5010,9 +5059,9 @@ STR_AI_DEBUG_MATCH_CASE                                         :{BLACK}Uwzględ
 STR_AI_DEBUG_MATCH_CASE_TOOLTIP                                 :{BLACK}Przełącz uwzględnianie wielkości liter przy porównywaniu wyrazu przerywającego
 STR_AI_DEBUG_CONTINUE                                           :{BLACK}Kontynuuj
 STR_AI_DEBUG_CONTINUE_TOOLTIP                                   :{BLACK}Odpauzowanie i kontynuuowanie SI
-STR_AI_DEBUG_SELECT_AI_TOOLTIP                                  :{BLACK}Pokaż okno debugowania tej SI
+STR_AI_DEBUG_SELECT_AI_TOOLTIP                                  :{BLACK}Pokaż okno debugowania tej SI. Ctrl+klik otworzy w nowym oknie
 STR_AI_GAME_SCRIPT                                              :{BLACK}Game Script
-STR_AI_GAME_SCRIPT_TOOLTIP                                      :{BLACK}Sprawdź log Game Script
+STR_AI_GAME_SCRIPT_TOOLTIP                                      :{BLACK}Sprawdź log Game Script. Ctrl+klik otworzy w nowym oknie
 
 STR_ERROR_AI_NO_AI_FOUND                                        :Nie znaleziono SI do wczytania.{}SI jest nieaktywne i nic nie robi.{}Możesz pobrać kilka SI z przeglądarki „Dodatków Online”
 STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}Jeden z uruchomionych skryptów przestał działać. Prosimy o zgłoszenie tego autorowi skryptu dołączając zrzut ekranu okna debugowania SI / GameScript
@@ -5287,7 +5336,7 @@ STR_ERROR_DRIVE_THROUGH_JUNCTION                                :{WHITE}... przy
 STR_ERROR_CAN_T_REMOVE_PART_OF_STATION                          :{WHITE}Nie można usunąć części stacji...
 STR_ERROR_MUST_REMOVE_RAILWAY_STATION_FIRST                     :{WHITE}Należy najpierw usunąć stację kolejową
 STR_ERROR_CAN_T_REMOVE_BUS_STATION                              :{WHITE}Nie można usunąć przystanku...
-STR_ERROR_CAN_T_REMOVE_TRUCK_STATION                            :{WHITE}Nie można usunąć stacji załadunkowej...
+STR_ERROR_CAN_T_REMOVE_TRUCK_STATION                            :{WHITE}Nie można usunąć stacji ciężarówek...
 STR_ERROR_CAN_T_REMOVE_PASSENGER_TRAM_STATION                   :{WHITE}Nie można usunąć przystanku tramwajowego...
 STR_ERROR_CAN_T_REMOVE_CARGO_TRAM_STATION                       :{WHITE}Nie można usunąć tramwajowej stacji załadunkowej...
 STR_ERROR_MUST_REMOVE_ROAD_STOP_FIRST                           :{WHITE}Należy najpierw usunąć przystanek
@@ -5524,7 +5573,7 @@ STR_ERROR_CAN_T_SKIP_ORDER                                      :{WHITE}Nie moż
 STR_ERROR_CAN_T_SKIP_TO_ORDER                                   :{WHITE}Nie można przejść do wybranego polecenia...
 STR_ERROR_CAN_T_COPY_SHARE_ORDER                                :{WHITE}... pojazd nie może jechać do wszystkich stacji
 STR_ERROR_CAN_T_ADD_ORDER                                       :{WHITE}... pojazd nie może jechać do tej stacji
-STR_ERROR_CAN_T_ADD_ORDER_SHARED                                :{WHITE}... pojazd dzielący ten rozkaz nie może jechać do tej stacji
+STR_ERROR_CAN_T_ADD_ORDER_SHARED                                :{WHITE}... pojazd współdzielący to polecenie nie może jechać do tej stacji
 STR_ERROR_CAN_T_COPY_ORDER_VEHICLE_LIST                         :{WHITE}... nie wszystkie pojazdy mają takie same polecenia
 STR_ERROR_CAN_T_SHARE_ORDER_VEHICLE_LIST                        :{WHITE}... nie wszystkie pojazdy współdzielą polecenia
 

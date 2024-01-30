@@ -1019,7 +1019,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Měna
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Výběr jednotek měny
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Libra
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dolar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1100,6 +1100,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Zaškrtn
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Škálovat úkosy
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Zaškrtni toto políčko pro škálování úkosů dle velikosti uživatelského rozhraní
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1815,6 +1816,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Vypnuto
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Vypnout servisy, když jsou vypnuty poruchy: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Pokud je zapnuto a zároveň jsou vypnuty poruchy, vozidla nebudou vůbec jezdit do servisu, protože se nemohou nikdy porouchat
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Zapnout omezení rychlosti vagonů: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Pokud zapnuto, použije rychlostní omezení vagónů při stanovení maximální rychlosti vlaku

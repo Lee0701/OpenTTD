@@ -883,7 +883,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Muntienh
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Muntienheidseleksje
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Britske Pûn
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikaanske Dollars
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -944,6 +944,7 @@ STR_GAME_OPTIONS_RESOLUTION                                     :{BLACK}Skermres
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :{BLACK}Selektearje de skermresolutje om te brûken
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oars
 STR_GAME_OPTIONS_RESOLUTION_ITEM                                :{NUM}x{NUM}
+
 
 
 
@@ -1591,6 +1592,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Útskeakele
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Gjin ûnderhald as stikken gean út steat: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :By ynskeakeljen sille fiertugen gjin ûnderhâld krije at sy net kapot gean kinne
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Wagon snelheids limiet: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :By ynskeakeljen sille de faasjelimyten fan de weinen meinaam wurde by it bepalen fan de maksimale faasje foar in trein

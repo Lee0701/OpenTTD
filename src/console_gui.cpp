@@ -40,7 +40,7 @@ static const uint ICON_BOTTOM_BORDERWIDTH = 12;
 struct IConsoleLine {
 	std::string buffer;     ///< The data to store.
 	TextColour colour;      ///< The colour of the line.
-	uint16 time;            ///< The amount of time the line is in the backlog.
+	uint16_t time;          ///< The amount of time the line is in the backlog.
 
 	IConsoleLine() : buffer(), colour(TC_BEGIN), time(0)
 	{
@@ -100,7 +100,7 @@ static const char *IConsoleHistoryAdd(const char *cmd);
 static void IConsoleHistoryNavigate(int direction);
 static void IConsoleTabCompletion();
 
-static const struct NWidgetPart _nested_console_window_widgets[] = {
+static constexpr NWidgetPart _nested_console_window_widgets[] = {
 	NWidget(WWT_EMPTY, INVALID_COLOUR, WID_C_BACKGROUND), SetResize(1, 1),
 };
 
@@ -206,7 +206,7 @@ struct IConsoleWindow : Window
 		if (_iconsole_cmdline.HandleCaret()) this->SetDirty();
 	}
 
-	EventState OnKeyPress(WChar key, uint16 keycode) override
+	EventState OnKeyPress(char32_t key, uint16_t keycode) override
 	{
 		if (_focused_window != this) return ES_NOT_HANDLED;
 
@@ -281,7 +281,7 @@ struct IConsoleWindow : Window
 		return ES_HANDLED;
 	}
 
-	void InsertTextString(int, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end) override
+	void InsertTextString(WidgetID, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end) override
 	{
 		if (_iconsole_cmdline.InsertString(str, marked, caret, insert_location, replacement_end)) {
 			IConsoleWindow::scroll = 0;
@@ -485,8 +485,8 @@ static void IConsoleTabCompletion()
 			const char *cmdp = cmd_name;
 			while (true) {
 				const char *end = cmdp;
-				WChar a = Utf8Consume(cp);
-				WChar b = Utf8Consume(cmdp);
+				char32_t a = Utf8Consume(cp);
+				char32_t b = Utf8Consume(cmdp);
 				if (a == 0 || b == 0 || a != b) {
 					common_prefix.resize(end - cmd_name);
 					break;
@@ -528,9 +528,9 @@ static void IConsoleTabCompletion()
  * @param colour_code the colour of the command. Red in case of errors, etc.
  * @param str the message entered or output on the console (notice, error, etc.)
  */
-void IConsoleGUIPrint(TextColour colour_code, char *str)
+void IConsoleGUIPrint(TextColour colour_code, std::string str)
 {
-	_iconsole_buffer.push_front(IConsoleLine(str, colour_code));
+	_iconsole_buffer.push_front(IConsoleLine(std::move(str), colour_code));
 	SetWindowDirty(WC_CONSOLE, 0);
 }
 

@@ -277,7 +277,7 @@ STR_EXTRA_VIEW_MOVE_MAIN_TO_VIEW_TT                             :{BLACK}इस �
 
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_FIM                                   :फिनलैंड मार्का
 STR_GAME_OPTIONS_CURRENCY_ISK                                   :आइसलैंडिक क्रोना
 STR_GAME_OPTIONS_CURRENCY_HKD                                   :हाँग काँग डॉलर
@@ -296,6 +296,7 @@ STR_GAME_OPTIONS_VIDEO_ACCELERATION                             :{BLACK}हा�
 
 
 STR_GAME_OPTIONS_GUI_SCALE_FRAME                                :{BLACK}इंटरफ़ेस का आकार
+
 
 
 
@@ -545,6 +546,7 @@ STR_CONFIG_SETTING_AI_BUILDS_AIRCRAFT                           :कंप्य
 
 
 ###setting-zero-is-special
+
 
 
 

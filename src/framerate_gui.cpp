@@ -363,7 +363,7 @@ static const char * GetAIName(int ai_index)
 }
 
 /** @hideinitializer */
-static const NWidgetPart _framerate_window_widgets[] = {
+static constexpr NWidgetPart _framerate_window_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_FRW_CAPTION), SetDataTip(STR_FRAMERATE_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -407,13 +407,13 @@ struct FramerateWindow : Window {
 
 	struct CachedDecimal {
 		StringID strid;
-		uint32 value;
+		uint32_t value;
 
 		inline void SetRate(double value, double target)
 		{
 			const double threshold_good = target * 0.95;
 			const double threshold_bad = target * 2 / 3;
-			this->value = (uint32)(value * 100);
+			this->value = (uint32_t)(value * 100);
 			this->strid = (value > threshold_good) ? STR_FRAMERATE_FPS_GOOD : (value < threshold_bad) ? STR_FRAMERATE_FPS_BAD : STR_FRAMERATE_FPS_WARN;
 		}
 
@@ -421,7 +421,7 @@ struct FramerateWindow : Window {
 		{
 			const double threshold_good = target / 3;
 			const double threshold_bad = target;
-			this->value = (uint32)(value * 100);
+			this->value = (uint32_t)(value * 100);
 			this->strid = (value < threshold_good) ? STR_FRAMERATE_MS_GOOD : (value > threshold_bad) ? STR_FRAMERATE_MS_BAD : STR_FRAMERATE_MS_WARN;
 		}
 
@@ -507,7 +507,7 @@ struct FramerateWindow : Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_FRW_CAPTION:
@@ -535,7 +535,7 @@ struct FramerateWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_FRW_RATE_GAMELOOP:
@@ -596,7 +596,7 @@ struct FramerateWindow : Window {
 	void DrawElementTimesColumn(const Rect &r, StringID heading_str, const CachedDecimal *values) const
 	{
 		const Scrollbar *sb = this->GetScrollbar(WID_FRW_SCROLLBAR);
-		uint16 skip = sb->GetPosition();
+		uint16_t skip = sb->GetPosition();
 		int drawable = this->num_displayed;
 		int y = r.top;
 		DrawString(r.left, r.right, y, heading_str, TC_FROMSTRING, SA_CENTER, true);
@@ -618,7 +618,7 @@ struct FramerateWindow : Window {
 	void DrawElementAllocationsColumn(const Rect &r) const
 	{
 		const Scrollbar *sb = this->GetScrollbar(WID_FRW_SCROLLBAR);
-		uint16 skip = sb->GetPosition();
+		uint16_t skip = sb->GetPosition();
 		int drawable = this->num_displayed;
 		int y = r.top;
 		DrawString(r.left, r.right, y, STR_FRAMERATE_MEMORYUSE, TC_FROMSTRING, SA_CENTER, true);
@@ -646,13 +646,13 @@ struct FramerateWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_FRW_TIMES_NAMES: {
 				/* Render a column of titles for performance element names */
 				const Scrollbar *sb = this->GetScrollbar(WID_FRW_SCROLLBAR);
-				uint16 skip = sb->GetPosition();
+				uint16_t skip = sb->GetPosition();
 				int drawable = this->num_displayed;
 				int y = r.top + GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_normal; // first line contains headings in the value columns
 				for (PerformanceElement e : DISPLAY_ORDER_PFE) {
@@ -688,7 +688,7 @@ struct FramerateWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_FRW_TIMES_NAMES:
@@ -730,7 +730,7 @@ static WindowDesc _framerate_display_desc(__FILE__, __LINE__,
 
 
 /** @hideinitializer */
-static const NWidgetPart _frametime_graph_window_widgets[] = {
+static constexpr NWidgetPart _frametime_graph_window_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_FGW_CAPTION), SetDataTip(STR_JUST_STRING2, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
@@ -761,7 +761,7 @@ struct FrametimeGraphWindow : Window {
 		this->InitNested(number);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_FGW_CAPTION:
@@ -776,7 +776,7 @@ struct FrametimeGraphWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget == WID_FGW_GRAPH) {
 			SetDParam(0, 100);
@@ -797,15 +797,21 @@ struct FrametimeGraphWindow : Window {
 
 	void SelectHorizontalScale(TimingMeasurement range)
 	{
+		/* 60 Hz graphical drawing results in a value of approximately TIMESTAMP_PRECISION,
+		 * this lands exactly on the scale = 2 vs scale = 4 boundary.
+		 * To avoid excessive switching of the horizontal scale, bias these performance
+		 * categories away from this scale boundary. */
+		if (this->element == PFE_DRAWING || this->element == PFE_DRAWWORLD) range += (range / 2);
+
 		/* Determine horizontal scale based on period covered by 60 points
 		 * (slightly less than 2 seconds at full game speed) */
 		struct ScaleDef { TimingMeasurement range; int scale; };
 		static const ScaleDef hscales[] = {
-			{ 120, 60 },
-			{  10, 20 },
-			{   5, 10 },
-			{   3,  4 },
-			{   1,  2 },
+			{ TIMESTAMP_PRECISION * 120, 60 },
+			{ TIMESTAMP_PRECISION *  10, 20 },
+			{ TIMESTAMP_PRECISION *   5, 10 },
+			{ TIMESTAMP_PRECISION *   3,  4 },
+			{ TIMESTAMP_PRECISION *   1,  2 },
 		};
 		for (const ScaleDef *sc = hscales; sc < hscales + lengthof(hscales); sc++) {
 			if (range < sc->range) this->horizontal_scale = sc->scale;
@@ -865,7 +871,7 @@ struct FrametimeGraphWindow : Window {
 			lastts = timestamps[point];
 
 			/* Enough data to select a range and get decent data density */
-			if (count == 60) this->SelectHorizontalScale(time_sum / TIMESTAMP_PRECISION);
+			if (count == 60) this->SelectHorizontalScale(time_sum);
 
 			/* End when enough points have been collected and the horizontal scale has been exceeded */
 			if (count >= 60 && time_sum >= (this->horizontal_scale + 2) * TIMESTAMP_PRECISION / 2) break;
@@ -893,7 +899,7 @@ struct FrametimeGraphWindow : Window {
 		return (value - src_min) * dst_diff / src_diff + dst_min;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget == WID_FGW_GRAPH) {
 			const TimingMeasurement *durations  = _pf_data[this->element].durations;
@@ -945,7 +951,7 @@ struct FrametimeGraphWindow : Window {
 			/* Position of last rendered data point */
 			Point lastpoint = {
 				x_max,
-				(int)Scinterlate<int64>(y_zero, y_max, 0, this->vertical_scale, durations[point])
+				(int)Scinterlate<int64_t>(y_zero, y_max, 0, this->vertical_scale, durations[point])
 			};
 			/* Timestamp of last rendered data point */
 			TimingMeasurement lastts = timestamps[point];
@@ -975,8 +981,8 @@ struct FrametimeGraphWindow : Window {
 
 				/* Draw line from previous point to new point */
 				Point newpoint = {
-					(int)Scinterlate<int64>(x_zero, x_max, 0, (int64)draw_horz_scale, (int64)draw_horz_scale - (int64)time_sum),
-					(int)Scinterlate<int64>(y_zero, y_max, 0, (int64)draw_vert_scale, (int64)value)
+					(int)Scinterlate<int64_t>(x_zero, x_max, 0, (int64_t)draw_horz_scale, (int64_t)draw_horz_scale - (int64_t)time_sum),
+					(int)Scinterlate<int64_t>(y_zero, y_max, 0, (int64_t)draw_vert_scale, (int64_t)value)
 				};
 				if (newpoint.x > lastpoint.x) continue; // don't draw backwards
 				GfxDrawLine(lastpoint.x, lastpoint.y, newpoint.x, newpoint.y, c_lines);

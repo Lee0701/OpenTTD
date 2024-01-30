@@ -35,6 +35,9 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :很慢
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :每{COMMA}现实分钟
 
+STR_RIVERS_VERY_MANY                                            :{RED}很多
+STR_RIVERS_EXTREMELY_MANY                                       :{RED}极多
+
 STR_COMMA_SEPARATOR                                             :,{SP}
 
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :英里/小时
@@ -91,9 +94,6 @@ STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :自定义间隔 (按现实分钟)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}自动保存间隔 (按现实分钟)
-
-STR_RIVERS_VERY_MANY                                            :{RED}很多
-STR_RIVERS_EXTREMELY_MANY                                       :{RED}极多
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :建议将此设置保留为默认值
 
@@ -163,7 +163,6 @@ STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE                     :船舶避免碰
 STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE_HELPTEXT            :当被启用时，船舶将尝试避免互相穿过{}在禁止船舶90度转向时效果最好
 
 STR_CONFIG_SETTING_CHUNNEL                                      :允许水下隧道的建设: {STRING}
-STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :当被启用时，可以建设水下隧道{}隧道末端须距离岸边三格以上
 
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :不同公司列车不会互相碰撞: {STRING}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :这是为了防止熊孩子故意在多人游戏中撞毁他人的列车
@@ -493,12 +492,6 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :无限制
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :城镇被允许建造桥梁: {STRING}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :决定城镇是否可以建造桥梁
 
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR                            :城镇货物生成因子 (更少 < 0 < 更多): {STRING}
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR_HELPTEXT                   :旅客、邮件和其他城镇货物的生成倍数为2^因子 (实验性)
-
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR                        :工业货物生成因子 (更少 < 0 < 更多): {STRING}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR_HELPTEXT               :原料工业货物的生成倍数为2^因子 (实验性){}这包括伐木工业{}可能与NewGRF工业冲突
-
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :城镇最高海拔: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :在此高度之上将没有城镇生成
 
@@ -595,14 +588,12 @@ STR_CONFIG_SETTING_INTERFACE_WALLCLOCK                          :{ORANGE}挂钟
 STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}客户端设置
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}游戏保存设置
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}时刻表
-STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}进阶信号
+STR_CONFIG_SETTING_INTERFACE_SIGNALS                            :{ORANGE}信号
 STR_CONFIG_SETTING_INTERFACE_SAVE                               :{ORANGE}存档与自动存档
 STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS                    :{ORANGE}载具窗口
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}河流和湖泊
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}货物分配
-STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}树
 STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS                         :{ORANGE}地图模式
-STR_CONFIG_SETTING_VIEWPORT_SIGNALS                             :{ORANGE}信号
 STR_CONFIG_SETTING_VEHICLE_ROUTE_OVERLAY                        :{ORANGE}载具路径覆盖层
 STR_CONFIG_SETTING_SHARING                                      :{ORANGE}基建共享
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}场景编辑器
@@ -856,7 +847,6 @@ STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL                     :速度调整控
 STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL                          :信号模式控制
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT                            :捕获或等待
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE                             :尝试捕获
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ON_RES                      :尝试捕获 (保持)
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT                           :释放 (前)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK                            :释放 (后)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT                :路径结束: 捕获或等待
@@ -864,7 +854,6 @@ STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE                 :路径结束: �
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE                     :路径结束: 释放
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT_ITEM                       :捕获条目: {STRING}{BLACK}{STRING}，或等待路径信号
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM                        :尝试捕获条目: {STRING}{BLACK}{STRING}，或总是维持
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM_RES_ONLY               :尝试捕获 (当路径释放) 条目: {STRING}{BLACK}{STRING}，或总是维持
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT_ITEM                      :释放条目: {STRING}{BLACK}{STRING} (车前)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK_ITEM                       :释放条目: {STRING}{BLACK}{STRING} (车后)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT_ITEM           :路径预留在此结束: 捕获条目: {STRING}{BLACK}{STRING}，或在起点等待
@@ -1761,7 +1750,7 @@ STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}太多�
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}桥梁相对车站太低
 STR_ERROR_BRIDGE_PILLARS_OBSTRUCT_STATION                       :{WHITE}桥柱与车站冲突
 STR_ERROR_CHUNNEL_THROUGH_MAP_BORDER                            :{WHITE}水下隧道出口将超出地图边界
-STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}...只有斜坡的长度在5和{NUM}之间的格子是被允许建设水下隧道的
+STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}...只有斜坡的长度在{NUM}和{NUM}之间的格子是被允许建设水下隧道的
 STR_ERROR_TUNNEL_TOO_MANY                                       :{WHITE}...太多隧道
 STR_ERROR_NO_DRILLING_ABOVE_CHUNNEL                             :{WHITE}水下隧道上方不允许存在油井
 STR_ERROR_ANOTHER_TUNNEL_IN_THE_WAY_FOR_CHUNNEL                 :{WHITE}要下穿其他隧道必须有三格以上的余量

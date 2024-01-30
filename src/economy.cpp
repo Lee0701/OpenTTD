@@ -58,6 +58,7 @@
 #include "pathfinder/yapf/yapf_cache.h"
 #include "debug_desync.h"
 #include "event_logs.h"
+#include "plans_func.h"
 
 #include "table/strings.h"
 #include "table/pricebase.h"
@@ -80,9 +81,9 @@ INSTANTIATE_POOL_METHODS(CargoPayment)
  * @param shift The amount to shift the value to right.
  * @return The shifted result
  */
-static inline int32 BigMulS(const int32 a, const int32 b, const uint8 shift)
+static inline int32_t BigMulS(const int32_t a, const int32_t b, const uint8_t shift)
 {
-	return (int32)((int64)a * (int64)b >> shift);
+	return (int32_t)((int64_t)a * (int64_t)b >> shift);
 }
 
 typedef std::vector<Industry *> SmallIndustryList;
@@ -103,11 +104,15 @@ const ScoreInfo _score_info[] = {
 	{       0,   0}  // SCORE_TOTAL
 };
 
-int64 _score_part[MAX_COMPANIES][SCORE_END];
+int64_t _score_part[MAX_COMPANIES][SCORE_END];
 Economy _economy;
 Prices _price;
 Money _additional_cash_required;
 static PriceMultipliers _price_base_multiplier;
+
+CargoScaler _town_cargo_scaler;
+CargoScaler _industry_cargo_scaler;
+CargoScaler _industry_inverse_cargo_scaler;
 
 extern int GetAmountOwnedBy(const Company *c, Owner owner);
 
@@ -325,7 +330,7 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 			/* Skip the total */
 			if (i == SCORE_TOTAL) continue;
 			/*  Check the score */
-			s = Clamp<int64>(_score_part[owner][i], 0, _score_info[i].needed) * _score_info[i].score / _score_info[i].needed;
+			s = Clamp<int64_t>(_score_part[owner][i], 0, _score_info[i].needed) * _score_info[i].score / _score_info[i].needed;
 			score += s;
 			total_score += _score_info[i].score;
 		}
@@ -665,6 +670,8 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 
 	extern void MarkAllViewportMapLandscapesDirty();
 	MarkAllViewportMapLandscapesDirty();
+
+	InvalidatePlanCaches();
 }
 
 /**
@@ -779,13 +786,13 @@ static void CompaniesGenStatistics()
 			cur_company.Change(c->index);
 
 			CommandCost cost(EXPENSES_PROPERTY);
-			uint32 rail_total = c->infrastructure.GetRailTotal();
+			uint32_t rail_total = c->infrastructure.GetRailTotal();
 			for (RailType rt = RAILTYPE_BEGIN; rt < RAILTYPE_END; rt++) {
 				if (c->infrastructure.rail[rt] != 0) cost.AddCost(RailMaintenanceCost(rt, c->infrastructure.rail[rt], rail_total));
 			}
 			cost.AddCost(SignalMaintenanceCost(c->infrastructure.signal));
-			uint32 road_total = c->infrastructure.GetRoadTotal();
-			uint32 tram_total = c->infrastructure.GetTramTotal();
+			uint32_t road_total = c->infrastructure.GetRoadTotal();
+			uint32_t tram_total = c->infrastructure.GetTramTotal();
 			for (RoadType rt = ROADTYPE_BEGIN; rt < ROADTYPE_END; rt++) {
 				if (c->infrastructure.road[rt] != 0) cost.AddCost(RoadMaintenanceCost(rt, c->infrastructure.road[rt], RoadTypeIsRoad(rt) ? road_total : tram_total));
 			}
@@ -871,7 +878,7 @@ bool AddInflation(bool check_year)
 void RecomputePrices()
 {
 	/* Setup maximum loan as a rounded down multiple of LOAN_INTERVAL. */
-	_economy.max_loan = ((uint64)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / LOAN_INTERVAL * LOAN_INTERVAL;
+	_economy.max_loan = ((uint64_t)_settings_game.difficulty.max_loan * _economy.inflation_prices >> 16) / LOAN_INTERVAL * LOAN_INTERVAL;
 
 	/* Setup price bases */
 	for (Price i = PR_BEGIN; i < PR_END; i++) {
@@ -898,7 +905,7 @@ void RecomputePrices()
 		}
 
 		/* Apply inflation */
-		price = (int64)price * _economy.inflation_prices;
+		price = (int64_t)price * _economy.inflation_prices;
 
 		/* Apply newgrf modifiers, remove fractional part of inflation, and normalise on medium difficulty. */
 		int shift = _price_base_multiplier[i] - 16 - 3;
@@ -924,7 +931,7 @@ void RecomputePrices()
 
 	/* Setup cargo payment */
 	for (CargoSpec *cs : CargoSpec::Iterate()) {
-		cs->current_payment = (cs->initial_payment * (int64)_economy.inflation_payment) >> 16;
+		cs->current_payment = (cs->initial_payment * (int64_t)_economy.inflation_payment) >> 16;
 	}
 
 	SetWindowClassesDirty(WC_BUILD_VEHICLE);
@@ -1088,7 +1095,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 	return cost;
 }
 
-Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_periods, CargoID cargo_type)
+Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16_t transit_periods, CargoID cargo_type)
 {
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
@@ -1098,8 +1105,8 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_perio
 
 	/* Use callback to calculate cargo profit, if available */
 	if (HasBit(cs->callback_mask, CBM_CARGO_PROFIT_CALC)) {
-		uint32 var18 = ClampTo<uint16_t>(dist) | (ClampTo<uint8_t>(num_pieces) << 16) | (ClampTo<uint8_t>(transit_periods) << 24);
-		uint16 callback = GetCargoCallback(CBID_CARGO_PROFIT_CALC, 0, var18, cs);
+		uint32_t var18 = ClampTo<uint16_t>(dist) | (ClampTo<uint8_t>(num_pieces) << 16) | (ClampTo<uint8_t>(transit_periods) << 24);
+		uint16_t callback = GetCargoCallback(CBID_CARGO_PROFIT_CALC, 0, var18, cs);
 		if (callback != CALLBACK_FAILED) {
 			int result = GB(callback, 0, 14);
 
@@ -1118,7 +1125,7 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_perio
 	static const int TIME_FACTOR_FRAC_BITS = 4;
 	static const int TIME_FACTOR_FRAC = 1 << TIME_FACTOR_FRAC_BITS;
 
-	if (_settings_game.economy.payment_algorithm == CPA_TRADITIONAL) transit_periods = std::min<uint16>(transit_periods, 0xFFu);
+	if (_settings_game.economy.payment_algorithm == CPA_TRADITIONAL) transit_periods = std::min<uint16_t>(transit_periods, 0xFFu);
 
 	const int periods1 = cs->transit_periods[0];
 	const int periods2 = cs->transit_periods[1];
@@ -1383,7 +1390,7 @@ static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, ui
 static void TriggerIndustryProduction(Industry *i)
 {
 	const IndustrySpec *indspec = GetIndustrySpec(i->type);
-	uint16 callback = indspec->callback_mask;
+	uint16_t callback = indspec->callback_mask;
 
 	i->was_cargo_delivered = true;
 
@@ -1396,10 +1403,10 @@ static void TriggerIndustryProduction(Industry *i)
 	} else {
 		for (uint ci_in = 0; ci_in < lengthof(i->incoming_cargo_waiting); ci_in++) {
 			uint cargo_waiting = i->incoming_cargo_waiting[ci_in];
-			if (cargo_waiting == 0 || i->accepts_cargo[ci_in] == CT_INVALID) continue;
+			if (cargo_waiting == 0 || i->accepts_cargo[ci_in] == INVALID_CARGO) continue;
 
 			for (uint ci_out = 0; ci_out < lengthof(i->produced_cargo_waiting); ci_out++) {
-				if (i->produced_cargo[ci_out] == CT_INVALID) continue;
+				if (i->produced_cargo[ci_out] == INVALID_CARGO) continue;
 				i->produced_cargo_waiting[ci_out] = ClampTo<uint16_t>(i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256));
 			}
 
@@ -1583,7 +1590,7 @@ static uint GetLoadAmount(Vehicle *v)
 	if (air_mail) load_amount = CeilDiv(load_amount, 4);
 
 	if (_settings_game.order.gradual_loading) {
-		uint16 cb_load_amount = CALLBACK_FAILED;
+		uint16_t cb_load_amount = CALLBACK_FAILED;
 		if (e->GetGRF() != nullptr && e->GetGRF()->grf_version >= 8) {
 			/* Use callback 36 */
 			cb_load_amount = GetVehicleProperty(v, PROP_VEHICLE_LOAD_AMOUNT, CALLBACK_FAILED);
@@ -1783,7 +1790,7 @@ static void HandleStationRefit(Vehicle *v, CargoArray &consist_capleft, Station 
 	/* Remove old capacity from consist capacity and collect refit mask. */
 	IterateVehicleParts(v_start, PrepareRefitAction(consist_capleft, refit_mask));
 
-	bool is_auto_refit = new_cid == CT_AUTO_REFIT;
+	bool is_auto_refit = new_cid == CARGO_AUTO_REFIT;
 	bool check_order = (v->First()->current_order.GetLoadType() == OLFB_CARGO_TYPE_LOAD);
 	if (is_auto_refit) {
 		/* Get a refittable cargo type with waiting cargo for next_station or INVALID_STATION. */
@@ -1919,7 +1926,7 @@ static void ReserveConsist(Station *st, Vehicle *u, CargoArray *consist_capleft,
  */
 static void UpdateLoadUnloadTicks(Vehicle *front, const Station *st, int ticks, int platform_length_left)
 {
-	if (front->type == VEH_TRAIN) {
+	if (front->type == VEH_TRAIN && _settings_game.order.station_length_loading_penalty) {
 		/* Each platform tile is worth 2 rail vehicles. */
 		int overhang = -platform_length_left;
 		if (overhang > 0) {
@@ -1979,7 +1986,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 
 	CargoStationIDStackSet next_station = front->GetNextStoppingStation();
 
-	bool use_autorefit = front->current_order.IsRefit() && front->current_order.GetRefitCargo() == CT_AUTO_REFIT;
+	bool use_autorefit = front->current_order.IsRefit() && front->current_order.GetRefitCargo() == CARGO_AUTO_REFIT;
 	CargoArray consist_capleft{};
 	bool should_reserve_consist = false;
 	bool reserve_consist_cargo_type_loading = false;
@@ -2370,7 +2377,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 	 * if _settings_client.gui.loading_indicators == 1, _local_company must be the owner or must be a spectator to show ind., so 1 > 0
 	 * if _settings_client.gui.loading_indicators == 0, do not display indicators ... 0 is never greater than anything
 	 */
-	if (_game_mode != GM_MENU && (_settings_client.gui.loading_indicators > (uint)(front->owner != _local_company && _local_company != COMPANY_SPECTATOR))
+	if (_game_mode != GM_MENU && !IsHeadless() && (_settings_client.gui.loading_indicators > (uint)(front->owner != _local_company && _local_company != COMPANY_SPECTATOR))
 			&& !front->current_order.IsType(OT_LOADING_ADVANCE)) {
 		StringID percent_up_down = STR_NULL;
 		int percent = CalcPercentVehicleFilled(front, &percent_up_down);
@@ -2500,7 +2507,7 @@ static void DoAcquireCompany(Company *c, bool hostile_takeover)
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdBuyShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuyShareInCompany(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	CommandCost cost(EXPENSES_OTHER);
 	CompanyID target_company = (CompanyID)p1;
@@ -2549,7 +2556,7 @@ CommandCost CmdBuyShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1,
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdSellShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdSellShareInCompany(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	CompanyID target_company = (CompanyID)p1;
 	Company *c = Company::GetIfValid(target_company);
@@ -2591,7 +2598,7 @@ CommandCost CmdSellShareInCompany(TileIndex tile, DoCommandFlag flags, uint32 p1
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	CompanyID target_company = (CompanyID)p1;
 	Company *c = Company::GetIfValid(target_company);
@@ -2641,7 +2648,7 @@ CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
  * @param text unused
  * @return the cost of this operation or an error
  */
-CommandCost CmdDeclineBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
+CommandCost CmdDeclineBuyCompany(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
 {
 	CompanyID target_company = (CompanyID)p1;
 	Company *c = Company::GetIfValid(target_company);
@@ -2668,8 +2675,8 @@ uint ScaleQuantity(uint amount, int cf, int fine, bool allow_trunc)
 {
 	if (fine != 0) {
 		// 2^0.1 << 16 to 2^0.9 << 16
-		const uint32 adj[9] = {70239, 75281, 80684, 86475, 92681, 99334, 106463, 114104, 122294};
-		uint64 scaled_amount = ((uint64) amount) * ((uint64) adj[fine - 1]);
+		const uint32_t adj[9] = {70239, 75281, 80684, 86475, 92681, 99334, 106463, 114104, 122294};
+		uint64_t scaled_amount = ((uint64_t) amount) * ((uint64_t) adj[fine - 1]);
 		amount = scaled_amount >> 16;
 	}
 
@@ -2688,4 +2695,51 @@ uint ScaleQuantity(uint amount, int cf, int fine, bool allow_trunc)
 	}
 
 	return amount;
+}
+
+int PercentageToScaleQuantityFactor(uint percentage)
+{
+	const uint32_t adj[11] = {65536, 70239, 75281, 80684, 86475, 92681, 99334, 106463, 114104, 122294, 65536 * 2};
+
+	const uint64_t base = (((uint64_t)1) << 32);
+	uint64_t scale = CeilDivT<uint64_t>(base, 100) * percentage;
+	const uint8_t first_bit = FindLastBit(scale);
+	if (first_bit >= 16) {
+		scale >>= (first_bit - 16);
+	} else {
+		scale <<= (16 - first_bit);
+	}
+
+	uint32_t best_distance = INT32_MAX;
+	int best = 0;
+	for (int i = 0; i < 11; i++) {
+		uint32_t distance = Delta((uint32_t)scale, adj[i]);
+		if (distance < best_distance) {
+			best = i;
+			best_distance = distance;
+		}
+	}
+
+	return ((((int)first_bit) - 32) * 10) + best;
+}
+
+uint CargoScaler::ScaleAllowTrunc(uint num)
+{
+	return this->ScaleWithBias(num, Random() & 0xFFFF);
+}
+
+void UpdateCargoScalers()
+{
+	uint town_scale = _settings_game.economy.town_cargo_scale;
+	if (_settings_game.economy.town_cargo_scale_mode == CSM_DAYLENGTH) {
+		town_scale = Clamp<uint>(town_scale * _settings_game.economy.day_length_factor, 1, 5000);
+	}
+	_town_cargo_scaler.SetScale((town_scale << 16) / 100);
+
+	uint industry_scale = _settings_game.economy.industry_cargo_scale;
+	if (_settings_game.economy.industry_cargo_scale_mode == CSM_DAYLENGTH) {
+		industry_scale = Clamp<uint>(industry_scale * _settings_game.economy.day_length_factor, 5, 3000);
+	}
+	_industry_cargo_scaler.SetScale((industry_scale << 16) / 100);
+	_industry_inverse_cargo_scaler.SetScale((100 << 16) / std::max<uint>(1, industry_scale));
 }

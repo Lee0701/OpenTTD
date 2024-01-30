@@ -41,10 +41,8 @@
 #include "../safeguards.h"
 
 static bool _read_ttdpatch_flags;    ///< Have we (tried to) read TTDPatch extra flags?
-static uint16 _old_extra_chunk_nums; ///< Number of extra TTDPatch chunks
+static uint16_t _old_extra_chunk_nums; ///< Number of extra TTDPatch chunks
 static byte _old_vehicle_multiplier; ///< TTDPatch vehicle multiplier
-
-static uint8 *_old_map3;
 
 void FixOldMapArray()
 {
@@ -55,12 +53,6 @@ void FixOldMapArray()
 
 static void FixTTDMapArray()
 {
-	/* _old_map3 is moved to _m::m3 and _m::m4 */
-	for (TileIndex t = 0; t < OLD_MAP_SIZE; t++) {
-		_m[t].m3 = _old_map3[t * 2];
-		_m[t].m4 = _old_map3[t * 2 + 1];
-	}
-
 	for (TileIndex t = 0; t < OLD_MAP_SIZE; t++) {
 		switch (GetTileType(t)) {
 			case MP_STATION:
@@ -120,7 +112,7 @@ static void FixTTDDepots()
 
 #define FIXNUM(x, y, z) (((((x) << 16) / (y)) + 1) << z)
 
-static uint32 RemapOldTownName(uint32 townnameparts, byte old_town_name_type)
+static uint32_t RemapOldTownName(uint32_t townnameparts, byte old_town_name_type)
 {
 	switch (old_town_name_type) {
 		case 0: case 3: // English, American
@@ -396,6 +388,7 @@ static bool FixTTOEngines()
 	}
 
 	Date aging_date = std::min(_date + DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta(), ConvertYMDToDate(2050, 0, 1));
+	YearMonthDay aging_ymd = ConvertDateToYMD(aging_date);
 
 	for (EngineID i = 0; i < 256; i++) {
 		int oi = ttd_to_tto[i];
@@ -404,7 +397,7 @@ static bool FixTTOEngines()
 		if (oi == 255) {
 			/* Default engine is used */
 			_date += DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
-			StartupOneEngine(e, aging_date, 0, INT_MAX);
+			StartupOneEngine(e, aging_date, aging_ymd, 0, INT_MAX);
 			CalcEngineReliability(e, false);
 			e->intro_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 			_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
@@ -490,9 +483,28 @@ static inline uint RemapOrderIndex(uint x)
 extern TimeoutTimer<TimerGameTick> _new_competitor_timeout;
 extern char *_old_name_array;
 
-static uint32 _old_town_index;
-static uint16 _old_string_id;
-static uint16 _old_string_id_2;
+static uint32_t _old_town_index;
+static uint16_t _old_string_id;
+static uint16_t _old_string_id_2;
+
+static void ClearOldMap3(TileIndex t)
+{
+	_m[t].m3 = 0;
+	_m[t].m4 = 0;
+}
+
+static Town *RemapTown(TileIndex fallback)
+{
+	/* In some cases depots, industries and stations could refer to a missing town. */
+	Town *t = Town::GetIfValid(RemapTownIndex(_old_town_index));
+	if (t == nullptr) {
+		/* In case the town that was refered to does not exist, find the closest.
+		 * However, this needs the kd-tree to be present. */
+		RebuildTownKdtree();
+		t = CalcClosestTownFromTile(fallback);
+	}
+	return t;
+}
 
 static void ReadTTDPatchFlags()
 {
@@ -509,7 +521,7 @@ static void ReadTTDPatchFlags()
 	if (_savegame_type == SGT_TTO) return;
 
 	/* TTDPatch misuses _old_map3 for flags.. read them! */
-	_old_vehicle_multiplier = _old_map3[0];
+	_old_vehicle_multiplier = _m[0].m3;
 	/* Somehow.... there was an error in some savegames, so 0 becomes 1
 	 * and 1 becomes 2. The rest of the values are okay */
 	if (_old_vehicle_multiplier < 2) _old_vehicle_multiplier++;
@@ -523,18 +535,25 @@ static void ReadTTDPatchFlags()
 	 * 1 vehicle   == 128 bytes */
 	_bump_assert_value = (_old_vehicle_multiplier - 1) * 850 * 128;
 
-	for (uint i = 0; i < 17; i++) { // check tile 0, too
-		if (_old_map3[i] != 0) _savegame_type = SGT_TTDP1;
+	/* The first 17 bytes are used by TTDP1, which translates to the first 9 m3s and first 8 m4s. */
+	for (TileIndex i = 0; i <= 8; i++) { // check tile 0, too
+		if (_m[i].m3 != 0 || (i != 8 && _m[i].m4 != 0)) _savegame_type = SGT_TTDP1;
 	}
 
 	/* Check if we have a modern TTDPatch savegame (has extra data all around) */
-	if (memcmp(&_old_map3[0x1FFFA], "TTDp", 4) == 0) _savegame_type = SGT_TTDP2;
+	TileIndex ttdp2_header_first = MapSize() - 3;
+	TileIndex ttdp2_header_second = MapSize() - 2;
+	if (_m[ttdp2_header_first].m3 == 'T' && _m[ttdp2_header_first].m4 == 'T' &&
+		_m[ttdp2_header_second].m3 == 'D' && _m[ttdp2_header_second].m4 == 'p') {
+		_savegame_type = SGT_TTDP2;
+	}
 
-	_old_extra_chunk_nums = _old_map3[_savegame_type == SGT_TTDP2 ? 0x1FFFE : 0x2];
+	TileIndex extra_chunk_tile = _savegame_type == SGT_TTDP2 ? MapSize() - 1 : 1;
+	_old_extra_chunk_nums = _m[extra_chunk_tile].m3 | (_m[extra_chunk_tile].m4 << 8);
 
 	/* Clean the misused places */
-	for (uint i = 0;       i < 17;      i++) _old_map3[i] = 0;
-	for (uint i = 0x1FE00; i < 0x20000; i++) _old_map3[i] = 0;
+	for (TileIndex i = 0; i < 9; i++) ClearOldMap3(i);
+	for (TileIndex i = TileXY(0, MapMaxY()); i < MapSize(); i++) ClearOldMap3(i);
 
 	if (_savegame_type == SGT_TTDP2) DEBUG(oldloader, 2, "Found TTDPatch game");
 
@@ -609,7 +628,7 @@ static bool LoadOldTown(LoadgameState *ls, int num)
 	return true;
 }
 
-static uint16 _old_order;
+static uint16_t _old_order;
 static const OldChunks order_chunk[] = {
 	OCL_VAR ( OC_UINT16,   1, &_old_order ),
 	OCL_END()
@@ -665,10 +684,7 @@ static bool LoadOldDepot(LoadgameState *ls, int num)
 	if (!LoadChunk(ls, d, depot_chunk)) return false;
 
 	if (d->xy != 0) {
-		/* In some cases, there could be depots referencing invalid town. */
-		Town *t = Town::GetIfValid(RemapTownIndex(_old_town_index));
-		if (t == nullptr) t = Town::GetRandom();
-		d->town = t;
+		d->town = RemapTown(d->xy);
 	} else {
 		delete d;
 	}
@@ -677,9 +693,9 @@ static bool LoadOldDepot(LoadgameState *ls, int num)
 }
 
 static StationID _current_station_id;
-static uint16 _waiting_acceptance;
-static uint8  _cargo_source;
-static uint8  _cargo_periods;
+static uint16_t _waiting_acceptance;
+static uint8_t  _cargo_source;
+static uint8_t  _cargo_periods;
 
 static const OldChunks goods_chunk[] = {
 	OCL_VAR ( OC_UINT16, 1,          &_waiting_acceptance ),
@@ -758,7 +774,7 @@ static bool LoadOldStation(LoadgameState *ls, int num)
 	if (!LoadChunk(ls, st, station_chunk)) return false;
 
 	if (st->xy != 0) {
-		st->town = Town::Get(RemapTownIndex(_old_town_index));
+		st->town = RemapTown(st->xy);
 
 		if (_savegame_type == SGT_TTO) {
 			if (IsInsideBS(_old_string_id, 0x180F, 32)) {
@@ -835,7 +851,7 @@ static bool LoadOldIndustry(LoadgameState *ls, int num)
 	if (!LoadChunk(ls, i, industry_chunk)) return false;
 
 	if (i->location.tile != 0) {
-		i->town = Town::Get(RemapTownIndex(_old_town_index));
+		i->town = RemapTown(i->location.tile);
 
 		if (_savegame_type == SGT_TTO) {
 			if (i->type > 0x06) i->type++; // Printing Works were added
@@ -855,7 +871,7 @@ static bool LoadOldIndustry(LoadgameState *ls, int num)
 }
 
 static CompanyID _current_company_id;
-static int32 _old_yearly;
+static int32_t _old_yearly;
 
 static const OldChunks _company_yearly_chunk[] = {
 	OCL_VAR(  OC_INT32,   1, &_old_yearly ),
@@ -1022,8 +1038,8 @@ static bool LoadOldCompany(LoadgameState *ls, int num)
 	return true;
 }
 
-static uint32 _old_order_ptr;
-static uint16 _old_next_ptr;
+static uint32_t _old_order_ptr;
+static uint16_t _old_next_ptr;
 static VehicleID _current_vehicle_id;
 
 static const OldChunks vehicle_train_chunk[] = {
@@ -1123,7 +1139,7 @@ static bool LoadOldVehicleUnion(LoadgameState *ls, int)
 	return res;
 }
 
-static uint16 _cargo_count;
+static uint16_t _cargo_count;
 
 static const OldChunks vehicle_chunk[] = {
 	OCL_SVAR(  OC_UINT8, Vehicle, subtype ),
@@ -1439,7 +1455,7 @@ static bool LoadOldSubsidy(LoadgameState *ls, int num)
 {
 	Subsidy *s = new (num) Subsidy();
 	bool ret = LoadChunk(ls, s, subsidy_chunk);
-	if (s->cargo_type == CT_INVALID) delete s;
+	if (s->cargo_type == INVALID_CARGO) delete s;
 	return ret;
 }
 
@@ -1475,7 +1491,7 @@ static bool LoadOldGameDifficulty(LoadgameState *ls, int)
 static bool LoadOldMapPart1(LoadgameState *ls, int)
 {
 	if (_savegame_type == SGT_TTO) {
-		AllocateMap(OLD_MAP_SIZE, OLD_MAP_SIZE);
+		AllocateMap(256, 256);
 	}
 
 	for (uint i = 0; i < OLD_MAP_SIZE; i++) {
@@ -1486,9 +1502,10 @@ static bool LoadOldMapPart1(LoadgameState *ls, int)
 	}
 
 	if (_savegame_type != SGT_TTO) {
+		/* old map3 is split into to m3 and m4 */
 		for (uint i = 0; i < OLD_MAP_SIZE; i++) {
-			_old_map3[i * 2] = ReadByte(ls);
-			_old_map3[i * 2 + 1] = ReadByte(ls);
+			_m[i].m3 = ReadByte(ls);
+			_m[i].m4 = ReadByte(ls);
 		}
 		for (uint i = 0; i < OLD_MAP_SIZE / 4; i++) {
 			byte b = ReadByte(ls);
@@ -1523,8 +1540,8 @@ static bool LoadTTDPatchExtraChunks(LoadgameState *ls, int)
 	DEBUG(oldloader, 2, "Found %d extra chunk(s)", _old_extra_chunk_nums);
 
 	for (int i = 0; i != _old_extra_chunk_nums; i++) {
-		uint16 id = ReadUint16(ls);
-		uint32 len = ReadUint32(ls);
+		uint16_t id = ReadUint16(ls);
+		uint32_t len = ReadUint32(ls);
 
 		switch (id) {
 			/* List of GRFIDs, used in the savegame. 0x8004 is the new ID
@@ -1536,7 +1553,7 @@ static bool LoadTTDPatchExtraChunks(LoadgameState *ls, int)
 
 				ClearGRFConfigList(&_grfconfig);
 				while (len != 0) {
-					uint32 grfid = ReadUint32(ls);
+					uint32_t grfid = ReadUint32(ls);
 
 					if (ReadByte(ls) == 1) {
 						GRFConfig *c = new GRFConfig("TTDP game, no information");
@@ -1573,11 +1590,11 @@ static bool LoadTTDPatchExtraChunks(LoadgameState *ls, int)
 }
 
 extern TileIndex _cur_tileloop_tile;
-extern uint16 _disaster_delay;
+extern uint16_t _disaster_delay;
 extern byte _trees_tick_ctr;
 extern byte _age_cargo_skip_counter; // From misc_sl.cpp
-extern uint8 _old_diff_level;
-extern uint8 _old_units;
+extern uint8_t _old_diff_level;
+extern uint8_t _old_units;
 static const OldChunks main_chunk[] = {
 	OCL_ASSERT( OC_TTD, 0 ),
 	OCL_ASSERT( OC_TTO, 0 ),
@@ -1755,8 +1772,6 @@ bool LoadTTDMain(LoadgameState *ls)
 	_read_ttdpatch_flags = false;
 
 	/* Load the biggest chunk */
-	std::array<byte, OLD_MAP_SIZE * 2> map3;
-	_old_map3 = map3.data();
 	_old_vehicle_names = nullptr;
 	try {
 		if (!LoadChunk(ls, nullptr, main_chunk)) {

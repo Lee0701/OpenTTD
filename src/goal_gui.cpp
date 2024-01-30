@@ -51,7 +51,7 @@ struct GoalListWindow : public Window {
 		this->OnInvalidateData(0);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_GOAL_CAPTION) return;
 
@@ -63,7 +63,7 @@ struct GoalListWindow : public Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_GOAL_GLOBAL_BUTTON:
@@ -168,7 +168,7 @@ struct GoalListWindow : public Window {
 		return num;
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_GOAL_LIST) return;
 		Dimension d = GetStringBoundingBox(STR_GOALS_NONE);
@@ -280,7 +280,7 @@ struct GoalListWindow : public Window {
 };
 
 /** Widgets of the #GoalListWindow. */
-static const NWidgetPart _nested_goals_list_widgets[] = {
+static constexpr NWidgetPart _nested_goals_list_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_GOAL_CAPTION), SetDataTip(STR_JUST_STRING1, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -327,7 +327,7 @@ struct GoalQuestionWindow : public Window {
 	int button[3];        ///< Buttons to display.
 	TextColour colour;    ///< Colour of the question text.
 
-	GoalQuestionWindow(WindowDesc *desc, WindowNumber window_number, TextColour colour, uint32 button_mask, const std::string &question) : Window(desc), colour(colour)
+	GoalQuestionWindow(WindowDesc *desc, WindowNumber window_number, TextColour colour, uint32_t button_mask, const std::string &question) : Window(desc), colour(colour)
 	{
 		this->question = question;
 
@@ -351,7 +351,7 @@ struct GoalQuestionWindow : public Window {
 	}
 
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GQ_BUTTON_1:
@@ -368,7 +368,7 @@ struct GoalQuestionWindow : public Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_GQ_BUTTON_1:
@@ -388,7 +388,7 @@ struct GoalQuestionWindow : public Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_GQ_QUESTION) return;
 
@@ -396,7 +396,7 @@ struct GoalQuestionWindow : public Window {
 		size->height = GetStringHeight(STR_JUST_RAW_STRING, size->width);
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_GQ_QUESTION) return;
 
@@ -406,7 +406,7 @@ struct GoalQuestionWindow : public Window {
 };
 
 /** Widgets of the goal question window. */
-static const NWidgetPart _nested_goal_question_widgets_question[] = {
+static constexpr NWidgetPart _nested_goal_question_widgets_question[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_LIGHT_BLUE),
 		NWidget(WWT_CAPTION, COLOUR_LIGHT_BLUE, WID_GQ_CAPTION), SetDataTip(STR_GOAL_QUESTION_CAPTION_QUESTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -432,7 +432,7 @@ static const NWidgetPart _nested_goal_question_widgets_question[] = {
 	EndContainer(),
 };
 
-static const NWidgetPart _nested_goal_question_widgets_info[] = {
+static constexpr NWidgetPart _nested_goal_question_widgets_info[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_LIGHT_BLUE),
 		NWidget(WWT_CAPTION, COLOUR_LIGHT_BLUE, WID_GQ_CAPTION), SetDataTip(STR_GOAL_QUESTION_CAPTION_INFORMATION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -458,7 +458,7 @@ static const NWidgetPart _nested_goal_question_widgets_info[] = {
 	EndContainer(),
 };
 
-static const NWidgetPart _nested_goal_question_widgets_warning[] = {
+static constexpr NWidgetPart _nested_goal_question_widgets_warning[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_YELLOW),
 		NWidget(WWT_CAPTION, COLOUR_YELLOW, WID_GQ_CAPTION), SetDataTip(STR_GOAL_QUESTION_CAPTION_WARNING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -484,7 +484,7 @@ static const NWidgetPart _nested_goal_question_widgets_warning[] = {
 	EndContainer(),
 };
 
-static const NWidgetPart _nested_goal_question_widgets_error[] = {
+static constexpr NWidgetPart _nested_goal_question_widgets_error[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_RED),
 		NWidget(WWT_CAPTION, COLOUR_RED, WID_GQ_CAPTION), SetDataTip(STR_GOAL_QUESTION_CAPTION_ERROR, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -548,7 +548,7 @@ static WindowDesc _goal_question_list_desc[] = {
  * @param button_mask Buttons to display.
  * @param question Question to ask.
  */
-void ShowGoalQuestion(uint16 id, byte type, uint32 button_mask, const std::string &question)
+void ShowGoalQuestion(uint16_t id, byte type, uint32_t button_mask, const std::string &question)
 {
 	assert(type < GQT_END);
 	new GoalQuestionWindow(&_goal_question_list_desc[type], id, type == 3 ? TC_WHITE : TC_BLACK, button_mask, question);

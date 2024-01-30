@@ -53,7 +53,7 @@ typedef GUIList<const Town*, const bool &> GUITownList;
 
 static void PlaceProc_House(TileIndex tile);
 
-static const NWidgetPart _nested_town_authority_widgets[] = {
+static constexpr NWidgetPart _nested_town_authority_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_TA_CAPTION), SetDataTip(STR_LOCAL_AUTHORITY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -97,7 +97,7 @@ private:
 	 * @param n The Nth set bit from which we want to know the position
 	 * @return The position of the Nth set bit
 	 */
-	static int GetNthSetBit(uint32 bits, int n)
+	static int GetNthSetBit(uint32_t bits, int n)
 	{
 		if (n >= 0) {
 			for (uint i : SetBitIterator(bits)) {
@@ -206,7 +206,7 @@ public:
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TA_CAPTION) {
 			SetDParam(0, this->window_number);
@@ -239,7 +239,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_TA_ACTION_INFO:
@@ -322,7 +322,7 @@ public:
 							}
 
 							case TSOF_OVERRIDE_BUILD_INCLINED_ROADS: {
-								uint8 max_slope = this->town->GetBuildMaxRoadSlope();
+								uint8_t max_slope = this->town->GetBuildMaxRoadSlope();
 								SetDParam(2, STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_VALUE + ((max_slope == 0) ? 1 : 0));
 								SetDParam(3, max_slope);
 								break;
@@ -346,7 +346,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_TA_ACTION_INFO: {
@@ -378,7 +378,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_TA_ZONE_BUTTON: {
@@ -419,7 +419,7 @@ public:
 				break;
 
 			case WID_TA_SETTING: {
-				uint8 idx = this->sel_index - 0x100;
+				uint8_t idx = this->sel_index - 0x100;
 				switch (idx) {
 					case TSOF_OVERRIDE_BUILD_ROADS:
 					case TSOF_OVERRIDE_BUILD_LEVEL_CROSSINGS:
@@ -473,12 +473,12 @@ public:
 	}
 
 
-	virtual void OnDropdownSelect(int widget, int index) override
+	virtual void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_TA_SETTING: {
 				if (index < 0) break;
-				uint32 p2 = this->sel_index - 0x100;
+				uint32_t p2 = this->sel_index - 0x100;
 				if (index > 0) {
 					SetBit(p2, 16);
 					p2 |= (index - 1) << 8;
@@ -541,7 +541,7 @@ public:
 		this->Window::Close();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TV_CAPTION) SetDParam(0, this->town->index);
 	}
@@ -556,7 +556,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_TV_INFO) return;
 
@@ -636,7 +636,7 @@ public:
 
 		/* only show the town noise, if the noise option is activated. */
 		if (_settings_game.economy.station_noise_level) {
-			uint16 max_noise = this->town->MaxTownNoise();
+			uint16_t max_noise = this->town->MaxTownNoise();
 			SetDParam(0, this->town->noise_reached);
 			SetDParam(1, max_noise);
 			DrawString(tr, max_noise == UINT16_MAX ? STR_TOWN_VIEW_NOISE_IN_TOWN_NO_LIMIT : STR_TOWN_VIEW_NOISE_IN_TOWN);
@@ -649,7 +649,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_TV_CENTER_VIEW: // scroll to location
@@ -684,7 +684,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_TV_INFO:
@@ -775,7 +775,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_town_game_view_widgets[] = {
+static constexpr NWidgetPart _nested_town_game_view_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_BROWN, WID_TV_CHANGE_NAME), SetMinimalSize(12, 14), SetDataTip(SPR_RENAME, STR_TOWN_VIEW_RENAME_TOOLTIP),
@@ -806,7 +806,7 @@ static WindowDesc _town_game_view_desc(__FILE__, __LINE__,
 	std::begin(_nested_town_game_view_widgets), std::end(_nested_town_game_view_widgets)
 );
 
-static const NWidgetPart _nested_town_editor_view_widgets[] = {
+static constexpr NWidgetPart _nested_town_editor_view_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_BROWN, WID_TV_CHANGE_NAME), SetMinimalSize(12, 14), SetDataTip(SPR_RENAME, STR_TOWN_VIEW_RENAME_TOOLTIP),
@@ -847,7 +847,7 @@ void ShowTownViewWindow(TownID town)
 	}
 }
 
-static const NWidgetPart _nested_town_directory_widgets[] = {
+static constexpr NWidgetPart _nested_town_directory_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_TOWN_DIRECTORY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -976,7 +976,7 @@ public:
 		this->townname_editbox.cancel_button = QueryString::ACTION_CLEAR;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_TD_WORLD_POPULATION:
@@ -1001,7 +1001,7 @@ public:
 		return t->larger_town ? STR_TOWN_DIRECTORY_CITY : STR_TOWN_DIRECTORY_TOWN;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_TD_SORT_ORDER:
@@ -1048,7 +1048,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_TD_SORT_ORDER: {
@@ -1102,7 +1102,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_TD_SORT_ORDER: // Click on sort order button
@@ -1139,7 +1139,7 @@ public:
 		}
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_TD_SORT_CRITERIA) return;
 
@@ -1167,7 +1167,7 @@ public:
 		this->vscroll->SetCapacityFromWidget(this, WID_TD_LIST);
 	}
 
-	void OnEditboxChanged(int wid) override
+	void OnEditboxChanged(WidgetID wid) override
 	{
 		if (wid == WID_TD_FILTER) {
 			this->string_filter.SetFilterTerm(this->townname_editbox.text.buf);
@@ -1250,7 +1250,7 @@ void ShowTownDirectory()
 	new TownDirectoryWindow(&_town_directory_desc);
 }
 
-void CcFoundTown(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcFoundTown(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 
@@ -1258,12 +1258,12 @@ void CcFoundTown(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2
 	if (!_settings_client.gui.persistent_buildingtools) ResetObjectToPlace();
 }
 
-void CcFoundRandomTown(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcFoundRandomTown(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Succeeded()) ScrollMainWindowToTile(Town::Get(_new_town_id)->xy);
 }
 
-static const NWidgetPart _nested_found_town_widgets[] = {
+static constexpr NWidgetPart _nested_found_town_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_FOUND_TOWN_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1322,7 +1322,7 @@ private:
 	bool city;              ///< Are we building a city?
 	QueryString townname_editbox; ///< Townname editbox
 	bool townnamevalid;     ///< Is generated town name valid?
-	uint32 townnameparts;   ///< Generated town name
+	uint32_t townnameparts;   ///< Generated town name
 	TownNameParams params;  ///< Town name parameters
 
 public:
@@ -1346,8 +1346,7 @@ public:
 		if (!this->townnamevalid) {
 			this->townname_editbox.text.DeleteAll();
 		} else {
-			GetTownName(this->townname_editbox.text.buf, &this->params, this->townnameparts, &this->townname_editbox.text.buf[this->townname_editbox.text.max_bytes - 1]);
-			this->townname_editbox.text.UpdateSize();
+			this->townname_editbox.text.Assign(GetTownName(&this->params, this->townnameparts));
 		}
 		UpdateOSKOriginalText(this, WID_TF_TOWN_NAME_EDITBOX);
 
@@ -1363,13 +1362,13 @@ public:
 			if (_settings_game.economy.found_town != TF_CUSTOM_LAYOUT) town_layout = _settings_game.economy.town_layout;
 		}
 
-		for (int i = WID_TF_SIZE_SMALL; i <= WID_TF_SIZE_RANDOM; i++) {
+		for (WidgetID i = WID_TF_SIZE_SMALL; i <= WID_TF_SIZE_RANDOM; i++) {
 			this->SetWidgetLoweredState(i, i == WID_TF_SIZE_SMALL + this->town_size);
 		}
 
 		this->SetWidgetLoweredState(WID_TF_CITY, this->city);
 
-		for (int i = WID_TF_LAYOUT_ORIGINAL; i <= WID_TF_LAYOUT_RANDOM; i++) {
+		for (WidgetID i = WID_TF_LAYOUT_ORIGINAL; i <= WID_TF_LAYOUT_RANDOM; i++) {
 			this->SetWidgetLoweredState(i, i == WID_TF_LAYOUT_ORIGINAL + this->town_layout);
 		}
 
@@ -1384,9 +1383,8 @@ public:
 			name = this->townname_editbox.text.buf;
 		} else {
 			/* If user changed the name, send it */
-			char buf[MAX_LENGTH_TOWN_NAME_CHARS * MAX_CHAR_LENGTH];
-			GetTownName(buf, &this->params, this->townnameparts, lastof(buf));
-			if (strcmp(buf, this->townname_editbox.text.buf) != 0) name = this->townname_editbox.text.buf;
+			std::string original_name = GetTownName(&this->params, this->townnameparts);
+			if (original_name != this->townname_editbox.text.buf) name = this->townname_editbox.text.buf;
 		}
 
 		bool success = DoCommandP(tile, this->town_size | this->city << 2 | this->town_layout << 3 | random << 6,
@@ -1396,7 +1394,7 @@ public:
 		if (success && !_shift_pressed) this->RandomTownName();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_TF_NEW_TOWN:
@@ -1486,7 +1484,7 @@ void ShowFoundTownWindow()
 
 class GUIHouseList : public std::vector<HouseID> {
 protected:
-	std::vector<uint16> house_sets; ///< list of house sets, each item points the first house of the set in the houses array
+	std::vector<uint16_t> house_sets; ///< list of house sets, each item points the first house of the set in the houses array
 
 	static bool HouseSorter(const HouseID &a, const HouseID &b)
 	{
@@ -1558,9 +1556,7 @@ public:
 		const GRFFile *gf = HouseSpec::Get(this->GetHouseAtOffset(house_set, 0))->grf_prop.grffile;
 		if (gf != nullptr) return GetGRFConfig(gf->grfid)->GetName();
 
-		static char name[DRAW_STRING_BUFFER];
-		GetString(name, STR_BASIC_HOUSE_SET_NAME, lastof(name));
-		return name;
+		return GetStringPtr(STR_BASIC_HOUSE_SET_NAME);
 	}
 
 	/**
@@ -1606,7 +1602,7 @@ public:
 			}
 		}
 		/* put a terminator on the list to make counting easier */
-		this->house_sets.push_back((uint16)this->size());
+		this->house_sets.push_back((uint16_t)this->size());
 	}
 };
 
@@ -1731,7 +1727,7 @@ public:
 		}
 	}
 
-	virtual void SetStringParameters(int widget) const override
+	virtual void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_HP_CAPTION) {
 			if (this->house_list.NumHouseSets() == 1) SetDParamStr(0, this->house_list.GetNameOfHouseSet(0));
@@ -1812,8 +1808,7 @@ public:
 				}
 
 				case WID_HP_HOUSE_ACCEPTANCE: {
-					static char buff[DRAW_STRING_BUFFER] = "";
-					char *str = buff;
+					std::string buff;
 					CargoArray cargo{};
 					CargoTypes dummy = 0;
 					AddAcceptedHouseCargo(this->display_house, INVALID_TILE, cargo, &dummy);
@@ -1823,17 +1818,17 @@ public:
 						SetDParam(0, cargo[i] < 8 ? STR_HOUSE_BUILD_CARGO_VALUE_EIGHTS : STR_HOUSE_BUILD_CARGO_VALUE_JUST_NAME);
 						SetDParam(1, cargo[i]);
 						SetDParam(2, CargoSpec::Get(i)->name);
-						str = GetString(str, str == buff ? STR_HOUSE_BUILD_CARGO_FIRST : STR_HOUSE_BUILD_CARGO_SEPARATED, lastof(buff));
+						GetString(StringBuilder(buff), buff.empty() ? STR_HOUSE_BUILD_CARGO_FIRST : STR_HOUSE_BUILD_CARGO_SEPARATED);
 					}
-					if (str == buff) GetString(buff, STR_JUST_NOTHING, lastof(buff));
-					SetDParamStr(0, buff);
+					if (buff.empty()) GetString(StringBuilder(buff), STR_JUST_NOTHING);
+					SetDParamStr(0, std::move(buff));
 					break;
 				}
 
 				case WID_HP_HOUSE_SUPPLY: {
 					CargoArray cargo{};
 					AddProducedHouseCargo(this->display_house, INVALID_TILE, cargo);
-					uint32 cargo_mask = 0;
+					uint32_t cargo_mask = 0;
 					for (uint i = 0; i < NUM_CARGO; i++) if (cargo[i] != 0) SetBit(cargo_mask, i);
 					SetDParam(0, cargo_mask);
 					break;
@@ -1844,7 +1839,7 @@ public:
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	virtual void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_HP_HOUSE_SETS: {
@@ -1920,9 +1915,9 @@ public:
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const override
+	virtual void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
-		switch (GB(widget, 0, 16)) {
+		switch (widget) {
 			case WID_HP_HOUSE_SETS: {
 				int y = r.top + WidgetDimensions::scaled.matrix.top;
 				for (uint i = 0; i < this->house_list.NumHouseSets(); i++) {
@@ -1940,7 +1935,7 @@ public:
 				break;
 
 			case WID_HP_HOUSE_SELECT: {
-				HouseID house = this->house_list.GetHouseAtOffset(this->house_set, GB(widget, 16, 16));
+				HouseID house = this->house_list.GetHouseAtOffset(this->house_set, this->GetWidget<NWidgetBase>(widget)->GetParentWidget<NWidgetMatrix>()->GetCurrentElement());
 				int lowered = (house == _cur_house) ? 1 : 0;
 				DrawHouseImage(house,
 						r.left  + WidgetDimensions::scaled.matrix.left  + lowered, r.top    + WidgetDimensions::scaled.matrix.top    + lowered,
@@ -1955,9 +1950,9 @@ public:
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count) override
+	virtual void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
-		switch (GB(widget, 0, 16)) {
+		switch (widget) {
 			case WID_HP_HOUSE_SETS: {
 				uint index = (uint)(pt.y - this->GetWidget<NWidgetBase>(widget)->pos_y) / this->line_height;
 				if (index < this->house_list.NumHouseSets() && index != this->house_set) this->SelectOtherHouse(index, 0);
@@ -1965,7 +1960,7 @@ public:
 			}
 
 			case WID_HP_HOUSE_SELECT:
-				this->SelectOtherHouse(this->house_set, GB(widget, 16, 16));
+				this->SelectOtherHouse(this->house_set, this->GetWidget<NWidgetBase>(widget)->GetParentWidget<NWidgetMatrix>()->GetCurrentElement());
 				break;
 		}
 	}
@@ -2068,7 +2063,7 @@ struct SelectTownWindow : Window {
 	CommandContainer cmd; ///< command to build the house (CMD_BUILD_HOUSE)
 	Scrollbar *vscroll;   ///< scrollbar for the town list
 
-	SelectTownWindow(WindowDesc *desc, const TownList &towns, const CommandContainer &cmd) : Window(desc), towns(towns), cmd(cmd)
+	SelectTownWindow(WindowDesc *desc, TownList towns, const CommandContainer &cmd) : Window(desc), towns(std::move(towns)), cmd(cmd)
 	{
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_ST_SCROLLBAR);
@@ -2076,7 +2071,7 @@ struct SelectTownWindow : Window {
 		this->FinishInitNested();
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget != WID_ST_PANEL) return;
 
@@ -2094,7 +2089,7 @@ struct SelectTownWindow : Window {
 		*size = d;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_ST_PANEL) return;
 
@@ -2108,7 +2103,7 @@ struct SelectTownWindow : Window {
 		}
 	}
 
-	void OnClick(Point pt, int widget, int click_count) override
+	void OnClick(Point pt, WidgetID widget, int click_count) override
 	{
 		if (widget != WID_ST_PANEL) return;
 
@@ -2151,10 +2146,10 @@ static WindowDesc _select_town_desc(__FILE__, __LINE__,
 	std::begin(_nested_select_town_widgets), std::end(_nested_select_town_widgets)
 );
 
-static void ShowSelectTownWindow(const TownList &towns, const CommandContainer &cmd)
+static void ShowSelectTownWindow(TownList towns, const CommandContainer &cmd)
 {
 	CloseWindowByClass(WC_SELECT_TOWN);
-	new SelectTownWindow(&_select_town_desc, towns, cmd);
+	new SelectTownWindow(&_select_town_desc, std::move(towns), cmd);
 }
 
 static void PlaceProc_House(TileIndex tile)
@@ -2197,7 +2192,7 @@ static void PlaceProc_House(TileIndex tile)
 
 	if (towns.size() > 16 && _settings_client.scenario.house_ignore_zones == 2) {
 		std::sort(towns.begin(), towns.end(), [&](const TownID a, const TownID b) {
-			return DistanceSquare(tile, Town::Get(a)->xy) < DistanceSquare(tile, Town::Get(a)->xy);
+			return DistanceSquare(tile, Town::Get(a)->xy) < DistanceSquare(tile, Town::Get(b)->xy);
 		});
 		towns.resize(16);
 	}
@@ -2215,7 +2210,7 @@ static void PlaceProc_House(TileIndex tile)
 		DoCommandP(&cmd);
 	} else {
 		if (!_settings_client.gui.persistent_buildingtools) CloseWindowById(WC_BUILD_HOUSE, 0);
-		ShowSelectTownWindow(towns, cmd);
+		ShowSelectTownWindow(std::move(towns), cmd);
 	}
 }
 

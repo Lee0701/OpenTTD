@@ -57,8 +57,8 @@ extern bool _ctrl_pressed;   ///< Is Ctrl pressed?
 extern bool _shift_pressed;  ///< Is Shift pressed?
 extern bool _invert_ctrl;
 extern bool _invert_shift;
-extern uint16 _game_speed;
-extern uint8 _milliseconds_per_tick;
+extern uint16_t _game_speed;
+extern uint8_t _milliseconds_per_tick;
 extern float _ticks_per_second;
 
 extern bool _left_button_down;
@@ -76,7 +76,7 @@ extern Palette _cur_palette; ///< Current palette
 extern DrawPixelInfo *_cur_dpi;
 
 void HandleToolbarHotkey(int hotkey);
-void HandleKeypress(uint keycode, WChar key);
+void HandleKeypress(uint keycode, char32_t key);
 void HandleTextInput(const char *str, bool marked = false, const char *caret = nullptr, const char *insert_location = nullptr, const char *replacement_end = nullptr);
 void HandleCtrlChanged();
 void HandleShiftChanged();
@@ -97,8 +97,7 @@ enum AdjustGUIZoomMode {
 };
 bool AdjustGUIZoom(AdjustGUIZoomMode mode);
 
-/** Size of the buffer used for drawing strings. */
-static const int DRAW_STRING_BUFFER = 2048;
+void FontChanged();
 
 void RedrawScreenRect(int left, int top, int right, int bottom);
 
@@ -116,7 +115,7 @@ int DrawString(int left, int right, int top, StringID str, TextColour colour = T
 int DrawStringMultiLine(int left, int right, int top, int bottom, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL);
 int DrawStringMultiLine(int left, int right, int top, int bottom, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL);
 
-void DrawCharCentered(WChar c, const Rect &r, TextColour colour);
+void DrawCharCentered(char32_t c, const Rect &r, TextColour colour);
 
 void GfxFillRect(const DrawPixelInfo *dpi, int left, int top, int right, int bottom, int colour, FillRectMode mode = FILLRECT_OPAQUE);
 inline void GfxFillRect(int left, int top, int right, int bottom, int colour, FillRectMode mode = FILLRECT_OPAQUE) { GfxFillRect(_cur_dpi, left, top, right, bottom, colour, mode); }
@@ -127,27 +126,27 @@ void DrawBox(const DrawPixelInfo *dpi, int x, int y, int dx1, int dy1, int dx2, 
 void DrawRectOutline(const Rect &r, int colour, int width = 1, int dash = 0);
 
 /* Versions of DrawString/DrawStringMultiLine that accept a Rect instead of separate left, right, top and bottom parameters. */
-static inline int DrawString(const Rect &r, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL)
+inline int DrawString(const Rect &r, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL)
 {
 	return DrawString(r.left, r.right, r.top, str, colour, align, underline, fontsize);
 }
 
-static inline int DrawString(const Rect &r, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL)
+inline int DrawString(const Rect &r, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = SA_LEFT, bool underline = false, FontSize fontsize = FS_NORMAL)
 {
 	return DrawString(r.left, r.right, r.top, str, colour, align, underline, fontsize);
 }
 
-static inline int DrawStringMultiLine(const Rect &r, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL)
+inline int DrawStringMultiLine(const Rect &r, std::string_view str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL)
 {
 	return DrawStringMultiLine(r.left, r.right, r.top, r.bottom, str, colour, align, underline, fontsize);
 }
 
-static inline int DrawStringMultiLine(const Rect &r, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL)
+inline int DrawStringMultiLine(const Rect &r, StringID str, TextColour colour = TC_FROMSTRING, StringAlignment align = (SA_TOP | SA_LEFT), bool underline = false, FontSize fontsize = FS_NORMAL)
 {
 	return DrawStringMultiLine(r.left, r.right, r.top, r.bottom, str, colour, align, underline, fontsize);
 }
 
-static inline void GfxFillRect(const Rect &r, int colour, FillRectMode mode = FILLRECT_OPAQUE)
+inline void GfxFillRect(const Rect &r, int colour, FillRectMode mode = FILLRECT_OPAQUE)
 {
 	GfxFillRect(r.left, r.top, r.right, r.bottom, colour, mode);
 }
@@ -174,7 +173,7 @@ void CheckBlitter();
 
 bool FillDrawPixelInfo(DrawPixelInfo *n, int left, int top, int width, int height);
 
-static inline bool FillDrawPixelInfo(DrawPixelInfo *n, const Rect &r)
+inline bool FillDrawPixelInfo(DrawPixelInfo *n, const Rect &r)
 {
 	return FillDrawPixelInfo(n, r.left, r.top, r.Width(), r.Height());
 }
@@ -186,7 +185,7 @@ static inline bool FillDrawPixelInfo(DrawPixelInfo *n, const Rect &r)
  * @param size The height or width of the object to draw.
  * @return Offset of where to start drawing the object.
  */
-static inline int CenterBounds(int min, int max, int size)
+inline int CenterBounds(int min, int max, int size)
 {
 	return (min + max - size + 1) / 2;
 }
@@ -211,10 +210,10 @@ void SortResolutions();
 bool ToggleFullScreen(bool fs);
 
 /* gfx.cpp */
-byte GetCharacterWidth(FontSize size, WChar key);
+byte GetCharacterWidth(FontSize size, char32_t key);
 byte GetDigitWidth(FontSize size = FS_NORMAL);
 void GetBroadestDigit(uint *front, uint *next, FontSize size = FS_NORMAL);
-uint64 GetBroadestDigitsValue(uint count, FontSize size = FS_NORMAL);
+uint64_t GetBroadestDigitsValue(uint count, FontSize size = FS_NORMAL);
 
 extern int font_height_cache[FS_END];
 
@@ -227,5 +226,20 @@ inline int GetCharacterHeight(FontSize size)
 {
 	return font_height_cache[size];
 }
+
+/* Scoped temporary screen pitch override */
+struct TemporaryScreenPitchOverride {
+	int old_pitch;
+
+	TemporaryScreenPitchOverride(int new_pitch) : old_pitch(_screen.pitch)
+	{
+		_screen.pitch = new_pitch;
+	}
+
+	~TemporaryScreenPitchOverride()
+	{
+		_screen.pitch = this->old_pitch;
+	}
+};
 
 #endif /* GFX_FUNC_H */

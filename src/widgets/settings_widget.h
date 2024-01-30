@@ -11,7 +11,7 @@
 #define WIDGETS_SETTINGS_WIDGET_H
 
 /** Widgets of the #GameOptionsWindow class. */
-enum GameOptionsWidgets {
+enum GameOptionsWidgets : WidgetID {
 	WID_GO_TAB_GENERAL,            ///< General tab.
 	WID_GO_TAB_GRAPHICS,           ///< Graphics tab.
 	WID_GO_TAB_SOUND,              ///< Sound tab.
@@ -25,6 +25,8 @@ enum GameOptionsWidgets {
 	WID_GO_GUI_SCALE,              ///< GUI Scale slider.
 	WID_GO_GUI_SCALE_AUTO,         ///< Autodetect GUI scale button.
 	WID_GO_GUI_SCALE_BEVEL_BUTTON, ///< Toggle for chunky bevels.
+	WID_GO_GUI_FONT_SPRITE,        ///< Toggle whether to prefer the sprite font over TTF fonts.
+	WID_GO_GUI_FONT_AA,            ///< Toggle whether to anti-alias fonts.
 	WID_GO_GUI_SCALE_MAIN_TOOLBAR, ///< Toggle for bigger main toolbar.
 	WID_GO_BASE_GRF_DROPDOWN,      ///< Use to select a base GRF.
 	WID_GO_BASE_GRF_PARAMETERS,    ///< Base GRF parameters.
@@ -55,7 +57,7 @@ enum GameOptionsWidgets {
 };
 
 /** Widgets of the #GameSettingsWindow class. */
-enum GameSettingsWidgets {
+enum GameSettingsWidgets : WidgetID {
 	WID_GS_FILTER,             ///< Text filter.
 	WID_GS_OPTIONSPANEL,       ///< Panel widget containing the option lists.
 	WID_GS_SCROLLBAR,          ///< Scrollbar.
@@ -72,7 +74,7 @@ enum GameSettingsWidgets {
 };
 
 /** Widgets of the #CustomCurrencyWindow class. */
-enum CustomCurrencyWidgets {
+enum CustomCurrencyWidgets : WidgetID {
 	WID_CC_RATE_DOWN,      ///< Down button.
 	WID_CC_RATE_UP,        ///< Up button.
 	WID_CC_RATE,           ///< Rate of currency.

@@ -95,7 +95,7 @@
 	EnforceCompanyModeValid(false);
 	EnforcePrecondition(false, IsValidGroup(group_id));
 
-	return ScriptObject::DoCommand(0, group_id | GroupFlags::GF_REPLACE_PROTECTION, enable ? 1 : 0, CMD_SET_GROUP_FLAG);
+	return ScriptObject::DoCommand(0, group_id | static_cast<uint32_t>(GroupFlags::GF_REPLACE_PROTECTION), enable ? 1 : 0, CMD_SET_GROUP_FLAG);
 }
 
 /* static */ bool ScriptGroup::GetAutoReplaceProtection(GroupID group_id)
@@ -198,8 +198,8 @@
 {
 	if (!IsValidGroup(group_id)) return -1;
 
-	uint32 occupancy = 0;
-	uint32 vehicle_count = 0;
+	uint32_t occupancy = 0;
+	uint32_t vehicle_count = 0;
 
 	for (const Vehicle *v : Vehicle::Iterate()) {
 		if (v->group_id != group_id) continue;

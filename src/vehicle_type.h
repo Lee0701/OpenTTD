@@ -13,7 +13,7 @@
 #include "core/enum_type.hpp"
 
 /** The type all our vehicle IDs have. */
-typedef uint32 VehicleID;
+typedef uint32_t VehicleID;
 
 static const int GROUND_ACCELERATION = 9800; ///< Acceleration due to gravity, 9.8 m/s^2
 
@@ -37,6 +37,7 @@ enum VehicleType : byte {
 DECLARE_POSTFIX_INCREMENT(VehicleType)
 /** Helper information for extract tool. */
 template <> struct EnumPropsT<VehicleType> : MakeEnumPropsT<VehicleType, byte, VEH_TRAIN, VEH_END, VEH_INVALID, 3> {};
+DECLARE_ENUM_AS_ADDABLE(VehicleType)
 
 struct Vehicle;
 struct Train;
@@ -124,6 +125,6 @@ enum EngineImageType {
 	EIT_PREVIEW    = 0x21,  ///< Vehicle drawn in preview window, news, ...
 };
 
-static const uint32 VEHICLE_NAME_NO_GROUP = 0x80000000; ///< String constant to not include the vehicle's group name, if using the long name format
+static const uint32_t VEHICLE_NAME_NO_GROUP = 0x80000000; ///< String constant to not include the vehicle's group name, if using the long name format
 
 #endif /* VEHICLE_TYPE_H */

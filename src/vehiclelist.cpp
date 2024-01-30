@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "train.h"
 #include "vehiclelist.h"
+#include "vehiclelist_func.h"
 #include "group.h"
 #include "tracerestrict.h"
 
@@ -19,7 +20,7 @@
  * Pack a VehicleListIdentifier in a single uint32.
  * @return The packed identifier.
  */
-uint32 VehicleListIdentifier::Pack() const
+uint32_t VehicleListIdentifier::Pack() const
 {
 	byte c = this->company == OWNER_NONE ? 0xF : (byte)this->company;
 	assert(c             < (1 <<  4));
@@ -36,7 +37,7 @@ uint32 VehicleListIdentifier::Pack() const
  * @param data The data to unpack.
  * @return true iff the data was valid (enough).
  */
-bool VehicleListIdentifier::UnpackIfValid(uint32 data)
+bool VehicleListIdentifier::UnpackIfValid(uint32_t data)
 {
 	byte c        = GB(data, 28, 4);
 	this->company = c == 0xF ? OWNER_NONE : (CompanyID)c;
@@ -51,7 +52,7 @@ bool VehicleListIdentifier::UnpackIfValid(uint32 data)
  * Decode a packed vehicle list identifier into a new one.
  * @param data The data to unpack.
  */
-/* static */ VehicleListIdentifier VehicleListIdentifier::UnPack(uint32 data)
+/* static */ VehicleListIdentifier VehicleListIdentifier::UnPack(uint32_t data)
 {
 	VehicleListIdentifier result;
 	[[maybe_unused]] bool ret = result.UnpackIfValid(data);
@@ -109,16 +110,16 @@ void BuildDepotVehicleList(VehicleType type, TileIndex tile, VehicleList *engine
 /** Cargo filter functions */
 bool VehicleCargoFilter(const Vehicle *v, const CargoID cid)
 {
-	if (cid == CF_ANY) {
+	if (cid == CargoFilterCriteria::CF_ANY) {
 		return true;
-	} else if (cid == CF_NONE) {
+	} else if (cid == CargoFilterCriteria::CF_NONE) {
 		for (const Vehicle *w = v; w != nullptr; w = w->Next()) {
 			if (w->cargo_cap > 0) {
 				return false;
 			}
 		}
 		return true;
-	} else if (cid == CF_FREIGHT) {
+	} else if (cid == CargoFilterCriteria::CF_FREIGHT) {
 		bool have_capacity = false;
 		for (const Vehicle *w = v; w != nullptr; w = w->Next()) {
 			if (w->cargo_cap) {
@@ -151,7 +152,7 @@ bool GenerateVehicleSortList(VehicleList *list, const VehicleListIdentifier &vli
 	list->clear();
 
 	auto add_veh = [&](const Vehicle *v) {
-		if (cid == CF_ANY || VehicleCargoFilter(v, cid)) list->push_back(v);
+		if (cid == CargoFilterCriteria::CF_ANY || VehicleCargoFilter(v, cid)) list->push_back(v);
 	};
 
 	auto fill_all_vehicles = [&]() {
@@ -164,17 +165,11 @@ bool GenerateVehicleSortList(VehicleList *list, const VehicleListIdentifier &vli
 
 	switch (vli.type) {
 		case VL_STATION_LIST:
-			for (const Vehicle *v : Vehicle::Iterate()) {
-				if (v->type == vli.vtype && v->IsPrimaryVehicle()) {
-					for (const Order *order : v->Orders()) {
-						if ((order->IsType(OT_GOTO_STATION) || order->IsType(OT_GOTO_WAYPOINT) || order->IsType(OT_IMPLICIT))
-								&& order->GetDestination() == vli.index) {
-							add_veh(v);
-							break;
-						}
-					}
-				}
-			}
+			FindVehiclesWithOrder(
+				[&vli](const Vehicle *v) { return v->type == vli.vtype; },
+				[&vli](const Order *order) { return (order->IsType(OT_GOTO_STATION) || order->IsType(OT_GOTO_WAYPOINT) || order->IsType(OT_IMPLICIT)) && order->GetDestination() == vli.index; },
+				[&add_veh](const Vehicle *v) { add_veh(v); }
+			);
 			break;
 
 		case VL_SHARED_ORDERS: {
@@ -206,16 +201,11 @@ bool GenerateVehicleSortList(VehicleList *list, const VehicleListIdentifier &vli
 			break;
 
 		case VL_DEPOT_LIST:
-			for (const Vehicle *v : Vehicle::Iterate()) {
-				if (v->type == vli.vtype && v->IsPrimaryVehicle()) {
-					for (const Order *order : v->Orders()) {
-						if (order->IsType(OT_GOTO_DEPOT) && !(order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) && order->GetDestination() == vli.index) {
-							add_veh(v);
-							break;
-						}
-					}
-				}
-			}
+			FindVehiclesWithOrder(
+				[&vli](const Vehicle *v) { return v->type == vli.vtype; },
+				[&vli](const Order *order) { return order->IsType(OT_GOTO_DEPOT) && !(order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) && order->GetDestination() == vli.index; },
+				[&add_veh](const Vehicle *v) { add_veh(v); }
+			);
 			break;
 
 		case VL_SLOT_LIST: {

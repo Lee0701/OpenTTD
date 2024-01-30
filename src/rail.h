@@ -23,15 +23,18 @@
 #include "settings_type.h"
 #include <vector>
 
-/** Railtype flags. */
-enum RailTypeFlags {
+/** Railtype flag bit numbers. */
+enum RailTypeFlag {
 	RTF_CATENARY          = 0,                           ///< Bit number for drawing a catenary.
 	RTF_NO_LEVEL_CROSSING = 1,                           ///< Bit number for disallowing level crossings.
 	RTF_HIDDEN            = 2,                           ///< Bit number for hiding from selection.
 	RTF_NO_SPRITE_COMBINE = 3,                           ///< Bit number for using non-combined junctions.
 	RTF_ALLOW_90DEG       = 4,                           ///< Bit number for always allowed 90 degree turns, regardless of setting.
 	RTF_DISALLOW_90DEG    = 5,                           ///< Bit number for never allowed 90 degree turns, regardless of setting.
+};
 
+/** Railtype flags. */
+enum RailTypeFlags : uint8_t {
 	RTFB_NONE              = 0,                          ///< All flags cleared.
 	RTFB_CATENARY          = 1 << RTF_CATENARY,          ///< Value for drawing a catenary.
 	RTFB_NO_LEVEL_CROSSING = 1 << RTF_NO_LEVEL_CROSSING, ///< Value for disallowing level crossings.
@@ -229,27 +232,27 @@ public:
 	/**
 	 * Signal extra aspects
 	 */
-	uint8 signal_extra_aspects;
+	uint8_t signal_extra_aspects;
 
 	/**
 	 * Cost multiplier for building this rail type
 	 */
-	uint16 cost_multiplier;
+	uint16_t cost_multiplier;
 
 	/**
 	 * Cost multiplier for maintenance of this rail type
 	 */
-	uint16 maintenance_multiplier;
+	uint16_t maintenance_multiplier;
 
 	/**
 	 * Acceleration type of this rail type
 	 */
-	uint8 acceleration_type;
+	uint8_t acceleration_type;
 
 	/**
 	 * Maximum speed for vehicles travelling on this rail type
 	 */
-	uint16 max_speed;
+	uint16_t max_speed;
 
 	/**
 	 * Unique 32 bit rail type identifier
@@ -325,7 +328,7 @@ public:
  * @param railtype the rail type which the information is requested for
  * @return The pointer to the RailTypeInfo
  */
-static inline const RailTypeInfo *GetRailTypeInfo(RailType railtype)
+inline const RailTypeInfo *GetRailTypeInfo(RailType railtype)
 {
 	extern RailTypeInfo _railtypes[RAILTYPE_END];
 	dbg_assert_msg(railtype < RAILTYPE_END, "%u", railtype);
@@ -340,7 +343,7 @@ static inline const RailTypeInfo *GetRailTypeInfo(RailType railtype)
  * @param  enginetype The RailType of the engine we are considering.
  * @param  tiletype   The RailType of the tile we are considering.
  */
-static inline bool IsCompatibleRail(RailType enginetype, RailType tiletype)
+inline bool IsCompatibleRail(RailType enginetype, RailType tiletype)
 {
 	return HasBit(GetRailTypeInfo(enginetype)->compatible_railtypes, tiletype);
 }
@@ -353,7 +356,7 @@ static inline bool IsCompatibleRail(RailType enginetype, RailType tiletype)
  * @param  enginetype The RailType of the engine we are considering.
  * @param  tiletype   The RailType of the tile we are considering.
  */
-static inline bool HasPowerOnRail(RailType enginetype, RailType tiletype)
+inline bool HasPowerOnRail(RailType enginetype, RailType tiletype)
 {
 	return HasBit(GetRailTypeInfo(enginetype)->powered_railtypes, tiletype);
 }
@@ -363,7 +366,7 @@ static inline bool HasPowerOnRail(RailType enginetype, RailType tiletype)
  * @param rt The RailType to check.
  * @return Whether level crossings are not allowed.
  */
-static inline bool RailNoLevelCrossings(RailType rt)
+inline bool RailNoLevelCrossings(RailType rt)
 {
 	return HasBit(GetRailTypeInfo(rt)->flags, RTF_NO_LEVEL_CROSSING);
 }
@@ -375,7 +378,7 @@ static inline bool RailNoLevelCrossings(RailType rt)
  * @param def Default value to use if the rail type doesn't specify anything.
  * @return True if 90 degree turns are disallowed between the two rail types.
  */
-static inline bool Rail90DegTurnDisallowed(RailType rt1, RailType rt2, bool def = _settings_game.pf.forbid_90_deg)
+inline bool Rail90DegTurnDisallowed(RailType rt1, RailType rt2, bool def = _settings_game.pf.forbid_90_deg)
 {
 	if (rt1 == INVALID_RAILTYPE || rt2 == INVALID_RAILTYPE) return def;
 
@@ -388,17 +391,17 @@ static inline bool Rail90DegTurnDisallowed(RailType rt1, RailType rt2, bool def 
 	return rt1_90deg || rt2_90deg;
 }
 
-static inline bool Rail90DegTurnDisallowedTilesFromDiagDir(TileIndex t1, TileIndex t2, DiagDirection t1_towards_t2, bool def = _settings_game.pf.forbid_90_deg)
+inline bool Rail90DegTurnDisallowedTilesFromDiagDir(TileIndex t1, TileIndex t2, DiagDirection t1_towards_t2, bool def = _settings_game.pf.forbid_90_deg)
 {
 	return Rail90DegTurnDisallowed(GetTileRailTypeByEntryDir(t1, ReverseDiagDir(t1_towards_t2)), GetTileRailTypeByEntryDir(t2, t1_towards_t2), def);
 }
 
-static inline bool Rail90DegTurnDisallowedAdjacentTiles(TileIndex t1, TileIndex t2, bool def = _settings_game.pf.forbid_90_deg)
+inline bool Rail90DegTurnDisallowedAdjacentTiles(TileIndex t1, TileIndex t2, bool def = _settings_game.pf.forbid_90_deg)
 {
 	return Rail90DegTurnDisallowedTilesFromDiagDir(t1, t2, DiagdirBetweenTiles(t1, t2));
 }
 
-static inline bool Rail90DegTurnDisallowedTilesFromTrackdir(TileIndex t1, TileIndex t2, Trackdir t1_td, bool def = _settings_game.pf.forbid_90_deg)
+inline bool Rail90DegTurnDisallowedTilesFromTrackdir(TileIndex t1, TileIndex t2, Trackdir t1_td, bool def = _settings_game.pf.forbid_90_deg)
 {
 	return Rail90DegTurnDisallowedTilesFromDiagDir(t1, t2, TrackdirToExitdir(t1_td));
 }
@@ -408,7 +411,7 @@ static inline bool Rail90DegTurnDisallowedTilesFromTrackdir(TileIndex t1, TileIn
  * @param railtype The railtype being built.
  * @return The cost multiplier.
  */
-static inline Money RailBuildCost(RailType railtype)
+inline Money RailBuildCost(RailType railtype)
 {
 	dbg_assert(railtype < RAILTYPE_END);
 	return (_price[PR_BUILD_RAIL] * GetRailTypeInfo(railtype)->cost_multiplier) >> 3;
@@ -419,7 +422,7 @@ static inline Money RailBuildCost(RailType railtype)
  * @param railtype The railtype being removed.
  * @return The cost.
  */
-static inline Money RailClearCost(RailType railtype)
+inline Money RailClearCost(RailType railtype)
 {
 	/* Clearing rail in fact earns money, but if the build cost is set
 	 * very low then a loophole exists where money can be made.
@@ -436,7 +439,7 @@ static inline Money RailClearCost(RailType railtype)
  * @param to   The railtype we are converting to
  * @return Cost per TrackBit
  */
-static inline Money RailConvertCost(RailType from, RailType to)
+inline Money RailConvertCost(RailType from, RailType to)
 {
 	/* Get the costs for removing and building anew
 	 * A conversion can never be more costly */
@@ -463,7 +466,7 @@ static inline Money RailConvertCost(RailType from, RailType to)
  * @param total_num Total number of track bits of all railtypes.
  * @return Total cost.
  */
-static inline Money RailMaintenanceCost(RailType railtype, uint32 num, uint32 total_num)
+inline Money RailMaintenanceCost(RailType railtype, uint32_t num, uint32_t total_num)
 {
 	dbg_assert(railtype < RAILTYPE_END);
 	return (_price[PR_INFRASTRUCTURE_RAIL] * GetRailTypeInfo(railtype)->maintenance_multiplier * num * (1 + IntSqrt(total_num))) >> 11; // 4 bits fraction for the multiplier and 7 bits scaling.
@@ -474,7 +477,7 @@ static inline Money RailMaintenanceCost(RailType railtype, uint32 num, uint32 to
  * @param num Number of signals.
  * @return Total cost.
  */
-static inline Money SignalMaintenanceCost(uint32 num)
+inline Money SignalMaintenanceCost(uint32_t num)
 {
 	return (_price[PR_INFRASTRUCTURE_RAIL] * 15 * num * (1 + IntSqrt(num))) >> 8; // 1 bit fraction for the multiplier and 7 bits scaling.
 }

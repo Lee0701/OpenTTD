@@ -35,6 +35,9 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :velmi pomalá
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Každých {COMMA} minut skutečného času
 
+STR_RIVERS_VERY_MANY                                            :{RED}Velice mnoho
+STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extrémně mnoho
+
 STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
@@ -89,9 +92,6 @@ STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Vlastní interval (minuty skutečného času)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Interval automatického ukládání v minutách skutečného času
-
-STR_RIVERS_VERY_MANY                                            :{RED}Velice mnoho
-STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extrémně mnoho
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :je ti doporučeno ponechat tohle nastavení na výchozí hodnotě
 
@@ -155,7 +155,6 @@ STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE                     :Lodě se snaž�
 STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE_HELPTEXT            :Pokud je zapnuto, lodě se pokouší vyhýbat se jedna druhé. Nejlepší výsledky v kombinaci s vypntými zatáčkami o 90 stupňů.
 
 STR_CONFIG_SETTING_CHUNNEL                                      :Povolit stavbu tunelů pod vodou: {STRING}
-STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :Pokud je zapnuto, tunely mohou být postaveny pod úrovní moře. Vyžaduje, aby konce tunelu byly nejméně 3 políčka od pobřeží.
 
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :Vlaky různých společností se nemůžou srazit: {STRING}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :Toto nastavení v síťové hře se sdílenou železniční infrastrukturou zabrání nedůvěryhodným hráčům záměrně způsobovat srážky svých vlaků s ostatními.
@@ -481,12 +480,6 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :bez omezení
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :Města mohou stavět mosty: {STRING}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :Povolí městům výstavbu mostů
 
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR                            :Faktor produkce nákladu městy (méně < 0 < více): {STRING}
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR_HELPTEXT                   :Cestující, pošta a ostatní produkce nákladu městy zhruba odpovídá hodnotě 2^faktor (je závislá exponenciálně)
-
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR                        :Faktor produkce nákladu průmyslem (méně < 0 < více): {STRING}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR_HELPTEXT               :Produkce nákladu průmyslem zhruba odpovídá hodnotě 2^faktor (je závislá exponenciálně). Nezahrnuje průmysl založený na kácení lesů.{}Není zaručena úplná kompatibilita se všemi průmyslovými řetězci z NewGRF.
-
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :Žádná města nad výškovou úroveň: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :Nad stanovenou výškovou úrovní se nebudou při tvorbě mapy generovat žádná města.
 
@@ -580,14 +573,12 @@ STR_CONFIG_SETTING_INTERFACE_WALLCLOCK                          :{ORANGE}Nástě
 STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}Nastavení klienta
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}Nastavení této mapy
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}Jízdní řády
-STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}Návěstidla (pokročilé)
+STR_CONFIG_SETTING_INTERFACE_SIGNALS                            :{ORANGE}Návěstidla
 STR_CONFIG_SETTING_INTERFACE_SAVE                               :{ORANGE}Ukládání & automatické ukládání
 STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS                    :{ORANGE}Okna vozidel
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}Řeky a jezera
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}Distribuce nákladu - prolomit u jednotlivých druhů
-STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}Stromy
 STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS                         :{ORANGE}Režim mapy
-STR_CONFIG_SETTING_VIEWPORT_SIGNALS                             :{ORANGE}Návěstidla
 STR_CONFIG_SETTING_VEHICLE_ROUTE_OVERLAY                        :{ORANGE}Vykreslování trasy vozidla
 STR_CONFIG_SETTING_SHARING                                      :{ORANGE}Sdílení infrastruktury
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}Editor scénáře
@@ -837,7 +828,6 @@ STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL                     :úprava adaptac
 STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL                          :úprava návěstního režimu
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT                            :vstoupit nebo počkat
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE                             :pokusit se o vstup
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ON_RES                      :pokusit se o vstup (při rezervaci)
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT                           :uvolnit (čelo vlaku)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK                            :uvolnit (konec vlaku)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT                :koncové PBS: vstoupit nebo počkat
@@ -845,7 +835,6 @@ STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE                 :koncové PBS: p
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE                     :koncové PBS: uvolnit
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT_ITEM                       :vstoupit do slotu {STRING}{BLACK}{STRING} nebo čekat u PBS návěstidla,
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM                        :pokusit se o vstup do slotu {STRING}{BLACK}{STRING} a bez ohledu na výsledek pokračovat,
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM_RES_ONLY               :pokusit se o vstup do slotu {STRING}{BLACK}{STRING} (při PBS rezervaci) a bez ohledu na výsledek pokračovat,
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT_ITEM                      :uvolnit slot {STRING}{BLACK}{STRING} při průjezdu čela vlaku kolem návěstidla,
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK_ITEM                       :uvolnit slot {STRING}{BLACK}{STRING} při průjezdu konce vlaku kolem návěstidla,
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT_ITEM           :PBS rezervace končící zde: vstoupit do slotu {STRING}{BLACK}{STRING} nebo čekat u PBS návěstidla,
@@ -1735,7 +1724,7 @@ STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}Počet v
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}Most je na stanici příliš nízký
 STR_ERROR_BRIDGE_PILLARS_OBSTRUCT_STATION                       :{WHITE}Pilíře mostu překáží stanici
 STR_ERROR_CHUNNEL_THROUGH_MAP_BORDER                            :{WHITE}Podmořský tunel by končil mimo mapu
-STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... podmořské tunely musí mít nájezdovou rampu v délce od 5 do {NUM} políček.
+STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... podmořské tunely musí mít nájezdovou rampu v délce od {NUM} do {NUM} políček.
 STR_ERROR_TUNNEL_TOO_MANY                                       :{WHITE}... příliš mnoho tunelů
 STR_ERROR_NO_DRILLING_ABOVE_CHUNNEL                             :{WHITE}Nad podmořskými tunely není povolen provoz ropných vrtů.
 STR_ERROR_ANOTHER_TUNNEL_IN_THE_WAY_FOR_CHUNNEL                 :{WHITE}Na průjezd pod druhým tunelem jsou zapotřebí tři políčka

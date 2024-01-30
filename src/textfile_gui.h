@@ -30,14 +30,12 @@ struct TextfileWindow : public Window, MissingGlyphSearcher {
 	Scrollbar *vscroll;              ///< Vertical scrollbar.
 	Scrollbar *hscroll;              ///< Horizontal scrollbar.
 
-	TextfileWindow(TextfileType file_type);
-
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override;
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override;
-	void DrawWidget(const Rect &r, int widget) const override;
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override;
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override;
+	void DrawWidget(const Rect &r, WidgetID widget) const override;
 	void OnResize() override;
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override;
-	void OnDropdownSelect(int widget, int index) override;
+	void OnDropdownSelect(WidgetID widget, int index) override;
 
 	void Reset() override;
 	FontSize DefaultSize() override;
@@ -54,6 +52,9 @@ struct TextfileWindow : public Window, MissingGlyphSearcher {
 	}
 
 protected:
+	TextfileWindow(TextfileType file_type);
+	void ConstructWindow();
+
 	struct Line {
 		int top{0};                  ///< Top scroll position in visual lines.
 		int bottom{0};               ///< Bottom scroll position in visual lines.

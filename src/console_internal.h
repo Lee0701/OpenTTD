@@ -84,10 +84,10 @@ void IConsoleClearBuffer();
 void IConsoleStdLibRegister();
 
 /* Supporting functions */
-bool GetArgumentInteger(uint32 *value, const char *arg);
+bool GetArgumentInteger(uint32_t *value, const char *arg);
 
 void IConsoleGUIInit();
 void IConsoleGUIFree();
-void IConsoleGUIPrint(TextColour colour_code, char *string);
+void IConsoleGUIPrint(TextColour colour_code, std::string str);
 
 #endif /* CONSOLE_INTERNAL_H */

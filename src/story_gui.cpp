@@ -252,7 +252,7 @@ protected:
 	DropDownList BuildDropDownList() const
 	{
 		DropDownList list;
-		uint16 page_num = 1;
+		uint16_t page_num = 1;
 		for (const StoryPage *p : this->story_pages) {
 			bool current_page = p->index == this->selected_page_id;
 			if (!p->title.empty()) {
@@ -537,7 +537,7 @@ protected:
 	 * Internal event handler for when a page element is clicked.
 	 * @param pe The clicked page element.
 	 */
-	void OnPageElementClick(const StoryPageElement& pe)
+	void OnPageElementClick(const StoryPageElement &pe)
 	{
 		switch (pe.type) {
 			case SPET_TEXT:
@@ -635,7 +635,7 @@ public:
 	 * Sets the selected page.
 	 * @param page_index pool index of the page to select.
 	 */
-	void SetSelectedPage(uint16 page_index)
+	void SetSelectedPage(uint16_t page_index)
 	{
 		if (this->selected_page_id != page_index) {
 			if (this->active_button_id) ResetObjectToPlace();
@@ -646,7 +646,7 @@ public:
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SB_SEL_PAGE: {
@@ -680,7 +680,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_SB_PAGE_PANEL) return;
 
@@ -754,7 +754,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_SB_SEL_PAGE && widget != WID_SB_PAGE_PANEL) return;
 
@@ -804,7 +804,7 @@ public:
 		this->vscroll->SetCount(this->GetContentHeight());
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SB_SEL_PAGE: {
@@ -845,7 +845,7 @@ public:
 		}
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_SB_SEL_PAGE) return;
 
@@ -950,7 +950,7 @@ GUIStoryPageElementList::SortFunction * const StoryBookWindow::page_element_sort
 	&PageElementOrderSorter,
 };
 
-static const NWidgetPart _nested_story_book_widgets[] = {
+static constexpr NWidgetPart _nested_story_book_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_SB_CAPTION), SetDataTip(STR_JUST_STRING1, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1045,7 +1045,7 @@ static CursorID TranslateStoryPageButtonCursor(StoryPageButtonCursor cursor)
  * @param company 'Owner' of the story book, may be #INVALID_COMPANY.
  * @param page_id Page to open, may be #INVALID_STORY_PAGE.
  */
-void ShowStoryBook(CompanyID company, uint16 page_id)
+void ShowStoryBook(CompanyID company, uint16_t page_id)
 {
 	if (!Company::IsValidID(company)) company = (CompanyID)INVALID_COMPANY;
 

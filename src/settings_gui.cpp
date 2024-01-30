@@ -58,6 +58,10 @@
 
 extern void FlushDeparturesWindowTextCaches();
 
+#if defined(WITH_FREETYPE) || defined(_WIN32) || defined(WITH_COCOA)
+#	define HAS_TRUETYPE_FONT
+#endif
+
 static const StringID _autosave_dropdown[] = {
 	STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF,
 	STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_10_MINUTES,
@@ -69,7 +73,7 @@ static const StringID _autosave_dropdown[] = {
 };
 
 /** Available settings for autosave intervals. */
-static const uint32 _autosave_dropdown_to_minutes[] = {
+static const uint32_t _autosave_dropdown_to_minutes[] = {
 	0, ///< never
 	10,
 	30,
@@ -96,16 +100,18 @@ static void ShowCustCurrency();
 /** Window for displaying the textfile of a BaseSet. */
 template <class TBaseSet>
 struct BaseSetTextfileWindow : public TextfileWindow {
-	const TBaseSet* baseset; ///< View the textfile of this BaseSet.
+	const TBaseSet *baseset; ///< View the textfile of this BaseSet.
 	StringID content_type;   ///< STR_CONTENT_TYPE_xxx for title.
 
-	BaseSetTextfileWindow(TextfileType file_type, const TBaseSet* baseset, StringID content_type) : TextfileWindow(file_type), baseset(baseset), content_type(content_type)
+	BaseSetTextfileWindow(TextfileType file_type, const TBaseSet *baseset, StringID content_type) : TextfileWindow(file_type), baseset(baseset), content_type(content_type)
 	{
+		this->ConstructWindow();
+
 		const char *textfile = this->baseset->GetTextfile(file_type);
 		this->LoadTextfile(textfile, BASESET_DIR);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TF_CAPTION) {
 			SetDParam(0, content_type);
@@ -121,7 +127,7 @@ struct BaseSetTextfileWindow : public TextfileWindow {
  * @param content_type STR_CONTENT_TYPE_xxx for title.
  */
 template <class TBaseSet>
-void ShowBaseSetTextfileWindow(TextfileType file_type, const TBaseSet* baseset, StringID content_type)
+void ShowBaseSetTextfileWindow(TextfileType file_type, const TBaseSet *baseset, StringID content_type)
 {
 	CloseWindowById(WC_TEXTFILE, file_type);
 	new BaseSetTextfileWindow<TBaseSet>(file_type, baseset, content_type);
@@ -179,7 +185,7 @@ struct GameOptionsWindow : Window {
 	GameSettings *opt;
 	bool reload;
 	int gui_scale;
-	static inline int active_tab = WID_GO_TAB_GENERAL;
+	static inline WidgetID active_tab = WID_GO_TAB_GENERAL;
 
 	enum class QueryTextItem {
 		None,
@@ -217,13 +223,13 @@ struct GameOptionsWindow : Window {
 	 * @param selected_index Currently selected item
 	 * @return the built dropdown list, or nullptr if the widget has no dropdown menu.
 	 */
-	DropDownList BuildDropDownList(int widget, int *selected_index) const
+	DropDownList BuildDropDownList(WidgetID widget, int *selected_index) const
 	{
 		DropDownList list;
 		switch (widget) {
 			case WID_GO_CURRENCY_DROPDOWN: { // Setup currencies dropdown
 				*selected_index = this->opt->locale.currency;
-				uint64 disabled = _game_mode == GM_MENU ? 0LL : ~GetMaskOfAllowedCurrencies();
+				uint64_t disabled = _game_mode == GM_MENU ? 0LL : ~GetMaskOfAllowedCurrencies();
 
 				/* Add non-custom currencies; sorted naturally */
 				for (const CurrencySpec &currency : _currency_specs) {
@@ -322,7 +328,7 @@ struct GameOptionsWindow : Window {
 		return list;
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GO_CURRENCY_DROPDOWN: {
@@ -369,7 +375,7 @@ struct GameOptionsWindow : Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GO_BASE_GRF_DESCRIPTION:
@@ -406,15 +412,20 @@ struct GameOptionsWindow : Window {
 		}
 	}
 
-	void SetTab(int widget)
+	void SetTab(WidgetID widget)
 	{
 		this->SetWidgetsLoweredState(false, WID_GO_TAB_GENERAL, WID_GO_TAB_GRAPHICS, WID_GO_TAB_SOUND);
 		this->LowerWidget(widget);
 		GameOptionsWindow::active_tab = widget;
 
-		int pane = 0;
-		if (widget == WID_GO_TAB_GRAPHICS) pane = 1;
-		else if (widget == WID_GO_TAB_SOUND) pane = 2;
+		int pane;
+		switch (widget) {
+			case WID_GO_TAB_GENERAL: pane = 0; break;
+			case WID_GO_TAB_GRAPHICS: pane = 1; break;
+			case WID_GO_TAB_SOUND: pane = 2; break;
+			default: NOT_REACHED();
+		}
+
 		this->GetWidget<NWidgetStacked>(WID_GO_TAB_SELECTION)->SetDisplayedPlane(pane);
 		this->SetDirty();
 	}
@@ -455,7 +466,7 @@ struct GameOptionsWindow : Window {
 		if (changed) this->ReInit(0, 0, this->flags & WF_CENTERED);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_GO_TEXT_SFX_VOLUME:
@@ -467,7 +478,14 @@ struct GameOptionsWindow : Window {
 				break;
 			}
 
-			default: {
+			case WID_GO_CURRENCY_DROPDOWN:
+			case WID_GO_AUTOSAVE_DROPDOWN:
+			case WID_GO_LANG_DROPDOWN:
+			case WID_GO_RESOLUTION_DROPDOWN:
+			case WID_GO_REFRESH_RATE_DROPDOWN:
+			case WID_GO_BASE_GRF_DROPDOWN:
+			case WID_GO_BASE_SFX_DROPDOWN:
+			case WID_GO_BASE_MUSIC_DROPDOWN: {
 				int selected;
 				size->width = std::max(size->width, GetDropDownListDimension(this->BuildDropDownList(widget, &selected)).width + padding.width);
 				break;
@@ -475,7 +493,7 @@ struct GameOptionsWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget >= WID_GO_BASE_GRF_TEXTFILE && widget < WID_GO_BASE_GRF_TEXTFILE + TFT_CONTENT_END) {
 			if (BaseGraphics::GetUsedSet() == nullptr) return;
@@ -569,6 +587,31 @@ struct GameOptionsWindow : Window {
 				break;
 			}
 
+#ifdef HAS_TRUETYPE_FONT
+			case WID_GO_GUI_FONT_SPRITE:
+				_fcsettings.prefer_sprite = !_fcsettings.prefer_sprite;
+
+				this->SetWidgetLoweredState(WID_GO_GUI_FONT_SPRITE, _fcsettings.prefer_sprite);
+				this->SetWidgetDisabledState(WID_GO_GUI_FONT_AA, _fcsettings.prefer_sprite);
+				this->SetDirty();
+
+				InitFontCache(false);
+				InitFontCache(true);
+				ClearFontCache();
+
+				FontChanged();
+				break;
+
+			case WID_GO_GUI_FONT_AA:
+				_fcsettings.global_aa = !_fcsettings.global_aa;
+
+				this->SetWidgetLoweredState(WID_GO_GUI_FONT_AA, _fcsettings.global_aa);
+				MarkWholeScreenDirty();
+
+				ClearFontCache();
+				break;
+#endif /* HAS_TRUETYPE_FONT */
+
 			case WID_GO_GUI_SCALE_MAIN_TOOLBAR: {
 				_settings_client.gui.bigger_main_toolbar = !_settings_client.gui.bigger_main_toolbar;
 
@@ -650,7 +693,14 @@ struct GameOptionsWindow : Window {
 				OpenBrowser(BaseMusic::GetUsedSet()->url);
 				break;
 
-			default: {
+			case WID_GO_CURRENCY_DROPDOWN:
+			case WID_GO_AUTOSAVE_DROPDOWN:
+			case WID_GO_LANG_DROPDOWN:
+			case WID_GO_RESOLUTION_DROPDOWN:
+			case WID_GO_REFRESH_RATE_DROPDOWN:
+			case WID_GO_BASE_GRF_DROPDOWN:
+			case WID_GO_BASE_SFX_DROPDOWN:
+			case WID_GO_BASE_MUSIC_DROPDOWN: {
 				int selected;
 				DropDownList list = this->BuildDropDownList(widget, &selected);
 				if (!list.empty()) {
@@ -676,7 +726,7 @@ struct GameOptionsWindow : Window {
 		}
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_GO_CURRENCY_DROPDOWN: // Currency
@@ -727,7 +777,7 @@ struct GameOptionsWindow : Window {
 			case WID_GO_BASE_GRF_DROPDOWN:
 				if (_game_mode == GM_MENU) {
 					CloseWindowByClass(WC_GRF_PARAMETERS);
-					auto* set = BaseGraphics::GetSet(index);
+					auto set = BaseGraphics::GetSet(index);
 					BaseGraphics::SetSet(set);
 					this->reload = true;
 					this->InvalidateData();
@@ -736,7 +786,7 @@ struct GameOptionsWindow : Window {
 
 			case WID_GO_BASE_SFX_DROPDOWN:
 				if (_game_mode == GM_MENU) {
-					auto* set = BaseSounds::GetSet(index);
+					auto set = BaseSounds::GetSet(index);
 					BaseSounds::ini_set = set->name;
 					BaseSounds::SetSet(set);
 					this->reload = true;
@@ -794,6 +844,12 @@ struct GameOptionsWindow : Window {
 
 		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_AUTO, _gui_scale_cfg == -1);
 		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_BEVEL_BUTTON, _settings_client.gui.scale_bevels);
+#ifdef HAS_TRUETYPE_FONT
+		this->SetWidgetLoweredState(WID_GO_GUI_FONT_SPRITE, _fcsettings.prefer_sprite);
+		this->SetWidgetLoweredState(WID_GO_GUI_FONT_AA, _fcsettings.global_aa);
+		this->SetWidgetDisabledState(WID_GO_GUI_FONT_AA, _fcsettings.prefer_sprite);
+#endif /* HAS_TRUETYPE_FONT */
+
 		this->SetWidgetLoweredState(WID_GO_GUI_SCALE_MAIN_TOOLBAR, _settings_client.gui.bigger_main_toolbar);
 
 		this->SetWidgetDisabledState(WID_GO_BASE_GRF_DROPDOWN, _game_mode != GM_MENU);
@@ -813,7 +869,7 @@ struct GameOptionsWindow : Window {
 	}
 };
 
-static const NWidgetPart _nested_game_options_widgets[] = {
+static constexpr NWidgetPart _nested_game_options_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -873,6 +929,16 @@ static const NWidgetPart _nested_game_options_widgets[] = {
 							NWidget(NWID_SPACER), SetMinimalSize(1, 0), SetFill(1, 0),
 							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_GUI_SCALE_MAIN_TOOLBAR), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_GUI_SCALE_MAIN_TOOLBAR_TOOLTIP),
 						EndContainer(),
+#ifdef HAS_TRUETYPE_FONT
+						NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_GUI_FONT_SPRITE, STR_NULL),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_GUI_FONT_SPRITE), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP),
+						EndContainer(),
+						NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+							NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_GUI_FONT_AA, STR_NULL),
+							NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_GO_GUI_FONT_AA), SetMinimalSize(21, 9), SetDataTip(STR_EMPTY, STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP),
+						EndContainer(),
+#endif /* HAS_TRUETYPE_FONT */
 					EndContainer(),
 				EndContainer(),
 
@@ -1082,16 +1148,12 @@ struct SettingEntry : BaseSettingEntry {
 	void SetButtons(byte new_val);
 	StringID GetHelpText() const;
 
-	struct SetValueDParamsTempData {
-		char buffer[512];
-	};
-
-	void SetValueDParams(uint first_param, int32 value, std::unique_ptr<SetValueDParamsTempData> &tempdata) const;
+	void SetValueDParams(uint first_param, int32_t value) const;
 
 protected:
 	SettingEntry(const IntSettingDesc *setting);
 	virtual void DrawSetting(GameSettings *settings_ptr, int left, int right, int y, bool highlight) const override;
-	virtual void DrawSettingString(uint left, uint right, int y, bool highlight, int32 value) const;
+	virtual void DrawSettingString(uint left, uint right, int y, bool highlight, int32_t value) const;
 
 private:
 	bool IsVisibleByRestrictionMode(RestrictionMode mode) const;
@@ -1124,7 +1186,7 @@ struct CargoDestPerCargoSettingEntry : SettingEntry {
 	bool UpdateFilterState(SettingFilter &filter, bool force_visible) override;
 
 protected:
-	void DrawSettingString(uint left, uint right, int y, bool highlight, int32 value) const override;
+	void DrawSettingString(uint left, uint right, int y, bool highlight, int32_t value) const override;
 };
 
 /** Conditionally hidden standard setting */
@@ -1373,8 +1435,8 @@ bool SettingEntry::IsVisibleByRestrictionMode(RestrictionMode mode) const
 
 	/* Read the current value. */
 	const void *object = ResolveObject(&GetGameSettings(), sd);
-	int64 current_value = sd->Read(object);
-	int64 filter_value;
+	int64_t current_value = sd->Read(object);
+	int64_t filter_value;
 
 	if (mode == RM_CHANGED_AGAINST_DEFAULT) {
 		/* This entry shall only be visible, if the value deviates from its default value. */
@@ -1456,19 +1518,18 @@ static const void *ResolveObject(const GameSettings *settings_ptr, const IntSett
  * @param first_param First DParam to use
  * @param value Setting value to set params for.
  */
-void SettingEntry::SetValueDParams(uint first_param, int32 value, std::unique_ptr<SettingEntry::SetValueDParamsTempData> &tempdata) const
+void SettingEntry::SetValueDParams(uint first_param, int32_t value) const
 {
+	const uint initial_first_param = first_param;
 	if (this->setting->IsBoolSetting()) {
 		SetDParam(first_param++, value != 0 ? STR_CONFIG_SETTING_ON : STR_CONFIG_SETTING_OFF);
 	} else if (this->setting->flags & SF_DEC1SCALE) {
-		tempdata.reset(new SettingEntry::SetValueDParamsTempData());
 		double scale = std::exp2(((double)value) / 10);
 		int log = -std::min(0, (int)std::floor(std::log10(scale)) - 2);
 
-		auto tmp_params = MakeParameters(value, (int64)(scale * std::pow(10.f, (float)log)), log);
-		GetStringWithArgs(tempdata->buffer, this->setting->str_val, tmp_params, lastof(tempdata->buffer));
 		SetDParam(first_param++, STR_JUST_RAW_STRING);
-		SetDParamStr(first_param++, tempdata->buffer);
+		auto tmp_params = MakeParameters(value, (int64_t)(scale * std::pow(10.f, (float)log)), log);
+		SetDParamStr(first_param++, GetStringWithArgs(this->setting->str_val, tmp_params));
 	} else {
 		if ((this->setting->flags & SF_ENUM) != 0) {
 			StringID str = STR_UNDEFINED;
@@ -1488,6 +1549,13 @@ void SettingEntry::SetValueDParams(uint first_param, int32 value, std::unique_pt
 			SetDParam(first_param++, this->setting->str_val + ((value == 0 && (this->setting->flags & SF_GUI_0_IS_SPECIAL) != 0) ? 1 : 0));
 		}
 		SetDParam(first_param++, value);
+	}
+	if (this->setting->guiproc != nullptr) {
+		SettingOnGuiCtrlData data;
+		data.type = SOGCT_VALUE_DPARAMS;
+		data.offset = initial_first_param;
+		data.val = value;
+		this->setting->guiproc(data);
 	}
 }
 
@@ -1514,7 +1582,7 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right, 
 	bool editable = sd->IsEditable();
 
 	SetDParam(0, STR_CONFIG_SETTING_VALUE);
-	int32 value = sd->Read(ResolveObject(settings_ptr, sd));
+	int32_t value = sd->Read(ResolveObject(settings_ptr, sd));
 	if (sd->IsBoolSetting()) {
 		/* Draw checkbox for boolean-value either on/off */
 		DrawBoolButton(buttons_left, button_y, value != 0, editable);
@@ -1524,21 +1592,27 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right, 
 	} else {
 		/* Draw [<][>] boxes for settings of an integer-type */
 		DrawArrowButtons(buttons_left, button_y, COLOUR_YELLOW, state,
-				editable && value != (sd->flags & SF_GUI_0_IS_SPECIAL ? 0 : sd->min), editable && (uint32)value != sd->max);
+				editable && value != (sd->flags & SF_GUI_0_IS_SPECIAL ? 0 : sd->min), editable && (uint32_t)value != sd->max);
 	}
 	this->DrawSettingString(text_left, text_right, y + (SETTING_HEIGHT - GetCharacterHeight(FS_NORMAL)) / 2, highlight, value);
 }
 
-void SettingEntry::DrawSettingString(uint left, uint right, int y, bool highlight, int32 value) const
+void SettingEntry::DrawSettingString(uint left, uint right, int y, bool highlight, int32_t value) const
 {
-	std::unique_ptr<SettingEntry::SetValueDParamsTempData> tempdata;
-	this->SetValueDParams(1, value, tempdata);
+	this->SetValueDParams(1, value);
 	int edge = DrawString(left, right, y, this->setting->str, highlight ? TC_WHITE : TC_LIGHT_BLUE);
-	if (this->setting->flags & SF_GUI_ADVISE_DEFAULT && value != this->setting->def && edge != 0) {
-		const Dimension warning_dimensions = GetSpriteSize(SPR_WARNING_SIGN);
-		if ((int)warning_dimensions.height <= SETTING_HEIGHT) {
-			DrawSprite(SPR_WARNING_SIGN, 0, (_current_text_dir == TD_RTL) ? edge - warning_dimensions.width - 5 : edge + 5,
-					y + (((int)GetCharacterHeight(FS_NORMAL) - (int)warning_dimensions.height) / 2));
+
+	if (this->setting->guiproc != nullptr && edge != 0) {
+		SettingOnGuiCtrlData data;
+		data.type = SOGCT_GUI_SPRITE;
+		data.val = value;
+		if (this->setting->guiproc(data)) {
+			SpriteID sprite = (SpriteID)data.output;
+			const Dimension warning_dimensions = GetSpriteSize(sprite);
+			if ((int)warning_dimensions.height <= SETTING_HEIGHT) {
+				DrawSprite(sprite, 0, (_current_text_dir == TD_RTL) ? edge - warning_dimensions.width - 5 : edge + 5,
+						y + (((int)GetCharacterHeight(FS_NORMAL) - (int)warning_dimensions.height) / 2));
+			}
 		}
 	}
 }
@@ -1553,13 +1627,12 @@ void CargoDestPerCargoSettingEntry::Init(byte level)
 	BaseSettingEntry::Init(level);
 }
 
-void CargoDestPerCargoSettingEntry::DrawSettingString(uint left, uint right, int y, bool highlight, int32 value) const
+void CargoDestPerCargoSettingEntry::DrawSettingString(uint left, uint right, int y, bool highlight, int32_t value) const
 {
 	assert(this->setting->str == STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO);
 	SetDParam(0, CargoSpec::Get(this->cargo)->name);
 	SetDParam(1, STR_CONFIG_SETTING_VALUE);
-	std::unique_ptr<SettingEntry::SetValueDParamsTempData> tempdata;
-	this->SetValueDParams(2, value, tempdata);
+	this->SetValueDParams(2, value);
 	DrawString(left, right, y, STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM, highlight ? TC_WHITE : TC_LIGHT_BLUE);
 }
 
@@ -2001,12 +2074,6 @@ static SettingsContainer &GetSettingsTree()
 					viewport_map->Add(new SettingEntry("gui.show_tunnels_on_map"));
 					viewport_map->Add(new SettingEntry("gui.use_owner_colour_for_tunnelbridge"));
 				}
-				SettingsPage *viewport_signals = viewports->Add(new SettingsPage(STR_CONFIG_SETTING_VIEWPORT_SIGNALS));
-				{
-					viewport_signals->Add(new SettingEntry("construction.train_signal_side"));
-					viewport_signals->Add(new SettingEntry("gui.show_restricted_signal_recolour"));
-					viewport_signals->Add(new SettingEntry("gui.show_all_signal_default"));
-				}
 				SettingsPage *viewport_route_overlay = viewports->Add(new SettingsPage(STR_CONFIG_SETTING_VEHICLE_ROUTE_OVERLAY));
 				{
 					viewport_route_overlay->Add(new SettingEntry("gui.show_vehicle_route_mode"));
@@ -2040,10 +2107,10 @@ static SettingsContainer &GetSettingsTree()
 			{
 				construction->Add(new SettingEntry("gui.link_terraform_toolbar"));
 				construction->Add(new SettingEntry("gui.persistent_buildingtools"));
-				construction->Add(new SettingEntry("gui.quick_goto"));
 				construction->Add(new SettingEntry("gui.default_rail_type"));
 				construction->Add(new SettingEntry("gui.default_road_type"));
 				construction->Add(new SettingEntry("gui.demolish_confirm_mode"));
+				construction->Add(new SettingEntry("gui.show_rail_polyline_tool"));
 			}
 
 			SettingsPage *vehicle_windows = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS));
@@ -2125,15 +2192,23 @@ static SettingsContainer &GetSettingsTree()
 				timetable->Add(new SettingEntry("gui.timetable_start_text_entry"));
 			}
 
-			SettingsPage *advsig = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS));
+			SettingsPage *signals = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_SIGNALS));
 			{
-				advsig->Add(new SettingEntry("gui.show_progsig_ui"));
-				advsig->Add(new SettingEntry("gui.show_noentrysig_ui"));
-				advsig->Add(new SettingEntry("gui.show_adv_tracerestrict_features"));
-				advsig->Add(new SettingEntry("gui.adv_sig_bridge_tun_modes"));
+				signals->Add(new SettingEntry("construction.train_signal_side"));
+				signals->Add(new SettingEntry("gui.semaphore_build_before"));
+				signals->Add(new SettingEntry("gui.signal_gui_mode"));
+				signals->Add(new SettingEntry("gui.cycle_signal_types"));
+				signals->Add(new SettingEntry("gui.drag_signals_fixed_distance"));
+				signals->Add(new SettingEntry("gui.drag_signals_skip_stations"));
+				signals->Add(new SettingEntry("gui.auto_remove_signals"));
+				signals->Add(new SettingEntry("gui.show_restricted_signal_recolour"));
+				signals->Add(new SettingEntry("gui.show_all_signal_default"));
+				signals->Add(new SettingEntry("gui.show_progsig_ui"));
+				signals->Add(new SettingEntry("gui.show_noentrysig_ui"));
+				signals->Add(new SettingEntry("gui.show_adv_tracerestrict_features"));
+				signals->Add(new SettingEntry("gui.adv_sig_bridge_tun_modes"));
 			}
 
-			interface->Add(new SettingEntry("gui.fast_forward_speed_limit"));
 			interface->Add(new SettingEntry("gui.toolbar_pos"));
 			interface->Add(new SettingEntry("gui.statusbar_pos"));
 			interface->Add(new SettingEntry("gui.prefer_teamchat"));
@@ -2170,14 +2245,6 @@ static SettingsContainer &GetSettingsTree()
 
 		SettingsPage *company = main->Add(new SettingsPage(STR_CONFIG_SETTING_COMPANY));
 		{
-			company->Add(new SettingEntry("gui.semaphore_build_before"));
-			company->Add(new SettingEntry("gui.cycle_signal_types"));
-			company->Add(new SettingEntry("gui.signal_gui_mode"));
-			company->Add(new SettingEntry("gui.drag_signals_fixed_distance"));
-			company->Add(new SettingEntry("gui.drag_signals_skip_stations"));
-			company->Add(new SettingEntry("gui.auto_remove_signals"));
-			company->Add(new SettingEntry("gui.new_nonstop"));
-			company->Add(new SettingEntry("gui.stop_location"));
 			company->Add(new SettingEntry("gui.starting_colour"));
 			company->Add(new SettingEntry("gui.starting_colour_secondary"));
 			company->Add(new SettingEntry("company.engine_renew"));
@@ -2244,6 +2311,7 @@ static SettingsContainer &GetSettingsTree()
 
 			SettingsPage *routing = vehicles->Add(new SettingsPage(STR_CONFIG_SETTING_VEHICLES_ROUTING));
 			{
+				routing->Add(new SettingEntry("vehicle.road_side"));
 				routing->Add(new SettingEntry("pf.pathfinder_for_trains"));
 				routing->Add(new SettingEntry("difficulty.line_reverse_mode"));
 				routing->Add(new SettingEntry("pf.reverse_at_signals"));
@@ -2255,9 +2323,14 @@ static SettingsContainer &GetSettingsTree()
 				routing->Add(new SettingEntry("vehicle.drive_through_train_depot"));
 			}
 
-			vehicles->Add(new SettingEntry("order.no_servicing_if_no_breakdowns"));
-			vehicles->Add(new SettingEntry("order.serviceathelipad"));
-			vehicles->Add(new SettingEntry("order.nonstop_only"));
+			SettingsPage *orders = vehicles->Add(new SettingsPage(STR_CONFIG_SETTING_VEHICLES_ORDERS));
+			{
+				orders->Add(new SettingEntry("gui.new_nonstop"));
+				orders->Add(new SettingEntry("gui.quick_goto"));
+				orders->Add(new SettingEntry("gui.stop_location"));
+				orders->Add(new SettingEntry("order.nonstop_only"));
+			}
+
 			vehicles->Add(new SettingEntry("vehicle.adjacent_crossings"));
 			vehicles->Add(new SettingEntry("vehicle.safer_crossings"));
 			vehicles->Add(new SettingEntry("vehicle.non_leading_engines_keep_name"));
@@ -2286,11 +2359,14 @@ static SettingsContainer &GetSettingsTree()
 			limitations->Add(new SettingEntry("vehicle.rail_depot_speed_limit"));
 			limitations->Add(new SettingEntry("station.station_spread"));
 			limitations->Add(new SettingEntry("station.distant_join_stations"));
+			limitations->Add(new SettingEntry("station.modified_catchment"));
+			limitations->Add(new SettingEntry("station.catchment_increase"));
 			limitations->Add(new SettingEntry("construction.road_stop_on_town_road"));
 			limitations->Add(new SettingEntry("construction.road_stop_on_competitor_road"));
 			limitations->Add(new SettingEntry("construction.crossing_with_competitor"));
 			limitations->Add(new SettingEntry("construction.convert_town_road_no_houses"));
 			limitations->Add(new SettingEntry("vehicle.disable_elrails"));
+			limitations->Add(new SettingEntry("order.station_length_loading_penalty"));
 			limitations->Add(new SettingEntry("construction.maximum_signal_evaluations"));
 			limitations->Add(new SettingEntry("construction.enable_build_river"));
 			limitations->Add(new SettingEntry("construction.enable_remove_water"));
@@ -2310,12 +2386,14 @@ static SettingsContainer &GetSettingsTree()
 		{
 			disasters->Add(new SettingEntry("difficulty.disasters"));
 			disasters->Add(new SettingEntry("difficulty.economy"));
+			disasters->Add(new SettingEntry("vehicle.plane_crashes"));
+			disasters->Add(new SettingEntry("vehicle.no_train_crash_other_company"));
 			disasters->Add(new SettingEntry("difficulty.vehicle_breakdowns"));
 			disasters->Add(new SettingEntry("vehicle.improved_breakdowns"));
 			disasters->Add(new SettingEntry("vehicle.pay_for_repair"));
 			disasters->Add(new SettingEntry("vehicle.repair_cost"));
-			disasters->Add(new SettingEntry("vehicle.plane_crashes"));
-			disasters->Add(new SettingEntry("vehicle.no_train_crash_other_company"));
+			disasters->Add(new SettingEntry("order.no_servicing_if_no_breakdowns"));
+			disasters->Add(new SettingEntry("order.serviceathelipad"));
 		}
 
 		SettingsPage *genworld = main->Add(new SettingsPage(STR_CONFIG_SETTING_GENWORLD));
@@ -2347,23 +2425,20 @@ static SettingsContainer &GetSettingsTree()
 			genworld->Add(new ConditionallyHiddenSettingEntry("game_creation.rainforest_line_height", rainforest_line_height_hide));
 			genworld->Add(new SettingEntry("game_creation.amount_of_rocks"));
 			genworld->Add(new SettingEntry("game_creation.height_affects_rocks"));
-			genworld->Add(new SettingEntry("game_creation.tree_placer"));
-			genworld->Add(new SettingEntry("vehicle.road_side"));
-			genworld->Add(new SettingEntry("economy.larger_towns"));
-			genworld->Add(new SettingEntry("economy.initial_city_size"));
-			genworld->Add(new SettingEntry("economy.town_layout"));
-			genworld->Add(new SettingEntry("economy.town_min_distance"));
-			genworld->Add(new SettingEntry("economy.max_town_heightlevel"));
-			genworld->Add(new SettingEntry("economy.min_town_land_area"));
-			genworld->Add(new SettingEntry("economy.min_city_land_area"));
 			genworld->Add(new SettingEntry("game_creation.build_public_roads"));
-			genworld->Add(new SettingEntry("difficulty.industry_density"));
-			genworld->Add(new SettingEntry("gui.pause_on_newgame"));
-			genworld->Add(new SettingEntry("game_creation.ending_year"));
 		}
 
 		SettingsPage *environment = main->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT));
 		{
+			SettingsPage *time = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_TIME));
+			{
+				time->Add(new SettingEntry("game_creation.ending_year"));
+				time->Add(new SettingEntry("gui.pause_on_newgame"));
+				time->Add(new SettingEntry("gui.fast_forward_speed_limit"));
+				time->Add(new SettingEntry("economy.day_length_factor"));
+				time->Add(new SettingEntry("economy.tick_rate"));
+			}
+
 			SettingsPage *authorities = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_AUTHORITIES));
 			{
 				authorities->Add(new SettingEntry("difficulty.town_council_tolerance"));
@@ -2392,6 +2467,8 @@ static SettingsContainer &GetSettingsTree()
 					town_zone->Add(new SettingEntry("economy.city_zone_3_mult"));
 					town_zone->Add(new SettingEntry("economy.city_zone_4_mult"));
 				}
+				towns->Add(new SettingEntry("economy.town_cargo_scale"));
+				towns->Add(new SettingEntry("economy.town_cargo_scale_mode"));
 				towns->Add(new SettingEntry("economy.town_growth_rate"));
 				towns->Add(new SettingEntry("economy.town_growth_cargo_transported"));
 				towns->Add(new SettingEntry("economy.town_zone_calc_mode"));
@@ -2401,20 +2478,28 @@ static SettingsContainer &GetSettingsTree()
 				towns->Add(new SettingEntry("economy.town_build_tunnels"));
 				towns->Add(new SettingEntry("economy.town_max_road_slope"));
 				towns->Add(new SettingEntry("economy.found_town"));
+				towns->Add(new SettingEntry("economy.town_layout"));
+				towns->Add(new SettingEntry("economy.larger_towns"));
+				towns->Add(new SettingEntry("economy.initial_city_size"));
+				towns->Add(new SettingEntry("economy.town_min_distance"));
+				towns->Add(new SettingEntry("economy.max_town_heightlevel"));
+				towns->Add(new SettingEntry("economy.min_town_land_area"));
+				towns->Add(new SettingEntry("economy.min_city_land_area"));
 				towns->Add(new SettingEntry("economy.town_cargogen_mode"));
-				towns->Add(new SettingEntry("economy.town_cargo_scale_factor"));
 				towns->Add(new SettingEntry("economy.random_road_reconstruction"));
 			}
 
 			SettingsPage *industries = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_INDUSTRIES));
 			{
+				industries->Add(new SettingEntry("economy.industry_cargo_scale"));
+				industries->Add(new SettingEntry("economy.industry_cargo_scale_mode"));
+				industries->Add(new SettingEntry("difficulty.industry_density"));
 				industries->Add(new SettingEntry("construction.raw_industry_construction"));
 				industries->Add(new SettingEntry("construction.industry_platform"));
 				industries->Add(new SettingEntry("economy.multiple_industry_per_town"));
 				industries->Add(new SettingEntry("game_creation.oil_refinery_limit"));
 				industries->Add(new SettingEntry("economy.type"));
 				industries->Add(new SettingEntry("station.serve_neutral_industries"));
-				industries->Add(new SettingEntry("economy.industry_cargo_scale_factor"));
 				industries->Add(new SettingEntry("station.station_delivery_mode"));
 			}
 
@@ -2441,23 +2526,21 @@ static SettingsContainer &GetSettingsTree()
 				cdist->Add(new SettingEntry("linkgraph.short_path_saturation"));
 				cdist->Add(new SettingEntry("linkgraph.aircraft_link_scale"));
 			}
-			SettingsPage *treedist = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_TREES));
+
+			SettingsPage *trees = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_TREES));
 			{
-				treedist->Add(new SettingEntry("construction.extra_tree_placement"));
-				treedist->Add(new SettingEntry("construction.trees_around_snow_line_enabled"));
-				treedist->Add(new SettingEntry("construction.trees_around_snow_line_range"));
-				treedist->Add(new SettingEntry("construction.trees_around_snow_line_dynamic_range"));
-				treedist->Add(new SettingEntry("construction.tree_growth_rate"));
+				trees->Add(new SettingEntry("game_creation.tree_placer"));
+				trees->Add(new SettingEntry("construction.extra_tree_placement"));
+				trees->Add(new SettingEntry("construction.trees_around_snow_line_enabled"));
+				trees->Add(new SettingEntry("construction.trees_around_snow_line_range"));
+				trees->Add(new SettingEntry("construction.trees_around_snow_line_dynamic_range"));
+				trees->Add(new SettingEntry("construction.tree_growth_rate"));
 			}
 
 			environment->Add(new SettingEntry("construction.flood_from_edges"));
 			environment->Add(new SettingEntry("construction.map_edge_mode"));
-			environment->Add(new SettingEntry("economy.day_length_factor"));
-			environment->Add(new SettingEntry("station.modified_catchment"));
-			environment->Add(new SettingEntry("station.catchment_increase"));
 			environment->Add(new SettingEntry("station.cargo_class_rating_wait_time"));
 			environment->Add(new SettingEntry("station.station_size_rating_cargo_amount"));
-			environment->Add(new SettingEntry("economy.tick_rate"));
 		}
 
 		SettingsPage *ai = main->Add(new SettingsPage(STR_CONFIG_SETTING_AI));
@@ -2602,7 +2685,7 @@ struct GameSettingsWindow : Window {
 		_circle_size = maxdim(GetSpriteSize(SPR_CIRCLE_FOLDED), GetSpriteSize(SPR_CIRCLE_UNFOLDED));
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_GS_OPTIONSPANEL:
@@ -2670,7 +2753,7 @@ struct GameSettingsWindow : Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GS_RESTRICT_DROPDOWN:
@@ -2688,7 +2771,7 @@ struct GameSettingsWindow : Window {
 		}
 	}
 
-	DropDownList BuildDropDownList(int widget) const
+	DropDownList BuildDropDownList(WidgetID widget) const
 	{
 		DropDownList list;
 		switch (widget) {
@@ -2712,7 +2795,7 @@ struct GameSettingsWindow : Window {
 		return list;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_GS_OPTIONSPANEL: {
@@ -2739,29 +2822,34 @@ struct GameSettingsWindow : Window {
 					DrawString(tr, STR_CONFIG_SETTING_TYPE);
 					tr.top += GetCharacterHeight(FS_NORMAL);
 
-					std::unique_ptr<SettingEntry::SetValueDParamsTempData> tempdata;
-					this->last_clicked->SetValueDParams(0, sd->def, tempdata);
+					this->last_clicked->SetValueDParams(0, sd->def);
 					DrawString(tr, STR_CONFIG_SETTING_DEFAULT_VALUE);
 					tr.top += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_normal;
 
-					if (sd->flags & SF_GUI_ADVISE_DEFAULT) {
-						const Dimension warning_dimensions = GetSpriteSize(SPR_WARNING_SIGN);
-						const int step_height = std::max<int>(warning_dimensions.height, GetCharacterHeight(FS_NORMAL));
-						const int text_offset_y = (step_height - GetCharacterHeight(FS_NORMAL)) / 2;
-						const int warning_offset_y = (step_height - warning_dimensions.height) / 2;
-						const bool rtl = _current_text_dir == TD_RTL;
+					if (sd->guiproc != nullptr) {
+						SettingOnGuiCtrlData data;
+						data.type = SOGCT_GUI_WARNING_TEXT;
+						data.text = STR_NULL;
+						data.val = sd->Read(ResolveObject(settings_ptr, sd));
+						if (sd->guiproc(data)) {
+							const Dimension warning_dimensions = GetSpriteSize(SPR_WARNING_SIGN);
+							const int step_height = std::max<int>(warning_dimensions.height, GetCharacterHeight(FS_NORMAL));
+							const int text_offset_y = (step_height - GetCharacterHeight(FS_NORMAL)) / 2;
+							const int warning_offset_y = (step_height - warning_dimensions.height) / 2;
+							const bool rtl = _current_text_dir == TD_RTL;
 
-						int left = tr.left;
-						int right = tr.right;
-						DrawSprite(SPR_WARNING_SIGN, 0, rtl ? right - warning_dimensions.width - 5 : left + 5, tr.top + warning_offset_y);
-						if (rtl) {
-							right -= (warning_dimensions.width + 10);
-						} else {
-							left += (warning_dimensions.width + 10);
+							int left = tr.left;
+							int right = tr.right;
+							DrawSprite(SPR_WARNING_SIGN, 0, rtl ? right - warning_dimensions.width - 5 : left + 5, tr.top + warning_offset_y);
+							if (rtl) {
+								right -= (warning_dimensions.width + 10);
+							} else {
+								left += (warning_dimensions.width + 10);
+							}
+							DrawString(left, right, tr.top + text_offset_y, data.text, TC_RED);
+
+							tr.top += step_height + WidgetDimensions::scaled.vsep_normal;
 						}
-						DrawString(left, right, tr.top + text_offset_y, STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT, TC_RED);
-
-						tr.top += step_height + WidgetDimensions::scaled.vsep_normal;
 					}
 
 					DrawStringMultiLine(tr, this->last_clicked->GetHelpText(), TC_WHITE);
@@ -2783,7 +2871,7 @@ struct GameSettingsWindow : Window {
 		this->last_clicked = pe;
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_GS_EXPAND_ALL:
@@ -2859,7 +2947,7 @@ struct GameSettingsWindow : Window {
 			return;
 		}
 
-		int32 value = sd->Read(ResolveObject(settings_ptr, sd));
+		int32_t value = sd->Read(ResolveObject(settings_ptr, sd));
 
 		/* clicked on the icon on the left side. Either scroller, bool on/off or dropdown */
 		if (x < SETTING_BUTTON_WIDTH && (sd->flags & (SF_GUI_DROPDOWN | SF_ENUM))) {
@@ -2916,7 +3004,7 @@ struct GameSettingsWindow : Window {
 			this->SetDirty();
 		} else if (x < SETTING_BUTTON_WIDTH) {
 			this->SetDisplayedHelpText(pe);
-			int32 oldvalue = value;
+			int32_t oldvalue = value;
 
 			if (sd->IsBoolSetting()) {
 				value ^= 1;
@@ -2925,7 +3013,7 @@ struct GameSettingsWindow : Window {
 				 * 50-steps you should be able to get from min to max,
 				 * unless specified otherwise in the 'interval' variable
 				 * of the current setting. */
-				uint32 step = (sd->interval == 0) ? ((sd->max - sd->min) / 50) : sd->interval;
+				uint32_t step = (sd->interval == 0) ? ((sd->max - sd->min) / 50) : sd->interval;
 				if (step == 0) step = 1;
 
 				/* don't allow too fast scrolling */
@@ -2938,10 +3026,10 @@ struct GameSettingsWindow : Window {
 				if (x >= SETTING_BUTTON_WIDTH / 2) {
 					value += step;
 					if (sd->min < 0) {
-						assert((int32)sd->max >= 0);
-						if (value > (int32)sd->max) value = (int32)sd->max;
+						assert((int32_t)sd->max >= 0);
+						if (value > (int32_t)sd->max) value = (int32_t)sd->max;
 					} else {
-						if ((uint32)value > sd->max) value = (int32)sd->max;
+						if ((uint32_t)value > sd->max) value = (int32_t)sd->max;
 					}
 					if (value < sd->min) value = sd->min; // skip between "disabled" and minimum
 				} else {
@@ -2968,7 +3056,7 @@ struct GameSettingsWindow : Window {
 		} else {
 			/* Only open editbox if clicked for the second time, and only for types where it is sensible for. */
 			if (this->last_clicked == pe && !sd->IsBoolSetting() && !(sd->flags & (SF_GUI_DROPDOWN | SF_ENUM))) {
-				int64 value64 = value;
+				int64_t value64 = value;
 				/* Show the correct currency or velocity translated value */
 				if (sd->flags & SF_GUI_CURRENCY) value64 *= _currency->rate;
 				if (sd->flags & SF_GUI_VELOCITY) value64 = ConvertKmhishSpeedToDisplaySpeed((uint)value64, VEH_TRAIN);
@@ -3010,7 +3098,7 @@ struct GameSettingsWindow : Window {
 		assert(this->valuewindow_entry != nullptr);
 		const IntSettingDesc *sd = this->valuewindow_entry->setting;
 
-		int32 value;
+		int32_t value;
 		if (!StrEmpty(str)) {
 			long long llvalue;
 			if (sd->flags & SF_DECIMAL1 || (sd->flags & SF_GUI_VELOCITY && _settings_game.locale.units_velocity == 3)) {
@@ -3022,7 +3110,7 @@ struct GameSettingsWindow : Window {
 			/* Save the correct currency-translated value */
 			if (sd->flags & SF_GUI_CURRENCY) llvalue /= _currency->rate;
 
-			value = ClampTo<int32>(llvalue);
+			value = ClampTo<int32_t>(llvalue);
 
 			/* Save the correct velocity-translated value */
 			if (sd->flags & SF_GUI_VELOCITY) value = ConvertDisplaySpeedToKmhishSpeed(value, VEH_TRAIN);
@@ -3034,7 +3122,7 @@ struct GameSettingsWindow : Window {
 		this->SetDirty();
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		switch (widget) {
 			case WID_GS_RESTRICT_DROPDOWN:
@@ -3071,7 +3159,7 @@ struct GameSettingsWindow : Window {
 		}
 	}
 
-	void OnDropdownClose(Point pt, int widget, int index, bool instant_close) override
+	void OnDropdownClose(Point pt, WidgetID widget, int index, bool instant_close) override
 	{
 		if (widget != WID_GS_SETTING_DROPDOWN) {
 			/* Normally the default implementation of OnDropdownClose() takes care of
@@ -3120,7 +3208,7 @@ struct GameSettingsWindow : Window {
 		this->SetWidgetDisabledState(WID_GS_COLLAPSE_ALL, all_folded);
 	}
 
-	void OnEditboxChanged(int wid) override
+	void OnEditboxChanged(WidgetID wid) override
 	{
 		if (wid == WID_GS_FILTER) {
 			this->filter.string.SetFilterTerm(this->filter_editbox.text.buf);
@@ -3141,7 +3229,7 @@ struct GameSettingsWindow : Window {
 
 GameSettings *GameSettingsWindow::settings_ptr = nullptr;
 
-static const NWidgetPart _nested_settings_selection_widgets[] = {
+static constexpr NWidgetPart _nested_settings_selection_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE), SetDataTip(STR_CONFIG_SETTING_TREE_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -3283,7 +3371,7 @@ struct CustomCurrencyWindow : Window {
 		this->SetWidgetDisabledState(WID_CC_YEAR_UP, _custom_currency.to_euro == MAX_YEAR);
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_CC_RATE:      SetDParam(0, 1); SetDParam(1, 1);            break;
@@ -3301,7 +3389,7 @@ struct CustomCurrencyWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			/* Set the appropriate width for the up/down buttons. */
@@ -3328,7 +3416,7 @@ struct CustomCurrencyWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		int line = 0;
 		int len = 0;
@@ -3448,7 +3536,7 @@ struct CustomCurrencyWindow : Window {
 	}
 };
 
-static const NWidgetPart _nested_cust_currency_widgets[] = {
+static constexpr NWidgetPart _nested_cust_currency_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_CURRENCY_WINDOW, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

@@ -919,7 +919,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unidad m
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Selecciona la nnidad monetaria
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Libra británica
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Dólar estadounidense
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -998,6 +998,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Marca es
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Escalar bordes
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Marca esta casilla para escalar los bordes según el tamaño de la interfaz
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1709,6 +1710,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Deshabilitado
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Desactivar mantenimiento cuando las averías están desactivadas: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Cuando se activa, los vehículos no reciben mantenimiento si no pueden averiarse
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Activar límites de velocidad en vagones: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Si se activa, se tienen en cuenta los límites de velocidad de los vagones a la hora de establecer la velocidad máxima de un tren

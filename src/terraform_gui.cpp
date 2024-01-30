@@ -47,7 +47,7 @@ enum DemolishConfirmMode {
 	DCM_INDUSTRY_RAIL_STATION,
 };
 
-void CcTerraform(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcTerraform(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Succeeded()) {
 		if (_settings_client.sound.confirm) SndPlayTileFx(SND_1F_CONSTRUCTION_OTHER, tile);
@@ -221,7 +221,7 @@ struct TerraformToolbarWindow : Window {
 		SetWidgetDisabledState(WID_TT_BUY_LAND, _settings_game.construction.purchase_land_permitted == 0);
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget < WID_TT_BUTTONS_START) return;
 
@@ -325,7 +325,7 @@ struct TerraformToolbarWindow : Window {
 		VpSelectTilesWithMethod(pt.x, pt.y, select_method);
 	}
 
-	Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number) override
+	Point OnInitialPosition(int16_t sm_width, int16_t sm_height, int window_number) override
 	{
 		Point pt = GetToolbarAlignedWindowPosition(sm_width);
 		pt.y += sm_height;
@@ -386,7 +386,7 @@ static Hotkey terraform_hotkeys[] = {
 };
 HotkeyList TerraformToolbarWindow::hotkeys("terraform", terraform_hotkeys, TerraformToolbarGlobalHotkeys);
 
-static const NWidgetPart _nested_terraform_widgets[] = {
+static constexpr NWidgetPart _nested_terraform_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_LANDSCAPING_TOOLBAR, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -473,7 +473,7 @@ static void CommonRaiseLowerBigLand(TileIndex tile, int mode)
 		StringID msg =
 			mode ? STR_ERROR_CAN_T_RAISE_LAND_HERE : STR_ERROR_CAN_T_LOWER_LAND_HERE;
 
-		DoCommandP(tile, SLOPE_N, (uint32)mode, CMD_TERRAFORM_LAND | CMD_MSG(msg), CcTerraform);
+		DoCommandP(tile, SLOPE_N, (uint32_t)mode, CMD_TERRAFORM_LAND | CMD_MSG(msg), CcTerraform);
 	} else {
 		assert(_terraform_size != 0);
 		TileArea ta(tile, _terraform_size, _terraform_size);
@@ -500,13 +500,13 @@ static void CommonRaiseLowerBigLand(TileIndex tile, int mode)
 
 		for (TileIndex tile2 : ta) {
 			if (TileHeight(tile2) == h) {
-				DoCommandP(tile2, SLOPE_N, (uint32)mode, CMD_TERRAFORM_LAND);
+				DoCommandP(tile2, SLOPE_N, (uint32_t)mode, CMD_TERRAFORM_LAND);
 			}
 		}
 	}
 }
 
-static const int8 _multi_terraform_coords[][2] = {
+static const int8_t _multi_terraform_coords[][2] = {
 	{  0, -2},
 	{  4,  0}, { -4,  0}, {  0,  2},
 	{ -8,  2}, { -4,  4}, {  0,  6}, {  4,  4}, {  8,  2},
@@ -517,7 +517,7 @@ static const int8 _multi_terraform_coords[][2] = {
 	{-28,  0}, {-24, -2}, {-20, -4}, {-16, -6}, {-12, -8}, { -8,-10}, { -4,-12}, {  0,-14}, {  4,-12}, {  8,-10}, { 12, -8}, { 16, -6}, { 20, -4}, { 24, -2}, { 28,  0},
 };
 
-static const NWidgetPart _nested_scen_edit_land_gen_widgets[] = {
+static constexpr NWidgetPart _nested_scen_edit_land_gen_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_TERRAFORM_TOOLBAR_LAND_GENERATION_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -628,7 +628,7 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_ETT_DOTS) return;
 
@@ -636,7 +636,7 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 		size->height = std::max<uint>(size->height, ScaleGUITrad(31));
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_ETT_DOTS) return;
 
@@ -644,7 +644,7 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 		int center_y = RoundDivSU(r.top + r.bottom, 2);
 
 		int n = _terraform_size * _terraform_size;
-		const int8 *coords = &_multi_terraform_coords[0][0];
+		const int8_t *coords = &_multi_terraform_coords[0][0];
 
 		assert(n != 0);
 		do {
@@ -653,7 +653,7 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 		} while (--n);
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget < WID_ETT_BUTTONS_START) return;
 
@@ -731,9 +731,9 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 
 	void OnTimeout() override
 	{
-		for (uint i = WID_ETT_START; i < this->nested_array_size; i++) {
-			if (i == WID_ETT_BUTTONS_START) i = WID_ETT_BUTTONS_END; // skip the buttons
-			this->RaiseWidgetWhenLowered(i);
+		for (const auto &pair : this->widget_lookup) {
+			if (pair.first < WID_ETT_START || (pair.first >= WID_ETT_BUTTONS_START && pair.first < WID_ETT_BUTTONS_END)) continue; // skip the buttons
+			this->RaiseWidgetWhenLowered(pair.first);
 		}
 	}
 

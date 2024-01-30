@@ -9,7 +9,6 @@
 
 #include "../../stdafx.h"
 #include "script_list.hpp"
-#include "script_controller.hpp"
 #include "../../debug.h"
 #include "../../script/squirrel.hpp"
 
@@ -1026,6 +1025,9 @@ SQInteger ScriptList::Valuate(HSQUIRRELVM vm)
 	bool backup_allow = ScriptObject::GetAllowDoCommand();
 	ScriptObject::SetAllowDoCommand(false);
 
+	/* Limit the total number of ops that can be consumed by a valuate operation */
+	SQOpsLimiter limiter(vm, MAX_VALUATE_OPS, "valuator function");
+
 	/* Push the function to call */
 	sq_push(vm, 2);
 
@@ -1069,16 +1071,6 @@ SQInteger ScriptList::Valuate(HSQUIRRELVM vm)
 				ScriptObject::SetAllowDoCommand(backup_allow);
 				return sq_throwerror(vm, "return value of valuator is not valid (not integer/bool)");
 			}
-		}
-
-		/* Kill the script when the valuator call takes way too long.
-		 * Triggered by nesting valuators, which then take billions of iterations. */
-		if (ScriptController::GetOpsTillSuspend() < -1000000) {
-			/* See below for explanation. The extra pop is the return value. */
-			sq_pop(vm, nparam + 4);
-
-			ScriptObject::SetAllowDoCommand(backup_allow);
-			return sq_throwerror(vm, "excessive CPU usage in valuator function");
 		}
 
 		/* Was something changed? */

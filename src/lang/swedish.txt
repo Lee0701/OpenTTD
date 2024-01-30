@@ -951,7 +951,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Välj va
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Brittiskt pund
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Amerikansk dollar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1034,6 +1034,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Kryssa i
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Skala bården
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Kryssa i den här rutan för att skala bården efter gränssnittets storlek
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1761,6 +1762,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Inaktiverat
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Inaktivera service när motorstopp är av: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :När det är aktiverat servas inte fordon om de inte kan få motorstopp
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Använd hastighetsbegränsningar för tågvagnar: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :När det är aktiverat tas även hänsyn till vagnarnas hastighetsbegränsningar när ett tågs maxhastighet beräknas

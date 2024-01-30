@@ -14,7 +14,6 @@
 #include "../fileio_type.h"
 #include "../fios.h"
 #include "../strings_type.h"
-#include "../core/span_type.hpp"
 #include "../core/ring_buffer.hpp"
 #include <optional>
 #include <string>
@@ -44,10 +43,10 @@ enum ChunkType {
 
 /** Handlers and description of chunk. */
 struct ChunkHandler {
-	uint32 id;                          ///< Unique ID (4 letters).
+	uint32_t id;                        ///< Unique ID (4 letters).
 	ChunkType type;                     ///< Type of the chunk. @see ChunkType
 
-	ChunkHandler(uint32 id, ChunkType type) : id(id), type(type) {}
+	ChunkHandler(uint32_t id, ChunkType type) : id(id), type(type) {}
 
 	virtual ~ChunkHandler() = default;
 
@@ -83,10 +82,10 @@ struct ChunkHandler {
 using ChunkHandlerRef = std::reference_wrapper<const ChunkHandler>;
 
 /** A table of ChunkHandler entries. */
-using ChunkHandlerTable = span<const ChunkHandlerRef>;
+using ChunkHandlerTable = std::span<const ChunkHandlerRef>;
 
 /** A table of SaveLoadCompat entries. */
-using SaveLoadCompatTable = span<const struct SaveLoadCompat>;
+using SaveLoadCompatTable = std::span<const struct SaveLoadCompat>;
 
 /** Handler for saving/loading an object to/from disk. */
 class SaveLoadHandler {
@@ -263,7 +262,7 @@ enum VarTypes {
 	SLF_ALLOW_NEWLINE   = 1 << 9, ///< Allow new lines in the strings.
 };
 
-typedef uint32 VarType;
+typedef uint32_t VarType;
 
 /** Type of data saved. */
 enum SaveLoadType : byte {
@@ -294,7 +293,7 @@ struct SaveLoad {
 	std::string name;    ///< Name of this field (optional, used for tables).
 	SaveLoadType cmd;    ///< The action to take with the saved/loaded type, All types need different action.
 	VarType conv;        ///< Type of the variable to be saved; this field combines both FileVarType and MemVarType.
-	uint16 length;       ///< (Conditional) length of the variable (eg. arrays) (max array size is 65536 elements).
+	uint16_t length;     ///< (Conditional) length of the variable (eg. arrays) (max array size is 65536 elements).
 	SaveLoadVersion version_from;   ///< Save/load the variable starting from this savegame version.
 	SaveLoadVersion version_to;     ///< Save/load the variable before this savegame version.
 	size_t size;                    ///< The sizeof size.
@@ -313,7 +312,7 @@ struct SaveLoad {
  */
 struct SaveLoadCompat {
 	std::string name;             ///< Name of the field.
-	uint16 length;                ///< Length of the NULL field.
+	uint16_t length;              ///< Length of the NULL field.
 	SaveLoadVersion version_from; ///< Save/load the variable starting from this savegame version.
 	SaveLoadVersion version_to;   ///< Save/load the variable before this savegame version.
 };
@@ -324,7 +323,7 @@ struct SaveLoadCompat {
  * @param type VarType holding information about the variable-type
  * @return the SLE_VAR_* part of a variable-type description
  */
-static inline constexpr VarType GetVarMemType(VarType type)
+inline constexpr VarType GetVarMemType(VarType type)
 {
 	return type & 0xF0; // GB(type, 4, 4) << 4;
 }
@@ -335,7 +334,7 @@ static inline constexpr VarType GetVarMemType(VarType type)
  * @param type VarType holding information about the file-type
  * @return the SLE_FILE_* part of a variable-type description
  */
-static inline VarType GetVarFileType(VarType type)
+inline constexpr VarType GetVarFileType(VarType type)
 {
 	return type & 0xF; // GB(type, 0, 4);
 }
@@ -345,7 +344,7 @@ static inline VarType GetVarFileType(VarType type)
  * @param conv the type to check
  * @return True if it's a numeric type.
  */
-static inline constexpr bool IsNumericType(VarType conv)
+inline constexpr bool IsNumericType(VarType conv)
 {
 	return GetVarMemType(conv) <= SLE_VAR_U64;
 }
@@ -355,7 +354,7 @@ static inline constexpr bool IsNumericType(VarType conv)
  * @param type VarType to get size of.
  * @return size of type in bytes.
  */
-static inline constexpr size_t SlVarSize(VarType type)
+inline constexpr size_t SlVarSize(VarType type)
 {
 	switch (GetVarMemType(type)) {
 		case SLE_VAR_BL: return sizeof(bool);
@@ -383,7 +382,7 @@ static inline constexpr size_t SlVarSize(VarType type)
  * @param size Actual size of variable.
  * @return true iff the sizes match.
  */
-static inline constexpr bool SlCheckVarSize(SaveLoadType cmd, VarType type, size_t length, size_t size)
+inline constexpr bool SlCheckVarSize(SaveLoadType cmd, VarType type, size_t length, size_t size)
 {
 	switch (cmd) {
 		case SL_VAR: return SlVarSize(type) == size;
@@ -853,7 +852,7 @@ static inline constexpr bool SlCheckVarSize(SaveLoadType cmd, VarType type, size
  * @param minor Minor number of the version to check against. If \a minor is 0 or not specified, only the major number is checked.
  * @return Savegame version is earlier than the specified version.
  */
-static inline bool IsSavegameVersionBefore(SaveLoadVersion major, byte minor = 0)
+inline bool IsSavegameVersionBefore(SaveLoadVersion major, byte minor = 0)
 {
 	return _sl_version < major || (minor > 0 && _sl_version == major && _sl_minor_version < minor);
 }
@@ -865,7 +864,7 @@ static inline bool IsSavegameVersionBefore(SaveLoadVersion major, byte minor = 0
  * @param major Major number of the version to check against.
  * @return Savegame version is at most the specified version.
  */
-static inline bool IsSavegameVersionBeforeOrAt(SaveLoadVersion major)
+inline bool IsSavegameVersionBeforeOrAt(SaveLoadVersion major)
 {
 	return _sl_version <= major;
 }
@@ -875,7 +874,7 @@ static inline bool IsSavegameVersionBeforeOrAt(SaveLoadVersion major)
  * everything else has a callback function that returns the address based
  * on the saveload data and the current object for non-globals.
  */
-static inline void *GetVariableAddress(const void *object, const SaveLoad &sld)
+inline void *GetVariableAddress(const void *object, const SaveLoad &sld)
 {
 	/* Entry is a null-variable, mostly used to read old savegames etc. */
 	if (GetVarMemType(sld.conv) == SLE_VAR_NULL) {
@@ -888,8 +887,8 @@ static inline void *GetVariableAddress(const void *object, const SaveLoad &sld)
 	return sld.address_proc(const_cast<void *>(object), sld.extra_data);
 }
 
-int64 ReadValue(const void *ptr, VarType conv);
-void WriteValue(void *ptr, VarType conv, int64 val);
+int64_t ReadValue(const void *ptr, VarType conv);
+void WriteValue(void *ptr, VarType conv, int64_t val);
 
 void SlSetArrayIndex(uint index);
 int SlIterateArray();

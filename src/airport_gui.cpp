@@ -42,7 +42,7 @@ static void ShowBuildAirportPicker(Window *parent);
 
 SpriteID GetCustomAirportSprite(const AirportSpec *as, byte layout);
 
-void CcBuildAirport(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2, uint64 p3, uint32 cmd)
+void CcBuildAirport(const CommandCost &result, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd)
 {
 	if (result.Failed()) return;
 
@@ -57,10 +57,10 @@ void CcBuildAirport(const CommandCost &result, TileIndex tile, uint32 p1, uint32
 static void PlaceAirport(TileIndex tile)
 {
 	if (_selected_airport_index == -1) return;
-	uint32 p2 = _ctrl_pressed;
+	uint32_t p2 = _ctrl_pressed;
 	SB(p2, 16, 16, INVALID_STATION); // no station to join
 
-	uint32 p1 = AirportClass::Get(_selected_airport_class)->GetSpec(_selected_airport_index)->GetIndex();
+	uint32_t p1 = AirportClass::Get(_selected_airport_class)->GetSpec(_selected_airport_index)->GetIndex();
 	p1 |= _selected_airport_layout << 8;
 	CommandContainer cmdcont = NewCommandContainerBasic(tile, p1, p2, CMD_BUILD_AIRPORT | CMD_MSG(STR_ERROR_CAN_T_BUILD_AIRPORT_HERE), CcBuildAirport);
 	ShowSelectStationIfNeeded(cmdcont, TileArea(tile, _thd.size.x / TILE_SIZE, _thd.size.y / TILE_SIZE));
@@ -106,7 +106,7 @@ struct BuildAirToolbarWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_AT_AIRPORT:
@@ -186,7 +186,7 @@ static Hotkey airtoolbar_hotkeys[] = {
 };
 HotkeyList BuildAirToolbarWindow::hotkeys("airtoolbar", airtoolbar_hotkeys, AirportToolbarGlobalHotkeys);
 
-static const NWidgetPart _nested_air_toolbar_widgets[] = {
+static constexpr NWidgetPart _nested_air_toolbar_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_TOOLBAR_AIRCRAFT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -283,7 +283,7 @@ public:
 		this->PickerWindowBase::Close();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_AP_CLASS_DROPDOWN:
@@ -308,7 +308,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_AP_CLASS_DROPDOWN: {
@@ -369,7 +369,7 @@ public:
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_AP_AIRPORT_LIST: {
@@ -479,7 +479,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_AP_CLASS_DROPDOWN:
@@ -554,7 +554,7 @@ public:
 		this->SelectOtherAirport(-1);
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget == WID_AP_CLASS_DROPDOWN) {
 			_selected_airport_class = (AirportClassID)index;
@@ -569,7 +569,7 @@ public:
 	}
 };
 
-static const NWidgetPart _nested_build_airport_widgets[] = {
+static constexpr NWidgetPart _nested_build_airport_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_STATION_BUILD_AIRPORT_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

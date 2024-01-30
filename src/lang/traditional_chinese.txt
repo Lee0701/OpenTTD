@@ -951,7 +951,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}選擇�
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :英鎊
 STR_GAME_OPTIONS_CURRENCY_USD                                   :美元
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :歐元
@@ -1034,6 +1034,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}勾選�
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}縮放邊框
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}勾選此方框以令邊框隨界面大小而縮放
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1倍
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2倍
@@ -1754,6 +1755,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :停用
 
 STR_CONFIG_SETTING_NOSERVICE                                    :如果停用故障，車輛不會進行自動維護：{STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :如啟用此選項，而且車輛設定為不故障，它們將不會進入機廠接受維護。
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :開啟列車車廂速限：{STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :如啟用此選項，無動力車廂的限速會影響列車的最高速度。

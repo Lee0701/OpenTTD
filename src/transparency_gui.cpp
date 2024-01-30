@@ -63,7 +63,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_TT_SIGNS:
@@ -76,13 +76,13 @@ public:
 			case WID_TT_CATENARY:
 			case WID_TT_LOADING:
 			case WIT_TT_TUNNELS: {
-				uint i = widget - WID_TT_BEGIN;
+				int i = widget - WID_TT_BEGIN;
 				if (HasBit(_transparency_lock, i)) DrawSprite(SPR_LOCK, PAL_NONE, r.left + WidgetDimensions::scaled.fullbevel.left, r.top + WidgetDimensions::scaled.fullbevel.top);
 				break;
 			}
 			case WID_TT_BUTTONS: {
 				const Rect fr = r.Shrink(WidgetDimensions::scaled.framerect);
-				for (uint i = WID_TT_BEGIN; i < WID_TT_END; i++) {
+				for (WidgetID i = WID_TT_BEGIN; i < WID_TT_END; i++) {
 					if (i == WID_TT_LOADING || i == WIT_TT_TUNNELS) continue; // Do not draw button for invisible loading indicators.
 
 					const Rect wr = this->GetWidget<NWidgetBase>(i)->GetCurrentRect().Shrink(WidgetDimensions::scaled.fullbevel);
@@ -94,7 +94,7 @@ public:
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (widget >= WID_TT_BEGIN && widget < WID_TT_END) {
 			if (_ctrl_pressed) {
@@ -129,7 +129,7 @@ public:
 		}
 	}
 
-	Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number) override
+	Point OnInitialPosition(int16_t sm_width, int16_t sm_height, int window_number) override
 	{
 		Point pt = GetToolbarAlignedWindowPosition(sm_width);
 		pt.y += 2 * (sm_height - this->GetWidget<NWidgetBase>(WID_TT_BUTTONS)->current_y);
@@ -144,13 +144,13 @@ public:
 	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
-		for (uint i = WID_TT_BEGIN; i < WID_TT_END; i++) {
+		for (WidgetID i = WID_TT_BEGIN; i < WID_TT_END; i++) {
 			this->SetWidgetLoweredState(i, IsTransparencySet((TransparencyOption)(i - WID_TT_BEGIN)));
 		}
 	}
 };
 
-static const NWidgetPart _nested_transparency_widgets[] = {
+static constexpr NWidgetPart _nested_transparency_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_TRANSPARENCY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),

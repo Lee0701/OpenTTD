@@ -97,14 +97,14 @@ struct ScriptListWindow : public Window {
 		}
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_SCRL_CAPTION) return;
 
 		SetDParam(0, (this->slot == OWNER_DEITY) ? STR_AI_LIST_CAPTION_GAMESCRIPT : STR_AI_LIST_CAPTION_AI);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_SCRL_LIST) return;
 
@@ -115,7 +115,7 @@ struct ScriptListWindow : public Window {
 		size->height = 5 * this->line_height;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SCRL_LIST: {
@@ -192,7 +192,7 @@ struct ScriptListWindow : public Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SCRL_LIST: { // Select one of the Scripts
@@ -247,7 +247,7 @@ struct ScriptListWindow : public Window {
 };
 
 /** Widgets for the AI list window. */
-static const NWidgetPart _nested_script_list_widgets[] = {
+static constexpr NWidgetPart _nested_script_list_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_SCRL_CAPTION), SetDataTip(STR_AI_LIST_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -351,14 +351,14 @@ struct ScriptSettingsWindow : public Window {
 		this->vscroll->SetCount(this->visible_settings.size());
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_SCRS_CAPTION) return;
 
 		SetDParam(0, (this->slot == OWNER_DEITY) ? STR_AI_SETTINGS_CAPTION_GAMESCRIPT : STR_AI_SETTINGS_CAPTION_AI);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget != WID_SCRS_BACKGROUND) return;
 
@@ -369,7 +369,7 @@ struct ScriptSettingsWindow : public Window {
 		size->height = 5 * this->line_height;
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_SCRS_BACKGROUND) return;
 
@@ -437,7 +437,7 @@ struct ScriptSettingsWindow : public Window {
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SCRS_BACKGROUND: {
@@ -535,19 +535,19 @@ struct ScriptSettingsWindow : public Window {
 	void OnQueryTextFinished(char *str) override
 	{
 		if (StrEmpty(str)) return;
-		int32 value = atoi(str);
+		int32_t value = atoi(str);
 
 		SetValue(value);
 	}
 
-	void OnDropdownSelect(int widget, int index) override
+	void OnDropdownSelect(WidgetID widget, int index) override
 	{
 		if (widget != WID_SCRS_SETTING_DROPDOWN) return;
 		assert(this->clicked_dropdown);
 		SetValue(index);
 	}
 
-	void OnDropdownClose(Point, int widget, int, bool) override
+	void OnDropdownClose(Point, WidgetID widget, int, bool) override
 	{
 		if (widget != WID_SCRS_SETTING_DROPDOWN) return;
 		/* We cannot raise the dropdown button just yet. OnClick needs some hint, whether
@@ -604,7 +604,7 @@ private:
 };
 
 /** Widgets for the Script settings window. */
-static const NWidgetPart _nested_script_settings_widgets[] = {
+static constexpr NWidgetPart _nested_script_settings_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_SCRS_CAPTION), SetDataTip(STR_AI_SETTINGS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -649,10 +649,11 @@ struct ScriptTextfileWindow : public TextfileWindow {
 
 	ScriptTextfileWindow(TextfileType file_type, CompanyID slot) : TextfileWindow(file_type), slot(slot)
 	{
+		this->ConstructWindow();
 		this->OnInvalidateData();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget == WID_TF_CAPTION) {
 			SetDParam(0, (slot == OWNER_DEITY) ? STR_CONTENT_TYPE_GAME_SCRIPT : STR_CONTENT_TYPE_AI);
@@ -803,11 +804,7 @@ struct ScriptDebugWindow : public Window {
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_SCRD_VSCROLLBAR);
 		this->hscroll = this->GetScrollbar(WID_SCRD_HSCROLLBAR);
-		this->show_break_box = _settings_client.gui.ai_developer_tools;
-		this->GetWidget<NWidgetStacked>(WID_SCRD_BREAK_STRING_WIDGETS)->SetDisplayedPlane(this->show_break_box ? 0 : SZSP_HORIZONTAL);
 		this->FinishInitNested(number);
-
-		if (!this->show_break_box) this->filter.break_check_enabled = false;
 
 		this->last_vscroll_pos = 0;
 		this->autoscroll = true;
@@ -815,7 +812,6 @@ struct ScriptDebugWindow : public Window {
 
 		this->querystrings[WID_SCRD_BREAK_STR_EDIT_BOX] = &this->break_editbox;
 
-		SetWidgetsDisabledState(!this->show_break_box, WID_SCRD_BREAK_STR_ON_OFF_BTN, WID_SCRD_BREAK_STR_EDIT_BOX, WID_SCRD_MATCH_CASE_BTN);
 		this->hscroll->SetStepSize(10); // Speed up horizontal scrollbar
 
 		/* Restore the break string value from static variable, and enable the filter. */
@@ -831,6 +827,11 @@ struct ScriptDebugWindow : public Window {
 
 	void OnInit() override
 	{
+		this->show_break_box = _settings_client.gui.ai_developer_tools;
+		this->GetWidget<NWidgetStacked>(WID_SCRD_BREAK_STRING_WIDGETS)->SetDisplayedPlane(this->show_break_box ? 0 : SZSP_HORIZONTAL);
+		if (!this->show_break_box) this->filter.break_check_enabled = false;
+		SetWidgetsDisabledState(!this->show_break_box, WID_SCRD_BREAK_STR_ON_OFF_BTN, WID_SCRD_BREAK_STR_EDIT_BOX, WID_SCRD_MATCH_CASE_BTN);
+
 		this->InvalidateData(-1);
 	}
 
@@ -839,7 +840,7 @@ struct ScriptDebugWindow : public Window {
 		ScriptDebugWindow::initial_state = this->filter;
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		if (widget == WID_SCRD_LOG_PANEL) {
 			resize->height = GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_normal;
@@ -856,7 +857,7 @@ struct ScriptDebugWindow : public Window {
 		this->DrawWidgets();
 	}
 
-	void SetStringParameters(int widget) const override
+	void SetStringParameters(WidgetID widget) const override
 	{
 		if (widget != WID_SCRD_NAME_TEXT) return;
 
@@ -877,7 +878,7 @@ struct ScriptDebugWindow : public Window {
 		}
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SCRD_LOG_PANEL:
@@ -898,7 +899,7 @@ struct ScriptDebugWindow : public Window {
 	 * @param widget Widget index to start.
 	 * @param start Widget index of first company button.
 	 */
-	void DrawWidgetCompanyButton(const Rect &r, int widget, int start) const
+	void DrawWidgetCompanyButton(const Rect &r, WidgetID widget, int start) const
 	{
 		if (this->IsWidgetDisabled(widget)) return;
 		CompanyID cid = (CompanyID)(widget - start);
@@ -1001,7 +1002,7 @@ struct ScriptDebugWindow : public Window {
 			bool dead = valid && Company::Get(i)->ai_instance->IsDead();
 			bool paused = valid && Company::Get(i)->ai_instance->IsPaused();
 
-			NWidgetCore *button = this->GetWidget<NWidgetCore>(i + WID_SCRD_COMPANY_BUTTON_START);
+			NWidgetCore *button = this->GetWidget<NWidgetCore>(WID_SCRD_COMPANY_BUTTON_START + i);
 			button->SetDisabled(!valid);
 			button->SetLowered(this->filter.script_debug_company == i);
 			SetScriptButtonColour(*button, dead, paused);
@@ -1052,7 +1053,7 @@ struct ScriptDebugWindow : public Window {
 		this->last_vscroll_pos = this->vscroll->GetPosition();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		/* Also called for hotkeys, so check for disabledness */
 		if (this->IsWidgetDisabled(widget)) return;
@@ -1128,7 +1129,7 @@ struct ScriptDebugWindow : public Window {
 		}
 	}
 
-	void OnEditboxChanged(int wid) override
+	void OnEditboxChanged(WidgetID wid) override
 	{
 		if (wid != WID_SCRD_BREAK_STR_EDIT_BOX) return;
 
@@ -1145,6 +1146,8 @@ struct ScriptDebugWindow : public Window {
 	 */
 	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
+		if (this->show_break_box != _settings_client.gui.ai_developer_tools) this->ReInit();
+
 		/* If the log message is related to the active company tab, check the break string.
 		 * This needs to be done in gameloop-scope, so the AI is suspended immediately. */
 		if (!gui_scope && data == this->filter.script_debug_company &&
@@ -1218,9 +1221,9 @@ struct ScriptDebugWindow : public Window {
 };
 
 /** Make a number of rows with buttons for each company for the Script debug window. */
-NWidgetBase *MakeCompanyButtonRowsScriptDebug(int *biggest_index)
+std::unique_ptr<NWidgetBase> MakeCompanyButtonRowsScriptDebug()
 {
-	return MakeCompanyButtonRows(biggest_index, WID_SCRD_COMPANY_BUTTON_START, WID_SCRD_COMPANY_BUTTON_END, COLOUR_GREY, 8, STR_AI_DEBUG_SELECT_AI_TOOLTIP);
+	return MakeCompanyButtonRows(WID_SCRD_COMPANY_BUTTON_START, WID_SCRD_COMPANY_BUTTON_END, COLOUR_GREY, 5, STR_AI_DEBUG_SELECT_AI_TOOLTIP, false);
 }
 
 /**
@@ -1246,15 +1249,15 @@ static Hotkey scriptdebug_hotkeys[] = {
 	Hotkey('7', "company_7", WID_SCRD_COMPANY_BUTTON_START + 6),
 	Hotkey('8', "company_8", WID_SCRD_COMPANY_BUTTON_START + 7),
 	Hotkey('9', "company_9", WID_SCRD_COMPANY_BUTTON_START + 8),
-	Hotkey((uint16)0, "company_10", WID_SCRD_COMPANY_BUTTON_START + 9),
-	Hotkey((uint16)0, "company_11", WID_SCRD_COMPANY_BUTTON_START + 10),
-	Hotkey((uint16)0, "company_12", WID_SCRD_COMPANY_BUTTON_START + 11),
-	Hotkey((uint16)0, "company_13", WID_SCRD_COMPANY_BUTTON_START + 12),
-	Hotkey((uint16)0, "company_14", WID_SCRD_COMPANY_BUTTON_START + 13),
-	Hotkey((uint16)0, "company_15", WID_SCRD_COMPANY_BUTTON_START + 14),
+	Hotkey((uint16_t)0, "company_10", WID_SCRD_COMPANY_BUTTON_START + 9),
+	Hotkey((uint16_t)0, "company_11", WID_SCRD_COMPANY_BUTTON_START + 10),
+	Hotkey((uint16_t)0, "company_12", WID_SCRD_COMPANY_BUTTON_START + 11),
+	Hotkey((uint16_t)0, "company_13", WID_SCRD_COMPANY_BUTTON_START + 12),
+	Hotkey((uint16_t)0, "company_14", WID_SCRD_COMPANY_BUTTON_START + 13),
+	Hotkey((uint16_t)0, "company_15", WID_SCRD_COMPANY_BUTTON_START + 14),
 	Hotkey('S', "settings", WID_SCRD_SETTINGS),
 	Hotkey('0', "game_script", WID_SCRD_SCRIPT_GAME),
-	Hotkey((uint16)0, "reload", WID_SCRD_RELOAD_TOGGLE),
+	Hotkey((uint16_t)0, "reload", WID_SCRD_RELOAD_TOGGLE),
 	Hotkey('B', "break_toggle", WID_SCRD_BREAK_STR_ON_OFF_BTN),
 	Hotkey('F', "break_string", WID_SCRD_BREAK_STR_EDIT_BOX),
 	Hotkey('C', "match_case", WID_SCRD_MATCH_CASE_BTN),
@@ -1264,7 +1267,7 @@ static Hotkey scriptdebug_hotkeys[] = {
 HotkeyList ScriptDebugWindow::hotkeys("aidebug", scriptdebug_hotkeys, ScriptDebugGlobalHotkeys);
 
 /** Widgets for the Script debug window. */
-static const NWidgetPart _nested_script_debug_widgets[] = {
+static constexpr NWidgetPart _nested_script_debug_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_AI_DEBUG, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
@@ -1272,14 +1275,16 @@ static const NWidgetPart _nested_script_debug_widgets[] = {
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_GREY, WID_SCRD_VIEW),
-		NWidgetFunction(MakeCompanyButtonRowsScriptDebug), SetPadding(0, 2, 1, 2),
-	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_SCRIPT_GAME), SetMinimalSize(100, 20), SetResize(1, 0), SetDataTip(STR_AI_GAME_SCRIPT, STR_AI_GAME_SCRIPT_TOOLTIP),
-		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_NAME_TEXT), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_JUST_STRING2, STR_AI_DEBUG_NAME_TOOLTIP),
-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_SETTINGS), SetMinimalSize(100, 20), SetDataTip(STR_AI_DEBUG_SETTINGS, STR_AI_DEBUG_SETTINGS_TOOLTIP),
-		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_RELOAD_TOGGLE), SetMinimalSize(100, 20), SetDataTip(STR_AI_DEBUG_RELOAD, STR_AI_DEBUG_RELOAD_TOOLTIP),
+		NWidget(WWT_PANEL, COLOUR_GREY, WID_SCRD_VIEW),
+			NWidgetFunction(MakeCompanyButtonRowsScriptDebug), SetPadding(0, 2, 1, 2),
+		EndContainer(),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_SCRIPT_GAME), SetMinimalSize(100, 20), SetDataTip(STR_AI_GAME_SCRIPT, STR_AI_GAME_SCRIPT_TOOLTIP),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_SCRD_NAME_TEXT), SetResize(1, 0), SetDataTip(STR_JUST_STRING2, STR_AI_DEBUG_NAME_TOOLTIP),
+		NWidget(NWID_VERTICAL),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_SETTINGS), SetMinimalSize(100, 20), SetFill(0, 1), SetDataTip(STR_AI_DEBUG_SETTINGS, STR_AI_DEBUG_SETTINGS_TOOLTIP),
+			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SCRD_RELOAD_TOGGLE), SetMinimalSize(100, 20), SetFill(0, 1), SetDataTip(STR_AI_DEBUG_RELOAD, STR_AI_DEBUG_RELOAD_TOOLTIP),
+		EndContainer(),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(NWID_VERTICAL),

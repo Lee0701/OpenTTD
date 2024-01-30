@@ -37,6 +37,8 @@
 #include "event_logs.h"
 #include "scope.h"
 #include "progress.h"
+#include "settings_type.h"
+#include "settings_internal.h"
 
 #include "ai/ai_info.hpp"
 #include "game/game.hpp"
@@ -215,7 +217,7 @@ char *CrashLog::LogOpenTTDVersion(char *buffer, const char *last) const
  */
 char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 {
-	auto pathfinder_name = [](uint8 pf) -> const char * {
+	auto pathfinder_name = [](uint8_t pf) -> const char * {
 		switch (pf) {
 			case VPF_NPF: return "NPF";
 			case VPF_YAPF: return "YAPF";
@@ -246,7 +248,7 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			BlitterFactory::GetCurrentBlitter() == nullptr ? "none" : BlitterFactory::GetCurrentBlitter()->GetName(),
 			BaseGraphics::GetUsedSet() == nullptr ? "none" : BaseGraphics::GetUsedSet()->name.c_str(),
 			BaseGraphics::GetUsedSet() == nullptr ? UINT32_MAX : BaseGraphics::GetUsedSet()->version,
-			_current_language == nullptr ? "none" : _current_language->file,
+			_current_language == nullptr ? "none" : _current_language->file.c_str(),
 			MusicDriver::GetInstance() == nullptr ? "none" : MusicDriver::GetInstance()->GetName(),
 			BaseMusic::GetUsedSet() == nullptr ? "none" : BaseMusic::GetUsedSet()->name.c_str(),
 			BaseMusic::GetUsedSet() == nullptr ? UINT32_MAX : BaseMusic::GetUsedSet()->version,
@@ -509,6 +511,31 @@ char *CrashLog::LogCommandLog(char *buffer, const char *last) const
 }
 
 /**
+ * Writes the non-default settings to the buffer.
+ * @param buffer The begin where to write at.
+ * @param last   The last position in the buffer to write to.
+ * @return the position of the \c '\0' character after the buffer.
+ */
+char *CrashLog::LogSettings(char *buffer, const char *last) const
+{
+	buffer += seprintf(buffer, last, "Non-default settings:");
+
+	IterateSettingsTables([&](const SettingTable &table, void *object) {
+		for (auto &sd : table) {
+			/* Skip any old settings we no longer save/load. */
+			if (!SlIsObjectCurrentlyValid(sd->save.version_from, sd->save.version_to, sd->save.ext_feature_test)) continue;
+
+			if (sd->IsDefaultValue(object)) continue;
+			buffer += seprintf(buffer, last, "\n  %s: ", sd->name);
+			buffer = sd->FormatValue(buffer, last, object);
+		}
+	});
+
+	buffer += seprintf(buffer, last, "\n\n");
+	return buffer;
+}
+
+/**
  * Fill the crash log buffer with all data of a crash log.
  * @param buffer The begin where to write at.
  * @param last   The last position in the buffer to write to.
@@ -560,7 +587,7 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 		buffer = this->TryCrashLogFaultSection(buffer, last, "network sync", [](CrashLog *self, char *buffer, const char *last) -> char * {
 			if (IsGameThread() && _record_sync_records && !_network_sync_records.empty()) {
 				uint total = 0;
-				for (uint32 count : _network_sync_record_counts) {
+				for (uint32_t count : _network_sync_record_counts) {
 					total += count;
 				}
 				NetworkSyncRecordEvents event = NSRE_BEGIN;
@@ -618,6 +645,9 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 	buffer = this->TryCrashLogFaultSection(buffer, last, "command log", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogCommandLog(buffer, last);
 	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "settings", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogSettings(buffer, last);
+	});
 
 	buffer += seprintf(buffer, last, "*** End of OpenTTD Crash Report ***\n");
 	this->StopCrashLogFaultHandler();
@@ -648,7 +678,7 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 		buffer += seprintf(buffer, last, "%s\n", info.desync_frame_info.c_str());
 	}
 
-	extern uint32 _frame_counter;
+	extern uint32_t _frame_counter;
 
 	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u), %08X\n",
 			_cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor, _frame_counter);
@@ -661,8 +691,8 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 	if (!_network_server) {
 		extern Date   _last_sync_date;
 		extern DateFract _last_sync_date_fract;
-		extern uint8  _last_sync_tick_skip_counter;
-		extern uint32 _last_sync_frame_counter;
+		extern uint8_t  _last_sync_tick_skip_counter;
+		extern uint32_t _last_sync_frame_counter;
 
 		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
 		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
@@ -682,6 +712,7 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 	buffer = this->LogGamelog(buffer, last);
 	buffer = this->LogRecentNews(buffer, last);
 	buffer = this->LogCommandLog(buffer, last);
+	buffer = this->LogSettings(buffer, last);
 	buffer = DumpDesyncMsgLog(buffer, last);
 
 	bool have_cache_log = false;
@@ -713,7 +744,7 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 	buffer += WriteScopeLog(buffer, last);
 #endif
 
-	extern uint32 _frame_counter;
+	extern uint32_t _frame_counter;
 
 	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u), %08X\n",
 			_cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor, _frame_counter);
@@ -726,8 +757,8 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 	if (_networking && !_network_server) {
 		extern Date   _last_sync_date;
 		extern DateFract _last_sync_date_fract;
-		extern uint8  _last_sync_tick_skip_counter;
-		extern uint32 _last_sync_frame_counter;
+		extern uint8_t  _last_sync_tick_skip_counter;
+		extern uint32_t _last_sync_frame_counter;
 
 		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
 		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
@@ -744,6 +775,7 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 	buffer = this->LogGamelog(buffer, last);
 	buffer = this->LogRecentNews(buffer, last);
 	buffer = this->LogCommandLog(buffer, last);
+	buffer = this->LogSettings(buffer, last);
 	buffer = DumpDesyncMsgLog(buffer, last);
 
 	if (!info.check_caches_result.empty()) {
@@ -901,7 +933,7 @@ void CrashLog::CloseCrashLogFile()
 	if (_screen.width < 1 || _screen.height < 1 || _screen.dst_ptr == nullptr) return false;
 
 	bool res = MakeScreenshot(SC_CRASHLOG, name);
-	if (res) strecpy(filename, _full_screenshot_name, filename_last);
+	if (res) strecpy(filename, _full_screenshot_path.c_str(), filename_last);
 	return res;
 }
 

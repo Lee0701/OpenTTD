@@ -72,6 +72,10 @@ STR_CONFIG_SETTING_TOWN_GROWTH_VERY_SLOW                        :Very slow
 ##before STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_OFF
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Every {COMMA}{NBSP}minute{P 0 "" s}
 
+##after STR_RIVERS_LOT
+STR_RIVERS_VERY_MANY                                            :{RED}Very many
+STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extremely many
+
 ##end-after
 
 STR_COMMA_SEPARATOR                                             :,{SP}
@@ -130,9 +134,6 @@ STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Custom interval (real-time minutes)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Autosave interval in real-time minutes
-
-STR_RIVERS_VERY_MANY                                            :{RED}Very many
-STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extremely many
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :You are advised to leave this setting at the default value
 
@@ -202,7 +203,7 @@ STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE                     :Ships avoid col
 STR_CONFIG_SETTING_SHIP_COLLISION_AVOIDANCE_HELPTEXT            :When enabled, ships try to avoid passing through each other. The best results are obtained when 90° turns are forbidden.
 
 STR_CONFIG_SETTING_CHUNNEL                                      :Allow construction of tunnels under water: {STRING2}
-STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :When enabled, tunnels can be constructed under bodies of water at sea level. This requires the tunnel ends to be least 3 tiles away from the shore.
+STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :When enabled, tunnels can be constructed under bodies of water at sea level. At each end of the tunnel the gap between the tunnel and coast tiles must be between {NUM} and {NUM} tiles.
 
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :Trains from different companies may not crash into each other: {STRING2}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :This setting is primarily to prevent untrusted players deliberately causing crashes involving other companies' trains in multi-player rail infrastructure sharing games.
@@ -318,6 +319,9 @@ STR_CONFIG_SETTING_SHOW_ORDER_NUMBER_IN_VEHICLE_VIEW_HELPTEXT   :When enabled, t
 
 STR_CONFIG_SETTING_HIDE_DEFAULT_STOP_LOCATION                   :Hide default order stop locations: {STRING2}
 STR_CONFIG_SETTING_HIDE_DEFAULT_STOP_LOCATION_HELPTEXT          :When enabled, hide the order stop location when it matches the default.
+
+STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL                              :Show rail polyline tool: {STRING2}
+STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL_HELPTEXT                     :When enabled, the rail construction toolbar includes a button to build using the polyline mode.
 
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES                     :Enable signals on bridges/tunnels advanced modes: {STRING2}
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :Enables use of advanced modes of signal simulation on bridges and tunnels. When disabled, bridges/tunnels which are not already in an advanced mode cannot be changed to an advanced mode, however other players may choose to enable this setting and use an advanced mode.
@@ -555,11 +559,25 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :No limit
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :Towns are allowed to build bridges: {STRING2}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :Enabling this setting allows towns to build bridges
 
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR                            :Town cargo generation factor (less < 0 < more): {STRING2}
-STR_CONFIG_SETTING_TOWN_CARGO_FACTOR_HELPTEXT                   :Passenger, mail, and other town cargo production is scaled by approximately 2^factor (exponential)
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE                             :Scale town cargo production: {STRING2}
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE_HELPTEXT                    :Scale the cargo production of towns by this percentage.
 
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR                        :Industry cargo generation factor (less < 0 < more): {STRING2}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_FACTOR_HELPTEXT               :Primary industry cargo production is scaled by approximately 2^factor (exponential). This excludes tree-cutting industries.{}This is not guaranteed to be fully compatible with all industry NewGRFs.
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE                         :Scale industry cargo production: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT                :Scale the cargo production of industries by this percentage.
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT_EXTRA          :{STRING}{}This excludes tree-cutting industries.{}This is not guaranteed to be fully compatible with all industry NewGRFs.
+
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Time interval for town cargo production scaling: {STRING2}
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE                    :Time interval for industry cargo production scaling: {STRING2}
+
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Monthly: The cargo production per month is scaled.{}{}Game-time: The cargo production per unit of game time is scaled, (the cargo production per month is also scaled by the day length factor). Very high scaling factors may not be achievable.
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA     :{STRING}{}Game-time mode is not guaranteed to be fully compatible with all industry NewGRFs.
+
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY                     :Monthly
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_GAME_TIME                   :Game-time
+
+STR_CONFIG_SETTING_CARGO_SCALE_VALUE                            :{NUM}%
+STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY                    :{NUM}% (monthly)
+STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME                  :{NUM}% (game-time)
 
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :No towns above height level: {STRING2}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :No towns above the specified height level are built during map creation.
@@ -664,14 +682,12 @@ STR_CONFIG_SETTING_INTERFACE_WALLCLOCK                          :{ORANGE}Wall cl
 STR_CONFIG_SETTING_INTERFACE_TIME_CLIENT                        :{ORANGE}Client settings
 STR_CONFIG_SETTING_INTERFACE_TIME_SAVEGAME                      :{ORANGE}Savegame settings
 STR_CONFIG_SETTING_INTERFACE_TIMETABLE                          :{ORANGE}Timetables
-STR_CONFIG_SETTING_INTERFACE_ADV_SIGNALS                        :{ORANGE}Signals (advanced)
+STR_CONFIG_SETTING_INTERFACE_SIGNALS                            :{ORANGE}Signals
 STR_CONFIG_SETTING_INTERFACE_SAVE                               :{ORANGE}Save & Autosave
 STR_CONFIG_SETTING_INTERFACE_VEHICLE_WINDOWS                    :{ORANGE}Vehicle windows
 STR_CONFIG_SETTING_GENWORLD_RIVERS_LAKES                        :{ORANGE}Rivers & Lakes
 STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST_PER_CARGO_OVERRIDE     :{ORANGE}Cargo distribution - per cargo overrides
-STR_CONFIG_SETTING_ENVIRONMENT_TREES                            :{ORANGE}Trees
 STR_CONFIG_SETTING_VIEWPORT_MAP_OPTIONS                         :{ORANGE}Map mode
-STR_CONFIG_SETTING_VIEWPORT_SIGNALS                             :{ORANGE}Signals
 STR_CONFIG_SETTING_VEHICLE_ROUTE_OVERLAY                        :{ORANGE}Vehicle route overlay
 STR_CONFIG_SETTING_SHARING                                      :{ORANGE}Infrastructure sharing
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}Scenario Editor
@@ -773,6 +789,8 @@ STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED_NEWGRF            :{WHITE}...setti
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Show timetable in ticks rather than days: {STRING2}
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Show travel times in time tables in game ticks instead of days
 
+STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT_EXTRA         :{STRING}{}Various features require use of the YAPF pathfinder, including: routing restrictions (all pathfinder and reservation related actions), reverse at waypoint/signal and drive through train depots.
+
 STR_CHEAT_EDIT_MONEY_QUERY_CAPT                                 :{WHITE}Increase or decrease money
 STR_CHEAT_INFLATION_COST                                        :{LTBLUE}Change inflation cost factor: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_COST_QUERY_CAPT                             :{WHITE}Change inflation cost factor
@@ -793,7 +811,7 @@ STR_LINKGRAPH_STATS_TOOLTIP_USAGE                               :{}Usage: {CARGO
 STR_LINKGRAPH_STATS_TOOLTIP_PLANNED                             :{}Planned: {CARGO_LONG}
 STR_LINKGRAPH_STATS_TOOLTIP_DISTANCE                            :Manhattan Distance: {COMMA} tile{P 0 "" s}{}Bird Fly Distance: {COMMA} tile{P 1 "" s}
 
-STR_RAIL_TOOLBAR_TOOLTIP_BUILD_POLYRAIL                         :{BLACK}Build railway track using the Polyline mode. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
+STR_RAIL_TOOLBAR_TOOLTIP_BUILD_POLYRAIL                         :{BLACK}Build railway track using the polyline mode. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
 
 STR_BUILD_SIGNAL_SEMAPHORE_PROG_TOOLTIP                         :{BLACK}Programmable Pre-Signal (semaphore){}The programmable pre-signal is a combo-signal which can be programmed to behave in complex ways.
 STR_BUILD_SIGNAL_SEMAPHORE_NO_ENTRY_TOOLTIP                     :{BLACK}No-Entry Signal (semaphore){}A path signal allows more than one train to enter a signal block at the same time, if the train can reserve a path to a safe stopping point. No-entry signals can't be passed from the front side
@@ -932,17 +950,17 @@ STR_TRACE_RESTRICT_SPEED_ADAPTATION_CONTROL                     :Speed adap. con
 STR_TRACE_RESTRICT_SIGNAL_MODE_CONTROL                          :Signal mode control
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT                            :Acquire or wait
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE                             :Try to acquire
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ON_RES                      :Try to acquire (on reserve)
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT                           :Release (front)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK                            :Release (back)
+STR_TRACE_RESTRICT_SLOT_RELEASE_ON_RESERVE                      :Release (on reserve)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT                :PBS end: Acquire or wait
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE                 :PBS end: Try to acquire
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE                     :PBS end: Release
 STR_TRACE_RESTRICT_SLOT_ACQUIRE_WAIT_ITEM                       :Acquire slot: {STRING1}{BLACK}{STRING}, or wait at PBS signal
 STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM                        :Try to acquire slot: {STRING1}{BLACK}{STRING}, or continue anyway
-STR_TRACE_RESTRICT_SLOT_TRY_ACQUIRE_ITEM_RES_ONLY               :Try to acquire (on PBS reserve) slot: {STRING1}{BLACK}{STRING}, or continue anyway
 STR_TRACE_RESTRICT_SLOT_RELEASE_FRONT_ITEM                      :Release slot: {STRING1}{BLACK}{STRING} (front of train)
 STR_TRACE_RESTRICT_SLOT_RELEASE_BACK_ITEM                       :Release slot: {STRING1}{BLACK}{STRING} (back of train)
+STR_TRACE_RESTRICT_SLOT_RELEASE_ON_RESERVE_ITEM                 :Release slot: {STRING1}{BLACK}{STRING} (on PBS reserve)
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_ACQUIRE_WAIT_ITEM           :PBS reservation ending here: Acquire slot: {STRING1}{BLACK}{STRING}, or wait at start
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_TRY_ACQUIRE_ITEM            :PBS reservation ending here: Acquire slot: {STRING1}{BLACK}{STRING}, or continue anyway
 STR_TRACE_RESTRICT_SLOT_PBS_RES_END_RELEASE_ITEM                :PBS reservation ending here: Release slot: {STRING1}{BLACK}{STRING}
@@ -1622,6 +1640,8 @@ STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_IS_FIRST         :is first slot
 STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_IS_NOT_FIRST     :is not first slot
 STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_IS_LAST          :is last slot
 STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_IS_NOT_LAST      :is not last slot
+STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_HAS_TAG          :has tag {NUM}
+STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_DOESNT_HAVE_TAG  :doesn't have tag {NUM}
 
 STR_ORDERS_MANAGE_LIST                                          :{BLACK}Manage List
 STR_ORDERS_MANAGE_LIST_TOOLTIP                                  :{BLACK}Manage this order list
@@ -1634,9 +1654,11 @@ STR_ORDER_APPEND_REVERSED_ORDER_LIST                            :Append reversed
 STR_ORDER_DUPLICATE_ORDER                                       :Duplicate order
 STR_ORDER_CHANGE_JUMP_TARGET                                    :Change jump target
 
+STR_ORDER_TRY_ACQUIRE_SLOT_BUTTON                               :Try acquire slot
 STR_ORDER_RELEASE_SLOT_BUTTON                                   :Release slot
 STR_ORDER_CHANGE_COUNTER_BUTTON                                 :Change counter
 STR_ORDER_RELEASE_SLOT_TOOLTIP                                  :{BLACK}The train slot to release
+STR_ORDER_TRY_ACQUIRE_SLOT_TOOLTIP                              :{BLACK}The train slot to try to acquire
 
 STR_ORDER_CHANGE_COUNTER_TOOLTIP                                :{BLACK}The counter to change
 
@@ -1704,6 +1726,7 @@ STR_ORDER_CONDITIONAL_TIME_HHMM                                 :Jump to order {
 STR_ORDER_CONDITIONAL_TIMETABLE                                 :Jump to order {COMMA} when {STRING} {STRING} {TT_TICKS}
 STR_ORDER_CONDITIONAL_DISPATCH_SLOT_DISPLAY                     :Jump to order {COMMA} when {STRING} {STRING} {STRING}
 
+STR_ORDER_TRY_ACQUIRE_SLOT                                      :Try to acquire slot: {STRING1}
 STR_ORDER_RELEASE_SLOT                                          :Release slot: {STRING1}
 
 STR_TIMETABLE_MINUTES                                           :{COMMA}{NBSP}minute{P "" s}
@@ -1846,7 +1869,7 @@ STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}Number o
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}Bridge is too low for station
 STR_ERROR_BRIDGE_PILLARS_OBSTRUCT_STATION                       :{WHITE}Bridge pillars obstruct station
 STR_ERROR_CHUNNEL_THROUGH_MAP_BORDER                            :{WHITE}Tunnel under water would end out of the map
-STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... only ramp length between 5 and {NUM} tiles is allowed for tunnels under water.
+STR_ERROR_CHUNNEL_RAMP                                          :{WHITE}... tunnels under water require the gap between tunnel and coast tiles to be between {NUM} and {NUM} tiles.
 STR_ERROR_TUNNEL_TOO_MANY                                       :{WHITE}... too many tunnels
 STR_ERROR_NO_DRILLING_ABOVE_CHUNNEL                             :{WHITE}No oil rigs allowed above underwater tunnels.
 STR_ERROR_ANOTHER_TUNNEL_IN_THE_WAY_FOR_CHUNNEL                 :{WHITE}Three tiles are needed to pass under the other tunnel.
@@ -2033,7 +2056,7 @@ STR_TMPL_CANT_RENAME                                            :{WHITE}Can't re
 STR_SCHDISPATCH_CAPTION                                         :{WHITE}{VEHICLE} (Scheduled Dispatch)
 STR_SCHDISPATCH_ENABLED                                         :{BLACK}Enable
 STR_SCHDISPATCH_ENABLED_TOOLTIP                                 :{BLACK}Enable scheduled dispatching for this order. Requires automatic separation to be off.
-STR_SCHDISPATCH_ADD                                             :{BLACK}Add Departure Slot
+STR_SCHDISPATCH_ADD                                             :{BLACK}Add Slot
 STR_SCHDISPATCH_ADD_TOOLTIP                                     :{BLACK}Add new departure slot for this schedule.
 STR_SCHDISPATCH_ADD_TOOLTIP_EXTRA                               :{BLACK}{STRING} Ctrl+Click to add multiple departure slots at once.
 STR_SCHDISPATCH_ADD_CAPTION                                     :{BLACK}Departure slot
@@ -2044,6 +2067,8 @@ STR_SCHDISPATCH_DURATION_CAPTION_DAY                            :{BLACK}Duration
 STR_SCHDISPATCH_DURATION_CAPTION_TICKS                          :{BLACK}Duration (ticks)
 STR_SCHDISPATCH_START                                           :{BLACK}Start Date
 STR_SCHDISPATCH_SET_START                                       :{BLACK}Set Start Date
+STR_SCHDISPATCH_START_TIME                                      :{BLACK}Start Time
+STR_SCHDISPATCH_SET_START_TIME                                  :{BLACK}Set Start Time
 STR_SCHDISPATCH_START_TOOLTIP                                   :{BLACK}Select a date to start this schedule.
 STR_SCHDISPATCH_START_CAPTION_MINUTE                            :{BLACK}Start time (hhmm)
 STR_SCHDISPATCH_DELAY                                           :{BLACK}Delay
@@ -2051,8 +2076,11 @@ STR_SCHDISPATCH_DELAY_TOOLTIP                                   :{BLACK}Set maxi
 STR_SCHDISPATCH_DELAY_CAPTION_MINUTE                            :{BLACK}Delay (minutes)
 STR_SCHDISPATCH_DELAY_CAPTION_DAY                               :{BLACK}Delay (days)
 STR_SCHDISPATCH_DELAY_CAPTION_TICKS                             :{BLACK}Delay (ticks)
-STR_SCHDISPATCH_ADJUST                                          :{BLACK}Adjust Departure Slots
+STR_SCHDISPATCH_ADJUST                                          :{BLACK}Adjust Slots
 STR_SCHDISPATCH_ADJUST_TOOLTIP                                  :{BLACK}Adjust all departure slots in this schedule.
+STR_SCHDISPATCH_REMOVE                                          :{BLACK}Remove Slots
+STR_SCHDISPATCH_REMOVE_TOOLTIP                                  :{BLACK}Enable removing departure slots from this schedule.
+STR_SCHDISPATCH_REMOVE_SLOT                                     :{BLACK}Remove departure slot
 STR_SCHDISPATCH_ADJUST_CAPTION_MINUTE                           :{BLACK}Adjustment to add (minutes)
 STR_SCHDISPATCH_ADJUST_CAPTION_DAY                              :{BLACK}Adjustment to add (days)
 STR_SCHDISPATCH_ADJUST_CAPTION_TICKS                            :{BLACK}Adjustment to add (ticks)
@@ -2074,6 +2102,13 @@ STR_SCHDISPATCH_DUPLICATE_SCHEDULE                              :{BLACK}Duplicat
 STR_SCHDISPATCH_DUPLICATE_SCHEDULE_TOOLTIP                      :{BLACK}Create a copy of this dispatch schedule.
 STR_SCHDISPATCH_APPEND_VEHICLE_SCHEDULES                        :{BLACK}Append Schedules From Vehicle
 STR_SCHDISPATCH_APPEND_VEHICLE_SCHEDULES_TOOLTIP                :{BLACK}Append the dispatch schedules from another vehicle.
+STR_SCHDISPATCH_REUSE_DEPARTURE_SLOTS                           :Re-use departure slots
+STR_SCHDISPATCH_REUSE_DEPARTURE_SLOTS_TOOLTIP                   :{BLACK}Set whether departure slots may be used more than once.
+STR_SCHDISPATCH_MANAGE_SLOT                                     :{BLACK}Manage Slot
+STR_SCHDISPATCH_REUSE_THIS_DEPARTURE_SLOT                       :Re-use departure slot
+STR_SCHDISPATCH_REUSE_THIS_DEPARTURE_SLOT_TOOLTIP               :{BLACK}Set whether the selected departure slot may be used more than once.
+STR_SCHDISPATCH_REUSE_THIS_DEPARTURE_TAG                        :Tag {NUM}
+STR_SCHDISPATCH_REUSE_THIS_DEPARTURE_TAG_TOOLTIP                :{BLACK}Tag the selected departure slot (for use with conditional orders).
 STR_SCHDISPATCH_NO_SCHEDULES                                    :{BLACK}No Schedules
 STR_SCHDISPATCH_SCHEDULE_ID                                     :{BLACK}Schedule {NUM} of {NUM}
 STR_SCHDISPATCH_NAMED_SCHEDULE_ID                               :{BLACK}{RAW_STRING} ({NUM} of {NUM})
@@ -2081,7 +2116,16 @@ STR_SCHDISPATCH_RENAME_SCHEDULE_TOOLTIP                         :{BLACK}Name sch
 STR_SCHDISPATCH_RENAME_SCHEDULE_CAPTION                         :{WHITE}Name schedule
 STR_ERROR_CAN_T_RENAME_SCHEDULE                                 :{WHITE}Can't name schedule...
 STR_SCHDISPATCH_MOVE_SCHEDULE                                   :{BLACK}Change position of current schedule in schedule list
+STR_SCHDISPATCH_DATE_WALLCLOCK_TINY_FLAGGED                     :{DATE_WALLCLOCK_TINY}*
+STR_SCHDISPATCH_SLOT_TOOLTIP                                    :{BLACK}{DATE_WALLCLOCK_TINY}
+STR_SCHDISPATCH_SLOT_TOOLTIP_RELATIVE                           : ({TIME_HHMM} from start)
+STR_SCHDISPATCH_SLOT_TOOLTIP_LAST                               :{}Last departure slot
+STR_SCHDISPATCH_SLOT_TOOLTIP_NEXT                               :{}Next available departure slot
+STR_SCHDISPATCH_SLOT_TOOLTIP_REUSE                              :{}Departure slot may be used more than once
+STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX                        : ({DATE_WALLCLOCK_TINY})
+STR_SCHDISPATCH_SLOT_TOOLTIP_TAG                                :{}Tag {NUM}
 
+STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE                       :{BLACK}No previous departures.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Last departure at {DATE_WALLCLOCK_TINY}.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}Last departure has not left yet, it will depart at {DATE_WALLCLOCK_TINY}.
 STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}This schedule requires {COMMA} vehicle{P "" s}.
@@ -2089,11 +2133,15 @@ STR_SCHDISPATCH_SUMMARY_L2                                      :{BLACK}This sch
 STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}This schedule began at {DATE_WALLCLOCK_TINY}, and ends at {DATE_WALLCLOCK_TINY}.
 STR_SCHDISPATCH_SUMMARY_L4                                      :{BLACK}Maximum delay of {STRING1} is allowed before the slot is skipped.
 STR_SCHDISPATCH_SUMMARY_NOT_ENABLED                             :{BLACK}This schedule is not active.
+STR_SCHDISPATCH_SUMMARY_REUSE_SLOTS_ENABLED                     :{BLACK}All departure slots may be used more than once.
+STR_SCHDISPATCH_SUMMARY_NEXT_AVAILABLE_DEPARTURE                :{BLACK}Next available departure at {DATE_WALLCLOCK_TINY}.
 
 STR_SCHDISPATCH_SLOT_OUTSIDE_SCHEDULE                           :{BLACK}One or more departure slots are outside the schedule duration.
 
 STR_SCHDISPATCH_NOT_ASSIGNED_TO_ORDER                           :{BLACK}This dispatch schedule is not assigned to an order.
 STR_SCHDISPATCH_ASSIGNED_TO_ORDER                               :{BLACK}This dispatch schedule is assigned to order {NUM}: {STRING2}.
+STR_SCHDISPATCH_MORE_THAN_N_HOURS_IN_PAST                       :{BLACK}This is more than {NUM} hours in the past.
+STR_SCHDISPATCH_MORE_THAN_N_HOURS_IN_FUTURE                     :{BLACK}This is more than {NUM} hours in the future.
 
 STR_SCHDISPATCH_ADD_DEPARTURE_SLOTS_START                       :{BLACK}Start:
 STR_SCHDISPATCH_ADD_DEPARTURE_SLOTS_STEP                        :{BLACK}Period:

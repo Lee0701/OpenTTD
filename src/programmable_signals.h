@@ -188,12 +188,12 @@ enum SignalConditionField {
 
 class SignalConditionComparable: public SignalCondition {
 protected:
-	bool EvaluateComparable(uint32 var_val);
+	bool EvaluateComparable(uint32_t var_val);
 
 public:
 	SignalConditionComparable(SignalConditionCode code) : SignalCondition(code) {}
 	SignalComparator comparator;
-	uint32 value;
+	uint32_t value;
 };
 
 /** A conditon based upon comparing a variable and a value. This condition can be
@@ -413,7 +413,7 @@ typedef std::map<SignalReference, SignalProgram*> ProgramList;
 extern ProgramList _signal_programs;
 
 /// Verifies that a SignalReference refers to a signal which has a program.
-static inline bool HasProgrammableSignals(SignalReference ref)
+inline bool HasProgrammableSignals(SignalReference ref)
 {
 	return IsTileType(ref.tile, MP_RAILWAY) && GetRailTileType(ref.tile) == RAIL_TILE_SIGNALS
 	    && IsPresignalProgrammable(ref.tile, ref.track);

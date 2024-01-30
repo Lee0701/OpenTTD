@@ -77,7 +77,7 @@ struct StatusBarWindow : Window {
 		PositionStatusbar(this);
 	}
 
-	Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number) override
+	Point OnInitialPosition(int16_t sm_width, int16_t sm_height, int window_number) override
 	{
 		Point pt = { 0, _screen.height - sm_height };
 		return pt;
@@ -88,7 +88,7 @@ struct StatusBarWindow : Window {
 		Window::FindWindowPlacementAndResize(_toolbar_width, def_height);
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		Dimension d;
 		switch (widget) {
@@ -98,8 +98,8 @@ struct StatusBarWindow : Window {
 				break;
 
 			case WID_S_RIGHT: {
-				int64 max_money = UINT32_MAX;
-				for (const Company *c : Company::Iterate()) max_money = std::max<int64>(c->money, max_money);
+				int64_t max_money = UINT32_MAX;
+				for (const Company *c : Company::Iterate()) max_money = std::max<int64_t>(c->money, max_money);
 				SetDParam(0, 100LL * max_money);
 				d = GetStringBoundingBox(STR_JUST_CURRENCY_LONG);
 				break;
@@ -114,7 +114,7 @@ struct StatusBarWindow : Window {
 		*size = maxdim(d, *size);
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		Rect tr = r.Shrink(WidgetDimensions::scaled.framerect, RectPadding::zero);
 		tr.top = CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL));
@@ -198,7 +198,7 @@ struct StatusBarWindow : Window {
 		}
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_S_MIDDLE: ShowLastNewsMessage(); break;
@@ -234,7 +234,7 @@ struct StatusBarWindow : Window {
 	}
 };
 
-static const NWidgetPart _nested_main_status_widgets[] = {
+static constexpr NWidgetPart _nested_main_status_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PANEL, COLOUR_GREY, WID_S_LEFT), SetMinimalSize(160, 12), EndContainer(),
 		NWidget(WWT_PUSHBTN, COLOUR_GREY, WID_S_MIDDLE), SetMinimalSize(40, 12), SetDataTip(0x0, STR_STATUSBAR_TOOLTIP_SHOW_LAST_NEWS), SetResize(1, 0),

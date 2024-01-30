@@ -80,7 +80,7 @@ private:
 template <class Titem, typename Tindex, size_t Tgrowth_step, size_t Tmax_size, PoolType Tpool_type = PT_NORMAL, bool Tcache = false, bool Tzero = true>
 struct Pool : PoolBase {
 	/* Ensure Tmax_size is within the bounds of Tindex. */
-	static_assert((uint64)(Tmax_size - 1) >> 8 * sizeof(Tindex) == 0);
+	static_assert((uint64_t)(Tmax_size - 1) >> 8 * sizeof(Tindex) == 0);
 
 	static constexpr size_t MAX_SIZE = Tmax_size; ///< Make template parameter accessible from outside
 
@@ -96,7 +96,7 @@ struct Pool : PoolBase {
 	bool cleaning;       ///< True if cleaning pool (deleting all items)
 
 	Titem **data;        ///< Pointer to array of pointers to Titem
-	uint64 *free_bitmap; ///< Pointer to free bitmap
+	uint64_t *free_bitmap; ///< Pointer to free bitmap
 
 	Pool(const char *name);
 	void CleanPool() override;
@@ -144,8 +144,8 @@ struct Pool : PoolBase {
 	template <class T>
 	struct PoolIterator {
 		typedef T value_type;
-		typedef T* pointer;
-		typedef T& reference;
+		typedef T *pointer;
+		typedef T &reference;
 		typedef size_t difference_type;
 		typedef std::forward_iterator_tag iterator_category;
 
@@ -188,8 +188,8 @@ struct Pool : PoolBase {
 	template <class T, class F>
 	struct PoolIteratorFiltered {
 		typedef T value_type;
-		typedef T* pointer;
-		typedef T& reference;
+		typedef T *pointer;
+		typedef T &reference;
 		typedef size_t difference_type;
 		typedef std::forward_iterator_tag iterator_category;
 

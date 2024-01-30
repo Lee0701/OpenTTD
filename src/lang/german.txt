@@ -956,7 +956,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Währung
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Britische Pfund
 STR_GAME_OPTIONS_CURRENCY_USD                                   :US-Dollar
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1039,6 +1039,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Dieses K
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Schrägen skalieren
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Dieses Kästchen ankreuzen, um Schrägen nach der Oberflächengröße zu skalieren
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1×
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2×
@@ -1767,6 +1768,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Deaktiviert
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Wartung deaktivieren, wenn Pannen abgeschaltet: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Schicke Fahrzeuge nicht zur Wartung, wenn Pannen ausgeschaltet sind
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Berücksichtige Waggonhöchstgeschwindigkeit: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Begrenze die Höchstgeschwindigkeit eines Zuges durch die jeweiligen Höchstgeschwindigkeiten der mitgeführten Waggons

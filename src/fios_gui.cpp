@@ -70,7 +70,7 @@ void LoadCheckData::Clear()
 }
 
 /** Load game/scenario with optional content download */
-static const NWidgetPart _nested_load_dialog_widgets[] = {
+static constexpr NWidgetPart _nested_load_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
@@ -131,7 +131,7 @@ static const NWidgetPart _nested_load_dialog_widgets[] = {
 };
 
 /** Load heightmap with content download */
-static const NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
+static constexpr NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
@@ -176,7 +176,7 @@ static const NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
 };
 
 /** Save game/scenario */
-static const NWidgetPart _nested_save_dialog_widgets[] = {
+static constexpr NWidgetPart _nested_save_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
@@ -308,8 +308,7 @@ public:
 	/** Generate a default save filename. */
 	void GenerateFileName()
 	{
-		GenerateDefaultSaveName(this->filename_editbox.text.buf, &this->filename_editbox.text.buf[this->filename_editbox.text.max_bytes - 1]);
-		this->filename_editbox.text.UpdateSize();
+		this->filename_editbox.text.Assign(GenerateDefaultSaveName());
 	}
 
 	SaveLoadWindow(WindowDesc *desc, AbstractFileType abstract_filetype, SaveLoadOperation fop)
@@ -418,7 +417,7 @@ public:
 		this->Window::Close();
 	}
 
-	void DrawWidget(const Rect &r, int widget) const override
+	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
 			case WID_SL_SORT_BYNAME:
@@ -587,7 +586,7 @@ public:
 		}
 	}
 
-	void UpdateWidgetSize(int widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
+	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_SL_BACKGROUND:
@@ -620,7 +619,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	void OnClick([[maybe_unused]] Point pt, int widget, [[maybe_unused]] int click_count) override
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
 			case WID_SL_SORT_BYNAME: // Sort save names by name
@@ -742,7 +741,7 @@ public:
 		}
 	}
 
-	void OnMouseOver([[maybe_unused]] Point pt, int widget) override
+	void OnMouseOver([[maybe_unused]] Point pt, WidgetID widget) override
 	{
 		if (widget == WID_SL_DRIVES_DIRECTORIES_LIST) {
 			auto it = this->vscroll->GetScrolledItemFromWidget(this->display_list, pt.y, this, WID_SL_DRIVES_DIRECTORIES_LIST, WidgetDimensions::scaled.inset.top);
@@ -761,7 +760,7 @@ public:
 		}
 	}
 
-	EventState OnKeyPress(WChar key, uint16 keycode) override
+	EventState OnKeyPress(char32_t key, uint16_t keycode) override
 	{
 		if (keycode == WKC_ESC) {
 			this->Close();
@@ -920,7 +919,7 @@ public:
 		}
 	}
 
-	void OnEditboxChanged(int wid) override
+	void OnEditboxChanged(WidgetID wid) override
 	{
 		if (wid == WID_SL_FILTER) {
 			this->string_filter.SetFilterTerm(this->filter_editbox.text.buf);

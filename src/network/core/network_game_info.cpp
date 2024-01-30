@@ -27,7 +27,7 @@
 
 #include "../../safeguards.h"
 
-extern const uint8 _out_of_band_grf_md5[16];
+extern const uint8_t _out_of_band_grf_md5[16];
 
 /**
  * How many hex digits of the git hash to include in network revision string.
@@ -158,6 +158,7 @@ const NetworkServerGameInfo *GetCurrentNetworkServerGameInfo()
 	_network_game_info.companies_on  = (byte)Company::GetNumItems();
 	_network_game_info.spectators_on = NetworkSpectatorCount();
 	_network_game_info.game_date     = _date;
+	_network_game_info.ticks_playing = _scaled_tick_counter;
 	return &_network_game_info;
 }
 
@@ -202,12 +203,15 @@ void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, bool
 	/* Update the documentation in game_info.h on changes
 	 * to the NetworkGameInfo wire-protocol! */
 
+	/* NETWORK_GAME_INFO_VERSION = 7 */
+	p->Send_uint64(info->ticks_playing);
+
 	/* NETWORK_GAME_INFO_VERSION = 6 */
 	p->Send_uint8(send_newgrf_names ? NST_GRFID_MD5_NAME : NST_GRFID_MD5);
 
 	/* NETWORK_GAME_INFO_VERSION = 5 */
 	GameInfo *game_info = Game::GetInfo();
-	p->Send_uint32(game_info == nullptr ? -1 : (uint32)game_info->GetVersion());
+	p->Send_uint32(game_info == nullptr ? -1 : (uint32_t)game_info->GetVersion());
 	p->Send_string(game_info == nullptr ? "" : game_info->GetName());
 
 	/* NETWORK_GAME_INFO_VERSION = 4 */
@@ -223,7 +227,7 @@ void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, bool
 		for (c = info->grfconfig; c != nullptr; c = c->next) {
 			if (!HasBit(c->flags, GCF_STATIC)) count++;
 		}
-		p->Send_uint8(std::min<uint>(count, NETWORK_MAX_GRF_COUNT)); // Send number of GRFs
+		p->Send_uint8(ClampTo<uint8_t>(std::min<uint>(count, NETWORK_MAX_GRF_COUNT))); // Send number of GRFs
 
 		/* Send actual GRF Identifications */
 		for (c = info->grfconfig; c != nullptr; c = c->next) {
@@ -251,7 +255,7 @@ void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, bool
 	p->Send_uint8 (info->clients_on);
 	p->Send_uint8 (info->spectators_on);
 
-	auto encode_map_size = [&](uint32 in) -> uint16 {
+	auto encode_map_size = [&](uint32_t in) -> uint16_t {
 		if (in < UINT16_MAX) {
 			return in;
 		} else {
@@ -269,9 +273,9 @@ void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, bool
  * @param p    the packet to write the data to
  * @param info the NetworkGameInfo struct to serialize
  */
-void SerializeNetworkGameInfoExtended(Packet *p, const NetworkServerGameInfo *info, uint16 flags, uint16 version, bool send_newgrf_names)
+void SerializeNetworkGameInfoExtended(Packet *p, const NetworkServerGameInfo *info, uint16_t flags, uint16_t version, bool send_newgrf_names)
 {
-	version = std::max<uint16>(version, 1); // Version 1 is the max supported
+	version = std::max<uint16_t>(version, 1); // Version 1 is the max supported
 
 	p->Send_uint8(version); // version num
 
@@ -295,7 +299,7 @@ void SerializeNetworkGameInfoExtended(Packet *p, const NetworkServerGameInfo *in
 
 	if (version >= 1) {
 		GameInfo *game_info = Game::GetInfo();
-		p->Send_uint32(game_info == nullptr ? -1 : (uint32)game_info->GetVersion());
+		p->Send_uint32(game_info == nullptr ? -1 : (uint32_t)game_info->GetVersion());
 		p->Send_string(game_info == nullptr ? "" : game_info->GetName());
 
 		p->Send_uint8(send_newgrf_names ? NST_GRFID_MD5_NAME : NST_GRFID_MD5);
@@ -346,6 +350,10 @@ void DeserializeNetworkGameInfo(Packet *p, NetworkGameInfo *info, const GameInfo
 	 * to the NetworkGameInfo wire-protocol! */
 
 	switch (game_info_version) {
+		case 7:
+			info->ticks_playing = p->Recv_uint64();
+			FALLTHROUGH;
+
 		case 6:
 			newgrf_serialisation = (NewGRFSerializationType)p->Recv_uint8();
 			if (newgrf_serialisation >= NST_END) return;
@@ -361,7 +369,7 @@ void DeserializeNetworkGameInfo(Packet *p, NetworkGameInfo *info, const GameInfo
 			/* Ensure that the maximum number of NewGRFs and the field in the network
 			 * protocol are matched to eachother. If that is not the case anymore a
 			 * check must be added to ensure the received data is still valid. */
-			static_assert(std::numeric_limits<uint8>::max() == NETWORK_MAX_GRF_COUNT);
+			static_assert(std::numeric_limits<uint8_t>::max() == NETWORK_MAX_GRF_COUNT);
 			uint num_grfs = p->Recv_uint8();
 
 			GRFConfig **dst = &info->grfconfig;
@@ -424,7 +432,7 @@ void DeserializeNetworkGameInfo(Packet *p, NetworkGameInfo *info, const GameInfo
 			}
 			if (game_info_version < 6) while (p->Recv_uint8() != 0) {} // Used to contain the map-name.
 
-			auto decode_map_size = [&](uint16 in) -> uint32 {
+			auto decode_map_size = [&](uint16_t in) -> uint32_t {
 				if (in >= 65000) {
 					return 1 << (in - 65000);
 				} else {
@@ -450,7 +458,7 @@ void DeserializeNetworkGameInfoExtended(Packet *p, NetworkGameInfo *info)
 {
 	static const Date MAX_DATE = ConvertYMDToDate(MAX_YEAR, 11, 31); // December is month 11
 
-	const uint8 version = p->Recv_uint8();
+	const uint8_t version = p->Recv_uint8();
 	if (version > SERVER_GAME_INFO_EXTENDED_MAX_VERSION) return; // Unknown version
 
 	NewGRFSerializationType newgrf_serialisation = NST_GRFID_MD5;

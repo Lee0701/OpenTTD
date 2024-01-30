@@ -1061,7 +1061,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Грош
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Виберіть грошову одиницю
 
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Британський фунт
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Американський долар
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Євро
@@ -1144,6 +1144,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Увім
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Межі шкали
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :BLACK}Увімкнутий прапорець дозволить змінити розмір інтерфейсу
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1856,6 +1857,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :Відключ�
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Не відправляти на техогляд, якщо відключені аварії: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Включення цієї опції дозволяє не проводити автоматичний техогляд у разі, якщо поломки транспорту вимкнено.
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Враховувати обмеження швидкості вагонів: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :При включенні максимальна швидкість потяга враховує обмеження швидкості вагонів.

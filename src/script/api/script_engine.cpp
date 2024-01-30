@@ -30,7 +30,7 @@
 	/* AIs have only access to engines they can purchase or still have in use.
 	 * Deity has access to all engined that will be or were available ever. */
 	CompanyID company = ScriptObject::GetCompany();
-	return ScriptCompanyMode::IsDeity() || ::IsEngineBuildable(engine_id, e->type, company) || ::Company::Get(company)->group_all[e->type].num_engines[engine_id] > 0;
+	return ScriptCompanyMode::IsDeity() || ::IsEngineBuildable(engine_id, e->type, company) || ::Company::Get(company)->group_all[e->type].GetNumEngines(engine_id) > 0;
 }
 
 /* static */ bool ScriptEngine::IsBuildable(EngineID engine_id)
@@ -50,12 +50,12 @@
 
 /* static */ CargoID ScriptEngine::GetCargoType(EngineID engine_id)
 {
-	if (!IsValidEngine(engine_id)) return CT_INVALID;
+	if (!IsValidEngine(engine_id)) return INVALID_CARGO;
 
 	CargoArray cap = ::GetCapacityOfArticulatedParts(engine_id);
 
 	auto it = std::max_element(std::cbegin(cap), std::cend(cap));
-	if (*it == 0) return CT_INVALID;
+	if (*it == 0) return INVALID_CARGO;
 
 	return CargoID(std::distance(std::cbegin(cap), it));
 }
@@ -275,7 +275,7 @@
 	EnforcePrecondition(false, IsValidEngine(engine_id));
 	EnforcePrecondition(false, company != ScriptCompany::COMPANY_INVALID);
 
-	return ScriptObject::DoCommand(0, engine_id, (uint32)company | (1 << 31), CMD_ENGINE_CTRL);
+	return ScriptObject::DoCommand(0, engine_id, (uint32_t)company | (1 << 31), CMD_ENGINE_CTRL);
 }
 
 /* static */ bool ScriptEngine::DisableForCompany(EngineID engine_id, ScriptCompany::CompanyID company)

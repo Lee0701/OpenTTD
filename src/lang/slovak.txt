@@ -1016,7 +1016,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Výber m
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 42
+###length 43
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Libra šterlingov
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Americký dolár
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Euro
@@ -1099,6 +1099,7 @@ STR_GAME_OPTIONS_GUI_SCALE_AUTO_TOOLTIP                         :{BLACK}Začiark
 
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Mierkové úkosy
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Začiarknutím tohto políčka zmeníte úkosy podľa veľkosti rozhrania
+
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1814,6 +1815,7 @@ STR_CONFIG_SETTING_SERVINT_DISABLED                             :vypnuté
 
 STR_CONFIG_SETTING_NOSERVICE                                    :Vypnúť servisy, ak sú vypnuté poruchy: {STRING}
 STR_CONFIG_SETTING_NOSERVICE_HELPTEXT                           :Ak je zapnuté, vozidlá nebudú servisované ak sú vypnuté poruchy.
+
 
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS                             :Obmedzenie rýchlosti pre vagóny: {STRING}
 STR_CONFIG_SETTING_WAGONSPEEDLIMITS_HELPTEXT                    :Ak je zapnuté, použijú sa tiež rýchlostné obmedzenia pre vagóny na obmedzenie celkovej rýchlosti vlakov.

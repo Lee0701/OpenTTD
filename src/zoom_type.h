@@ -53,8 +53,9 @@ enum ZoomLevel : byte {
 	ZOOM_LVL_SPR_COUNT = ZOOM_LVL_SPR_END - ZOOM_LVL_BEGIN, ///< Number of zoom levels to draw with sprites.
 };
 DECLARE_POSTFIX_INCREMENT(ZoomLevel)
+DECLARE_ENUM_AS_ADDABLE(ZoomLevel)
 
-static inline uint8 ZoomMask(ZoomLevel level)
+inline uint8_t ZoomMask(ZoomLevel level)
 {
 	return 1 << level;
 }

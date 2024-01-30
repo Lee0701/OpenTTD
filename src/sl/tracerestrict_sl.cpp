@@ -44,7 +44,7 @@ static void Save_TRRM()
 
 /** program length save header struct */
 struct TraceRestrictProgramStub {
-	uint32 length;
+	uint32_t length;
 };
 
 static const SaveLoad _trace_restrict_program_stub_desc[] = {
@@ -72,6 +72,24 @@ static void Load_TRRP()
 				if (IsTraceRestrictDoubleItem(item)) i++;
 			}
 		}
+		if (SlXvIsFeatureMissing(XSLFI_TRACE_RESTRICT, 17)) {
+			/* TRIT_SLOT subtype moved from cond op to combined aux and cond op field in version 17.
+			 * Do this for all previous versions to avoid cases where it is unexpectedly present despite the version,
+			 * e.g. in JokerPP and non-SLXI tracerestrict saves.
+			 */
+			for (size_t i = 0; i < prog->items.size(); i++) {
+				TraceRestrictItem &item = prog->items[i]; // note this is a reference
+				if (GetTraceRestrictType(item) == TRIT_SLOT) {
+					TraceRestrictSlotSubtypeField subtype = static_cast<TraceRestrictSlotSubtypeField>(GetTraceRestrictCondOp(item));
+					if (subtype == 7) {
+						/* Was TRSCOF_ACQUIRE_TRY_ON_RESERVE */
+						subtype = TRSCOF_ACQUIRE_TRY;
+					}
+					SetTraceRestrictCombinedAuxCondOpField(item, subtype);
+				}
+				if (IsTraceRestrictDoubleItem(item)) i++;
+			}
+		}
 		CommandCost validation_result = prog->Validate();
 		if (validation_result.Failed()) {
 			char str[4096];
@@ -95,7 +113,7 @@ static void Load_TRRP()
 static void RealSave_TRRP(TraceRestrictProgram *prog)
 {
 	TraceRestrictProgramStub stub;
-	stub.length = (uint32)prog->items.size();
+	stub.length = (uint32_t)prog->items.size();
 	SlObject(&stub, _trace_restrict_program_stub_desc);
 	SlArray(prog->items.data(), stub.length, SLE_UINT32);
 }
@@ -113,7 +131,7 @@ static void Save_TRRP()
 
 /** program length save header struct */
 struct TraceRestrictSlotStub {
-	uint32 length;
+	uint32_t length;
 };
 
 static const SaveLoad _trace_restrict_slot_stub_desc[] = {
@@ -151,7 +169,7 @@ static void RealSave_TRRS(TraceRestrictSlot *slot)
 {
 	SlObject(slot, _trace_restrict_slot_desc);
 	TraceRestrictSlotStub stub;
-	stub.length = (uint32)slot->occupants.size();
+	stub.length = (uint32_t)slot->occupants.size();
 	SlObject(&stub, _trace_restrict_slot_stub_desc);
 	if (stub.length) SlArray(slot->occupants.data(), stub.length, SLE_UINT32);
 }

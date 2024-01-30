@@ -72,7 +72,7 @@
 {
 	EnforceCompanyModeValid(VEHICLE_INVALID);
 	EnforcePrecondition(VEHICLE_INVALID, ScriptEngine::IsBuildable(engine_id));
-	EnforcePrecondition(VEHICLE_INVALID, cargo == CT_INVALID || ScriptCargo::IsValidCargo(cargo));
+	EnforcePrecondition(VEHICLE_INVALID, cargo == INVALID_CARGO || ScriptCargo::IsValidCargo(cargo));
 
 	::VehicleType type = ::Engine::Get(engine_id)->type;
 
@@ -86,7 +86,7 @@
 
 /* static */ VehicleID ScriptVehicle::BuildVehicle(TileIndex depot, EngineID engine_id)
 {
-	return _BuildVehicleInternal(depot, engine_id, CT_INVALID);
+	return _BuildVehicleInternal(depot, engine_id, INVALID_CARGO);
 }
 
 /* static */ VehicleID ScriptVehicle::BuildVehicleWithRefit(TileIndex depot, EngineID engine_id, CargoID cargo)
@@ -416,7 +416,7 @@
 	if (!IsValidVehicle(vehicle_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo)) return -1;
 
-	uint32 amount = 0;
+	uint32_t amount = 0;
 	for (const Vehicle *v = ::Vehicle::Get(vehicle_id); v != nullptr; v = v->Next()) {
 		if (v->cargo_type == cargo) amount += v->cargo_cap;
 	}
@@ -429,7 +429,7 @@
 	if (!IsValidVehicle(vehicle_id)) return -1;
 	if (!ScriptCargo::IsValidCargo(cargo)) return -1;
 
-	uint32 amount = 0;
+	uint32_t amount = 0;
 	for (const Vehicle *v = ::Vehicle::Get(vehicle_id); v != nullptr; v = v->Next()) {
 		if (v->cargo_type == cargo) amount += v->cargo.StoredCount();
 	}

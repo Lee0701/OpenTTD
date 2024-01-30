@@ -121,8 +121,8 @@ private:
 		uint received_demand;    ///< Received demand towards this node.
 		PathList paths;          ///< Paths through this node, sorted so that those with flow == 0 are in the back.
 		FlowStatMap flows;       ///< Planned flows to other nodes.
-		span<DemandAnnotation> demands; ///< Demand annotations belonging to this node.
-		span<Edge> edges;        ///< Edges with annotations belonging to this node.
+		std::span<DemandAnnotation> demands; ///< Demand annotations belonging to this node.
+		std::span<Edge> edges;               ///< Edges with annotations belonging to this node.
 		void Init(uint supply);
 	};
 
@@ -152,7 +152,8 @@ protected:
 
 public:
 
-	btree::btree_map<std::pair<NodeID, NodeID>, uint> demand_map; ///< Demand map.
+	std::unique_ptr<uint[]> demand_matrix;                        ///< Demand matrix.
+	uint demand_matrix_count;                                     ///< Count of non-zero entries in demand_matrix.
 	std::vector<DemandAnnotation> demand_annotation_store;        ///< Demand annotation store.
 
 	DynUniformArenaAllocator path_allocator; ///< Arena allocator used for paths
@@ -231,12 +232,12 @@ public:
 			this->node_anno.received_demand += amount;
 		}
 
-		span<DemandAnnotation> GetDemandAnnotations() const
+		std::span<DemandAnnotation> GetDemandAnnotations() const
 		{
 			return this->node_anno.demands;
 		}
 
-		void SetDemandAnnotations(span<DemandAnnotation> demands)
+		void SetDemandAnnotations(std::span<DemandAnnotation> demands)
 		{
 			this->node_anno.demands = demands;
 		}
@@ -251,7 +252,7 @@ public:
 			return empty_edge;
 		}
 
-		span<Edge> GetEdges()
+		std::span<Edge> GetEdges()
 		{
 			return this->node_anno.edges;
 		}

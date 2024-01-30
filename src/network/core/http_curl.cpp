@@ -177,7 +177,7 @@ void HttpThread()
 		/* Prepare POST body and URI. */
 		if (!request->data.empty()) {
 			/* When the payload starts with a '{', it is a JSON payload. */
-			if (StrStartsWith(request->data, "{")) {
+			if (request->data.starts_with("{")) {
 				headers = curl_slist_append(headers, "Content-Type: application/json");
 			} else {
 				headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
@@ -233,8 +233,10 @@ void HttpThread()
 			request->callback.OnFailure();
 		}
 
-		/* Wait till the callback tells us all data is dequeued. */
-		request->callback.WaitTillEmpty();
+		/* Wait till the callback tells us all data is dequeued, or _http_thread_exit has been set. */
+		request->callback.WaitTillEmptyOrCondition([]() -> bool {
+			return _http_thread_exit;
+		});
 	}
 
 	curl_easy_cleanup(curl);
@@ -277,9 +279,11 @@ void NetworkHTTPInitialize()
 
 void NetworkHTTPUninitialize()
 {
-	curl_global_cleanup();
-
 	_http_thread_exit = true;
+
+	/* Ensure the callbacks are handled. This is mostly needed as we send
+	 * a survey just before close, and that might be pending here. */
+	NetworkHTTPSocketHandler::HTTPReceive();
 
 	{
 		std::lock_guard<std::mutex> lock(_http_mutex);
@@ -289,4 +293,6 @@ void NetworkHTTPUninitialize()
 	if (_http_thread.joinable()) {
 		_http_thread.join();
 	}
+
+	curl_global_cleanup();
 }
