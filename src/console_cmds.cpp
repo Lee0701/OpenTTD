@@ -3952,11 +3952,11 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 }
 
 DEF_CONSOLE_CMD(ConIndustryTypes) {
-	char buf[128];
+	std::string name;
 	for(IndustryType i = 0 ; i < NUM_INDUSTRYTYPES ; i++) {
 		const IndustrySpec *spec = GetIndustrySpec(i);
-		GetString(buf, spec->name, lastof(buf));
-		IConsolePrintF(CC_DEFAULT, "%d: %s", i, buf);
+		name = GetString(spec->name);
+		IConsolePrintF(CC_DEFAULT, "%d: %s", i, name.c_str());
 	}
 	return true;
 }
