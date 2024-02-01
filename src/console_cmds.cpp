@@ -3814,7 +3814,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 					if (town != nullptr) break;
 				}
 				if(town != nullptr) {
-					for(uint i = 0 ; i < town_size_int ; i++) {
+					for(uint i = 0 ; i < 1000 ; i++) {
 						if(town->cache.population >= town_size_int) break;
 						DoCommandP(0, town->index, DC_EXEC, CMD_EXPAND_TOWN);
 					}
