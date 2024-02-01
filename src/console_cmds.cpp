@@ -3791,7 +3791,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 						for (int y = -1; y <= 1; y++) {
 							if (x == 0 && y == 0) continue;
 							off_tile = TILE_ADDXY(tile, x, y);
-							if(IsTileType(off_tile, MP_CLEAR) || !IsTileType(off_tile, MP_TREES)) {
+							if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
 								success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
 							}
 							if (success) break;
@@ -3860,6 +3860,11 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 		return true;
 	}
 
+	if(Town::GetNumItems() == 0) {
+		IConsolePrintF(CC_ERROR, "At least one town is required to import industries");
+        return true;
+	}
+
 	if (argc != 2) return false;
 
 	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
@@ -3915,7 +3920,7 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 						for (int y = -1; y <= 1; y++) {
 							if (x == 0 && y == 0) continue;
 							off_tile = TILE_ADDXY(tile, x, y);
-							if(IsTileType(off_tile, MP_CLEAR) || !IsTileType(off_tile, MP_TREES)) {
+							if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
 								success = DoCommandP(off_tile, industry_type, InteractiveRandom(), CMD_BUILD_INDUSTRY);
 							}
 							if (success) break;
@@ -3926,17 +3931,6 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 			}
 
 			if (success) {
-				tile = off_tile;
-				Industry *industry = nullptr;
-				for (int x = -1; x <= 1; x++) {
-					for (int y = -1; y <= 1; y++) {
-						off_tile = TILE_ADDXY(tile, x, y);
-						if(!(IsTileType(off_tile, MP_HOUSE) || (IsTileType(off_tile, MP_ROAD) && !IsRoadDepot(off_tile)))) continue;
-						industry = Industry::GetByTile(off_tile);
-						if(industry != nullptr) break;
-					}
-					if (industry != nullptr) break;
-				}
 				founded++;
 			} else {
 				failed++;
