@@ -1,4 +1,4 @@
-name: Release (Linux)
+name: Release (Linux, Dedicated)
 
 on:
   workflow_call:
@@ -10,14 +10,14 @@ on:
 
 jobs:
   linux:
-    name: Linux (Generic)
+    name: Linux (Dedicated)
 
     runs-on: ubuntu-latest
     container:
-      # manylinux_2_28 is based on AlmaLinux 8, and already has a lot of things
+      # manylinux2014 is based on CentOS 7, and already has a lot of things
       # installed and preconfigured. It makes it easier to build OpenTTD.
-      # This distro is based on glibc 2.28, released in 2018.
-      image: quay.io/pypa/manylinux_2_28_x86_64
+      # This distro is based on glibc 2.17, released in 2012.
+      image: quay.io/pypa/manylinux2014_x86_64
 
     steps:
     - name: Download source
@@ -29,11 +29,31 @@ jobs:
       run: |
         tar -xf source.tar.gz --strip-components=1
 
+    # curl is too old for most of the tools to work properly. For example,
+    # rust-toolchain doesn't work properly, neither vcpkg caching.
+    # The easier solution here is to upgrade curl.
+    - name: Update curl
+      run: |
+        yum install -y \
+          openssl-devel \
+          # EOF
+
+        mkdir /curl
+        cd /curl
+        curl -o curl-7.81.0.zip https://curl.se/download/curl-7.81.0.zip
+        unzip curl-7.81.0.zip
+        cd curl-7.81.0
+        ./configure --with-ssl --with-zlib --prefix=/usr --libdir=/usr/lib64
+        make -j $(nproc)
+        make install
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
 
     - name: Enable Rust cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@v2.7.0
+      with:
+        key: dedicated
 
     - name: Setup vcpkg caching
       uses: actions/github-script@v6
@@ -62,55 +82,13 @@ jobs:
         cp /usr/share/aclocal/* /usr/local/share/aclocal/
         echo "::endgroup::"
 
-        # The yum variant of fluidsynth depends on all possible audio drivers,
-        # like jack, ALSA, pulseaudio, etc. This is not really useful for us,
-        # as we route the output of fluidsynth back via our sound driver, and
-        # as such do not use these audio driver outputs at all.
-        # The vcpkg variant of fluidsynth depends on ALSA. Similar issue here.
-        # So instead, we compile fluidsynth ourselves, with as few
-        # dependencies as possible. We do it before anything else is installed,
-        # to make sure it doesn't pick up on any of the drivers.
-        echo "::group::Install fluidsynth"
-        wget https://github.com/FluidSynth/fluidsynth/archive/v2.3.3.tar.gz
-        tar xf v2.3.3.tar.gz
+        # The container we use is old enough, that it doesn't know SHF_COMPRESSED.
+        # But, breakpad needs this symbol to exist. So we patch it in our system
+        # libraries.
         (
-          cd fluidsynth-2.3.3
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr
-          cmake --build . -j $(nproc)
-          cmake --install .
+          cd /
+          patch -p1 < ${GITHUB_WORKSPACE}/os/linux/shf-compressed.patch
         )
-
-        echo "::group::Install audio drivers"
-        # These audio libs are to make sure the SDL version of vcpkg adds
-        # sound-support; these libraries are not added to the resulting
-        # binary, but the headers are used to enable them in SDL.
-        yum install -y \
-          alsa-lib-devel \
-          pulseaudio-libs-devel \
-          # EOF
-        echo "::endgroup::"
-
-        echo "::group::Install video drivers"
-        # These video libs are to make sure the SDL version of vcpkg adds
-        # video-support; these libraries are not added to the resulting
-        # binary, but the headers are used to enable them in SDL.
-        yum install -y \
-          libX11-devel \
-          libXcursor-devel \
-          libXext-devel \
-          libXfixes-devel \
-          libXi-devel \
-          libxkbcommon-devel \
-          libXrandr-devel \
-          libXScrnSaver-devel \
-          mesa-libEGL-devel \
-          mesa-libGL-devel \
-          mesa-libGLES-devel \
-          wayland-devel \
-          wayland-protocols-devel \
-          # EOF
         echo "::endgroup::"
 
         # We use vcpkg for our dependencies, to get more up-to-date version.
@@ -123,8 +101,20 @@ jobs:
           ./bootstrap-vcpkg.sh -disableMetrics
         )
 
-    - name: Install GCC problem matcher
-      uses: ammaraskar/gcc-problem-matcher@master
+        # Make Python3 available for other packages. This needs to be done
+        # first, as otherwise dependencies fail to build because Python3 is
+        # not available.
+        (
+          cd /
+
+          /vcpkg/vcpkg install python3
+          ln -sf /vcpkg/installed/x64-linux/tools/python3/python3.[0-9][0-9] /usr/bin/python3
+        )
+        echo "::endgroup::"
+
+    - name: Patch bundle name
+      run: |
+        sed -i 's/generic/dedicated/g' cmake/InstallAndPackage.cmake
 
     - name: Build
       run: |
@@ -135,6 +125,7 @@ jobs:
         cmake ${GITHUB_WORKSPACE} \
           -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake \
           -DCMAKE_BUILD_TYPE=Release \
+          -DOPTION_DEDICATED=ON \
           -DOPTION_COMPRESS_DEBUG=ON \
           -DOPTION_LTO=ON \
           -DOPTION_TRIM_PATH_PREFIX=ON \
@@ -164,6 +155,6 @@ jobs:
     - name: Store bundles
       uses: actions/upload-artifact@v3
       with:
-        name: openttd-linux-generic
+        name: openttd-linux-dedicated
         path: build/bundles
         retention-days: 5
