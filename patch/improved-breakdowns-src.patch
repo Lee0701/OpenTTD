@@ -143,10 +143,10 @@ index ae79391955..e475ddc423 100644
  		}
  	}
  
-diff --git a/src/disaster_cmd.cpp b/src/disaster_cmd.cpp
+diff --git a/src/disaster_vehicle.cpp b/src/disaster_vehicle.cpp
 index 0d95bf144c..bec50174db 100644
---- a/src/disaster_cmd.cpp
-+++ b/src/disaster_cmd.cpp
+--- a/src/disaster_vehicle.cpp
++++ b/src/disaster_vehicle.cpp
 @@ -350,6 +350,7 @@ static void DisasterTick_Ufo(Vehicle *v)
  		dist = Delta(v->x_pos, u->x_pos) + Delta(v->y_pos, u->y_pos);
  
@@ -393,10 +393,10 @@ index 214d4f1208..4e7975d208 100644
  	}
  
  	if (v->vehstatus & VS_STOPPED) return;
-diff --git a/src/saveload.cpp b/src/saveload.cpp
+diff --git a/src/saveload/saveload.cpp b/src/saveload/saveload.cpp
 index ce48465caf..ac441ffba1 100644
---- a/src/saveload.cpp
-+++ b/src/saveload.cpp
+--- a/src/saveload/saveload.cpp
++++ b/src/saveload/saveload.cpp
 @@ -37,7 +37,7 @@
  
  #include "table/strings.h"
