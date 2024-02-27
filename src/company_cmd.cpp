@@ -20,6 +20,7 @@
 #include "network/network_base.h"
 #include "network/network_admin.h"
 #include "ai/ai.hpp"
+#include "ai/ai_config.hpp"
 #include "company_manager_face.h"
 #include "window_func.h"
 #include "strings_func.h"
@@ -107,6 +108,16 @@ void Company::PostDestructor(size_t index)
 	InvalidateWindowData(WC_LINKGRAPH_LEGEND, 0);
 	/* If the currently shown error message has this company in it, then close it. */
 	InvalidateWindowData(WC_ERRMSG, 0);
+}
+
+/**
+ * Calculate the max allowed loan for this company.
+ * @return the max loan amount.
+ */
+Money Company::GetMaxLoan() const
+{
+	if (this->max_loan == COMPANY_MAX_LOAN_DEFAULT) return _economy.max_loan;
+	return this->max_loan;
 }
 
 /**
@@ -217,19 +228,47 @@ void InvalidateCompanyWindows(const Company *company)
 }
 
 /**
+ * Get the amount of money that a company has available, or INT64_MAX
+ * if there is no such valid company.
+ *
+ * @param company Company to check
+ * @return The available money of the company or INT64_MAX
+ */
+Money GetAvailableMoney(CompanyID company)
+{
+	if (_settings_game.difficulty.infinite_money) return INT64_MAX;
+	if (!Company::IsValidID(company)) return INT64_MAX;
+	return Company::Get(company)->money;
+}
+
+/**
+ * This functions returns the money which can be used to execute a command.
+ * This is either the money of the current company, or INT64_MAX if infinite money
+ * is enabled or there is no such a company "at the moment" like the server itself.
+ *
+ * @return The available money of the current company or INT64_MAX
+ */
+Money GetAvailableMoneyForCommand()
+{
+	return GetAvailableMoney(_current_company);
+}
+
+/**
  * Verify whether the company can pay the bill.
  * @param[in,out] cost Money to pay, is changed to an error if the company does not have enough money.
- * @return Function returns \c true if the company has enough money, else it returns \c false.
+ * @return Function returns \c true if the company has enough money or infinite money is enabled,
+ * else it returns \c false.
  */
 bool CheckCompanyHasMoney(CommandCost &cost)
 {
-	if (cost.GetCost() > 0) {
-		const Company *c = Company::GetIfValid(_current_company);
-		if (c != nullptr && cost.GetCost() > c->money) {
-			SetDParam(0, cost.GetCost());
-			cost.MakeError(STR_ERROR_NOT_ENOUGH_CASH_REQUIRES_CURRENCY);
-			return false;
-		}
+	if (cost.GetCost() <= 0) return true;
+	if (_settings_game.difficulty.infinite_money) return true;
+
+	const Company *c = Company::GetIfValid(_current_company);
+	if (c != nullptr && cost.GetCost() > c->money) {
+		SetDParam(0, cost.GetCost());
+		cost.MakeError(STR_ERROR_NOT_ENOUGH_CASH_REQUIRES_CURRENCY);
+		return false;
 	}
 	return true;
 }
@@ -483,7 +522,7 @@ static Colours GenerateCompanyColour()
 
 	/* Move the colours that look similar to each company's colour to the side */
 	for (const Company *c : Company::Iterate()) {
-		Colours pcolour = (Colours)c->colour;
+		Colours pcolour = c->colour;
 
 		for (uint i = 0; i < COLOUR_END; i++) {
 			if (colours[i] == pcolour) {
@@ -587,7 +626,7 @@ Company *DoStartupNewCompany(DoStartupNewCompanyFlag flags, CompanyID company)
 	c->colour = colour;
 
 	ResetCompanyLivery(c);
-	_company_colours[c->index] = (Colours)c->colour;
+	_company_colours[c->index] = c->colour;
 
 	/* Scale the initial loan based on the inflation rounded down to the loan interval. The maximum loan has already been inflation adjusted. */
 	c->money = c->current_loan = std::min<int64_t>((INITIAL_LOAN * _economy.inflation_prices >> 16) / LOAN_INTERVAL * LOAN_INTERVAL, _economy.max_loan);
@@ -596,7 +635,7 @@ Company *DoStartupNewCompany(DoStartupNewCompanyFlag flags, CompanyID company)
 
 	c->avail_railtypes = GetCompanyRailTypes(c->index);
 	c->avail_roadtypes = GetCompanyRoadTypes(c->index);
-	c->inaugurated_year = _cur_year;
+	c->inaugurated_year = CalTime::CurYear();
 
 	/* If starting a player company in singleplayer and a favorite company manager face is selected, choose it. Otherwise, use a random face.
 	 * In a network game, we'll choose the favorite face later in CmdCompanyCtrl to sync it to all clients. */
@@ -926,6 +965,11 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 				break;
 			}
 
+			/* Send new companies, before potentially setting the password. Otherwise,
+			 * the password update could be sent when the company is not yet known. */
+			NetworkAdminCompanyNew(c);
+			NetworkServerNewCompany(c, ci);
+
 			/* This is the client (or non-dedicated server) who wants a new company */
 			if (client_id == _network_own_client_id) {
 				assert(_local_company == COMPANY_SPECTATOR);
@@ -945,7 +989,6 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 				MarkWholeScreenDirty();
 			}
 
-			NetworkServerNewCompany(c, ci);
 			DEBUG(desync, 1, "new_company: %s, company_id: %u", debug_date_dumper().HexDate(), c->index);
 			break;
 		}
@@ -963,6 +1006,7 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 
 			Company *c = DoStartupNewCompany(DSNC_AI, company_id);
 			if (c != nullptr) {
+				NetworkAdminCompanyNew(c);
 				NetworkServerNewCompany(c, nullptr);
 				DEBUG(desync, 1, "new_company_ai: %s, company_id: %u", debug_date_dumper().HexDate(), c->index);
 			}
@@ -1105,7 +1149,7 @@ CommandCost CmdSetCompanyColour(TileIndex tile, DoCommandFlag flags, uint32_t p1
 	if (flags & DC_EXEC) {
 		if (!second) {
 			if (scheme != LS_DEFAULT) SB(c->livery[scheme].in_use, 0, 1, colour != INVALID_COLOUR);
-			if (colour == INVALID_COLOUR) colour = (Colours)c->livery[LS_DEFAULT].colour1;
+			if (colour == INVALID_COLOUR) colour = c->livery[LS_DEFAULT].colour1;
 			c->livery[scheme].colour1 = colour;
 
 			/* If setting the first colour of the default scheme, adjust the
@@ -1118,11 +1162,11 @@ CommandCost CmdSetCompanyColour(TileIndex tile, DoCommandFlag flags, uint32_t p1
 			}
 		} else {
 			if (scheme != LS_DEFAULT) SB(c->livery[scheme].in_use, 1, 1, colour != INVALID_COLOUR);
-			if (colour == INVALID_COLOUR) colour = (Colours)c->livery[LS_DEFAULT].colour2;
+			if (colour == INVALID_COLOUR) colour = c->livery[LS_DEFAULT].colour2;
 			c->livery[scheme].colour2 = colour;
 
 			if (scheme == LS_DEFAULT) {
-				UpdateCompanyGroupLiveries(c);
+				UpdateCompanyLiveries(c);
 			}
 		}
 

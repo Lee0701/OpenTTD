@@ -104,8 +104,8 @@ DECLARE_ENUM_AS_BIT_SET(HouseCtrlFlags)
 
 struct HouseSpec {
 	/* Standard properties */
-	Year min_year;                            ///< introduction year of the house
-	Year max_year;                            ///< last year it can be built
+	CalTime::Year min_year;                   ///< introduction year of the house
+	CalTime::Year max_year;                   ///< last year it can be built
 	byte population;                          ///< population (Zero on other tiles in multi tile house.)
 	byte removal_cost;                        ///< cost multiplier for removing it
 	StringID building_name;                   ///< building name
@@ -113,6 +113,7 @@ struct HouseSpec {
 	byte mail_generation;                     ///< mail generation multiplier (tile based, as the acceptances below)
 	byte cargo_acceptance[HOUSE_NUM_ACCEPTS]; ///< acceptance level for the cargo slots
 	CargoID accepts_cargo[HOUSE_NUM_ACCEPTS]; ///< input cargo slots
+	CargoLabel accepts_cargo_label[HOUSE_NUM_ACCEPTS]; ///< input landscape cargo slots
 	BuildingFlags building_flags;             ///< some flags that describe the house (size, stadium etc...)
 	HouseZones building_availability;         ///< where can it be built (climates, zones)
 	bool enabled;                             ///< the house is available to build (true by default, but can be disabled by newgrf)
@@ -120,7 +121,7 @@ struct HouseSpec {
 	/* NewHouses properties */
 	GRFFileProps grf_prop;                    ///< Properties related the the grf file
 	uint16_t callback_mask;                   ///< Bitmask of house callbacks that have to be called
-	byte random_colour[4];                    ///< 4 "random" colours
+	Colours random_colour[4];                 ///< 4 "random" colours
 	byte probability;                         ///< Relative probability of appearing (16 is the standard value)
 	HouseExtraFlags extra_flags;              ///< some more flags
 	HouseCtrlFlags ctrl_flags;                ///< control flags

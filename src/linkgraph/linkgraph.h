@@ -57,7 +57,7 @@ public:
 		uint demand;             ///< Acceptance at the station.
 		StationID station;       ///< Station ID.
 		TileIndex xy;            ///< Location of the station referred to by the node.
-		Date last_update;        ///< When the supply was last updated.
+		EconTime::Date last_update; ///< When the supply was last updated.
 		void Init(TileIndex xy = INVALID_TILE, StationID st = INVALID_STATION, uint demand = 0);
 	};
 
@@ -71,18 +71,18 @@ public:
 		uint capacity;                 ///< Capacity of the link.
 		uint usage;                    ///< Usage of the link.
 		uint64_t travel_time_sum;      ///< Sum of the travel times of the link, in ticks.
-		Date last_unrestricted_update; ///< When the unrestricted part of the link was last updated.
-		Date last_restricted_update;   ///< When the restricted part of the link was last updated.
-		Date last_aircraft_update;     ///< When aircraft capacity of the link was last updated.
+		EconTime::Date last_unrestricted_update; ///< When the unrestricted part of the link was last updated.
+		EconTime::Date last_restricted_update;   ///< When the restricted part of the link was last updated.
+		EconTime::Date last_aircraft_update;     ///< When aircraft capacity of the link was last updated.
 
 		void Init()
 		{
 			this->capacity = 0;
 			this->usage = 0;
 			this->travel_time_sum = 0;
-			this->last_unrestricted_update = INVALID_DATE;
-			this->last_restricted_update = INVALID_DATE;
-			this->last_aircraft_update = INVALID_DATE;
+			this->last_unrestricted_update = EconTime::INVALID_DATE;
+			this->last_restricted_update = EconTime::INVALID_DATE;
+			this->last_aircraft_update = EconTime::INVALID_DATE;
 		}
 
 		BaseEdge() { this->Init(); }
@@ -130,25 +130,25 @@ public:
 		 * Get the date of the last update to the edge's unrestricted capacity.
 		 * @return Last update.
 		 */
-		Date LastUnrestrictedUpdate() const { return this->edge->last_unrestricted_update; }
+		EconTime::Date LastUnrestrictedUpdate() const { return this->edge->last_unrestricted_update; }
 
 		/**
 		 * Get the date of the last update to the edge's restricted capacity.
 		 * @return Last update.
 		 */
-		Date LastRestrictedUpdate() const { return this->edge->last_restricted_update; }
+		EconTime::Date LastRestrictedUpdate() const { return this->edge->last_restricted_update; }
 
 		/**
 		 * Get the date of the last update to the edge's aircraft capacity.
 		 * @return Last update.
 		 */
-		Date LastAircraftUpdate() const { return this->edge->last_aircraft_update; }
+		EconTime::Date LastAircraftUpdate() const { return this->edge->last_aircraft_update; }
 
 		/**
 		 * Get the date of the last update to any part of the edge's capacity.
 		 * @return Last update.
 		 */
-		Date LastUpdate() const { return std::max(this->edge->last_unrestricted_update, this->edge->last_restricted_update); }
+		EconTime::Date LastUpdate() const { return std::max(this->edge->last_unrestricted_update, this->edge->last_restricted_update); }
 	};
 
 	/**
@@ -192,7 +192,7 @@ public:
 		 * Get node's last update.
 		 * @return Last update.
 		 */
-		Date LastUpdate() const { return this->node.last_update; }
+		EconTime::Date LastUpdate() const { return this->node.last_update; }
 
 		/**
 		 * Get the location of the station associated with the node.
@@ -219,9 +219,9 @@ public:
 		 */
 		Edge(BaseEdge &edge) : EdgeWrapper<BaseEdge>(edge) {}
 		void Update(uint capacity, uint usage, uint32_t time, EdgeUpdateMode mode);
-		void Restrict() { this->edge->last_unrestricted_update = INVALID_DATE; }
-		void Release() { this->edge->last_restricted_update = INVALID_DATE; }
-		void ClearAircraft() { this->edge->last_aircraft_update = INVALID_DATE; }
+		void Restrict() { this->edge->last_unrestricted_update = EconTime::INVALID_DATE; }
+		void Release() { this->edge->last_restricted_update = EconTime::INVALID_DATE; }
+		void ClearAircraft() { this->edge->last_aircraft_update = EconTime::INVALID_DATE; }
 	};
 
 	/**
@@ -261,7 +261,7 @@ public:
 		void UpdateSupply(uint supply)
 		{
 			this->node.supply += supply;
-			this->node.last_update = _date;
+			this->node.last_update = EconTime::CurDate();
 		}
 
 		/**
@@ -290,7 +290,7 @@ public:
 	static constexpr DateDelta STALE_LINK_DEPOT_TIMEOUT = 1024;
 
 	/** Minimum number of ticks between subsequent compressions of a LG. */
-	static constexpr DateTicksScaledDelta COMPRESSION_INTERVAL = 256 * DAY_TICKS;
+	static constexpr ScaledTickCounter COMPRESSION_INTERVAL = 256 * DAY_TICKS;
 
 	/**
 	 * Scale a value from a link graph of age orig_age for usage in one of age
@@ -311,7 +311,7 @@ public:
 	 * Real constructor.
 	 * @param cargo Cargo the link graph is about.
 	 */
-	LinkGraph(CargoID cargo) : cargo(cargo), last_compression(_scaled_date_ticks) {}
+	LinkGraph(CargoID cargo) : cargo(cargo), last_compression(_scaled_tick_counter) {}
 
 	void Init(uint size);
 	void ShiftDates(DateDelta interval);
@@ -350,7 +350,7 @@ public:
 	 * Get date of last compression.
 	 * @return Date of last compression.
 	 */
-	inline DateTicksScaled LastCompression() const { return this->last_compression; }
+	inline ScaledTickCounter LastCompression() const { return this->last_compression; }
 
 	/**
 	 * Get the cargo ID this component's link graph refers to.
@@ -365,7 +365,7 @@ public:
 	 */
 	inline uint Monthly(uint base) const
 	{
-		return (uint)((static_cast<uint64_t>(base) * 30 * DAY_TICKS * _settings_game.economy.day_length_factor) / std::max<uint64_t>((_scaled_date_ticks - this->last_compression).base(), DAY_TICKS));
+		return (uint)((static_cast<uint64_t>(base) * 30 * DAY_TICKS * DayLengthFactor()) / std::max<uint64_t>(_scaled_tick_counter - this->last_compression, DAY_TICKS));
 	}
 
 	NodeID AddNode(const Station *st);
@@ -392,11 +392,10 @@ protected:
 	friend upstream_sl::SlLinkgraphNode;
 	friend upstream_sl::SlLinkgraphEdge;
 
-	friend void AdjustLinkGraphScaledTickBase(DateTicksScaledDelta delta);
-	friend void LinkGraphFixupLastCompressionAfterLoad();
+	friend void LinkGraphFixupAfterLoad(bool compression_was_date);
 
 	CargoID cargo;         ///< Cargo of this component's link graph.
-	DateTicksScaled last_compression; ///< Last time the capacities and supplies were compressed.
+	ScaledTickCounter last_compression; ///< Last time the capacities and supplies were compressed.
 	NodeVector nodes;      ///< Nodes in the component.
 	EdgeMatrix edges;      ///< Edges in the component.
 

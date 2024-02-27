@@ -185,7 +185,6 @@ typedef void SettingDescProc(IniFile &ini, const SettingTable &desc, const char 
 typedef void SettingDescProcList(IniFile &ini, const char *grpname, StringList &list);
 
 static bool IsSignedVarMemType(VarType vt);
-static bool DecodeHexText(const char *pos, uint8_t *dest, size_t dest_size);
 
 
 /**
@@ -219,9 +218,11 @@ enum IniFileVersion : uint32_t {
 	IFV_PRIVATE_SECRETS,                                   ///< 1  PR#9298  Moving of settings from openttd.cfg to private.cfg / secrets.cfg.
 	IFV_GAME_TYPE,                                         ///< 2  PR#9515  Convert server_advertise to server_game_type.
 	IFV_LINKGRAPH_SECONDS,                                 ///< 3  PR#10610 Store linkgraph update intervals in seconds instead of days.
-	IFV_NETWORK_PRIVATE_SETTINGS,                          ///< 4  PR#10762 Move no_http_content_downloads / use_relay_service to private settings.
+	IFV_NETWORK_PRIVATE_SETTINGS,                          ///< 4  PR#10762 Move use_relay_service to private settings.
+
 	IFV_AUTOSAVE_RENAME,                                   ///< 5  PR#11143 Renamed values of autosave to be in minutes.
 	IFV_RIGHT_CLICK_CLOSE,                                 ///< 6  PR#10204 Add alternative right click to close windows setting.
+	IFV_REMOVE_GENERATION_SEED,                            ///< 7  PR#11927 Remove "generation_seed" from configuration.
 
 	IFV_MAX_VERSION,       ///< Highest possible ini-file version.
 };
@@ -314,7 +315,7 @@ static int ParseIntList(const char *p, T *items, size_t maxitems)
 				/* Do not accept multiple commas between numbers */
 				if (!comma) return -1;
 				comma = false;
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case ' ':
 				p++;
@@ -524,6 +525,72 @@ static bool ValidateEnumSetting(const IntSettingDesc *sdb, int32_t &val)
 		}
 	}
 	return false;
+}
+
+/**
+ * Get the title of the setting.
+ * The string should include a {STRING2} to show the current value.
+ * @return The title string.
+ */
+StringID IntSettingDesc::GetTitle() const
+{
+	return this->get_title_cb != nullptr ? this->get_title_cb(*this) : this->str;
+}
+
+/**
+ * Get the help text of the setting.
+ * @return The requested help text.
+ */
+StringID IntSettingDesc::GetHelp() const
+{
+	StringID str = this->get_help_cb != nullptr ? this->get_help_cb(*this) : this->str_help;
+	if (this->guiproc != nullptr) {
+		SettingOnGuiCtrlData data;
+		data.type = SOGCT_DESCRIPTION_TEXT;
+		data.text = str;
+		if (this->guiproc(data)) {
+			str = data.text;
+		}
+	}
+	return str;
+}
+
+/**
+ * Set the DParams for drawing the value of the setting.
+ * @param first_param First DParam to use
+ * @param value Setting value to set params for.
+ */
+void IntSettingDesc::SetValueDParams(uint first_param, int32_t value) const
+{
+	const uint initial_first_param = first_param;
+	if (this->set_value_dparams_cb != nullptr) {
+		this->set_value_dparams_cb(*this, first_param, value);
+	} else if (this->IsBoolSetting()) {
+		SetDParam(first_param++, value != 0 ? STR_CONFIG_SETTING_ON : STR_CONFIG_SETTING_OFF);
+	} else {
+		if ((this->flags & SF_ENUM) != 0) {
+			StringID str = STR_UNDEFINED;
+			for (const SettingDescEnumEntry *enumlist = this->enumlist; enumlist != nullptr && enumlist->str != STR_NULL; enumlist++) {
+				if (enumlist->val == value) {
+					str = enumlist->str;
+					break;
+				}
+			}
+			SetDParam(first_param++, str);
+		} else if ((this->flags & SF_GUI_DROPDOWN) != 0) {
+			SetDParam(first_param++, this->str_val - this->min + value);
+		} else {
+			SetDParam(first_param++, this->str_val + ((value == 0 && (this->flags & SF_GUI_0_IS_SPECIAL) != 0) ? 1 : 0));
+		}
+		SetDParam(first_param++, value);
+	}
+	if (this->guiproc != nullptr) {
+		SettingOnGuiCtrlData data;
+		data.type = SOGCT_VALUE_DPARAMS;
+		data.offset = initial_first_param;
+		data.val = value;
+		this->guiproc(data);
+	}
 }
 
 /**
@@ -1000,6 +1067,40 @@ const StringSettingDesc *SettingDesc::AsStringSetting() const
 
 /* Begin - Callback Functions for the various settings. */
 
+/** Switch setting title depending on wallclock setting */
+static StringID SettingTitleWallclock(const IntSettingDesc &sd)
+{
+	return EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? sd.str + 1 : sd.str;
+}
+
+/** Switch setting help depending on wallclock setting */
+static StringID SettingHelpWallclock(const IntSettingDesc &sd)
+{
+	return EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? sd.str_help + 1 : sd.str_help;
+}
+
+/** Setting values for velocity unit localisation */
+static void SettingsValueVelocityUnit(const IntSettingDesc &, uint first_param, int32_t value)
+{
+	StringID val;
+	switch (value) {
+		case 0: val = STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL; break;
+		case 1: val = STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC; break;
+		case 2: val = STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI; break;
+		case 3: val = EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS_SECS : STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS_DAYS; break;
+		case 4: val = STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS; break;
+		default: NOT_REACHED();
+	}
+	SetDParam(first_param, val);
+}
+
+/** A negative value has another string (the one after "strval"). */
+static void SettingsValueAbsolute(const IntSettingDesc &sd, uint first_param, int32_t value)
+{
+	SetDParam(first_param, sd.str_val + ((value >= 0) ? 1 : 0));
+	SetDParam(first_param + 1, abs(value));
+}
+
 /** Reposition the main toolbar as the setting changed. */
 static void v_PositionMainToolbar(int32_t new_value)
 {
@@ -1079,6 +1180,12 @@ static void UpdateAllServiceInterval(int32_t new_value)
 		vds->servint_roadveh  = DEF_SERVINT_PERCENT;
 		vds->servint_aircraft = DEF_SERVINT_PERCENT;
 		vds->servint_ships    = DEF_SERVINT_PERCENT;
+	} else if (EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) {
+		/* Service intervals are in minutes. */
+		vds->servint_trains   = DEF_SERVINT_MINUTES_TRAINS;
+		vds->servint_roadveh  = DEF_SERVINT_MINUTES_ROADVEH;
+		vds->servint_aircraft = DEF_SERVINT_MINUTES_AIRCRAFT;
+		vds->servint_ships    = DEF_SERVINT_MINUTES_SHIPS;
 	} else {
 		/* Service intervals are in days. */
 		vds->servint_trains   = DEF_SERVINT_DAYS_TRAINS;
@@ -1125,6 +1232,99 @@ static void UpdateServiceInterval(VehicleType type, int32_t new_value)
 	}
 
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
+}
+
+/**
+ * Callback for when the player changes the timekeeping units.
+ * @param Unused.
+ */
+static void ChangeTimekeepingUnits(int32_t)
+{
+	/* If service intervals are in time units (calendar days or real-world minutes), reset them to the correct defaults. */
+	if (!_settings_client.company.vehicle.servint_ispercent) {
+		UpdateAllServiceInterval(0);
+	}
+
+	/* If we are using calendar timekeeping, "minutes per year" must be default. */
+	if (_game_mode == GM_MENU && !EconTime::UsingWallclockUnits(true)) {
+		_settings_newgame.economy.minutes_per_calendar_year = CalTime::DEF_MINUTES_PER_YEAR;
+	}
+
+	InvalidateWindowClassesData(WC_GAME_OPTIONS, 0);
+
+	/* It is possible to change these units in-game. We must set the economy date appropriately. */
+	if (_game_mode != GM_MENU) {
+		/* Update effective day length before setting dates, so that the state ticks offset is calculated correctly */
+		UpdateEffectiveDayLengthFactor();
+
+		EconTime::Date new_economy_date;
+		EconTime::DateFract new_economy_date_fract;
+
+		if (EconTime::UsingWallclockUnits()) {
+			/* If the new mode is wallclock units, adjust the economy date to account for different month/year lengths. */
+			new_economy_date = EconTime::ConvertYMDToDate(EconTime::CurYear(), EconTime::CurMonth(), Clamp<EconTime::Day>(EconTime::CurDay(), 1, EconTime::DAYS_IN_ECONOMY_WALLCLOCK_MONTH));
+			new_economy_date_fract = EconTime::CurDateFract();
+		} else {
+			/* If the new mode is calendar units, sync the economy date with the calendar date. */
+			new_economy_date = CalTime::CurDate().base();
+			new_economy_date_fract = CalTime::CurDateFract();
+		}
+
+		/* Update link graphs and vehicles, as these include stored economy dates. */
+		LinkGraphSchedule::instance.ShiftDates(new_economy_date - EconTime::CurDate());
+		ShiftVehicleDates(new_economy_date - EconTime::CurDate());
+
+		/* Only change the date after changing cached values above. */
+		EconTime::Detail::SetDate(new_economy_date, new_economy_date_fract);
+
+		UpdateOrderUIOnDateChange();
+		SetupTickRate();
+	}
+
+	UpdateTimeSettings(0);
+	CloseWindowByClass(WC_PAYMENT_RATES);
+	CloseWindowByClass(WC_COMPANY_VALUE);
+	CloseWindowByClass(WC_PERFORMANCE_HISTORY);
+	CloseWindowByClass(WC_DELIVERED_CARGO);
+	CloseWindowByClass(WC_OPERATING_PROFIT);
+	CloseWindowByClass(WC_INCOME_GRAPH);
+	CloseWindowByClass(WC_STATION_CARGO);
+}
+
+/**
+ * Callback after the player changes the minutes per year.
+ * @param new_value The intended new value of the setting, used for clamping.
+ */
+static void ChangeMinutesPerYear(int32_t new_value)
+{
+	/* We don't allow setting Minutes Per Year below default, unless it's to 0 for frozen calendar time. */
+	if (new_value < CalTime::DEF_MINUTES_PER_YEAR) {
+		int clamped;
+
+		/* If the new value is 1, we're probably at 0 and trying to increase the value, so we should jump up to default. */
+		if (new_value == 1) {
+			clamped = CalTime::DEF_MINUTES_PER_YEAR;
+		} else {
+			clamped = CalTime::FROZEN_MINUTES_PER_YEAR;
+		}
+
+		/* Override the setting with the clamped value. */
+		if (_game_mode == GM_MENU) {
+			_settings_newgame.economy.minutes_per_calendar_year = clamped;
+		} else {
+			_settings_game.economy.minutes_per_calendar_year = clamped;
+		}
+	}
+
+	UpdateEffectiveDayLengthFactor();
+
+	/* If the setting value is not the default, force the game to use wallclock timekeeping units.
+	 * This can only happen in the menu, since the pre_cb ensures this setting can only be changed there, or if we're already using wallclock units.
+	 */
+	if (_game_mode == GM_MENU && (_settings_newgame.economy.minutes_per_calendar_year != CalTime::DEF_MINUTES_PER_YEAR)) {
+		_settings_newgame.economy.timekeeping_units = TKU_WALLCLOCK;
+		InvalidateWindowClassesData(WC_GAME_OPTIONS, 0);
+	}
 }
 
 static void TrainAccelerationModelChanged(int32_t new_value)
@@ -1678,6 +1878,9 @@ static void UpdateFreeformEdges(int32_t new_value)
 			MakeSea(TileXY(0, i));
 		}
 	}
+	for (Vehicle *v : Vehicle::Iterate()) {
+		if (v->tile == 0) v->UpdatePosition();
+	}
 	MarkWholeScreenDirty();
 }
 
@@ -1839,22 +2042,10 @@ static void ImprovedBreakdownsSettingChanged(int32_t new_value)
 	}
 }
 
-static uint8_t _pre_change_day_length_factor;
-
-static bool DayLengthPreChange(int32_t &new_value)
-{
-	_pre_change_day_length_factor = _settings_game.economy.day_length_factor;
-
-	return true;
-}
-
 static void DayLengthChanged(int32_t new_value)
 {
-	extern void RebaseScaledDateTicksBase();
-	RebaseScaledDateTicksBase();
-
-	SetupTileLoopCounts();
-	UpdateCargoScalers();
+	UpdateEffectiveDayLengthFactor();
+	RecalculateStateTicksOffset();
 
 	MarkWholeScreenDirty();
 }
@@ -1912,16 +2103,16 @@ static bool IsValidHex256BitKeyString(std::string &newval)
 
 static void ParseCompanyPasswordStorageToken(const std::string &value)
 {
-	extern uint8_t _network_company_password_storage_token[16];
+	extern std::array<uint8_t, 16> _network_company_password_storage_token;
 	if (value.size() != 32) return;
-	DecodeHexText(value.c_str(), _network_company_password_storage_token, 16);
+	ConvertHexToBytes(value, _network_company_password_storage_token);
 }
 
 static void ParseCompanyPasswordStorageSecret(const std::string &value)
 {
-	extern uint8_t _network_company_password_storage_key[32];
+	extern std::array<uint8_t, 32> _network_company_password_storage_key;
 	if (value.size() != 64) return;
-	DecodeHexText(value.c_str(), _network_company_password_storage_key, 32);
+	ConvertHexToBytes(value, _network_company_password_storage_key);
 }
 
 /** Update the game info, and send it to the clients when we are running as a server. */
@@ -2083,7 +2274,7 @@ static bool TownCargoScaleGUI(SettingOnGuiCtrlData &data)
 {
 	switch (data.type) {
 		case SOGCT_VALUE_DPARAMS:
-			SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.town_cargo_scale_mode);
+			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.town_cargo_scale_mode);
 			return true;
 
 		default:
@@ -2100,7 +2291,7 @@ static bool IndustryCargoScaleGUI(SettingOnGuiCtrlData &data)
 			return true;
 
 		case SOGCT_VALUE_DPARAMS:
-			SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.industry_cargo_scale_mode);
+			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.industry_cargo_scale_mode);
 			return true;
 
 		default:
@@ -2114,6 +2305,38 @@ static bool IndustryCargoScaleModeGUI(SettingOnGuiCtrlData &data)
 		case SOGCT_DESCRIPTION_TEXT:
 			SetDParam(0, data.text);
 			data.text = STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA;
+			return true;
+
+		default:
+			return WallclockModeDisabledGUI(data);
+	}
+}
+
+static bool CalendarModeDisabledGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_VALUE_DPARAMS:
+			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_CALENDAR);
+			return true;
+
+		case SOGCT_GUI_DISABLE:
+			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) data.val = 1;
+			return true;
+
+		default:
+			return false;
+	}
+}
+
+static bool WallclockModeDisabledGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_VALUE_DPARAMS:
+			if (EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_WALLCLOCK);
+			return true;
+
+		case SOGCT_GUI_DISABLE:
+			if (EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) data.val = 1;
 			return true;
 
 		default:
@@ -2226,40 +2449,6 @@ static void GameLoadConfig(const IniFile &ini, const char *grpname)
 }
 
 /**
- * Convert a character to a hex nibble value, or \c -1 otherwise.
- * @param c Character to convert.
- * @return Hex value of the character, or \c -1 if not a hex digit.
- */
-static int DecodeHexNibble(char c)
-{
-	if (c >= '0' && c <= '9') return c - '0';
-	if (c >= 'A' && c <= 'F') return c + 10 - 'A';
-	if (c >= 'a' && c <= 'f') return c + 10 - 'a';
-	return -1;
-}
-
-/**
- * Parse a sequence of characters (supposedly hex digits) into a sequence of bytes.
- * After the hex number should be a \c '|' character.
- * @param pos First character to convert.
- * @param[out] dest Output byte array to write the bytes.
- * @param dest_size Number of bytes in \a dest.
- * @return Whether reading was successful.
- */
-static bool DecodeHexText(const char *pos, uint8_t *dest, size_t dest_size)
-{
-	while (dest_size > 0) {
-		int hi = DecodeHexNibble(pos[0]);
-		int lo = (hi >= 0) ? DecodeHexNibble(pos[1]) : -1;
-		if (lo < 0) return false;
-		*dest++ = (hi << 4) | lo;
-		pos += 2;
-		dest_size--;
-	}
-	return *pos == '|';
-}
-
-/**
  * Load BaseGraphics set selection and configuration.
  */
 static void GraphicsSetLoadConfig(IniFile &ini)
@@ -2311,29 +2500,40 @@ static GRFConfig *GRFLoadConfig(const IniFile &ini, const char *grpname, bool is
 	for (const IniItem &item : group->items) {
 		GRFConfig *c = nullptr;
 
-		uint8_t grfid_buf[4];
+		std::array<uint8_t, 4> grfid_buf;
 		MD5Hash md5sum;
-		const char *filename = item.name.c_str();
-		bool has_grfid = false;
+		std::string_view item_name = item.name;
 		bool has_md5sum = false;
 
 		/* Try reading "<grfid>|" and on success, "<md5sum>|". */
-		has_grfid = DecodeHexText(filename, grfid_buf, lengthof(grfid_buf));
-		if (has_grfid) {
-			filename += 1 + 2 * lengthof(grfid_buf);
-			has_md5sum = DecodeHexText(filename, md5sum.data(), md5sum.size());
-			if (has_md5sum) filename += 1 + 2 * md5sum.size();
+		auto grfid_pos = item_name.find("|");
+		if (grfid_pos != std::string_view::npos) {
+			std::string_view grfid_str = item_name.substr(0, grfid_pos);
 
-			uint32_t grfid = grfid_buf[0] | (grfid_buf[1] << 8) | (grfid_buf[2] << 16) | (grfid_buf[3] << 24);
-			if (has_md5sum) {
-				const GRFConfig *s = FindGRFConfig(grfid, FGCM_EXACT, &md5sum);
-				if (s != nullptr) c = new GRFConfig(*s);
-			}
-			if (c == nullptr && !FioCheckFileExists(filename, NEWGRF_DIR)) {
-				const GRFConfig *s = FindGRFConfig(grfid, FGCM_NEWEST_VALID);
-				if (s != nullptr) c = new GRFConfig(*s);
+			if (ConvertHexToBytes(grfid_str, grfid_buf)) {
+				item_name = item_name.substr(grfid_pos + 1);
+
+				auto md5sum_pos = item_name.find("|");
+				if (md5sum_pos != std::string_view::npos) {
+					std::string_view md5sum_str = item_name.substr(0, md5sum_pos);
+
+					has_md5sum = ConvertHexToBytes(md5sum_str, md5sum);
+					if (has_md5sum) item_name = item_name.substr(md5sum_pos + 1);
+				}
+
+				uint32_t grfid = grfid_buf[0] | (grfid_buf[1] << 8) | (grfid_buf[2] << 16) | (grfid_buf[3] << 24);
+				if (has_md5sum) {
+					const GRFConfig *s = FindGRFConfig(grfid, FGCM_EXACT, &md5sum);
+					if (s != nullptr) c = new GRFConfig(*s);
+				}
+				if (c == nullptr && !FioCheckFileExists(std::string(item_name), NEWGRF_DIR)) {
+					const GRFConfig *s = FindGRFConfig(grfid, FGCM_NEWEST_VALID);
+					if (s != nullptr) c = new GRFConfig(*s);
+				}
 			}
 		}
+		std::string filename = std::string(item_name);
+
 		if (c == nullptr) c = new GRFConfig(filename);
 
 		/* Parse parameters */
@@ -2361,7 +2561,7 @@ static GRFConfig *GRFLoadConfig(const IniFile &ini, const char *grpname, bool is
 				SetDParam(1, STR_CONFIG_ERROR_INVALID_GRF_UNKNOWN);
 			}
 
-			SetDParamStr(0, StrEmpty(filename) ? item.name.c_str() : filename);
+			SetDParamStr(0, filename.empty() ? item.name.c_str() : filename);
 			ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_GRF, WL_CRITICAL);
 			delete c;
 			continue;
@@ -2652,19 +2852,10 @@ void LoadFromConfig(bool startup)
 			_settings_newgame.linkgraph.recalc_time     *= SECONDS_PER_DAY;
 		}
 
-		/* Move no_http_content_downloads and use_relay_service from generic_ini to private_ini. */
+		/* Move use_relay_service from generic_ini to private_ini. */
 		if (generic_version < IFV_NETWORK_PRIVATE_SETTINGS) {
 			const IniGroup *network = generic_ini.GetGroup("network");
 			if (network != nullptr) {
-				const IniItem *no_http_content_downloads = network->GetItem("no_http_content_downloads");
-				if (no_http_content_downloads != nullptr) {
-					if (no_http_content_downloads->value == "true") {
-						_settings_client.network.no_http_content_downloads = true;
-					} else if (no_http_content_downloads->value == "false") {
-						_settings_client.network.no_http_content_downloads = false;
-					}
-				}
-
 				const IniItem *use_relay_service = network->GetItem("use_relay_service");
 				if (use_relay_service != nullptr) {
 					if (use_relay_service->value == "never") {
@@ -2803,11 +2994,17 @@ void SaveToConfig(SaveToConfigFlags flags)
 		}
 	}
 
+	if (generic_version < IFV_REMOVE_GENERATION_SEED) {
+		IniGroup *game_creation = generic_ini.GetGroup("game_creation");
+		if (game_creation != nullptr) {
+			game_creation->RemoveItem("generation_seed");
+		}
+	}
+
 	/* These variables are migrated from generic ini to private ini now. */
 	if (generic_version < IFV_NETWORK_PRIVATE_SETTINGS) {
 		IniGroup *network = generic_ini.GetGroup("network");
 		if (network != nullptr) {
-			network->RemoveItem("no_http_content_downloads");
 			network->RemoveItem("use_relay_service");
 		}
 	}
@@ -3195,6 +3392,12 @@ void IConsoleSetSetting(const char *name, const char *value, bool force_newgame)
 		IConsolePrintF(CC_WARNING, "'%s' is an unknown setting.", name);
 		return;
 	}
+
+	const auto old_game_mode = _game_mode;
+	if (force_newgame) _game_mode = GM_MENU;
+	auto guard = scope_guard([force_newgame, old_game_mode]() {
+		if (force_newgame) _game_mode = old_game_mode;
+	});
 
 	bool success = true;
 	if (sd->IsStringSetting()) {
@@ -3703,28 +3906,9 @@ static void Check_PATX()
 	LoadSettingsPatx(&_load_check_data.settings);
 }
 
-struct PATSChunkInfo
-{
-	static SaveLoadVersion GetLoadVersion()
-	{
-		extern SaveLoadVersion _sl_xv_upstream_version;
-		return _sl_xv_upstream_version;
-	}
-
-	static bool SaveUpstream()
-	{
-		return true;
-	}
-
-	static bool LoadUpstream()
-	{
-		return SlXvIsFeaturePresent(XSLFI_TABLE_PATS);
-	}
-};
-
 static const ChunkHandler setting_chunk_handlers[] = {
 	{ 'OPTS', nullptr,   Load_OPTS, nullptr, nullptr,    CH_RIFF },
-	MakeConditionallyUpstreamChunkHandler<'PATS', PATSChunkInfo>(nullptr, Load_PATS, nullptr, Check_PATS, CH_RIFF),
+	MakeSaveUpstreamFeatureConditionalLoadUpstreamChunkHandler<'PATS', XSLFI_TABLE_PATS>(Load_PATS, nullptr, Check_PATS),
 	{ 'PATX', nullptr,   Load_PATX, nullptr, Check_PATX, CH_RIFF },
 };
 

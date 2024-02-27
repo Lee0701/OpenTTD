@@ -323,7 +323,7 @@ uint32_t StationScopeResolver::GetNearbyStationInfo(uint32_t parameter, StationS
 				}
 				break;
 
-			case 0xFA: return ClampTo<uint16_t>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR); // Build date, clamped to a 16 bit value
+			case 0xFA: return ClampTo<uint16_t>(CalTime::CurDate() - CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR); // Build date, clamped to a 16 bit value
 		}
 
 		extra->available = false;
@@ -403,12 +403,28 @@ uint32_t StationScopeResolver::GetNearbyStationInfo(uint32_t parameter, StationS
 			return ssl.grfid;
 		}
 
+		case 0x6B: { // 16 bit Station ID of nearby tiles
+			TileIndex nearby_tile = GetNearbyTile(parameter, this->tile);
+
+			if (!HasStationTileRail(nearby_tile)) return 0xFFFFFFFF;
+			if (!IsCustomStationSpecIndex(nearby_tile)) return 0xFFFE;
+
+			uint32_t grfid = this->st->speclist[GetCustomStationSpecIndex(this->tile)].grfid;
+
+			const StationSpecList ssl = BaseStation::GetByTile(nearby_tile)->speclist[GetCustomStationSpecIndex(nearby_tile)];
+			if (ssl.grfid == grfid) {
+				return ssl.localidx;
+			}
+
+			return 0xFFFE;
+		}
+
 		/* General station variables */
 		case 0x82: return 50;
 		case 0x84: return this->st->string_id;
 		case 0x86: return 0;
 		case 0xF0: return this->st->facilities;
-		case 0xFA: return ClampTo<uint16_t>(this->st->build_date - DAYS_TILL_ORIGINAL_BASE_YEAR);
+		case 0xFA: return ClampTo<uint16_t>(this->st->build_date - CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR);
 	}
 
 	return this->st->GetNewGRFVariable(this->ro, variable, parameter, &(extra->available));

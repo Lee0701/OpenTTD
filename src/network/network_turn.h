@@ -20,11 +20,11 @@ private:
 	std::string connection_string; ///< The connection string of the TURN server we are connecting to.
 
 protected:
-	bool Receive_TURN_ERROR(Packet *p) override;
-	bool Receive_TURN_CONNECTED(Packet *p) override;
+	bool Receive_TURN_ERROR(Packet &p) override;
+	bool Receive_TURN_CONNECTED(Packet &p) override;
 
 public:
-	TCPConnecter *connecter = nullptr; ///< Connecter instance.
+	std::shared_ptr<TCPConnecter> connecter{}; ///< Connecter instance.
 	bool connect_started = false;      ///< Whether we started the connection.
 
 	ClientNetworkTurnSocketHandler(const std::string &token, uint8_t tracking_number, const std::string &connection_string) : token(token), tracking_number(tracking_number), connection_string(connection_string) {}

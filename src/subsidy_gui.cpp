@@ -27,6 +27,7 @@
 
 struct SubsidyListWindow : Window {
 	Scrollbar *vscroll;
+	Dimension cargo_icon_size;
 
 	SubsidyListWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
 	{
@@ -34,6 +35,11 @@ struct SubsidyListWindow : Window {
 		this->vscroll = this->GetScrollbar(WID_SUL_SCROLLBAR);
 		this->FinishInitNested(window_number);
 		this->OnInvalidateData(0);
+	}
+
+	void OnInit() override
+	{
+		this->cargo_icon_size = GetLargestCargoIconSize();
 	}
 
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
@@ -138,11 +144,21 @@ struct SubsidyListWindow : Window {
 		*size = maxdim(*size, d);
 	}
 
+	void DrawCargoIcon(const Rect &r, int y_offset, CargoID cid) const
+	{
+		bool rtl = _current_text_dir == TD_RTL;
+		SpriteID icon = CargoSpec::Get(cid)->GetCargoIcon();
+		Dimension d = GetSpriteSize(icon);
+		Rect ir = r.WithWidth(this->cargo_icon_size.width, rtl).WithHeight(GetCharacterHeight(FS_NORMAL));
+		DrawSprite(icon, PAL_NONE, CenterBounds(ir.left, ir.right, d.width), CenterBounds(ir.top, ir.bottom, this->cargo_icon_size.height) + y_offset);
+	}
+
 	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		if (widget != WID_SUL_PANEL) return;
 
 		Rect tr = r.Shrink(WidgetDimensions::scaled.framerect);
+		Rect sr = tr.Indent(this->cargo_icon_size.width + WidgetDimensions::scaled.hsep_normal, _current_text_dir == TD_RTL);
 
 		int pos = -this->vscroll->GetPosition();
 		const int cap = this->vscroll->GetCapacity();
@@ -157,8 +173,17 @@ struct SubsidyListWindow : Window {
 				if (IsInsideMM(pos, 0, cap)) {
 					/* Displays the two offered towns */
 					SetupSubsidyDecodeParam(s, SubsidyDecodeParamType::Gui);
-					SetDParam(7, _date - _cur_date_ymd.day + s->remaining * 32);
-					DrawString(tr.left, tr.right, tr.top + pos * GetCharacterHeight(FS_NORMAL), STR_SUBSIDIES_OFFERED_FROM_TO);
+					/* If using wallclock units, show minutes remaining. Otherwise show the date when the subsidy ends. */
+					if (EconTime::UsingWallclockUnits()) {
+						SetDParam(7, STR_SUBSIDIES_OFFERED_EXPIRY_TIME);
+						SetDParam(8, s->remaining + 1); // We get the rest of the current economy month for free, since the expiration is checked on each new month.
+					} else {
+						SetDParam(7, STR_SUBSIDIES_OFFERED_EXPIRY_DATE);
+						SetDParam(8, EconTime::CurDate() - EconTime::CurDay() + s->remaining * 32);
+					}
+
+					DrawCargoIcon(tr, pos * GetCharacterHeight(FS_NORMAL), s->cargo_type);
+					DrawString(sr.left, sr.right, sr.top + pos * GetCharacterHeight(FS_NORMAL), STR_SUBSIDIES_OFFERED_FROM_TO);
 				}
 				pos++;
 				num++;
@@ -181,10 +206,19 @@ struct SubsidyListWindow : Window {
 				if (IsInsideMM(pos, 0, cap)) {
 					SetupSubsidyDecodeParam(s, SubsidyDecodeParamType::Gui);
 					SetDParam(7, s->awarded);
-					SetDParam(8, _date - _cur_date_ymd.day + s->remaining * 32);
+					/* If using wallclock units, show minutes remaining. Otherwise show the date when the subsidy ends. */
+					if (EconTime::UsingWallclockUnits()) {
+						SetDParam(8, STR_SUBSIDIES_SUBSIDISED_EXPIRY_TIME);
+						SetDParam(9, s->remaining);
+					}
+					else {
+						SetDParam(8, STR_SUBSIDIES_SUBSIDISED_EXPIRY_DATE);
+						SetDParam(9, EconTime::CurDate() - EconTime::CurDay() + s->remaining * 32);
+					}
 
 					/* Displays the two connected stations */
-					DrawString(tr.left, tr.right, tr.top + pos * GetCharacterHeight(FS_NORMAL), STR_SUBSIDIES_SUBSIDISED_FROM_TO);
+					DrawCargoIcon(tr, pos * GetCharacterHeight(FS_NORMAL), s->cargo_type);
+					DrawString(sr.left, sr.right, sr.top + pos * GetCharacterHeight(FS_NORMAL), STR_SUBSIDIES_SUBSIDISED_FROM_TO);
 				}
 				pos++;
 				num++;

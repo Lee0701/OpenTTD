@@ -64,6 +64,7 @@
 #include "tile_cmd.h"
 #include "object_base.h"
 #include "newgrf_newsignals.h"
+#include "roadstop_base.h"
 #include <time.h>
 
 #include "3rdparty/cpp-btree/btree_set.h"
@@ -78,9 +79,8 @@ static uint _script_current_depth; ///< Depth of scripts running (used to abort 
 /** File list storage for the console, for caching the last 'ls' command. */
 class ConsoleFileList : public FileList {
 public:
-	ConsoleFileList() : FileList()
+	ConsoleFileList(AbstractFileType abstract_filetype, bool show_dirs) : FileList(), abstract_filetype(abstract_filetype), show_dirs(show_dirs)
 	{
-		this->file_list_valid = false;
 	}
 
 	/** Declare the file storage cache as being invalid, also clears all stored files. */
@@ -97,15 +97,19 @@ public:
 	void ValidateFileList(bool force_reload = false)
 	{
 		if (force_reload || !this->file_list_valid) {
-			this->BuildFileList(FT_SAVEGAME, SLO_LOAD);
+			this->BuildFileList(this->abstract_filetype, SLO_LOAD, this->show_dirs);
 			this->file_list_valid = true;
 		}
 	}
 
-	bool file_list_valid; ///< If set, the file list is valid.
+	AbstractFileType abstract_filetype; ///< The abstract file type to list.
+	bool show_dirs; ///< Whether to show directories in the file list.
+	bool file_list_valid = false; ///< If set, the file list is valid.
 };
 
-static ConsoleFileList _console_file_list; ///< File storage cache for the console.
+static ConsoleFileList _console_file_list_savegame{FT_SAVEGAME, true}; ///< File storage cache for savegames.
+static ConsoleFileList _console_file_list_scenario{FT_SCENARIO, false}; ///< File storage cache for scenarios.
+static ConsoleFileList _console_file_list_heightmap{FT_HEIGHTMAP, false}; ///< File storage cache for heightmaps.
 
 /* console command defines */
 #define DEF_CONSOLE_CMD(function) static bool function([[maybe_unused]] byte argc, [[maybe_unused]] char *argv[])
@@ -516,8 +520,8 @@ DEF_CONSOLE_CMD(ConLoad)
 	if (argc != 2) return false;
 
 	const char *file = argv[1];
-	_console_file_list.ValidateFileList();
-	const FiosItem *item = _console_file_list.FindItem(file);
+	_console_file_list_savegame.ValidateFileList();
+	const FiosItem *item = _console_file_list_savegame.FindItem(file);
 	if (item != nullptr) {
 		if (GetAbstractFileType(item->type) == FT_SAVEGAME) {
 			_switch_mode = SM_LOAD_GAME;
@@ -532,6 +536,57 @@ DEF_CONSOLE_CMD(ConLoad)
 	return true;
 }
 
+DEF_CONSOLE_CMD(ConLoadScenario)
+{
+	if (argc == 0) {
+		IConsoleHelp("Load a scenario by name or index. Usage: 'load_scenario <file | number>'.");
+		return true;
+	}
+
+	if (argc != 2) return false;
+
+	const char *file = argv[1];
+	_console_file_list_scenario.ValidateFileList();
+	const FiosItem *item = _console_file_list_scenario.FindItem(file);
+	if (item != nullptr) {
+		if (GetAbstractFileType(item->type) == FT_SCENARIO) {
+			_switch_mode = SM_LOAD_GAME;
+			_file_to_saveload.Set(*item);
+		} else {
+			IConsolePrintF(CC_ERROR, "'%s' is not a scenario.", file);
+		}
+	} else {
+		IConsolePrintF(CC_ERROR, "'%s' cannot be found.", file);
+	}
+
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConLoadHeightmap)
+{
+	if (argc == 0) {
+		IConsoleHelp("Load a heightmap by name or index. Usage: 'load_heightmap <file | number>'.");
+		return true;
+	}
+
+	if (argc != 2) return false;
+
+	const char *file = argv[1];
+	_console_file_list_heightmap.ValidateFileList();
+	const FiosItem *item = _console_file_list_heightmap.FindItem(file);
+	if (item != nullptr) {
+		if (GetAbstractFileType(item->type) == FT_HEIGHTMAP) {
+			_switch_mode = SM_START_HEIGHTMAP;
+			_file_to_saveload.Set(*item);
+		} else {
+			IConsolePrintF(CC_ERROR, "'%s' is not a heightmap.", file);
+		}
+	} else {
+		IConsolePrintF(CC_ERROR, "'%s' cannot be found.", file);
+	}
+
+	return true;
+}
 
 DEF_CONSOLE_CMD(ConRemove)
 {
@@ -543,8 +598,8 @@ DEF_CONSOLE_CMD(ConRemove)
 	if (argc != 2) return false;
 
 	const char *file = argv[1];
-	_console_file_list.ValidateFileList();
-	const FiosItem *item = _console_file_list.FindItem(file);
+	_console_file_list_savegame.ValidateFileList();
+	const FiosItem *item = _console_file_list_savegame.FindItem(file);
 	if (item != nullptr) {
 		if (unlink(item->name.c_str()) != 0) {
 			IConsolePrintF(CC_ERROR, "%s: Failed to delete file", file);
@@ -553,7 +608,7 @@ DEF_CONSOLE_CMD(ConRemove)
 		IConsolePrintF(CC_ERROR, "%s: No such file or directory.", file);
 	}
 
-	_console_file_list.InvalidateFileList();
+	_console_file_list_savegame.InvalidateFileList();
 	return true;
 }
 
@@ -566,9 +621,41 @@ DEF_CONSOLE_CMD(ConListFiles)
 		return true;
 	}
 
-	_console_file_list.ValidateFileList(true);
-	for (uint i = 0; i < _console_file_list.size(); i++) {
-		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list[i].title.c_str());
+	_console_file_list_savegame.ValidateFileList(true);
+	for (uint i = 0; i < _console_file_list_savegame.size(); i++) {
+		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list_savegame[i].title.c_str());
+	}
+
+	return true;
+}
+
+/* List all the scenarios */
+DEF_CONSOLE_CMD(ConListScenarios)
+{
+	if (argc == 0) {
+		IConsoleHelp("List all loadable scenarios. Usage: 'list_scenarios'.");
+		return true;
+	}
+
+	_console_file_list_scenario.ValidateFileList(true);
+	for (uint i = 0; i < _console_file_list_scenario.size(); i++) {
+		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list_scenario[i].title.c_str());
+	}
+
+	return true;
+}
+
+/* List all the heightmaps */
+DEF_CONSOLE_CMD(ConListHeightmaps)
+{
+	if (argc == 0) {
+		IConsoleHelp("List all loadable heightmaps. Usage: 'list_heightmaps'.");
+		return true;
+	}
+
+	_console_file_list_heightmap.ValidateFileList(true);
+	for (uint i = 0; i < _console_file_list_heightmap.size(); i++) {
+		IConsolePrintF(CC_DEFAULT, "%d) %s", i, _console_file_list_heightmap[i].title.c_str());
 	}
 
 	return true;
@@ -585,8 +672,8 @@ DEF_CONSOLE_CMD(ConChangeDirectory)
 	if (argc != 2) return false;
 
 	const char *file = argv[1];
-	_console_file_list.ValidateFileList(true);
-	const FiosItem *item = _console_file_list.FindItem(file);
+	_console_file_list_savegame.ValidateFileList(true);
+	const FiosItem *item = _console_file_list_savegame.FindItem(file);
 	if (item != nullptr) {
 		switch (item->type) {
 			case FIOS_TYPE_DIR: case FIOS_TYPE_DRIVE: case FIOS_TYPE_PARENT:
@@ -598,7 +685,7 @@ DEF_CONSOLE_CMD(ConChangeDirectory)
 		IConsolePrintF(CC_ERROR, "%s: No such file or directory.", file);
 	}
 
-	_console_file_list.InvalidateFileList();
+	_console_file_list_savegame.InvalidateFileList();
 	return true;
 }
 
@@ -610,8 +697,8 @@ DEF_CONSOLE_CMD(ConPrintWorkingDirectory)
 	}
 
 	/* XXX - Workaround for broken file handling */
-	_console_file_list.ValidateFileList(true);
-	_console_file_list.InvalidateFileList();
+	_console_file_list_savegame.ValidateFileList(true);
+	_console_file_list_savegame.InvalidateFileList();
 
 	IConsolePrint(CC_DEFAULT, FiosGetCurrentPath().c_str());
 	return true;
@@ -1273,33 +1360,39 @@ DEF_CONSOLE_CMD(ConNewGame)
 
 DEF_CONSOLE_CMD(ConRestart)
 {
-	if (argc == 0) {
-		IConsoleHelp("Restart game. Usage: 'restart'");
-		IConsoleHelp("Restarts a game. It tries to reproduce the exact same map as the game started with.");
-		IConsoleHelp("However:");
-		IConsoleHelp(" * restarting games started in another version might create another map due to difference in map generation");
-		IConsoleHelp(" * restarting games based on scenarios, loaded games or heightmaps will start a new game based on the settings stored in the scenario/savegame");
+	if (argc == 0 || argc > 2) {
+		IConsoleHelp("Restart game. Usage: 'restart [current|newgame]'.");
+		IConsoleHelp("Restarts a game, using either the current or newgame (default) settings.");
+		IConsoleHelp(" * if you started from a new game, and your current/newgame settings haven't changed, the game will be identical to when you started it.");
+		IConsoleHelp(" * if you started from a savegame / scenario / heightmap, the game might be different, because the current/newgame settings might differ.");
 		return true;
 	}
 
-	/* Don't copy the _newgame pointers to the real pointers, so call SwitchToMode directly */
-	_settings_game.game_creation.map_x = MapLogX();
-	_settings_game.game_creation.map_y = MapLogY();
-	_switch_mode = SM_RESTARTGAME;
+	if (argc == 1 || std::string_view(argv[1]) == "newgame") {
+		StartNewGameWithoutGUI(_settings_game.game_creation.generation_seed);
+	} else {
+		_settings_game.game_creation.map_x = MapLogX();
+		_settings_game.game_creation.map_y = MapLogY();
+		_switch_mode = SM_RESTARTGAME;
+	}
+
 	return true;
 }
 
 DEF_CONSOLE_CMD(ConReload)
 {
 	if (argc == 0) {
-		IConsoleHelp("Reload game. Usage: 'reload'");
-		IConsoleHelp("Reloads a game.");
-		IConsoleHelp(" * if you started from a savegame / scenario / heightmap, that exact same savegame / scenario / heightmap will be loaded.");
-		IConsoleHelp(" * if you started from a new game, this acts the same as 'restart'.");
+		IConsoleHelp("Reload game. Usage: 'reload'.");
+		IConsoleHelp("Reloads a game if loaded via savegame / scenario / heightmap.");
 		return true;
 	}
 
-	/* Don't copy the _newgame pointers to the real pointers, so call SwitchToMode directly */
+	if (_file_to_saveload.abstract_ftype == FT_NONE || _file_to_saveload.abstract_ftype == FT_INVALID) {
+		IConsolePrint(CC_ERROR, "No game loaded to reload.");
+		return true;
+	}
+
+	/* Use a switch-mode to prevent copying over newgame settings to active settings. */
 	_settings_game.game_creation.map_x = MapLogX();
 	_settings_game.game_creation.map_y = MapLogY();
 	_switch_mode = SM_RELOADGAME;
@@ -1597,7 +1690,7 @@ DEF_CONSOLE_CMD(ConGetDate)
 		return true;
 	}
 
-	IConsolePrintF(CC_DEFAULT, "Date: %04d-%02d-%02d", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day);
+	IConsolePrintF(CC_DEFAULT, "Date: %04d-%02d-%02d", CalTime::CurYear().base(), CalTime::CurMonth() + 1, CalTime::CurDay());
 	return true;
 }
 
@@ -1815,6 +1908,11 @@ DEF_CONSOLE_CMD(ConPart)
 
 	if (_game_mode != GM_NORMAL) return false;
 
+	if (_network_dedicated) {
+		IConsolePrint(CC_ERROR, "A dedicated server can not leave the game.");
+		return false;
+	}
+
 	_switch_mode = SM_MENU;
 	return true;
 }
@@ -1913,7 +2011,7 @@ DEF_CONSOLE_CMD(ConCompanies)
 
 		IConsolePrintF(CC_INFO, "#:%d(%s) Company Name: '%s'  Year Founded: %d  Money: " OTTD_PRINTF64 "  Loan: " OTTD_PRINTF64 "  Value: " OTTD_PRINTF64 "  (T:%d, R:%d, P:%d, S:%d) %s",
 			c->index + 1, GetStringPtr(STR_COLOUR_DARK_BLUE + _company_colours[c->index]), company_name.c_str(),
-			c->inaugurated_year, (int64_t)c->money, (int64_t)c->current_loan, (int64_t)CalculateCompanyValue(c),
+			c->inaugurated_year.base(), (int64_t)c->money, (int64_t)c->current_loan, (int64_t)CalculateCompanyValue(c),
 			c->group_all[VEH_TRAIN].num_vehicle,
 			c->group_all[VEH_ROAD].num_vehicle,
 			c->group_all[VEH_AIRCRAFT].num_vehicle,
@@ -2407,6 +2505,7 @@ DEF_CONSOLE_CMD(ConListDirs)
 		{ SAVE_DIR,         "save",       true  },
 		{ AUTOSAVE_DIR,     "autosave",   true  },
 		{ SCREENSHOT_DIR,   "screenshot", true  },
+		{ SOCIAL_INTEGRATION_DIR, "social_integration", true },
 	};
 
 	if (argc != 2) {
@@ -2490,7 +2589,33 @@ DEF_CONSOLE_CMD(ConMergeLinkgraphJobsAsap)
 		return true;
 	}
 
-	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) lgj->ShiftJoinDate((NowDateTicks() - lgj->JoinDateTicks()).base() / DAY_TICKS);
+	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) {
+		lgj->SetJoinTick(_scaled_tick_counter);
+	}
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConUnblockBayRoadStops)
+{
+	if (argc == 0) {
+		IConsoleHelp("Unblock bay road stops blocked by a bug, for single-player use only.");
+		return true;
+	}
+
+	for (Station *st : Station::Iterate()) {
+		for (RoadStopType rs_type : { ROADSTOP_BUS, ROADSTOP_TRUCK }) {
+			for (RoadStop *rs = st->GetPrimaryRoadStop(rs_type); rs != nullptr; rs = rs->next) {
+				if (IsBayRoadStopTile(rs->xy)) {
+					rs->DebugClearOccupancy();
+				}
+			}
+		}
+	}
+	for (const RoadVehicle *rv : RoadVehicle::Iterate()) {
+		if (IsInsideMM(rv->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) {
+			RoadStop::GetByTile(rv->tile, GetRoadStopType(rv->tile))->DebugReEnter(rv);
+		}
+	}
 	return true;
 }
 
@@ -2563,11 +2688,16 @@ DEF_CONSOLE_CMD(ConRunTileLoopTile)
 DEF_CONSOLE_CMD(ConGetFullDate)
 {
 	if (argc == 0) {
-		IConsoleHelp("Returns the current full date (year-month-day, date fract, tick skip, counter) of the game. Usage: 'getfulldate'");
+		IConsoleHelp("Returns the current full date/tick information of the game. Usage: 'getfulldate'");
 		return true;
 	}
 
-	IConsolePrintF(CC_DEFAULT, "Date: %04d-%02d-%02d, %i, %i", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter);
+	IConsolePrintF(CC_DEFAULT, "Calendar Date: %04d-%02d-%02d (%d), fract: %i, sub_fract: %i", CalTime::CurYear().base(), CalTime::CurMonth() + 1, CalTime::CurDay(), CalTime::CurDate().base(), CalTime::CurDateFract(), CalTime::Detail::now.sub_date_fract);
+	IConsolePrintF(CC_DEFAULT, "Economy Date: %04d-%02d-%02d (%d), fract: %i, tick skip: %i", EconTime::CurYear().base(), EconTime::CurMonth() + 1, EconTime::CurDay(), EconTime::CurDate().base(), EconTime::CurDateFract(), TickSkipCounter());
+	IConsolePrintF(CC_DEFAULT, "Tick counter: " OTTD_PRINTF64, _tick_counter);
+	IConsolePrintF(CC_DEFAULT, "Tick counter (scaled): " OTTD_PRINTF64, _scaled_tick_counter);
+	IConsolePrintF(CC_DEFAULT, "State ticks: " OTTD_PRINTF64 " (offset: " OTTD_PRINTF64 ")", _state_ticks.base(), DateDetail::_state_ticks_offset.base());
+	IConsolePrintF(CC_DEFAULT, "Effective day length: %d", DayLengthFactor());
 	return true;
 }
 
@@ -2736,13 +2866,9 @@ DEF_CONSOLE_CMD(ConDumpLinkgraphJobs)
 
 	IConsolePrintF(CC_DEFAULT, PRINTF_SIZE " link graph jobs", LinkGraphJob::GetNumItems());
 	for (const LinkGraphJob *lgj : LinkGraphJob::Iterate()) {
-		YearMonthDay start_ymd = ConvertDateToYMD(lgj->StartDateTicks().ToDate());
-		YearMonthDay join_ymd = ConvertDateToYMD(lgj->JoinDateTicks().ToDate());
-		IConsolePrintF(CC_DEFAULT, "  Job: %5u, nodes: %u, cost: " OTTD_PRINTF64U ", start: (" OTTD_PRINTF64 ", %4i-%02i-%02i, %i), end: (" OTTD_PRINTF64 ", %4i-%02i-%02i, %i), duration: " OTTD_PRINTF64,
+		IConsolePrintF(CC_DEFAULT, "  Job: %5u, nodes: %u, cost: " OTTD_PRINTF64U ", started: %d, ends in: %d, duration: %d",
 				lgj->index, lgj->Graph().Size(), lgj->Graph().CalculateCostEstimate(),
-				lgj->StartDateTicks().base(), start_ymd.year, start_ymd.month + 1, start_ymd.day, lgj->StartDateTicks().ToDateFractRemainder(),
-				lgj->JoinDateTicks().base(), join_ymd.year, join_ymd.month + 1, join_ymd.day, lgj->JoinDateTicks().ToDateFractRemainder(),
-				(lgj->JoinDateTicks() - lgj->StartDateTicks()).base());
+				(int)(lgj->StartTick() - _scaled_tick_counter), (int)(lgj->JoinTick() - _scaled_tick_counter), (int)(lgj->JoinTick() - lgj->StartTick()));
 	 }
 	return true;
 }
@@ -2884,7 +3010,7 @@ DEF_CONSOLE_CMD(ConDumpBridgeTypes)
 		if (grfid != 0) grfids.insert(grfid);
 		IConsolePrintF(CC_DEFAULT, "  %02u Year: %7u, Min: %3u, Max: %5u, Flags: %02X, Ctrl Flags: %c%c%c%c, Pillars: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X, GRF: %08X, %s",
 				(uint) bt,
-				spec->avail_year,
+				spec->avail_year.base(),
 				spec->min_length,
 				spec->max_length,
 				spec->flags,
@@ -2956,7 +3082,7 @@ DEF_CONSOLE_CMD(ConDumpCargoTypes)
 		IConsolePrintF(CC_DEFAULT, "  %02u Bit: %2u, Label: %c%c%c%c, Callback mask: 0x%02X, Cargo class: %c%c%c%c%c%c%c%c%c%c%c, GRF: %08X, %s",
 				(uint) i,
 				spec->bitnum,
-				spec->label >> 24, spec->label >> 16, spec->label >> 8, spec->label,
+				spec->label.base() >> 24, spec->label.base() >> 16, spec->label.base() >> 8, spec->label.base(),
 				spec->callback_mask,
 				(spec->classes & CC_PASSENGERS)   != 0 ? 'p' : '-',
 				(spec->classes & CC_MAIL)         != 0 ? 'm' : '-',
@@ -3070,10 +3196,10 @@ DEF_CONSOLE_CMD(ConDumpGrfCargoTables)
 			char *b = buffer;
 			for (const CargoSpec *cs : CargoSpec::Iterate()) {
 				if (grf->cargo_map[cs->Index()] == i) {
-					b += seprintf(b, lastof(buffer), "%s%02u[%c%c%c%c]", (b == buffer) ? ": " : ", ", cs->Index(), GB(cs->label, 24, 8), GB(cs->label, 16, 8), GB(cs->label, 8, 8), GB(cs->label, 0, 8));
+					b += seprintf(b, lastof(buffer), "%s%02u[%c%c%c%c]", (b == buffer) ? ": " : ", ", cs->Index(), GB(cs->label.base(), 24, 8), GB(cs->label.base(), 16, 8), GB(cs->label.base(), 8, 8), GB(cs->label.base(), 0, 8));
 				}
 			}
-			IConsolePrintF(CC_DEFAULT, "  %c%c%c%c%s", GB(cl, 24, 8), GB(cl, 16, 8), GB(cl, 8, 8), GB(cl, 0, 8), buffer);
+			IConsolePrintF(CC_DEFAULT, "  %c%c%c%c%s", GB(cl.base(), 24, 8), GB(cl.base(), 16, 8), GB(cl.base(), 8, 8), GB(cl.base(), 0, 8), buffer);
 			i++;
 		}
 	}
@@ -3139,6 +3265,18 @@ DEF_CONSOLE_CMD(ConSpriteCacheStats)
 	extern void DumpSpriteCacheStats(char *buffer, const char *last);
 	char buffer[8192];
 	DumpSpriteCacheStats(buffer, lastof(buffer));
+	PrintLineByLine(buffer);
+	return true;
+}
+
+DEF_CONSOLE_CMD(ConDumpVersion)
+{
+	if (argc == 0) {
+		IConsoleHelp("Dump version info");
+	}
+
+	char buffer[65536];
+	CrashLog::VersionInfoLog(buffer, lastof(buffer));
 	PrintLineByLine(buffer);
 	return true;
 }
@@ -3664,17 +3802,17 @@ static bool ConConditionalCommon(byte argc, char *argv[], int value, const char 
 
 DEF_CONSOLE_CMD(ConIfYear)
 {
-	return ConConditionalCommon(argc, argv, _cur_date_ymd.year, "the current year (in game)", "if_year");
+	return ConConditionalCommon(argc, argv, CalTime::CurYear().base(), "the current year (in game)", "if_year");
 }
 
 DEF_CONSOLE_CMD(ConIfMonth)
 {
-	return ConConditionalCommon(argc, argv, _cur_date_ymd.month + 1, "the current month (in game)", "if_month");
+	return ConConditionalCommon(argc, argv, CalTime::CurMonth() + 1, "the current month (in game)", "if_month");
 }
 
 DEF_CONSOLE_CMD(ConIfDay)
 {
-	return ConConditionalCommon(argc, argv, _cur_date_ymd.day, "the current day of the month (in game)", "if_day");
+	return ConConditionalCommon(argc, argv, CalTime::CurDay(), "the current day of the month (in game)", "if_day");
 }
 
 DEF_CONSOLE_CMD(ConIfHour)
@@ -4086,10 +4224,16 @@ void IConsoleStdLibRegister()
 	IConsole::AliasRegister("scrollto_highlight",    "scrollto %+; highlight_tile %+");
 	IConsole::CmdRegister("alias",                   ConAlias);
 	IConsole::CmdRegister("load",                    ConLoad);
+	IConsole::CmdRegister("load_save",               ConLoad);
+	IConsole::CmdRegister("load_scenario",           ConLoadScenario);
+	IConsole::CmdRegister("load_heightmap",          ConLoadHeightmap);
 	IConsole::CmdRegister("rm",                      ConRemove);
 	IConsole::CmdRegister("save",                    ConSave);
 	IConsole::CmdRegister("saveconfig",              ConSaveConfig);
 	IConsole::CmdRegister("ls",                      ConListFiles);
+	IConsole::CmdRegister("list_saves",              ConListFiles);
+	IConsole::CmdRegister("list_scenarios",          ConListScenarios);
+	IConsole::CmdRegister("list_heightmaps",         ConListHeightmaps);
 	IConsole::CmdRegister("cd",                      ConChangeDirectory);
 	IConsole::CmdRegister("pwd",                     ConPrintWorkingDirectory);
 	IConsole::CmdRegister("clear",                   ConClearBuffer);
@@ -4234,6 +4378,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("dump_grf_cargo_tables",   ConDumpGrfCargoTables, nullptr, true);
 	IConsole::CmdRegister("dump_signal_styles",      ConDumpSignalStyles, nullptr, true);
 	IConsole::CmdRegister("dump_sprite_cache_stats", ConSpriteCacheStats, nullptr, true);
+	IConsole::CmdRegister("dump_version",            ConDumpVersion,      nullptr, true);
 	IConsole::CmdRegister("check_caches",            ConCheckCaches,      nullptr, true);
 	IConsole::CmdRegister("show_town_window",        ConShowTownWindow,   nullptr, true);
 	IConsole::CmdRegister("show_station_window",     ConShowStationWindow, nullptr, true);
@@ -4261,6 +4406,7 @@ void IConsoleStdLibRegister()
 	/* Bug workarounds */
 	IConsole::CmdRegister("jgrpp_bug_workaround_unblock_heliports", ConResetBlockedHeliports, ConHookNoNetwork, true);
 	IConsole::CmdRegister("merge_linkgraph_jobs_asap", ConMergeLinkgraphJobsAsap, ConHookNoNetwork, true);
+	IConsole::CmdRegister("unblock_bay_road_stops",  ConUnblockBayRoadStops,  ConHookNoNetwork, true);
 
 	IConsole::CmdRegister("dbgspecial",              ConDbgSpecial,       ConHookSpecialCmd, true);
 

@@ -64,6 +64,12 @@ enum IndustryDensity {
 	ID_END,       ///< Number of industry density settings.
 };
 
+/** Possible values for the "timekeeping_units" setting. */
+enum TimekeepingUnits : uint8_t {
+	TKU_CALENDAR = 0,
+	TKU_WALLCLOCK,
+};
+
 /** Possible values for "use_relay_service" setting. */
 enum UseRelayService : uint8_t {
 	URS_NEVER = 0,
@@ -110,6 +116,7 @@ struct DifficultySettings {
 	bool   line_reverse_mode;                ///< reversing at stations or not
 	bool   disasters;                        ///< are disasters enabled
 	byte   town_council_tolerance;           ///< minimum required town ratings to be allowed to demolish stuff
+	bool   infinite_money;                   ///< whether spending money despite negative balance is allowed
 	bool   money_cheat_in_multiplayer;       ///< is the money cheat permitted for non-admin multiplayer clients
 	bool   rename_towns_in_multiplayer;      ///< is renaming towns permitted for non-admin multiplayer clients
 	bool   override_town_settings_in_multiplayer; ///< is overriding town settings permitted for non-admin multiplayer clients
@@ -136,18 +143,18 @@ struct TimeSettings {
 	uint16_t ticks_per_minute;               ///< how many ticks per minute
 	uint16_t clock_offset;                   ///< clock offset in minutes
 
-	TickMinutes ToTickMinutes(DateTicksScaled ticks) const
+	TickMinutes ToTickMinutes(StateTicks ticks) const
 	{
 		return (ticks.base() / this->ticks_per_minute) + this->clock_offset;
 	}
 
 	TickMinutes NowInTickMinutes() const
 	{
-		extern DateTicksScaled _scaled_date_ticks;
-		return this->ToTickMinutes(_scaled_date_ticks);
+		extern StateTicks _state_ticks;
+		return this->ToTickMinutes(_state_ticks);
 	}
 
-	DateTicksScaled FromTickMinutes(TickMinutes minutes) const
+	StateTicks FromTickMinutes(TickMinutes minutes) const
 	{
 		return (minutes.base() - this->clock_offset) * this->ticks_per_minute;
 	}
@@ -244,7 +251,7 @@ struct GUISettings : public TimeSettings {
 	SignalGUISettings signal_gui_mode;                      ///< select which signal types are shown in the signal GUI
 	SignalCycleSettings cycle_signal_types;                 ///< Which signal types to cycle with the build signal tool.
 	SignalType default_signal_type;                         ///< The default signal type, which is set automatically by the last signal used. Not available in Settings.
-	Year   coloured_news_year;                              ///< when does newspaper become coloured?
+	CalTime::Year coloured_news_year;                       ///< when does newspaper become coloured?
 	bool   override_time_settings;                          ///< Whether to override time display settings stored in savegame.
 	bool   timetable_in_ticks;                              ///< whether to show the timetable in ticks rather than days
 	bool   timetable_leftover_ticks;                        ///< whether to show leftover ticks after converting to minutes/days, in the timetable
@@ -255,7 +262,7 @@ struct GUISettings : public TimeSettings {
 	byte   drag_signals_density;                            ///< many signals density
 	bool   drag_signals_fixed_distance;                     ///< keep fixed distance between signals when dragging
 	bool   drag_signals_skip_stations;                      ///< continue past station/waypoint tiles when auto-fill dragging signals
-	Year   semaphore_build_before;                          ///< build semaphore signals automatically before this year
+	CalTime::Year semaphore_build_before;                   ///< build semaphore signals automatically before this year
 	byte   news_message_timeout;                            ///< how much longer than the news message "age" should we keep the message in the history
 	bool   show_track_reservation;                          ///< highlight reserved tracks.
 	byte   station_numtracks;                               ///< the number of platforms to default on for rail stations
@@ -275,8 +282,8 @@ struct GUISettings : public TimeSettings {
 	bool   show_progsig_ui;                                 ///< Show programmable pre-signals feature in UI
 	bool   show_noentrysig_ui;                              ///< Show no-entry signals feature in UI
 	uint8_t  osk_activation;                                ///< Mouse gesture to trigger the OSK.
-	byte   starting_colour;                                 ///< default color scheme for the company to start a new game with
-	byte   starting_colour_secondary;                       ///< default secondary color scheme for the company to start a new game with
+	Colours starting_colour;                                ///< default color scheme for the company to start a new game with
+	Colours starting_colour_secondary;                      ///< default secondary color scheme for the company to start a new game with
 	bool   show_newgrf_name;                                ///< Show the name of the NewGRF in the build vehicle window
 	bool   show_cargo_in_vehicle_lists;                     ///< Show the cargoes the vehicles can carry in the list windows
 	bool   show_wagon_intro_year;                           ///< Show the introduction year for wagons in the build vehicle window
@@ -441,11 +448,11 @@ struct NetworkSettings {
 	uint8_t       autoclean_novehicles;                   ///< remove companies with no vehicles after this many months
 	uint8_t       max_companies;                          ///< maximum amount of companies
 	uint8_t       max_clients;                            ///< maximum amount of clients
-	Year        restart_game_year;                        ///< year the server restarts
+	CalTime::Year restart_game_year;                      ///< year the server restarts
+	uint16_t      restart_hours;                          ///< number of hours to run the server before automatic restart
 	uint8_t       min_active_clients;                     ///< minimum amount of active clients to unpause the game
 	bool        reload_cfg;                               ///< reload the config file before restarting
 	std::string last_joined;                              ///< Last joined server
-	bool        no_http_content_downloads;                ///< do not do content downloads over HTTP
 	UseRelayService use_relay_service;                    ///< Use relay service?
 	ParticipateSurvey participate_survey;                 ///< Participate in the automated survey
 };
@@ -454,8 +461,8 @@ struct NetworkSettings {
 struct GameCreationSettings {
 	uint32_t generation_seed;                ///< noise seed for world generation
 	uint32_t generation_unique_id;           ///< random id to differentiate savegames
-	Year   starting_year;                    ///< starting date
-	Year   ending_year;                      ///< scoring end date
+	CalTime::Year starting_year;             ///< starting date
+	CalTime::Year ending_year;               ///< scoring end date
 	uint8_t  map_x;                          ///< X size of map
 	uint8_t  map_y;                          ///< Y size of map
 	byte   land_generator;                   ///< the landscape generator
@@ -527,7 +534,7 @@ struct ConstructionSettings {
 	bool   allow_docks_under_bridges;        ///< allow docks under bridges
 	byte   purchase_land_permitted;          ///< whether and how purchasing land is permitted
 	bool   build_object_area_permitted;      ///< whether building objects by area is permitted
-	Year   no_expire_objects_after;          ///< do not expire objects after this year
+	CalTime::Year no_expire_objects_after;   ///< do not expire objects after this year
 	bool   ignore_object_intro_dates;        ///< allow players to build objects before their introduction dates (does not include during map generation)
 	bool   convert_town_road_no_houses;      ///< allow converting town roads to a type which does not allow houses
 
@@ -557,7 +564,6 @@ struct AISettings {
 
 /** Settings related to scripts. */
 struct ScriptSettings {
-	uint8_t  settings_profile;                 ///< difficulty profile to set initial settings of scripts, esp. random AIs
 	uint32_t script_max_opcode_till_suspend;   ///< max opcode calls till scripts will suspend
 	uint32_t script_max_memory_megabytes;      ///< limit on memory a single script instance may have allocated
 };
@@ -694,8 +700,8 @@ struct VehicleSettings {
 	uint8_t  freight_trains;                   ///< value to multiply the weight of cargo by
 	bool   dynamic_engines;                    ///< enable dynamic allocation of engine data
 	bool   never_expire_vehicles;              ///< never expire vehicles
-	Year   no_expire_vehicles_after;           ///< do not expire vehicles after this year
-	Year   no_introduce_vehicles_after;        ///< do not introduce vehicles after this year
+	CalTime::Year no_expire_vehicles_after;    ///< do not expire vehicles after this year
+	CalTime::Year no_introduce_vehicles_after; ///< do not introduce vehicles after this year
 	byte   extend_vehicle_life;                ///< extend vehicle life by this many years
 	byte   road_side;                          ///< the side of the road vehicles drive on
 	uint8_t  plane_crashes;                    ///< number of plane crashes, 0 = none, 1 = reduced, 2 = normal
@@ -730,6 +736,7 @@ struct EconomySettings {
 	bool   give_money;                       ///< allow giving other companies money
 	bool   mod_road_rebuild;                 ///< roadworks remove unnecessary RoadBits
 	bool   multiple_industry_per_town;       ///< allow many industries of the same type per town
+	bool   spawn_primary_industry_only;      ///< only spawn primary industried
 	int8_t   town_growth_rate;               ///< town growth rate
 	uint8_t  town_growth_cargo_transported;  ///< percentage of town growth rate which depends on proportion of transported cargo in the last month
 	bool   town_zone_calc_mode;              ///< calc mode for town zones
@@ -763,6 +770,8 @@ struct EconomySettings {
 	uint8_t  town_max_road_slope;            ///< maximum number of consecutive sloped road tiles which towns are allowed to build
 	bool   allow_town_bridges;               ///< towns are allowed to build bridges
 	bool   infrastructure_maintenance;       ///< enable monthly maintenance fee for owner infrastructure
+	TimekeepingUnits timekeeping_units;      ///< time units to use for the game economy, either calendar or wallclock
+	uint16_t minutes_per_calendar_year;      ///< minutes per calendar year. Special value 0 means that calendar time is frozen.
 	uint16_t town_cargo_scale;               ///< scale cargo production of towns by this percentage.
 	uint16_t industry_cargo_scale;           ///< scale cargo production of industries by this percentage.
 	CargoScalingMode town_cargo_scale_mode;  ///< scaling mode for town cargo.
@@ -887,6 +896,11 @@ struct GameSettings {
 	TimeSettings         game_time;          ///< time display settings.
 
 	OldEconomySettings   old_economy;
+
+	uint8_t EffectiveDayLengthFactor() const
+	{
+		return this->economy.timekeeping_units == TKU_CALENDAR ? this->economy.day_length_factor : 1;
+	}
 };
 
 /** All settings that are only important for the local client. */

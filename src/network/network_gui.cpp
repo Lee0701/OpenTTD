@@ -40,6 +40,7 @@
 #include "../sprite.h"
 #include "../settings_internal.h"
 #include "../textfile_gui.h"
+#include "../timer/timer_game_tick.h"
 
 #include "../widgets/network_widget.h"
 
@@ -101,7 +102,7 @@ public:
 		this->Add(std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_CLIENTS, STR_NETWORK_SERVER_LIST_CLIENTS_CAPTION, STR_NETWORK_SERVER_LIST_CLIENTS_CAPTION_TOOLTIP));
 		this->Add(std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_MAPSIZE, STR_NETWORK_SERVER_LIST_MAP_SIZE_CAPTION, STR_NETWORK_SERVER_LIST_MAP_SIZE_CAPTION_TOOLTIP));
 		this->Add(std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_DATE, STR_NETWORK_SERVER_LIST_DATE_CAPTION, STR_NETWORK_SERVER_LIST_DATE_CAPTION_TOOLTIP));
-		this->Add(std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_YEARS, STR_NETWORK_SERVER_LIST_YEARS_CAPTION, STR_NETWORK_SERVER_LIST_YEARS_CAPTION_TOOLTIP));
+		this->Add(std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_YEARS, STR_NETWORK_SERVER_LIST_PLAY_TIME_CAPTION, STR_NETWORK_SERVER_LIST_PLAY_TIME_CAPTION_TOOLTIP));
 
 		leaf = std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NG_INFO, STR_EMPTY, STR_NETWORK_SERVER_LIST_INFO_ICONS_TOOLTIP);
 		leaf->SetMinimalSize(14 + GetSpriteSize(SPR_LOCK, nullptr, ZOOM_LVL_OUT_4X).width
@@ -288,18 +289,20 @@ protected:
 		return (r != 0) ? r < 0 : NGameClientSorter(a, b);
 	}
 
-	/** Sort servers by current date */
-	static bool NGameDateSorter(NetworkGameList * const &a, NetworkGameList * const &b)
+	/** Sort servers by calendar date. */
+	static bool NGameCalendarDateSorter(NetworkGameList * const &a, NetworkGameList * const &b)
 	{
-		auto r = a->info.game_date - b->info.game_date;
+		auto r = a->info.calendar_date - b->info.calendar_date;
 		return (r != 0) ? r < 0 : NGameClientSorter(a, b);
 	}
 
-	/** Sort servers by the number of days the game is running */
-	static bool NGameYearsSorter(NetworkGameList * const &a, NetworkGameList * const &b)
+	/** Sort servers by the number of ticks the game is running. */
+	static bool NGameTicksPlayingSorter(NetworkGameList * const &a, NetworkGameList * const &b)
 	{
-		auto r = a->info.game_date.base() - a->info.start_date.base() - b->info.game_date.base() + b->info.start_date.base();
-		return (r != 0) ? r < 0: NGameDateSorter(a, b);
+		if (a->info.ticks_playing == b->info.ticks_playing) {
+			return NGameClientSorter(a, b);
+		}
+		return a->info.ticks_playing < b->info.ticks_playing;
 	}
 
 	/**
@@ -397,18 +400,18 @@ protected:
 			if (const NWidgetBase *nwid = this->GetWidget<NWidgetBase>(WID_NG_DATE); nwid->current_x != 0) {
 				/* current date */
 				Rect date = nwid->GetCurrentRect();
-				YearMonthDay ymd = ConvertDateToYMD(cur_item->info.game_date);
+				CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(cur_item->info.calendar_date);
 				SetDParam(0, ymd.year);
 				DrawString(date.left, date.right, y + text_y_offset, STR_JUST_INT, TC_BLACK, SA_HOR_CENTER);
 			}
 
 			if (const NWidgetBase *nwid = this->GetWidget<NWidgetBase>(WID_NG_YEARS); nwid->current_x != 0) {
-				/* number of years the game is running */
+				/* play time */
 				Rect years = nwid->GetCurrentRect();
-				YearMonthDay ymd_cur = ConvertDateToYMD(cur_item->info.game_date);
-				YearMonthDay ymd_start = ConvertDateToYMD(cur_item->info.start_date);
-				SetDParam(0, ymd_cur.year - ymd_start.year);
-				DrawString(years.left, years.right, y + text_y_offset, STR_JUST_INT, TC_BLACK, SA_HOR_CENTER);
+				const auto play_time = cur_item->info.ticks_playing / TICKS_PER_SECOND;
+				SetDParam(0, play_time / 60 / 60);
+				SetDParam(1, (play_time / 60) % 60);
+				DrawString(years.left, years.right, y + text_y_offset, STR_NETWORK_SERVER_LIST_PLAY_TIME_SHORT, TC_BLACK, SA_HOR_CENTER);
 			}
 
 			/* draw a lock if the server is password protected */
@@ -660,11 +663,16 @@ public:
 			StringID invite_or_address = sel->connection_string.starts_with("+") ? STR_NETWORK_SERVER_LIST_INVITE_CODE : STR_NETWORK_SERVER_LIST_SERVER_ADDRESS;
 			tr.top = DrawStringMultiLine(tr, invite_or_address); // server address / invite code
 
-			SetDParam(0, sel->info.start_date);
+			SetDParam(0, sel->info.calendar_start);
 			tr.top = DrawStringMultiLine(tr, STR_NETWORK_SERVER_LIST_START_DATE); // start date
 
-			SetDParam(0, sel->info.game_date);
+			SetDParam(0, sel->info.calendar_date);
 			tr.top = DrawStringMultiLine(tr, STR_NETWORK_SERVER_LIST_CURRENT_DATE); // current date
+
+			const auto play_time = sel->info.ticks_playing / TICKS_PER_SECOND;
+			SetDParam(0, play_time / 60 / 60);
+			SetDParam(1, (play_time / 60) % 60);
+			tr.top = DrawStringMultiLine(tr, STR_NETWORK_SERVER_LIST_PLAY_TIME); // play time
 
 			if (sel->info.gamescript_version != -1) {
 				SetDParamStr(0, sel->info.gamescript_name);
@@ -867,8 +875,8 @@ GUIGameServerList::SortFunction * const NetworkGameWindow::sorter_funcs[] = {
 	&NGameNameSorter,
 	&NGameClientSorter,
 	&NGameMapSizeSorter,
-	&NGameDateSorter,
-	&NGameYearsSorter,
+	&NGameCalendarDateSorter,
+	&NGameTicksPlayingSorter,
 	&NGameAllowedSorter
 };
 
@@ -1510,7 +1518,7 @@ private:
 		wi_rect.bottom = pt.y;
 
 		w->dd_client_id = client_id;
-		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true);
+		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, DDMF_INSTANT_CLOSE);
 	}
 
 	/**
@@ -1532,7 +1540,7 @@ private:
 		wi_rect.bottom = pt.y;
 
 		w->dd_company_id = company_id;
-		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, true);
+		ShowDropDownListAt(w, std::move(list), -1, WID_CL_MATRIX, wi_rect, COLOUR_GREY, DDMF_INSTANT_CLOSE);
 	}
 	/**
 	 * Chat button on a Client is clicked.
@@ -1680,6 +1688,18 @@ public:
 	void UpdateWidgetSize(WidgetID widget, Dimension *size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension *fill, [[maybe_unused]] Dimension *resize) override
 	{
 		switch (widget) {
+			case WID_CL_SERVER_NAME:
+			case WID_CL_CLIENT_NAME:
+				if (widget == WID_CL_SERVER_NAME) {
+					SetDParamStr(0, _network_server ? _settings_client.network.server_name : _network_server_name);
+				} else {
+					const NetworkClientInfo *own_ci = NetworkClientInfo::GetByClientID(_network_own_client_id);
+					SetDParamStr(0, own_ci != nullptr ? own_ci->client_name : _settings_client.network.client_name);
+				}
+				*size = GetStringBoundingBox(STR_JUST_RAW_STRING);
+				size->width = std::min(size->width, static_cast<uint>(ScaleGUITrad(200))); // By default, don't open the window too wide.
+				break;
+
 			case WID_CL_SERVER_VISIBILITY:
 				*size = maxdim(maxdim(GetStringBoundingBox(STR_NETWORK_SERVER_VISIBILITY_LOCAL), GetStringBoundingBox(STR_NETWORK_SERVER_VISIBILITY_PUBLIC)), GetStringBoundingBox(STR_NETWORK_SERVER_VISIBILITY_INVITE_ONLY));
 				size->width += padding.width;
@@ -2125,7 +2145,7 @@ struct NetworkJoinStatusWindow : Window {
 							progress = 15; // We don't have the final size yet; the server is still compressing!
 							break;
 						}
-						FALLTHROUGH;
+						[[fallthrough]];
 
 					default: // Waiting is 15%, so the resting receivement of map is maximum 70%
 						progress = 15 + _network_join_bytes * (100 - 15) / _network_join_bytes_total;
@@ -2298,7 +2318,7 @@ struct NetworkCompanyPasswordWindow : public Window {
 		switch (widget) {
 			case WID_NCP_OK:
 				this->OnOk();
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WID_NCP_CANCEL:
 				this->Close();

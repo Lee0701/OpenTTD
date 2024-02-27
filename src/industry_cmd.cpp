@@ -1025,7 +1025,7 @@ bool IsTileForestIndustry(TileIndex tile)
 	/* Check for wood production */
 	for (uint i = 0; i < lengthof(ind->produced_cargo); i++) {
 		/* The industry produces wood. */
-		if (ind->produced_cargo[i] != INVALID_CARGO && CargoSpec::Get(ind->produced_cargo[i])->label == 'WOOD') return true;
+		if (ind->produced_cargo[i] != INVALID_CARGO && CargoSpec::Get(ind->produced_cargo[i])->label == CT_WOOD) return true;
 	}
 
 	return false;
@@ -1059,16 +1059,21 @@ static bool IsSuitableForFarmField(TileIndex tile, bool allow_fields)
 static void SetupFarmFieldFence(TileIndex tile, int size, byte type, DiagDirection side)
 {
 	TileIndexDiff diff = (DiagDirToAxis(side) == AXIS_Y ? TileDiffXY(1, 0) : TileDiffXY(0, 1));
+	TileIndexDiff neighbour_diff = TileOffsByDiagDir(side);
 
 	do {
 		tile = TILE_MASK(tile);
 
 		if (IsTileType(tile, MP_CLEAR) && IsClearGround(tile, CLEAR_FIELDS)) {
-			byte or_ = type;
+			TileIndex neighbour = tile + neighbour_diff;
+			if (!IsTileType(neighbour, MP_CLEAR) || !IsClearGround(neighbour, CLEAR_FIELDS) || GetFence(neighbour, ReverseDiagDir(side)) == 0) {
+				/* Add fence as long as neighbouring tile does not already have a fence in the same position. */
+				byte or_ = type;
 
-			if (or_ == 1 && Chance16(1, 7)) or_ = 2;
+				if (or_ == 1 && Chance16(1, 7)) or_ = 2;
 
-			SetFence(tile, side, or_);
+				SetFence(tile, side, or_);
+			}
 		}
 
 		tile += diff;
@@ -1849,15 +1854,15 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 	i->owner = OWNER_NONE;
 
 	uint16_t r = Random();
-	i->random_colour = GB(r, 0, 4);
+	i->random_colour = static_cast<Colours>(GB(r, 0, 4));
 	i->counter = GB(r, 4, 12);
 	i->random = initial_random_bits;
 	i->was_cargo_delivered = false;
-	i->last_prod_year = _cur_year;
+	i->last_prod_year = EconTime::CurYear();
 	i->founder = founder;
 	i->ctlflags = INDCTL_NONE;
 
-	i->construction_date = _date;
+	i->construction_date = CalTime::CurDate();
 	i->construction_type = (_game_mode == GM_EDITOR) ? ICT_SCENARIO_EDITOR :
 			(_generating_world ? ICT_MAP_GENERATION : ICT_NORMAL_GAMEPLAY);
 
@@ -1903,7 +1908,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 		uint16_t res = GetIndustryCallback(CBID_INDUSTRY_DECIDE_COLOUR, 0, 0, i, type, INVALID_TILE);
 		if (res != CALLBACK_FAILED) {
 			if (GB(res, 4, 11) != 0) ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_DECIDE_COLOUR, res);
-			i->random_colour = GB(res, 0, 4);
+			i->random_colour = static_cast<Colours>(GB(res, 0, 4));
 		}
 	}
 
@@ -1914,7 +1919,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 		uint maxcargoes = (indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED) ? lengthof(i->accepts_cargo) : 3;
 		for (uint j = 0; j < maxcargoes; j++) {
 			uint16_t res = GetIndustryCallback(CBID_INDUSTRY_INPUT_CARGO_TYPES, j, 0, i, type, INVALID_TILE);
-			if (res == CALLBACK_FAILED || GB(res, 0, 8) == CT_INVALID) break;
+			if (res == CALLBACK_FAILED || GB(res, 0, 8) == UINT8_MAX) break;
 			if (indspec->grf_prop.grffile->grf_version >= 8 && res >= 0x100) {
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_INPUT_CARGO_TYPES, res);
 				break;
@@ -1946,7 +1951,7 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 		uint maxcargoes = (indspec->behaviour & INDUSTRYBEH_CARGOTYPES_UNLIMITED) ? lengthof(i->produced_cargo) : 2;
 		for (uint j = 0; j < maxcargoes; j++) {
 			uint16_t res = GetIndustryCallback(CBID_INDUSTRY_OUTPUT_CARGO_TYPES, j, 0, i, type, INVALID_TILE);
-			if (res == CALLBACK_FAILED || GB(res, 0, 8) == CT_INVALID) break;
+			if (res == CALLBACK_FAILED || GB(res, 0, 8) == UINT8_MAX) break;
 			if (indspec->grf_prop.grffile->grf_version >= 8 && res >= 0x100) {
 				ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_OUTPUT_CARGO_TYPES, res);
 				break;
@@ -2363,6 +2368,7 @@ static uint32_t GetScaledIndustryGenerationProbability(IndustryType it, bool *fo
 	uint32_t chance = ind_spc->appear_creation[_settings_game.game_creation.landscape];
 	if (!ind_spc->enabled || ind_spc->layouts.empty() ||
 			(_game_mode != GM_EDITOR && _settings_game.difficulty.industry_density == ID_FUND_ONLY) ||
+			(_settings_game.economy.spawn_primary_industry_only && !ind_spc->IsRawIndustry()) ||
 			(chance = GetIndustryProbabilityCallback(it, IACT_MAPGENERATION, chance)) == 0) {
 		*force_at_least_one = false;
 		return 0;
@@ -2391,10 +2397,15 @@ static uint16_t GetIndustryGamePlayProbability(IndustryType it, byte *min_number
 	}
 
 	const IndustrySpec *ind_spc = GetIndustrySpec(it);
+	if (_settings_game.economy.spawn_primary_industry_only && !ind_spc->IsRawIndustry()) {
+		*min_number = 0;
+		return 0;
+	}
+
 	byte chance = ind_spc->appear_ingame[_settings_game.game_creation.landscape];
 	if (!ind_spc->enabled || ind_spc->layouts.empty() ||
-			((ind_spc->behaviour & INDUSTRYBEH_BEFORE_1950) && _cur_year > 1950) ||
-			((ind_spc->behaviour & INDUSTRYBEH_AFTER_1960) && _cur_year < 1960) ||
+			((ind_spc->behaviour & INDUSTRYBEH_BEFORE_1950) && CalTime::CurYear() > 1950) ||
+			((ind_spc->behaviour & INDUSTRYBEH_AFTER_1960) && CalTime::CurYear() < 1960) ||
 			(chance = GetIndustryProbabilityCallback(it, IACT_RANDOMCREATION, chance)) == 0) {
 		*min_number = 0;
 		return 0;
@@ -2566,7 +2577,7 @@ static void UpdateIndustryStatistics(Industry *i)
 		if (i->produced_cargo[j] != INVALID_CARGO) {
 			byte pct = 0;
 			if (i->this_month_production[j] != 0) {
-				i->last_prod_year = _cur_year;
+				i->last_prod_year = EconTime::CurYear();
 				pct = ClampTo<byte>(i->this_month_transported[j] * 256 / i->this_month_production[j]);
 			}
 			i->last_month_pct_transported[j] = pct;
@@ -2956,7 +2967,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 
 				/* Prevent production to overflow or Oil Rig passengers to be over-"produced" */
 				new_prod = Clamp(new_prod, 1, 255);
-				if (i->produced_cargo[j] == CT_PASSENGERS && !(indspec->behaviour & INDUSTRYBEH_NO_PAX_PROD_CLAMP)) {
+				if (IsValidCargoID(i->produced_cargo[j]) && i->produced_cargo[j] == GetCargoIDByLabel(CT_PASSENGERS) && !(indspec->behaviour & INDUSTRYBEH_NO_PAX_PROD_CLAMP)) {
 					new_prod = Clamp(new_prod, 0, 16);
 				}
 
@@ -2993,7 +3004,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 	}
 
 	if (!callback_enabled && (indspec->life_type & INDUSTRYLIFE_PROCESSING)) {
-		if ((_cur_year - i->last_prod_year) >= PROCESSING_INDUSTRY_ABANDONMENT_YEARS && Chance16(1, original_economy ? 2 : 180)) {
+		if ((EconTime::CurYear() - i->last_prod_year) >= PROCESSING_INDUSTRY_ABANDONMENT_YEARS && Chance16(1, original_economy ? 2 : 180)) {
 			closeit = true;
 		}
 	}

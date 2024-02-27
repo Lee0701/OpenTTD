@@ -18,6 +18,7 @@
 #include "../command_type.h"
 #include "../date_type.h"
 
+#include <array>
 #include <vector>
 
 static const uint32_t FIND_SERVER_EXTENDED_TOKEN = 0x2A49582A;
@@ -75,10 +76,10 @@ extern NetworkAddressList _broadcast_list;
 extern uint32_t _sync_seed_1;
 extern uint64_t _sync_state_checksum;
 extern uint32_t _sync_frame;
-extern Date   _last_sync_date;
-extern DateFract _last_sync_date_fract;
-extern uint8_t  _last_sync_tick_skip_counter;
-extern uint32_t  _last_sync_frame_counter;
+extern EconTime::Date _last_sync_date;
+extern EconTime::DateFract _last_sync_date_fract;
+extern uint8_t _last_sync_tick_skip_counter;
+extern uint32_t _last_sync_frame_counter;
 extern bool _network_first_time;
 /* Vars needed for the join-GUI */
 extern NetworkJoinStatus _network_join_status;
@@ -103,15 +104,15 @@ void NetworkRebuildHostList();
 void UpdateNetworkGameWindow();
 
 struct NetworkGameKeys {
-	byte x25519_priv_key[32];    ///< x25519 key: private part
-	byte x25519_pub_key[32];     ///< x25519 key: public part
+	std::array<uint8_t, 32> x25519_priv_key;    ///< x25519 key: private part
+	std::array<uint8_t, 32> x25519_pub_key;     ///< x25519 key: public part
 	bool inited = false;
 
 	void Initialise();
 };
 
 struct NetworkSharedSecrets {
-	byte shared_data[64];
+	std::array<uint8_t, 64> shared_data;
 
 	~NetworkSharedSecrets();
 };
@@ -122,8 +123,7 @@ struct NetworkSharedSecrets {
  */
 struct CommandPacket : CommandContainer {
 	/** Make sure the pointer is nullptr. */
-	CommandPacket() : next(nullptr), frame(0), client_id(INVALID_CLIENT_ID), company(INVALID_COMPANY), my_cmd(false) {}
-	CommandPacket *next; ///< the next command packet (if in queue)
+	CommandPacket() : frame(0), client_id(INVALID_CLIENT_ID), company(INVALID_COMPANY), my_cmd(false) {}
 	uint32_t frame;      ///< the frame in which this packet is executed
 	ClientID client_id;  ///< originating client ID (or INVALID_CLIENT_ID if not specified)
 	CompanyID company;   ///< company that is executing the command
@@ -149,7 +149,5 @@ NetworkAddress ParseConnectionString(const std::string &connection_string, uint1
 std::string NormalizeConnectionString(const std::string &connection_string, uint16_t default_port);
 
 void ClientNetworkEmergencySave();
-
-void NetworkRandomBytesWithFallback(void *buf, size_t n);
 
 #endif /* NETWORK_INTERNAL_H */

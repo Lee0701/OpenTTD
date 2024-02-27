@@ -39,11 +39,11 @@
 #include "../string_func.h"
 #include "../string_func_extra.h"
 #include "../core/serialisation.hpp"
-#include "../3rdparty/randombytes/randombytes.h"
 #include "../3rdparty/monocypher/monocypher.h"
 #include "../settings_internal.h"
 #include <sstream>
 #include <iomanip>
+#include <tuple>
 
 #ifdef DEBUG_DUMP_COMMANDS
 #include "../fileio_func.h"
@@ -71,8 +71,8 @@ bool _is_network_server;                                ///< Does this client wa
 bool _network_settings_access;                          ///< Can this client change server settings?
 NetworkCompanyState *_network_company_states = nullptr; ///< Statistics about some companies.
 std::string _network_company_server_id;                 ///< Server ID string used for company passwords
-uint8_t _network_company_password_storage_token[16];    ///< Non-secret token for storage of company passwords in savegames
-uint8_t _network_company_password_storage_key[32];      ///< Key for storage of company passwords in savegames
+std::array<uint8_t, 16> _network_company_password_storage_token; ///< Non-secret token for storage of company passwords in savegames
+std::array<uint8_t, 32> _network_company_password_storage_key;   ///< Key for storage of company passwords in savegames
 ClientID _network_own_client_id;                        ///< Our client identifier.
 ClientID _redirect_console_to_client;                   ///< If not invalid, redirect the console output to a client.
 uint8_t _network_reconnect;                             ///< Reconnect timeout
@@ -87,8 +87,8 @@ NetworkAddressList _broadcast_list;                     ///< List of broadcast a
 uint32_t _sync_seed_1;                                  ///< Seed to compare during sync checks.
 uint64_t _sync_state_checksum;                          ///< State checksum to compare during sync checks.
 uint32_t _sync_frame;                                   ///< The frame to perform the sync check.
-Date   _last_sync_date;                                 ///< The game date of the last successfully received sync frame
-DateFract _last_sync_date_fract;                        ///< "
+EconTime::Date   _last_sync_date;                       ///< The game date of the last successfully received sync frame
+EconTime::DateFract _last_sync_date_fract;              ///< "
 uint8_t  _last_sync_tick_skip_counter;                  ///< "
 uint32_t _last_sync_frame_counter;                      ///< "
 bool _network_first_time;                               ///< Whether we have finished joining or not.
@@ -700,7 +700,7 @@ static void NetworkInitialize(bool close_admins = true)
 }
 
 /** Non blocking connection to query servers for their game info. */
-class TCPQueryConnecter : TCPServerConnecter {
+class TCPQueryConnecter : public TCPServerConnecter {
 private:
 	std::string connection_string;
 
@@ -734,7 +734,7 @@ void NetworkQueryServer(const std::string &connection_string)
 	NetworkGameList *item = NetworkGameListAddItem(connection_string);
 	item->refreshing = true;
 
-	new TCPQueryConnecter(connection_string);
+	TCPConnecter::Create<TCPQueryConnecter>(connection_string);
 }
 
 /**
@@ -797,7 +797,7 @@ void NetworkRebuildHostList()
 }
 
 /** Non blocking connection create to actually connect to servers */
-class TCPClientConnecter : TCPServerConnecter {
+class TCPClientConnecter : public TCPServerConnecter {
 private:
 	std::string connection_string;
 
@@ -876,7 +876,7 @@ void NetworkClientJoinGame()
 	_network_join_status = NETWORK_JOIN_STATUS_CONNECTING;
 	ShowJoinStatusWindow();
 
-	new TCPClientConnecter(_network_join.connection_string);
+	TCPConnecter::Create<TCPClientConnecter>(_network_join.connection_string);
 }
 
 static void NetworkInitGameInfo()
@@ -1130,6 +1130,7 @@ const char *GetSyncRecordEventName(NetworkSyncRecordEvents event)
 		"TREE",
 		"STATION",
 		"INDUSTRY",
+		"PRE_DATES",
 		"PRE_COMPANY_STATE",
 		"VEH_PERIODIC",
 		"VEH_LOAD_UNLOAD",
@@ -1160,19 +1161,19 @@ void NetworkGameLoop()
 
 	if (_network_server) {
 		/* Log the sync state to check for in-syncedness of replays. */
-		if (_date_fract == 0 && _tick_skip_counter == 0) {
+		if (EconTime::CurDateFract() == 0 && TickSkipCounter() == 0) {
 			/* We don't want to log multiple times if paused. */
-			static Date last_log;
-			if (last_log != _date) {
+			static EconTime::Date last_log;
+			if (last_log != EconTime::CurDate()) {
 				DEBUG(desync, 2, "sync: %s; %08x; %08x", debug_date_dumper().HexDate(), _random.state[0], _random.state[1]);
-				last_log = _date;
+				last_log = EconTime::CurDate();
 			}
 		}
 
 #ifdef DEBUG_DUMP_COMMANDS
 		/* Loading of the debug commands from -ddesync>=1 */
 		static FILE *f = FioFOpenFile("commands.log", "rb", SAVE_DIR);
-		static Date next_date = 0;
+		static EconTime::Date next_date = 0;
 		static uint next_date_fract;
 		static uint next_tick_skip_counter;
 		static std::unique_ptr<CommandPacket> cp;
@@ -1184,7 +1185,7 @@ void NetworkGameLoop()
 		}
 
 		while (f != nullptr && !feof(f)) {
-			if (_date == next_date && _date_fract == next_date_fract) {
+			if (EconTime::CurDate() == next_date && EconTime::CurDateFract() == next_date_fract) {
 				if (cp != nullptr) {
 					NetworkSendCommand(cp->tile, cp->p1, cp->p2, cp->p3, cp->cmd & ~CMD_FLAGS_MASK, nullptr, cp->text.c_str(), cp->company, cp->aux_data.get());
 					DEBUG(net, 0, "injecting: %s; %02x; %06x; %08x; %08x; " OTTD_PRINTFHEX64PAD " %08x; \"%s\"%s (%s)",
@@ -1371,7 +1372,7 @@ static void NetworkGenerateServerId()
 std::string NetworkGenerateRandomKeyString(uint bytes)
 {
 	uint8_t *key = AllocaM(uint8_t, bytes);
-	NetworkRandomBytesWithFallback(key, bytes);
+	RandomBytesWithFallback({ key, bytes });
 
 	return FormatArrayAsHex({key, bytes});
 }
@@ -1416,26 +1417,16 @@ void NetworkShutDown()
 	NetworkCoreShutdown();
 }
 
-void NetworkRandomBytesWithFallback(void *buf, size_t bytes)
-{
-	if (randombytes(buf, bytes) < 0) {
-		/* Fallback poor-quality random */
-		DEBUG(net, 0, "High quality random source unavailable");
-		for (uint i = 0; i < bytes; i++) {
-			reinterpret_cast<byte *>(buf)[i] = (byte)InteractiveRandom();
-		}
-	}
-}
-
 void NetworkGameKeys::Initialise()
 {
 	assert(!this->inited);
 
 	this->inited = true;
 
-	static_assert(sizeof(this->x25519_priv_key) == 32);
-	NetworkRandomBytesWithFallback(this->x25519_priv_key, sizeof(this->x25519_priv_key));
-	crypto_x25519_public_key(this->x25519_pub_key, this->x25519_priv_key);
+	static_assert(std::tuple_size<decltype(NetworkGameKeys::x25519_priv_key)>::value == 32);
+	static_assert(std::tuple_size<decltype(NetworkGameKeys::x25519_pub_key)>::value == 32);
+	RandomBytesWithFallback(this->x25519_priv_key);
+	crypto_x25519_public_key(this->x25519_pub_key.data(), this->x25519_priv_key.data());
 }
 
 NetworkSharedSecrets::~NetworkSharedSecrets()

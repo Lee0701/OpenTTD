@@ -134,7 +134,7 @@ static uint GetTotalCategoriesHeight()
  */
 static uint GetMaxCategoriesWidth()
 {
-	uint max_width = 0;
+	uint max_width = GetStringBoundingBox(EconTime::UsingWallclockUnits() ? STR_FINANCES_PERIOD_CAPTION : STR_FINANCES_YEAR_CAPTION).width;
 
 	/* Loop through categories to check max widths. */
 	for (const ExpensesList &list : _expenses_list_types) {
@@ -169,8 +169,10 @@ static void DrawCategory(const Rect &r, int start_y, const ExpensesList &list)
  */
 static void DrawCategories(const Rect &r)
 {
-	/* Start with an empty space in the year row, plus the blockspace under the year. */
-	int y = r.top + GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_wide;
+	int y = r.top;
+	/* Draw description of 12-minute economic period. */
+	DrawString(r.left, r.right, y, (EconTime::UsingWallclockUnits() ? STR_FINANCES_PERIOD_CAPTION : STR_FINANCES_YEAR_CAPTION), TC_FROMSTRING, SA_LEFT, true);
+	y += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_wide;
 
 	for (const ExpensesList &list : _expenses_list_types) {
 		/* Draw category title and advance y */
@@ -371,9 +373,11 @@ struct CompanyFinancesWindow : Window {
 				SetDParam(0, _settings_game.difficulty.initial_interest);
 				break;
 
-			case WID_CF_MAXLOAN_VALUE:
-				SetDParam(0, _economy.max_loan);
+			case WID_CF_MAXLOAN_VALUE: {
+				const Company *c = Company::Get((CompanyID)this->window_number);
+				SetDParam(0, c->GetMaxLoan());
 				break;
+			}
 
 			case WID_CF_INCREASE_LOAN:
 			case WID_CF_REPAY_LOAN:
@@ -394,7 +398,7 @@ struct CompanyFinancesWindow : Window {
 			case WID_CF_EXPS_PRICE2:
 			case WID_CF_EXPS_PRICE3:
 				size->height = GetTotalCategoriesHeight();
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WID_CF_BALANCE_VALUE:
 			case WID_CF_LOAN_VALUE:
@@ -420,10 +424,10 @@ struct CompanyFinancesWindow : Window {
 			case WID_CF_EXPS_PRICE2:
 			case WID_CF_EXPS_PRICE3: {
 				const Company *c = Company::Get((CompanyID)this->window_number);
-				int age = std::min(_cur_year - c->inaugurated_year, 2);
+				YearDelta age = std::min<YearDelta>(CalTime::CurYear() - c->inaugurated_year, 2);
 				int wid_offset = widget - WID_CF_EXPS_PRICE1;
-				if (wid_offset <= age) {
-					DrawYearColumn(r, _cur_year - (age - wid_offset), c->yearly_expenses[age - wid_offset]);
+				if (wid_offset <= age.base()) {
+					DrawYearColumn(r, CalTime::CurYear().base() - (age.base() - wid_offset), c->yearly_expenses[age.base() - wid_offset]);
 				}
 				break;
 			}
@@ -471,7 +475,7 @@ struct CompanyFinancesWindow : Window {
 			}
 
 			const Company *c = Company::Get(company);
-			this->SetWidgetDisabledState(WID_CF_INCREASE_LOAN, c->current_loan == _economy.max_loan); // Borrow button only shows when there is any more money to loan.
+			this->SetWidgetDisabledState(WID_CF_INCREASE_LOAN, c->current_loan >= c->GetMaxLoan()); // Borrow button only shows when there is any more money to loan.
 			this->SetWidgetDisabledState(WID_CF_REPAY_LOAN, company != _local_company || c->current_loan == 0); // Repay button only shows when there is any more money to repay.
 		}
 
@@ -625,7 +629,7 @@ static const LiveryClass _livery_class[LS_END] = {
 template <SpriteID TSprite = SPR_SQUARE>
 class DropDownListColourItem : public DropDownIcon<DropDownString<DropDownListItem>> {
 public:
-	DropDownListColourItem(int colour, bool masked) : DropDownIcon<DropDownString<DropDownListItem>>(TSprite, PALETTE_RECOLOUR_START + (colour % COLOUR_END), colour < COLOUR_END ? _colour_dropdown[colour] : STR_COLOUR_DEFAULT, colour, masked)
+	DropDownListColourItem(int colour, bool masked) : DropDownIcon<DropDownString<DropDownListItem>>(TSprite, GENERAL_SPRITE_COLOUR(colour % COLOUR_END), colour < COLOUR_END ? _colour_dropdown[colour] : STR_COLOUR_DEFAULT, colour, masked)
 	{
 	}
 };
@@ -688,7 +692,12 @@ private:
 			list.push_back(std::make_unique<DropDownListColourItem<>>(i, HasBit(used_colours, i)));
 		}
 
-		byte sel = (default_livery == nullptr || HasBit(livery->in_use, primary ? 0 : 1)) ? (primary ? livery->colour1 : livery->colour2) : default_col;
+		byte sel;
+		if (default_livery == nullptr || HasBit(livery->in_use, primary ? 0 : 1)) {
+			sel = primary ? livery->colour1 : livery->colour2;
+		} else {
+			sel = default_col;
+		}
 		ShowDropDownList(this, std::move(list), sel, widget);
 	}
 
@@ -831,7 +840,7 @@ public:
 					size->width = 0;
 					break;
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WID_SCL_PRI_COL_DROPDOWN: {
 				this->square = GetSpriteSize(SPR_SQUARE);
@@ -1055,7 +1064,8 @@ public:
 		bool local = (CompanyID)this->window_number == _local_company;
 		if (!local) return;
 
-		if (index >= COLOUR_END) index = INVALID_COLOUR;
+		Colours colour = static_cast<Colours>(index);
+		if (colour >= COLOUR_END) colour = INVALID_COLOUR;
 
 		if (this->livery_class < LC_GROUP_RAIL) {
 			/* Set company colour livery */
@@ -1122,6 +1132,9 @@ static constexpr NWidgetPart _nested_select_company_livery_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SCL_CAPTION), SetDataTip(STR_LIVERY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_SHADEBOX, COLOUR_GREY),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
+		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_SCL_CLASS_GENERAL), SetMinimalSize(22, 22), SetFill(0, 1), SetDataTip(SPR_IMG_COMPANY_GENERAL, STR_LIVERY_GENERAL_TOOLTIP),
@@ -1148,7 +1161,7 @@ static constexpr NWidgetPart _nested_select_company_livery_widgets[] = {
 };
 
 static WindowDesc _select_company_livery_desc(__FILE__, __LINE__,
-	WDP_AUTO, nullptr, 0, 0,
+	WDP_AUTO, "company_color_scheme", 0, 0,
 	WC_COMPANY_COLOUR, WC_NONE,
 	0,
 	std::begin(_nested_select_company_livery_widgets), std::end(_nested_select_company_livery_widgets)
@@ -1170,7 +1183,7 @@ void ShowCompanyLiveryWindow(CompanyID company, GroupID group)
  * @param colour the (background) colour of the gradient
  * @param r      position to draw the face
  */
-void DrawCompanyManagerFace(CompanyManagerFace cmf, int colour, const Rect &r)
+void DrawCompanyManagerFace(CompanyManagerFace cmf, Colours colour, const Rect &r)
 {
 	GenderEthnicity ge = (GenderEthnicity)GetCompanyManagerFaceBits(cmf, CMFV_GEN_ETHN, GE_WM);
 
@@ -1660,7 +1673,7 @@ public:
 			/* OK button */
 			case WID_SCMF_ACCEPT:
 				DoCommandP(0, 0, this->face, CMD_SET_COMPANY_MANAGER_FACE);
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			/* Cancel button */
 			case WID_SCMF_CANCEL:
@@ -1853,7 +1866,7 @@ struct CompanyInfrastructureWindow : Window
 		}
 
 		/* Get the date introduced railtypes as well. */
-		this->railtypes = AddDateIntroducedRailTypes(this->railtypes, MAX_DATE);
+		this->railtypes = AddDateIntroducedRailTypes(this->railtypes, CalTime::MAX_DATE);
 
 		/* Find the used roadtypes. */
 		for (const Engine *e : Engine::IterateType(VEH_ROAD)) {
@@ -1863,7 +1876,7 @@ struct CompanyInfrastructureWindow : Window
 		}
 
 		/* Get the date introduced roadtypes as well. */
-		this->roadtypes = AddDateIntroducedRoadTypes(this->roadtypes, MAX_DATE);
+		this->roadtypes = AddDateIntroducedRoadTypes(this->roadtypes, CalTime::MAX_DATE);
 		this->roadtypes &= ~_roadtypes_hidden_mask;
 	}
 
@@ -1991,11 +2004,11 @@ struct CompanyInfrastructureWindow : Window
 
 				if (_settings_game.economy.infrastructure_maintenance) {
 					SetDParamMaxValue(0, this->GetTotalMaintenanceCost() * 12); // Convert to per year
-					this->total_width = GetStringBoundingBox(STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL).width + WidgetDimensions::scaled.hsep_indent * 2;
+					this->total_width = GetStringBoundingBox(EconTime::UsingWallclockUnits() ? STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_PERIOD : STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_YEAR).width + WidgetDimensions::scaled.hsep_indent * 2;
 					size->width = std::max(size->width, this->total_width);
 
 					SetDParamMaxValue(0, max_cost * 12); // Convert to per year
-					count_width += std::max(this->total_width, GetStringBoundingBox(STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL).width);
+					count_width += std::max(this->total_width, GetStringBoundingBox(EconTime::UsingWallclockUnits() ? STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_PERIOD : STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_YEAR).width);
 				}
 
 				size->width = std::max(size->width, count_width);
@@ -2019,7 +2032,7 @@ struct CompanyInfrastructureWindow : Window
 		if (_settings_game.economy.infrastructure_maintenance) {
 			SetDParam(0, monthly_cost * 12); // Convert to per year
 			int left = _current_text_dir == TD_RTL ? width - this->total_width : 0;
-			DrawString(left, left + this->total_width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL, TC_FROMSTRING, SA_RIGHT);
+			DrawString(left, left + this->total_width, y, EconTime::UsingWallclockUnits() ? STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_PERIOD : STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_YEAR, TC_FROMSTRING, SA_RIGHT);
 		}
 	}
 
@@ -2142,7 +2155,7 @@ struct CompanyInfrastructureWindow : Window
 					GfxFillRect(left, y, left + this->total_width, y + WidgetDimensions::scaled.bevel.top - 1, PC_WHITE);
 					y += WidgetDimensions::scaled.vsep_normal;
 					SetDParam(0, this->GetTotalMaintenanceCost() * 12); // Convert to per year
-					DrawString(left, left + this->total_width, y, STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL, TC_FROMSTRING, SA_RIGHT);
+					DrawString(left, left + this->total_width, y, EconTime::UsingWallclockUnits() ? STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_PERIOD : STR_COMPANY_INFRASTRUCTURE_VIEW_TOTAL_YEAR, TC_FROMSTRING, SA_RIGHT);
 				}
 				break;
 			}

@@ -283,12 +283,14 @@ static void GenericPlaceSignals(TileIndex tile)
 	uint32_t p1 = track;
 
 	/* Which signals should we cycle through? */
-	uint8_t cycle_types;
-
-	if (_settings_client.gui.cycle_signal_types == SIGNAL_CYCLE_ALL && (_settings_client.gui.signal_gui_mode == SIGNAL_GUI_ALL || _settings_game.vehicle.train_braking_model == TBM_REALISTIC)) {
-		cycle_types = SIGNAL_CYCLE_ALL;
+	SignalCycleGroups cycle_types;
+	if (_settings_game.vehicle.train_braking_model == TBM_REALISTIC) {
+		cycle_types = SCG_BLOCK | SCG_PBS;
+	} else if (_settings_client.gui.cycle_signal_types == SIGNAL_CYCLE_ALL) {
+		cycle_types = SCG_PBS;
+		if (_settings_client.gui.signal_gui_mode == SIGNAL_GUI_ALL) cycle_types |= SCG_BLOCK;
 	} else {
-		cycle_types = SIGNAL_CYCLE_PATH;
+		cycle_types = SCG_CURRENT_GROUP;
 	}
 
 	if (w != nullptr) {
@@ -297,15 +299,15 @@ static void GenericPlaceSignals(TileIndex tile)
 		SB(p1, 4, 1, _cur_signal_variant);
 		SB(p1, 5, 3, _cur_signal_type);
 		SB(p1, 8, 1, _convert_signal_button);
-		SB(p1, 9, 6, cycle_types);
+		SB(p1, 9, 2, cycle_types);
 		SB(p1, 19, 4, _cur_signal_style);
 		if (_cur_signal_type == SIGTYPE_NO_ENTRY) SB(p1, 15, 2, 1); // reverse default signal direction
 	} else {
 		SB(p1, 3, 1, _ctrl_pressed);
-		SB(p1, 4, 1, (_cur_year < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC));
+		SB(p1, 4, 1, (CalTime::CurYear() < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC));
 		SB(p1, 5, 3, GetDefaultSignalType());
 		SB(p1, 8, 1, 0);
-		SB(p1, 9, 6, cycle_types);
+		SB(p1, 9, 2, cycle_types);
 	}
 	SB(p1, 18, 1, _settings_client.gui.adv_sig_bridge_tun_modes);
 	SB(p1, 23, 5, Clamp<int>(_settings_client.gui.drag_signals_density, 1, 16));
@@ -484,7 +486,7 @@ static void HandleAutoSignalPlacement()
 		SB(p2, 11, 4, _cur_signal_style);
 	} else {
 		SB(p2,  3, 1, 0);
-		SB(p2,  4, 1, (_cur_year < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC));
+		SB(p2,  4, 1, (CalTime::CurYear() < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC));
 		SB(p2,  6, 1, _ctrl_pressed);
 		SB(p2,  7, 3, GetDefaultSignalType());
 		SB(p2, 24, 8, _settings_client.gui.drag_signals_density);
@@ -509,13 +511,15 @@ struct BuildRailToolbarWindow : Window {
 
 	BuildRailToolbarWindow(WindowDesc *desc, RailType railtype) : Window(desc)
 	{
-		this->InitNested(TRANSPORT_RAIL);
-		this->SetupRailToolbar(railtype);
-		this->DisableWidget(WID_RAT_REMOVE);
-		this->last_user_action = INVALID_WID_RAT;
+		this->CreateNestedTree();
 		if (!_settings_client.gui.show_rail_polyline_tool) {
 			this->GetWidget<NWidgetStacked>(WID_RAT_POLYRAIL_SEL)->SetDisplayedPlane(SZSP_NONE);
 		}
+		this->FinishInitNested(TRANSPORT_RAIL);
+		this->SetupRailToolbar(railtype);
+		this->DisableWidget(WID_RAT_REMOVE);
+		this->OnInvalidateData();
+		this->last_user_action = INVALID_WID_RAT;
 
 		if (_settings_client.gui.link_terraform_toolbar) ShowTerraformToolbar(this);
 	}
@@ -527,6 +531,53 @@ struct BuildRailToolbarWindow : Window {
 		if (_settings_client.gui.link_terraform_toolbar) CloseWindowById(WC_SCEN_LAND_GEN, 0, false);
 		CloseWindowById(WC_SELECT_STATION, 0);
 		this->Window::Close();
+	}
+
+	/** List of widgets to be disabled if infrastructure limit prevents building. */
+	static inline const std::initializer_list<WidgetID> can_build_widgets = {
+		WID_RAT_BUILD_NS, WID_RAT_BUILD_X, WID_RAT_BUILD_EW, WID_RAT_BUILD_Y, WID_RAT_AUTORAIL,
+		WID_RAT_BUILD_DEPOT, WID_RAT_BUILD_WAYPOINT, WID_RAT_BUILD_STATION, WID_RAT_BUILD_SIGNALS,
+		WID_RAT_BUILD_BRIDGE, WID_RAT_BUILD_TUNNEL, WID_RAT_CONVERT_RAIL,
+	};
+
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
+	{
+		if (!gui_scope) return;
+
+		if (this->GetWidget<NWidgetStacked>(WID_RAT_POLYRAIL_SEL)->SetDisplayedPlane(_settings_client.gui.show_rail_polyline_tool ? 0 : SZSP_NONE)) {
+			if (this->IsWidgetLowered(WID_RAT_POLYRAIL)) {
+				ResetObjectToPlace();
+			}
+			this->ReInit();
+		}
+
+		bool can_build = CanBuildVehicleInfrastructure(VEH_TRAIN);
+		for (const WidgetID widget : can_build_widgets) this->SetWidgetDisabledState(widget, !can_build);
+		if (!can_build) {
+			CloseWindowById(WC_BUILD_SIGNAL, TRANSPORT_RAIL);
+			CloseWindowById(WC_BUILD_STATION, TRANSPORT_RAIL);
+			CloseWindowById(WC_BUILD_DEPOT, TRANSPORT_RAIL);
+			CloseWindowById(WC_BUILD_WAYPOINT, TRANSPORT_RAIL);
+			CloseWindowById(WC_SELECT_STATION, 0);
+		}
+	}
+
+	bool OnTooltip([[maybe_unused]] Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
+	{
+		bool can_build = CanBuildVehicleInfrastructure(VEH_TRAIN);
+		if (can_build) {
+			if (widget == WID_RAT_CONVERT_RAIL) {
+				SetDParam(0, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL);
+				GuiShowTooltips(this, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_EXTRA, close_cond, 1);
+				return true;
+			}
+			return false;
+		}
+
+		if (std::find(std::begin(can_build_widgets), std::end(can_build_widgets), widget) == std::end(can_build_widgets)) return false;
+
+		GuiShowTooltips(this, STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE, close_cond);
+		return true;
 	}
 
 	/**
@@ -746,16 +797,6 @@ struct BuildRailToolbarWindow : Window {
 		if (_ctrl_pressed) RailToolbar_CtrlChanged(this);
 	}
 
-	virtual bool OnTooltip(Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
-	{
-		if (widget == WID_RAT_CONVERT_RAIL) {
-			SetDParam(0, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL);
-			GuiShowTooltips(this, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_EXTRA, close_cond, 1);
-			return true;
-		}
-		return false;
-	}
-
 	EventState OnHotkey(int hotkey) override
 	{
 		MarkTileDirtyByTile(TileVirtXY(_thd.pos.x, _thd.pos.y)); // redraw tile selection
@@ -962,18 +1003,6 @@ struct BuildRailToolbarWindow : Window {
 	void OnRealtimeTick([[maybe_unused]] uint delta_ms) override
 	{
 		if (this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT)) CheckRedrawWaypointCoverage(this, false);
-	}
-
-	void OnInvalidateData(int data = 0, bool gui_scope = true) override
-	{
-		if (!gui_scope) return;
-
-		if (this->GetWidget<NWidgetStacked>(WID_RAT_POLYRAIL_SEL)->SetDisplayedPlane(_settings_client.gui.show_rail_polyline_tool ? 0 : SZSP_NONE)) {
-			if (this->IsWidgetLowered(WID_RAT_POLYRAIL)) {
-				ResetObjectToPlace();
-			}
-			this->ReInit();
-		}
 	}
 
 	static HotkeyList hotkeys;
@@ -1730,7 +1759,8 @@ public:
 	{
 		this->SelectClass(class_id);
 		this->EnsureSelectedStationClassIsVisible();
-		this->OnClick({}, WID_BRAS_IMAGE | (spec_id << 16), 1);
+		this->GetWidget<NWidgetBase>(WID_BRAS_IMAGE)->GetParentWidget<NWidgetMatrix>()->SetCurrentElement(spec_id);
+		this->OnClick({}, WID_BRAS_IMAGE, 1);
 	}
 
 	static HotkeyList hotkeys;
@@ -1882,12 +1912,9 @@ private:
 
 	/**
 	 * Draw dynamic a signal-sprite in a button in the signal GUI
-	 * Draw the sprite +1px to the right and down if the button is lowered
-	 *
-	 * @param widget_index index of this widget in the window
 	 * @param image        the sprite to draw
 	 */
-	void DrawSignalSprite(const Rect &r, WidgetID widget_index, PalSpriteID image) const
+	void DrawSignalSprite(const Rect &r, PalSpriteID image) const
 	{
 		Point offset;
 		Dimension sprite_size = GetSpriteSize(image.sprite, &offset);
@@ -1896,9 +1923,7 @@ private:
 		int y = ir.top - sig_sprite_bottom_offset +
 				(ir.Height() + sig_sprite_size.height) / 2; // aligned to bottom
 
-		DrawSprite(image.sprite, image.pal,
-				x + this->IsWidgetLowered(widget_index),
-				y + this->IsWidgetLowered(widget_index));
+		DrawSprite(image.sprite, image.pal, x, y);
 	}
 
 	void SetDisableStates()
@@ -2070,7 +2095,7 @@ public:
 				sprite = GetRailTypeInfo(_cur_railtype)->gui_sprites.signals[type][var][this->IsWidgetLowered(widget)];
 			}
 
-			this->DrawSignalSprite(r, widget, sprite);
+			this->DrawSignalSprite(r, sprite);
 		}
 	}
 
@@ -2620,7 +2645,8 @@ struct BuildRailWaypointWindow : PickerWindowBase {
 	{
 		for (uint i = 0; i < (uint)this->list.size(); i++) {
 			if (this->list[i] == spec_id) {
-				this->OnClick({}, WID_BRW_WAYPOINT | (i << 16), 1);
+				this->GetWidget<NWidgetBase>(WID_BRW_WAYPOINT)->GetParentWidget<NWidgetMatrix>()->SetCurrentElement(i);
+				this->OnClick({}, WID_BRW_WAYPOINT, 1);
 				break;
 			}
 		}
@@ -2728,7 +2754,7 @@ static void SetDefaultRailGui()
 			if (count[rt] > 0) break;
 
 			/* No rail, just get the first available one */
-			FALLTHROUGH;
+			[[fallthrough]];
 		}
 		case 0: {
 			/* Use first available type */
@@ -2759,7 +2785,7 @@ static void SetDefaultRailGui()
  */
 void ResetSignalVariant(int32_t new_value)
 {
-	SignalVariant new_variant = (_cur_year < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC);
+	SignalVariant new_variant = (CalTime::CurYear() < _settings_client.gui.semaphore_build_before ? SIG_SEMAPHORE : SIG_ELECTRIC);
 
 	if (new_variant != _cur_signal_variant) {
 		Window *w = FindWindowById(WC_BUILD_SIGNAL, 0);

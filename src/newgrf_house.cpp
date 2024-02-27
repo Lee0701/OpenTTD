@@ -334,7 +334,7 @@ static uint32_t GetDistanceFromNearbyHouse(uint8_t parameter, TileIndex tile, Ho
 		case 0x40: return (IsTileType(this->tile, MP_HOUSE) ? GetHouseBuildingStage(this->tile) : 0) | TileHash2Bit(TileX(this->tile), TileY(this->tile)) << 2;
 
 		/* Building age. */
-		case 0x41: return IsTileType(this->tile, MP_HOUSE) ? GetHouseAge(this->tile) : 0;
+		case 0x41: return IsTileType(this->tile, MP_HOUSE) ? GetHouseAge(this->tile).base() : 0;
 
 		/* Town zone */
 		case 0x42: return GetTownRadiusGroup(this->town, this->tile);
@@ -558,7 +558,7 @@ static inline PaletteID GetHouseColour(HouseID house_id, TileIndex tile = INVALI
 			return HasBit(callback, 14) ? GB(callback, 0, 8) + SPR_2CCMAP_BASE : callback;
 		}
 	}
-	return hs->random_colour[TileHash2Bit(TileX(tile), TileY(tile))] + PALETTE_RECOLOUR_START;
+	return GENERAL_SPRITE_COLOUR(hs->random_colour[TileHash2Bit(TileX(tile), TileY(tile))]);
 }
 
 static void DrawTileLayout(const TileInfo *ti, const TileLayoutSpriteGroup *group, byte stage, HouseID house_id)

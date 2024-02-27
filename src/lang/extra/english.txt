@@ -2,20 +2,18 @@
 STR_NEWS_VEHICLE_AUTORENEW_FAILED                               :{WHITE}Autorenew failed on {VEHICLE}{}{STRING1}
 STR_NEWGRF_ERROR_FATAL_POPUP                                    :{WHITE}The NewGRF "{RAW_STRING}" has returned a fatal error: {}{STRING7}
 STR_NEWGRF_ERROR_POPUP                                          :{WHITE}The NewGRF "{RAW_STRING}" has returned an error: {}{STRING7}
-STR_ORDER_TEXT                                                  :{STRING6} {STRING2} {STRING}
+STR_ORDER_TEXT                                                  :{STRING6} {STRING2} {STRING} {STRING}
 ##override off
 
 ##no-translate on
 STR_JUST_DECIMAL1                                               :{DECIMAL1}
-STR_JUST_DATE_WALLCLOCK_TINY                                    :{DATE_WALLCLOCK_TINY}
-STR_JUST_DATE_WALLCLOCK_SHORT                                   :{DATE_WALLCLOCK_SHORT}
-STR_JUST_DATE_WALLCLOCK_LONG                                    :{DATE_WALLCLOCK_LONG}
-STR_JUST_DATE_WALLCLOCK_ISO                                     :{DATE_WALLCLOCK_ISO}
 STR_JUST_TIME_HHMM                                              :{TIME_HHMM}
 STR_JUST_STRING3                                                :{STRING3}
 STR_JUST_VELOCITY                                               :{VELOCITY}
 STR_JUST_TT_TICKS                                               :{TT_TICKS}
 STR_JUST_TT_TICKS_LONG                                          :{TT_TICKS_LONG}
+STR_JUST_TT_TIME                                                :{TT_TIME}
+STR_JUST_TT_TIME_ABS                                            :{TT_TIME_ABS}
 STR_JUST_STATION                                                :{STATION}
 
 STR_RED_INT                                                     :{RED}{NUM}
@@ -85,6 +83,8 @@ STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
 STR_UNIT_NAME_VELOCITY_GAMEUNITS                                :tiles/day
 
+STR_UNITS_SECONDS_SHORT                                         :{COMMA}{NBSP}s
+
 STR_BUTTON_RENAME                                               :{BLACK}Rename
 
 STR_MEASURE_DIST_HEIGHTDIFF                                     :{BLACK}Manhattan Distance: {NUM}{}Bird Fly Distance: {NUM}{}Distance from the nearest edge: {NUM}{}Height from sea level: {HEIGHT}{}Height difference: {HEIGHT}
@@ -114,12 +114,12 @@ STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_SPEED                     :{TINY_FONT}{BLA
 STR_GRAPH_CARGO_PAYMENT_RATES_TITLE_AVG_SPEED                   :{TINY_FONT}{BLACK}Payment for delivering 1 unit (or 1,000 litres) of cargo a distance of 200 squares
 STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES                   :{TINY_FONT}{BLACK}Minutes in transit
 STR_GRAPH_STATION_CARGO_CAPTION                                 :{WHITE}{STATION} - Waiting Cargo History
-STR_GRAPH_STATION_CARGO_X_LABEL                                 :{TINY_FONT}{BLACK}Development over the last {NUM} days
+STR_GRAPH_STATION_CARGO_X_LABEL_DAYS                            :{TINY_FONT}{BLACK}Development over the last {NUM} days
+STR_GRAPH_STATION_CARGO_X_LABEL_SECONDS                         :{TINY_FONT}{BLACK}Development over the last {NUM} seconds
 STR_GRAPH_STATION_CARGO_TITLE                                   :{TINY_FONT}{BLACK}Units of cargo waiting at the station
 
-STR_GRAPH_CARGO_DAYS_MODE                                       :{TINY_FONT}{BLACK}Days in transit
 STR_GRAPH_CARGO_SPEED_MODE                                      :{TINY_FONT}{BLACK}Average speed
-STR_GRAPH_CARGO_TOOLTIP_DAYS_MODE                               :{BLACK}Display days in transit on the x-axis of the graph
+STR_GRAPH_CARGO_TOOLTIP_TIME_MODE                               :{BLACK}Display time in transit on the x-axis of the graph
 STR_GRAPH_CARGO_TOOLTIP_SPEED_MODE                              :{BLACK}Display average transit speed on the x-axis of the graph
 
 STR_GRAPH_DELIVERED_CARGO_BY_COMPANY_MODE                       :{TINY_FONT}{BLACK}Companies
@@ -559,11 +559,6 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :No limit
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :Towns are allowed to build bridges: {STRING2}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :Enabling this setting allows towns to build bridges
 
-STR_CONFIG_SETTING_TOWN_CARGO_SCALE                             :Scale town cargo production: {STRING2}
-STR_CONFIG_SETTING_TOWN_CARGO_SCALE_HELPTEXT                    :Scale the cargo production of towns by this percentage.
-
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE                         :Scale industry cargo production: {STRING2}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT                :Scale the cargo production of industries by this percentage.
 STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT_EXTRA          :{STRING}{}This excludes tree-cutting industries.{}This is not guaranteed to be fully compatible with all industry NewGRFs.
 
 STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Time interval for town cargo production scaling: {STRING2}
@@ -575,7 +570,6 @@ STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA     :{STRING}{}Game-
 STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY                     :Monthly
 STR_CONFIG_SETTING_CARGO_SCALE_MODE_GAME_TIME                   :Game-time
 
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE                            :{NUM}%
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY                    :{NUM}% (monthly)
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME                  :{NUM}% (game-time)
 
@@ -733,6 +727,9 @@ STR_CONFIG_SETTING_IGNORE_OBJECT_INTRO_DATES_HELPTEXT           :Set whether pla
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES            :Allow converting town roads to non-house types: {STRING2}
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES_HELPTEXT   :Whether to allow players to convert town-owned roads to a road type which does not allow houses.{}This is off by default because doing so can prevent towns from building houses at all, resulting in them shrinking.
 
+STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY                  :Only generate primary industries: {STRING2}
+STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY_HELPTEXT         :If enabled, only primary industries are generated during game play and map generation.
+
 STR_PURCHASE_LAND_PERMITTED_NO                                  :No
 STR_PURCHASE_LAND_PERMITTED_SINGLE                              :Yes, 1 tile at a time
 STR_PURCHASE_LAND_PERMITTED_AREA                                :Yes, large areas at a time
@@ -790,6 +787,9 @@ STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Show timetable 
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Show travel times in time tables in game ticks instead of days
 
 STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT_EXTRA         :{STRING}{}Various features require use of the YAPF pathfinder, including: routing restrictions (all pathfinder and reservation related actions), reverse at waypoint/signal and drive through train depots.
+
+STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_CALENDAR           :{RED}[Setting disabled in calendar timekeeping mode]
+STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_WALLCLOCK          :{RED}[Setting disabled in wallclock timekeeping mode]
 
 STR_CHEAT_EDIT_MONEY_QUERY_CAPT                                 :{WHITE}Increase or decrease money
 STR_CHEAT_INFLATION_COST                                        :{LTBLUE}Change inflation cost factor: {ORANGE}{DECIMAL}
@@ -1363,10 +1363,10 @@ STR_DEPARTURES_SHOW_AIRCRAFT_TOOLTIP                            :{BLACK}Show upc
 STR_DEPARTURES_SHOW_TYPE_TOOLTIP_CTRL_SUFFIX                    :{BLACK}{STRING}. Ctrl+Click to show exclusively.
 STR_DEPARTURES_EMPTY                                            :{ORANGE}No vehicles are currently timetabled for this station.
 STR_DEPARTURES_NONE_SELECTED                                    :{ORANGE}No timetable information has been requested.
-STR_DEPARTURES_TIME                                             :{ORANGE}{DATE_WALLCLOCK_TINY}
-STR_DEPARTURES_TIME_DEP                                         :{ORANGE}{DATE_WALLCLOCK_TINY} {GREEN}{UP_ARROW}
-STR_DEPARTURES_TIME_ARR                                         :{ORANGE}{DATE_WALLCLOCK_TINY} {RED}{DOWN_ARROW}
-STR_DEPARTURES_TIME_BOTH                                        :{ORANGE}{1:DATE_WALLCLOCK_TINY} {RED}{DOWN_ARROW} {ORANGE}{0:DATE_WALLCLOCK_TINY} {GREEN}{UP_ARROW}
+STR_DEPARTURES_TIME                                             :{ORANGE}{STRING1}
+STR_DEPARTURES_TIME_DEP                                         :{ORANGE}{STRING1} {GREEN}{UP_ARROW}
+STR_DEPARTURES_TIME_ARR                                         :{ORANGE}{STRING1} {RED}{DOWN_ARROW}
+STR_DEPARTURES_TIME_BOTH                                        :{ORANGE}{STRING1} {RED}{DOWN_ARROW} {ORANGE}{STRING1} {GREEN}{UP_ARROW}
 STR_DEPARTURES_TERMINUS                                         :{ORANGE}{STATION}{STRING}
 STR_DEPARTURES_TERMINUS_VIA_STATION                             :{ORANGE}{STATION}{STRING} via {STRING}
 STR_DEPARTURES_TERMINUS_VIA                                     :{ORANGE}{STATION}{STRING} via
@@ -1403,7 +1403,7 @@ STR_DEPARTURES_STATION_PORTAIRPORT                              :{ORANGE} {SHIP}
 STR_DEPARTURES_ON_TIME                                          :{GREEN}On time
 STR_DEPARTURES_ARRIVED                                          :{GREEN}Arrived
 STR_DEPARTURES_DELAYED                                          :{YELLOW}Delayed
-STR_DEPARTURES_EXPECTED                                         :{YELLOW}Expt {DATE_WALLCLOCK_TINY}
+STR_DEPARTURES_EXPECTED                                         :{YELLOW}Expt {STRING1}
 STR_DEPARTURES_CANCELLED                                        :{RED}Cancelled
 
 STR_CONFIG_SETTING_DEPARTUREBOARDS                              :{ORANGE}Departure boards
@@ -1513,6 +1513,7 @@ STR_BUY_VEHICLE_TRAIN_LOCOMOTIVES                               :Locomotives and
 STR_BUY_VEHICLE_TRAIN_WAGONS                                    :Wagons
 
 STR_PURCHASE_INFO_DESIGNED                                      :{BLACK}Designed: {GOLD}{NUM}
+STR_PURCHASE_INFO_RUNNINGCOST_ORIG_YEAR                         :{BLACK}Running Cost: {GOLD}{CURRENCY_LONG}/original year
 
 STR_BUY_REFIT_VEHICLE_BUY_VEHICLE_BUTTON                        :{BLACK}Refit after buy
 STR_BUY_REFIT_VEHICLE_BUY_VEHICLE_TOOLTIP                       :{BLACK}Automatically refit the highlighted vehicle after buying to selected cargo type
@@ -1570,12 +1571,16 @@ STR_NEED_REPAIR                                                 :{ORANGE}Vehicle
 
 STR_CURRENT_STATUS                                              :{BLACK}Current status: {STRING3}
 
+STR_ENGINE_PREVIEW_RUNCOST_ORIG_YEAR                            :Running Cost: {CURRENCY_LONG}/original year
+
 STR_VEHICLE_INFO_TRAIN_LENGTH                                   :{BLACK}Train length {LTBLUE}{DECIMAL} tile{P "" s} {STRING4}
 STR_VEHICLE_INFO_WEIGHT_RATIOS                                  :{STRING1} {STRING1}
 STR_VEHICLE_INFO_POWER_WEIGHT_RATIO                             :{BLACK}Power / weight: {LTBLUE}{POWER_WEIGHT_RATIO}
 STR_VEHICLE_INFO_TE_WEIGHT_RATIO                                :{BLACK}Max. T.E / weight: {LTBLUE}{FORCE_WEIGHT_RATIO}
 STR_VEHICLE_INFO_FULL_WEIGHT_WITH_RATIOS                        :{BLACK}Full weight: {LTBLUE}{WEIGHT_SHORT} {STRING4}
 STR_VEHICLE_INFO_MAX_SPEED_LOADED                               :{BLACK}Max. speed (full): {LTBLUE}{VELOCITY}
+
+STR_VEHICLE_INFO_AGE_RUNNING_COST_ORIG_YR                       :{BLACK}Age: {LTBLUE}{STRING2}{BLACK}   Running Cost: {LTBLUE}{CURRENCY_LONG}/original year
 
 STR_VEHICLE_INFO_PROFIT_THIS_YEAR_LAST_YEAR_LIFETIME            :{STRING2} (lifetime: {CURRENCY_LONG})
 
@@ -1702,6 +1707,7 @@ STR_ORDER_CARGO_TYPE_UNLOAD_FULL_LOAD_REFIT                     :(Unload by carg
 STR_ORDER_CARGO_TYPE_UNLOAD_FULL_LOAD_ANY_REFIT                 :(Unload by cargo type and wait for any full load with refit to {STRING})
 STR_ORDER_CARGO_TYPE_UNLOAD_CARGO_TYPE_LOAD_REFIT               :(Unload by cargo type and load by cargo type with refit to {STRING})
 
+STR_ORDER_RV_DIR_ANY                                            :[any direction]
 STR_ORDER_RV_DIR_NE                                             :[north-east direction]
 STR_ORDER_RV_DIR_SE                                             :[south-east direction]
 STR_ORDER_RV_DIR_SW                                             :[south-west direction]
@@ -1894,9 +1900,10 @@ STR_TRADITIONAL_SHIP_NAME                                       :Ship {COMMA}
 STR_TRADITIONAL_AIRCRAFT_NAME                                   :Aircraft {COMMA}
 
 STR_FORMAT_DATE_MINUTES                                         :{0:RAW_STRING}:{1:RAW_STRING}
-STR_FORMAT_DATE_MINUTES_WITH_Y                                  :{0:RAW_STRING}:{1:RAW_STRING} / {2:NUM}
-STR_FORMAT_DATE_MINUTES_WITH_YM                                 :{0:RAW_STRING}:{1:RAW_STRING} / {2:DATE_SHORT}
-STR_FORMAT_DATE_MINUTES_WITH_YMD                                :{0:RAW_STRING}:{1:RAW_STRING} / {2:DATE_LONG}
+
+STR_HHMM_WITH_DATE_Y                                            :{TIME_HHMM} / {NUM}
+STR_HHMM_WITH_DATE_YM                                           :{TIME_HHMM} / {DATE_SHORT}
+STR_HHMM_WITH_DATE_YMD                                          :{TIME_HHMM} / {DATE_LONG}
 
 STR_FORMAT_GROUP_VEHICLE_NAME_LONG                              :{GROUP} - {STRING1}
 
@@ -2055,7 +2062,7 @@ STR_TMPL_CANT_RENAME                                            :{WHITE}Can't re
 # Scheduled Dispatch
 STR_SCHDISPATCH_CAPTION                                         :{WHITE}{VEHICLE} (Scheduled Dispatch)
 STR_SCHDISPATCH_ENABLED                                         :{BLACK}Enable
-STR_SCHDISPATCH_ENABLED_TOOLTIP                                 :{BLACK}Enable scheduled dispatching for this order. Requires automatic separation to be off.
+STR_SCHDISPATCH_ENABLED_TOOLTIP                                 :{BLACK}Enable scheduled dispatching for this order.
 STR_SCHDISPATCH_ADD                                             :{BLACK}Add Slot
 STR_SCHDISPATCH_ADD_TOOLTIP                                     :{BLACK}Add new departure slot for this schedule.
 STR_SCHDISPATCH_ADD_TOOLTIP_EXTRA                               :{BLACK}{STRING} Ctrl+Click to add multiple departure slots at once.
@@ -2116,25 +2123,25 @@ STR_SCHDISPATCH_RENAME_SCHEDULE_TOOLTIP                         :{BLACK}Name sch
 STR_SCHDISPATCH_RENAME_SCHEDULE_CAPTION                         :{WHITE}Name schedule
 STR_ERROR_CAN_T_RENAME_SCHEDULE                                 :{WHITE}Can't name schedule...
 STR_SCHDISPATCH_MOVE_SCHEDULE                                   :{BLACK}Change position of current schedule in schedule list
-STR_SCHDISPATCH_DATE_WALLCLOCK_TINY_FLAGGED                     :{DATE_WALLCLOCK_TINY}*
-STR_SCHDISPATCH_SLOT_TOOLTIP                                    :{BLACK}{DATE_WALLCLOCK_TINY}
+STR_SCHDISPATCH_DATE_WALLCLOCK_TINY_FLAGGED                     :{TT_TIME}*
+STR_SCHDISPATCH_SLOT_TOOLTIP                                    :{BLACK}{TT_TIME}
 STR_SCHDISPATCH_SLOT_TOOLTIP_RELATIVE                           : ({TIME_HHMM} from start)
 STR_SCHDISPATCH_SLOT_TOOLTIP_LAST                               :{}Last departure slot
 STR_SCHDISPATCH_SLOT_TOOLTIP_NEXT                               :{}Next available departure slot
 STR_SCHDISPATCH_SLOT_TOOLTIP_REUSE                              :{}Departure slot may be used more than once
-STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX                        : ({DATE_WALLCLOCK_TINY})
+STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX                        : ({TT_TIME})
 STR_SCHDISPATCH_SLOT_TOOLTIP_TAG                                :{}Tag {NUM}
 
 STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE                       :{BLACK}No previous departures.
-STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Last departure at {DATE_WALLCLOCK_TINY}.
-STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}Last departure has not left yet, it will depart at {DATE_WALLCLOCK_TINY}.
+STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Last departure at {TT_TIME}.
+STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}Last departure has not left yet, it will depart at {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}This schedule requires {COMMA} vehicle{P "" s}.
 STR_SCHDISPATCH_SUMMARY_L2                                      :{BLACK}This schedule repeats every {STRING1}.
-STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}This schedule began at {DATE_WALLCLOCK_TINY}, and ends at {DATE_WALLCLOCK_TINY}.
+STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}This schedule began at {TT_TIME}, and ends at {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_L4                                      :{BLACK}Maximum delay of {STRING1} is allowed before the slot is skipped.
 STR_SCHDISPATCH_SUMMARY_NOT_ENABLED                             :{BLACK}This schedule is not active.
 STR_SCHDISPATCH_SUMMARY_REUSE_SLOTS_ENABLED                     :{BLACK}All departure slots may be used more than once.
-STR_SCHDISPATCH_SUMMARY_NEXT_AVAILABLE_DEPARTURE                :{BLACK}Next available departure at {DATE_WALLCLOCK_TINY}.
+STR_SCHDISPATCH_SUMMARY_NEXT_AVAILABLE_DEPARTURE                :{BLACK}Next available departure at {TT_TIME}.
 
 STR_SCHDISPATCH_SLOT_OUTSIDE_SCHEDULE                           :{BLACK}One or more departure slots are outside the schedule duration.
 
@@ -2155,6 +2162,17 @@ STR_SCHDISPATCH_QUERY_REMOVE_SCHEDULE_TEXT                      :{WHITE}Are you 
 
 STR_ERROR_SCHDISPATCH_TRIED_TO_ADD_TOO_MANY_SLOTS               :{WHITE}Tried to add too many departure slots at once
 STR_ERROR_SCHDISPATCH_ADJUSTMENT_TOO_LARGE                      :{WHITE}Departure slot adjustment is too large
+
+STR_TOOLTIP_SEPARATION_CANNOT_ENABLE                            :{STRING}{}{}{STRING}
+STR_ERROR_SEPARATION_MUTUALLY_EXCLUSIVE                         :{WHITE}Only one of scheduled dispatch, automatic separation and depot unbunching can be enabled at a time
+
+STR_CANNOT_ENABLE_BECAUSE_UNBUNCHING                            :Cannot enable because a depot unbunching order is present
+STR_CANNOT_ENABLE_BECAUSE_SCHED_DISPATCH                        :Cannot enable because scheduled dispatch is enabled
+STR_CANNOT_ENABLE_BECAUSE_AUTO_SEPARATION                       :Cannot enable because automatic separation is enabled
+STR_CANNOT_ENABLE_BECAUSE_TIME_UNITS_UNUSABLE                   :Cannot enable because the current time units are unusable.{}Enable showing time in minutes in the settings.
+
+STR_ERROR_UNBUNCHING_NO_UNBUNCHING_SCHED_DISPATCH               :{WHITE}... cannot unbunch a vehicle using scheduled dispatch
+STR_ERROR_UNBUNCHING_NO_UNBUNCHING_AUTO_SEPARATION              :{WHITE}... cannot unbunch a vehicle using automatic separation
 
 # Modifier key toggle window
 STR_MODIFIER_KEY_TOGGLE_CAPTION                                 :{WHITE}Modifier keys

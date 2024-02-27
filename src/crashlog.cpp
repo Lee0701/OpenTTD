@@ -39,6 +39,7 @@
 #include "progress.h"
 #include "settings_type.h"
 #include "settings_internal.h"
+#include "social_integration.h"
 
 #include "ai/ai_info.hpp"
 #include "game/game.hpp"
@@ -439,6 +440,20 @@ char *CrashLog::LogLibraries(char *buffer, const char *last) const
 }
 
 /**
+ * Writes information (versions) of the used plugins.
+ * @param buffer The begin where to write at.
+ * @param last   The last position in the buffer to write to.
+ * @return the position of the \c '\0' character after the buffer.
+ */
+char *CrashLog::LogPlugins(char *buffer, const char *last) const
+{
+	if (SocialIntegration::GetPluginCount() == 0) return buffer;
+
+	buffer += seprintf(buffer, last, "Plugins:\n");
+	return SocialIntegration::LogPluginSummary(buffer, last);
+}
+
+/**
  * Helper function for printing the gamelog.
  * @param s the string to print.
  */
@@ -486,9 +501,9 @@ char *CrashLog::LogRecentNews(char *buffer, const char *last) const
 
 	int i = 0;
 	for (NewsItem *news = _latest_news; i < 32 && news != nullptr; news = news->prev, i++) {
-		YearMonthDay ymd = ConvertDateToYMD(news->date);
+		CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(news->date);
 		buffer += seprintf(buffer, last, "(%i-%02i-%02i) StringID: %u, Type: %u, Ref1: %u, %u, Ref2: %u, %u\n",
-		                   ymd.year, ymd.month + 1, ymd.day, news->string_id, news->type,
+		                   ymd.year.base(), ymd.month + 1, ymd.day, news->string_id, news->type,
 		                   news->reftype1, news->ref1, news->reftype2, news->ref2);
 	}
 	buffer += seprintf(buffer, last, "\n");
@@ -559,12 +574,9 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 	buffer = this->TryCrashLogFaultSection(buffer, last, "times", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		buffer += UTCTime::Format(buffer, last, "Crash at: %Y-%m-%d %H:%M:%S (UTC)\n");
 
-		buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u)\n", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor);
-		if (_game_load_time != 0) {
-			buffer += seprintf(buffer, last, "Game loaded at: %i-%02i-%02i (%i, %i), ",
-					_game_load_cur_date_ymd.year, _game_load_cur_date_ymd.month + 1, _game_load_cur_date_ymd.day, _game_load_date_fract, _game_load_tick_skip_counter);
-			buffer += UTCTime::Format(buffer, last, _game_load_time, "%Y-%m-%d %H:%M:%S");
-		}
+		buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u)\n", EconTime::CurYear().base(), EconTime::CurMonth() + 1, EconTime::CurDay(), EconTime::CurDateFract(), TickSkipCounter(), DayLengthFactor());
+		buffer += seprintf(buffer, last, "Calendar date: %i-%02i-%02i (%i, %i)\n", CalTime::CurYear().base(), CalTime::CurMonth() + 1, CalTime::CurDay(), CalTime::CurDateFract(), CalTime::CurSubDateFract());
+		LogGameLoadDateTimes(buffer, last);
 		return buffer;
 	});
 
@@ -636,21 +648,45 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last)
 	buffer = this->TryCrashLogFaultSection(buffer, last, "libraries", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogLibraries(buffer, last);
 	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "plugins", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogPlugins(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "settings", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogSettings(buffer, last);
+	});
+	buffer = this->TryCrashLogFaultSection(buffer, last, "command log", [](CrashLog *self, char *buffer, const char *last) -> char * {
+		return self->LogCommandLog(buffer, last);
+	});
 	buffer = this->TryCrashLogFaultSection(buffer, last, "gamelog", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogGamelog(buffer, last);
 	});
 	buffer = this->TryCrashLogFaultSection(buffer, last, "news", [](CrashLog *self, char *buffer, const char *last) -> char * {
 		return self->LogRecentNews(buffer, last);
 	});
-	buffer = this->TryCrashLogFaultSection(buffer, last, "command log", [](CrashLog *self, char *buffer, const char *last) -> char * {
-		return self->LogCommandLog(buffer, last);
-	});
-	buffer = this->TryCrashLogFaultSection(buffer, last, "settings", [](CrashLog *self, char *buffer, const char *last) -> char * {
-		return self->LogSettings(buffer, last);
-	});
 
 	buffer += seprintf(buffer, last, "*** End of OpenTTD Crash Report ***\n");
 	this->StopCrashLogFaultHandler();
+	return buffer;
+}
+
+static char *LogDesyncDateHeader(char *buffer, const char *last)
+{
+	extern uint32_t _frame_counter;
+
+	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u), %08X\n",
+			EconTime::CurYear().base(), EconTime::CurMonth() + 1, EconTime::CurDay(), EconTime::CurDateFract(), TickSkipCounter(), DayLengthFactor(), _frame_counter);
+	buffer += seprintf(buffer, last, "Calendar date: %i-%02i-%02i (%i, %i)\n", CalTime::CurYear().base(), CalTime::CurMonth() + 1, CalTime::CurDay(), CalTime::CurDateFract(), CalTime::CurSubDateFract());
+	LogGameLoadDateTimes(buffer, last);
+	if (_networking && !_network_server) {
+		extern EconTime::Date _last_sync_date;
+		extern EconTime::DateFract _last_sync_date_fract;
+		extern uint8_t _last_sync_tick_skip_counter;
+		extern uint32_t _last_sync_frame_counter;
+
+		EconTime::YearMonthDay ymd = EconTime::ConvertDateToYMD(_last_sync_date);
+		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
+				ymd.year.base(), ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter, _last_sync_frame_counter);
+	}
 	return buffer;
 }
 
@@ -677,27 +713,8 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 	if (_network_server && !info.desync_frame_info.empty()) {
 		buffer += seprintf(buffer, last, "%s\n", info.desync_frame_info.c_str());
 	}
+	buffer = LogDesyncDateHeader(buffer, last);
 
-	extern uint32_t _frame_counter;
-
-	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u), %08X\n",
-			_cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor, _frame_counter);
-	if (_game_load_time != 0) {
-		buffer += seprintf(buffer, last, "Game loaded at: %i-%02i-%02i (%i, %i), ",
-				_game_load_cur_date_ymd.year, _game_load_cur_date_ymd.month + 1, _game_load_cur_date_ymd.day, _game_load_date_fract, _game_load_tick_skip_counter);
-		buffer += UTCTime::Format(buffer, last, _game_load_time, "%Y-%m-%d %H:%M:%S");
-		buffer += seprintf(buffer, last, "\n");
-	}
-	if (!_network_server) {
-		extern Date   _last_sync_date;
-		extern DateFract _last_sync_date_fract;
-		extern uint8_t  _last_sync_tick_skip_counter;
-		extern uint32_t _last_sync_frame_counter;
-
-		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
-		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
-				ymd.year, ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter, _last_sync_frame_counter);
-	}
 	if (info.client_id >= 0) {
 		buffer += seprintf(buffer, last, "Client #%d, \"%s\"\n", info.client_id, info.client_name != nullptr ? info.client_name : "");
 	}
@@ -709,10 +726,10 @@ char *CrashLog::FillDesyncCrashLog(char *buffer, const char *last, const DesyncE
 	buffer = this->LogOSVersionDetail(buffer, last);
 	buffer = this->LogConfiguration(buffer, last);
 	buffer = this->LogLibraries(buffer, last);
+	buffer = this->LogSettings(buffer, last);
+	buffer = this->LogCommandLog(buffer, last);
 	buffer = this->LogGamelog(buffer, last);
 	buffer = this->LogRecentNews(buffer, last);
-	buffer = this->LogCommandLog(buffer, last);
-	buffer = this->LogSettings(buffer, last);
 	buffer = DumpDesyncMsgLog(buffer, last);
 
 	bool have_cache_log = false;
@@ -744,26 +761,7 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 	buffer += WriteScopeLog(buffer, last);
 #endif
 
-	extern uint32_t _frame_counter;
-
-	buffer += seprintf(buffer, last, "In game date: %i-%02i-%02i (%i, %i) (DL: %u), %08X\n",
-			_cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract, _tick_skip_counter, _settings_game.economy.day_length_factor, _frame_counter);
-	if (_game_load_time != 0) {
-		buffer += seprintf(buffer, last, "Game loaded at: %i-%02i-%02i (%i, %i), ",
-				_game_load_cur_date_ymd.year, _game_load_cur_date_ymd.month + 1, _game_load_cur_date_ymd.day, _game_load_date_fract, _game_load_tick_skip_counter);
-		buffer += UTCTime::Format(buffer, last, _game_load_time, "%Y-%m-%d %H:%M:%S");
-		buffer += seprintf(buffer, last, "\n");
-	}
-	if (_networking && !_network_server) {
-		extern Date   _last_sync_date;
-		extern DateFract _last_sync_date_fract;
-		extern uint8_t  _last_sync_tick_skip_counter;
-		extern uint32_t _last_sync_frame_counter;
-
-		YearMonthDay ymd = ConvertDateToYMD(_last_sync_date);
-		buffer += seprintf(buffer, last, "Last sync at: %i-%02i-%02i (%i, %i), %08X\n",
-				ymd.year, ymd.month + 1, ymd.day, _last_sync_date_fract, _last_sync_tick_skip_counter, _last_sync_frame_counter);
-	}
+	buffer = LogDesyncDateHeader(buffer, last);
 	buffer += seprintf(buffer, last, "\n");
 
 	buffer = this->LogOpenTTDVersion(buffer, last);
@@ -772,10 +770,10 @@ char *CrashLog::FillInconsistencyLog(char *buffer, const char *last, const Incon
 	buffer = this->LogOSVersionDetail(buffer, last);
 	buffer = this->LogConfiguration(buffer, last);
 	buffer = this->LogLibraries(buffer, last);
+	buffer = this->LogSettings(buffer, last);
+	buffer = this->LogCommandLog(buffer, last);
 	buffer = this->LogGamelog(buffer, last);
 	buffer = this->LogRecentNews(buffer, last);
-	buffer = this->LogCommandLog(buffer, last);
-	buffer = this->LogSettings(buffer, last);
 	buffer = DumpDesyncMsgLog(buffer, last);
 
 	if (!info.check_caches_result.empty()) {
@@ -804,6 +802,7 @@ char *CrashLog::FillVersionInfoLog(char *buffer, const char *last) const
 	buffer = this->LogCompiler(buffer, last);
 	buffer = this->LogOSVersionDetail(buffer, last);
 	buffer = this->LogLibraries(buffer, last);
+	buffer = this->LogPlugins(buffer, last);
 
 	buffer += seprintf(buffer, last, "*** End of OpenTTD Version Info Report ***\n");
 	return buffer;
@@ -1157,18 +1156,6 @@ void CrashLog::MakeInconsistencyLog(const InconsistencyExtraInfo &info) const
 }
 
 /**
- * Makes a version info log, writes it to a file. It uses DEBUG to write
- * information like paths to the console.
- * @return true when everything is made successfully.
- */
-void CrashLog::MakeVersionInfoLog() const
-{
-	char buffer[65536];
-	this->FillVersionInfoLog(buffer, lastof(buffer));
-	printf("%s\n", buffer);
-}
-
-/**
  * Makes a crash dump and crash savegame. It uses DEBUG to write
  * information like paths to the console.
  * @return true when everything is made successfully.
@@ -1236,10 +1223,10 @@ void CrashLog::MakeCrashSavegameAndScreenshot()
 sym_info_bfd::sym_info_bfd(bfd_vma addr_) : addr(addr_), abfd(nullptr), syms(nullptr), sym_count(0),
 		file_name(nullptr), function_name(nullptr), function_addr(0), line(0), found(false) {}
 
-sym_info_bfd::~sym_info_bfd()
+sym_bfd_obj::~sym_bfd_obj()
 {
-	free(syms);
-	if (abfd != nullptr) bfd_close(abfd);
+	free(this->syms);
+	if (this->abfd != nullptr) bfd_close(this->abfd);
 }
 
 static void find_address_in_section(bfd *abfd, asection *section, void *data)
@@ -1249,13 +1236,13 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 
 	if ((bfd_get_section_flags(abfd, section) & SEC_ALLOC) == 0) return;
 
+	bfd_vma addr = info->addr + info->image_base;
 	bfd_vma vma = bfd_get_section_vma(abfd, section);
-	if (info->addr < vma) return;
-
 	bfd_size_type size = get_bfd_section_size(abfd, section);
-	if (info->addr >= vma + size) return;
 
-	info->found = bfd_find_nearest_line(abfd, section, info->syms, info->addr - vma,
+	if (addr < vma || addr >= vma + size) return;
+
+	info->found = bfd_find_nearest_line(abfd, section, info->syms, addr - vma,
 			&(info->file_name), &(info->function_name), &(info->line));
 
 	if (info->found && info->function_name) {
@@ -1266,7 +1253,7 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 			}
 		}
 	} else if (info->found) {
-		bfd_vma target = info->addr - vma;
+		bfd_vma target = addr - vma;
 		bfd_vma best_diff = size;
 		for (long i = 0; i < info->sym_count; i++) {
 			asymbol *sym = info->syms[i];
@@ -1282,20 +1269,56 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 	}
 }
 
-void lookup_addr_bfd(const char *obj_file_name, sym_info_bfd &info)
+void lookup_addr_bfd(const char *obj_file_name, sym_bfd_obj_cache &bfdc, sym_info_bfd &info)
 {
-	info.abfd = bfd_openr(obj_file_name, nullptr);
+	auto res = bfdc.cache.try_emplace(obj_file_name);
+	sym_bfd_obj &obj = res.first->second;
+	if (res.second) {
+		/* New sym_bfd_obj */
+		obj.abfd = bfd_openr(obj_file_name, nullptr);
 
-	if (info.abfd == nullptr) return;
+		if (obj.abfd == nullptr) return;
 
-	if (!bfd_check_format(info.abfd, bfd_object) || (bfd_get_file_flags(info.abfd) & HAS_SYMS) == 0) return;
+		if (!bfd_check_format(obj.abfd, bfd_object) || (bfd_get_file_flags(obj.abfd) & HAS_SYMS) == 0) return;
 
-	unsigned int size;
-	info.sym_count = bfd_read_minisymbols(info.abfd, false, (void**) &(info.syms), &size);
-	if (info.sym_count <= 0) {
-		info.sym_count = bfd_read_minisymbols(info.abfd, true, (void**) &(info.syms), &size);
+		unsigned int size;
+		obj.sym_count = bfd_read_minisymbols(obj.abfd, false, (void**) &(obj.syms), &size);
+		if (obj.sym_count <= 0) {
+			obj.sym_count = bfd_read_minisymbols(obj.abfd, true, (void**) &(obj.syms), &size);
+		}
+		if (obj.sym_count <= 0) return;
+
+		obj.usable = true;
+
+#if defined(__MINGW32__)
+		/* Handle Windows PE relocation.
+		 * libbfd sections (and thus symbol addresses) are relative to the image base address (i.e. absolute).
+		 * Due to relocation/ASLR/etc the module base address in memory may not match the image base address.
+		 * Instead of using the absolute addresses, expect the inputs here to be relative to the module base address
+		 * in memory, which is easy to get.
+		 * The original image base address is very awkward to get, but as it's always the same, just hard-code it
+		 * via the expected .text section address here. */
+#ifdef _M_AMD64
+		asection *section = bfd_get_section_by_name(obj.abfd, ".text");
+		if (section != nullptr && section->vma == 0x140001000) {
+			obj.image_base = 0x140000000;
+		}
+#elif defined(_M_IX86)
+		asection *section = bfd_get_section_by_name(obj.abfd, ".text");
+		if (section != nullptr && section->vma == 0x401000) {
+			obj.image_base = 0x400000;
+		}
+#endif
+		if (obj.image_base == 0) obj.usable = false;
+#endif
 	}
-	if (info.sym_count <= 0) return;
+
+	if (!obj.usable) return;
+
+	info.abfd = obj.abfd;
+	info.image_base = obj.image_base;
+	info.syms = obj.syms;
+	info.sym_count = obj.sym_count;
 
 	bfd_map_over_sections(info.abfd, find_address_in_section, &info);
 }

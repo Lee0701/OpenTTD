@@ -56,7 +56,7 @@
 #pragma GCC diagnostic ignored "-Wclobbered"
 #endif
 
-static void NORETURN ImmediateExitProcess(uint exit_code)
+[[noreturn]] static void ImmediateExitProcess(uint exit_code)
 {
 	/* TerminateProcess may fail in some special edge cases, fall back to ExitProcess in this case */
 	TerminateProcess(GetCurrentProcess(), exit_code);
@@ -399,6 +399,11 @@ static const uint MAX_FRAMES     = 64;
 
 		std::array<DWORD64, 8> last_offsets = {};
 
+#if defined(WITH_BFD)
+		sym_bfd_obj_cache bfd_cache;
+		bfd_init();
+#endif /* WITH_BFD */
+
 		/* Walk stack at most MAX_FRAMES deep in case the stack is corrupt. */
 		for (uint num = 0; num < MAX_FRAMES; num++) {
 			auto guard = scope_guard([&]() {
@@ -422,12 +427,14 @@ static const uint MAX_FRAMES     = 64;
 			/* Get module name. */
 			const char *mod_name = "???";
 			const char *image_name = nullptr;
+			[[maybe_unused]] DWORD64 image_base = 0;
 
 			IMAGEHLP_MODULE64 module;
 			module.SizeOfStruct = sizeof(module);
 			if (proc.pSymGetModuleInfo64(hCur, frame.AddrPC.Offset, &module)) {
 				mod_name = module.ModuleName;
 				image_name = module.ImageName;
+				image_base = module.BaseOfImage;
 			}
 
 			/* Print module and instruction pointer. */
@@ -447,8 +454,8 @@ static const uint MAX_FRAMES     = 64;
 			} else if (image_name != nullptr) {
 #if defined (WITH_BFD)
 				/* subtract one to get the line before the return address, i.e. the function call line */
-				sym_info_bfd bfd_info(static_cast<bfd_vma>(frame.AddrPC.Offset) - 1);
-				lookup_addr_bfd(image_name, bfd_info);
+				sym_info_bfd bfd_info(static_cast<bfd_vma>(frame.AddrPC.Offset) - static_cast<bfd_vma>(image_base) - 1);
+				lookup_addr_bfd(image_name, bfd_cache, bfd_info);
 				if (bfd_info.function_name != nullptr) {
 					const char *func_name = bfd_info.function_name;
 #if defined(WITH_DEMANGLE)
@@ -794,10 +801,10 @@ static void CDECL CustomAbort(int)
 	log.MakeInconsistencyLog(info);
 }
 
-/* static */ void CrashLog::VersionInfoLog()
+/* static */ void CrashLog::VersionInfoLog(char *buffer, const char *last)
 {
 	CrashLogWindows log(nullptr);
-	log.MakeVersionInfoLog();
+	log.FillVersionInfoLog(buffer, last);
 }
 
 /* The crash log GUI */

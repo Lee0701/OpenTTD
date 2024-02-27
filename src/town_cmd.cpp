@@ -19,6 +19,7 @@
 #include "viewport_kdtree.h"
 #include "cmd_helper.h"
 #include "command_func.h"
+#include "company_func.h"
 #include "industry.h"
 #include "station_base.h"
 #include "waypoint_base.h"
@@ -679,6 +680,51 @@ static void TownGenerateCargo(Town *t, CargoID ct, uint amount, StationFinder &s
 }
 
 /**
+ * Generate cargo for a house using the original algorithm.
+ * @param t The current town.
+ * @param tpe The town production effect.
+ * @param rate The town's product rate for this production.
+ * @param stations Available stations for this house.
+ */
+static void TownGenerateCargoOriginal(Town *t, TownProductionEffect tpe, uint8_t rate, StationFinder &stations)
+{
+	for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[tpe])) {
+		const CargoSpec *cs = CargoSpec::Get(cid);
+		uint32_t r = Random();
+		if (GB(r, 0, 8) < rate) {
+			CargoID cid = cs->Index();
+			uint amt = (GB(r, 0, 8) * cs->town_production_multiplier / TOWN_PRODUCTION_DIVISOR) / 8 + 1;
+
+			TownGenerateCargo(t, cid, amt, stations, true);
+		}
+	}
+}
+
+/**
+ * Generate cargo for a house using the binominal algorithm.
+ * @param t The current town.
+ * @param tpe The town production effect.
+ * @param rate The town's product rate for this production.
+ * @param stations Available stations for this house.
+ */
+static void TownGenerateCargoBinominal(Town *t, TownProductionEffect tpe, uint8_t rate, StationFinder &stations)
+{
+	for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[tpe])) {
+		const CargoSpec *cs = CargoSpec::Get(cid);
+		uint32_t r = Random();
+
+		/* Make a bitmask with up to 32 bits set, one for each potential pax. */
+		int genmax = (rate + 7) / 8;
+		uint32_t genmask = (genmax >= 32) ? 0xFFFFFFFF : ((1 << genmax) - 1);
+
+		/* Mask random value by potential pax and count number of actual pax. */
+		uint amt = CountBits(r & genmask) * cs->town_production_multiplier / TOWN_PRODUCTION_DIVISOR;
+
+		TownGenerateCargo(t, cid, amt, stations, true);
+	}
+}
+
+/**
  * Tile callback function.
  *
  * Periodic tic handler for houses and town
@@ -732,15 +778,8 @@ static void TileLoop_Town(TileIndex tile)
 		switch (_settings_game.economy.town_cargogen_mode) {
 			case TCGM_ORIGINAL:
 				/* Original (quadratic) cargo generation algorithm */
-				if (GB(r, 0, 8) < hs->population) {
-					uint amt = GB(r, 0, 8) / 8 + 1;
-					TownGenerateCargo(t, CT_PASSENGERS, amt, stations, true);
-				}
-
-				if (GB(r, 8, 8) < hs->mail_generation) {
-					uint amt = GB(r, 8, 8) / 8 + 1;
-					TownGenerateCargo(t, CT_MAIL, amt, stations, true);
-				}
+				TownGenerateCargoOriginal(t, TPE_PASSENGERS, hs->population, stations);
+				TownGenerateCargoOriginal(t, TPE_MAIL, hs->mail_generation, stations);
 				break;
 
 			case TCGM_BITCOUNT:
@@ -748,20 +787,8 @@ static void TileLoop_Town(TileIndex tile)
 				/* Reduce generation rate to a 1/4, using tile bits to spread out distribution.
 				 * As tick counter is incremented by 256 between each call, we ignore the lower 8 bits. */
 				if (GB(_tick_counter, 8, 2) == GB(tile, 0, 2)) {
-					/* Make a bitmask with up to 32 bits set, one for each potential pax */
-					int genmax = (hs->population + 7) / 8;
-					uint32_t genmask = (genmax >= 32) ? 0xFFFFFFFF : ((1 << genmax) - 1);
-					/* Mask random value by potential pax and count number of actual pax */
-					uint amt = CountBits(r & genmask);
-					/* Adjust and apply */
-					TownGenerateCargo(t, CT_PASSENGERS, amt, stations, true);
-
-					/* Do the same for mail, with a fresh random */
-					r = Random();
-					genmax = (hs->mail_generation + 7) / 8;
-					genmask = (genmax >= 32) ? 0xFFFFFFFF : ((1 << genmax) - 1);
-					amt = CountBits(r & genmask);
-					TownGenerateCargo(t, CT_MAIL, amt, stations, true);
+					TownGenerateCargoBinominal(t, TPE_PASSENGERS, hs->population, stations);
+					TownGenerateCargoBinominal(t, TPE_MAIL, hs->mail_generation, stations);
 				}
 				break;
 
@@ -865,10 +892,14 @@ void AddProducedHouseCargo(HouseID house_id, TileIndex tile, CargoArray &produce
 		}
 	} else {
 		if (hs->population > 0) {
-			produced[CT_PASSENGERS]++;
+			for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[TPE_PASSENGERS])) {
+				produced[cid]++;
+			}
 		}
 		if (hs->mail_generation > 0) {
-			produced[CT_MAIL]++;
+			for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[TPE_MAIL])) {
+				produced[cid]++;
+			}
 		}
 	}
 }
@@ -915,7 +946,7 @@ void AddAcceptedHouseCargo(HouseID house_id, TileIndex tile, CargoArray &accepta
 			AddAcceptedCargoSetMask(accepts[1], GB(callback, 4, 4), acceptance, always_accepted);
 			if (_settings_game.game_creation.landscape != LT_TEMPERATE && HasBit(callback, 12)) {
 				/* The 'S' bit indicates food instead of goods */
-				AddAcceptedCargoSetMask(CT_FOOD, GB(callback, 8, 4), acceptance, always_accepted);
+				AddAcceptedCargoSetMask(GetCargoIDByLabel(CT_FOOD), GB(callback, 8, 4), acceptance, always_accepted);
 			} else {
 				AddAcceptedCargoSetMask(accepts[2], GB(callback, 8, 4), acceptance, always_accepted);
 			}
@@ -1033,7 +1064,7 @@ RoadType GetTownRoadType()
 		if (HasBit(rti->extra_flags, RXTF_NO_TOWN_MODIFICATION)) continue;
 
 		/* Not yet introduced at this date. */
-		if (IsInsideMM(rti->introduction_date, 0, MAX_DATE.base()) && rti->introduction_date > _date) continue;
+		if (IsInsideMM(rti->introduction_date, 0, CalTime::MAX_DATE.base()) && rti->introduction_date > CalTime::CurDate()) continue;
 
 		if (best != nullptr) {
 			if ((rti->max_speed == 0 ? assume_max_speed : rti->max_speed) < (best->max_speed == 0 ? assume_max_speed : best->max_speed)) continue;
@@ -1546,7 +1577,7 @@ static inline bool RoadTypesAllowHouseHere(TileIndex t)
 		TileIndex cur_tile = t + ToTileIndexDiff(*ptr);
 		if (!IsValidTile(cur_tile)) continue;
 
-		if (!(IsTileType(cur_tile, MP_ROAD) || IsTileType(cur_tile, MP_STATION))) continue;
+		if (!(IsTileType(cur_tile, MP_ROAD) || IsAnyRoadStopTile(cur_tile))) continue;
 		allow = true;
 
 		RoadType road_rt = GetRoadTypeRoad(cur_tile);
@@ -1796,7 +1827,7 @@ static void GrowTownInTile(TileIndex *tile_ptr, RoadBits cur_rb, DiagDirection t
 
 				case TL_3X3_GRID: // Use 2x2 grid afterwards!
 					GrowTownWithExtraHouse(t1, TileAddByDiagDir(house_tile, target_dir));
-					FALLTHROUGH;
+					[[fallthrough]];
 
 				case TL_2X2_GRID:
 					rcmd = GetTownRoadGridElement(t1, tile, target_dir);
@@ -1805,7 +1836,7 @@ static void GrowTownInTile(TileIndex *tile_ptr, RoadBits cur_rb, DiagDirection t
 
 				case TL_BETTER_ROADS: // Use original afterwards!
 					GrowTownWithExtraHouse(t1, TileAddByDiagDir(house_tile, target_dir));
-					FALLTHROUGH;
+					[[fallthrough]];
 
 				case TL_ORIGINAL:
 					/* Allow a house at the edge. 60% chance or
@@ -2154,8 +2185,12 @@ void UpdateTownRadii()
 
 void UpdateTownMaxPass(Town *t)
 {
-	t->supplied[CT_PASSENGERS].old_max = t->cache.population >> 3;
-	t->supplied[CT_MAIL].old_max = t->cache.population >> 4;
+	for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[TPE_PASSENGERS])) {
+		t->supplied[cid].old_max = _town_cargo_scaler.Scale(t->cache.population >> 3);
+	}
+	for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[TPE_MAIL])) {
+		t->supplied[cid].old_max = _town_cargo_scaler.Scale(t->cache.population >> 4);
+	}
 }
 
 static void UpdateTownGrowthRate(Town *t);
@@ -2191,12 +2226,12 @@ static void DoCreateTown(Town *t, TileIndex tile, uint32_t townnameparts, TownSi
 	/* Set the default cargo requirement for town growth */
 	switch (_settings_game.game_creation.landscape) {
 		case LT_ARCTIC:
-			if (FindFirstCargoWithTownEffect(TE_FOOD) != nullptr) t->goal[TE_FOOD] = TOWN_GROWTH_WINTER;
+			if (FindFirstCargoWithTownAcceptanceEffect(TAE_FOOD) != nullptr) t->goal[TAE_FOOD] = TOWN_GROWTH_WINTER;
 			break;
 
 		case LT_TROPIC:
-			if (FindFirstCargoWithTownEffect(TE_FOOD) != nullptr) t->goal[TE_FOOD] = TOWN_GROWTH_DESERT;
-			if (FindFirstCargoWithTownEffect(TE_WATER) != nullptr) t->goal[TE_WATER] = TOWN_GROWTH_DESERT;
+			if (FindFirstCargoWithTownAcceptanceEffect(TAE_FOOD) != nullptr) t->goal[TAE_FOOD] = TOWN_GROWTH_DESERT;
+			if (FindFirstCargoWithTownAcceptanceEffect(TAE_WATER) != nullptr) t->goal[TAE_WATER] = TOWN_GROWTH_DESERT;
 			break;
 	}
 
@@ -2947,8 +2982,8 @@ static CommandCost CheckCanBuildHouse(HouseID house, const Town *t, bool manual)
 	}
 
 	if (!manual || !_settings_client.scenario.house_ignore_dates) {
-		if (_cur_year > hs->max_year) return_cmd_error(STR_ERROR_BUILDING_IS_TOO_OLD);
-		if (_cur_year < hs->min_year) return_cmd_error(STR_ERROR_BUILDING_IS_TOO_MODERN);
+		if (CalTime::CurYear() > hs->max_year) return_cmd_error(STR_ERROR_BUILDING_IS_TOO_OLD);
+		if (CalTime::CurYear() < hs->min_year) return_cmd_error(STR_ERROR_BUILDING_IS_TOO_MODERN);
 	}
 
 	/* Special houses that there can be only one of. */
@@ -3279,10 +3314,10 @@ CommandCost CmdRenameTownNonAdmin(TileIndex tile, DoCommandFlag flags, uint32_t 
  * @param effect Town effect of interest
  * @return first active cargo slot with that effect
  */
-const CargoSpec *FindFirstCargoWithTownEffect(TownEffect effect)
+const CargoSpec *FindFirstCargoWithTownAcceptanceEffect(TownAcceptanceEffect effect)
 {
 	for (const CargoSpec *cs : CargoSpec::Iterate()) {
-		if (cs->town_effect == effect) return cs;
+		if (cs->town_acceptance_effect == effect) return cs;
 	}
 	return nullptr;
 }
@@ -3293,7 +3328,7 @@ const CargoSpec *FindFirstCargoWithTownEffect(TownEffect effect)
  * @param flags Type of operation.
  * @param p1 various bitstuffed elements
  * - p1 = (bit  0 - 15) - Town ID to cargo game of.
- * - p1 = (bit 16 - 23) - TownEffect to change the game of.
+ * - p1 = (bit 16 - 23) - TownAcceptanceEffect to change the game of.
  * @param p2 The new goal value.
  * @param text Unused.
  * @return Empty cost or an error.
@@ -3302,19 +3337,19 @@ CommandCost CmdTownCargoGoal(TileIndex tile, DoCommandFlag flags, uint32_t p1, u
 {
 	if (_current_company != OWNER_DEITY) return CMD_ERROR;
 
-	TownEffect te = (TownEffect)GB(p1, 16, 8);
-	if (te < TE_BEGIN || te >= TE_END) return CMD_ERROR;
+	TownAcceptanceEffect tae = (TownAcceptanceEffect)GB(p1, 16, 8);
+	if (tae < TAE_BEGIN || tae >= TAE_END) return CMD_ERROR;
 
 	uint16_t index = GB(p1, 0, 16);
 	Town *t = Town::GetIfValid(index);
 	if (t == nullptr) return CMD_ERROR;
 
-	/* Validate if there is a cargo which is the requested TownEffect */
-	const CargoSpec *cargo = FindFirstCargoWithTownEffect(te);
+	/* Validate if there is a cargo which is the requested TownAcceptanceEffect */
+	const CargoSpec *cargo = FindFirstCargoWithTownAcceptanceEffect(tae);
 	if (cargo == nullptr) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {
-		t->goal[te] = p2;
+		t->goal[tae] = p2;
 		UpdateTownGrowth(t);
 		InvalidateWindowData(WC_TOWN_VIEW, index);
 	}
@@ -3628,7 +3663,8 @@ static CommandCost TownActionRoadRebuild(Town *t, DoCommandFlag flags)
 		SetDParam(0, t->index);
 		SetDParamStr(1, company_name->string);
 
-		AddNewsItem(STR_NEWS_ROAD_REBUILDING, NT_GENERAL, NF_NORMAL, NR_TOWN, t->index, NR_NONE, UINT32_MAX, company_name);
+		AddNewsItem(EconTime::UsingWallclockUnits() ? STR_NEWS_ROAD_REBUILDING_MINUTES : STR_NEWS_ROAD_REBUILDING_MONTHS,
+				NT_GENERAL, NF_NORMAL, NR_TOWN, t->index, NR_NONE, UINT32_MAX, company_name);
 		AI::BroadcastNewEvent(new ScriptEventRoadReconstruction((ScriptCompany::CompanyID)(Owner)_current_company, t->index));
 		Game::NewEvent(new ScriptEventRoadReconstruction((ScriptCompany::CompanyID)(Owner)_current_company, t->index));
 	}
@@ -3780,7 +3816,7 @@ static CommandCost TownActionBuyRights(Town *t, DoCommandFlag flags)
 		/* Spawn news message */
 		CompanyNewsInformation *cni = new CompanyNewsInformation(Company::Get(_current_company));
 		SetDParam(0, STR_NEWS_EXCLUSIVE_RIGHTS_TITLE);
-		SetDParam(1, STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION);
+		SetDParam(1, EconTime::UsingWallclockUnits() ? STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MINUTES : STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MONTHS);
 		SetDParam(2, t->index);
 		SetDParamStr(3, cni->company_name);
 		AddNewsItem(STR_MESSAGE_NEWS_FORMAT, NT_GENERAL, NF_COMPANY, NR_TOWN, t->index, NR_NONE, UINT32_MAX, cni);
@@ -3862,7 +3898,7 @@ uint GetMaskOfTownActions(int *nump, CompanyID cid, const Town *t)
 	if (cid != COMPANY_SPECTATOR && !(_settings_game.economy.bribe && t->unwanted[cid])) {
 
 		/* Things worth more than this are not shown */
-		Money avail = Company::Get(cid)->money + _price[PR_STATION_VALUE] * 200;
+		Money avail = GetAvailableMoney(cid) + _price[PR_STATION_VALUE] * 200;
 
 		/* Check the action bits for validity and
 		 * if they are valid add them */
@@ -4140,10 +4176,19 @@ static uint GetNormalGrowthRate(Town *t)
 		 * The growth rate can only be decreased by this setting, not increased.
 		 */
 		uint32_t inverse_m = UINT32_MAX / m;
-		auto calculate_cargo_ratio_fix15 = [](const TransportedCargoStat<uint32_t> &stat) -> uint32_t {
-			return stat.old_max ? ((uint64_t) (stat.old_act << 15)) / stat.old_max : 1 << 15;
-		};
-		uint32_t cargo_ratio_fix16 = calculate_cargo_ratio_fix15(t->supplied[CT_PASSENGERS]) + calculate_cargo_ratio_fix15(t->supplied[CT_MAIL]);
+
+		uint32_t cargo_ratio_fix16 = 0;
+		for (auto tpe : {TPE_PASSENGERS, TPE_MAIL}) {
+			uint32_t old_max = 0;
+			uint32_t old_act = 0;
+			for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[tpe])) {
+				const TransportedCargoStat<uint32_t> &stat = t->supplied[cid];
+				old_max += stat.old_max;
+				old_act += stat.old_act;
+			}
+			cargo_ratio_fix16 += old_max ? ((uint64_t) (old_act << 15)) / old_max : 1 << 15;
+		}
+
 		uint64_t cargo_dependant_part = (((uint64_t) cargo_ratio_fix16) * ((uint64_t) inverse_m) * _settings_game.economy.town_growth_cargo_transported) >> 16;
 		uint64_t non_cargo_dependant_part = ((uint64_t) inverse_m) * (100 - _settings_game.economy.town_growth_cargo_transported);
 		uint64_t total = (cargo_dependant_part + non_cargo_dependant_part);
@@ -4193,7 +4238,7 @@ static void UpdateTownGrowth(Town *t)
 
 	if (t->fund_buildings_months == 0) {
 		/* Check if all goals are reached for this town to grow (given we are not funding it) */
-		for (int i = TE_BEGIN; i < TE_END; i++) {
+		for (int i = TAE_BEGIN; i < TAE_END; i++) {
 			switch (t->goal[i]) {
 				case TOWN_GROWTH_WINTER:
 					if (TileHeight(t->xy) >= GetSnowLine() && t->received[i].old_act == 0 && t->cache.population > 90) return;
@@ -4289,7 +4334,7 @@ Town *ClosestTownFromTile(TileIndex tile, uint threshold)
 
 				return town;
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case MP_HOUSE:
 			return Town::GetByTile(tile);

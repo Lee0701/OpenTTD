@@ -69,7 +69,7 @@
 	}
 }
 
-/* static */ void Game::StartNew()
+/* static */ void Game::StartNew(bool deviate)
 {
 	if (Game::instance != nullptr) return;
 
@@ -83,6 +83,7 @@
 	GameInfo *info = config->GetInfo();
 	if (info == nullptr) return;
 
+	if (deviate) config->AddRandomDeviation(OWNER_DEITY);
 	config->AnchorUnchangeableSettings();
 
 	Backup<CompanyID> cur_company(_current_company, FILE_LINE);

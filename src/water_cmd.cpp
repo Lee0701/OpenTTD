@@ -150,7 +150,7 @@ CommandCost CmdBuildShipDepot(TileIndex tile, DoCommandFlag flags, uint32_t p1, 
 		InvalidateWaterRegion(tile2);
 
 		Depot *depot = new Depot(tile);
-		depot->build_date = _date;
+		depot->build_date = CalTime::CurDate();
 
 		uint new_water_infra = 2 * LOCK_DEPOT_TILE_FACTOR;
 		/* Update infrastructure counts after the tile clears earlier.
@@ -180,7 +180,7 @@ bool IsPossibleDockingTile(TileIndex t)
 	switch (GetTileType(t)) {
 		case MP_WATER:
 			if (IsLock(t) && GetLockPart(t) == LOCK_PART_MIDDLE) return false;
-			FALLTHROUGH;
+			[[fallthrough]];
 		case MP_RAILWAY:
 		case MP_STATION:
 		case MP_TUNNELBRIDGE:
@@ -292,16 +292,19 @@ static CommandCost RemoveShipDepot(TileIndex tile, DoCommandFlag flags)
 		if (ret.Failed()) return ret;
 	}
 
+	bool do_clear = (flags & DC_FORCE_CLEAR_TILE) != 0;
+
 	if (flags & DC_EXEC) {
 		delete Depot::GetByTile(tile);
 
 		Company *c = Company::GetIfValid(GetTileOwner(tile));
 		if (c != nullptr) {
 			c->infrastructure.water -= 2 * LOCK_DEPOT_TILE_FACTOR;
+			if (do_clear && GetWaterClass(tile) == WATER_CLASS_CANAL) c->infrastructure.water--;
 			DirtyCompanyInfrastructureWindows(c->index);
 		}
 
-		MakeWaterKeepingClass(tile,  GetTileOwner(tile));
+		if (!do_clear) MakeWaterKeepingClass(tile,  GetTileOwner(tile));
 		MakeWaterKeepingClass(tile2, GetTileOwner(tile2));
 	}
 
@@ -546,7 +549,7 @@ CommandCost CmdBuildCanal(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint
 						MakeSea(current_tile);
 						break;
 					}
-					FALLTHROUGH;
+					[[fallthrough]];
 
 				default:
 					MakeCanal(current_tile, _current_company, Random());
@@ -1162,7 +1165,7 @@ FloodingBehaviour GetFloodingBehaviour(TileIndex tile)
 				Slope tileh = GetTileSlope(tile);
 				return (IsSlopeWithOneCornerRaised(tileh) ? FLOOD_ACTIVE : FLOOD_DRYUP);
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 		case MP_STATION:
 		case MP_INDUSTRY:
 			return (GetWaterClass(tile) == WATER_CLASS_SEA) ? FLOOD_ACTIVE : FLOOD_NONE;
@@ -1216,7 +1219,7 @@ void DoFloodTile(TileIndex target)
 					flooded = true;
 					break;
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case MP_CLEAR:
 				if (DoCommand(target, 0, 0, DC_EXEC, CMD_LANDSCAPE_CLEAR).Succeeded()) {
@@ -1341,7 +1344,7 @@ void TileLoop_Water(TileIndex tile)
 	if (IsTileType(tile, MP_WATER)) AmbientSoundEffect(tile);
 
 	/* At day lengths > 4, handle flooding in auxiliary tile loop */
-	if (_settings_game.economy.day_length_factor > 4 && _game_mode != GM_EDITOR) return;
+	if (DayLengthFactor() > 4 && _game_mode != GM_EDITOR) return;
 
 	if (IsNonFloodingWaterTile(tile)) return;
 

@@ -219,8 +219,25 @@ uint32_t RoadStopScopeResolver::GetVariable(uint16_t variable, uint32_t paramete
 			return ssl.grfid;
 		}
 
-		/* Road info of nearby tiles */
+		/* 16 bit road stop ID of nearby tiles */
 		case 0x6B: {
+			TileIndex nearby_tile = GetNearbyTile(parameter, this->tile);
+
+			if (!IsAnyRoadStopTile(nearby_tile)) return 0xFFFFFFFF;
+			if (!IsCustomRoadStopSpecIndex(nearby_tile)) return 0xFFFE;
+
+			uint32_t grfid = this->st->roadstop_speclist[GetCustomRoadStopSpecIndex(this->tile)].grfid;
+
+			const RoadStopSpecList ssl = BaseStation::GetByTile(nearby_tile)->roadstop_speclist[GetCustomRoadStopSpecIndex(nearby_tile)];
+			if (ssl.grfid == grfid) {
+				return ssl.localidx;
+			}
+
+			return 0xFFFE;
+		}
+
+		/* Road info of nearby tiles */
+		case A2VRI_ROADSTOP_ROAD_INFO_NEARBY_TILES: {
 			if (this->tile == INVALID_TILE) return 0xFFFFFFFF;
 			TileIndex nearby_tile = GetNearbyTile(parameter, this->tile);
 
@@ -238,7 +255,7 @@ uint32_t RoadStopScopeResolver::GetVariable(uint16_t variable, uint32_t paramete
 
 		case 0xF0: return this->st == nullptr ? 0 : this->st->facilities; // facilities
 
-		case 0xFA: return ClampTo<uint16_t>((this->st == nullptr ? _date : this->st->build_date) - DAYS_TILL_ORIGINAL_BASE_YEAR); // build date
+		case 0xFA: return ClampTo<uint16_t>((this->st == nullptr ? CalTime::CurDate() : this->st->build_date) - CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR); // build date
 	}
 
 	if (this->st != nullptr) return this->st->GetNewGRFVariable(this->ro, variable, parameter, &(extra->available));
@@ -532,11 +549,12 @@ void TriggerRoadStopRandomisation(Station *st, TileIndex tile, RoadStopRandomTri
  */
 bool GetIfNewStopsByType(RoadStopType rs, RoadType roadtype)
 {
-	if (!(RoadStopClass::GetClassCount() > 1 || RoadStopClass::Get(ROADSTOP_CLASS_DFLT)->GetSpecCount() > 1)) return false;
 	for (uint i = 0; RoadStopClass::IsClassIDValid((RoadStopClassID)i); i++) {
-		// We don't want to check the default or waypoint classes. These classes are always available.
-		if (i == ROADSTOP_CLASS_DFLT || i == ROADSTOP_CLASS_WAYP) continue;
-		RoadStopClass *roadstopclass = RoadStopClass::Get((RoadStopClassID)i);
+		/* Ignore the waypoint class. */
+		if (i == ROADSTOP_CLASS_WAYP) continue;
+		const RoadStopClass *roadstopclass = RoadStopClass::Get((RoadStopClassID)i);
+		/* Ignore the default class with only the default station. */
+		if (i == ROADSTOP_CLASS_DFLT && roadstopclass->GetSpecCount() == 1) continue;
 		if (GetIfClassHasNewStopsByType(roadstopclass, rs, roadtype)) return true;
 	}
 	return false;
@@ -549,7 +567,7 @@ bool GetIfNewStopsByType(RoadStopType rs, RoadType roadtype)
  * @param roadtype the RoadType to check.
  * @return true if the RoadStopSpec has any specs compatible with the given RoadStopType and RoadType.
  */
-bool GetIfClassHasNewStopsByType(RoadStopClass *roadstopclass, RoadStopType rs, RoadType roadtype)
+bool GetIfClassHasNewStopsByType(const RoadStopClass *roadstopclass, RoadStopType rs, RoadType roadtype)
 {
 	for (uint j = 0; j < roadstopclass->GetSpecCount(); j++) {
 		if (GetIfStopIsForType(roadstopclass->GetSpec(j), rs, roadtype)) return true;

@@ -22,6 +22,7 @@
 #include "window_func.h"
 #include "gui.h"
 #include "vehicle_base.h"
+#include "palette_func.h"
 #include "game/game.hpp"
 #include "script/api/script_story_page.hpp"
 #include "script/api/script_event_types.hpp"
@@ -68,13 +69,16 @@ static bool VerifyElementContentParameters(StoryPageID page_id, StoryPageElement
 			break;
 		case SPET_BUTTON_PUSH:
 			if (!button_data.ValidateColour()) return false;
+			if (!button_data.ValidateFlags()) return false;
 			return true;
 		case SPET_BUTTON_TILE:
 			if (!button_data.ValidateColour()) return false;
+			if (!button_data.ValidateFlags()) return false;
 			if (!button_data.ValidateCursor()) return false;
 			return true;
 		case SPET_BUTTON_VEHICLE:
 			if (!button_data.ValidateColour()) return false;
+			if (!button_data.ValidateFlags()) return false;
 			if (!button_data.ValidateCursor()) return false;
 			if (!button_data.ValidateVehicleType()) return false;
 			return true;
@@ -145,7 +149,9 @@ void StoryPageButtonData::SetVehicleType(VehicleType vehtype)
 /** Get the button background colour. */
 Colours StoryPageButtonData::GetColour() const
 {
-	return Extract<Colours, 0, 8>(this->referenced_id);
+	Colours colour = Extract<Colours, 0, 8>(this->referenced_id);
+	if (!IsValidColours(colour)) return INVALID_COLOUR;
+	return colour;
 }
 
 StoryPageButtonFlags StoryPageButtonData::GetFlags() const
@@ -221,7 +227,7 @@ CommandCost CmdCreateStoryPage(TileIndex tile, DoCommandFlag flags, uint32_t p1,
 
 		StoryPage *s = new StoryPage();
 		s->sort_value = _story_page_next_sort_value;
-		s->date = _date;
+		s->date = CalTime::CurDate();
 		s->company = company;
 		if (StrEmpty(text)) {
 			s->title.clear();
@@ -364,7 +370,7 @@ CommandCost CmdSetStoryPageDate(TileIndex tile, DoCommandFlag flags, uint32_t p1
 	if (_current_company != OWNER_DEITY) return CMD_ERROR;
 	StoryPageID page_id = (StoryPageID)GB(p1, 0, 16);
 	if (!StoryPage::IsValidID(page_id)) return CMD_ERROR;
-	Date date = (Date)p2;
+	CalTime::Date date = (CalTime::Date)p2;
 
 	if (flags & DC_EXEC) {
 		StoryPage *p = StoryPage::Get(page_id);
@@ -394,7 +400,7 @@ CommandCost CmdShowStoryPage(TileIndex tile, DoCommandFlag flags, uint32_t p1, u
 
 	if (flags & DC_EXEC) {
 		StoryPage *g = StoryPage::Get(page_id);
-		if ((g->company != INVALID_COMPANY && g->company == _local_company) || (g->company == INVALID_COMPANY && Company::IsValidID(_local_company))) ShowStoryBook(_local_company, page_id);
+		if ((g->company != INVALID_COMPANY && g->company == _local_company) || (g->company == INVALID_COMPANY && Company::IsValidID(_local_company))) ShowStoryBook(_local_company, page_id, true);
 	}
 
 	return CommandCost();

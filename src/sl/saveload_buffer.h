@@ -29,14 +29,14 @@ struct ReadBuffer {
 	byte buf[MEMORY_CHUNK_SIZE]; ///< Buffer we're going to read from.
 	byte *bufp;                  ///< Location we're at reading the buffer.
 	byte *bufe;                  ///< End of the buffer we can read from.
-	LoadFilter *reader;          ///< The filter used to actually read.
+	std::shared_ptr<LoadFilter> reader; ///< The filter used to actually read.
 	size_t read;                 ///< The amount of read bytes so far from the filter.
 
 	/**
 	 * Initialise our variables.
 	 * @param reader The filter to actually read data.
 	 */
-	ReadBuffer(LoadFilter *reader) : bufp(nullptr), bufe(nullptr), reader(reader), read(0)
+	ReadBuffer(std::shared_ptr<LoadFilter> reader) : bufp(nullptr), bufe(nullptr), reader(std::move(reader)), read(0)
 	{
 	}
 
@@ -67,6 +67,15 @@ struct ReadBuffer {
 		}
 
 		return RawReadByte();
+	}
+
+	inline byte PeekByte()
+	{
+		if (unlikely(this->bufp == this->bufe)) {
+			this->AcquireBytes();
+		}
+
+		return *this->bufp;
 	}
 
 	inline void CheckBytes(size_t bytes)
@@ -123,6 +132,11 @@ struct ReadBuffer {
 			ptr += to_copy;
 			length -= to_copy;
 		}
+	}
+
+	inline void CopyBytes(std::span<byte> buffer)
+	{
+		this->CopyBytes(buffer.data(), buffer.size());
 	}
 
 	/**
@@ -209,6 +223,11 @@ struct MemoryDumper {
 		}
 	}
 
+	inline void CopyBytes(std::span<const byte> buffer)
+	{
+		this->CopyBytes(buffer.data(), buffer.size());
+	}
+
 	inline void RawWriteByte(byte b)
 	{
 		*this->buf++ = b;
@@ -255,10 +274,10 @@ struct MemoryDumper {
 		this->buf += 8;
 	}
 
-	void Flush(SaveFilter *writer);
+	void Flush(SaveFilter &writer);
 	size_t GetSize() const;
 	void StartAutoLength();
-	std::pair<byte *, size_t> StopAutoLength();
+	std::span<byte> StopAutoLength();
 	bool IsAutoLengthActive() const { return this->saved_buf != nullptr; }
 };
 

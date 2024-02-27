@@ -165,8 +165,9 @@ CommandCost CmdBuildVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 		}
 
 		if (refitting) {
-			/* Refit only one vehicle. If we purchased an engine, it may have gained free wagons. */
-			value.AddCost(CmdRefitVehicle(tile, flags, v->index, cargo | (1 << 16), nullptr));
+			/* Refit only one vehicle. If we purchased an engine, it may have gained free wagons.
+			 * For ships try to refit all parts. */
+			value.AddCost(CmdRefitVehicle(tile, flags, v->index, cargo | (v->type == VEH_SHIP ? 0 : (1 << 16)), nullptr));
 		} else {
 			/* Fill in non-refitted capacities */
 			if (e->type == VEH_TRAIN || e->type == VEH_ROAD || e->type == VEH_SHIP) {
@@ -177,7 +178,8 @@ CommandCost CmdBuildVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 				_returned_refit_capacity = e->GetDisplayDefaultCapacity(&_returned_mail_refit_capacity);
 				_returned_vehicle_capacities.Clear();
 				_returned_vehicle_capacities[default_cargo] = _returned_refit_capacity;
-				_returned_vehicle_capacities[CT_MAIL] = _returned_mail_refit_capacity;
+				CargoID mail = GetCargoIDByLabel(CT_MAIL);
+				if (IsValidCargoID(mail)) _returned_vehicle_capacities[mail] = _returned_mail_refit_capacity;
 			}
 		}
 
@@ -437,7 +439,8 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8_t num_vehicles
 		total_mail_capacity += mail_capacity;
 
 		_returned_vehicle_capacities[new_cid] += amount;
-		_returned_vehicle_capacities[CT_MAIL] += mail_capacity;
+		CargoID mail = GetCargoIDByLabel(CT_MAIL);
+		if (IsValidCargoID(mail)) _returned_vehicle_capacities[mail] += mail_capacity;
 
 		if (!refittable) continue;
 
@@ -694,6 +697,10 @@ CommandCost CmdStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1
 			Train::From(v)->lookahead.reset();
 			FillTrainReservationLookAhead(Train::From(v));
 		}
+
+		/* Unbunching data is no longer valid. */
+		v->ResetDepotUnbunching();
+
 		v->MarkDirty();
 		SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
 		SetWindowDirty(WC_VEHICLE_DEPOT, v->tile);

@@ -124,7 +124,7 @@ struct RoadStopResolverObject : public ResolverObject {
 			case VSG_SCOPE_PARENT: {
 				TownScopeResolver *tsr = this->GetTown();
 				if (tsr != nullptr) return tsr;
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 			default: return ResolverObject::GetScope(scope, relative);
 		}
@@ -196,10 +196,8 @@ void TriggerRoadStopAnimation(BaseStation *st, TileIndex tile, StationAnimationT
 void TriggerRoadStopRandomisation(Station *st, TileIndex tile, RoadStopRandomTrigger trigger, CargoID cargo_type = INVALID_CARGO);
 
 bool GetIfNewStopsByType(RoadStopType rs, RoadType roadtype);
-bool GetIfClassHasNewStopsByType(RoadStopClass *roadstopclass, RoadStopType rs, RoadType roadtype);
+bool GetIfClassHasNewStopsByType(const RoadStopClass *roadstopclass, RoadStopType rs, RoadType roadtype);
 bool GetIfStopIsForType(const RoadStopSpec *roadstopspec, RoadStopType rs, RoadType roadtype);
-
-uint GetCountOfCompatibleStopsByType(RoadStopClass *roadstopclass, RoadStopType rs);
 
 const RoadStopSpec *GetRoadStopSpec(TileIndex t);
 int AllocateRoadStopSpecToStation(const RoadStopSpec *statspec, BaseStation *st, bool exec);

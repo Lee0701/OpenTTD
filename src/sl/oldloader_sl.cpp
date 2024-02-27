@@ -387,8 +387,8 @@ static bool FixTTOEngines()
 		for (uint i = 0; i < lengthof(_orig_aircraft_vehicle_info); i++, j++) new (GetTempDataEngine(j)) Engine(VEH_AIRCRAFT, i);
 	}
 
-	Date aging_date = std::min(_date + DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta(), ConvertYMDToDate(2050, 0, 1));
-	YearMonthDay aging_ymd = ConvertDateToYMD(aging_date);
+	CalTime::Date aging_date = std::min(CalTime::CurDate() + CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta(), CalTime::ConvertYMDToDate(2050, 0, 1));
+	CalTime::YearMonthDay aging_ymd = CalTime::ConvertDateToYMD(aging_date);
 
 	for (EngineID i = 0; i < 256; i++) {
 		int oi = ttd_to_tto[i];
@@ -396,17 +396,19 @@ static bool FixTTOEngines()
 
 		if (oi == 255) {
 			/* Default engine is used */
-			_date += DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
+			CalTime::State backup = CalTime::Detail::now;
+			CalTime::Detail::now.cal_date += CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
+			CalTime::Detail::now.cal_ymd = CalTime::ConvertDateToYMD(CalTime::Detail::now.cal_date);
 			StartupOneEngine(e, aging_date, aging_ymd, 0, INT_MAX);
 			CalcEngineReliability(e, false);
-			e->intro_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
-			_date -= DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
+			e->intro_date -= CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
+			CalTime::Detail::now = backup;
 
 			/* Make sure for example monorail and maglev are available when they should be */
-			if (_date >= e->intro_date && HasBit(e->info.climates, 0)) {
+			if (CalTime::CurDate() >= e->intro_date && HasBit(e->info.climates, 0)) {
 				e->flags |= ENGINE_AVAILABLE;
 				e->company_avail = MAX_UVALUE(CompanyMask);
-				e->age = _date > e->intro_date ? (_date - e->intro_date).base() / 30 : 0;
+				e->age = CalTime::CurDate() > e->intro_date ? (CalTime::CurDate() - e->intro_date).base() / 30 : 0;
 			}
 		} else {
 			/* Using data from TTO savegame */
@@ -455,10 +457,10 @@ static void FixTTOCompanies()
 	}
 }
 
-static inline byte RemapTTOColour(byte tto)
+static inline Colours RemapTTOColour(Colours tto)
 {
 	/** Lossy remapping of TTO colours to TTD colours. SVXConverter uses the same conversion. */
-	static const byte tto_colour_remap[] = {
+	static const Colours tto_colour_remap[] = {
 		COLOUR_DARK_BLUE,  COLOUR_GREY,       COLOUR_YELLOW,     COLOUR_RED,
 		COLOUR_PURPLE,     COLOUR_DARK_GREEN, COLOUR_ORANGE,     COLOUR_PALE_GREEN,
 		COLOUR_BLUE,       COLOUR_GREEN,      COLOUR_CREAM,      COLOUR_BROWN,
@@ -587,21 +589,22 @@ static const OldChunks town_chunk[] = {
 	OCL_SVAR(  OC_FILE_U8 | OC_VAR_U16, Town, time_until_rebuild ),
 	OCL_SVAR(  OC_FILE_U8 | OC_VAR_U16, Town, growth_rate ),
 
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_PASSENGERS].new_max ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_MAIL].new_max ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_PASSENGERS].new_act ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_MAIL].new_act ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_PASSENGERS].old_max ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_MAIL].old_max ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_PASSENGERS].old_act ),
-	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[CT_MAIL].old_act ),
+	/* Slots 0 and 2 are passengers and mail respectively for old saves. */
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[0].new_max ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[2].new_max ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[0].new_act ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[2].new_act ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[0].old_max ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[2].old_max ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[0].old_act ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Town, supplied[2].old_act ),
 
 	OCL_NULL( 2 ),         ///< pct_pass_transported / pct_mail_transported, now computed on the fly
 
-	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TE_FOOD].new_act ),
-	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TE_WATER].new_act ),
-	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TE_FOOD].old_act ),
-	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TE_WATER].old_act ),
+	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TAE_FOOD].new_act ),
+	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TAE_WATER].new_act ),
+	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TAE_FOOD].old_act ),
+	OCL_SVAR( OC_TTD | OC_UINT16, Town, received[TAE_WATER].old_act ),
 
 	OCL_SVAR(  OC_UINT8, Town, road_build_months ),
 	OCL_SVAR(  OC_UINT8, Town, fund_buildings_months ),
@@ -857,7 +860,7 @@ static bool LoadOldIndustry(LoadgameState *ls, int num)
 			if (i->type > 0x06) i->type++; // Printing Works were added
 			if (i->type == 0x0A) i->type = 0x12; // Iron Ore Mine has different ID
 
-			i->last_prod_year = _cur_date_ymd.year;
+			i->last_prod_year = CalTime::CurYear().base();
 
 			i->random_colour = RemapTTOColour(i->random_colour);
 		}
@@ -1032,8 +1035,8 @@ static bool LoadOldCompany(LoadgameState *ls, int num)
 		if (c->money == 893288) c->money = c->current_loan = 100000;
 	}
 
-	_company_colours[num] = (Colours)c->colour;
-	c->inaugurated_year -= ORIGINAL_BASE_YEAR;
+	_company_colours[num] = c->colour;
+	c->inaugurated_year -= CalTime::ORIGINAL_BASE_YEAR.AsDelta();
 
 	return true;
 }
@@ -1302,10 +1305,10 @@ bool LoadOldVehicle(LoadgameState *ls, int num)
 
 					switch (v->spritenum) {
 						case 2: // oil tanker && cargo type != oil
-							if (v->cargo_type != CT_OIL) v->spritenum = 0; // make it a coal/goods ship
+							if (v->cargo_type != 3) v->spritenum = 0; // make it a coal/goods ship
 							break;
 						case 4: // passenger ship && cargo type == mail
-							if (v->cargo_type == CT_MAIL) v->spritenum = 0; // make it a mail ship
+							if (v->cargo_type == 2) v->spritenum = 0; // make it a mail ship
 							break;
 						default:
 							break;
@@ -1598,8 +1601,8 @@ extern uint8_t _old_units;
 static const OldChunks main_chunk[] = {
 	OCL_ASSERT( OC_TTD, 0 ),
 	OCL_ASSERT( OC_TTO, 0 ),
-	OCL_VAR ( OC_FILE_U16 | OC_VAR_U32, 1, &_date ),
-	OCL_VAR ( OC_UINT16,   1, &_date_fract ),
+	OCL_VAR ( OC_FILE_U16 | OC_VAR_U32, 1, &CalTime::Detail::now.cal_date ),
+	OCL_VAR ( OC_UINT16,   1, &CalTime::Detail::now.cal_date_fract ),
 	OCL_NULL( 600 ),            ///< TextEffects
 	OCL_VAR ( OC_UINT32,   2, &_random.state ),
 

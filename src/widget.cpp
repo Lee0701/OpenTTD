@@ -23,6 +23,9 @@
 #include "table/strings.h"
 #include "table/string_colours.h"
 
+#include <stdexcept>
+#include <numeric>
+
 #include "safeguards.h"
 
 WidgetDimensions WidgetDimensions::scaled = {};
@@ -1258,10 +1261,10 @@ void NWidgetStacked::SetupSmallestSize(Window *w)
 
 		this->smallest_x = std::max(this->smallest_x, child_wid->smallest_x + child_wid->padding.Horizontal());
 		this->smallest_y = std::max(this->smallest_y, child_wid->smallest_y + child_wid->padding.Vertical());
-		this->fill_x = LeastCommonMultiple(this->fill_x, child_wid->fill_x);
-		this->fill_y = LeastCommonMultiple(this->fill_y, child_wid->fill_y);
-		this->resize_x = LeastCommonMultiple(this->resize_x, child_wid->resize_x);
-		this->resize_y = LeastCommonMultiple(this->resize_y, child_wid->resize_y);
+		this->fill_x = std::lcm(this->fill_x, child_wid->fill_x);
+		this->fill_y = std::lcm(this->fill_y, child_wid->fill_y);
+		this->resize_x = std::lcm(this->resize_x, child_wid->resize_x);
+		this->resize_y = std::lcm(this->resize_y, child_wid->resize_y);
 	}
 }
 
@@ -1290,8 +1293,13 @@ void NWidgetStacked::AssignSizePosition(SizingType sizing, int x, int y, uint gi
 
 void NWidgetStacked::FillWidgetLookup(WidgetLookup &widget_lookup)
 {
+	/* We need to update widget_lookup later. */
+	this->widget_lookup = &widget_lookup;
+
 	if (this->index >= 0) widget_lookup[this->index] = this;
 	NWidgetContainer::FillWidgetLookup(widget_lookup);
+	/* In case widget IDs are repeated, make sure Window::GetWidget works on displayed widgets. */
+	if (static_cast<size_t>(this->shown_plane) < this->children.size()) this->children[shown_plane]->FillWidgetLookup(widget_lookup);
 }
 
 void NWidgetStacked::Draw(const Window *w)
@@ -1340,6 +1348,8 @@ bool NWidgetStacked::SetDisplayedPlane(int plane)
 {
 	if (this->shown_plane == plane) return false;
 	this->shown_plane = plane;
+	/* In case widget IDs are repeated, make sure Window::GetWidget works on displayed widgets. */
+	if (static_cast<size_t>(this->shown_plane) < this->children.size()) this->children[shown_plane]->FillWidgetLookup(*this->widget_lookup);
 	return true;
 }
 
@@ -1449,12 +1459,12 @@ void NWidgetHorizontal::SetupSmallestSize(Window *w)
 		if (child_wid->fill_x > 0) {
 			if (this->fill_x == 0 || this->fill_x > child_wid->fill_x) this->fill_x = child_wid->fill_x;
 		}
-		this->fill_y = LeastCommonMultiple(this->fill_y, child_wid->fill_y);
+		this->fill_y = std::lcm(this->fill_y, child_wid->fill_y);
 
 		if (child_wid->resize_x > 0) {
 			if (this->resize_x == 0 || this->resize_x > child_wid->resize_x) this->resize_x = child_wid->resize_x;
 		}
-		this->resize_y = LeastCommonMultiple(this->resize_y, child_wid->resize_y);
+		this->resize_y = std::lcm(this->resize_y, child_wid->resize_y);
 	}
 	if (this->fill_x == 0 && this->pip_ratio_pre + this->pip_ratio_inter + this->pip_ratio_post > 0) this->fill_x = 1;
 	/* 4. Increase by required PIP space. */
@@ -1638,12 +1648,12 @@ void NWidgetVertical::SetupSmallestSize(Window *w)
 		if (child_wid->fill_y > 0) {
 			if (this->fill_y == 0 || this->fill_y > child_wid->fill_y) this->fill_y = child_wid->fill_y;
 		}
-		this->fill_x = LeastCommonMultiple(this->fill_x, child_wid->fill_x);
+		this->fill_x = std::lcm(this->fill_x, child_wid->fill_x);
 
 		if (child_wid->resize_y > 0) {
 			if (this->resize_y == 0 || this->resize_y > child_wid->resize_y) this->resize_y = child_wid->resize_y;
 		}
-		this->resize_x = LeastCommonMultiple(this->resize_x, child_wid->resize_x);
+		this->resize_x = std::lcm(this->resize_x, child_wid->resize_x);
 	}
 	if (this->fill_y == 0 && this->pip_ratio_pre + this->pip_ratio_inter + this->pip_ratio_post > 0) this->fill_y = 1;
 	/* 4. Increase by required PIP space. */
@@ -2725,7 +2735,7 @@ void NWidgetLeaf::SetupSmallestSize(Window *w)
 			size.width = std::max(size.width, ScaleGUITrad(30) + sprite_size.width);
 			size.height = std::max(sprite_size.height, GetStringBoundingBox("_").height + WidgetDimensions::scaled.framerect.Vertical());
 		}
-		FALLTHROUGH;
+		[[fallthrough]];
 		case WWT_PUSHBTN: {
 			padding = {WidgetDimensions::scaled.frametext.Horizontal(), WidgetDimensions::scaled.framerect.Vertical()};
 			break;
@@ -3108,7 +3118,7 @@ static const NWidgetPart *MakeNWidget(const NWidgetPart *nwid_begin, const NWidg
 				NWidgetBackground *nwb = dynamic_cast<NWidgetBackground *>(dest.get());
 				if (nwb != nullptr) nwb->SetPIPRatio(nwid_begin->u.pip.pre, nwid_begin->u.pip.inter, nwid_begin->u.pip.post);
 
-				if (unlikely(nwc == nullptr && nwb == nullptr)) throw std::runtime_error("WPT_PIPRATIO requires NWidgetPIPContainer or NWidgetBackground");
+				if (nwc == nullptr && nwb == nullptr) [[unlikely]] throw std::runtime_error("WPT_PIPRATIO requires NWidgetPIPContainer or NWidgetBackground");
 				break;
 			}
 
@@ -3221,7 +3231,7 @@ std::unique_ptr<NWidgetBase> MakeNWidgets(const NWidgetPart *nwid_begin, const N
 	if (container == nullptr) container = std::make_unique<NWidgetVertical>();
 	[[maybe_unused]] const NWidgetPart *nwid_part = MakeWidgetTree(nwid_begin, nwid_end, container);
 #ifdef WITH_ASSERT
-	if (unlikely(nwid_part != nwid_end)) throw std::runtime_error("Did not consume all NWidgetParts");
+	if (nwid_part != nwid_end) [[unlikely]] throw std::runtime_error("Did not consume all NWidgetParts");
 #endif
 	return container;
 }

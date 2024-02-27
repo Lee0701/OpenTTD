@@ -193,14 +193,21 @@ SpriteID TileZoneCheckUnservedBuildingsEvaluation(TileIndex tile, Owner owner)
 		return ZONING_INVALID_SPRITE_ID;
 	}
 
+	auto has_town_cargo = [&](const CargoArray &dat) {
+		for (CargoID cid : SetCargoBitIterator(CargoSpec::town_production_cargo_mask[TPE_PASSENGERS] | CargoSpec::town_production_cargo_mask[TPE_MAIL])) {
+			if (dat[cid] > 0) return true;
+		}
+		return false;
+	};
+
 	CargoArray dat{};
 	dat.Clear();
 	AddAcceptedCargo(tile, dat, nullptr);
-	if (dat[CT_MAIL] + dat[CT_PASSENGERS] == 0) {
-		// nothing is accepted, so now test if cargo is produced
+	if (!has_town_cargo(dat)) {
+		/* nothing is accepted, so now test if cargo is produced */
 		AddProducedCargo(tile, dat);
-		if (dat[CT_MAIL] + dat[CT_PASSENGERS] == 0) {
-			// total is still 0, so give up
+		if (!has_town_cargo(dat)) {
+			/* still don't have town cargo, so give up */
 			return ZONING_INVALID_SPRITE_ID;
 		}
 	}
@@ -401,6 +408,7 @@ SpriteID TileZoningSpriteEvaluation(TileIndex tile, Owner owner, ZoningEvaluatio
 
 inline SpriteID TileZoningSpriteEvaluationCached(TileIndex tile, Owner owner, ZoningEvaluationMode ev_mode, bool is_inner)
 {
+	if (owner == COMPANY_SPECTATOR && (ev_mode == ZEM_CAN_BUILD || (ev_mode >= ZEM_STA_CATCH && ev_mode <= ZEM_IND_UNSER))) return ZONING_INVALID_SPRITE_ID;
 	if (ev_mode == ZEM_BUL_UNSER && !IsTileType(tile, MP_HOUSE)) return ZONING_INVALID_SPRITE_ID;
 	if (ev_mode == ZEM_IND_UNSER && !IsTileType(tile, MP_INDUSTRY)) return ZONING_INVALID_SPRITE_ID;
 	if (ev_mode >= ZEM_STA_CATCH && ev_mode <= ZEM_IND_UNSER) {

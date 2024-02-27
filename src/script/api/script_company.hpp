@@ -219,11 +219,37 @@ public:
 	static Money GetLoanAmount();
 
 	/**
-	 * Gets the maximum amount your company can loan.
+	 * Gets the maximum amount your company can loan. In deity mode returns the global max loan.
 	 * @return The maximum amount your company can loan.
 	 * @post GetLoanInterval() is always a multiplier of the return value.
 	 */
 	static Money GetMaxLoanAmount();
+
+	/**
+	 * Sets the max amount of money company can loan.
+	 * @param company The company ID.
+	 * @param amount Max loan amount. Will be rounded down to a multiple of GetLoanInterval().
+	 * @return True, if the max loan was changed.
+	 * @pre ScriptCompanyMode::IsDeity().
+	 * @pre amount >= 0.
+	 * @pre ResolveCompanyID(company) != COMPANY_INVALID.
+	 * @note You need to create your own news message to inform about max loan change.
+	 * @note Max loan value set with this method is not affected by inflation.
+	 * @api -ai
+	 */
+	static bool SetMaxLoanAmountForCompany(CompanyID company, Money amount);
+
+	/**
+	 * Makes the max amount of money company can loan follow the global max loan setting.
+	 * @param company The company ID.
+	 * @return True, if the max loan was reset.
+	 * @pre ScriptCompanyMode::IsDeity().
+	 * @pre amount >= 0 && amount <= MAX_LOAN_LIMIT.
+	 * @pre ResolveCompanyID(company) != COMPANY_INVALID.
+	 * @note You need to create your own news message to inform about max loan change.
+	 * @api -ai
+	 */
+	static bool ResetMaxLoanAmountForCompany(CompanyID company);
 
 	/**
 	 * Gets the interval/loan step.
@@ -234,9 +260,10 @@ public:
 
 	/**
 	 * Gets the bank balance. In other words, the amount of money the given company can spent.
+	 * If infinite money is enabled, it returns INT32_MAX.
 	 * @param company The company to get the bank balance of.
 	 * @pre ResolveCompanyID(company) != COMPANY_INVALID.
-	 * @return The actual bank balance.
+	 * @return The actual bank balance or INT32_MAX.
 	 */
 	static Money GetBankBalance(CompanyID company);
 

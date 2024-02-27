@@ -185,8 +185,10 @@
 {
 	company = ResolveCompanyID(company);
 	if (company == COMPANY_INVALID) return -1;
+	/* If we return INT64_MAX as usual, overflows may occur in the script. So return a smaller value. */
+	if (_settings_game.difficulty.infinite_money) return INT32_MAX;
 
-	return ::Company::Get(company)->money;
+	return GetAvailableMoney((::CompanyID)company);
 }
 
 /* static */ Money ScriptCompany::GetLoanAmount()
@@ -199,7 +201,32 @@
 
 /* static */ Money ScriptCompany::GetMaxLoanAmount()
 {
-	return _economy.max_loan;
+	if (ScriptCompanyMode::IsDeity()) return _economy.max_loan;
+
+	ScriptCompany::CompanyID company = ResolveCompanyID(COMPANY_SELF);
+	if (company == COMPANY_INVALID) return -1;
+
+	return ::Company::Get(company)->GetMaxLoan();
+}
+
+/* static */ bool ScriptCompany::SetMaxLoanAmountForCompany(CompanyID company, Money amount)
+{
+	EnforceDeityMode(false);
+	EnforcePrecondition(false, amount >= 0 && amount <= (Money)MAX_LOAN_LIMIT);
+
+	company = ResolveCompanyID(company);
+	EnforcePrecondition(false, company != COMPANY_INVALID);
+	return ScriptObject::DoCommandEx(0, company, 0, (uint64_t)amount, CMD_SET_COMPANY_MAX_LOAN);
+}
+
+/* static */ bool ScriptCompany::ResetMaxLoanAmountForCompany(CompanyID company)
+{
+	EnforceDeityMode(false);
+
+	company = ResolveCompanyID(company);
+	EnforcePrecondition(false, company != COMPANY_INVALID);
+
+	return ScriptObject::DoCommandEx(0, company, 0, (uint64_t)COMPANY_MAX_LOAN_DEFAULT, CMD_SET_COMPANY_MAX_LOAN);
 }
 
 /* static */ Money ScriptCompany::GetLoanInterval()

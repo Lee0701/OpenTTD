@@ -292,7 +292,7 @@ public:
 	{
 		if (widget == WID_NCDS_CANCELOK) {
 			if (this->downloaded_bytes != this->total_bytes) {
-				_network_content_client.CloseConnection();
+				_network_content_client.Cancel();
 				this->Close();
 			} else {
 				/* If downloading succeeded, close the online content window. This will close
@@ -898,7 +898,7 @@ public:
 						return ES_HANDLED;
 					}
 					/* space is pressed and filter is focused. */
-					FALLTHROUGH;
+					[[fallthrough]];
 
 				default:
 					return ES_NOT_HANDLED;

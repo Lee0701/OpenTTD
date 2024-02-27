@@ -950,7 +950,7 @@ static ChangeInfoResult CommonVehicleChangeInfo(EngineInfo *ei, int prop, const 
 {
 	switch (prop) {
 		case 0x00: // Introduction date
-			ei->base_intro = buf->ReadWord() + DAYS_TILL_ORIGINAL_BASE_YEAR;
+			ei->base_intro = buf->ReadWord() + CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR;
 			break;
 
 		case 0x02: // Decay speed
@@ -1105,6 +1105,7 @@ static ChangeInfoResult RailVehicleChangeInfo(uint engine, int numinfo, int prop
 					ei->cargo_type = INVALID_CARGO;
 					grfmsg(2, "RailVehicleChangeInfo: Invalid cargo type %d, using first refittable", ctype);
 				}
+				ei->cargo_label = CT_INVALID;
 				break;
 			}
 
@@ -1367,6 +1368,7 @@ static ChangeInfoResult RoadVehicleChangeInfo(uint engine, int numinfo, int prop
 					ei->cargo_type = INVALID_CARGO;
 					grfmsg(2, "RailVehicleChangeInfo: Invalid cargo type %d, using first refittable", ctype);
 				}
+				ei->cargo_label = CT_INVALID;
 				break;
 			}
 
@@ -1542,7 +1544,7 @@ static ChangeInfoResult ShipVehicleChangeInfo(uint engine, int numinfo, int prop
 				svi->cost_factor = buf->ReadByte();
 				break;
 
-			case PROP_SHIP_SPEED: // 0x0B Speed (1 unit is 0.5 km-ish/h)
+			case PROP_SHIP_SPEED: // 0x0B Speed (1 unit is 0.5 km-ish/h). Use 0x23 to achieve higher speeds.
 				svi->max_speed = buf->ReadByte();
 				break;
 
@@ -1563,6 +1565,7 @@ static ChangeInfoResult ShipVehicleChangeInfo(uint engine, int numinfo, int prop
 					ei->cargo_type = INVALID_CARGO;
 					grfmsg(2, "ShipVehicleChangeInfo: Invalid cargo type %d, using first refittable", ctype);
 				}
+				ei->cargo_label = CT_INVALID;
 				break;
 			}
 
@@ -1669,6 +1672,14 @@ static ChangeInfoResult ShipVehicleChangeInfo(uint engine, int numinfo, int prop
 
 			case 0x22: // Callback additional mask
 				SB(ei->callback_mask, 8, 8, buf->ReadByte());
+				break;
+
+			case 0x23: // Speed (1 unit is 0.5 km-ish/h)
+				svi->max_speed = buf->ReadWord();
+				break;
+
+			case 0x24: // Acceleration (1 unit is 0.5 km-ish/h per tick)
+				svi->acceleration = std::max<uint8_t>(1, buf->ReadByte());
 				break;
 
 			default:
@@ -2071,7 +2082,7 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 
 			case A0RPI_STATION_MIN_BRIDGE_HEIGHT:
 				if (MappedPropertyLengthMismatch(buf, 8, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x1B: // Minimum height for a bridge above
 				SetBit(statspec->internal_flags, SSIF_BRIDGE_HEIGHTS_SET);
 				for (uint i = 0; i < 8; i++) {
@@ -2166,7 +2177,7 @@ static ChangeInfoResult BridgeChangeInfo(uint brid, int numinfo, int prop, const
 			case 0x08: { // Year of availability
 				/* We treat '0' as always available */
 				byte year = buf->ReadByte();
-				bridge->avail_year = (year > 0 ? ORIGINAL_BASE_YEAR + year : 0);
+				bridge->avail_year = (year > 0 ? CalTime::ORIGINAL_BASE_YEAR + year : 0);
 				break;
 			}
 
@@ -2227,7 +2238,7 @@ static ChangeInfoResult BridgeChangeInfo(uint brid, int numinfo, int prop, const
 				break;
 
 			case 0x0F: // Long format year of availability (year since year 0)
-				bridge->avail_year = Clamp(buf->ReadDWord(), MIN_YEAR, MAX_YEAR);
+				bridge->avail_year = Clamp<CalTime::Year>(buf->ReadDWord(), CalTime::MIN_YEAR, CalTime::MAX_YEAR);
 				break;
 
 			case 0x10: { // purchase string
@@ -2249,7 +2260,7 @@ static ChangeInfoResult BridgeChangeInfo(uint brid, int numinfo, int prop, const
 
 			case A0RPI_BRIDGE_MENU_ICON:
 				if (MappedPropertyLengthMismatch(buf, 4, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x14: // purchase sprite
 				bridge->sprite = buf->ReadWord();
 				bridge->pal    = buf->ReadWord();
@@ -2400,10 +2411,11 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 					housespec->grf_prop.local_id = hid + i;
 					housespec->grf_prop.subst_id = subs_id;
 					housespec->grf_prop.grffile = _cur.grffile;
-					housespec->random_colour[0] = 0x04;  // those 4 random colours are the base colour
-					housespec->random_colour[1] = 0x08;  // for all new houses
-					housespec->random_colour[2] = 0x0C;  // they stand for red, blue, orange and green
-					housespec->random_colour[3] = 0x06;
+					/* Set default colours for randomization, used if not overridden. */
+					housespec->random_colour[0] = COLOUR_RED;
+					housespec->random_colour[1] = COLOUR_BLUE;
+					housespec->random_colour[2] = COLOUR_ORANGE;
+					housespec->random_colour[3] = COLOUR_GREEN;
 
 					/* House flags 40 and 80 are exceptions; these flags are never set automatically. */
 					housespec->building_flags &= ~(BUILDING_IS_CHURCH | BUILDING_IS_STADIUM);
@@ -2412,7 +2424,9 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 					 * climate. This can cause problems when copying the properties
 					 * of a house that accepts food, where the new house is valid
 					 * in the temperate climate. */
-					if (!CargoSpec::Get(housespec->accepts_cargo[2])->IsValid()) {
+					CargoID cid = housespec->accepts_cargo[2];
+					if (!IsValidCargoID(cid)) cid = GetCargoIDByLabel(housespec->accepts_cargo_label[2]);
+					if (!IsValidCargoID(cid)) {
 						housespec->cargo_acceptance[2] = 0;
 					}
 				}
@@ -2425,8 +2439,8 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 
 			case 0x0A: { // Availability years
 				uint16_t years = buf->ReadWord();
-				housespec->min_year = GB(years, 0, 8) > 150 ? MAX_YEAR : ORIGINAL_BASE_YEAR + GB(years, 0, 8);
-				housespec->max_year = GB(years, 8, 8) > 150 ? MAX_YEAR : ORIGINAL_BASE_YEAR + GB(years, 8, 8);
+				housespec->min_year = GB(years, 0, 8) > 150 ? CalTime::MAX_YEAR : CalTime::ORIGINAL_BASE_YEAR + GB(years, 0, 8);
+				housespec->max_year = GB(years, 8, 8) > 150 ? CalTime::MAX_YEAR : CalTime::ORIGINAL_BASE_YEAR + GB(years, 8, 8);
 				break;
 			}
 
@@ -2448,13 +2462,14 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 
 				/* If value of goods is negative, it means in fact food or, if in toyland, fizzy_drink acceptance.
 				 * Else, we have "standard" 3rd cargo type, goods or candy, for toyland once more */
-				CargoID cid = (goods >= 0) ? ((_settings_game.game_creation.landscape == LT_TOYLAND) ? CT_CANDY : CT_GOODS) :
-						((_settings_game.game_creation.landscape == LT_TOYLAND) ? CT_FIZZY_DRINKS : CT_FOOD);
+				CargoID cid = (goods >= 0) ? ((_settings_game.game_creation.landscape == LT_TOYLAND) ? GetCargoIDByLabel(CT_CANDY) : GetCargoIDByLabel(CT_GOODS)) :
+						((_settings_game.game_creation.landscape == LT_TOYLAND) ? GetCargoIDByLabel(CT_FIZZY_DRINKS) : GetCargoIDByLabel(CT_FOOD));
 
 				/* Make sure the cargo type is valid in this climate. */
-				if (!CargoSpec::Get(cid)->IsValid()) goods = 0;
+				if (!IsValidCargoID(cid)) goods = 0;
 
 				housespec->accepts_cargo[2] = cid;
+				housespec->accepts_cargo_label[2] = CT_INVALID;
 				housespec->cargo_acceptance[2] = abs(goods); // but we do need positive value here
 				break;
 			}
@@ -2497,7 +2512,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 				break;
 
 			case 0x17: // Four random colours to use
-				for (uint j = 0; j < 4; j++) housespec->random_colour[j] = buf->ReadByte();
+				for (uint j = 0; j < 4; j++) housespec->random_colour[j] = static_cast<Colours>(GB(buf->ReadByte(), 0, 4));
 				break;
 
 			case 0x18: // Relative probability of appearing
@@ -2586,6 +2601,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 						housespec->accepts_cargo[i] = INVALID_CARGO;
 						housespec->cargo_acceptance[i] = 0;
 					}
+					housespec->accepts_cargo_label[i] = CT_INVALID;
 				}
 				break;
 			}
@@ -2622,7 +2638,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
  * @return ChangeInfoResult.
  */
 template <typename T>
-static ChangeInfoResult LoadTranslationTable(uint gvid, int numinfo, ByteReader *buf, T &translation_table, const char *name)
+static ChangeInfoResult LoadTranslationTable(uint gvid, int numinfo, ByteReader *buf, std::vector<T> &translation_table, const char *name)
 {
 	if (gvid != 0) {
 		grfmsg(1, "LoadTranslationTable: %s translation table must start at zero", name);
@@ -2631,8 +2647,7 @@ static ChangeInfoResult LoadTranslationTable(uint gvid, int numinfo, ByteReader 
 
 	translation_table.clear();
 	for (int i = 0; i < numinfo; i++) {
-		uint32_t item = buf->ReadDWord();
-		translation_table.push_back(BSWAP32(item));
+		translation_table.push_back(T(BSWAP32(buf->ReadDWord())));
 	}
 
 	return CIR_SUCCESS;
@@ -2763,7 +2778,7 @@ static ChangeInfoResult GlobalVarChangeInfo(uint gvid, int numinfo, int prop, co
 
 			case 0x0F: { //  Euro introduction dates
 				uint curidx = GetNewgrfCurrencyIdConverted(gvid + i);
-				Year year_euro = buf->ReadWord();
+				CalTime::Year year_euro = buf->ReadWord();
 
 				if (curidx < CURRENCY_END) {
 					_currency_specs[curidx].to_euro = year_euro;
@@ -3020,6 +3035,7 @@ static ChangeInfoResult CargoChangeInfo(uint cid, int numinfo, int prop, const G
 				} else {
 					ClrBit(_cargo_mask, cid + i);
 				}
+				BuildCargoLabelMap();
 				break;
 
 			case 0x09: // String ID for cargo type name
@@ -3087,23 +3103,23 @@ static ChangeInfoResult CargoChangeInfo(uint cid, int numinfo, int prop, const G
 				break;
 
 			case 0x17: // Cargo label
-				cs->label = buf->ReadDWord();
-				cs->label = BSWAP32(cs->label);
+				cs->label = CargoLabel{BSWAP32(buf->ReadDWord())};
+				BuildCargoLabelMap();
 				break;
 
 			case 0x18: { // Town growth substitute type
 				uint8_t substitute_type = buf->ReadByte();
 
 				switch (substitute_type) {
-					case 0x00: cs->town_effect = TE_PASSENGERS; break;
-					case 0x02: cs->town_effect = TE_MAIL; break;
-					case 0x05: cs->town_effect = TE_GOODS; break;
-					case 0x09: cs->town_effect = TE_WATER; break;
-					case 0x0B: cs->town_effect = TE_FOOD; break;
+					case 0x00: cs->town_acceptance_effect = TAE_PASSENGERS; break;
+					case 0x02: cs->town_acceptance_effect = TAE_MAIL; break;
+					case 0x05: cs->town_acceptance_effect = TAE_GOODS; break;
+					case 0x09: cs->town_acceptance_effect = TAE_WATER; break;
+					case 0x0B: cs->town_acceptance_effect = TAE_FOOD; break;
 					default:
 						grfmsg(1, "CargoChangeInfo: Unknown town growth substitute value %d, setting to none.", substitute_type);
-						FALLTHROUGH;
-					case 0xFF: cs->town_effect = TE_NONE; break;
+						[[fallthrough]];
+					case 0xFF: cs->town_acceptance_effect = TAE_NONE; break;
 				}
 				break;
 			}
@@ -3118,6 +3134,24 @@ static ChangeInfoResult CargoChangeInfo(uint cid, int numinfo, int prop, const G
 
 			case 0x1D: // Vehicle capacity muliplier
 				cs->multiplier = std::max<uint16_t>(1u, buf->ReadWord());
+				break;
+
+			case 0x1E: { // Town production substitute type
+				uint8_t substitute_type = buf->ReadByte();
+
+				switch (substitute_type) {
+					case 0x00: cs->town_production_effect = TPE_PASSENGERS; break;
+					case 0x02: cs->town_production_effect = TPE_MAIL; break;
+					default:
+						grfmsg(1, "CargoChangeInfo: Unknown town production substitute value %u, setting to none.", substitute_type);
+						[[fallthrough]];
+					case 0xFF: cs->town_production_effect = TPE_NONE; break;
+				}
+				break;
+			}
+
+			case 0x1F: // Town production multiplier
+				cs->town_production_multiplier = std::max<uint16_t>(1U, buf->ReadWord());
 				break;
 
 			default:
@@ -3347,6 +3381,7 @@ static ChangeInfoResult IndustrytilesChangeInfo(uint indtid, int numinfo, int pr
 						tsp->accepts_cargo[i] = INVALID_CARGO;
 						tsp->acceptance[i] = 0;
 					}
+					tsp->accepts_cargo_label[i] = CT_INVALID;
 				}
 				break;
 			}
@@ -3677,12 +3712,14 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 			case 0x10: // Production cargo types
 				for (byte j = 0; j < 2; j++) {
 					indsp->produced_cargo[j] = GetCargoTranslation(buf->ReadByte(), _cur.grffile);
+					indsp->produced_cargo_label[j] = CT_INVALID;
 				}
 				break;
 
 			case 0x11: // Acceptance cargo types
 				for (byte j = 0; j < 3; j++) {
 					indsp->accepts_cargo[j] = GetCargoTranslation(buf->ReadByte(), _cur.grffile);
+					indsp->accepts_cargo_label[j] = CT_INVALID;
 				}
 				buf->ReadByte(); // Unnused, eat it up
 				break;
@@ -3793,6 +3830,7 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 					} else {
 						indsp->produced_cargo[i] = INVALID_CARGO;
 					}
+					indsp->produced_cargo_label[i] = CT_INVALID;
 				}
 				break;
 			}
@@ -3811,6 +3849,7 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 					} else {
 						indsp->accepts_cargo[i] = INVALID_CARGO;
 					}
+					indsp->accepts_cargo_label[i] = CT_INVALID;
 				}
 				break;
 			}
@@ -4032,7 +4071,7 @@ static ChangeInfoResult AirportChangeInfo(uint airport, int numinfo, int prop, c
 			case 0x0C:
 				as->min_year = buf->ReadWord();
 				as->max_year = buf->ReadWord();
-				if (as->max_year == 0xFFFF) as->max_year = MAX_YEAR;
+				if (as->max_year == 0xFFFF) as->max_year = CalTime::MAX_YEAR;
 				break;
 
 			case 0x0D:
@@ -4504,7 +4543,7 @@ static ChangeInfoResult RailTypeChangeInfo(uint id, int numinfo, int prop, const
 					RailType resolved_rt = GetRailTypeByLabel(BSWAP32(label), false);
 					if (resolved_rt != INVALID_RAILTYPE) {
 						switch (prop) {
-							case 0x0F: SetBit(rti->powered_railtypes, resolved_rt);               FALLTHROUGH; // Powered implies compatible.
+							case 0x0F: SetBit(rti->powered_railtypes, resolved_rt);               [[fallthrough]]; // Powered implies compatible.
 							case 0x0E: SetBit(rti->compatible_railtypes, resolved_rt);            break;
 							case 0x18: SetBit(rti->introduction_required_railtypes, resolved_rt); break;
 							case 0x19: SetBit(rti->introduces_railtypes, resolved_rt);            break;
@@ -4651,7 +4690,7 @@ static ChangeInfoResult RailTypeReserveInfo(uint id, int numinfo, int prop, cons
 					break;
 				}
 				grfmsg(1, "RailTypeReserveInfo: Ignoring property 1D for rail type %u because no label was set", id + i);
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case 0x0E: // Compatible railtype list
 			case 0x0F: // Powered railtype list
@@ -5088,7 +5127,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 		switch (prop) {
 			case A0RPI_ROADSTOP_CLASS_ID:
 				if (MappedPropertyLengthMismatch(buf, 4, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x08: { // Road Stop Class ID
 				if (rs == nullptr) {
 					_cur.grffile->roadstops[id + i] = std::make_unique<RoadStopSpec>();
@@ -5103,42 +5142,42 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 
 			case A0RPI_ROADSTOP_STOP_TYPE:
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x09: // Road stop type
 				rs->stop_type = (RoadStopAvailabilityType)buf->ReadByte();
 				break;
 
 			case A0RPI_ROADSTOP_STOP_NAME:
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0A: // Road Stop Name
 				AddStringForMapping(buf->ReadWord(), &rs->name);
 				break;
 
 			case A0RPI_ROADSTOP_CLASS_NAME:
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0B: // Road Stop Class name
 				AddStringForMapping(buf->ReadWord(), &RoadStopClass::Get(rs->cls_id)->name);
 				break;
 
 			case A0RPI_ROADSTOP_DRAW_MODE:
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0C: // The draw mode
 				rs->draw_mode = (RoadStopDrawMode)buf->ReadByte();
 				break;
 
 			case A0RPI_ROADSTOP_TRIGGER_CARGOES:
 				if (MappedPropertyLengthMismatch(buf, 4, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0D: // Cargo types for random triggers
 				rs->cargo_triggers = TranslateRefitMask(buf->ReadDWord());
 				break;
 
 			case A0RPI_ROADSTOP_ANIMATION_INFO:
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0E: // Animation info
 				rs->animation.frames = buf->ReadByte();
 				rs->animation.status = buf->ReadByte();
@@ -5146,35 +5185,35 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 
 			case A0RPI_ROADSTOP_ANIMATION_SPEED:
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x0F: // Animation speed
 				rs->animation.speed = buf->ReadByte();
 				break;
 
 			case A0RPI_ROADSTOP_ANIMATION_TRIGGERS:
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x10: // Animation triggers
 				rs->animation.triggers = buf->ReadWord();
 				break;
 
 			case A0RPI_ROADSTOP_CALLBACK_MASK:
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x11: // Callback mask
 				rs->callback_mask = buf->ReadByte();
 				break;
 
 			case A0RPI_ROADSTOP_GENERAL_FLAGS:
 				if (MappedPropertyLengthMismatch(buf, 4, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x12: // General flags
 				rs->flags = (uint16_t)buf->ReadDWord(); // Future-proofing, size this as 4 bytes, but we only need two bytes' worth of flags at present
 				break;
 
 			case A0RPI_ROADSTOP_MIN_BRIDGE_HEIGHT:
 				if (MappedPropertyLengthMismatch(buf, 6, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x13: // Minimum height for a bridge above
 				SetBit(rs->internal_flags, RSIF_BRIDGE_HEIGHTS_SET);
 				for (uint i = 0; i < 6; i++) {
@@ -5184,7 +5223,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 
 			case A0RPI_ROADSTOP_DISALLOWED_BRIDGE_PILLARS:
 				if (MappedPropertyLengthMismatch(buf, 6, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x14: // Disallowed bridge pillars
 				SetBit(rs->internal_flags, RSIF_BRIDGE_DISALLOWED_PILLARS_SET);
 				for (uint i = 0; i < 6; i++) {
@@ -5194,7 +5233,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 
 			case A0RPI_ROADSTOP_COST_MULTIPLIERS:
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x15: // Cost multipliers
 				rs->build_cost_multiplier = buf->ReadByte();
 				rs->clear_cost_multiplier = buf->ReadByte();
@@ -5202,7 +5241,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 
 			case A0RPI_ROADSTOP_HEIGHT:
 				if (MappedPropertyLengthMismatch(buf, 1, mapping_entry)) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x16: // Height
 				rs->height = buf->ReadByte();
 				break;
@@ -5275,7 +5314,7 @@ static bool HandleChangeInfoResult(const char *caller, ChangeInfoResult cir, Grf
 
 		case CIR_UNKNOWN:
 			grfmsg(0, "%s: Unknown property 0x%02X of feature %s, disabling", caller, property, GetFeatureString(feature));
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case CIR_INVALID_ID: {
 			/* No debug message for an invalid ID, as it has already been output */
@@ -6332,18 +6371,18 @@ static CargoID TranslateCargo(uint8_t feature, uint8_t ctype)
 
 	/* Look up the cargo label from the translation table */
 	CargoLabel cl = _cur.grffile->cargo_list[ctype];
-	if (cl == 0) {
+	if (cl  == CT_INVALID) {
 		grfmsg(5, "TranslateCargo: Cargo type %d not available in this climate, skipping.", ctype);
 		return INVALID_CARGO;
 	}
 
 	CargoID cid = GetCargoIDByLabel(cl);
 	if (cid == INVALID_CARGO) {
-		grfmsg(5, "TranslateCargo: Cargo '%c%c%c%c' unsupported, skipping.", GB(cl, 24, 8), GB(cl, 16, 8), GB(cl, 8, 8), GB(cl, 0, 8));
+		grfmsg(5, "TranslateCargo: Cargo '%c%c%c%c' unsupported, skipping.", GB(cl.base(), 24, 8), GB(cl.base(), 16, 8), GB(cl.base(), 8, 8), GB(cl.base(), 0, 8));
 		return INVALID_CARGO;
 	}
 
-	grfmsg(6, "TranslateCargo: Cargo '%c%c%c%c' mapped to cargo type %d.", GB(cl, 24, 8), GB(cl, 16, 8), GB(cl, 8, 8), GB(cl, 0, 8), cid);
+	grfmsg(6, "TranslateCargo: Cargo '%c%c%c%c' mapped to cargo type %d.", GB(cl.base(), 24, 8), GB(cl.base(), 16, 8), GB(cl.base(), 8, 8), GB(cl.base(), 0, 8), cid);
 	return cid;
 }
 
@@ -7403,16 +7442,16 @@ bool GetGlobalVariable(byte param, uint32_t *value, const GRFFile *grffile)
 
 	switch (param) {
 		case 0x00: // current date
-			*value = std::max<DateDelta>(_date - DAYS_TILL_ORIGINAL_BASE_YEAR, 0).base();
+			*value = std::max<DateDelta>(CalTime::CurDate() - CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR, 0).base();
 			return true;
 
 		case 0x01: // current year
-			*value = Clamp(_cur_year, ORIGINAL_BASE_YEAR, ORIGINAL_MAX_YEAR) - ORIGINAL_BASE_YEAR;
+			*value = (Clamp(CalTime::CurYear(), CalTime::ORIGINAL_BASE_YEAR, CalTime::ORIGINAL_MAX_YEAR) - CalTime::ORIGINAL_BASE_YEAR).base();
 			return true;
 
 		case 0x02: { // detailed date information: month of year (bit 0-7), day of month (bit 8-12), leap year (bit 15), day of year (bit 16-24)
-			Date start_of_year = ConvertYMDToDate(_cur_date_ymd.year, 0, 1);
-			*value = _cur_date_ymd.month | (_cur_date_ymd.day - 1) << 8 | (IsLeapYear(_cur_date_ymd.year) ? 1 << 15 : 0) | (_date - start_of_year).base() << 16;
+			CalTime::Date start_of_year = CalTime::ConvertYMDToDate(CalTime::CurYear(), 0, 1);
+			*value = CalTime::CurMonth() | (CalTime::CurDay() - 1) << 8 | (CalTime::IsLeapYear(CalTime::CurYear()) ? 1 << 15 : 0) | (CalTime::CurDate() - start_of_year).base() << 16;
 			return true;
 		}
 
@@ -7425,7 +7464,7 @@ bool GetGlobalVariable(byte param, uint32_t *value, const GRFFile *grffile)
 			return true;
 
 		case 0x09: // date fraction
-			*value = _date_fract * 885;
+			*value = CalTime::CurDateFract() * 885;
 			return true;
 
 		case 0x0A: // animation counter
@@ -7518,11 +7557,11 @@ bool GetGlobalVariable(byte param, uint32_t *value, const GRFFile *grffile)
 			return true;
 
 		case 0x23: // long format date
-			*value = _date.base();
+			*value = CalTime::CurDate().base();
 			return true;
 
 		case 0x24: // long format year
-			*value = _cur_year;
+			*value = CalTime::CurYear().base();
 			return true;
 
 		default: return false;
@@ -7732,9 +7771,9 @@ static void SkipIf(ByteReader *buf)
 	if (condtype >= 0x0B) {
 		/* Tests that ignore 'param' */
 		switch (condtype) {
-			case 0x0B: result = GetCargoIDByLabel(BSWAP32(cond_val)) == INVALID_CARGO;
+			case 0x0B: result = !IsValidCargoID(GetCargoIDByLabel(CargoLabel(BSWAP32(cond_val))));
 				break;
-			case 0x0C: result = GetCargoIDByLabel(BSWAP32(cond_val)) != INVALID_CARGO;
+			case 0x0C: result = IsValidCargoID(GetCargoIDByLabel(CargoLabel(BSWAP32(cond_val))));
 				break;
 			case 0x0D: result = GetRailTypeByLabel(BSWAP32(cond_val)) == INVALID_RAILTYPE;
 				break;
@@ -8136,7 +8175,7 @@ static uint32_t GetPatchVariable(uint8_t param)
 {
 	switch (param) {
 		/* start year - 1920 */
-		case 0x0B: return std::max(_settings_game.game_creation.starting_year, ORIGINAL_BASE_YEAR) - ORIGINAL_BASE_YEAR;
+		case 0x0B: return (std::max(_settings_game.game_creation.starting_year, CalTime::ORIGINAL_BASE_YEAR) - CalTime::ORIGINAL_BASE_YEAR).base();
 
 		/* freight trains weight factor */
 		case 0x0E: return _settings_game.vehicle.freight_trains;
@@ -10578,6 +10617,38 @@ GRFFile::~GRFFile()
 	delete[] this->language_map;
 }
 
+/**
+ * Find first cargo label that exists and is active from a list of cargo labels.
+ * @param labels List of cargo labels.
+ * @returns First cargo label in list that exists, or CT_INVALID if none exist.
+ */
+static CargoLabel GetActiveCargoLabel(const std::initializer_list<CargoLabel> &labels)
+{
+	for (const CargoLabel &label : labels) {
+		CargoID cid = GetCargoIDByLabel(label);
+		if (cid != INVALID_CARGO) return label;
+	}
+	return CT_INVALID;
+}
+
+/**
+ * Get active cargo label from either a cargo label or climate-dependent mixed cargo type.
+ * @param label Cargo label or climate-dependent mixed cargo type.
+ * @returns Active cargo label, or CT_INVALID if cargo label is not active.
+ */
+static CargoLabel GetActiveCargoLabel(const std::variant<CargoLabel, MixedCargoType> &label)
+{
+	if (std::holds_alternative<CargoLabel>(label)) return std::get<CargoLabel>(label);
+	if (std::holds_alternative<MixedCargoType>(label)) {
+		switch (std::get<MixedCargoType>(label)) {
+			case MCT_LIVESTOCK_FRUIT: return GetActiveCargoLabel({CT_LIVESTOCK, CT_FRUIT});
+			case MCT_GRAIN_WHEAT_MAIZE: return GetActiveCargoLabel({CT_GRAIN, CT_WHEAT, CT_MAIZE});
+			case MCT_VALUABLES_GOLD_DIAMONDS: return GetActiveCargoLabel({CT_VALUABLES, CT_GOLD, CT_DIAMONDS});
+			default: NOT_REACHED();
+		}
+	}
+	NOT_REACHED();
+}
 
 /**
  * Precalculate refit masks from cargo classes for all vehicles.
@@ -10585,15 +10656,19 @@ GRFFile::~GRFFile()
 static void CalculateRefitMasks()
 {
 	CargoTypes original_known_cargoes = 0;
-	for (int ct = 0; ct != NUM_ORIGINAL_CARGO; ++ct) {
-		CargoID cid = GetDefaultCargoID(_settings_game.game_creation.landscape, static_cast<CargoType>(ct));
-		if (cid != INVALID_CARGO) SetBit(original_known_cargoes, cid);
+	for (CargoID cid = 0; cid != NUM_CARGO; ++cid) {
+		if (IsDefaultCargo(cid)) SetBit(original_known_cargoes, cid);
 	}
 
 	for (Engine *e : Engine::Iterate()) {
 		EngineID engine = e->index;
 		EngineInfo *ei = &e->info;
 		bool only_defaultcargo; ///< Set if the vehicle shall carry only the default cargo
+
+		/* Apply default cargo translation map if cargo type hasn't been set, either explicitly or by aircraft cargo handling. */
+		if (!IsValidCargoID(e->info.cargo_type)) {
+			e->info.cargo_type = GetCargoIDByLabel(GetActiveCargoLabel(e->info.cargo_label));
+		}
 
 		/* If the NewGRF did not set any cargo properties, we apply default values. */
 		if (_gted[engine].defaultcargo_grf == nullptr) {
@@ -10605,7 +10680,7 @@ static void CalculateRefitMasks()
 				static constexpr byte Y = 1 << LT_TOYLAND;
 				static const struct DefaultRefitMasks {
 					byte climate;
-					CargoType cargo_type;
+					CargoLabel cargo_label;
 					CargoTypes cargo_allowed;
 					CargoTypes cargo_disallowed;
 				} _default_refit_masks[] = {
@@ -10629,13 +10704,14 @@ static void CalculateRefitMasks()
 					_gted[engine].cargo_allowed = CC_PASSENGERS | CC_MAIL | CC_ARMOURED | CC_EXPRESS;
 					_gted[engine].cargo_disallowed = CC_LIQUID;
 				} else if (e->type == VEH_SHIP) {
-					switch (ei->cargo_type) {
-						case CT_PASSENGERS:
+					CargoLabel label = GetActiveCargoLabel(ei->cargo_label);
+					switch (label.base()) {
+						case CT_PASSENGERS.base():
 							/* Ferries */
 							_gted[engine].cargo_allowed = CC_PASSENGERS;
 							_gted[engine].cargo_disallowed = 0;
 							break;
-						case CT_OIL:
+						case CT_OIL.base():
 							/* Tankers */
 							_gted[engine].cargo_allowed = CC_LIQUID;
 							_gted[engine].cargo_disallowed = 0;
@@ -10660,9 +10736,10 @@ static void CalculateRefitMasks()
 					_gted[engine].cargo_disallowed = 0;
 				} else {
 					/* Train wagons and road vehicles are classified by their default cargo type */
+					CargoLabel label = GetActiveCargoLabel(ei->cargo_label);
 					for (const auto &drm : _default_refit_masks) {
 						if (!HasBit(drm.climate, _settings_game.game_creation.landscape)) continue;
-						if (drm.cargo_type != ei->cargo_type) continue;
+						if (drm.cargo_label != label) continue;
 
 						_gted[engine].cargo_allowed = drm.cargo_allowed;
 						_gted[engine].cargo_disallowed = drm.cargo_disallowed;
@@ -10675,9 +10752,7 @@ static void CalculateRefitMasks()
 			}
 			_gted[engine].UpdateRefittability(_gted[engine].cargo_allowed != 0);
 
-			/* Translate cargo_type using the original climate-specific cargo table. */
-			ei->cargo_type = GetDefaultCargoID(_settings_game.game_creation.landscape, static_cast<CargoType>(ei->cargo_type));
-			if (ei->cargo_type != INVALID_CARGO) ClrBit(_gted[engine].ctt_exclude_mask, ei->cargo_type);
+			if (IsValidCargoID(ei->cargo_type)) ClrBit(_gted[engine].ctt_exclude_mask, ei->cargo_type);
 		}
 
 		/* Compute refittability */
@@ -10828,6 +10903,14 @@ static void FinaliseEngineArray()
 void FinaliseCargoArray()
 {
 	for (CargoSpec &cs : CargoSpec::array) {
+		if (cs.town_production_effect == INVALID_TPE) {
+			/* Set default town production effect by cargo label. */
+			switch (cs.label.base()) {
+				case CT_PASSENGERS.base(): cs.town_production_effect = TPE_PASSENGERS; break;
+				case CT_MAIL.base():       cs.town_production_effect = TPE_MAIL; break;
+				default:                   cs.town_production_effect = TPE_NONE; break;
+			}
+		}
 		if (!cs.IsValid()) {
 			cs.name = cs.name_single = cs.units_volume = STR_NEWGRF_INVALID_CARGO;
 			cs.quantifier = STR_NEWGRF_INVALID_CARGO_QUANTITY;
@@ -10895,7 +10978,7 @@ static bool IsHouseSpecValid(HouseSpec *hs, const HouseSpec *next1, const HouseS
  */
 static void EnsureEarlyHouse(HouseZones bitmask)
 {
-	Year min_year = MAX_YEAR;
+	CalTime::Year min_year = CalTime::MAX_YEAR;
 
 	for (int i = 0; i < NUM_HOUSES; i++) {
 		HouseSpec *hs = HouseSpec::Get(i);
@@ -10967,6 +11050,13 @@ static void FinaliseHouseArray()
 			 * building_flags to zero here to make sure any house following
 			 * this one in the pool is properly handled as 1x1 house. */
 			hs->building_flags = TILE_NO_FLAG;
+		}
+
+		/* Apply default cargo translation map for unset cargo slots */
+		for (uint i = 0; i < lengthof(hs->accepts_cargo); ++i) {
+			if (!IsValidCargoID(hs->accepts_cargo[i])) hs->accepts_cargo[i] = GetCargoIDByLabel(hs->accepts_cargo_label[i]);
+			/* Disable acceptance if cargo type is invalid. */
+			if (!IsValidCargoID(hs->accepts_cargo[i])) hs->cargo_acceptance[i] = 0;
 		}
 	}
 
@@ -11041,6 +11131,21 @@ static void FinaliseIndustriesArray()
 		}
 		if (!indsp.enabled) {
 			indsp.name = STR_NEWGRF_INVALID_INDUSTRYTYPE;
+		}
+
+		/* Apply default cargo translation map for unset cargo slots */
+		for (uint i = 0; i < lengthof(indsp.produced_cargo); ++i) {
+			if (!IsValidCargoID(indsp.produced_cargo[i])) indsp.produced_cargo[i] = GetCargoIDByLabel(GetActiveCargoLabel(indsp.produced_cargo_label[i]));
+		}
+		for (uint i = 0; i < lengthof(indsp.accepts_cargo); ++i) {
+			if (!IsValidCargoID(indsp.accepts_cargo[i])) indsp.accepts_cargo[i] = GetCargoIDByLabel(GetActiveCargoLabel(indsp.accepts_cargo_label[i]));
+		}
+	}
+
+	for (auto &indtsp : _industry_tile_specs) {
+		/* Apply default cargo translation map for unset cargo slots */
+		for (uint i = 0; i < lengthof(indtsp.accepts_cargo); ++i) {
+			if (!IsValidCargoID(indtsp.accepts_cargo[i])) indtsp.accepts_cargo[i] = GetCargoIDByLabel(GetActiveCargoLabel(indtsp.accepts_cargo_label[i]));
 		}
 	}
 }
@@ -11599,26 +11704,24 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 	 * so all NewGRFs are loaded equally. For this we use the
 	 * start date of the game and we set the counters, etc. to
 	 * 0 so they're the same too. */
-	YearMonthDay date_ymd = _cur_date_ymd;
-	Date date            = _date;
-	DateFract date_fract = _date_fract;
-	uint64_t tick_counter  = _tick_counter;
-	uint8_t tick_skip_counter = _tick_skip_counter;
+	CalTime::State cal_state = CalTime::Detail::now;
+	EconTime::State econ_state = EconTime::Detail::now;
+	uint8_t tick_skip_counter = DateDetail::_tick_skip_counter;
+	uint64_t tick_counter = _tick_counter;
 	uint64_t scaled_tick_counter = _scaled_tick_counter;
-	DateTicksScaled scaled_date_ticks_offset = _scaled_date_ticks_offset;
-	byte display_opt     = _display_opt;
+	StateTicks state_ticks = _state_ticks;
+	StateTicksDelta state_ticks_offset = DateDetail::_state_ticks_offset;
+	byte display_opt = _display_opt;
 
 	if (_networking) {
-		_cur_date_ymd = { _settings_game.game_creation.starting_year, 0, 1};
-		_date         = ConvertYMDToDate(_cur_date_ymd);
-		_date_fract   = 0;
+		CalTime::Detail::now = CalTime::Detail::NewState(_settings_game.game_creation.starting_year);
+		EconTime::Detail::now = EconTime::Detail::NewState(_settings_game.game_creation.starting_year.base());
 		_tick_counter = 0;
-		_tick_skip_counter = 0;
 		_scaled_tick_counter = 0;
-		_scaled_date_ticks_offset = 0;
+		_state_ticks = 0;
 		_display_opt  = 0;
 		UpdateCachedSnowLine();
-		SetScaledTickVariables();
+		RecalculateStateTicksOffset();
 	}
 
 	InitializeGRFSpecial();
@@ -11716,16 +11819,15 @@ void LoadNewGRF(uint load_index, uint num_baseset)
 	AfterLoadGRFs();
 
 	/* Now revert back to the original situation */
-	_cur_date_ymd = date_ymd;
-	_date         = date;
-	_date_fract   = date_fract;
+	CalTime::Detail::now = cal_state;
+	EconTime::Detail::now = econ_state;
+	DateDetail::_tick_skip_counter = tick_skip_counter;
 	_tick_counter = tick_counter;
-	_tick_skip_counter = tick_skip_counter;
 	_scaled_tick_counter = scaled_tick_counter;
-	_scaled_date_ticks_offset = scaled_date_ticks_offset;
+	_state_ticks = state_ticks;
+	DateDetail::_state_ticks_offset = state_ticks_offset;
 	_display_opt  = display_opt;
 	UpdateCachedSnowLine();
-	SetScaledTickVariables();
 }
 
 /**

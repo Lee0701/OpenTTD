@@ -300,7 +300,7 @@ CommandCost CheckBridgeAvailability(BridgeType bridge_type, uint bridge_len, DoC
 	if (bridge_type >= MAX_BRIDGES) return CMD_ERROR;
 
 	const BridgeSpec *b = GetBridgeSpec(bridge_type);
-	if (b->avail_year > _cur_year) return CMD_ERROR;
+	if (b->avail_year > CalTime::CurYear()) return CMD_ERROR;
 
 	uint max = std::min(b->max_length, _settings_game.construction.max_bridge_length);
 
@@ -2495,7 +2495,12 @@ void DrawBridgeMiddle(const TileInfo *ti)
 	int z = bridge_z - BRIDGE_Z_START;
 
 	/* Add a bounding box that separates the bridge from things below it. */
-	AddSortableSpriteToDraw(SPR_EMPTY_BOUNDING_BOX, PAL_NONE, x, y, 16, 16, 1, bridge_z - TILE_HEIGHT + BB_Z_SEPARATOR);
+	ViewportSortableSpriteSpecialFlags special_flags = VSSF_NONE;
+	if (IsPlainRailTile(ti->tile) && (GetTrackBits(ti->tile) & (TRACK_BIT_LEFT | TRACK_BIT_RIGHT | TRACK_BIT_LOWER)) != 0) {
+		/* Problematic diagonal rail track is underneath this bridge */
+		special_flags = VSSSF_SORT_SPECIAL | VSSSF_SORT_SORT_BRIDGE_BB;
+	}
+	AddSortableSpriteToDraw(SPR_EMPTY_BOUNDING_BOX, PAL_NONE, x, y, 16, 16, 1, bridge_z - TILE_HEIGHT + BB_Z_SEPARATOR, false, 0, 0, 0, nullptr, special_flags);
 
 	/* Draw Trambits as SpriteCombine */
 	if (transport_type == TRANSPORT_ROAD || transport_type == TRANSPORT_RAIL) StartSpriteCombine();

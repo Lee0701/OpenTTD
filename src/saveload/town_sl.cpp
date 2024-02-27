@@ -85,7 +85,7 @@ public:
 
 	void Load(Town *t) const override
 	{
-		size_t length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? (size_t)TE_END : SlGetStructListLength(TE_END);
+		size_t length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? (size_t)TAE_END : SlGetStructListLength(TAE_END);
 		for (size_t i = 0; i < length; i++) {
 			SlObject(&t->received[i], this->GetLoadDescription());
 		}
@@ -133,29 +133,30 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               SLV_4, SLV_104),
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
 
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_UINT32,                 SLV_9, SLV_165),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_UINT32,                 SLV_9, SLV_165),
+	/* Slots 0 and 2 are passengers and mail respectively for old saves. */
+	SLE_CONDVARNAME(Town, supplied[0].old_max, "supplied[CT_PASSENGERS].old_max", SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[0].old_max, "supplied[CT_PASSENGERS].old_max", SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[2].old_max,       "supplied[CT_MAIL].old_max",       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[2].old_max,       "supplied[CT_MAIL].old_max",       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[0].new_max, "supplied[CT_PASSENGERS].new_max", SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[0].new_max, "supplied[CT_PASSENGERS].new_max", SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[2].new_max,       "supplied[CT_MAIL].new_max",       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[2].new_max,       "supplied[CT_MAIL].new_max",       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[0].old_act, "supplied[CT_PASSENGERS].old_act", SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[0].old_act, "supplied[CT_PASSENGERS].old_act", SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[2].old_act,       "supplied[CT_MAIL].old_act",       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[2].old_act,       "supplied[CT_MAIL].old_act",       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[0].new_act, "supplied[CT_PASSENGERS].new_act", SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[0].new_act, "supplied[CT_PASSENGERS].new_act", SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVARNAME(Town, supplied[2].new_act,       "supplied[CT_MAIL].new_act",       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVARNAME(Town, supplied[2].new_act,       "supplied[CT_MAIL].new_act",       SLE_UINT32,                 SLV_9, SLV_165),
 
-	SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVARNAME(Town, received[TAE_FOOD].old_act,  "received[TE_FOOD].old_act",  SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVARNAME(Town, received[TAE_WATER].old_act, "received[TE_WATER].old_act", SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVARNAME(Town, received[TAE_FOOD].new_act,  "received[TE_FOOD].new_act",  SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVARNAME(Town, received[TAE_WATER].new_act, "received[TE_WATER].new_act", SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
 
-	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TE, SLV_165, SL_MAX_VERSION),
+	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TAE, SLV_165, SL_MAX_VERSION),
 
 	SLE_CONDSSTR(Town, text,                 SLE_STR | SLF_ALLOW_CONTROL, SLV_168, SL_MAX_VERSION),
 

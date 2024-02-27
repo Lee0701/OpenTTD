@@ -30,6 +30,7 @@
 #include "viewport_func.h"
 #include "rev.h"
 #include "core/backup_type.hpp"
+#include "pathfinder/water_regions.h"
 
 #include "widgets/misc_widget.h"
 
@@ -145,6 +146,8 @@ public:
 			DEBUG(misc, LANDINFOD_LEVEL, "m6     = %#x", _me[tile].m6);
 			DEBUG(misc, LANDINFOD_LEVEL, "m7     = %#x", _me[tile].m7);
 			DEBUG(misc, LANDINFOD_LEVEL, "m8     = %#x", _me[tile].m8);
+
+			PrintWaterRegionDebugInfo(tile);
 		}
 #undef LANDINFOD_LEVEL
 	}
@@ -156,7 +159,7 @@ public:
 		/* Because build_date is not set yet in every TileDesc, we make sure it is empty */
 		TileDesc td;
 
-		td.build_date = INVALID_DATE;
+		td.build_date = CalTime::INVALID_DATE;
 
 		/* Most tiles have only one owner, but
 		 *  - drivethrough roadstops can be build on town owned roads (up to 2 owners) and
@@ -247,7 +250,7 @@ public:
 		this->landinfo_data.push_back(GetString(STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY));
 
 		/* Build date */
-		if (td.build_date != INVALID_DATE) {
+		if (td.build_date != CalTime::INVALID_DATE) {
 			SetDParam(0, td.build_date);
 			this->landinfo_data.push_back(GetString(STR_LAND_AREA_INFORMATION_BUILD_DATE));
 		}
@@ -1100,11 +1103,11 @@ struct QueryStringWindow : public Window
 		switch (widget) {
 			case WID_QS_DEFAULT:
 				this->editbox.text.DeleteAll();
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WID_QS_OK:
 				this->OnOk();
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WID_QS_CANCEL:
 				this->Close();
@@ -1287,7 +1290,7 @@ struct QueryWindow : public Window {
 					this->proc(this->parent, true);
 					this->proc = nullptr;
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case WKC_ESC:
 				this->Close();

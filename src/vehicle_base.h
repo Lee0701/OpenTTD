@@ -268,6 +268,12 @@ struct ClosestDepot {
 		location(location), destination(destination), reverse(reverse), found(true) {}
 };
 
+struct VehicleUnbunchState {
+	StateTicks depot_unbunching_last_departure = INVALID_STATE_TICKS; ///< When the vehicle last left its unbunching depot.
+	StateTicks depot_unbunching_next_departure = INVALID_STATE_TICKS; ///< When the vehicle will next try to leave its unbunching depot.
+	Ticks round_trip_time = 0;                                        ///< How many ticks for a single circumnavigation of the orders.
+};
+
 /** %Vehicle data structure. */
 struct Vehicle : VehiclePool::PoolItem<&_vehicle_pool>, BaseVehicle, BaseConsist {
 	/* These are here for structure packing purposes */
@@ -329,11 +335,11 @@ public:
 	SpriteID colourmap;                 ///< NOSAVE: cached colour mapping
 
 	/* Related to age and service time */
-	Year build_year;                    ///< Year the vehicle has been built.
+	CalTime::Year build_year;           ///< Year the vehicle has been built.
 	DateDelta age;                      ///< Age in days
 	DateDelta max_age;                  ///< Maximum age
-	Date date_of_last_service;          ///< Last date the vehicle had a service at a depot.
-	Date date_of_last_service_newgrf;   ///< Last date the vehicle had a service at a depot, unchanged by the date cheat to protect against unsafe NewGRF behavior.
+	EconTime::Date date_of_last_service;       ///< Last date the vehicle had a service at a depot.
+	CalTime::Date date_of_last_service_newgrf; ///< Last date the vehicle had a service at a depot, unchanged by the date cheat to protect against unsafe NewGRF behavior.
 	uint16_t reliability;               ///< Reliability.
 	uint16_t reliability_spd_dec;       ///< Reliability decrease speed.
 	byte breakdown_ctr;                 ///< Counter for managing breakdown events. @see Vehicle::HandleBreakdown
@@ -380,7 +386,7 @@ public:
 
 	StationID last_station_visited;     ///< The last station we stopped at.
 	StationID last_loading_station;     ///< Last station the vehicle has stopped at and could possibly leave from with any cargo loaded. (See VF_LAST_LOAD_ST_SEP).
-	DateTicksScaled last_loading_tick;  ///< Last tick (_scaled_date_ticks) the vehicle has stopped at a station and could possibly leave with any cargo loaded. (See VF_LAST_LOAD_ST_SEP).
+	StateTicks last_loading_tick;       ///< Last tick (_state_ticks) the vehicle has stopped at a station and could possibly leave with any cargo loaded. (See VF_LAST_LOAD_ST_SEP).
 
 	VehicleCargoList cargo;             ///< The cargo this vehicle is carrying
 	uint16_t cargo_cap;                 ///< total capacity
@@ -408,6 +414,8 @@ public:
 	Direction cur_image_valid_dir;      ///< NOSAVE: direction for which cur_image does not need to be regenerated on the next tick
 
 	VehicleCache vcache;                ///< Cache of often used vehicle values.
+
+	std::unique_ptr<VehicleUnbunchState> unbunch_state;
 
 	/**
 	 * Calculates the weight value that this vehicle will have when fully loaded with its current cargo.
@@ -693,7 +701,7 @@ public:
 	 * Gets the running cost of a vehicle  that can be sent into SetDParam for string processing.
 	 * @return the vehicle's running cost
 	 */
-	Money GetDisplayRunningCost() const { return (this->GetRunningCost() >> 8) * _settings_game.economy.day_length_factor; }
+	Money GetDisplayRunningCost() const { return this->GetRunningCost() >> 8; }
 
 	/**
 	 * Gets the profit vehicle had this year. It can be sent into SetDParam for string processing.
@@ -957,6 +965,12 @@ public:
 	inline void SetServiceIntervalIsCustom(bool on) { SB(this->vehicle_flags, VF_SERVINT_IS_CUSTOM, 1, on); }
 
 	inline void SetServiceIntervalIsPercent(bool on) { SB(this->vehicle_flags, VF_SERVINT_IS_PERCENT, 1, on); }
+
+	inline void ResetDepotUnbunching() { this->unbunch_state.reset(); }
+
+	bool HasUnbunchingOrder() const;
+	void LeaveUnbunchingDepot();
+	bool IsWaitingForUnbunching() const;
 
 	VehicleOrderID GetFirstWaitingLocation(bool require_wait_timetabled) const;
 

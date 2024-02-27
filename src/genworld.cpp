@@ -115,8 +115,14 @@ static void _GenerateWorld()
 		/* Must start economy early because of the costs. */
 		StartupEconomy();
 
+		bool landscape_generated = false;
+
 		/* Don't generate landscape items when in the scenario editor. */
-		if (_gw.mode == GWM_EMPTY) {
+		if (_gw.mode != GWM_EMPTY) {
+			landscape_generated = GenerateLandscape(_gw.mode);
+		}
+
+		if (!landscape_generated) {
 			SetGeneratingWorldProgress(GWP_OBJECT, 1);
 
 			/* Make sure the tiles at the north border are void tiles if needed. */
@@ -135,7 +141,6 @@ static void _GenerateWorld()
 			UpdateCachedSnowLine();
 			UpdateCachedSnowLineBounds();
 		} else {
-			GenerateLandscape(_gw.mode);
 			GenerateClearTile();
 
 			/* Only generate towns, tree and industries in newgame mode. */
@@ -211,7 +216,7 @@ static void _GenerateWorld()
 
 		if (_debug_desync_level > 0) {
 			char name[MAX_PATH];
-			seprintf(name, lastof(name), "dmp_cmds_%08x_%08x.sav", _settings_game.game_creation.generation_seed, _date.base());
+			seprintf(name, lastof(name), "dmp_cmds_%08x_%08x.sav", _settings_game.game_creation.generation_seed, EconTime::CurDate().base());
 			SaveOrLoad(name, SLO_SAVE, DFT_GAME_FILE, AUTOSAVE_DIR, false, SMF_ZSTD_OK);
 		}
 	} catch (AbortGenerateWorldSignal&) {
@@ -320,7 +325,7 @@ void GenerateWorld(GenWorldMode mode, uint size_x, uint size_y, bool reset_setti
 		_settings_game.construction.map_height_limit = std::max(MAP_HEIGHT_LIMIT_AUTO_MINIMUM, std::min(MAX_MAP_HEIGHT_LIMIT, estimated_height + MAP_HEIGHT_LIMIT_AUTO_CEILING_ROOM));
 	}
 
-	if (_settings_game.game_creation.generation_seed == GENERATE_NEW_SEED) _settings_game.game_creation.generation_seed = _settings_newgame.game_creation.generation_seed = InteractiveRandom();
+	if (_settings_game.game_creation.generation_seed == GENERATE_NEW_SEED) _settings_game.game_creation.generation_seed = InteractiveRandom();
 
 	/* Load the right landscape stuff, and the NewGRFs! */
 	GfxLoadSprites();

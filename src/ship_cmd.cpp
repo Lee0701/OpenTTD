@@ -290,7 +290,7 @@ void Ship::OnNewDay()
 	if ((++this->day_counter & 7) == 0) {
 		DecreaseVehicleValue(this);
 	}
-	AgeVehicle(this);
+	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
 }
 
 void Ship::OnPeriodic()
@@ -451,6 +451,9 @@ static bool CheckShipLeaveDepot(Ship *v)
 		return true;
 	}
 
+	/* Check if we should wait here for unbunching. */
+	if (v->IsWaitingForUnbunching()) return true;
+
 	/* We are leaving a depot, but have to go to the exact same one; re-enter */
 	if (v->current_order.IsType(OT_GOTO_DEPOT) &&
 			IsShipDepotTile(v->tile) && GetDepotIndex(v->tile) == v->current_order.GetDestination()) {
@@ -498,8 +501,9 @@ static bool CheckShipLeaveDepot(Ship *v)
 	v->UpdateViewport(true, true);
 	SetWindowDirty(WC_VEHICLE_DEPOT, v->tile);
 
-	v->PlayLeaveStationSound();
 	VehicleServiceInDepot(v);
+	v->LeaveUnbunchingDepot();
+	v->PlayLeaveStationSound();
 	InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
 	DirtyVehicleListWindowForVehicle(v);
 
@@ -529,7 +533,7 @@ static uint ShipAccelerate(Vehicle *v)
 {
 	uint speed;
 
-	speed = std::min<uint>(v->cur_speed + 1, Ship::From(v)->GetEffectiveMaxSpeed());
+	speed = std::min<uint>(v->cur_speed + v->acceleration, Ship::From(v)->GetEffectiveMaxSpeed());
 	speed = std::min<uint>(speed, v->current_order.GetMaxSpeed() * 2);
 
 	if (v->breakdown_ctr == 1 && v->breakdown_type == BREAKDOWN_LOW_POWER && v->cur_speed > (v->breakdown_severity * ShipVehInfo(v->engine_type)->max_speed) >> 8) {
@@ -972,6 +976,8 @@ static void ShipController(Ship *v)
 	uint number_of_steps = ShipAccelerate(v);
 	if (number_of_steps == 0 && v->current_order.IsType(OT_LEAVESTATION)) number_of_steps = 1;
 	for (uint i = 0; i < number_of_steps; ++i) {
+		if (ShipMoveUpDownOnLock(v)) return;
+
 		GetNewVehiclePosResult gp = GetNewVehiclePos(v);
 		if (v->state != TRACK_BIT_WORMHOLE) {
 			/* Not on a bridge */
@@ -1180,6 +1186,7 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, V
 
 		v->spritenum = svi->image_index;
 		v->cargo_type = e->GetDefaultCargoType();
+		assert(IsValidCargoID(v->cargo_type));
 		v->cargo_cap = svi->capacity;
 		v->refit_cap = 0;
 
@@ -1196,12 +1203,13 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, V
 		v->state = TRACK_BIT_DEPOT;
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_ships);
-		v->date_of_last_service = _date;
-		v->date_of_last_service_newgrf = _date;
-		v->build_year = _cur_year;
+		v->date_of_last_service = EconTime::CurDate();
+		v->date_of_last_service_newgrf = CalTime::CurDate();
+		v->build_year = CalTime::CurYear();
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = Random();
 
+		v->acceleration = svi->acceleration;
 		v->UpdateCache();
 
 		if (e->flags & ENGINE_EXCLUSIVE_PREVIEW) SetBit(v->vehicle_flags, VF_BUILT_AS_PROTOTYPE);

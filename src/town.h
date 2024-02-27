@@ -105,12 +105,16 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 	uint8_t town_label_rating;       ///< Label dependent on _local_company rating.
 
 	TransportedCargoStat<uint32_t> supplied[NUM_CARGO]; ///< Cargo statistics about supplied cargo.
-	TransportedCargoStat<uint16_t> received[NUM_TE];    ///< Cargo statistics about received cargotypes.
-	uint32_t goal[NUM_TE];                              ///< Amount of cargo required for the town to grow.
+	TransportedCargoStat<uint16_t> received[NUM_TAE]; ///< Cargo statistics about received cargotypes.
+	uint32_t goal[NUM_TAE]; ///< Amount of cargo required for the town to grow.
 
 	std::string text; ///< General text with additional information.
 
-	inline byte GetPercentTransported(CargoID cid) const { return this->supplied[cid].old_act * 256 / (this->supplied[cid].old_max + 1); }
+	inline byte GetPercentTransported(CargoID cid) const
+	{
+		if (!IsValidCargoID(cid)) return 0;
+		return this->supplied[cid].old_act * 256 / (this->supplied[cid].old_max + 1);
+	}
 
 	StationList stations_near;       ///< NOSAVE: List of nearby stations.
 
@@ -271,7 +275,7 @@ HouseZonesBits GetTownRadiusGroup(const Town *t, TileIndex tile);
 void SetTownRatingTestMode(bool mode);
 uint GetMaskOfTownActions(int *nump, CompanyID cid, const Town *t);
 bool GenerateTowns(TownLayout layout);
-const CargoSpec *FindFirstCargoWithTownEffect(TownEffect effect);
+const CargoSpec *FindFirstCargoWithTownAcceptanceEffect(TownAcceptanceEffect effect);
 
 /** Town actions of a company. */
 enum TownActions {

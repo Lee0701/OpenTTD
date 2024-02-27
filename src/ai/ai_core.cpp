@@ -35,25 +35,31 @@
 	return !_networking || (_network_server && _settings_game.ai.ai_in_multiplayer);
 }
 
-/* static */ void AI::StartNew(CompanyID company, bool rerandomise_ai)
+/* static */ void AI::StartNew(CompanyID company, bool deviate)
 {
 	assert(Company::IsValidID(company));
 
 	/* Clients shouldn't start AIs */
 	if (_networking && !_network_server) return;
 
-	AIConfig *config = AIConfig::GetConfig(company, AIConfig::SSS_FORCE_GAME);
+	Backup<CompanyID> cur_company(_current_company, company, FILE_LINE);
+	Company *c = Company::Get(company);
+
+	AIConfig *config = c->ai_config.get();
+	if (config == nullptr) {
+		c->ai_config = std::make_unique<AIConfig>(AIConfig::GetConfig(company, AIConfig::SSS_FORCE_GAME));
+		config = c->ai_config.get();
+	}
+
 	AIInfo *info = config->GetInfo();
-	if (info == nullptr || (rerandomise_ai && config->IsRandom())) {
+	if (info == nullptr) {
 		info = AI::scanner_info->SelectRandomAI();
 		assert(info != nullptr);
 		/* Load default data and store the name in the settings */
-		config->Change(info->GetName(), -1, false, true);
+		config->Change(info->GetName(), -1, false);
 	}
+	if (deviate) config->AddRandomDeviation(company);
 	config->AnchorUnchangeableSettings();
-
-	Backup<CompanyID> cur_company(_current_company, company, FILE_LINE);
-	Company *c = Company::Get(company);
 
 	c->ai_info = info;
 	assert(c->ai_instance == nullptr);
@@ -113,11 +119,11 @@
 	delete c->ai_instance;
 	c->ai_instance = nullptr;
 	c->ai_info = nullptr;
+	c->ai_config.reset();
 
 	cur_company.Restore();
 
 	InvalidateWindowClassesData(WC_SCRIPT_DEBUG, -1);
-	CloseWindowById(WC_SCRIPT_SETTINGS, company);
 }
 
 /* static */ void AI::Pause(CompanyID company)
@@ -277,14 +283,18 @@
 {
 	if (!_networking || _network_server) {
 		Company *c = Company::GetIfValid(company);
-		assert(c != nullptr && c->ai_instance != nullptr);
+		assert(c != nullptr);
 
-		Backup<CompanyID> cur_company(_current_company, company, FILE_LINE);
-		c->ai_instance->Save();
-		cur_company.Restore();
-	} else {
-		AIInstance::SaveEmpty();
+		/* When doing emergency saving, an AI can be not fully initialised. */
+		if (c->ai_instance != nullptr) {
+			Backup<CompanyID> cur_company(_current_company, company, FILE_LINE);
+			c->ai_instance->Save();
+			cur_company.Restore();
+			return;
+		}
 	}
+
+	AIInstance::SaveEmpty();
 }
 
 /* static */ std::string AI::GetConsoleList(bool newest_only)

@@ -2407,19 +2407,19 @@ int GetTraceRestrictTimeDateValue(TraceRestrictTimeDateValueField type)
 			return now.ClockHHMM();
 
 		case TRTDVF_DAY:
-			return _cur_date_ymd.day;
+			return CalTime::CurDay();
 
 		case TRTDVF_MONTH:
-			return _cur_date_ymd.month + 1;
+			return CalTime::CurMonth() + 1;
 
 		default:
 			return 0;
 	}
 }
 
-int GetTraceRestrictTimeDateValueFromDate(TraceRestrictTimeDateValueField type, DateTicksScaled scaled_date_ticks)
+int GetTraceRestrictTimeDateValueFromStateTicks(TraceRestrictTimeDateValueField type, StateTicks state_ticks)
 {
-	const TickMinutes minutes = _settings_game.game_time.ToTickMinutes(scaled_date_ticks);
+	const TickMinutes minutes = _settings_game.game_time.ToTickMinutes(state_ticks);
 
 	switch (type) {
 		case TRTDVF_MINUTE:
@@ -2432,12 +2432,12 @@ int GetTraceRestrictTimeDateValueFromDate(TraceRestrictTimeDateValueField type, 
 			return minutes.ClockHHMM();
 
 		case TRTDVF_DAY: {
-			YearMonthDay ymd = ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks));
+			CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(StateTicksToCalendarDate(state_ticks));
 			return ymd.day;
 		}
 
 		case TRTDVF_MONTH: {
-			YearMonthDay ymd = ConvertDateToYMD(ScaledDateTicksToDate(scaled_date_ticks));
+			CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(StateTicksToCalendarDate(state_ticks));
 			return ymd.month + 1;
 		}
 

@@ -38,6 +38,7 @@
 #include "table/sprites.h"
 
 #include <map>
+#include <numeric>
 #include "safeguards.h"
 
 /**
@@ -1069,7 +1070,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 					break;
 				}
 				/* With double click, continue */
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case WID_NS_REMOVE: { // Remove GRF
@@ -1127,7 +1128,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 					break;
 				}
 				/* With double click, continue */
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case WID_NS_ADD:
@@ -1283,7 +1284,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 				}
 
 				this->avails.ForceRebuild();
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case GOID_NEWGRF_CURRENT_LOADED:
 				this->modified = false;
@@ -1292,7 +1293,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 
 			case GOID_NEWGRF_LIST_EDITED:
 				this->preset = -1;
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case GOID_NEWGRF_CHANGES_MADE:
 				UpdateScrollBars();
@@ -1666,20 +1667,20 @@ public:
 		this->smallest_y = std::max(min_inf_height, min_acs_height + WidgetDimensions::scaled.vsep_wide + min_avs_height);
 
 		/* Filling. */
-		this->fill_x = LeastCommonMultiple(this->avs->fill_x, this->acs->fill_x);
+		this->fill_x = std::lcm(this->avs->fill_x, this->acs->fill_x);
 		if (this->inf->fill_x > 0 && (this->fill_x == 0 || this->fill_x > this->inf->fill_x)) this->fill_x = this->inf->fill_x;
 
 		this->fill_y = this->avs->fill_y;
 		if (this->acs->fill_y > 0 && (this->fill_y == 0 || this->fill_y > this->acs->fill_y)) this->fill_y = this->acs->fill_y;
-		this->fill_y = LeastCommonMultiple(this->fill_y, this->inf->fill_y);
+		this->fill_y = std::lcm(this->fill_y, this->inf->fill_y);
 
 		/* Resizing. */
-		this->resize_x = LeastCommonMultiple(this->avs->resize_x, this->acs->resize_x);
+		this->resize_x = std::lcm(this->avs->resize_x, this->acs->resize_x);
 		if (this->inf->resize_x > 0 && (this->resize_x == 0 || this->resize_x > this->inf->resize_x)) this->resize_x = this->inf->resize_x;
 
 		this->resize_y = this->avs->resize_y;
 		if (this->acs->resize_y > 0 && (this->resize_y == 0 || this->resize_y > this->acs->resize_y)) this->resize_y = this->acs->resize_y;
-		this->resize_y = LeastCommonMultiple(this->resize_y, this->inf->resize_y);
+		this->resize_y = std::lcm(this->resize_y, this->inf->resize_y);
 
 		/* Make sure the height suits the 3 column (resp. not-editable) format; the 2 column format can easily fill space between the lists */
 		this->smallest_y = ComputeMaxSize(min_acs_height, this->smallest_y + this->resize_y - 1, this->resize_y);

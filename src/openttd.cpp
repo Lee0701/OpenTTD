@@ -34,6 +34,7 @@
 #include "console_func.h"
 #include "screenshot.h"
 #include "network/network.h"
+#include "network/network_server.h"
 #include "network/network_func.h"
 #include "ai/ai.hpp"
 #include "ai/ai_config.hpp"
@@ -92,6 +93,7 @@
 #include "timer/timer.h"
 #include "timer/timer_game_realtime.h"
 #include "timer/timer_game_tick.h"
+#include "social_integration.h"
 #include "network/network_sync.h"
 #include "plans_func.h"
 
@@ -120,13 +122,14 @@ void MusicLoop();
 void CallWindowGameTickEvent();
 bool HandleBootstrap();
 void OnTick_Companies(bool main_tick);
+void OnTick_LinkGraph();
 
 extern void AfterLoadCompanyStats();
 extern Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY);
 extern void OSOpenBrowser(const std::string &url);
 extern void RebuildTownCaches(bool cargo_update_required, bool old_map_position);
 extern void ShowOSErrorBox(const char *buf, bool system);
-extern void NORETURN DoOSAbort();
+[[noreturn]] extern void DoOSAbort();
 extern std::string _config_file;
 extern uint64_t _station_tile_cache_hash;
 
@@ -140,7 +143,7 @@ std::mutex _music_driver_mutex;
 static std::string _music_driver_params;
 static std::atomic<bool> _music_inited;
 
-void NORETURN usererror_str(const char *msg)
+[[noreturn]] void usererror_str(const char *msg)
 {
 	ShowOSErrorBox(msg, false);
 	if (VideoDriver::GetInstance() != nullptr) VideoDriver::GetInstance()->Stop();
@@ -173,7 +176,7 @@ void CDECL usererror(const char *s, ...)
 	usererror_str(buf);
 }
 
-static void NORETURN fatalerror_common(const char *msg)
+[[noreturn]] static void fatalerror_common(const char *msg)
 {
 	if (VideoDriver::GetInstance() == nullptr || VideoDriver::GetInstance()->HasGUI()) {
 		ShowOSErrorBox(msg, true);
@@ -285,7 +288,7 @@ static void ShowHelp()
 		"  -t year             = Set starting year\n"
 		"  -d [[fac=]lvl[,...]]= Debug mode\n"
 		"  -e                  = Start Editor\n"
-		"  -g [savegame]       = Start new/save game immediately\n"
+		"  -g [savegame|scenario|heightmap] = Start new/savegame/scenario/heightmap immediately\n"
 		"  -G seed             = Set random seed\n"
 		"  -n host[:port][#company]= Join network game\n"
 		"  -p password         = Password to join server\n"
@@ -480,6 +483,7 @@ static void ShutdownGame()
 
 	if (_network_available) NetworkShutDown(); // Shut down the network and close any open connections
 
+	SocialIntegration::Shutdown();
 	DriverFactoryBase::ShutdownDrivers();
 
 	UnInitWindowSystem();
@@ -520,6 +524,7 @@ static void ShutdownGame()
 	InvalidateVehicleTickCaches();
 	ClearVehicleTickCaches();
 	InvalidateTemplateReplacementImages();
+	ResetDisasterVehicleTargeting();
 	ClearCommandLog();
 	ClearCommandQueue();
 	ClearSpecialEventsLog();
@@ -534,6 +539,7 @@ static void ShutdownGame()
 	_game_load_cur_date_ymd = { 0, 0, 0 };
 	_game_load_date_fract = 0;
 	_game_load_tick_skip_counter = 0;
+	_game_load_state_ticks = 0;
 	_game_load_time = 0;
 	_extra_aspects = 0;
 	_aspect_cfg_hash = 0;
@@ -608,6 +614,7 @@ void MakeNewgameSettingsLive()
 		_settings_game.game_config = new GameConfig(_settings_newgame.game_config);
 	}
 
+	UpdateEffectiveDayLengthFactor();
 	SetupTickRate();
 }
 
@@ -621,7 +628,7 @@ void OpenBrowser(const std::string &url)
 
 /** Callback structure of statements to be executed after the NewGRF scan. */
 struct AfterNewGRFScan : NewGRFScanCallback {
-	Year startyear = INVALID_YEAR;                ///< The start year.
+	CalTime::Year startyear = CalTime::INVALID_YEAR; ///< The start year.
 	uint32_t generation_seed = GENERATE_NEW_SEED; ///< Seed for the new game.
 	std::string dedicated_host;                   ///< Hostname for the dedicated server.
 	uint16_t dedicated_port = 0;                  ///< Port for the dedicated server.
@@ -670,8 +677,8 @@ struct AfterNewGRFScan : NewGRFScanCallback {
 		MusicDriver::GetInstance()->SetVolume(_settings_client.music.music_vol);
 		SetEffectVolume(_settings_client.music.effect_vol);
 
-		if (startyear != INVALID_YEAR) IConsoleSetSetting("game_creation.starting_year", startyear);
-		if (generation_seed != GENERATE_NEW_SEED) _settings_newgame.game_creation.generation_seed = generation_seed;
+		if (startyear != CalTime::INVALID_YEAR) IConsoleSetSetting("game_creation.starting_year", startyear.base());
+		_settings_newgame.game_creation.generation_seed = generation_seed;
 
 		if (!dedicated_host.empty()) {
 			_network_bind_list.clear();
@@ -825,21 +832,42 @@ int openttd_main(int argc, char *argv[])
 				if (mgo.opt != nullptr) SetDebugString(mgo.opt, ShowInfoI);
 				break;
 			}
-		case 'e': _switch_mode = (_switch_mode == SM_LOAD_GAME || _switch_mode == SM_LOAD_SCENARIO ? SM_LOAD_SCENARIO : SM_EDITOR); break;
+		case 'e':
+			/* Allow for '-e' before or after '-g'. */
+			switch (_switch_mode) {
+				case SM_MENU: _switch_mode = SM_EDITOR; break;
+				case SM_LOAD_GAME: _switch_mode = SM_LOAD_SCENARIO; break;
+				case SM_START_HEIGHTMAP: _switch_mode = SM_LOAD_HEIGHTMAP; break;
+				default: break;
+			}
+			break;
 		case 'g':
 			if (mgo.opt != nullptr) {
 				_file_to_saveload.name = mgo.opt;
-				bool is_scenario = _switch_mode == SM_EDITOR || _switch_mode == SM_LOAD_SCENARIO;
-				_switch_mode = is_scenario ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
-				_file_to_saveload.SetMode(SLO_LOAD, is_scenario ? FT_SCENARIO : FT_SAVEGAME, DFT_GAME_FILE);
 
 				/* if the file doesn't exist or it is not a valid savegame, let the saveload code show an error */
+				std::string extension;
 				auto t = _file_to_saveload.name.find_last_of('.');
 				if (t != std::string::npos) {
-					FiosType ft = FiosGetSavegameListCallback(SLO_LOAD, _file_to_saveload.name, _file_to_saveload.name.substr(t).c_str(), nullptr, nullptr);
-					if (ft != FIOS_TYPE_INVALID) _file_to_saveload.SetMode(ft);
+					extension = _file_to_saveload.name.substr(t);
+				}
+				FiosType ft = FiosGetSavegameListCallback(SLO_LOAD, _file_to_saveload.name, extension.c_str(), nullptr, nullptr);
+				if (ft == FIOS_TYPE_INVALID) {
+					ft = FiosGetScenarioListCallback(SLO_LOAD, _file_to_saveload.name, extension.c_str(), nullptr, nullptr);
+				}
+				if (ft == FIOS_TYPE_INVALID) {
+					ft = FiosGetHeightmapListCallback(SLO_LOAD, _file_to_saveload.name, extension.c_str(), nullptr, nullptr);
 				}
 
+				/* Allow for '-e' before or after '-g'. */
+				switch (GetAbstractFileType(ft)) {
+					case FT_SAVEGAME: _switch_mode = (_switch_mode == SM_EDITOR ? SM_LOAD_SCENARIO : SM_LOAD_GAME); break;
+					case FT_SCENARIO: _switch_mode = (_switch_mode == SM_EDITOR ? SM_LOAD_SCENARIO : SM_LOAD_GAME); break;
+					case FT_HEIGHTMAP: _switch_mode = (_switch_mode == SM_EDITOR ? SM_LOAD_HEIGHTMAP : SM_START_HEIGHTMAP); break;
+					default: break;
+				}
+
+				_file_to_saveload.SetMode(SLO_LOAD, GetAbstractFileType(ft), GetDetailedFileType(ft));
 				break;
 			}
 
@@ -895,7 +923,9 @@ int openttd_main(int argc, char *argv[])
 		case 'x': scanner->save_config = false; break;
 		case 'J': _quit_after_days = Clamp(atoi(mgo.opt), 0, INT_MAX); break;
 		case 'Z': {
-			CrashLog::VersionInfoLog();
+			char buffer[65536];
+			CrashLog::VersionInfoLog(buffer, lastof(buffer));
+			fputs(buffer, stdout);
 			return ret;
 		}
 		case 'X': only_local_path = true; break;
@@ -1019,6 +1049,7 @@ int openttd_main(int argc, char *argv[])
 	/* The video driver is now selected, now initialise GUI zoom */
 	AdjustGUIZoom(AGZM_STARTUP);
 
+	SocialIntegration::Initialize();
 	NetworkStartUp(); // initialize network-core
 
 	if (!HandleBootstrap()) {
@@ -1124,7 +1155,7 @@ static void OnStartScenario()
 
 	/* Make sure all industries were built "this year", to avoid too early closures. (#9918) */
 	for (Industry *i : Industry::Iterate()) {
-		i->last_prod_year = _cur_year;
+		i->last_prod_year = EconTime::CurYear();
 	}
 }
 
@@ -1176,7 +1207,7 @@ static void MakeNewGameDone()
 	if (_settings_client.gui.starting_colour != COLOUR_END) {
 		c->colour = _settings_client.gui.starting_colour;
 		ResetCompanyLivery(c);
-		_company_colours[c->index] = (Colours)c->colour;
+		_company_colours[c->index] = c->colour;
 		BuildOwnerLegend();
 	}
 
@@ -1201,7 +1232,11 @@ static void MakeNewGameDone()
 	CheckIndustries();
 	MarkWholeScreenDirty();
 
-	if (_network_server && !_network_dedicated) ShowClientList();
+	if (_network_server) {
+		ChangeNetworkRestartTime(true);
+
+		if (!_network_dedicated) ShowClientList();
+	}
 }
 
 /*
@@ -1270,7 +1305,7 @@ static void MakeNewEditorWorld()
  * @param error_detail Optional string to fill with detaied error information.
  */
 bool SafeLoad(const std::string &filename, SaveLoadOperation fop, DetailedFileType dft, GameMode newgm, Subdirectory subdir,
-		struct LoadFilter *lf = nullptr, std::string *error_detail = nullptr)
+		std::shared_ptr<struct LoadFilter> lf = nullptr, std::string *error_detail = nullptr)
 {
 	assert(fop == SLO_LOAD);
 	assert(dft == DFT_GAME_FILE || (lf == nullptr && dft == DFT_OLD_GAME_FILE));
@@ -1278,7 +1313,7 @@ bool SafeLoad(const std::string &filename, SaveLoadOperation fop, DetailedFileTy
 
 	_game_mode = newgm;
 
-	SaveOrLoadResult result = (lf == nullptr) ? SaveOrLoad(filename, fop, dft, subdir) : LoadWithFilter(lf);
+	SaveOrLoadResult result = (lf == nullptr) ? SaveOrLoad(filename, fop, dft, subdir) : LoadWithFilter(std::move(lf));
 	if (result == SL_OK) return true;
 
 	if (error_detail != nullptr) *error_detail = GetSaveLoadErrorString();
@@ -1327,6 +1362,28 @@ bool SafeLoad(const std::string &filename, SaveLoadOperation fop, DetailedFileTy
 	return false;
 }
 
+static void UpdateSocialIntegration(GameMode game_mode)
+{
+	switch (game_mode) {
+		case GM_BOOTSTRAP:
+		case GM_MENU:
+			SocialIntegration::EventEnterMainMenu();
+			break;
+
+		case GM_NORMAL:
+			if (_networking) {
+				SocialIntegration::EventEnterMultiplayer(MapSizeX(), MapSizeY());
+			} else {
+				SocialIntegration::EventEnterSingleplayer(MapSizeX(), MapSizeY());
+			}
+			break;
+
+		case GM_EDITOR:
+			SocialIntegration::EventEnterScenarioEditor(MapSizeX(), MapSizeY());
+			break;
+	}
+}
+
 void SwitchToMode(SwitchMode new_mode)
 {
 	/* If we are saving something, the network stays in its current state */
@@ -1368,12 +1425,17 @@ void SwitchToMode(SwitchMode new_mode)
 	if (_game_mode == GM_NORMAL && new_mode != SM_SAVE_GAME) _survey.Transmit(NetworkSurveyHandler::Reason::LEAVE);
 
 	/* Keep track when we last switch mode. Used for survey, to know how long someone was in a game. */
-	if (new_mode != SM_SAVE_GAME) _switch_mode_time = std::chrono::steady_clock::now();
+	if (new_mode != SM_SAVE_GAME) {
+		_switch_mode_time = std::chrono::steady_clock::now();
+		_switch_mode_time_valid = true;
+	}
 
 	switch (new_mode) {
 		case SM_EDITOR: // Switch to scenario editor
 			MakeNewEditorWorld();
 			GenerateSavegameId();
+
+			UpdateSocialIntegration(GM_EDITOR);
 			break;
 
 		case SM_RELOADGAME: // Reload with what-ever started the game
@@ -1391,12 +1453,16 @@ void SwitchToMode(SwitchMode new_mode)
 
 			MakeNewGame(false, new_mode == SM_NEWGAME);
 			GenerateSavegameId();
+
+			UpdateSocialIntegration(GM_NORMAL);
 			break;
 
 		case SM_RESTARTGAME: // Restart --> 'Random game' with current settings
 		case SM_NEWGAME: // New Game --> 'Random game'
 			MakeNewGame(false, new_mode == SM_NEWGAME);
 			GenerateSavegameId();
+
+			UpdateSocialIntegration(GM_NORMAL);
 			break;
 
 		case SM_LOAD_GAME: { // Load game, Play Scenario
@@ -1414,6 +1480,8 @@ void SwitchToMode(SwitchMode new_mode)
 				/* Decrease pause counter (was increased from opening load dialog) */
 				DoCommandP(0, PM_PAUSED_SAVELOAD, 0, CMD_PAUSE);
 			}
+
+			UpdateSocialIntegration(GM_NORMAL);
 			break;
 		}
 
@@ -1421,34 +1489,44 @@ void SwitchToMode(SwitchMode new_mode)
 		case SM_START_HEIGHTMAP: // Load a heightmap and start a new game from it
 			MakeNewGame(true, new_mode == SM_START_HEIGHTMAP);
 			GenerateSavegameId();
+
+			UpdateSocialIntegration(GM_NORMAL);
 			break;
 
 		case SM_LOAD_HEIGHTMAP: // Load heightmap from scenario editor
 			SetLocalCompany(OWNER_NONE);
 
+			_game_mode = GM_EDITOR;
+
 			FixConfigMapSize();
 			GenerateWorld(GWM_HEIGHTMAP, 1 << _settings_game.game_creation.map_x, 1 << _settings_game.game_creation.map_y);
 			GenerateSavegameId();
 			MarkWholeScreenDirty();
+
+			UpdateSocialIntegration(GM_EDITOR);
 			break;
 
 		case SM_LOAD_SCENARIO: { // Load scenario from scenario editor
 			if (SafeLoad(_file_to_saveload.name, _file_to_saveload.file_op, _file_to_saveload.detail_ftype, GM_EDITOR, NO_DIRECTORY)) {
 				SetLocalCompany(OWNER_NONE);
 				GenerateSavegameId();
-				_settings_newgame.game_creation.starting_year = _cur_year;
+				_settings_newgame.game_creation.starting_year = CalTime::CurYear();
 				/* Cancel the saveload pausing */
 				DoCommandP(0, PM_PAUSED_SAVELOAD, 0, CMD_PAUSE);
 			} else {
 				SetDParamStr(0, GetSaveLoadErrorString());
 				ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_CRITICAL);
 			}
+
+			UpdateSocialIntegration(GM_EDITOR);
 			break;
 		}
 
 		case SM_JOIN_GAME: // Join a multiplayer game
 			LoadIntroGame();
 			NetworkClientJoinGame();
+
+			SocialIntegration::EventJoiningMultiplayer();
 			break;
 
 		case SM_MENU: // Switch to game intro menu
@@ -1465,6 +1543,8 @@ void SwitchToMode(SwitchMode new_mode)
 					ShowNetworkAskSurvey();
 				}
 			}
+
+			UpdateSocialIntegration(GM_MENU);
 			break;
 
 		case SM_SAVE_GAME: { // Save game.
@@ -1567,7 +1647,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 			desync_level = 1;
 			if (HasChickenBit(DCBF_DESYNC_CHECK_NO_GENERAL)) flags &= ~CHECK_CACHE_GENERAL;
 		}
-		if (unlikely(HasChickenBit(DCBF_DESYNC_CHECK_PERIODIC_SIGNALS)) && desync_level < 2 && _scaled_date_ticks.base() % 256 == 0) {
+		if (unlikely(HasChickenBit(DCBF_DESYNC_CHECK_PERIODIC_SIGNALS)) && desync_level < 2 && _state_ticks.base() % 256 == 0) {
 			if (!SignalInfraTotalMatches()) desync_level = 2;
 		}
 
@@ -1575,7 +1655,7 @@ void CheckCaches(bool force_check, std::function<void(const char *)> log, CheckC
 		 * always to aid testing of caches. */
 		if (desync_level < 1) return;
 
-		if (desync_level == 1 && _scaled_date_ticks.base() % 500 != 0) return;
+		if (desync_level == 1 && _state_ticks.base() % 500 != 0) return;
 	}
 
 	SCOPE_INFO_FMT([flags], "CheckCaches: %X", flags);
@@ -2114,13 +2194,13 @@ void StateGameLoop()
 	if (_game_mode == GM_EDITOR) {
 		BasePersistentStorageArray::SwitchMode(PSM_ENTER_GAMELOOP);
 
-		/* _scaled_date_ticks and _scaled_date_ticks_offset must update in lockstep here,
+		/* _state_ticks and _state_ticks_offset must update in lockstep here,
 		 * as _date, _tick_skip_counter, etc are not updated in the scenario editor,
-		 * but _scaled_date_ticks should still update in case there are vehicles running,
+		 * but _state_ticks should still update in case there are vehicles running,
 		 * to avoid problems with timetables and train speed adaptation
 		 */
-		_scaled_date_ticks++;
-		_scaled_date_ticks_offset++;
+		_state_ticks++;
+		DateDetail::_state_ticks_offset++;
 
 		RunTileLoop();
 		CallVehicleTicks();
@@ -2132,10 +2212,10 @@ void StateGameLoop()
 		CallWindowGameTickEvent();
 		NewsLoop();
 	} else {
-		if (_debug_desync_level > 2 && _tick_skip_counter == 0 && _date_fract == 0 && (_date.base() & 0x1F) == 0) {
+		if (_debug_desync_level > 2 && DateDetail::_tick_skip_counter == 0 && EconTime::CurDateFract() == 0 && (EconTime::CurDate().base() & 0x1F) == 0) {
 			/* Save the desync savegame if needed. */
 			char name[MAX_PATH];
-			seprintf(name, lastof(name), "dmp_cmds_%08x_%08x.sav", _settings_game.game_creation.generation_seed, _date.base());
+			seprintf(name, lastof(name), "dmp_cmds_%08x_%08x.sav", _settings_game.game_creation.generation_seed, EconTime::CurDate().base());
 			SaveOrLoad(name, SLO_SAVE, DFT_GAME_FILE, AUTOSAVE_DIR, false);
 		}
 
@@ -2146,27 +2226,27 @@ void StateGameLoop()
 		Backup<CompanyID> cur_company(_current_company, OWNER_NONE, FILE_LINE);
 
 		BasePersistentStorageArray::SwitchMode(PSM_ENTER_GAMELOOP);
-		_tick_skip_counter++;
+		DateDetail::_tick_skip_counter++;
 		_scaled_tick_counter++;
-		if (_game_mode != GM_MENU && _game_mode != GM_BOOTSTRAP) {
-			_scaled_date_ticks++;   // This must update in lock-step with _tick_skip_counter, such that it always matches what SetScaledTickVariables would return.
+		if (_game_mode != GM_BOOTSTRAP) {
+			_state_ticks++;   // This must update in lock-step with _tick_skip_counter, such that _state_ticks_offset doesn't need to be changed.
 		}
 
 		if (!(_game_mode == GM_MENU || _game_mode == GM_BOOTSTRAP) && !_settings_client.gui.autosave_realtime &&
-				(_scaled_date_ticks.base() % (_settings_client.gui.autosave_interval * (_settings_game.economy.tick_rate == TRM_MODERN ? (60000 / 27) : (60000 / 30)))) == 0) {
+				(_state_ticks.base() % (_settings_client.gui.autosave_interval * (_settings_game.economy.tick_rate == TRM_MODERN ? (60000 / 27) : (60000 / 30)))) == 0) {
 			_do_autosave = true;
 			_check_special_modes = true;
 			SetWindowDirty(WC_STATUS_BAR, 0);
 		}
 
 		RunAuxiliaryTileLoop();
-		if (_tick_skip_counter < _settings_game.economy.day_length_factor) {
+		if (DateDetail::_tick_skip_counter < DayLengthFactor()) {
 			AnimateAnimatedTiles();
 			RunTileLoop(true);
 			CallVehicleTicks();
 			OnTick_Companies(false);
 		} else {
-			_tick_skip_counter = 0;
+			DateDetail::_tick_skip_counter = 0;
 			IncreaseDate();
 			AnimateAnimatedTiles();
 			RunTileLoop(true);
@@ -2174,6 +2254,7 @@ void StateGameLoop()
 			CallLandscapeTick();
 			OnTick_Companies(true);
 		}
+		OnTick_LinkGraph();
 		TimerManager<TimerGameTick>::Elapsed(1);
 		BasePersistentStorageArray::SwitchMode(PSM_LEAVE_GAMELOOP);
 
@@ -2190,6 +2271,17 @@ void StateGameLoop()
 		NewsLoop();
 
 		if (_networking) {
+			RecordSyncEvent(NSRE_PRE_DATES);
+			UpdateStateChecksum(_tick_counter);
+			UpdateStateChecksum(_scaled_tick_counter);
+			UpdateStateChecksum(_state_ticks.base());
+			UpdateStateChecksum(CalTime::CurDate().base());
+			UpdateStateChecksum(CalTime::CurDateFract());
+			UpdateStateChecksum(CalTime::CurSubDateFract());
+			UpdateStateChecksum(EconTime::CurDate().base());
+			UpdateStateChecksum(EconTime::CurDateFract());
+			UpdateStateChecksum(TickSkipCounter());
+
 			RecordSyncEvent(NSRE_PRE_COMPANY_STATE);
 			for (Company *c : Company::Iterate()) {
 				DEBUG_UPDATESTATECHECKSUM("Company: %u, Money: " OTTD_PRINTF64, c->index, (int64_t)c->money);
@@ -2383,4 +2475,5 @@ void GameLoop()
 
 	SoundDriver::GetInstance()->MainLoop();
 	MusicLoop();
+	SocialIntegration::RunCallbacks();
 }

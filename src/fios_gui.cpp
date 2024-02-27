@@ -535,7 +535,7 @@ public:
 
 			/* Start date (if available) */
 			if (_load_check_data.settings.game_creation.starting_year != 0) {
-				SetDParam(0, ConvertYMDToDate(_load_check_data.settings.game_creation.starting_year, 0, 1));
+				SetDParam(0, CalTime::ConvertYMDToDate(_load_check_data.settings.game_creation.starting_year, 0, 1));
 				DrawString(tr, STR_NETWORK_SERVER_LIST_START_DATE);
 				tr.top += GetCharacterHeight(FS_NORMAL);
 			}
@@ -801,8 +801,12 @@ public:
 						std::string caption = GetString(STR_SAVELOAD_OVERWRITE_TITLE_DIFFERENT_VERSION_SUFFIX);
 
 						SetDParam(0, STR_SAVELOAD_OVERWRITE_WARNING);
-						SetDParam(1, (version != nullptr) ? STR_SAVELOAD_OVERWRITE_WARNING_VERSION_NAME : STR_EMPTY);
-						SetDParamStr(2, version);
+						if (version != nullptr) {
+							SetDParam(1, STR_SAVELOAD_OVERWRITE_WARNING_VERSION_NAME);
+							SetDParamStr(2, version);
+						 } else {
+							SetDParam(1, STR_EMPTY);
+						 }
 						std::string message = GetString(STR_SAVELOAD_OVERWRITE_WARNING_DIFFERENT_VERSION_SUFFIX);
 
 						ShowQuery(std::move(caption), std::move(message), this, SaveLoadWindow::SaveGameConfirmationCallback);
@@ -875,14 +879,14 @@ public:
 				if (!gui_scope) break;
 
 				_fios_path_changed = true;
-				this->fios_items.BuildFileList(this->abstract_filetype, this->fop);
+				this->fios_items.BuildFileList(this->abstract_filetype, this->fop, true);
 				this->selected = nullptr;
 				_load_check_data.Clear();
 
 				/* We reset the files filtered */
 				this->OnInvalidateData(SLIWD_FILTER_CHANGES);
 
-				FALLTHROUGH;
+				[[fallthrough]];
 
 			case SLIWD_SELECTION_CHANGES:
 				/* Selection changes */

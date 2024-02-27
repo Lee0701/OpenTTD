@@ -34,6 +34,8 @@
 #include "base_media_base.h"
 #include "blitter/factory.hpp"
 
+#include "social_integration.h"
+
 #include "core/format.hpp"
 
 #ifdef WITH_ALLEGRO
@@ -85,6 +87,17 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GRFStatus, {
 	{GRFStatus::GCS_INITIALISED, "initialised"},
 	{GRFStatus::GCS_ACTIVATED, "activated"},
 })
+
+NLOHMANN_JSON_SERIALIZE_ENUM(SocialIntegrationPlugin::State, {
+	{SocialIntegrationPlugin::State::RUNNING, "running"},
+	{SocialIntegrationPlugin::State::FAILED, "failed"},
+	{SocialIntegrationPlugin::State::PLATFORM_NOT_RUNNING, "platform_not_running"},
+	{SocialIntegrationPlugin::State::UNLOADED, "unloaded"},
+	{SocialIntegrationPlugin::State::DUPLICATE, "duplicate"},
+	{SocialIntegrationPlugin::State::UNSUPPORTED_API, "unsupported_api"},
+	{SocialIntegrationPlugin::State::INVALID_SIGNATURE, "invalid_signature"},
+})
+
 
 /** Lookup table to convert a VehicleType to a string. */
 static const std::string _vehicle_type_to_string[] = {
@@ -290,9 +303,14 @@ void SurveyCompanies(nlohmann::json &survey)
 void SurveyTimers(nlohmann::json &survey)
 {
 	survey["ticks"] = _scaled_tick_counter;
-	survey["seconds"] = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - _switch_mode_time).count();
+	if (_switch_mode_time_valid) {
+		survey["seconds"] = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - _switch_mode_time).count();
+	} else {
+		survey["seconds"] = 0;
+	}
 
-	survey["calendar"] = fmt::format("{:04}-{:02}-{:02} ({})", _cur_date_ymd.year, _cur_date_ymd.month + 1, _cur_date_ymd.day, _date_fract);
+	survey["calendar"] = fmt::format("{:04}-{:02}-{:02} ({})", CalTime::CurYear(), CalTime::CurMonth() + 1, CalTime::CurDay(), CalTime::CurDateFract());
+	survey["economy"] = fmt::format("{:04}-{:02}-{:02} ({})", EconTime::CurYear(), EconTime::CurMonth() + 1, EconTime::CurDay(), EconTime::CurDateFract());
 }
 
 /**
@@ -406,6 +424,33 @@ void SurveyLibraries(nlohmann::json &survey)
 	survey["curl"] = curl_v->version;
 	survey["curl_ssl"] = curl_v->ssl_version == nullptr ? "none" : curl_v->ssl_version;
 #endif
+}
+
+/**
+ * Convert plugin information to JSON.
+ *
+ * @param survey The JSON object.
+ */
+void SurveyPlugins(nlohmann::json &survey)
+{
+	auto _plugins = SocialIntegration::GetPlugins();
+
+	for (auto &plugin : _plugins) {
+		auto &platform = survey[plugin->social_platform];
+		platform.push_back({
+			{"name", plugin->name},
+			{"version", plugin->version},
+			{"basepath", plugin->basepath},
+			{"state", plugin->state},
+		});
+	}
+}
+
+const char *PluginStateToString(SocialIntegrationPlugin::State state)
+{
+	const char *output = "";
+	to_json<const char *>(output, state);
+	return output;
 }
 
 /**

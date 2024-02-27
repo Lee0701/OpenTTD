@@ -72,7 +72,7 @@ extern const GRFFeatureInfo _grf_feature_list[] = {
 	GRFFeatureInfo("town_zone_callback", 1, GFTOF_TOWN_ZONE_CALLBACK),
 	GRFFeatureInfo("varaction2_towns_town_xy", 1),
 	GRFFeatureInfo("more_varaction2_types", 1, GFTOF_MORE_VARACTION2_TYPES),
-	GRFFeatureInfo("multi_part_ships", 2, GFTOF_MULTI_PART_SHIPS),
+	GRFFeatureInfo("multi_part_ships", 3, GFTOF_MULTI_PART_SHIPS),
 	GRFFeatureInfo("more_stations_per_grf", 1),
 	GRFFeatureInfo(),
 };
@@ -170,7 +170,7 @@ extern const GRFVariableMapDefinition _grf_action2_remappable_variables[] = {
 	GRFVariableMapDefinition(GSF_ROADSTOPS, 0x67, "roadstop_land_info_nearby_tiles"),
 	GRFVariableMapDefinition(GSF_ROADSTOPS, 0x68, "roadstop_road_stop_info_nearby_tiles"),
 	GRFVariableMapDefinition(GSF_ROADSTOPS, 0x6A, "roadstop_road_stop_grfid_nearby_tiles"),
-	GRFVariableMapDefinition(GSF_ROADSTOPS, 0x6B, "roadstop_road_info_nearby_tiles"),
+	GRFVariableMapDefinition(GSF_ROADSTOPS, A2VRI_ROADSTOP_ROAD_INFO_NEARBY_TILES, "roadstop_road_info_nearby_tiles"),
 	GRFVariableMapDefinition(GSF_ROADSTOPS, A2VRI_ROADSTOP_INFO_NEARBY_TILES_V2, "roadstop_road_stop_info_nearby_tiles_v2"),
 	GRFVariableMapDefinition(GSF_RAILTYPES, A2VRI_RAILTYPE_SIGNAL_RESTRICTION_INFO, "railtype_signal_restriction_info"),
 	GRFVariableMapDefinition(GSF_RAILTYPES, A2VRI_RAILTYPE_SIGNAL_CONTEXT, "railtype_signal_context"),

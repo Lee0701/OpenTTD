@@ -429,6 +429,8 @@ void SetFocusedWindow(Window *w)
 {
 	if (_focused_window == w) return;
 
+	if (w != nullptr && w->window_class == WC_INVALID) return;
+
 	/* Invalidate focused widget */
 	if (_focused_window != nullptr) {
 		if (_focused_window->nested_focus != nullptr) _focused_window->nested_focus->SetDirty(_focused_window);
@@ -1040,12 +1042,12 @@ void Window::SetShaded(bool make_shaded)
  * @param wc Window class of the window to remove; #WC_INVALID if class does not matter
  * @return a Window pointer that is the child of \a w, or \c nullptr otherwise
  */
-static Window *FindChildWindow(const Window *w, WindowClass wc)
+Window *Window::FindChildWindow(WindowClass wc) const
 {
 	if (wc < WC_END && !_present_window_types[wc]) return nullptr;
 
 	for (Window *v : Window::IterateFromBack()) {
-		if ((wc == WC_INVALID || wc == v->window_class) && v->parent == w) return v;
+		if ((wc == WC_INVALID || wc == v->window_class) && v->parent == this) return v;
 	}
 
 	return nullptr;
@@ -1057,10 +1059,10 @@ static Window *FindChildWindow(const Window *w, WindowClass wc)
  */
 void Window::CloseChildWindows(WindowClass wc) const
 {
-	Window *child = FindChildWindow(this, wc);
+	Window *child = this->FindChildWindow(wc);
 	while (child != nullptr) {
 		child->Close();
-		child = FindChildWindow(this, wc);
+		child = this->FindChildWindow(wc);
 	}
 }
 
@@ -1322,45 +1324,45 @@ static uint GetWindowZPriority(WindowClass wc)
 	switch (wc) {
 		case WC_TOOLTIPS:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_ERRMSG:
 		case WC_CONFIRM_POPUP_QUERY:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_ENDSCREEN:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_HIGHSCORE:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_DROPDOWN_MENU:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_MAIN_TOOLBAR:
 		case WC_STATUS_BAR:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_OSK:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_QUERY_STRING:
 		case WC_SEND_NETWORK_MSG:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_NETWORK_ASK_RELAY:
 		case WC_MODAL_PROGRESS:
 		case WC_NETWORK_STATUS_WINDOW:
 		case WC_SAVE_PRESET:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_GENERATE_LANDSCAPE:
 		case WC_SAVELOAD:
@@ -1372,19 +1374,19 @@ static uint GetWindowZPriority(WindowClass wc)
 		case WC_SCRIPT_SETTINGS:
 		case WC_TEXTFILE:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_CONSOLE:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_NEWS_WINDOW:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		default:
 			++z_priority;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case WC_MAIN_WINDOW:
 			return z_priority;
@@ -1578,8 +1580,8 @@ void Window::FindWindowPlacementAndResize(int def_width, int def_height)
 		ResizeWindow(this, enlarge_x, enlarge_y);
 		/* ResizeWindow() calls this->OnResize(). */
 	} else {
-		/* Always call OnResize; that way the scrollbars and matrices get initialized. */
-		this->OnResize();
+		/* Schedule OnResize; that way the scrollbars and matrices get initialized. */
+		this->ScheduleResize();
 	}
 
 	int nx = this->left;
@@ -1871,6 +1873,7 @@ void Window::FinishInitNested(WindowNumber window_number)
 	Point pt = this->OnInitialPosition(this->nested_root->smallest_x, this->nested_root->smallest_y, window_number);
 	this->InitializePositionSize(pt.x, pt.y, this->nested_root->smallest_x, this->nested_root->smallest_y);
 	this->FindWindowPlacementAndResize(this->window_desc->GetDefaultWidth(), this->window_desc->GetDefaultHeight());
+	this->ProcessScheduledResize();
 }
 
 /**
@@ -2197,8 +2200,8 @@ void ResizeWindow(Window *w, int delta_x, int delta_y, bool clamp_to_screen)
 
 	EnsureVisibleCaption(w, w->left, w->top);
 
-	/* Always call OnResize to make sure everything is initialised correctly if it needs to be. */
-	w->OnResize();
+	/* Schedule OnResize to make sure everything is initialised correctly if it needs to be. */
+	w->ScheduleResize();
 	extern bool _gfx_draw_active;
 	if (_gfx_draw_active) {
 		SetWindowDirtyPending(w);
@@ -3052,7 +3055,7 @@ static void MouseLoop(MouseClick click, int mousewheel)
 			if (!scrollwheel_scrolling || w == nullptr || w->window_class != WC_SMALLMAP) break;
 			/* We try to use the scrollwheel to scroll since we didn't touch any of the buttons.
 			 * Simulate a right button click so we can get started. */
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case MC_RIGHT:
 			DispatchRightClickEvent(w, x - w->left, y - w->top);
@@ -3082,6 +3085,7 @@ void HandleMouseEvents()
 		/* We are done with the last draw-frame, so we know what sprites we
 		 * clicked on. Reset the picker mode and invalidate the window. */
 		_newgrf_debug_sprite_picker.mode = SPM_NONE;
+		_newgrf_debug_sprite_picker.DrawingComplete();
 		InvalidateWindowData(WC_SPRITE_ALIGNER, 0, 1);
 	}
 
@@ -3271,6 +3275,7 @@ void UpdateWindows()
 
 	/* Process invalidations before anything else. */
 	for (Window *w : Window::Iterate()) {
+		w->ProcessScheduledResize();
 		w->ProcessScheduledInvalidations();
 		w->ProcessHighlightedInvalidations();
 	}
@@ -3313,7 +3318,7 @@ void UpdateWindows()
 
 	for (Window *w : Window::Iterate()) {
 		/* Update viewport only if window is not shaded. */
-		if (w->viewport != nullptr && !w->IsShaded()) UpdateNextViewportPosition(w);
+		if (w->viewport != nullptr && !w->IsShaded()) UpdateNextViewportPosition(w, delta_ms);
 	}
 
 	DrawDirtyBlocks();
@@ -3371,6 +3376,26 @@ void SetWindowClassesDirty(WindowClass cls)
 
 	for (Window *w : Window::Iterate()) {
 		if (w->window_class == cls) w->SetDirty();
+	}
+}
+
+/**
+ * Mark this window as resized and in need of OnResize() event.
+ */
+void Window::ScheduleResize()
+{
+	this->scheduled_resize = true;
+}
+
+/**
+ * Process scheduled OnResize() event.
+ */
+void Window::ProcessScheduledResize()
+{
+	/* Sometimes OnResize() resizes the window again, in which case we can reprocess immediately. */
+	while (this->scheduled_resize) {
+		this->scheduled_resize = false;
+		this->OnResize();
 	}
 }
 

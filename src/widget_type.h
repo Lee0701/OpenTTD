@@ -520,6 +520,9 @@ public:
 	int shown_plane; ///< Plane being displayed (for #NWID_SELECTION only).
 	const WidgetID index; ///< If non-negative, index in the #Window::widget_lookup.
 	bool independent_planes = false; ///< If true, treat planes as independent for layout purposes.
+
+private:
+	WidgetLookup *widget_lookup; ///< Window's widget lookup, updated in SetDisplayedPlane().
 };
 
 /** Nested widget container flags, */
@@ -609,6 +612,8 @@ public:
 	void SetCount(int count);
 	void SetScrollbar(Scrollbar *sb);
 	int GetCurrentElement() const;
+
+	void SetCurrentElement(int current_element) { this->current_element = current_element; }
 
 	void SetupSmallestSize(Window *w) override;
 	void AssignSizePosition(SizingType sizing, int x, int y, uint given_width, uint given_height, bool rtl) override;

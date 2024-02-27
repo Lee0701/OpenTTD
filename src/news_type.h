@@ -12,6 +12,7 @@
 
 #include "core/enum_type.hpp"
 #include "date_type.h"
+#include "gfx_type.h"
 #include "strings_type.h"
 #include "sound_type.h"
 #include <vector>
@@ -128,7 +129,8 @@ struct NewsItem {
 	NewsItem *prev;              ///< Previous news item
 	NewsItem *next;              ///< Next news item
 	StringID string_id;          ///< Message text
-	Date date;                   ///< Date of the news
+	CalTime::Date date;          ///< Date of the news
+	uint64_t creation_tick;      ///< Tick when news was created
 	NewsType type;               ///< Type of the news
 	NewsFlag flags;              ///< NewsFlags bits @see NewsFlag
 
@@ -161,8 +163,8 @@ struct CompanyNewsInformation : NewsAllocatedData {
 	std::string president_name;     ///< The name of the president
 	std::string other_company_name; ///< The name of the company taking over this one
 
-	uint32_t face; ///< The face of the president
-	byte colour;   ///< The colour related to the company
+	uint32_t face;                  ///< The face of the president
+	Colours colour;                 ///< The colour related to the company
 
 	CompanyNewsInformation(const struct Company *c, const struct Company *other = nullptr);
 };

@@ -532,11 +532,8 @@ static bool RoadVehEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a,
  */
 static bool ShipEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	const Engine *e_a = Engine::Get(a.engine_id);
-	const Engine *e_b = Engine::Get(b.engine_id);
-
-	int va = e_a->GetDisplayDefaultCapacity();
-	int vb = e_b->GetDisplayDefaultCapacity();
+	int va = GetTotalCapacityOfArticulatedParts(a.engine_id);
+	int vb = GetTotalCapacityOfArticulatedParts(b.engine_id);
 	int r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
@@ -552,7 +549,7 @@ static bool ShipEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngine
  */
 static bool ShipEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	return GenericEngineValueVsRunningCostSorter(a, Engine::Get(a.engine_id)->GetDisplayDefaultCapacity(), b, Engine::Get(b.engine_id)->GetDisplayDefaultCapacity());
+	return GenericEngineValueVsRunningCostSorter(a, GetTotalCapacityOfArticulatedParts(a.engine_id), b, GetTotalCapacityOfArticulatedParts(b.engine_id));
 }
 
 /* Aircraft sorting functions */
@@ -789,6 +786,17 @@ static int DrawCargoCapacityInfo(int left, int right, int y, TestedEngineDetails
 	return y;
 }
 
+static StringID GetRunningCostString()
+{
+	if (EconTime::UsingWallclockUnits()) {
+		return STR_PURCHASE_INFO_RUNNINGCOST_PERIOD;
+	} else if (DayLengthFactor() > 1) {
+		return STR_PURCHASE_INFO_RUNNINGCOST_ORIG_YEAR;
+	} else {
+		return STR_PURCHASE_INFO_RUNNINGCOST_YEAR;
+	}
+}
+
 /* Draw rail wagon specific details */
 static int DrawRailWagonPurchaseInfo(int left, int right, int y, EngineID engine_number, const RailVehicleInfo *rvi, TestedEngineDetails &te)
 {
@@ -825,7 +833,7 @@ static int DrawRailWagonPurchaseInfo(int left, int right, int y, EngineID engine
 	/* Running cost */
 	if (rvi->running_cost_class != INVALID_PRICE) {
 		SetDParam(0, e->GetDisplayRunningCost());
-		DrawString(left, right, y, STR_PURCHASE_INFO_RUNNINGCOST);
+		DrawString(left, right, y, GetRunningCostString());
 		y += GetCharacterHeight(FS_NORMAL);
 	}
 
@@ -866,7 +874,7 @@ static int DrawRailEnginePurchaseInfo(int left, int right, int y, EngineID engin
 	/* Running cost */
 	if (rvi->running_cost_class != INVALID_PRICE) {
 		SetDParam(0, e->GetDisplayRunningCost());
-		DrawString(left, right, y, STR_PURCHASE_INFO_RUNNINGCOST);
+		DrawString(left, right, y, GetRunningCostString());
 		y += GetCharacterHeight(FS_NORMAL);
 	}
 
@@ -932,7 +940,7 @@ static int DrawRoadVehPurchaseInfo(int left, int right, int y, EngineID engine_n
 
 	/* Running cost */
 	SetDParam(0, e->GetDisplayRunningCost());
-	DrawString(left, right, y, STR_PURCHASE_INFO_RUNNINGCOST);
+	DrawString(left, right, y, GetRunningCostString());
 	y += GetCharacterHeight(FS_NORMAL);
 
 	return y;
@@ -980,6 +988,11 @@ static int DrawShipPurchaseInfo(int left, int right, int y, EngineID engine_numb
 		y += GetCharacterHeight(FS_NORMAL);
 	}
 
+	/* Running cost */
+	SetDParam(0, e->GetDisplayRunningCost());
+	DrawString(left, right, y, GetRunningCostString());
+	y += GetCharacterHeight(FS_NORMAL);
+
 	if (!IsArticulatedEngine(engine_number)) {
 		/* Cargo type + capacity */
 		SetDParam(0, te.cargo);
@@ -988,11 +1001,6 @@ static int DrawShipPurchaseInfo(int left, int right, int y, EngineID engine_numb
 		DrawString(left, right, y, STR_PURCHASE_INFO_CAPACITY);
 		y += GetCharacterHeight(FS_NORMAL);
 	}
-
-	/* Running cost */
-	SetDParam(0, e->GetDisplayRunningCost());
-	DrawString(left, right, y, STR_PURCHASE_INFO_RUNNINGCOST);
-	y += GetCharacterHeight(FS_NORMAL);
 
 	return y;
 }
@@ -1027,7 +1035,7 @@ static int DrawAircraftPurchaseInfo(int left, int right, int y, EngineID engine_
 	if (te.mail_capacity > 0) {
 		SetDParam(0, te.cargo);
 		SetDParam(1, te.capacity);
-		SetDParam(2, CT_MAIL);
+		SetDParam(2, GetCargoIDByLabel(CT_MAIL));
 		SetDParam(3, te.mail_capacity);
 		DrawString(left, right, y, STR_PURCHASE_INFO_AIRCRAFT_CAPACITY);
 	} else {
@@ -1042,7 +1050,7 @@ static int DrawAircraftPurchaseInfo(int left, int right, int y, EngineID engine_
 
 	/* Running cost */
 	SetDParam(0, e->GetDisplayRunningCost());
-	DrawString(left, right, y, STR_PURCHASE_INFO_RUNNINGCOST);
+	DrawString(left, right, y, GetRunningCostString());
 	y += GetCharacterHeight(FS_NORMAL);
 
 	/* Aircraft type */
@@ -1102,14 +1110,18 @@ static uint ShowAdditionalText(int left, int right, int y, EngineID engine)
 void TestedEngineDetails::FillDefaultCapacities(const Engine *e)
 {
 	this->cargo = e->GetDefaultCargoType();
-	if (e->type == VEH_TRAIN || e->type == VEH_ROAD) {
+	if (e->type == VEH_TRAIN || e->type == VEH_ROAD || e->type == VEH_SHIP) {
 		this->all_capacities = GetCapacityOfArticulatedParts(e->index);
 		this->capacity = this->all_capacities[this->cargo];
 		this->mail_capacity = 0;
 	} else {
 		this->capacity = e->GetDisplayDefaultCapacity(&this->mail_capacity);
 		this->all_capacities[this->cargo] = this->capacity;
-		this->all_capacities[CT_MAIL] = this->mail_capacity;
+		if (IsValidCargoID(GetCargoIDByLabel(CT_MAIL))) {
+			this->all_capacities[GetCargoIDByLabel(CT_MAIL)] = this->mail_capacity;
+		} else {
+			this->mail_capacity = 0;
+		}
 	}
 	if (this->all_capacities.GetCount() == 0) this->cargo = INVALID_CARGO;
 }
@@ -1123,7 +1135,7 @@ void TestedEngineDetails::FillDefaultCapacities(const Engine *e)
 int DrawVehiclePurchaseInfo(int left, int right, int y, EngineID engine_number, TestedEngineDetails &te)
 {
 	const Engine *e = Engine::Get(engine_number);
-	YearMonthDay ymd = ConvertDateToYMD(e->intro_date);
+	CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(e->intro_date);
 	bool refittable = IsArticulatedVehicleRefittable(engine_number);
 	bool articulated_cargo = false;
 
@@ -1171,7 +1183,7 @@ int DrawVehiclePurchaseInfo(int left, int right, int y, EngineID engine_number, 
 	if (e->type != VEH_TRAIN || e->u.rail.railveh_type != RAILVEH_WAGON) {
 		/* Design date - Life length */
 		SetDParam(0, ymd.year);
-		SetDParam(1, DateDeltaToYears(e->GetLifeLengthInDays()));
+		SetDParam(1, DateDeltaToYearDelta(e->GetLifeLengthInDays()));
 		DrawString(left, right, y, STR_PURCHASE_INFO_DESIGNED_LIFE);
 		y += GetCharacterHeight(FS_NORMAL);
 
@@ -1509,6 +1521,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 		this->eng_list.ForceRebuild();
 		this->GenerateBuildList(); // generate the list, since we need it in the next line
+		this->vscroll->SetCount(this->eng_list.size());
 
 		/* Select the first unshaded engine in the list as default when opening the window */
 		EngineID engine = INVALID_ENGINE;
@@ -1610,13 +1623,14 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		}
 
 		/* Purchase test was not possible or failed, fill in the defaults instead. */
-		this->te.cost     = 0;
+		this->te = {};
 		this->te.FillDefaultCapacities(e);
 	}
 
 	void OnInit() override
 	{
 		this->SetCargoFilterArray();
+		this->vscroll->SetCount(this->eng_list.size());
 	}
 
 	/** Filter the engine list against the currently selected cargo filter */
@@ -2516,7 +2530,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		}
 
 		/* Purchase test was not possible or failed, fill in the defaults instead. */
-		state.te.cost = 0;
+		state.te = {};
 		state.te.FillDefaultCapacities(e);
 	}
 
@@ -2546,6 +2560,9 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 	{
 		this->SetCargoFilterArray(this->loco, _last_filter_criteria_loco);
 		this->SetCargoFilterArray(this->wagon, _last_filter_criteria_wagon);
+
+		this->loco.vscroll->SetCount(this->loco.eng_list.size());
+		this->wagon.vscroll->SetCount(this->wagon.eng_list.size());
 	}
 
 	/* Filter a single engine */
@@ -3079,8 +3096,8 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		this->SetBuyLocomotiveText();
 		this->SetBuyWagonText();
 
-		this->loco.vscroll->SetCount(static_cast<int>(this->loco.eng_list.size()));
-		this->wagon.vscroll->SetCount(static_cast<int>(this->wagon.eng_list.size()));
+		this->loco.vscroll->SetCount(this->loco.eng_list.size());
+		this->wagon.vscroll->SetCount(this->wagon.eng_list.size());
 
 		this->SetWidgetDisabledState(WID_BV_SHOW_HIDE_LOCO, this->loco.sel_engine == INVALID_ENGINE);
 		this->SetWidgetDisabledState(WID_BV_SHOW_HIDE_WAGON, this->wagon.sel_engine == INVALID_ENGINE);

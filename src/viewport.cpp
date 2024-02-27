@@ -126,6 +126,7 @@
 #include <algorithm>
 #include <tuple>
 #include <atomic>
+#include <cmath>
 
 #include <mutex>
 #include <condition_variable>
@@ -287,6 +288,7 @@ struct ViewportDrawerDynamic {
 	TileSpriteToDrawVector tile_sprites_to_draw;
 	ParentSpriteToDrawVector parent_sprites_to_draw;
 	std::vector<ViewportProcessParentSpritesData> parent_sprite_sets;
+	ParentSpriteToDrawSubSpriteHolder parent_sprite_subsprites;
 	ChildScreenSpriteToDrawVector child_screen_sprites_to_draw;
 	btree::btree_map<TileIndex, TileIndex, BridgeSetXComparator> bridge_to_map_x;
 	btree::btree_map<TileIndex, TileIndex, BridgeSetYComparator> bridge_to_map_y;
@@ -327,7 +329,7 @@ struct ViewportDrawerDynamic {
 static void MarkRouteStepDirty(RouteStepsMap::const_iterator cit);
 static void MarkRouteStepDirty(const TileIndex tile, uint order_nr);
 static void HideMeasurementTooltips();
-static void ViewportDrawPlans(const Viewport *vp, DrawPixelInfo *plan_dpi);
+static void ViewportDrawPlans(const Viewport *vp, Blitter *blitter, DrawPixelInfo *plan_dpi);
 
 static std::unique_ptr<ViewportDrawerDynamic> _vdd;
 std::vector<std::unique_ptr<ViewportDrawerDynamic>> _spare_viewport_drawers;
@@ -494,10 +496,9 @@ static bool ScrollViewportPixelCacheGeneric(Viewport *vp, std::vector<byte> &cac
 
 	int height = vp->height;
 
-	TemporaryScreenPitchOverride screen_pitch(width);
-
 	/* Blitter_8bppDrawing::ScrollBuffer can be used on 32 bit buffers if widths and offsets are suitably adjusted */
-	Blitter_8bppDrawing blitter;
+	const int pitch = width;
+	Blitter_8bppDrawing blitter(&pitch);
 	blitter.ScrollBuffer(cache.data(), 0, 0, width, height, offset_x, offset_y);
 
 	auto fill_rect = [&](int x, int y, int w, int h) {
@@ -560,9 +561,9 @@ static void ScrollPlanPixelCache(Viewport *vp, int offset_x, int offset_y)
 		plan_dpi.left = UnScaleByZoomLower(vp->virtual_left, vp->zoom) + x;
 		plan_dpi.top = UnScaleByZoomLower(vp->virtual_top, vp->zoom) + y;
 
-		Blitter_8bppDrawing blitter;
-		BlitterFactory::TemporaryCurrentBlitterOverride current_blitter(&blitter);
-		ViewportDrawPlans(vp, &plan_dpi);
+		const int pitch = vp->width;
+		Blitter_8bppDrawing blitter(&pitch);
+		ViewportDrawPlans(vp, &blitter, &plan_dpi);
 	});
 	if (clear) ClearViewportPlanPixelCache(vp);
 }
@@ -586,9 +587,9 @@ static void ScrollOrInvalidateOverlayPixelCache(Viewport *vp, int offset_x, int 
 		overlay_dpi.left = UnScaleByZoomLower(vp->virtual_left, vp->zoom) + x;
 		overlay_dpi.top = UnScaleByZoomLower(vp->virtual_top, vp->zoom) + y;
 
-		Blitter_8bppDrawing blitter;
-		BlitterFactory::TemporaryCurrentBlitterOverride current_blitter(&blitter);
-		vp->overlay->Draw(&overlay_dpi);
+		const int pitch = vp->width;
+		Blitter_8bppDrawing blitter(&pitch);
+		vp->overlay->Draw(&blitter, &overlay_dpi);
 	});
 	if (clear) vp->overlay_pixel_cache.clear();
 }
@@ -1232,8 +1233,9 @@ static void AddCombinedSprite(SpriteID image, PaletteID pal, int x, int y, int z
  * @param bb_offset_y bounding box extent towards negative Y (world),
  * @param bb_offset_z bounding box extent towards negative Z (world)
  * @param sub Only draw a part of the sprite.
+ * @param special_flags Special flags (special sorting, etc).
  */
-void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w, int h, int dz, int z, bool transparent, int bb_offset_x, int bb_offset_y, int bb_offset_z, const SubSprite *sub)
+void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w, int h, int dz, int z, bool transparent, int bb_offset_x, int bb_offset_y, int bb_offset_z, const SubSprite *sub, ViewportSortableSpriteSpecialFlags special_flags)
 {
 	int32_t left, right, top, bottom;
 
@@ -1299,7 +1301,9 @@ void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w,
 
 	ps.image = image;
 	ps.pal = pal;
-	ps.sub = sub;
+	_vdd->parent_sprite_subsprites.Set(&ps, sub);
+	ps.special_flags = special_flags;
+
 	ps.xmin = x + bb_offset_x;
 	ps.xmax = x + std::max(bb_offset_x, w) - 1;
 
@@ -1326,6 +1330,11 @@ void AddSortableSpriteToDraw(SpriteID image, PaletteID pal, int x, int y, int w,
 		_vd.combine_top = tmp_top;
 		_vd.combine_bottom = bottom;
 	}
+}
+
+void SetLastSortableSpriteToDrawSpecialFlags(ViewportSortableSpriteSpecialFlags flags)
+{
+	_vdd->parent_sprites_to_draw.back().special_flags = flags;
 }
 
 /**
@@ -2144,11 +2153,75 @@ static bool ViewportSortParentSpritesChecker()
 	return true;
 }
 
+static void ViewportSortParentSpritesSingleComparison(ParentSpriteToDraw *ps, ParentSpriteToDraw *ps2, ParentSpriteToDraw *ps_to_move, ParentSpriteToDraw **psd, ParentSpriteToDraw **psd2)
+{
+	/* Decide which comparator to use, based on whether the bounding
+	 * boxes overlap
+	 */
+	if (ps->xmax >= ps2->xmin && ps->xmin <= ps2->xmax && // overlap in X?
+			ps->ymax >= ps2->ymin && ps->ymin <= ps2->ymax && // overlap in Y?
+			ps->zmax >= ps2->zmin && ps->zmin <= ps2->zmax) { // overlap in Z?
+		/* Use X+Y+Z as the sorting order, so sprites closer to the bottom of
+		 * the screen and with higher Z elevation, are drawn in front.
+		 * Here X,Y,Z are the coordinates of the "center of mass" of the sprite,
+		 * i.e. X=(left+right)/2, etc.
+		 * However, since we only care about order, don't actually divide / 2
+		 */
+		if (ps->xmin + ps->xmax + ps->ymin + ps->ymax + ps->zmin + ps->zmax <=
+				ps2->xmin + ps2->xmax + ps2->ymin + ps2->ymax + ps2->zmin + ps2->zmax) {
+			return;
+		}
+	} else {
+		/* We only change the order, if it is definite.
+		 * I.e. every single order of X, Y, Z says ps2 is behind ps or they overlap.
+		 * That is: If one partial order says ps behind ps2, do not change the order.
+		 */
+		if (ps->xmax < ps2->xmin ||
+				ps->ymax < ps2->ymin ||
+				ps->zmax < ps2->zmin) {
+			return;
+		}
+	}
+
+	/* Move ps_to_move (ps2) in front of ps */
+	ParentSpriteToDraw *temp = ps_to_move;
+	for (auto psd3 = psd2; psd3 > psd; psd3--) {
+		*psd3 = *(psd3 - 1);
+	}
+	*psd = temp;
+}
+
+bool ViewportSortParentSpritesSpecial(ParentSpriteToDraw *ps, ParentSpriteToDraw *ps2, ParentSpriteToDraw **psd, ParentSpriteToDraw **psd2)
+{
+	ParentSpriteToDraw temp;
+
+	auto is_bridge_diag_veh_comparison = [&](ParentSpriteToDraw *a, ParentSpriteToDraw *b) -> bool {
+		if ((a->special_flags & VSSSF_SORT_SPECIAL_TYPE_MASK) == VSSSF_SORT_SORT_BRIDGE_BB && (b->special_flags & VSSSF_SORT_SPECIAL_TYPE_MASK) == VSSSF_SORT_DIAG_VEH && a->zmin > b->zmax) {
+			temp = *a;
+			temp.xmax += 4;
+			temp.ymax += 4;
+			return true;
+		}
+		return false;
+	};
+
+	if (is_bridge_diag_veh_comparison(ps, ps2)) {
+		ViewportSortParentSpritesSingleComparison(&temp, ps2, ps2, psd, psd2);
+		return true;
+	}
+	if (is_bridge_diag_veh_comparison(ps2, ps)) {
+		ViewportSortParentSpritesSingleComparison(ps, &temp, ps2, psd, psd2);
+		return true;
+	}
+
+	return false;
+}
+
 /** Sort parent sprites pointer array */
 static void ViewportSortParentSprites(ParentSpriteToSortVector *psdv)
 {
-	auto psdvend = psdv->end();
-	auto psd = psdv->begin();
+	ParentSpriteToDraw ** const psdvend = psdv->data() + psdv->size();
+	ParentSpriteToDraw **psd = psdv->data();
 	while (psd != psdvend) {
 		ParentSpriteToDraw *ps = *psd;
 
@@ -2158,46 +2231,18 @@ static void ViewportSortParentSprites(ParentSpriteToSortVector *psdv)
 		}
 
 		ps->SetComparisonDone(true);
+		const bool is_special = (ps->special_flags & VSSSF_SORT_SPECIAL) != 0;
 
 		for (auto psd2 = psd + 1; psd2 != psdvend; psd2++) {
 			ParentSpriteToDraw *ps2 = *psd2;
 
 			if (ps2->IsComparisonDone()) continue;
 
-			/* Decide which comparator to use, based on whether the bounding
-			 * boxes overlap
-			 */
-			if (ps->xmax >= ps2->xmin && ps->xmin <= ps2->xmax && // overlap in X?
-					ps->ymax >= ps2->ymin && ps->ymin <= ps2->ymax && // overlap in Y?
-					ps->zmax >= ps2->zmin && ps->zmin <= ps2->zmax) { // overlap in Z?
-				/* Use X+Y+Z as the sorting order, so sprites closer to the bottom of
-				 * the screen and with higher Z elevation, are drawn in front.
-				 * Here X,Y,Z are the coordinates of the "center of mass" of the sprite,
-				 * i.e. X=(left+right)/2, etc.
-				 * However, since we only care about order, don't actually divide / 2
-				 */
-				if (ps->xmin + ps->xmax + ps->ymin + ps->ymax + ps->zmin + ps->zmax <=
-						ps2->xmin + ps2->xmax + ps2->ymin + ps2->ymax + ps2->zmin + ps2->zmax) {
-					continue;
-				}
-			} else {
-				/* We only change the order, if it is definite.
-				 * I.e. every single order of X, Y, Z says ps2 is behind ps or they overlap.
-				 * That is: If one partial order says ps behind ps2, do not change the order.
-				 */
-				if (ps->xmax < ps2->xmin ||
-						ps->ymax < ps2->ymin ||
-						ps->zmax < ps2->zmin) {
-					continue;
-				}
+			if (is_special && (ps2->special_flags & VSSSF_SORT_SPECIAL) != 0) {
+				if (ViewportSortParentSpritesSpecial(ps, ps2, psd, psd2)) continue;
 			}
 
-			/* Move ps2 in front of ps */
-			ParentSpriteToDraw *temp = ps2;
-			for (auto psd3 = psd2; psd3 > psd; psd3--) {
-				*psd3 = *(psd3 - 1);
-			}
-			*psd = temp;
+			ViewportSortParentSpritesSingleComparison(ps, ps2, ps2, psd, psd2);
 		}
 	}
 }
@@ -2205,7 +2250,7 @@ static void ViewportSortParentSprites(ParentSpriteToSortVector *psdv)
 static void ViewportDrawParentSprites(const ViewportDrawerDynamic *vdd, const DrawPixelInfo *dpi, const ParentSpriteToSortVector *psd, const ChildScreenSpriteToDrawVector *csstdv)
 {
 	for (const ParentSpriteToDraw *ps : *psd) {
-		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSpriteViewport(vdd->sprite_data, dpi, ps->image, ps->pal, ps->x, ps->y, ps->sub);
+		if (ps->image != SPR_EMPTY_BOUNDING_BOX) DrawSpriteViewport(vdd->sprite_data, dpi, ps->image, ps->pal, ps->x, ps->y, vdd->parent_sprite_subsprites.Get(ps));
 
 		int child_idx = ps->first_child;
 		while (child_idx >= 0) {
@@ -2602,10 +2647,10 @@ void ViewportRouteOverlay::DrawVehicleRoutePath(const Viewport *vp, ViewportDraw
 
 		int line_width = 3;
 		if (_settings_client.gui.dash_level_of_route_lines == 0) {
-			GfxDrawLine(&dpi_for_text, from_x, from_y, to_x, to_y, PC_BLACK, 3, _settings_client.gui.dash_level_of_route_lines);
+			GfxDrawLine(BlitterFactory::GetCurrentBlitter(), &dpi_for_text, from_x, from_y, to_x, to_y, PC_BLACK, 3, _settings_client.gui.dash_level_of_route_lines);
 			line_width = 1;
 		}
-		GfxDrawLine(&dpi_for_text, from_x, from_y, to_x, to_y, iter.order_conditional ? PC_YELLOW : PC_WHITE, line_width, _settings_client.gui.dash_level_of_route_lines);
+		GfxDrawLine(BlitterFactory::GetCurrentBlitter(), &dpi_for_text, from_x, from_y, to_x, to_y, iter.order_conditional ? PC_YELLOW : PC_WHITE, line_width, _settings_client.gui.dash_level_of_route_lines);
 	}
 }
 
@@ -2796,7 +2841,7 @@ static void ViewportDrawVehicleRouteSteps(const Viewport * const vp)
 	}
 }
 
-static void ViewportDrawPlans(const Viewport *vp, DrawPixelInfo *plan_dpi)
+static void ViewportDrawPlans(const Viewport *vp, Blitter *blitter, DrawPixelInfo *plan_dpi)
 {
 	const Rect bounds = {
 		ScaleByZoom(plan_dpi->left - 2, vp->zoom),
@@ -2842,11 +2887,11 @@ static void ViewportDrawPlans(const Viewport *vp, DrawPixelInfo *plan_dpi)
 				const int to_x = UnScaleByZoom(to_pt.x, vp->zoom);
 				const int to_y = UnScaleByZoom(to_pt.y, vp->zoom);
 
-				GfxDrawLine(plan_dpi, from_x, from_y, to_x, to_y, PC_BLACK, 3);
+				GfxDrawLine(blitter, plan_dpi, from_x, from_y, to_x, to_y, PC_BLACK, 3);
 				if (pl->focused) {
-					GfxDrawLine(plan_dpi, from_x, from_y, to_x, to_y, PC_RED, 1);
+					GfxDrawLine(blitter, plan_dpi, from_x, from_y, to_x, to_y, PC_RED, 1);
 				} else {
-					GfxDrawLine(plan_dpi, from_x, from_y, to_x, to_y, _colour_value[p->colour], 1);
+					GfxDrawLine(blitter, plan_dpi, from_x, from_y, to_x, to_y, _colour_value[p->colour], 1);
 				}
 			}
 		}
@@ -2873,7 +2918,7 @@ static void ViewportDrawPlans(const Viewport *vp, DrawPixelInfo *plan_dpi)
 			const int to_x = UnScaleByZoom(to_pt.x, vp->zoom);
 			const int to_y = UnScaleByZoom(to_pt.y, vp->zoom);
 
-			GfxDrawLine(plan_dpi, from_x, from_y, to_x, to_y, _colour_value[_current_plan->colour], 3, 1);
+			GfxDrawLine(blitter, plan_dpi, from_x, from_y, to_x, to_y, _colour_value[_current_plan->colour], 3, 1);
 		}
 	}
 }
@@ -3318,7 +3363,7 @@ static inline uint32_t ViewportMapGetColourRoutes(const TileIndex tile, TileType
 				colour = rti->map_colour;
 				break;
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 		}
 
 		default: {
@@ -3614,7 +3659,7 @@ static void ViewportMapDrawBridgeTunnel(Viewport * const vp, const TunnelBridgeT
 					colour = rti->map_colour;
 					break;
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			default:
@@ -3904,22 +3949,27 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 			overlay_dpi.left = UnScaleByZoomLower(vp->virtual_left, vp->zoom);
 			overlay_dpi.top = UnScaleByZoomLower(vp->virtual_top, vp->zoom);
 
-			Blitter_8bppDrawing blitter;
-			BlitterFactory::TemporaryCurrentBlitterOverride current_blitter(&blitter);
-			TemporaryScreenPitchOverride screen_pitch(vp->width);
-			vp->overlay->Draw(&overlay_dpi);
+			const int pitch = vp->width;
+			Blitter_8bppDrawing blitter(&pitch);
+			vp->overlay->Draw(&blitter, &overlay_dpi);
 		}
 	}
 
 	if (vp->zoom >= ZOOM_LVL_DRAW_MAP) {
 		/* Here the rendering is like smallmap. */
 		if (BlitterFactory::GetCurrentBlitter()->GetScreenDepth() == 32) {
-			if (_settings_client.gui.show_slopes_on_viewport_map) ViewportMapDraw<true, true>(vp);
-			else ViewportMapDraw<true, false>(vp);
+			if (_settings_client.gui.show_slopes_on_viewport_map) {
+				ViewportMapDraw<true, true>(vp);
+			} else {
+				ViewportMapDraw<true, false>(vp);
+			}
 		} else {
 			_pal2trsp_remap_ptr = IsTransparencySet(TO_TREES) ? GetNonSprite(GB(PALETTE_TO_TRANSPARENT, 0, PALETTE_WIDTH), SpriteType::Recolour) + 1 : nullptr;
-			if (_settings_client.gui.show_slopes_on_viewport_map) ViewportMapDraw<false, true>(vp);
-			else ViewportMapDraw<false, false>(vp);
+			if (_settings_client.gui.show_slopes_on_viewport_map) {
+				ViewportMapDraw<false, true>(vp);
+			} else {
+				ViewportMapDraw<false, false>(vp);
+			}
 		}
 		ViewportMapDrawVehicles(&_vdd->dpi, vp);
 		if (_scrolling_viewport && _settings_client.gui.show_scrolling_viewport_on_map) ViewportMapDrawScrollingViewportBox(vp);
@@ -3941,10 +3991,9 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 				plan_dpi.left = UnScaleByZoomLower(vp->virtual_left, vp->zoom);
 				plan_dpi.top = UnScaleByZoomLower(vp->virtual_top, vp->zoom);
 
-				Blitter_8bppDrawing blitter;
-				BlitterFactory::TemporaryCurrentBlitterOverride current_blitter(&blitter);
-				TemporaryScreenPitchOverride screen_pitch(vp->width);
-				ViewportDrawPlans(vp, &plan_dpi);
+				const int pitch = vp->width;
+				Blitter_8bppDrawing blitter(&pitch);
+				ViewportDrawPlans(vp, &blitter, &plan_dpi);
 			}
 		} else {
 			vp->plan_pixel_cache.clear();
@@ -3968,7 +4017,8 @@ void ViewportDoDraw(Viewport *vp, int left, int top, int right, int bottom, uint
 		}
 
 		_viewport_drawer_jobs++;
-		if (unlikely(HasBit(_viewport_debug_flags, VDF_DISABLE_THREAD))) {
+		extern bool _draw_widget_outlines;
+		if (unlikely(_draw_widget_outlines || HasBit(_viewport_debug_flags, VDF_DISABLE_THREAD))) {
 			ViewportDoDrawRenderJob(vp, _vdd.release());
 		} else {
 			_general_worker_pool.EnqueueJob([](void *data1, void *data2, void *data3) {
@@ -4024,7 +4074,8 @@ static void ViewportDoDrawRenderJob(Viewport *vp, ViewportDrawerDynamic *vdd)
 	vdd->draw_jobs_active.store((uint)vdd->parent_sprite_sets.size(), std::memory_order_relaxed);
 
 	for (uint i = 1; i < (uint)vdd->parent_sprite_sets.size(); i++) {
-		if (unlikely(HasBit(_viewport_debug_flags, VDF_DISABLE_THREAD))) {
+		extern bool _draw_widget_outlines;
+		if (unlikely(_draw_widget_outlines || HasBit(_viewport_debug_flags, VDF_DISABLE_THREAD))) {
 			ViewportDoDrawRenderSubJob(vp, vdd, i);
 		} else {
 			_general_worker_pool.EnqueueJob([](void *data1, void *data2, void *data3) {
@@ -4081,7 +4132,7 @@ static void ViewportDoDrawPhase2(Viewport *vp, ViewportDrawerDynamic *vdd)
 			dp.height = UnScaleByZoom(dp.height, zoom);
 			dp.left = vdd->offset_x + vp->left;
 			dp.top = vdd->offset_y + vp->top;
-			vp->overlay->Draw(&dp);
+			vp->overlay->Draw(BlitterFactory::GetCurrentBlitter(), &dp);
 		} else {
 			const int pixel_cache_start = vdd->offset_x + (vdd->offset_y * vp->width);
 			BlitterFactory::GetCurrentBlitter()->SetRectNoD7(vdd->dpi.dst_ptr, 0, 0, vp->overlay_pixel_cache.data() + pixel_cache_start,
@@ -4116,7 +4167,7 @@ static void ViewportDoDrawPhase3(Viewport *vp)
 
 	if (vp->zoom < ZOOM_LVL_DRAW_MAP && AreAnyPlansVisible()) {
 		DrawPixelInfo plan_dpi = _vdd->MakeDPIForText();
-		ViewportDrawPlans(vp, &plan_dpi);
+		ViewportDrawPlans(vp, BlitterFactory::GetCurrentBlitter(), &plan_dpi);
 	} else if (vp->zoom >= ZOOM_LVL_DRAW_MAP && !vp->plan_pixel_cache.empty()) {
 		const int pixel_cache_start = _vdd->offset_x + (_vdd->offset_y * vp->width);
 		BlitterFactory::GetCurrentBlitter()->SetRectNoD7(_vdd->dpi.dst_ptr, 0, 0, vp->plan_pixel_cache.data() + pixel_cache_start,
@@ -4125,7 +4176,7 @@ static void ViewportDoDrawPhase3(Viewport *vp)
 
 	if (_vdd->display_flags & (ND_SHADE_GREY | ND_SHADE_DIMMED)) {
 		DrawPixelInfo dp = _vdd->MakeDPIForText();
-		GfxFillRect(&dp, dp.left, dp.top, dp.left + dp.width, dp.top + dp.height,
+		GfxFillRect(BlitterFactory::GetCurrentBlitter(), &dp, dp.left, dp.top, dp.left + dp.width, dp.top + dp.height,
 				(_vdd->display_flags & ND_SHADE_DIMMED) ? PALETTE_TO_TRANSPARENT : PALETTE_NEWSPAPER, FILLRECT_RECOLOUR);
 	}
 
@@ -4135,6 +4186,7 @@ static void ViewportDoDrawPhase3(Viewport *vp)
 	_vdd->tile_sprites_to_draw.clear();
 	_vdd->parent_sprites_to_draw.clear();
 	_vdd->parent_sprite_sets.clear();
+	_vdd->parent_sprite_subsprites.Clear();
 	_vdd->child_screen_sprites_to_draw.clear();
 	_vdd->sprite_data.Clear();
 
@@ -4235,11 +4287,47 @@ static inline void ClampViewportToMap(const Viewport *vp, int *scroll_x, int *sc
 	}
 }
 
+
+/**
+ * Clamp the smooth scroll to a maxmimum speed and distance based on time elapsed.
+ *
+ * Every 30ms, we move 1/4th of the distance, to give a smooth movement experience.
+ * But we never go over the max_scroll speed.
+ *
+ * @param delta_ms Time elapsed since last update.
+ * @param delta_hi The distance to move in highest dimension (can't be zero).
+ * @param delta_lo The distance to move in lowest dimension.
+ * @param[out] delta_hi_clamped The clamped distance to move in highest dimension.
+ * @param[out] delta_lo_clamped The clamped distance to move in lowest dimension.
+ */
+static void ClampSmoothScroll(uint32_t delta_ms, int64_t delta_hi, int64_t delta_lo, int &delta_hi_clamped, int &delta_lo_clamped)
+{
+	/** A tile is 64 pixels in width at 1x zoom; viewport coordinates are in 4x zoom. */
+	constexpr int PIXELS_PER_TILE = TILE_PIXELS * 2 * ZOOM_LVL_BASE;
+
+	assert(delta_hi != 0);
+
+	/* Move at most 75% of the distance every 30ms, for a smooth experience */
+	int64_t delta_left = delta_hi * std::pow(0.75, delta_ms / 30.0);
+	/* Move never more than 16 tiles per 30ms. */
+	int max_scroll = ScaleByMapSize1D(16 * PIXELS_PER_TILE * delta_ms / 30);
+
+	/* We never go over the max_scroll speed. */
+	delta_hi_clamped = Clamp(delta_hi - delta_left, -max_scroll, max_scroll);
+	/* The lower delta is in ratio of the higher delta, so we keep going straight at the destination. */
+	delta_lo_clamped = delta_lo * delta_hi_clamped / delta_hi;
+
+	/* Ensure we always move (delta_hi can't be zero). */
+	if (delta_hi_clamped == 0) {
+		delta_hi_clamped = delta_hi > 0 ? 1 : -1;
+	}
+}
+
 /**
  * Update the next viewport position being displayed.
  * @param w %Window owning the viewport.
  */
-void UpdateNextViewportPosition(Window *w)
+void UpdateNextViewportPosition(Window *w, uint32_t delta_ms)
 {
 	const Viewport *vp = w->viewport;
 
@@ -4257,16 +4345,26 @@ void UpdateNextViewportPosition(Window *w)
 		int delta_x = w->viewport->dest_scrollpos_x - w->viewport->scrollpos_x;
 		int delta_y = w->viewport->dest_scrollpos_y - w->viewport->scrollpos_y;
 
+		int current_x = w->viewport->scrollpos_x;
+		int current_y = w->viewport->scrollpos_y;
+
 		w->viewport->next_scrollpos_x = w->viewport->scrollpos_x;
 		w->viewport->next_scrollpos_y = w->viewport->scrollpos_y;
 
 		bool update_overlay = false;
 		if (delta_x != 0 || delta_y != 0) {
 			if (_settings_client.gui.smooth_scroll) {
-				int max_scroll = ScaleByMapSize1D(512 * ZOOM_LVL_BASE);
-				/* Not at our desired position yet... */
-				w->viewport->next_scrollpos_x += Clamp(DivAwayFromZero(delta_x, 4), -max_scroll, max_scroll);
-				w->viewport->next_scrollpos_y += Clamp(DivAwayFromZero(delta_y, 4), -max_scroll, max_scroll);
+				int delta_x_clamped;
+				int delta_y_clamped;
+
+				if (abs(delta_x) > abs(delta_y)) {
+					ClampSmoothScroll(delta_ms, delta_x, delta_y, delta_x_clamped, delta_y_clamped);
+				} else {
+					ClampSmoothScroll(delta_ms, delta_y, delta_x, delta_y_clamped, delta_x_clamped);
+				}
+
+				w->viewport->next_scrollpos_x += delta_x_clamped;
+				w->viewport->next_scrollpos_y += delta_y_clamped;
 			} else {
 				w->viewport->next_scrollpos_x = w->viewport->dest_scrollpos_x;
 				w->viewport->next_scrollpos_y = w->viewport->dest_scrollpos_y;
@@ -4277,6 +4375,13 @@ void UpdateNextViewportPosition(Window *w)
 		w->viewport->force_update_overlay_pending = update_overlay;
 
 		ClampViewportToMap(vp, &w->viewport->next_scrollpos_x, &w->viewport->next_scrollpos_y);
+
+		/* When moving small amounts around the border we can get stuck, and
+		 * not actually move. In those cases, teleport to the destination. */
+		if ((delta_x != 0 || delta_y != 0) && current_x == w->viewport->next_scrollpos_x && current_y == w->viewport->next_scrollpos_y) {
+			w->viewport->next_scrollpos_x = w->viewport->dest_scrollpos_x;
+			w->viewport->next_scrollpos_y = w->viewport->dest_scrollpos_y;
+		}
 
 		if (_scrolling_viewport == w) UpdateActiveScrollingViewport(w);
 	}
@@ -4392,7 +4497,7 @@ void MarkViewportDirty(Viewport * const vp, int left, int top, int right, int bo
 
 	uint x = std::max<int>(0, UnScaleByZoomLower(left, vp->zoom) - vp->dirty_block_left_margin) >> vp->GetDirtyBlockWidthShift();
 	uint y = UnScaleByZoomLower(top, vp->zoom) >> vp->GetDirtyBlockHeightShift();
-	uint w = (std::max<int>(0, UnScaleByZoomLower(right, vp->zoom) - 1 - vp->dirty_block_left_margin) >> vp->GetDirtyBlockWidthShift()) + 1 - x;
+	uint w = (std::max<int>(0, UnScaleByZoom(right, vp->zoom) - 1 - vp->dirty_block_left_margin) >> vp->GetDirtyBlockWidthShift()) + 1 - x;
 	uint h = ((UnScaleByZoom(bottom, vp->zoom) - 1) >> vp->GetDirtyBlockHeightShift()) + 1 - y;
 
 	uint column_skip = vp->dirty_blocks_per_column - h;
@@ -5699,7 +5804,7 @@ static int CalcHeightdiff(HighLightStyle style, uint distance, TileIndex start_t
 			byte style_t = (byte)(TileX(end_tile) > TileX(start_tile));
 			start_tile = TILE_ADD(start_tile, ToTileIndexDiff(heightdiff_area_by_dir[style_t]));
 			end_tile   = TILE_ADD(end_tile, ToTileIndexDiff(heightdiff_area_by_dir[2 + style_t]));
-			FALLTHROUGH;
+			[[fallthrough]];
 		}
 
 		case HT_POINT:
@@ -6293,7 +6398,7 @@ void VpSelectTilesWithMethod(int x, int y, ViewportPlaceMethod method)
 
 		case VPM_X_LIMITED: // Drag in X direction (limited size).
 			limit = (_thd.sizelimit - 1) * TILE_SIZE;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case VPM_FIX_X: // drag in Y direction
 			x = sx;
@@ -6302,7 +6407,7 @@ void VpSelectTilesWithMethod(int x, int y, ViewportPlaceMethod method)
 
 		case VPM_Y_LIMITED: // Drag in Y direction (limited size).
 			limit = (_thd.sizelimit - 1) * TILE_SIZE;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case VPM_FIX_Y: // drag in X direction
 			y = sy;
@@ -6361,7 +6466,7 @@ calc_heightdiff_single_direction:;
 			limit = (_thd.sizelimit - 1) * TILE_SIZE;
 			x = sx + Clamp(x - sx, -limit, limit);
 			y = sy + Clamp(y - sy, -limit, limit);
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case VPM_X_AND_Y: // drag an X by Y area
 			if (_settings_client.gui.measure_tooltip) {

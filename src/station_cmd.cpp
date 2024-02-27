@@ -1913,6 +1913,7 @@ CommandCost RemoveFromRailBaseStation(TileArea ta, std::vector<T *> &affected_st
 		/* if we deleted the whole station, delete the train facility. */
 		if (st->train_station.tile == INVALID_TILE) {
 			st->facilities &= ~FACIL_TRAIN;
+			SetWindowClassesDirty(WC_VEHICLE_ORDERS);
 			SetWindowWidgetDirty(WC_STATION_VIEW, st->index, WID_SV_TRAINS);
 			st->UpdateVirtCoord();
 			DeleteStationIfEmpty(st);
@@ -2421,6 +2422,7 @@ CommandCost RemoveRoadStop(TileIndex tile, DoCommandFlag flags, int replacement_
 			/* removed the only stop? */
 			if (*primary_stop == nullptr) {
 				st->facilities &= (is_truck ? ~FACIL_TRUCK_STOP : ~FACIL_BUS_STOP);
+				SetWindowClassesDirty(WC_VEHICLE_ORDERS);
 			}
 		} else {
 			/* tell the predecessor in the list to skip this stop */
@@ -2580,13 +2582,14 @@ uint8_t GetAirportNoiseLevelForDistance(const AirportSpec *as, uint distance)
 	 * So no need to go any further*/
 	if (as->noise_level < 2) return as->noise_level;
 
-	if (_settings_game.difficulty.town_council_tolerance == TOWN_COUNCIL_PERMISSIVE) return 1;
+	auto tolerance = _settings_game.difficulty.town_council_tolerance;
+	if (tolerance == TOWN_COUNCIL_PERMISSIVE) tolerance = TOWN_COUNCIL_LENIENT;
 
 	/* The steps for measuring noise reduction are based on the "magical" (and arbitrary) 8 base distance
 	 * adding the town_council_tolerance 4 times, as a way to graduate, depending of the tolerance.
 	 * Basically, it says that the less tolerant a town is, the bigger the distance before
 	 * an actual decrease can be granted */
-	uint8_t town_tolerance_distance = 8 + (_settings_game.difficulty.town_council_tolerance * 4);
+	uint8_t town_tolerance_distance = 8 + (tolerance * 4);
 
 	/* now, we want to have the distance segmented using the distance judged bareable by town
 	 * This will give us the coefficient of reduction the distance provides. */
@@ -2802,7 +2805,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 			authority_refuse_message = STR_ERROR_LOCAL_AUTHORITY_REFUSES_NOISE;
 			authority_refuse_town = nearest;
 		}
-	} else if (action != AIRPORT_UPGRADE) {
+	} else if (_settings_game.difficulty.town_council_tolerance != TOWN_COUNCIL_PERMISSIVE && action != AIRPORT_UPGRADE) {
 		Town *t = ClosestTownFromTile(tile, UINT_MAX);
 		uint num = 0;
 		for (const Station *st : Station::Iterate()) {
@@ -2958,6 +2961,7 @@ static CommandCost RemoveAirport(TileIndex tile, DoCommandFlag flags)
 
 		st->airport.Clear();
 		st->facilities &= ~FACIL_AIRPORT;
+		SetWindowClassesDirty(WC_VEHICLE_ORDERS);
 
 		InvalidateWindowData(WC_STATION_VIEW, st->index, -1);
 
@@ -3222,6 +3226,7 @@ static CommandCost RemoveDock(TileIndex tile, DoCommandFlag flags)
 			st->docking_station.Clear();
 			st->docking_tiles.clear();
 			st->facilities &= ~FACIL_DOCK;
+			SetWindowClassesDirty(WC_VEHICLE_ORDERS);
 		}
 
 		Company::Get(st->owner)->infrastructure.station -= 2;
@@ -3879,7 +3884,7 @@ static void TileLoop_Station(TileIndex tile)
 
 		case STATION_DOCK:
 			if (!IsTileFlat(tile)) break; // only handle water part
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case STATION_OILRIG: //(station part)
 		case STATION_BUOY:
@@ -4471,12 +4476,12 @@ void DeleteStaleLinks(Station *from)
 
 			Station *to = Station::Get((*lg)[to_id].Station());
 			assert(to->goods[c].node == to_id);
-			assert(_date >= edge.LastUpdate());
-			DateDelta timeout = std::max<uint>((LinkGraph::MIN_TIMEOUT_DISTANCE + (DistanceManhattan(from->xy, to->xy) >> 3)) / _settings_game.economy.day_length_factor, 1);
-			if (edge.LastAircraftUpdate() != INVALID_DATE && (_date - edge.LastAircraftUpdate()) > timeout) {
+			assert(EconTime::CurDate() >= edge.LastUpdate());
+			DateDelta timeout = std::max<uint>((LinkGraph::MIN_TIMEOUT_DISTANCE + (DistanceManhattan(from->xy, to->xy) >> 3)) / DayLengthFactor(), 1);
+			if (edge.LastAircraftUpdate() != EconTime::INVALID_DATE && (EconTime::CurDate() - edge.LastAircraftUpdate()) > timeout) {
 				edge.ClearAircraft();
 			}
-			if ((_date - edge.LastUpdate()) > timeout) {
+			if ((EconTime::CurDate() - edge.LastUpdate()) > timeout) {
 				bool updated = false;
 
 				if (auto_distributed) {
@@ -4508,7 +4513,7 @@ void DeleteStaleLinks(Station *from)
 						// Only run LinkRefresher if vehicle was not already in the cache
 						if (res.second) {
 							/* Do not refresh links of vehicles that have been stopped in depot for a long time. */
-							if (!v->IsStoppedInDepot() || (_date - v->date_of_last_service) <=
+							if (!v->IsStoppedInDepot() || (EconTime::CurDate() - v->date_of_last_service) <=
 									LinkGraph::STALE_LINK_DEPOT_TIMEOUT) {
 								edge_helper.RecordSize();
 								LinkRefresher::Run(v, false); // Don't allow merging. Otherwise lg might get deleted.
@@ -4517,7 +4522,7 @@ void DeleteStaleLinks(Station *from)
 								}
 							}
 						}
-						if (edge.LastUpdate() == _date) {
+						if (edge.LastUpdate() == EconTime::CurDate()) {
 							updated = true;
 							break;
 						}
@@ -4540,18 +4545,18 @@ void DeleteStaleLinks(Station *from)
 					if (ge.data != nullptr) ge.data->flows.DeleteFlows(to->index);
 					RerouteCargo(from, c, to->index, from->index);
 				}
-			} else if (edge.LastUnrestrictedUpdate() != INVALID_DATE && (_date - edge.LastUnrestrictedUpdate()) > timeout) {
+			} else if (edge.LastUnrestrictedUpdate() != EconTime::INVALID_DATE && (EconTime::CurDate() - edge.LastUnrestrictedUpdate()) > timeout) {
 				edge.Restrict();
 				if (ge.data != nullptr) ge.data->flows.RestrictFlows(to->index);
 				RerouteCargo(from, c, to->index, from->index);
-			} else if (edge.LastRestrictedUpdate() != INVALID_DATE && (_date - edge.LastRestrictedUpdate()) > timeout) {
+			} else if (edge.LastRestrictedUpdate() != EconTime::INVALID_DATE && (EconTime::CurDate() - edge.LastRestrictedUpdate()) > timeout) {
 				edge.Release();
 			}
 
 			return result;
 		});
-		assert(_scaled_date_ticks >= lg->LastCompression());
-		if ((_scaled_date_ticks - lg->LastCompression()) > LinkGraph::COMPRESSION_INTERVAL) {
+		assert(_scaled_tick_counter >= lg->LastCompression());
+		if ((_scaled_tick_counter - lg->LastCompression()) > LinkGraph::COMPRESSION_INTERVAL) {
 			lg->Compress();
 		}
 	}
@@ -4663,7 +4668,7 @@ void OnTick_Station()
 void StationDailyLoop()
 {
 	// Only record cargo history every second day.
-	if (_date.base() % 2 != 0) {
+	if (EconTime::CurDate().base() % 2 != 0) {
 		for (Station *st : Station::Iterate()) {
 			st->UpdateCargoHistory();
 		}
@@ -5075,7 +5080,7 @@ void BuildOilRig(TileIndex tile)
 	st->airport.Add(tile);
 	st->ship_station.Add(tile);
 	st->facilities = FACIL_AIRPORT | FACIL_DOCK;
-	st->build_date = _date;
+	st->build_date = CalTime::CurDate();
 	UpdateStationDockingTiles(st);
 
 	st->rect.BeforeAddTile(tile, StationRect::ADD_FORCE);
@@ -5524,7 +5529,7 @@ void FlowStat::ScaleToMonthly(uint runtime)
 	assert(runtime > 0);
 	uint share = 0;
 	for (iterator i = this->begin(); i != this->end(); ++i) {
-		share = std::max(share + 1, ClampTo<uint>((static_cast<uint64_t>(i->first) * 30 * DAY_TICKS * _settings_game.economy.day_length_factor) / runtime));
+		share = std::max(share + 1, ClampTo<uint>((static_cast<uint64_t>(i->first) * 30 * DAY_TICKS * DayLengthFactor()) / runtime));
 		if (this->unrestricted == i->first) this->unrestricted = share;
 		i->first = share;
 	}

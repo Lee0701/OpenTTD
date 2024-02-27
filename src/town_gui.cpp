@@ -272,7 +272,32 @@ public:
 						SetDParam(0, STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_ALLOW_ROADS + this->sel_index - 0x100);
 					} else {
 						colour = TC_YELLOW;
-						text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_SMALL_ADVERTISING + this->sel_index;
+						switch (this->sel_index) {
+							case 0:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_SMALL_ADVERTISING;
+								break;
+							case 1:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_MEDIUM_ADVERTISING;
+								break;
+							case 2:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_LARGE_ADVERTISING;
+								break;
+							case 3:
+								text = EconTime::UsingWallclockUnits() ? STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_ROAD_RECONSTRUCTION_MINUTES : STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_ROAD_RECONSTRUCTION_MONTHS;
+								break;
+							case 4:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_STATUE_OF_COMPANY;
+								break;
+							case 5:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_NEW_BUILDINGS;
+								break;
+							case 6:
+								text = EconTime::UsingWallclockUnits() ? STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_EXCLUSIVE_TRANSPORT_MINUTES : STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_EXCLUSIVE_TRANSPORT_MONTHS;
+								break;
+							case 7:
+								text = STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_BRIBE;
+								break;
+						}
 						SetDParam(0, _price[PR_TOWN_ACTION] * _town_action_costs[this->sel_index] >> 8);
 					}
 					DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect), text, colour);
@@ -411,7 +436,7 @@ public:
 				}
 				/* When double-clicking, continue */
 				if (click_count == 1 || y < 0) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case WID_TA_EXECUTE:
@@ -567,20 +592,20 @@ public:
 		DrawString(tr, STR_TOWN_VIEW_POPULATION_HOUSES);
 		tr.top += GetCharacterHeight(FS_NORMAL);
 
-		SetDParam(0, 1 << CT_PASSENGERS);
-		SetDParam(1, this->town->supplied[CT_PASSENGERS].old_act);
-		SetDParam(2, this->town->supplied[CT_PASSENGERS].old_max);
-		DrawString(tr, STR_TOWN_VIEW_CARGO_LAST_MONTH_MAX);
-		tr.top += GetCharacterHeight(FS_NORMAL);
+		StringID str_last_period = EconTime::UsingWallclockUnits() ? STR_TOWN_VIEW_CARGO_LAST_MINUTE_MAX : STR_TOWN_VIEW_CARGO_LAST_MONTH_MAX;
 
-		SetDParam(0, 1 << CT_MAIL);
-		SetDParam(1, this->town->supplied[CT_MAIL].old_act);
-		SetDParam(2, this->town->supplied[CT_MAIL].old_max);
-		DrawString(tr, STR_TOWN_VIEW_CARGO_LAST_MONTH_MAX);
-		tr.top += GetCharacterHeight(FS_NORMAL);
+		for (auto tpe : {TPE_PASSENGERS, TPE_MAIL}) {
+			for (CargoID cid : CargoSpec::town_production_cargoes[tpe]) {
+				SetDParam(0, 1ULL << cid);
+				SetDParam(1, this->town->supplied[cid].old_act);
+				SetDParam(2, this->town->supplied[cid].old_max);
+				DrawString(tr, str_last_period);
+				tr.top += GetCharacterHeight(FS_NORMAL);
+			}
+		}
 
 		bool first = true;
-		for (int i = TE_BEGIN; i < TE_END; i++) {
+		for (int i = TAE_BEGIN; i < TAE_END; i++) {
 			if (this->town->goal[i] == 0) continue;
 			if (this->town->goal[i] == TOWN_GROWTH_WINTER && (TileHeight(this->town->xy) < LowestSnowLine() || this->town->cache.population <= 90)) continue;
 			if (this->town->goal[i] == TOWN_GROWTH_DESERT && (GetTropicZone(this->town->xy) != TROPICZONE_DESERT || this->town->cache.population <= 60)) continue;
@@ -593,7 +618,7 @@ public:
 
 			bool rtl = _current_text_dir == TD_RTL;
 
-			const CargoSpec *cargo = FindFirstCargoWithTownEffect((TownEffect)i);
+			const CargoSpec *cargo = FindFirstCargoWithTownAcceptanceEffect((TownAcceptanceEffect)i);
 			assert(cargo != nullptr);
 
 			StringID string;
@@ -699,10 +724,10 @@ public:
 	 */
 	uint GetDesiredInfoHeight(int width) const
 	{
-		uint aimed_height = 3 * GetCharacterHeight(FS_NORMAL);
+		uint aimed_height = static_cast<uint>(1 + CountBits(CargoSpec::town_production_cargo_mask[TPE_PASSENGERS] | CargoSpec::town_production_cargo_mask[TPE_MAIL])) * GetCharacterHeight(FS_NORMAL);
 
 		bool first = true;
-		for (int i = TE_BEGIN; i < TE_END; i++) {
+		for (int i = TAE_BEGIN; i < TAE_END; i++) {
 			if (this->town->goal[i] == 0) continue;
 			if (this->town->goal[i] == TOWN_GROWTH_WINTER && (TileHeight(this->town->xy) < LowestSnowLine() || this->town->cache.population <= 90)) continue;
 			if (this->town->goal[i] == TOWN_GROWTH_DESERT && (GetTropicZone(this->town->xy) != TROPICZONE_DESERT || this->town->cache.population <= 60)) continue;
@@ -1800,9 +1825,9 @@ public:
 
 				case WID_HP_HOUSE_YEARS: {
 					const HouseSpec *hs = HouseSpec::Get(this->display_house);
-					SetDParam(0, hs->min_year <= _cur_year ? STR_HOUSE_BUILD_YEARS_GOOD_YEAR : STR_HOUSE_BUILD_YEARS_BAD_YEAR);
+					SetDParam(0, hs->min_year <= CalTime::CurYear() ? STR_HOUSE_BUILD_YEARS_GOOD_YEAR : STR_HOUSE_BUILD_YEARS_BAD_YEAR);
 					SetDParam(1, hs->min_year);
-					SetDParam(2, hs->max_year >= _cur_year ? STR_HOUSE_BUILD_YEARS_GOOD_YEAR : STR_HOUSE_BUILD_YEARS_BAD_YEAR);
+					SetDParam(2, hs->max_year >= CalTime::CurYear() ? STR_HOUSE_BUILD_YEARS_GOOD_YEAR : STR_HOUSE_BUILD_YEARS_BAD_YEAR);
 					SetDParam(3, hs->max_year);
 					break;
 				}
@@ -1942,7 +1967,7 @@ public:
 						r.right - WidgetDimensions::scaled.matrix.right + lowered, r.bottom - WidgetDimensions::scaled.matrix.bottom + lowered);
 				const HouseSpec *hs = HouseSpec::Get(house);
 				/* disabled? */
-				if (_cur_year < hs->min_year || _cur_year > hs->max_year) {
+				if (CalTime::CurYear() < hs->min_year || CalTime::CurYear() > hs->max_year) {
 					GfxFillRect(r.left + 1, r.top + 1, r.right - 1, r.bottom - 1, PC_BLACK, FILLRECT_CHECKER);
 				}
 				break;

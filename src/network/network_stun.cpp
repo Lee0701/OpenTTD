@@ -71,7 +71,7 @@ void ClientNetworkStunSocketHandler::Connect(const std::string &token, uint8_t f
 	this->token = token;
 	this->family = family;
 
-	this->connecter = new NetworkStunConnecter(this, NetworkStunConnectionString(), token, family);
+	this->connecter = TCPConnecter::Create<NetworkStunConnecter>(this, NetworkStunConnectionString(), token, family);
 }
 
 /**
@@ -86,12 +86,12 @@ std::unique_ptr<ClientNetworkStunSocketHandler> ClientNetworkStunSocketHandler::
 
 	stun_handler->Connect(token, family);
 
-	Packet *p = new Packet(PACKET_STUN_SERCLI_STUN);
+	auto p = std::make_unique<Packet>(PACKET_STUN_SERCLI_STUN);
 	p->Send_uint8(NETWORK_COORDINATOR_VERSION);
 	p->Send_string(token);
 	p->Send_uint8(family);
 
-	stun_handler->SendPacket(p);
+	stun_handler->SendPacket(std::move(p));
 
 	return stun_handler;
 }

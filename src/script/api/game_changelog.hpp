@@ -22,6 +22,7 @@
  * \li GSAsyncMode
  * \li GSCompanyMode::IsValid
  * \li GSCompanyMode::IsDeity
+ * \li GSTimeMode
  * \li GSTown::ROAD_LAYOUT_RANDOM
  * \li GSVehicle::IsPrimaryVehicle
  * \li GSOrder::SetOrderJumpTo
@@ -46,6 +47,8 @@
  * \li GSCompany::SetAutoRenewStatus
  * \li GSCompany::SetAutoRenewMonths
  * \li GSCompany::SetAutoRenewMoney
+ * \li GSCompany::SetMaxLoanAmountForCompany
+ * \li GSCompany::ResetMaxLoanAmountForCompany
  * \li GSGameSettings::IsDisabledVehicleType
  * \li GSGroup::GroupID
  * \li GSGroup::IsValidGroup
@@ -80,9 +83,16 @@
  * \li GSGoal::SetDestination
  * \li GSIndustry::GetProductionLevel
  * \li GSIndustry::SetProductionLevel
+ * \li GSStoryPage::IsValidStoryPageElementType
+ * \li GSStoryPage::IsValidStoryPageButtonColour
+ * \li GSStoryPage::IsValidStoryPageButtonFlags
+ * \li GSStoryPage::IsValidStoryPageButtonCursor
+ * \li GSTileList_StationCoverage
+ * \li GSAirport::GetAirportNumHelipads
  *
  * API removals:
  * \li GSError::ERR_PRECONDITION_TOO_MANY_PARAMETERS, that error is never returned anymore.
+ * \li GSInfo::CONFIG_RANDOM, no longer used.
  *
  * Other changes:
  * \li GSGroupList accepts an optional filter function
@@ -91,6 +101,7 @@
  * \li GSSubsidyList accepts an optional filter function
  * \li GSTownList accepts an optional filter function
  * \li GSVehicleList accepts an optional filter function
+ * \li GSInfo::AddSettings easy_value / medium_value / hard_value are replaced with default_value
  *
  * \b 13.0
  *

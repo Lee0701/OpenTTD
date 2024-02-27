@@ -379,6 +379,16 @@ enum SaveLoadVersion : uint16_t {
 	SLV_TIMETABLE_TICKS_TYPE,               ///< 323  PR#11435 Convert timetable current order time to ticks.
 	SLV_WATER_REGIONS,                      ///< 324  PR#10543 Water Regions for ship pathfinder.
 
+	SLV_WATER_REGION_EVAL_SIMPLIFIED,       ///< 325  PR#11750 Simplified Water Region evaluation.
+	SLV_ECONOMY_DATE,                       ///< 326  PR#10700 Split calendar and economy timers and dates.
+	SLV_ECONOMY_MODE_TIMEKEEPING_UNITS,     ///< 327  PR#11341 Mode to display economy measurements in wallclock units.
+	SLV_CALENDAR_SUB_DATE_FRACT,            ///< 328  PR#11428 Add sub_date_fract to measure calendar days.
+	SLV_SHIP_ACCELERATION,                  ///< 329  PR#10734 Start using Vehicle's acceleration field for ships too.
+	SLV_MAX_LOAN_FOR_COMPANY,               ///< 330  PR#11224 Separate max loan for each company.
+	SLV_DEPOT_UNBUNCHING,                   ///< 331  PR#11945 Allow unbunching shared order vehicles at a depot.
+	SLV_AI_LOCAL_CONFIG,                    ///< 332  PR#12003 Config of running AI is stored inside Company.
+	SLV_SCRIPT_RANDOMIZER,                  ///< 333  PR#12063 Save script randomizers.
+
 	SL_MAX_VERSION,                         ///< Highest possible saveload version
 
 	SL_SPRING_2013_v2_0_102 = 220,
@@ -422,9 +432,9 @@ void SlSkipBytes(size_t length);
 size_t SlGetBytesRead();
 size_t SlGetBytesWritten();
 
-void NORETURN SlError(StringID string, std::string extra_msg = {});
-void NORETURN SlErrorCorrupt(std::string msg);
-void NORETURN CDECL SlErrorCorruptFmt(const char *format, ...) WARN_FORMAT(1, 2);
+[[noreturn]] void SlError(StringID string, std::string extra_msg = {});
+[[noreturn]] void SlErrorCorrupt(std::string msg);
+[[noreturn]] void CDECL SlErrorCorruptFmt(const char *format, ...) WARN_FORMAT(1, 2);
 
 bool SaveLoadFileTypeIsScenario();
 

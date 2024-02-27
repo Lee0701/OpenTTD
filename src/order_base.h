@@ -53,7 +53,7 @@ void ClearOrderDestinationRefcountMap();
 
 /*
  * xflags bits:
- * Bit 0:    OT_CONDITIONAL: IsWaitTimetabled(): For branch travel time
+ * Bit 0:    OT_CONDITIONAL and OT_GOTO_DEPOT: IsWaitTimetabled(): Depot: wait is timetabled, conditional: branch travel time
  * Bit 1:    IsWaitFixed(): Wait time fixed
  * Bits 2-3: GetLeaveType(): Order leave type
  * Bit 4:    IsTravelFixed(): Travel time fixed
@@ -168,6 +168,11 @@ public:
 	{
 		CheckExtraInfoAlloced();
 		return this->extra->xdata2;
+	}
+
+	inline uint16_t GetRawFlags() const
+	{
+		return this->flags;
 	}
 
 	Order *next;          ///< Pointer to next order. If nullptr, end of list
@@ -380,7 +385,7 @@ public:
 	/** What caused us going to the depot? */
 	inline OrderDepotTypeFlags GetDepotOrderType() const { return (OrderDepotTypeFlags)GB(this->flags, 0, 3); }
 	/** What are we going to do when in the depot. */
-	inline OrderDepotActionFlags GetDepotActionType() const { return (OrderDepotActionFlags)GB(this->flags, 4, 3); }
+	inline OrderDepotActionFlags GetDepotActionType() const { return (OrderDepotActionFlags)GB(this->flags, 3, 4); }
 	/** Extra depot flags. */
 	inline OrderDepotExtraFlags GetDepotExtraFlags() const { return (OrderDepotExtraFlags)GB(this->flags, 8, 8); }
 	/** What waypoint flags? */
@@ -445,7 +450,7 @@ public:
 	/** Set the cause to go to the depot. */
 	inline void SetDepotOrderType(OrderDepotTypeFlags depot_order_type) { SB(this->flags, 0, 3, depot_order_type); }
 	/** Set what we are going to do in the depot. */
-	inline void SetDepotActionType(OrderDepotActionFlags depot_service_type) { SB(this->flags, 4, 3, depot_service_type); }
+	inline void SetDepotActionType(OrderDepotActionFlags depot_service_type) { SB(this->flags, 3, 4, depot_service_type); }
 	/** Set what we are going to do in the depot. */
 	inline void SetDepotExtraFlags(OrderDepotExtraFlags depot_extra_flags) { SB(this->flags, 8, 8, depot_extra_flags); }
 	/** Set waypoint flags. */
@@ -475,7 +480,7 @@ public:
 	inline bool IsWaitTimetabled() const
 	{
 		if (this->HasNoTimetableTimes()) return true;
-		return this->IsType(OT_CONDITIONAL) ? HasBit(this->GetXFlags(), 0) : HasBit(this->flags, 3);
+		return (this->IsType(OT_CONDITIONAL) || this->IsType(OT_GOTO_DEPOT)) ? HasBit(this->GetXFlags(), 0) : HasBit(this->flags, 3);
 	}
 	/** Does this order have an explicit travel time set? */
 	inline bool IsTravelTimetabled() const
@@ -504,7 +509,8 @@ public:
 	inline void SetWaitTimetabled(bool timetabled)
 	{
 		if (this->HasNoTimetableTimes()) return;
-		if (this->IsType(OT_CONDITIONAL)) {
+		if (this->IsType(OT_CONDITIONAL) || this->IsType(OT_GOTO_DEPOT)) {
+			if (this->extra == nullptr && !timetabled) return;
 			SB(this->GetXFlagsRef(), 0, 1, timetabled ? 1 : 0);
 		} else {
 			SB(this->flags, 3, 1, timetabled ? 1 : 0);
@@ -740,7 +746,7 @@ private:
 	friend SaveLoadTable GetDispatchScheduleDescription();              ///< Saving and loading of dispatch schedules
 
 	std::vector<DispatchSlot> scheduled_dispatch;                       ///< Scheduled dispatch slots
-	DateTicksScaled scheduled_dispatch_start_tick = -1;                 ///< Scheduled dispatch start tick
+	StateTicks scheduled_dispatch_start_tick = -1;                      ///< Scheduled dispatch start tick
 	uint32_t scheduled_dispatch_duration = 0;                           ///< Scheduled dispatch duration
 	int32_t scheduled_dispatch_last_dispatch = INVALID_SCHEDULED_DISPATCH_OFFSET; ///< Last vehicle dispatched offset
 	int32_t scheduled_dispatch_max_delay = 0;                           ///< Maximum allowed delay
@@ -777,7 +783,7 @@ public:
 	void RemoveScheduledDispatch(uint32_t offset);
 	void AdjustScheduledDispatch(int32_t adjust);
 	void ClearScheduledDispatch() { this->scheduled_dispatch.clear(); }
-	bool UpdateScheduledDispatchToDate(DateTicksScaled now);
+	bool UpdateScheduledDispatchToDate(StateTicks now);
 	void UpdateScheduledDispatch(const Vehicle *v);
 
 	/**
@@ -796,7 +802,7 @@ public:
 	 * Set the scheduled dispatch start
 	 * @param  start_ticks New start ticks
 	 */
-	inline void SetScheduledDispatchStartTick(DateTicksScaled start_tick)
+	inline void SetScheduledDispatchStartTick(StateTicks start_tick)
 	{
 		this->scheduled_dispatch_start_tick = start_tick;
 	}
@@ -805,7 +811,7 @@ public:
 	 * Get the scheduled dispatch start date, in absolute scaled tick
 	 * @return  scheduled dispatch start date
 	 */
-	inline DateTicksScaled GetScheduledDispatchStartTick() const { return this->scheduled_dispatch_start_tick; }
+	inline StateTicks GetScheduledDispatchStartTick() const { return this->scheduled_dispatch_start_tick; }
 
 	/**
 	 * Whether the scheduled dispatch setting is valid
@@ -1028,6 +1034,6 @@ public:
 	inline const DispatchSchedule &GetDispatchScheduleByIndex(uint index) const { return this->dispatch_schedules[index]; }
 };
 
-void ShiftOrderDates(DateDelta interval);
+void UpdateOrderUIOnDateChange();
 
 #endif /* ORDER_BASE_H */

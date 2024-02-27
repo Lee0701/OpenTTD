@@ -30,7 +30,7 @@ inline void LinkGraph::BaseNode::Init(TileIndex xy, StationID st, uint demand)
 	this->supply = 0;
 	this->demand = demand;
 	this->station = st;
-	this->last_update = INVALID_DATE;
+	this->last_update = EconTime::INVALID_DATE;
 }
 
 /**
@@ -42,19 +42,19 @@ void LinkGraph::ShiftDates(DateDelta interval)
 {
 	for (NodeID node1 = 0; node1 < this->Size(); ++node1) {
 		BaseNode &source = this->nodes[node1];
-		if (source.last_update != INVALID_DATE) source.last_update += interval;
+		if (source.last_update != EconTime::INVALID_DATE) source.last_update += interval;
 	}
 	for (auto &it : this->edges) {
 		BaseEdge &edge = it.second;
-		if (edge.last_unrestricted_update != INVALID_DATE) edge.last_unrestricted_update += interval;
-		if (edge.last_restricted_update != INVALID_DATE) edge.last_restricted_update += interval;
-		if (edge.last_aircraft_update != INVALID_DATE) edge.last_aircraft_update += interval;
+		if (edge.last_unrestricted_update != EconTime::INVALID_DATE) edge.last_unrestricted_update += interval;
+		if (edge.last_restricted_update != EconTime::INVALID_DATE) edge.last_restricted_update += interval;
+		if (edge.last_aircraft_update != EconTime::INVALID_DATE) edge.last_aircraft_update += interval;
 	}
 }
 
 void LinkGraph::Compress()
 {
-	this->last_compression = (_scaled_date_ticks.base() + this->last_compression.base()) / 2;
+	this->last_compression = (_scaled_tick_counter + this->last_compression) / 2;
 	for (NodeID node1 = 0; node1 < this->Size(); ++node1) {
 		this->nodes[node1].supply /= 2;
 	}
@@ -79,8 +79,8 @@ void LinkGraph::Compress()
  */
 void LinkGraph::Merge(LinkGraph *other)
 {
-	uint32_t age = ClampTo<uint32_t>(CeilDivT<int64_t>(_scaled_date_ticks.base() - this->last_compression.base() + 1, DAY_TICKS));
-	uint32_t other_age = ClampTo<uint32_t>(CeilDivT<int64_t>(_scaled_date_ticks.base() - other->last_compression.base() + 1, DAY_TICKS));
+	uint32_t age = ClampTo<uint32_t>(CeilDivT<int64_t>(_scaled_tick_counter - this->last_compression + 1, DAY_TICKS));
+	uint32_t other_age = ClampTo<uint32_t>(CeilDivT<int64_t>(_scaled_tick_counter - other->last_compression + 1, DAY_TICKS));
 	NodeID first = this->Size();
 	this->nodes.reserve(first + other->Size());
 	for (NodeID node1 = 0; node1 < other->Size(); ++node1) {
@@ -172,9 +172,9 @@ static void AddEdge(LinkGraph::BaseEdge &edge, uint capacity, uint usage, uint32
 	edge.capacity = capacity;
 	edge.usage = usage;
 	edge.travel_time_sum = static_cast<uint64_t>(travel_time) * capacity;
-	if (mode & EUM_UNRESTRICTED)  edge.last_unrestricted_update = _date;
-	if (mode & EUM_RESTRICTED) edge.last_restricted_update = _date;
-	if (mode & EUM_AIRCRAFT) edge.last_aircraft_update = _date;
+	if (mode & EUM_UNRESTRICTED)  edge.last_unrestricted_update = EconTime::CurDate();
+	if (mode & EUM_RESTRICTED) edge.last_restricted_update = EconTime::CurDate();
+	if (mode & EUM_AIRCRAFT) edge.last_aircraft_update = EconTime::CurDate();
 }
 
 /**
@@ -250,9 +250,9 @@ void LinkGraph::Edge::Update(uint capacity, uint usage, uint32_t travel_time, Ed
 		}
 		edge.usage = std::max(edge.usage, usage);
 	}
-	if (mode & EUM_UNRESTRICTED) edge.last_unrestricted_update = _date;
-	if (mode & EUM_RESTRICTED) edge.last_restricted_update = _date;
-	if (mode & EUM_AIRCRAFT) edge.last_aircraft_update = _date;
+	if (mode & EUM_UNRESTRICTED) edge.last_unrestricted_update = EconTime::CurDate();
+	if (mode & EUM_RESTRICTED) edge.last_restricted_update = EconTime::CurDate();
+	if (mode & EUM_AIRCRAFT) edge.last_aircraft_update = EconTime::CurDate();
 }
 
 /**
@@ -266,23 +266,28 @@ void LinkGraph::Init(uint size)
 	this->nodes.resize(size);
 }
 
-void AdjustLinkGraphScaledTickBase(DateTicksScaledDelta delta)
+void LinkGraphFixupAfterLoad(bool compression_was_date)
 {
-	for (LinkGraph *lg : LinkGraph::Iterate()) lg->last_compression += delta;
-
-	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) {
-		LinkGraph *lg = &(const_cast<LinkGraph &>(lgj->Graph()));
-		lg->last_compression += delta;
+	/* last_compression was previously a Date, change it to a StateTicks */
+	for (LinkGraph *lg : LinkGraph::Iterate()) {
+		if (compression_was_date) lg->last_compression = DateToStateTicks((EconTime::Date)lg->last_compression).base();
+		lg->last_compression += _scaled_tick_counter;
+		lg->last_compression -= _state_ticks.base();
+		if (lg->last_compression > _scaled_tick_counter) lg->last_compression = _scaled_tick_counter;
 	}
-}
-
-void LinkGraphFixupLastCompressionAfterLoad()
-{
-	/* last_compression was previously a Date, change it to a DateTicksScaled */
-	for (LinkGraph *lg : LinkGraph::Iterate()) lg->last_compression = DateToScaledDateTicks((Date)lg->last_compression.base());
 
 	for (LinkGraphJob *lgj : LinkGraphJob::Iterate()) {
 		LinkGraph *lg = &(const_cast<LinkGraph &>(lgj->Graph()));
-		lg->last_compression = DateToScaledDateTicks((Date)lg->last_compression.base());
+		if (compression_was_date) lg->last_compression = DateToStateTicks((EconTime::Date)lg->last_compression).base();
+		lg->last_compression += _scaled_tick_counter;
+		lg->last_compression -= _state_ticks.base();
+		if (lg->last_compression > _scaled_tick_counter) lg->last_compression = _scaled_tick_counter;
+
+		/* Change start and join ticks from DateTicks to ScaledTickCounter */
+		auto convert = [&](ScaledTickCounter &tick) {
+			tick = (uint64_t)(std::max<int64_t>(0, _scaled_tick_counter + (DateTicksToStateTicks((EconTime::DateTicks)tick) - _state_ticks).base()));
+		};
+		convert(lgj->join_tick);
+		convert(lgj->start_tick);
 	}
 }

@@ -101,7 +101,7 @@ static bool CheckTrainStayInWormHolePathReserve(Train *t, TileIndex tile);
 
 /** Return the scaled date ticks by which the speed restriction
  *  at the current position of the train is going to be invalid */
-static DateTicksScaled GetSpeedRestrictionTimeout(const Train *t)
+static StateTicks GetSpeedRestrictionTimeout(const Train *t)
 {
 	const int64_t velocity = std::max<int64_t>(25, t->cur_speed);
 	const int64_t look_ahead_distance = Clamp(t->cur_speed / 8, 4, 16); // In tiles, varying between 4 and 16 depending on current speed
@@ -111,7 +111,7 @@ static DateTicksScaled GetSpeedRestrictionTimeout(const Train *t)
 
 	const int64_t ticks = ticks_per_tile * look_ahead_distance;
 
-	return _scaled_date_ticks + ticks;
+	return _state_ticks + ticks;
 }
 
 /** Removes all speed restrictions from all signals */
@@ -120,7 +120,7 @@ void ClearAllSignalSpeedRestrictions()
 	_signal_speeds.clear();
 }
 
-void AdjustAllSignalSpeedRestrictionTickValues(DateTicksScaledDelta delta)
+void AdjustAllSignalSpeedRestrictionTickValues(StateTicksDelta delta)
 {
 	for (auto &it : _signal_speeds) {
 		it.second.time_stamp += delta;
@@ -692,7 +692,7 @@ void AdvanceOrderIndex(const Vehicle *v, VehicleOrderID &index)
 			case OT_GOTO_DEPOT:
 				/* Skip service in depot orders when the train doesn't need service. */
 				if ((order->GetDepotOrderType() & ODTFB_SERVICE) && !v->NeedsServicing()) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case OT_GOTO_STATION:
 			case OT_GOTO_WAYPOINT:
 				return;
@@ -1477,14 +1477,15 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 		InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
 
 		v->cargo_type = e->GetDefaultCargoType();
+		assert(IsValidCargoID(v->cargo_type));
 		v->cargo_cap = rvi->capacity;
 		v->refit_cap = 0;
 
 		v->railtype = rvi->railtype;
 
-		v->date_of_last_service = _date;
-		v->date_of_last_service_newgrf = _date;
-		v->build_year = _cur_year;
+		v->date_of_last_service = EconTime::CurDate();
+		v->date_of_last_service_newgrf = CalTime::CurDate();
+		v->build_year = CalTime::CurYear();
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = Random();
 
@@ -1613,6 +1614,7 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		v->vehstatus = VS_HIDDEN | VS_STOPPED | VS_DEFPAL;
 		v->spritenum = rvi->image_index;
 		v->cargo_type = e->GetDefaultCargoType();
+		assert(IsValidCargoID(v->cargo_type));
 		v->cargo_cap = rvi->capacity;
 		v->refit_cap = 0;
 		v->last_station_visited = INVALID_STATION;
@@ -1631,9 +1633,9 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		_new_vehicle_id = v->index;
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_trains);
-		v->date_of_last_service = _date;
-		v->date_of_last_service_newgrf = _date;
-		v->build_year = _cur_year;
+		v->date_of_last_service = EconTime::CurDate();
+		v->date_of_last_service_newgrf = CalTime::CurDate();
+		v->build_year = CalTime::CurYear();
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = Random();
 
@@ -3204,6 +3206,9 @@ CommandCost CmdReverseTrainDirection(TileIndex tile, DoCommandFlag flags, uint32
 				HideFillingPercent(&v->fill_percent_te_id);
 				ReverseTrainDirection(v);
 			}
+
+			/* Unbunching data is no longer valid. */
+			v->ResetDepotUnbunching();
 		}
 	}
 	return CommandCost();
@@ -3237,6 +3242,9 @@ CommandCost CmdForceTrainProceed(TileIndex tile, DoCommandFlag flags, uint32_t p
 		 * next signal we encounter. */
 		t->force_proceed = t->force_proceed == TFP_SIGNAL ? TFP_NONE : HasBit(t->flags, VRF_TRAIN_STUCK) || t->IsChainInDepot() ? TFP_STUCK : TFP_SIGNAL;
 		SetWindowDirty(WC_VEHICLE_VIEW, t->index);
+
+		/* Unbunching data is no longer valid. */
+		t->ResetDepotUnbunching();
 	}
 
 	return CommandCost();
@@ -3388,6 +3396,9 @@ static bool CheckTrainStayInDepot(Train *v)
 		return true;
 	}
 
+	/* Check if we should wait here for unbunching. */
+	if (v->IsWaitingForUnbunching()) return true;
+
 	if (v->reverse_distance > 0) {
 		v->reverse_distance--;
 		if (v->reverse_distance == 0) SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
@@ -3484,6 +3495,7 @@ static bool CheckTrainStayInDepot(Train *v)
 	if (_settings_client.gui.show_track_reservation) MarkTileDirtyByTile(v->tile, VMDF_NOT_MAP_MODE);
 
 	VehicleServiceInDepot(v);
+	v->LeaveUnbunchingDepot();
 	DirtyVehicleListWindowForVehicle(v);
 	v->PlayLeaveStationSound();
 
@@ -3876,19 +3888,29 @@ static PBSTileInfo ExtendTrainReservation(const Train *v, const PBSTileInfo &ori
 		}
 
 		if (IsTileType(tile, MP_RAILWAY) && HasSignals(tile) && IsRestrictedSignal(tile) && HasSignalOnTrack(tile, TrackdirToTrack(cur_td))) {
-			const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(cur_td));
-			if (prog != nullptr && prog->actions_used_flags & (TRPAUF_WAIT_AT_PBS | TRPAUF_SLOT_ACQUIRE)) {
+			const bool front_side = HasSignalOnTrackdir(tile, cur_td);
 
-				if (!temporary_slot_state.IsActive()) {
-					/* The temporary slot state needs to be be pushed because permission to use it is granted by TRPISP_ACQUIRE_TEMP_STATE */
-					temporary_slot_state.PushToChangeStack();
+			TraceRestrictProgramActionsUsedFlags au_flags = TRPAUF_SLOT_ACQUIRE;
+			if (front_side) {
+				/* Passing through a signal from the front side */
+				au_flags |= TRPAUF_WAIT_AT_PBS;
+			}
+
+			const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(cur_td));
+			if (prog != nullptr && prog->actions_used_flags & au_flags) {
+				TraceRestrictProgramInput input(tile, cur_td, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr);
+				if (prog->actions_used_flags & TRPAUF_SLOT_ACQUIRE) {
+					input.permitted_slot_operations = TRPISP_ACQUIRE_TEMP_STATE;
+
+					if (!temporary_slot_state.IsActive()) {
+						/* The temporary slot state needs to be be pushed because permission to use it is granted by TRPISP_ACQUIRE_TEMP_STATE */
+						temporary_slot_state.PushToChangeStack();
+					}
 				}
 
-				TraceRestrictProgramInput input(tile, cur_td, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr);
-				input.permitted_slot_operations = TRPISP_ACQUIRE_TEMP_STATE;
 				TraceRestrictProgramResult out;
 				prog->Execute(v, input, out);
-				if (out.flags & TRPRF_WAIT_AT_PBS) {
+				if (front_side && (out.flags & TRPRF_WAIT_AT_PBS)) {
 					/* Wait at PBS is set, take this as waiting at the start signal, handle as a reservation failure */
 					break;
 				}
@@ -4033,7 +4055,7 @@ public:
 				case OT_GOTO_DEPOT:
 					/* Skip service in depot orders when the train doesn't need service. */
 					if ((order->GetDepotOrderType() & ODTFB_SERVICE) && !this->v->NeedsServicing()) break;
-					FALLTHROUGH;
+					[[fallthrough]];
 				case OT_GOTO_STATION:
 				case OT_GOTO_WAYPOINT:
 					this->v->current_order = *order;
@@ -6417,7 +6439,7 @@ static bool TrainApproachingLineEnd(Train *v, bool signal, bool reverse)
 	 * for other directions, it will be 1, 3, 5, ..., 15 */
 	switch (v->direction) {
 		case DIR_N : x = ~x + ~y + 25; break;
-		case DIR_NW: x = y;            FALLTHROUGH;
+		case DIR_NW: x = y;            [[fallthrough]];
 		case DIR_NE: x = ~x + 16;      break;
 		case DIR_E : x = ~x + y + 9;   break;
 		case DIR_SE: x = y;            break;
@@ -6879,7 +6901,7 @@ static void CheckIfTrainNeedsService(Train *v)
 /** Update day counters of the train vehicle. */
 void Train::OnNewDay()
 {
-	AgeVehicle(this);
+	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 }
@@ -7036,7 +7058,7 @@ Train* CmdBuildVirtualRailWagon(const Engine *e, uint32_t user, bool no_consist_
 
 	v->railtype = rvi->railtype;
 
-	v->build_year = _cur_year;
+	v->build_year = CalTime::CurYear();
 	v->sprite_seq.Set(SPR_IMG_QUERY);
 	v->random_bits = Random();
 
@@ -7116,7 +7138,7 @@ Train* BuildVirtualRailVehicle(EngineID eid, StringID &error, uint32_t user, boo
 	v->railtype = rvi->railtype;
 	_new_vehicle_id = v->index;
 
-	v->build_year = _cur_year;
+	v->build_year = CalTime::CurYear();
 	v->sprite_seq.Set(SPR_IMG_QUERY);
 	v->random_bits = Random();
 

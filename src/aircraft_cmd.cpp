@@ -319,11 +319,16 @@ CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *
 
 		v->cargo_cap = avi->passenger_capacity;
 		v->refit_cap = 0;
-		u->cargo_cap = avi->mail_capacity;
 		u->refit_cap = 0;
 
 		v->cargo_type = e->GetDefaultCargoType();
-		u->cargo_type = CT_MAIL;
+		assert(IsValidCargoID(v->cargo_type));
+
+		CargoID mail = GetCargoIDByLabel(CT_MAIL);
+		if (IsValidCargoID(mail)) {
+			u->cargo_type = mail;
+			u->cargo_cap = avi->mail_capacity;
+		}
 
 		v->name.clear();
 		v->last_station_visited = INVALID_STATION;
@@ -357,9 +362,9 @@ CommandCost CmdBuildAircraft(TileIndex tile, DoCommandFlag flags, const Engine *
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_aircraft);
 
-		v->date_of_last_service = _date;
-		v->date_of_last_service_newgrf = _date;
-		v->build_year = u->build_year = _cur_year;
+		v->date_of_last_service = EconTime::CurDate();
+		v->date_of_last_service_newgrf = CalTime::CurDate();
+		v->build_year = u->build_year = CalTime::CurYear();
 
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		u->sprite_seq.Set(SPR_IMG_QUERY);
@@ -480,7 +485,7 @@ void Aircraft::OnNewDay()
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 
-	AgeVehicle(this);
+	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
 }
 
 void Aircraft::OnPeriodic()
@@ -1005,12 +1010,12 @@ static bool AircraftController(Aircraft *v)
 		int z = GetSlopePixelZ(x, y) + 1 + afc->delta_z;
 
 		if (z == v->z_pos) {
+			v->UpdatePosition();
 			Vehicle *u = v->Next()->Next();
 
 			/*  Increase speed of rotors. When speed is 80, we've landed. */
 			if (u->cur_speed >= 80) {
 				ClrBit(v->flags, VAF_HELI_DIRECT_DESCENT);
-				v->UpdatePosition();
 				return true;
 			}
 			u->cur_speed += 4;
@@ -1576,6 +1581,7 @@ void AircraftLeaveHangar(Aircraft *v, Direction exit_dir)
 	}
 
 	VehicleServiceInDepot(v);
+	v->LeaveUnbunchingDepot();
 	SetAircraftPosition(v, v->x_pos, v->y_pos, v->z_pos);
 	InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
 	DirtyVehicleListWindowForVehicle(v);
@@ -1627,6 +1633,9 @@ static void AircraftEventHandler_InHangar(Aircraft *v, const AirportFTAClass *ap
 		return;
 	}
 
+	/* Check if we should wait here for unbunching. */
+	if (v->IsWaitingForUnbunching()) return;
+
 	if (!v->current_order.IsType(OT_GOTO_STATION) &&
 			!v->current_order.IsType(OT_GOTO_DEPOT))
 		return;
@@ -1669,8 +1678,8 @@ static void AircraftEventHandler_AtTerminal(Aircraft *v, const AirportFTAClass *
 		if (_settings_game.order.serviceathelipad) {
 			if (v->subtype == AIR_HELICOPTER && apc->num_helipads > 0) {
 				/* an excerpt of ServiceAircraft, without the invisibility stuff */
-				v->date_of_last_service = _date;
-				v->date_of_last_service_newgrf = _date;
+				v->date_of_last_service = EconTime::CurDate();
+				v->date_of_last_service_newgrf = CalTime::CurDate();
 				v->breakdowns_since_last_service = 0;
 				v->reliability = v->GetEngine()->reliability;
 				SetWindowDirty(WC_VEHICLE_DETAILS, v->index);

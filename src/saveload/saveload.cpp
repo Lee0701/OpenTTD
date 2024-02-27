@@ -48,6 +48,11 @@
 StringID RemapOldStringID(StringID s);
 std::string CopyFromOldName(StringID id);
 
+extern uint8_t SlSaveToTempBufferSetup();
+extern std::span<byte> SlSaveToTempBufferRestore(uint8_t state);
+extern void SlCopyBytesRead(void *ptr, size_t length);
+extern void SlCopyBytesWrite(void *ptr, size_t length);
+
 namespace upstream_sl {
 
 /** What are we currently doing? */
@@ -116,6 +121,7 @@ static const std::vector<ChunkHandlerRef> &ChunkHandlers()
 	extern const ChunkHandlerTable _object_chunk_handlers;
 	extern const ChunkHandlerTable _persistent_storage_chunk_handlers;
 	extern const ChunkHandlerTable _water_region_chunk_handlers;
+	extern const ChunkHandlerTable _randomizer_chunk_handlers;
 
 	/** List of all chunks in a savegame. */
 	static const ChunkHandlerTable _chunk_handler_tables[] = {
@@ -154,6 +160,7 @@ static const std::vector<ChunkHandlerRef> &ChunkHandlers()
 		_object_chunk_handlers,
 		_persistent_storage_chunk_handlers,
 		_water_region_chunk_handlers,
+		_randomizer_chunk_handlers,
 	};
 
 	static std::vector<ChunkHandlerRef> _chunk_handlers;
@@ -177,7 +184,7 @@ void SlNullPointers()
 	/* We don't want any savegame conversion code to run
 	 * during NULLing; especially those that try to get
 	 * pointers from other pools. */
-	_sl_version = SAVEGAME_VERSION;
+	_sl_version = MAX_LOAD_SAVEGAME_VERSION;
 
 	for (const ChunkHandler &ch : ChunkHandlers()) {
 		DEBUG(sl, 3, "Nulling pointers for %c%c%c%c", ch.id >> 24, ch.id >> 16, ch.id >> 8, ch.id);
@@ -491,15 +498,13 @@ void SlSetLength(size_t length)
  */
 static void SlCopyBytes(void *ptr, size_t length)
 {
-	byte *p = (byte *)ptr;
-
 	switch (_sl.action) {
 		case SLA_LOAD_CHECK:
 		case SLA_LOAD:
-			for (; length != 0; length--) *p++ = SlReadByte();
+			SlCopyBytesRead(ptr, length);
 			break;
 		case SLA_SAVE:
-			for (; length != 0; length--) SlWriteByte(*p++);
+			SlCopyBytesWrite(ptr, length);
 			break;
 		default: NOT_REACHED();
 	}
@@ -1820,8 +1825,16 @@ void SlGlobList(const SaveLoadTable &slt)
  */
 void SlAutolength(AutolengthProc *proc, void *arg)
 {
-	// removed
-	NOT_REACHED();
+	assert(_sl.action == SLA_SAVE);
+	assert(_sl.need_length == NL_WANTLENGTH);
+
+	_sl.need_length = NL_NONE;
+	uint8_t state = SlSaveToTempBufferSetup();
+	proc(arg);
+	std::span<byte> result = SlSaveToTempBufferRestore(state);
+	_sl.need_length = NL_WANTLENGTH;
+	SlSetLength(result.size());
+	SlCopyBytesWrite(result.data(), result.size());
 }
 
 void ChunkHandler::LoadCheck(size_t len) const
@@ -1830,7 +1843,7 @@ void ChunkHandler::LoadCheck(size_t len) const
 		case CH_TABLE:
 		case CH_SPARSE_TABLE:
 			SlTableHeader({});
-			FALLTHROUGH;
+			[[fallthrough]];
 		case CH_ARRAY:
 		case CH_SPARSE_ARRAY:
 			SlSkipArray();
@@ -2025,9 +2038,21 @@ void SlFixPointers()
 
 void SlFixPointerChunkByID(uint32_t id)
 {
+	_sl.action = SLA_PTRS;
+
 	const ChunkHandler *ch = SlFindChunkHandler(id);
 	if (ch == nullptr) SlErrorCorrupt("Unknown chunk type");
 	DEBUG(sl, 3, "Fixing pointers for %c%c%c%c", ch->id >> 24, ch->id >> 16, ch->id >> 8, ch->id);
+	ch->FixPointers();
+}
+
+void SlNullPointerChunkByID(uint32_t id)
+{
+	_sl.action = SLA_NULL;
+
+	const ChunkHandler *ch = SlFindChunkHandler(id);
+	if (ch == nullptr) SlErrorCorrupt("Unknown chunk type");
+	DEBUG(sl, 3, "Nulling pointers for %c%c%c%c", ch->id >> 24, ch->id >> 16, ch->id >> 8, ch->id);
 	ch->FixPointers();
 }
 

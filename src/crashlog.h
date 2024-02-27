@@ -131,6 +131,7 @@ protected:
 	char *LogOpenTTDVersion(char *buffer, const char *last) const;
 	char *LogConfiguration(char *buffer, const char *last) const;
 	char *LogLibraries(char *buffer, const char *last) const;
+	char *LogPlugins(char *buffer, const char *last) const;
 	char *LogGamelog(char *buffer, const char *last) const;
 	char *LogRecentNews(char *buffer, const char *list) const;
 	char *LogCommandLog(char *buffer, const char *last) const;
@@ -189,7 +190,6 @@ public:
 	void MakeDesyncCrashLog(const std::string *log_in, std::string *log_out, const DesyncExtraInfo &info) const;
 	static bool WriteDesyncSavegame(const char *log_data, const char *name_buffer);
 	void MakeInconsistencyLog(const InconsistencyExtraInfo &info) const;
-	void MakeVersionInfoLog() const;
 	void MakeCrashSavegameAndScreenshot();
 
 	void SendSurvey() const;
@@ -209,7 +209,7 @@ public:
 
 	static void DesyncCrashLog(const std::string *log_in, std::string *log_out, const DesyncExtraInfo &info);
 	static void InconsistencyLog(const InconsistencyExtraInfo &info);
-	static void VersionInfoLog();
+	static void VersionInfoLog(char *buffer, const char *last);
 
 	static void RegisterCrashed() { CrashLog::have_crashed = true; }
 	static bool HaveAlreadyCrashed() { return CrashLog::have_crashed; }

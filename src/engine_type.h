@@ -17,6 +17,7 @@
 #include "date_type.h"
 #include "sound_type.h"
 #include "strings_type.h"
+#include <variant>
 
 typedef uint16_t EngineID; ///< Unique identification number of an engine.
 
@@ -67,6 +68,7 @@ struct RailVehicleInfo {
 struct ShipVehicleInfo {
 	byte image_index;
 	byte cost_factor;
+	uint8_t acceleration;  ///< Acceleration (1 unit = 1/3.2 mph per tick = 0.5 km-ish/h per tick)
 	uint16_t max_speed;    ///< Maximum speed (1 unit = 1/3.2 mph = 0.5 km-ish/h)
 	uint16_t capacity;
 	byte running_cost;
@@ -141,13 +143,14 @@ DECLARE_ENUM_AS_BIT_SET(ExtraEngineFlags);
  *  @see table/engines.h
  */
 struct EngineInfo {
-	Date base_intro;    ///< Basic date of engine introduction (without random parts).
-	Year lifelength;    ///< Lifetime of a single vehicle
-	Year base_life;     ///< Basic duration of engine availability (without random parts). \c 0xFF means infinite life.
+	CalTime::Date base_intro; ///< Basic date of engine introduction (without random parts).
+	YearDelta lifelength;     ///< Lifetime of a single vehicle
+	YearDelta base_life;      ///< Basic duration of engine availability (without random parts). \c 0xFF means infinite life.
 	byte decay_speed;
 	byte load_amount;
 	byte climates;      ///< Climates supported by the engine.
 	CargoID cargo_type;
+	std::variant<CargoLabel, MixedCargoType> cargo_label;
 	CargoTypes refit_mask;
 	byte refit_cost;
 	byte misc_flags;           ///< Miscellaneous flags. @see EngineMiscFlags

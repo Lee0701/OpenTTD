@@ -58,6 +58,7 @@ bool _check_special_modes;
 std::atomic<bool> _exit_game;
 GameMode _game_mode;
 SwitchMode _switch_mode;  ///< The next mainloop command.
+bool _switch_mode_time_valid = false;
 std::chrono::steady_clock::time_point _switch_mode_time; ///< The time when the switch mode was requested.
 PauseMode _pause_mode;
 uint32_t _pause_countdown;
@@ -114,6 +115,7 @@ uint32_t _gfx_debug_flags;
  * Applies a certain FillRectMode-operation to a rectangle [left, right] x [top, bottom] on the screen.
  *
  * @pre dpi->zoom == ZOOM_LVL_NORMAL, right >= left, bottom >= top
+ * @param blitter Blitter to use
  * @param dpi Draw pixel info
  * @param left Minimum X (inclusive)
  * @param top Minimum Y (inclusive)
@@ -125,9 +127,8 @@ uint32_t _gfx_debug_flags;
  *         FILLRECT_CHECKER:  Like FILLRECT_OPAQUE, but only draw every second pixel (used to grey out things)
  *         FILLRECT_RECOLOUR:  Apply a recolour sprite to every pixel in the rectangle currently on screen
  */
-void GfxFillRect(const DrawPixelInfo *dpi, int left, int top, int right, int bottom, int colour, FillRectMode mode)
+void GfxFillRect(Blitter *blitter, const DrawPixelInfo *dpi, int left, int top, int right, int bottom, int colour, FillRectMode mode)
 {
-	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 	void *dst;
 	const int otop = top;
 	const int oleft = left;
@@ -137,17 +138,19 @@ void GfxFillRect(const DrawPixelInfo *dpi, int left, int top, int right, int bot
 	if (right < dpi->left || left >= dpi->left + dpi->width) return;
 	if (bottom < dpi->top || top >= dpi->top + dpi->height) return;
 
-	if ( (left -= dpi->left) < 0) left = 0;
+	left -= dpi->left;
+	if (left < 0) left = 0;
 	right = right - dpi->left + 1;
 	if (right > dpi->width) right = dpi->width;
 	right -= left;
-	assert(right > 0);
+	if (right <= 0) return;
 
-	if ( (top -= dpi->top) < 0) top = 0;
+	top -= dpi->top;
+	if (top < 0) top = 0;
 	bottom = bottom - dpi->top + 1;
 	if (bottom > dpi->height) bottom = dpi->height;
 	bottom -= top;
-	assert(bottom > 0);
+	if (bottom <= 0) return;
 
 	dst = blitter->MoveTo(dpi->dst_ptr, left, top);
 
@@ -169,6 +172,11 @@ void GfxFillRect(const DrawPixelInfo *dpi, int left, int top, int right, int bot
 			break;
 		}
 	}
+}
+
+void GfxFillRect(int left, int top, int right, int bottom, int colour, FillRectMode mode)
+{
+	GfxFillRect(BlitterFactory::GetCurrentBlitter(), _cur_dpi, left, top, right, bottom, colour, mode);
 }
 
 typedef std::pair<Point, Point> LineSegment;
@@ -317,6 +325,7 @@ void GfxFillPolygon(const std::vector<Point> &shape, int colour, FillRectMode mo
 /**
  * Check line clipping by using a linear equation and draw the visible part of
  * the line given by x/y and x2/y2.
+ * @param blitter Blitter to use.
  * @param video Destination pointer to draw into.
  * @param x X coordinate of first point.
  * @param y Y coordinate of first point.
@@ -328,10 +337,8 @@ void GfxFillPolygon(const std::vector<Point> &shape, int colour, FillRectMode mo
  * @param width Width of the line.
  * @param dash Length of dashes for dashed lines. 0 means solid line.
  */
-static inline void GfxDoDrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8_t colour, int width, int dash = 0)
+static inline void GfxDoDrawLine(Blitter *blitter, void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8_t colour, int width, int dash = 0)
 {
-	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
-
 	assert(width > 0);
 
 	if (y2 == y || x2 == x) {
@@ -401,17 +408,24 @@ static inline bool GfxPreprocessLine(const DrawPixelInfo *dpi, int &x, int &y, i
 	return true;
 }
 
-void GfxDrawLine(const DrawPixelInfo *dpi, int x, int y, int x2, int y2, int colour, int width, int dash)
+void GfxDrawLine(Blitter *blitter, const DrawPixelInfo *dpi, int x, int y, int x2, int y2, int colour, int width, int dash)
 {
 	if (GfxPreprocessLine(dpi, x, y, x2, y2, width)) {
-		GfxDoDrawLine(dpi->dst_ptr, x, y, x2, y2, dpi->width, dpi->height, colour, width, dash);
+		GfxDoDrawLine(blitter, dpi->dst_ptr, x, y, x2, y2, dpi->width, dpi->height, colour, width, dash);
 	}
 }
 
-void GfxDrawLineUnscaled(const DrawPixelInfo *dpi, int x, int y, int x2, int y2, int colour)
+void GfxDrawLine(int x, int y, int x2, int y2, int colour, int width, int dash)
+{
+	if (GfxPreprocessLine(_cur_dpi, x, y, x2, y2, width)) {
+		GfxDoDrawLine(BlitterFactory::GetCurrentBlitter(), _cur_dpi->dst_ptr, x, y, x2, y2, _cur_dpi->width, _cur_dpi->height, colour, width, dash);
+	}
+}
+
+static void GfxDrawLineUnscaled(const DrawPixelInfo *dpi, int x, int y, int x2, int y2, int colour)
 {
 	if (GfxPreprocessLine(dpi, x, y, x2, y2, 1)) {
-		GfxDoDrawLine(dpi->dst_ptr,
+		GfxDoDrawLine(BlitterFactory::GetCurrentBlitter(), dpi->dst_ptr,
 				UnScaleByZoom(x, dpi->zoom), UnScaleByZoom(y, dpi->zoom),
 				UnScaleByZoom(x2, dpi->zoom), UnScaleByZoom(y2, dpi->zoom),
 				UnScaleByZoom(dpi->width, dpi->zoom), UnScaleByZoom(dpi->height, dpi->zoom), colour, 1);
@@ -541,6 +555,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 	truncation &= max_w < w;         // Whether we need to do truncation.
 	int dot_width = 0;               // Cache for the width of the dot.
 	const Sprite *dot_sprite = nullptr; // Cache for the sprite of the dot.
+	bool dot_has_shadow = false;     // Whether the dot's font requires shadows.
 
 	if (truncation) {
 		/*
@@ -550,6 +565,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 		 * the truncation dots.
 		 */
 		FontCache *fc = line.GetVisualRun(0).GetFont()->fc;
+		dot_has_shadow = fc->GetDrawGlyphShadow();
 		GlyphID dot_glyph = fc->MapCharToGlyph('.');
 		dot_width = fc->GetGlyphWidth(dot_glyph);
 		dot_sprite = fc->GetGlyph(dot_glyph);
@@ -596,59 +612,53 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 
 	const uint shadow_offset = ScaleGUITrad(1);
 
-	TextColour colour = TC_BLACK;
-	bool draw_shadow = false;
-	for (int run_index = 0; run_index < line.CountRuns(); run_index++) {
-		const ParagraphLayouter::VisualRun &run = line.GetVisualRun(run_index);
-		const auto &glyphs = run.GetGlyphs();
-		const auto &positions = run.GetPositions();
-		const Font *f = run.GetFont();
+	/* Draw shadow, then foreground */
+	for (bool do_shadow : { true, false }) {
+		bool colour_has_shadow = false;
+		for (int run_index = 0; run_index < line.CountRuns(); run_index++) {
+			const ParagraphLayouter::VisualRun &run = line.GetVisualRun(run_index);
+			const auto &glyphs = run.GetGlyphs();
+			const auto &positions = run.GetPositions();
+			const Font *f = run.GetFont();
 
-		FontCache *fc = f->fc;
-		colour = f->colour;
-		ctx.SetColourRemap(colour);
+			FontCache *fc = f->fc;
+			TextColour colour = f->colour;
+			colour_has_shadow = (colour & TC_NO_SHADE) == 0 && colour != TC_BLACK;
+			ctx.SetColourRemap(do_shadow ? TC_BLACK : colour); // the last run also sets the colour for the truncation dots
+			if (do_shadow && (!fc->GetDrawGlyphShadow() || !colour_has_shadow)) continue;
 
-		DrawPixelInfo *dpi = _cur_dpi;
-		int dpi_left  = dpi->left;
-		int dpi_right = dpi->left + dpi->width - 1;
+			DrawPixelInfo *dpi = _cur_dpi;
+			int dpi_left  = dpi->left;
+			int dpi_right = dpi->left + dpi->width - 1;
 
-		draw_shadow = fc->GetDrawGlyphShadow() && (colour & TC_NO_SHADE) == 0 && (colour & ~TC_FORCED) != TC_BLACK;
+			for (int i = 0; i < run.GetGlyphCount(); i++) {
+				GlyphID glyph = glyphs[i];
 
-		for (int i = 0; i < run.GetGlyphCount(); i++) {
-			GlyphID glyph = glyphs[i];
+				/* Not a valid glyph (empty) */
+				if (glyph == 0xFFFF) continue;
 
-			/* Not a valid glyph (empty) */
-			if (glyph == 0xFFFF) continue;
+				int begin_x = positions[i].x     + left - offset_x;
+				int end_x   = positions[i + 1].x + left - offset_x  - 1;
+				int top     = positions[i].y + y;
 
-			int begin_x = positions[i].x     + left - offset_x;
-			int end_x   = positions[i + 1].x + left - offset_x  - 1;
-			int top     = positions[i].y + y;
+				/* Truncated away. */
+				if (truncation && (begin_x < min_x || end_x > max_x)) continue;
 
-			/* Truncated away. */
-			if (truncation && (begin_x < min_x || end_x > max_x)) continue;
+				const Sprite *sprite = fc->GetGlyph(glyph);
+				/* Check clipping (the "+ 1" is for the shadow). */
+				if (begin_x + sprite->x_offs > dpi_right || begin_x + sprite->x_offs + sprite->width /* - 1 + 1 */ < dpi_left) continue;
 
-			const Sprite *sprite = fc->GetGlyph(glyph);
-			/* Check clipping (the "+ 1" is for the shadow). */
-			if (begin_x + sprite->x_offs > dpi_right || begin_x + sprite->x_offs + sprite->width /* - 1 + 1 */ < dpi_left) continue;
+				if (do_shadow && (glyph & SPRITE_GLYPH) != 0) continue;
 
-			if (draw_shadow && (glyph & SPRITE_GLYPH) == 0) {
-				ctx.SetColourRemap(TC_BLACK);
-				GfxMainBlitter(ctx, sprite, begin_x + shadow_offset, top + shadow_offset, BM_COLOUR_REMAP);
-				ctx.SetColourRemap(colour);
+				GfxMainBlitter(ctx, sprite, begin_x + (do_shadow ? shadow_offset : 0), top + (do_shadow ? shadow_offset : 0), BM_COLOUR_REMAP);
 			}
-			GfxMainBlitter(ctx, sprite, begin_x, top, BM_COLOUR_REMAP);
 		}
-	}
 
-	if (truncation) {
-		int x = (_current_text_dir == TD_RTL) ? left : (right - 3 * dot_width);
-		for (int i = 0; i < 3; i++, x += dot_width) {
-			if (draw_shadow) {
-				ctx.SetColourRemap(TC_BLACK);
-				GfxMainBlitter(ctx, dot_sprite, x + shadow_offset, y + shadow_offset, BM_COLOUR_REMAP);
-				ctx.SetColourRemap(colour);
+		if (truncation && (!do_shadow || (dot_has_shadow && colour_has_shadow))) {
+			int x = (_current_text_dir == TD_RTL) ? left : (right - 3 * dot_width);
+			for (int i = 0; i < 3; i++, x += dot_width) {
+				GfxMainBlitter(ctx, dot_sprite, x + (do_shadow ? shadow_offset : 0), y + (do_shadow ? shadow_offset : 0), BM_COLOUR_REMAP);
 			}
-			GfxMainBlitter(ctx, dot_sprite, x, y, BM_COLOUR_REMAP);
 		}
 	}
 
@@ -1210,7 +1220,7 @@ static void GfxBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, in
 		if (topleft <= clicked && clicked <= bottomright) {
 			uint offset = (((size_t)clicked - (size_t)topleft) / (blitter->GetScreenDepth() / 8)) % bp.pitch;
 			if (offset < (uint)bp.width) {
-				include(_newgrf_debug_sprite_picker.sprites, sprite_id);
+				_newgrf_debug_sprite_picker.FoundSpriteDuringDrawing(sprite_id);
 			}
 		}
 	}
@@ -2246,6 +2256,6 @@ void ChangeGameSpeed(bool enable_fast_forward)
 
 void SetupTickRate()
 {
-	_milliseconds_per_tick = (_settings_game.economy.tick_rate == TRM_MODERN) ? 27 : 30;
+	_milliseconds_per_tick = (_settings_game.economy.tick_rate == TRM_MODERN || _settings_game.economy.timekeeping_units == TKU_WALLCLOCK) ? 27 : 30;
 	_ticks_per_second = 1000.0f / _milliseconds_per_tick;
 }

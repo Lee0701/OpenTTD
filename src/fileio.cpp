@@ -53,6 +53,7 @@ static const char * const _subdirs[] = {
 	"game" PATHSEP,
 	"game" PATHSEP "library" PATHSEP,
 	"screenshot" PATHSEP,
+	"social_integration" PATHSEP,
 };
 static_assert(lengthof(_subdirs) == NUM_SUBDIRS);
 
@@ -332,7 +333,7 @@ FILE *FioFOpenFile(const std::string &filename, const char *mode, Subdirectory s
 			case BASESET_DIR:
 				f = FioFOpenFile(filename, mode, OLD_GM_DIR, filesize, output_filename);
 				if (f != nullptr) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			case NEWGRF_DIR:
 				f = FioFOpenFile(filename, mode, OLD_DATA_DIR, filesize, output_filename);
 				break;
@@ -737,7 +738,10 @@ bool ExtractTar(const std::string &tar_filename, Subdirectory subdir)
 	for (auto &it2 : _tar_filelist[subdir]) {
 		if (tar_filename != it2.second.tar_filename) continue;
 
-		filename.replace(p + 1, std::string::npos, it2.first);
+		/* it2.first is tarball + PATHSEPCHAR + name. */
+		std::string_view name = it2.first;
+		name.remove_prefix(name.find_first_of(PATHSEPCHAR) + 1);
+		filename.replace(p + 1, std::string::npos, name);
 
 		DEBUG(misc, 9, "  extracting %s", filename.c_str());
 
@@ -1090,7 +1094,7 @@ void DeterminePaths(const char *exe, bool only_local_path)
 	DEBUG(misc, 1, "%s found as personal directory", _personal_dir.c_str());
 
 	static const Subdirectory default_subdirs[] = {
-		SAVE_DIR, AUTOSAVE_DIR, SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR, SCREENSHOT_DIR
+		SAVE_DIR, AUTOSAVE_DIR, SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR, SCREENSHOT_DIR, SOCIAL_INTEGRATION_DIR
 	};
 
 	for (uint i = 0; i < lengthof(default_subdirs); i++) {
@@ -1104,7 +1108,7 @@ void DeterminePaths(const char *exe, bool only_local_path)
 	FillValidSearchPaths(only_local_path);
 
 	/* Create the directory for each of the types of content */
-	const Subdirectory dirs[] = { SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR };
+	const Subdirectory dirs[] = { SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR, SOCIAL_INTEGRATION_DIR };
 	for (uint i = 0; i < lengthof(dirs); i++) {
 		FioCreateDirectory(FioGetDirectory(SP_AUTODOWNLOAD_DIR, dirs[i]));
 	}
@@ -1263,7 +1267,7 @@ uint FileScanner::Scan(const char *extension, Subdirectory sd, bool tars, bool r
 	switch (sd) {
 		case BASESET_DIR:
 			num += this->Scan(extension, OLD_GM_DIR, tars, recursive);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case NEWGRF_DIR:
 			num += this->Scan(extension, OLD_DATA_DIR, tars, recursive);
 			break;

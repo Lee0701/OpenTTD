@@ -1040,7 +1040,7 @@ struct RefitWindow : public Window {
 
 		Money money = cost.GetCost();
 		if (_returned_mail_refit_capacity > 0) {
-			SetDParam(2, CT_MAIL);
+			SetDParam(2, GetCargoIDByLabel(CT_MAIL));
 			SetDParam(3, _returned_mail_refit_capacity);
 			if (this->order != INVALID_VEH_ORDER_ID) {
 				/* No predictable cost */
@@ -1165,7 +1165,7 @@ struct RefitWindow : public Window {
 				this->selected_vehicle = v->index;
 				this->num_vehicles = UINT8_MAX;
 				this->ship_part_names.clear();
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case 2: { // The vehicle selection has changed; rebuild the entire list.
@@ -1191,7 +1191,7 @@ struct RefitWindow : public Window {
 					this->information_width = max_width;
 					this->ReInit();
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case 1: // A new cargo has been selected.
@@ -1252,7 +1252,7 @@ struct RefitWindow : public Window {
 					if (_ctrl_pressed) this->num_vehicles = UINT8_MAX;
 					break;
 				}
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			default:
@@ -1310,7 +1310,7 @@ struct RefitWindow : public Window {
 				this->InvalidateData(1);
 
 				if (click_count == 1) break;
-				FALLTHROUGH;
+				[[fallthrough]];
 			}
 
 			case WID_VR_REFIT: // refit button
@@ -1896,8 +1896,8 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 			switch (this->vehgroups.SortType()) {
 				case VST_AGE: {
 					str = (v->age + DAYS_IN_YEAR < v->max_age) ? STR_VEHICLE_LIST_AGE : STR_VEHICLE_LIST_AGE_RED;
-					SetDParam(3, DateDeltaToYears(v->age));
-					SetDParam(4, DateDeltaToYears(v->max_age));
+					SetDParam(3, DateDeltaToYearDelta(v->age));
+					SetDParam(4, DateDeltaToYearDelta(v->max_age));
 					break;
 				}
 
@@ -1957,7 +1957,7 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 				}
 
 				case VST_TIMETABLE_DELAY: {
-					if (v->lateness_counter == 0 || (!_settings_client.gui.timetable_in_ticks && v->lateness_counter / DATE_UNIT_SIZE == 0)) {
+					if (v->lateness_counter == 0 || (!_settings_client.gui.timetable_in_ticks && v->lateness_counter / TimetableDisplayUnitSize() == 0)) {
 						str = STR_VEHICLE_LIST_TIMETABLE_DELAY_ON_TIME;
 					} else {
 						str = v->lateness_counter > 0 ? STR_VEHICLE_LIST_TIMETABLE_DELAY_LATE : STR_VEHICLE_LIST_TIMETABLE_DELAY_EARLY;
@@ -2419,7 +2419,7 @@ public:
 
 			case WID_VL_SORT_BY_PULLDOWN: // Select sorting criteria dropdown menu
 				ShowDropDownMenu(this, this->GetVehicleSorterNames(), this->vehgroups.SortType(), WID_VL_SORT_BY_PULLDOWN, 0,
-						this->GetSorterDisableMask(this->vli.vtype), 0, DDSF_LOST_FOCUS);
+						this->GetSorterDisableMask(this->vli.vtype));
 				return;
 
 			case WID_VL_FILTER_BY_CARGO: // Cargo filter dropdown
@@ -2766,9 +2766,9 @@ static constexpr NWidgetPart _nested_nontrain_vehicle_details_widgets[] = {
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_VD_MIDDLE_DETAILS), SetMinimalSize(405, 45), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_VD_DECREASE_SERVICING_INTERVAL), SetFill(0, 1),
-				SetDataTip(AWV_DECREASE, STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP),
+				SetDataTip(AWV_DECREASE, STR_NULL),
 		NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_VD_INCREASE_SERVICING_INTERVAL), SetFill(0, 1),
-				SetDataTip(AWV_INCREASE, STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP),
+				SetDataTip(AWV_INCREASE, STR_NULL),
 		NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_VD_SERVICE_INTERVAL_DROPDOWN), SetFill(0, 1),
 				SetDataTip(STR_EMPTY, STR_SERVICE_INTERVAL_DROPDOWN_TOOLTIP),
 		NWidget(WWT_PANEL, COLOUR_GREY, WID_VD_SERVICING_INTERVAL), SetFill(1, 1), SetResize(1, 0), EndContainer(),
@@ -2792,9 +2792,9 @@ static constexpr NWidgetPart _nested_train_vehicle_details_widgets[] = {
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_VD_DECREASE_SERVICING_INTERVAL), SetFill(0, 1),
-				SetDataTip(AWV_DECREASE, STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP),
+				SetDataTip(AWV_DECREASE, STR_NULL),
 		NWidget(WWT_PUSHARROWBTN, COLOUR_GREY, WID_VD_INCREASE_SERVICING_INTERVAL), SetFill(0, 1),
-				SetDataTip(AWV_INCREASE, STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP),
+				SetDataTip(AWV_INCREASE, STR_NULL),
 		NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_VD_SERVICE_INTERVAL_DROPDOWN), SetFill(0, 1),
 				SetDataTip(STR_EMPTY, STR_SERVICE_INTERVAL_DROPDOWN_TOOLTIP),
 		NWidget(WWT_PANEL, COLOUR_GREY, WID_VD_SERVICING_INTERVAL), SetFill(1, 1), SetResize(1, 0), EndContainer(),
@@ -2819,9 +2819,16 @@ extern void DrawRoadVehDetails(const Vehicle *v, const Rect &r);
 extern void DrawShipDetails(const Vehicle *v, const Rect &r);
 extern void DrawAircraftDetails(const Aircraft *v, const Rect &r);
 
-static StringID _service_interval_dropdown[] = {
+static StringID _service_interval_dropdown_calendar[] = {
 	STR_VEHICLE_DETAILS_DEFAULT,
 	STR_VEHICLE_DETAILS_DAYS,
+	STR_VEHICLE_DETAILS_PERCENT,
+	INVALID_STRING_ID,
+};
+
+static StringID _service_interval_dropdown_wallclock[] = {
+	STR_VEHICLE_DETAILS_DEFAULT,
+	STR_VEHICLE_DETAILS_MINUTES,
 	STR_VEHICLE_DETAILS_PERCENT,
 	INVALID_STRING_ID,
 };
@@ -2994,7 +3001,7 @@ struct VehicleDetailsWindow : Window {
 					dim = maxdim(dim, GetStringBoundingBox(STR_VEHICLE_INFO_WEIGHT_RATIOS));
 				}
 				SetDParam(0, STR_VEHICLE_INFO_AGE);
-				dim = maxdim(dim, GetStringBoundingBox(STR_VEHICLE_INFO_AGE_RUNNING_COST_YR));
+				dim = maxdim(dim, GetStringBoundingBox(this->GetRunningCostString()));
 				size->width = dim.width + padding.width;
 				break;
 			}
@@ -3024,9 +3031,10 @@ struct VehicleDetailsWindow : Window {
 
 			case WID_VD_SERVICE_INTERVAL_DROPDOWN: {
 				Dimension d{0, 0};
-				StringID *strs = _service_interval_dropdown;
-				while (*strs != INVALID_STRING_ID) {
-					d = maxdim(d, GetStringBoundingBox(*strs++));
+				for (const StringID *strs : {_service_interval_dropdown_calendar, _service_interval_dropdown_wallclock}) {
+					while (*strs != INVALID_STRING_ID) {
+						d = maxdim(d, GetStringBoundingBox(*strs++));
+					}
 				}
 				d.width += padding.width;
 				d.height += padding.height;
@@ -3036,7 +3044,17 @@ struct VehicleDetailsWindow : Window {
 
 			case WID_VD_SERVICING_INTERVAL:
 				SetDParamMaxValue(0, MAX_SERVINT_DAYS); // Roughly the maximum interval
-				SetDParamMaxValue(1, MAX_YEAR * DAYS_IN_YEAR); // Roughly the maximum year
+
+				/* Do we show the last serviced value as a date or minutes since service? */
+				if (EconTime::UsingWallclockUnits()) {
+					SetDParam(1, STR_VEHICLE_DETAILS_LAST_SERVICE_MINUTES_AGO);
+					/* Vehicle was last serviced at year 0, and we're at max year */
+					SetDParamMaxValue(2, MONTHS_IN_YEAR * EconTime::MAX_YEAR.base());
+				} else {
+					SetDParam(1, STR_VEHICLE_DETAILS_LAST_SERVICE_DATE);
+					/* Vehicle was last serviced at year 0, and we're at max year */
+					SetDParamMaxValue(2, EconTime::DateAtStartOfYear(EconTime::MAX_YEAR));
+				}
 				size->width = std::max(
 					GetStringBoundingBox(STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT).width,
 					GetStringBoundingBox(STR_VEHICLE_DETAILS_SERVICING_INTERVAL_DAYS).width
@@ -3084,6 +3102,17 @@ struct VehicleDetailsWindow : Window {
 		if (widget == WID_VD_CAPTION) SetDParam(0, Vehicle::Get(this->window_number)->index);
 	}
 
+	StringID GetRunningCostString() const
+	{
+		if (EconTime::UsingWallclockUnits()) {
+			return STR_VEHICLE_INFO_AGE_RUNNING_COST_PERIOD;
+		} else if (DayLengthFactor() > 1) {
+			return STR_VEHICLE_INFO_AGE_RUNNING_COST_ORIG_YR;
+		} else {
+			return STR_VEHICLE_INFO_AGE_RUNNING_COST_YR;
+		}
+	}
+
 	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		const Vehicle *v = Vehicle::Get(this->window_number);
@@ -3093,11 +3122,11 @@ struct VehicleDetailsWindow : Window {
 				Rect tr = r.Shrink(WidgetDimensions::scaled.framerect);
 
 				/* Draw running cost */
-				SetDParam(1, DateDeltaToYears(v->age));
+				SetDParam(1, DateDeltaToYearDelta(v->age));
 				SetDParam(0, (v->age + DAYS_IN_YEAR < v->max_age) ? STR_VEHICLE_INFO_AGE : STR_VEHICLE_INFO_AGE_RED);
-				SetDParam(2, DateDeltaToYears(v->max_age));
+				SetDParam(2, DateDeltaToYearDelta(v->max_age));
 				SetDParam(3, v->GetDisplayRunningCost());
-				DrawString(tr, STR_VEHICLE_INFO_AGE_RUNNING_COST_YR);
+				DrawString(tr, this->GetRunningCostString());
 				tr.top += GetCharacterHeight(FS_NORMAL);
 
 				/* Draw max speed */
@@ -3264,8 +3293,22 @@ struct VehicleDetailsWindow : Window {
 			case WID_VD_SERVICING_INTERVAL: {
 				/* Draw service interval text */
 				Rect tr = r.Shrink(WidgetDimensions::scaled.framerect);
+
 				SetDParam(0, v->GetServiceInterval());
-				SetDParam(1, v->date_of_last_service);
+
+				/* We're using wallclock units. Show minutes since last serviced. */
+				if (EconTime::UsingWallclockUnits()) {
+					int minutes_since_serviced = (EconTime::CurDate() - v->date_of_last_service).base() / EconTime::DAYS_IN_ECONOMY_WALLCLOCK_MONTH;
+					SetDParam(1, STR_VEHICLE_DETAILS_LAST_SERVICE_MINUTES_AGO);
+					SetDParam(2, minutes_since_serviced);
+					DrawString(tr.left, tr.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)),
+						v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT : STR_VEHICLE_DETAILS_SERVICING_INTERVAL_MINUTES);
+					break;
+				}
+
+				/* We're using calendar dates. Show the date of last service. */
+				SetDParam(1, STR_VEHICLE_DETAILS_LAST_SERVICE_DATE);
+				SetDParam(2, v->date_of_last_service);
 				DrawString(tr.left, tr.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)),
 						v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT : STR_VEHICLE_DETAILS_SERVICING_INTERVAL_DAYS);
 				break;
@@ -3288,9 +3331,10 @@ struct VehicleDetailsWindow : Window {
 			WID_VD_INCREASE_SERVICING_INTERVAL,
 			WID_VD_DECREASE_SERVICING_INTERVAL);
 
-		StringID str = v->ServiceIntervalIsCustom() ?
-			(v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_PERCENT : STR_VEHICLE_DETAILS_DAYS) :
-			STR_VEHICLE_DETAILS_DEFAULT;
+		StringID str =
+			!v->ServiceIntervalIsCustom() ? STR_VEHICLE_DETAILS_DEFAULT :
+			v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_PERCENT :
+			EconTime::UsingWallclockUnits() ? STR_VEHICLE_DETAILS_MINUTES : STR_VEHICLE_DETAILS_DAYS;
 		this->GetWidget<NWidgetCore>(WID_VD_SERVICE_INTERVAL_DROPDOWN)->widget_data = str;
 
 		this->DrawWidgets();
@@ -3301,8 +3345,13 @@ struct VehicleDetailsWindow : Window {
 		switch (widget) {
 			case WID_VD_INCREASE_SERVICING_INTERVAL:   // increase int
 			case WID_VD_DECREASE_SERVICING_INTERVAL: { // decrease int
-				int mod = _ctrl_pressed ? 5 : 10;
 				const Vehicle *v = Vehicle::Get(this->window_number);
+				int mod;
+				if (!v->ServiceIntervalIsPercent() && EconTime::UsingWallclockUnits()) {
+					mod = _ctrl_pressed ? 1 : 5;
+				} else {
+					mod = _ctrl_pressed ? 5 : 10;
+				}
 
 				mod = (widget == WID_VD_DECREASE_SERVICING_INTERVAL) ? -mod : mod;
 				mod = GetServiceIntervalClamped(mod + v->GetServiceInterval(), v->ServiceIntervalIsPercent());
@@ -3314,7 +3363,9 @@ struct VehicleDetailsWindow : Window {
 
 			case WID_VD_SERVICE_INTERVAL_DROPDOWN: {
 				const Vehicle *v = Vehicle::Get(this->window_number);
-				ShowDropDownMenu(this, _service_interval_dropdown, v->ServiceIntervalIsCustom() ? (v->ServiceIntervalIsPercent() ? 2 : 1) : 0, widget, 0, 0, 0, DDSF_LOST_FOCUS);
+				ShowDropDownMenu(this,
+						EconTime::UsingWallclockUnits() ? _service_interval_dropdown_wallclock : _service_interval_dropdown_calendar,
+						v->ServiceIntervalIsCustom() ? (v->ServiceIntervalIsPercent() ? 2 : 1) : 0, widget, 0, 0, 0, DDSF_SHARED);
 				break;
 			}
 
@@ -3332,6 +3383,25 @@ struct VehicleDetailsWindow : Window {
 				this->SetDirty();
 				break;
 		}
+	}
+
+	bool OnTooltip([[maybe_unused]] Point pt, WidgetID widget, TooltipCloseCondition close_cond) override
+	{
+		if (widget == WID_VD_INCREASE_SERVICING_INTERVAL || widget == WID_VD_DECREASE_SERVICING_INTERVAL) {
+			const Vehicle *v = Vehicle::Get(this->window_number);
+			StringID tool_tip;
+			if (v->ServiceIntervalIsPercent()) {
+				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_PERCENT : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_PERCENT;
+			} else if (EconTime::UsingWallclockUnits()) {
+				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES;
+			} else {
+				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_DAYS : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_DAYS;
+			}
+			GuiShowTooltips(this, tool_tip, close_cond);
+			return true;
+		}
+
+		return false;
 	}
 
 	void OnDropdownSelect(WidgetID widget, int index) override
@@ -3811,6 +3881,8 @@ public:
 			}
 		} else if (v->type == VEH_AIRCRAFT && HasBit(Aircraft::From(v)->flags, VAF_DEST_TOO_FAR) && !v->current_order.IsType(OT_LOADING)) {
 			str = STR_VEHICLE_STATUS_AIRCRAFT_TOO_FAR;
+		} else if (v->IsInDepot() && v->IsWaitingForUnbunching()) {
+			str = STR_VEHICLE_STATUS_WAITING_UNBUNCHING;
 		} else { // vehicle is in a "normal" state, show current order
 			switch (v->current_order.GetType()) {
 				case OT_GOTO_STATION: {
@@ -3840,6 +3912,8 @@ public:
 						str = STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SELL_VEL;
 					} else if (v->current_order.GetDepotActionType() & ODATFB_HALT) {
 						str = HasBit(v->vehicle_flags, VF_PATHFINDER_LOST) ? STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL : STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL;
+					} else if (v->current_order.GetDepotActionType() & ODATFB_UNBUNCH) {
+						str = HasBit(v->vehicle_flags, VF_PATHFINDER_LOST) ? STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL : STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL;
 					} else {
 						str = HasBit(v->vehicle_flags, VF_PATHFINDER_LOST) ? STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL : STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL;
 					}
@@ -3876,7 +3950,7 @@ public:
 						str = STR_VEHICLE_STATUS_LEAVING;
 						break;
 					}
-					FALLTHROUGH;
+					[[fallthrough]];
 				default:
 					if (v->GetNumManualOrders() == 0) {
 						str = STR_VEHICLE_STATUS_NO_ORDERS_VEL;

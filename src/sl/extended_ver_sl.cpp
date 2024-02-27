@@ -98,22 +98,22 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_SIG_TUNNEL_BRIDGE,                XSCF_NULL,               10,  10, "signal_tunnel_bridge",             nullptr, nullptr, "XBSS"           },
 	{ XSLFI_IMPROVED_BREAKDOWNS,              XSCF_NULL,                8,   8, "improved_breakdowns",              nullptr, nullptr, nullptr          },
 	{ XSLFI_CONSIST_BREAKDOWN_FLAG,           XSCF_NULL,                1,   1, "consist_breakdown_flag",           nullptr, nullptr, nullptr          },
-	{ XSLFI_TT_WAIT_IN_DEPOT,                 XSCF_NULL,                1,   1, "tt_wait_in_depot",                 nullptr, nullptr, nullptr          },
+	{ XSLFI_TT_WAIT_IN_DEPOT,                 XSCF_NULL,                2,   2, "tt_wait_in_depot",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_AUTO_TIMETABLE,                   XSCF_NULL,                5,   5, "auto_timetables",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_VEHICLE_REPAIR_COST,              XSCF_NULL,                2,   2, "vehicle_repair_cost",              nullptr, nullptr, nullptr          },
 	{ XSLFI_ENH_VIEWPORT_PLANS,               XSCF_IGNORABLE_ALL,       4,   4, "enh_viewport_plans",               nullptr, nullptr, "PLAN"           },
 	{ XSLFI_INFRA_SHARING,                    XSCF_NULL,                2,   2, "infra_sharing",                    nullptr, nullptr, "CPDP"           },
-	{ XSLFI_VARIABLE_DAY_LENGTH,              XSCF_NULL,                3,   3, "variable_day_length",              nullptr, nullptr, nullptr          },
+	{ XSLFI_VARIABLE_DAY_LENGTH,              XSCF_NULL,                5,   5, "variable_day_length",              nullptr, nullptr, nullptr          },
 	{ XSLFI_ORDER_OCCUPANCY,                  XSCF_NULL,                2,   2, "order_occupancy",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_MORE_COND_ORDERS,                 XSCF_NULL,               17,  17, "more_cond_orders",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_EXTRA_LARGE_MAP,                  XSCF_NULL,                0,   1, "extra_large_map",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_REVERSE_AT_WAYPOINT,              XSCF_NULL,                1,   1, "reverse_at_waypoint",              nullptr, nullptr, nullptr          },
 	{ XSLFI_VEH_LIFETIME_PROFIT,              XSCF_NULL,                1,   1, "veh_lifetime_profit",              nullptr, nullptr, nullptr          },
-	{ XSLFI_LINKGRAPH_DAY_SCALE,              XSCF_NULL,                5,   5, "linkgraph_day_scale",              nullptr, nullptr, nullptr          },
+	{ XSLFI_LINKGRAPH_DAY_SCALE,              XSCF_NULL,                6,   6, "linkgraph_day_scale",              nullptr, nullptr, nullptr          },
 	{ XSLFI_TEMPLATE_REPLACEMENT,             XSCF_NULL,                9,   9, "template_replacement",             nullptr, nullptr, "TRPL,TMPL"      },
 	{ XSLFI_MORE_RAIL_TYPES,                  XSCF_NULL,                0,   1, "more_rail_types",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_CARGO_TYPE_ORDERS,                XSCF_NULL,                3,   3, "cargo_type_orders",                nullptr, nullptr, "ORDX,VEOX"      },
-	{ XSLFI_EXTENDED_GAMELOG,                 XSCF_NULL,                1,   1, "extended_gamelog",                 nullptr, nullptr, nullptr          },
+	{ XSLFI_EXTENDED_GAMELOG,                 XSCF_NULL,                2,   2, "extended_gamelog",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_STATION_CATCHMENT_INC,            XSCF_NULL,                1,   1, "station_catchment_inc",            nullptr, nullptr, nullptr          },
 	{ XSLFI_CUSTOM_BRIDGE_HEADS,              XSCF_NULL,                4,   4, "custom_bridge_heads",              nullptr, nullptr, nullptr          },
 	{ XSLFI_CHUNNEL,                          XSCF_NULL,                2,   2, "chunnel",                          nullptr, nullptr, "TUNN"           },
@@ -208,8 +208,14 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_SAVEGAME_ID,                      XSCF_NULL,                1,   1, "slv_savegame_id",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_NEWGRF_LAST_SERVICE,              XSCF_NULL,                1,   1, "slv_newgrf_last_service",          nullptr, nullptr, nullptr          },
 	{ XSLFI_CARGO_TRAVELLED,                  XSCF_NULL,                1,   1, "slv_cargo_travelled",              nullptr, nullptr, nullptr          },
+	{ XSLFI_SHIP_ACCELERATION,                XSCF_NULL,                1,   1, "slv_ship_acceleration",            nullptr, nullptr, nullptr          },
+	{ XSLFI_DEPOT_UNBUNCHING,                 XSCF_NULL,                1,   1, "slv_depot_unbunching",             nullptr, nullptr, "VUBS"           },
 
 	{ XSLFI_TABLE_PATS,                       XSCF_NULL,                1,   1, "table_pats",                       nullptr, nullptr, nullptr          },
+	{ XSLFI_TABLE_MISC_SL,                    XSCF_NULL,                2,   2, "table_misc_sl",                    nullptr, nullptr, nullptr          },
+	{ XSLFI_TABLE_SCRIPT_SL,                  XSCF_NULL,                1,   1, "table_script_sl",                  nullptr, nullptr, nullptr          },
+	{ XSLFI_TABLE_NEWGRF_SL,                  XSCF_NULL,                1,   1, "table_newgrf_sl",                  nullptr, nullptr, nullptr          },
+	{ XSLFI_TABLE_INDUSTRY_SL,                XSCF_NULL,                1,   1, "table_industry_sl",                nullptr, nullptr, nullptr          },
 
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr }, // This is the end marker
 };
@@ -217,8 +223,8 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 /**
  * Extended save/load feature test
  *
- * First performs a tradional check on the provided @p savegame_version against @p savegame_version_from and @p savegame_version_to.
- * Then, if the feature set in the constructor is not XSLFI_NULL, also check than the feature version is inclusively bounded by @p min_version and @p max_version,
+ * First performs a traditional check on the provided @p savegame_version against @p savegame_version_from and @p savegame_version_to.
+ * Then, if the feature set in the constructor is not XSLFI_NULL, also check that the feature version is inclusively bounded by @p min_version and @p max_version,
  * and return the combination of the two tests using the operator defined in the constructor.
  * Otherwise just returns the result of the savegame version test
  */
@@ -380,7 +386,7 @@ bool SlXvCheckSpecialSavegameVersions()
 		_sl_is_faked_ext = true;
 		return true;
 	}
-	if (_sl_version == SL_CHILLPP_201) { /* 232 - 233 */
+	if (_sl_version == SL_CHILLPP_201) { /* 201 */
 		_sl_maybe_chillpp = true;
 		return true;
 	}

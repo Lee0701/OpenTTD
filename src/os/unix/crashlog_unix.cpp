@@ -521,6 +521,7 @@ class CrashLogUnix : public CrashLog {
 		char **messages = backtrace_symbols(trace, trace_size);
 
 #if defined(WITH_BFD)
+		sym_bfd_obj_cache bfd_cache;
 		bfd_init();
 #endif /* WITH_BFD */
 
@@ -574,7 +575,7 @@ class CrashLogUnix : public CrashLog {
 			/* subtract one to get the line before the return address, i.e. the function call line */
 			sym_info_bfd bfd_info(reinterpret_cast<bfd_vma>(trace[i]) - reinterpret_cast<bfd_vma>(info.dli_fbase) - 1);
 			if (dladdr_result && info.dli_fname) {
-				lookup_addr_bfd(info.dli_fname, bfd_info);
+				lookup_addr_bfd(info.dli_fname, bfd_cache, bfd_info);
 				if (bfd_info.file_name != nullptr) file_name = bfd_info.file_name;
 				if (bfd_info.function_name != nullptr) func_name = bfd_info.function_name;
 				if (bfd_info.function_addr != 0) func_addr = reinterpret_cast<void *>(bfd_info.function_addr + reinterpret_cast<bfd_vma>(info.dli_fbase));
@@ -589,18 +590,19 @@ class CrashLogUnix : public CrashLog {
 				demangled = abi::__cxa_demangle(func_name, nullptr, 0, &status);
 #endif /* WITH_DEMANGLE */
 				const char *name = (demangled != nullptr && status == 0) ? demangled : func_name;
-				buffer += seprintf(buffer, last, " [%02i] %*p %-40s %s + 0x%zx\n", i, ptr_str_size,
+				buffer += seprintf(buffer, last, " [%02i] %*p %-40s %s + 0x%zx", i, ptr_str_size,
 						trace[i], info.dli_fname, name, (char *)trace[i] - (char *)func_addr);
 				free(demangled);
 			} else if (dladdr_result && info.dli_fname) {
-				buffer += seprintf(buffer, last, " [%02i] %*p %-40s + 0x%zx\n", i, ptr_str_size,
+				buffer += seprintf(buffer, last, " [%02i] %*p %-40s + 0x%zx", i, ptr_str_size,
 						trace[i], info.dli_fname, (char *)trace[i] - (char *)info.dli_fbase);
 			} else {
 				ok = false;
 			}
-			if (file_name != nullptr) {
-				buffer += seprintf(buffer, last, "%*s%s:%u\n", 7 + ptr_str_size, "", file_name, line_num);
+			if (ok && file_name != nullptr) {
+				buffer += seprintf(buffer, last, " at %s:%u", file_name, line_num);
 			}
+			if (ok) buffer += seprintf(buffer, last, "\n");
 #if defined(WITH_BFD)
 			if (ok && bfd_info.found && bfd_info.abfd) {
 				uint iteration_limit = 32;
@@ -612,15 +614,16 @@ class CrashLogUnix : public CrashLog {
 						demangled = abi::__cxa_demangle(func_name, nullptr, 0, &status);
 #endif /* WITH_DEMANGLE */
 						const char *name = (demangled != nullptr && status == 0) ? demangled : func_name;
-						buffer += seprintf(buffer, last, " [inlined] %*s %s\n", ptr_str_size + 36, "",
+						buffer += seprintf(buffer, last, " [inlined] %*s %s", ptr_str_size + 36, "",
 								name);
 						free(demangled);
 					} else if (file_name) {
-						buffer += seprintf(buffer, last, " [inlined]\n");
+						buffer += seprintf(buffer, last, " [inlined]");
 					}
 					if (file_name != nullptr) {
-						buffer += seprintf(buffer, last, "%*s%s:%u\n", 7 + ptr_str_size, "", file_name, line_num);
+						buffer += seprintf(buffer, last, " at %s:%u", file_name, line_num);
 					}
+					buffer += seprintf(buffer, last, "\n");
 				}
 			}
 #endif /* WITH_BFD */
@@ -847,8 +850,8 @@ static void CDECL HandleCrash(int signum)
 	log.MakeInconsistencyLog(info);
 }
 
-/* static */ void CrashLog::VersionInfoLog()
+/* static */ void CrashLog::VersionInfoLog(char *buffer, const char *last)
 {
 	CrashLogUnix log(CrashLogUnix::DesyncTag{});
-	log.MakeVersionInfoLog();
+	log.FillVersionInfoLog(buffer, last);
 }

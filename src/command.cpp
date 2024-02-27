@@ -129,6 +129,7 @@ CommandProc CmdSetCompanyColour;
 
 CommandProc CmdIncreaseLoan;
 CommandProc CmdDecreaseLoan;
+CommandProcEx CmdSetCompanyMaxLoan;
 
 CommandProc CmdWantEnginePreview;
 CommandProc CmdEngineCtrl;
@@ -397,6 +398,7 @@ static const Command _command_proc_table[] = {
 
 	DEF_CMD(CmdIncreaseLoan,                                   0, CMDT_MONEY_MANAGEMENT      ), // CMD_INCREASE_LOAN
 	DEF_CMD(CmdDecreaseLoan,                                   0, CMDT_MONEY_MANAGEMENT      ), // CMD_DECREASE_LOAN
+	DEF_CMD(CmdSetCompanyMaxLoan,                      CMD_DEITY, CMDT_MONEY_MANAGEMENT      ), // CMD_SET_COMPANY_MAX_LOAN
 
 	DEF_CMD(CmdWantEnginePreview,                              0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_WANT_ENGINE_PREVIEW
 	DEF_CMD(CmdEngineCtrl,                             CMD_DEITY, CMDT_VEHICLE_MANAGEMENT    ), // CMD_ENGINE_CTRL
@@ -615,8 +617,8 @@ struct CommandLogEntry {
 	uint32_t p2;
 	uint32_t cmd;
 	uint64_t p3;
-	Date date;
-	DateFract date_fract;
+	EconTime::Date date;
+	EconTime::DateFract date_fract;
 	uint8_t tick_skip_counter;
 	CompanyID current_company;
 	CompanyID local_company;
@@ -627,7 +629,7 @@ struct CommandLogEntry {
 	CommandLogEntry() { }
 
 	CommandLogEntry(TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd, CommandLogEntryFlag log_flags, std::string text)
-			: text(text), tile(tile), p1(p1), p2(p2), cmd(cmd), p3(p3), date(_date), date_fract(_date_fract), tick_skip_counter(_tick_skip_counter),
+			: text(text), tile(tile), p1(p1), p2(p2), cmd(cmd), p3(p3), date(EconTime::CurDate()), date_fract(EconTime::CurDateFract()), tick_skip_counter(TickSkipCounter()),
 			current_company(_current_company), local_company(_local_company), log_flags(log_flags), client_id(_cmd_client_id), frame_counter(_frame_counter) { }
 };
 
@@ -669,8 +671,8 @@ static void DumpSubCommandLogEntry(char *&buffer, const char *last, const Comman
 			return (entry.log_flags & CLEF_SCRIPT_ASYNC) ? 'A' : 'a';
 		};
 
-		YearMonthDay ymd = ConvertDateToYMD(entry.date);
-		buffer += seprintf(buffer, last, "%4i-%02i-%02i, %2i, %3i", ymd.year, ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter);
+		EconTime::YearMonthDay ymd = EconTime::ConvertDateToYMD(entry.date);
+		buffer += seprintf(buffer, last, "%4i-%02i-%02i, %2i, %3i", ymd.year.base(), ymd.month + 1, ymd.day, entry.date_fract, entry.tick_skip_counter);
 		if (_networking) {
 			buffer += seprintf(buffer, last, ", %08X", entry.frame_counter);
 		}
@@ -732,7 +734,7 @@ char *DumpCommandLog(char *buffer, const char *last, std::function<char *(char *
 	return buffer;
 }
 
-/*!
+/**
  * This function range-checks a cmd, and checks if the cmd is not nullptr
  *
  * @param cmd The integer value of a command
@@ -745,7 +747,7 @@ bool IsValidCommand(uint32_t cmd)
 	return cmd < lengthof(_command_proc_table) && _command_proc_table[cmd].proc != nullptr;
 }
 
-/*!
+/**
  * This function mask the parameter with CMD_ID_MASK and returns
  * the flags which belongs to the given command.
  *
@@ -759,7 +761,7 @@ CommandFlags GetCommandFlags(uint32_t cmd)
 	return _command_proc_table[cmd & CMD_ID_MASK].flags;
 }
 
-/*!
+/**
  * This function mask the parameter with CMD_ID_MASK and returns
  * the name which belongs to the given command.
  *
@@ -819,7 +821,7 @@ private:
 	char buffer[64];
 };
 
-/*!
+/**
  * This function executes a given command with the parameters from the #CommandProc parameter list.
  * Depending on the flags parameter it execute or test a command.
  *
@@ -889,20 +891,6 @@ error:
 	return res;
 }
 
-/*!
- * This functions returns the money which can be used to execute a command.
- * This is either the money of the current company or INT64_MAX if there
- * is no such a company "at the moment" like the server itself.
- *
- * @return The available money of a company or INT64_MAX
- */
-Money GetAvailableMoneyForCommand()
-{
-	CompanyID company = _current_company;
-	if (!Company::IsValidID(company)) return INT64_MAX;
-	return Company::Get(company)->money;
-}
-
 static void DebugLogCommandLogEntry(const CommandLogEntry &entry)
 {
 	if (_debug_command_level <= 0) return;
@@ -910,7 +898,7 @@ static void DebugLogCommandLogEntry(const CommandLogEntry &entry)
 	char buffer[256];
 	char *b = buffer;
 	DumpSubCommandLogEntry(b, lastof(buffer), entry);
-	debug_print("command", buffer);
+	debug_print("command", 0, buffer);
 }
 
 static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32_t p1, uint32_t p2, uint64_t p3, uint32_t cmd, CommandLogEntryFlag log_flags, const char *text)
@@ -923,8 +911,9 @@ static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32
 	if (_networking && cmd_log.count > 0) {
 		CommandLogEntry &current = cmd_log.log[(cmd_log.next - 1) % cmd_log.log.size()];
 		if (current.log_flags & CLEF_ONLY_SENDING && ((current.log_flags ^ log_flags) & ~(CLEF_SCRIPT | CLEF_MY_CMD)) == CLEF_ONLY_SENDING &&
-				current.tile == tile && current.p1 == p1 && current.p2 == p2 && current.p3 == p3 && ((current.cmd ^ cmd) & ~CMD_NETWORK_COMMAND) == 0 && current.date == _date &&
-				current.date_fract == _date_fract && current.tick_skip_counter == _tick_skip_counter &&
+				current.tile == tile && current.p1 == p1 && current.p2 == p2 && current.p3 == p3 && ((current.cmd ^ cmd) & ~CMD_NETWORK_COMMAND) == 0 &&
+				current.date == EconTime::CurDate() && current.date_fract == EconTime::CurDateFract() &&
+				current.tick_skip_counter == TickSkipCounter() &&
 				current.frame_counter == _frame_counter &&
 				current.current_company == _current_company && current.local_company == _local_company) {
 			current.log_flags |= log_flags | CLEF_TWICE;
@@ -948,7 +937,7 @@ static void AppendCommandLogEntry(const CommandCost &res, TileIndex tile, uint32
 	cmd_log.count++;
 }
 
-/*!
+/**
  * Toplevel network safe docommand function for the current company. Must not be called recursively.
  * The callback is called when the command succeeded or failed. The parameters
  * \a tile, \a p1, and \a p2 are from the #CommandProc function. The parameter \a cmd is the command to execute.
@@ -1106,7 +1095,7 @@ void EnqueueDoCommandP(CommandContainer cmd)
  */
 #define return_dcpi(cmd) { _docommand_recursive = 0; return cmd; }
 
-/*!
+/**
  * Helper function for the toplevel network safe docommand function for the current company.
  *
  * @param tile The tile to perform a command on (see #CommandProc)
@@ -1205,7 +1194,7 @@ CommandCost DoCommandPInternal(TileIndex tile, uint32_t p1, uint32_t p2, uint64_
 			std::string dbg_info = stdstr_fmt("%s: %s; company: %02x; tile: %06x (%u x %u); p1: %08x; p2: %08x; p3: " OTTD_PRINTFHEX64PAD "; cmd: %08x; %s <%s> (%s)",
 					prefix, debug_date_dumper().HexDate(), (int)_current_company, tile, TileX(tile), TileY(tile), p1, p2, p3,
 					cmd & ~CMD_NETWORK_COMMAND, text_buf.c_str(), aux_str.c_str(), GetCommandName(cmd));
-			debug_print("desync", dbg_info.c_str());
+			debug_print("desync", 1, dbg_info.c_str());
 		}
 	};
 

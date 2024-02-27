@@ -562,7 +562,7 @@ byte GetSnowLineUncached()
 {
 	if (_snow_line == nullptr) return _settings_game.game_creation.snow_line_height;
 
-	return _snow_line->table[_cur_date_ymd.month][_cur_date_ymd.day];
+	return _snow_line->table[CalTime::CurMonth()][CalTime::CurDay()];
 }
 
 void UpdateCachedSnowLine()
@@ -670,6 +670,8 @@ CommandCost CmdClearArea(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint3
 	const Company *c = (flags & (DC_AUTO | DC_BANKRUPT)) ? nullptr : Company::GetIfValid(_current_company);
 	int limit = (c == nullptr ? INT32_MAX : GB(c->clear_limit, 16, 16));
 
+	if (tile != p1) flags |= DC_FORCE_CLEAR_TILE;
+
 	OrthogonalOrDiagonalTileIterator iter(tile, p1, HasBit(p2, 0));
 	for (; *iter != INVALID_TILE; ++iter) {
 		TileIndex t = *iter;
@@ -733,10 +735,10 @@ static std::vector<uint> _tile_loop_counts;
 
 void SetupTileLoopCounts()
 {
-	_tile_loop_counts.resize(_settings_game.economy.day_length_factor);
-	if (_settings_game.economy.day_length_factor == 0) return;
+	_tile_loop_counts.resize(DayLengthFactor());
+	if (DayLengthFactor() == 0) return;
 
-	uint64_t count_per_tick_fp16 = (static_cast<uint64_t>(1) << (MapLogX() + MapLogY() + 8)) / _settings_game.economy.day_length_factor;
+	uint64_t count_per_tick_fp16 = (static_cast<uint64_t>(1) << (MapLogX() + MapLogY() + 8)) / DayLengthFactor();
 	uint64_t accumulator = 0;
 	for (uint &count : _tile_loop_counts) {
 		accumulator += count_per_tick_fp16;
@@ -753,8 +755,8 @@ void RunTileLoop(bool apply_day_length)
 {
 	/* We update every tile every 256 ticks, so divide the map size by 2^8 = 256 */
 	uint count;
-	if (apply_day_length && _settings_game.economy.day_length_factor > 1) {
-		count = _tile_loop_counts[_tick_skip_counter];
+	if (apply_day_length && DayLengthFactor() > 1) {
+		count = _tile_loop_counts[TickSkipCounter()];
 		if (count == 0) return;
 	} else {
 		count = 1 << (MapLogX() + MapLogY() - 8);
@@ -795,7 +797,7 @@ void RunTileLoop(bool apply_day_length)
 void RunAuxiliaryTileLoop()
 {
 	/* At day lengths <= 4, flooding is handled by main tile loop */
-	if (_settings_game.economy.day_length_factor <= 4 || (_scaled_tick_counter % 4) != 0) return;
+	if (DayLengthFactor() <= 4 || (_scaled_tick_counter % 4) != 0) return;
 
 	PerformanceAccumulator framerate(PFE_GL_LANDSCAPE);
 
@@ -1233,7 +1235,7 @@ static void BuildRiver(TileIndex begin, TileIndex end)
 	finder.EndNodeCheck = River_EndNodeCheck;
 	finder.FoundEndNode = River_FoundEndNode;
 	finder.user_target = &end;
-	finder.max_search_nodes = AYSTAR_DEF_MAX_SEARCH_NODES;
+	finder.max_search_nodes = 100 * AYSTAR_DEF_MAX_SEARCH_NODES;
 
 	finder.Init(1 << RIVER_HASH_SIZE);
 
@@ -1516,7 +1518,7 @@ static uint8_t CalculateDesertLine()
 	return CalculateCoverageLine(100 - _settings_game.game_creation.desert_coverage, 4);
 }
 
-void GenerateLandscape(byte mode)
+bool GenerateLandscape(byte mode)
 {
 	/** Number of steps of landscape generation */
 	enum GenLandscapeSteps {
@@ -1530,7 +1532,9 @@ void GenerateLandscape(byte mode)
 
 	if (mode == GWM_HEIGHTMAP) {
 		SetGeneratingWorldProgress(GWP_LANDSCAPE, steps + GLS_HEIGHTMAP);
-		LoadHeightmap(_file_to_saveload.detail_ftype, _file_to_saveload.name.c_str());
+		if (!LoadHeightmap(_file_to_saveload.detail_ftype, _file_to_saveload.name.c_str())) {
+			return false;
+		}
 		IncreaseGeneratingWorldProgress(GWP_LANDSCAPE);
 	} else if (_settings_game.game_creation.land_generator == LG_TERRAGENESIS) {
 		SetGeneratingWorldProgress(GWP_LANDSCAPE, steps + GLS_TERRAGENESIS);
@@ -1616,14 +1620,13 @@ void GenerateLandscape(byte mode)
 	}
 
 	CreateRivers();
+	return true;
 }
 
 void OnTick_Town();
 void OnTick_Trees();
 void OnTick_Station();
 void OnTick_Industry();
-
-void OnTick_LinkGraph();
 
 void CallLandscapeTick()
 {
@@ -1639,6 +1642,4 @@ void CallLandscapeTick()
 		OnTick_Industry();
 		RecordSyncEvent(NSRE_INDUSTRY);
 	}
-
-	OnTick_LinkGraph();
 }

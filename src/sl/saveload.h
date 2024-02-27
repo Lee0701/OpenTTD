@@ -76,8 +76,8 @@ void DoExitSave();
 
 void DoAutoOrNetsave(FiosNumberedSaveName &counter, bool threaded, FiosNumberedSaveName *lt_counter = nullptr);
 
-SaveOrLoadResult SaveWithFilter(struct SaveFilter *writer, bool threaded, SaveModeFlags flags);
-SaveOrLoadResult LoadWithFilter(struct LoadFilter *reader);
+SaveOrLoadResult SaveWithFilter(std::shared_ptr<struct SaveFilter> writer, bool threaded, SaveModeFlags flags);
+SaveOrLoadResult LoadWithFilter(std::shared_ptr<struct LoadFilter> reader);
 bool IsNetworkServerSave();
 bool IsScenarioSave();
 
@@ -90,6 +90,7 @@ enum ChunkSaveLoadSpecialOp {
 	CSLSO_PRE_LOAD,
 	CSLSO_PRE_LOADCHECK,
 	CSLSO_PRE_PTRS,
+	CSLSO_PRE_NULL_PTRS,
 	CSLSO_SHOULD_SAVE_CHUNK,
 };
 enum ChunkSaveLoadSpecialOpResult {
@@ -97,14 +98,17 @@ enum ChunkSaveLoadSpecialOpResult {
 	CSLSOR_LOAD_CHUNK_CONSUMED,
 	CSLSOR_DONT_SAVE_CHUNK,
 	CSLSOR_UPSTREAM_SAVE_CHUNK,
+	CSLSOR_UPSTREAM_NULL_PTRS,
 };
 typedef ChunkSaveLoadSpecialOpResult ChunkSaveLoadSpecialProc(uint32_t, ChunkSaveLoadSpecialOp);
 
 /** Type of a chunk. */
 enum ChunkType {
-	CH_RIFF = 0,
-	CH_ARRAY = 1,
+	CH_RIFF         = 0,
+	CH_ARRAY        = 1,
 	CH_SPARSE_ARRAY = 2,
+	CH_TABLE        = 3,
+	CH_SPARSE_TABLE = 4,
 	CH_EXT_HDR      = 15, ///< Extended chunk header
 
 	CH_UNUSED = 0x80,
@@ -121,17 +125,45 @@ struct ChunkHandler {
 	ChunkSaveLoadSpecialProc *special_proc = nullptr;
 };
 
+struct ChunkIDDumper {
+	const char *operator()(uint32_t id);
+
+private:
+	char buffer[5];
+};
+
 template <typename F>
 void SlExecWithSlVersion(SaveLoadVersion use_version, F proc)
 {
-	extern SaveLoadVersion _sl_version;
-	SaveLoadVersion old_ver = _sl_version;
-	_sl_version = use_version;
+	extern SaveLoadVersion SlExecWithSlVersionStart(SaveLoadVersion use_version);
+	extern void SlExecWithSlVersionEnd(SaveLoadVersion old_version);
+
+	SaveLoadVersion old_ver = SlExecWithSlVersionStart(use_version);
 	auto guard = scope_guard([&]() {
-		_sl_version = old_ver;
+		SlExecWithSlVersionEnd(old_ver);
 	});
 	proc();
 }
+
+template <SlXvFeatureIndex feature, uint16_t min_version, uint16_t max_version>
+struct SaveUpstreamFeatureConditionalLoadUpstreamChunkInfo
+{
+	static SaveLoadVersion GetLoadVersion()
+	{
+		extern SaveLoadVersion _sl_xv_upstream_version;
+		return _sl_xv_upstream_version;
+	}
+
+	static bool SaveUpstream()
+	{
+		return true;
+	}
+
+	static bool LoadUpstream()
+	{
+		return SlXvIsFeaturePresent(feature, min_version, max_version);
+	}
+};
 
 namespace upstream_sl {
 	template <uint32_t id, typename F>
@@ -167,6 +199,8 @@ namespace upstream_sl {
 						SlFixPointerChunkByID(id);
 					});
 					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_PRE_NULL_PTRS:
+					return CSLSOR_UPSTREAM_NULL_PTRS;
 				case CSLSO_SHOULD_SAVE_CHUNK:
 					return CSLSOR_UPSTREAM_SAVE_CHUNK;
 				default:
@@ -212,6 +246,9 @@ namespace upstream_sl {
 						SlFixPointerChunkByID(id);
 					});
 					return CSLSOR_LOAD_CHUNK_CONSUMED;
+				case CSLSO_PRE_NULL_PTRS:
+					if (!F::LoadUpstream()) return CSLSOR_NONE;
+					return CSLSOR_UPSTREAM_NULL_PTRS;
 				case CSLSO_SHOULD_SAVE_CHUNK:
 					return F::SaveUpstream() ? CSLSOR_UPSTREAM_SAVE_CHUNK : CSLSOR_NONE;
 				default:
@@ -220,10 +257,22 @@ namespace upstream_sl {
 		};
 		return ch;
 	}
+
+	template <uint32_t id, SlXvFeatureIndex feature, uint16_t min_version = 1, uint16_t max_version = 0xFFFF>
+	ChunkHandler MakeSaveUpstreamFeatureConditionalLoadUpstreamChunkHandler(ChunkSaveLoadProc *load_proc, ChunkSaveLoadProc *ptrs_proc, ChunkSaveLoadProc *load_check_proc)
+	{
+		return MakeConditionallyUpstreamChunkHandler<id, SaveUpstreamFeatureConditionalLoadUpstreamChunkInfo<feature, min_version, max_version>>(nullptr, load_proc, ptrs_proc, load_check_proc, CH_UNUSED);
+	}
 }
+
+struct GeneralUpstreamChunkLoadInfo
+{
+	static SaveLoadVersion GetLoadVersion();
+};
 
 using upstream_sl::MakeUpstreamChunkHandler;
 using upstream_sl::MakeConditionallyUpstreamChunkHandler;
+using upstream_sl::MakeSaveUpstreamFeatureConditionalLoadUpstreamChunkHandler;
 
 struct NullStruct {
 	byte null;
@@ -870,7 +919,7 @@ inline bool IsSavegameVersionBefore(SaveLoadVersion major, byte minor = 0)
  * @param major Major number of the version to check against.
  * @return Savegame version is at most the specified version.
  */
-inline bool IsSavegameVersionUntil(SaveLoadVersion major)
+inline bool IsSavegameVersionBeforeOrAt(SaveLoadVersion major)
 {
 	extern SaveLoadVersion _sl_version;
 	return _sl_version <= major;
@@ -946,12 +995,11 @@ template <typename F>
 std::span<byte> SlSaveToTempBuffer(F proc)
 {
 	extern uint8_t SlSaveToTempBufferSetup();
-	extern std::pair<byte *, size_t> SlSaveToTempBufferRestore(uint8_t state);
+	extern std::span<byte> SlSaveToTempBufferRestore(uint8_t state);
 
 	uint8_t state = SlSaveToTempBufferSetup();
 	proc();
-	auto result = SlSaveToTempBufferRestore(state);
-	return std::span<byte>(result.first, result.second);
+	return SlSaveToTempBufferRestore(state);
 }
 
 /**
@@ -1021,7 +1069,24 @@ void SlObjectSaveFiltered(void *object, const SaveLoadTable &slt);
 void SlObjectLoadFiltered(void *object, const SaveLoadTable &slt);
 void SlObjectPtrOrNullFiltered(void *object, const SaveLoadTable &slt);
 
-void NORETURN CDECL SlErrorFmt(StringID string, const char *msg, ...) WARN_FORMAT(2, 3);
+bool SlIsTableChunk();
+void SlSkipTableHeader();
+std::vector<SaveLoad> SlTableHeader(const NamedSaveLoadTable &slt);
+std::vector<SaveLoad> SlTableHeaderOrRiff(const NamedSaveLoadTable &slt);
+void SlSaveTableObjectChunk(const SaveLoadTable &slt);
+void SlLoadTableOrRiffFiltered(const SaveLoadTable &slt);
+
+inline void SlSaveTableObjectChunk(const NamedSaveLoadTable &slt)
+{
+	SlSaveTableObjectChunk(SlTableHeader(slt));
+}
+
+inline void SlLoadTableOrRiffFiltered(const NamedSaveLoadTable &slt)
+{
+	SlLoadTableOrRiffFiltered(SlTableHeaderOrRiff(slt));
+}
+
+[[noreturn]] void CDECL SlErrorFmt(StringID string, const char *msg, ...) WARN_FORMAT(2, 3);
 
 bool SaveloadCrashWithMissingNewGRFs();
 

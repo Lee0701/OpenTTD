@@ -47,12 +47,12 @@
 #include "network/network_gui.h"
 #include "network/network_survey.h"
 #include "video/video_driver.hpp"
+#include "social_integration.h"
 
 #include <vector>
 #include <functional>
 #include <iterator>
 #include <set>
-#include <cmath>
 
 #include "safeguards.h"
 
@@ -180,6 +180,184 @@ static const std::map<int, StringID> _volume_labels = {
 	{  111, STR_NULL },
 	{  127, STR_GAME_OPTIONS_VOLUME_100 },
 };
+
+static const NWidgetPart _nested_social_plugins_widgets[] = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_FRAME, COLOUR_GREY, WID_GO_SOCIAL_PLUGIN_TITLE), SetDataTip(STR_JUST_STRING2, STR_NULL),
+			NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+				NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_SOCIAL_PLUGIN_PLATFORM, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_SOCIAL_PLUGIN_PLATFORM), SetMinimalSize(100, 12), SetDataTip(STR_JUST_RAW_STRING, STR_NULL), SetAlignment(SA_RIGHT),
+			EndContainer(),
+			NWidget(NWID_HORIZONTAL), SetPIP(0, WidgetDimensions::unscaled.hsep_normal, 0),
+				NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE, STR_NULL),
+				NWidget(WWT_TEXT, COLOUR_GREY, WID_GO_SOCIAL_PLUGIN_STATE), SetMinimalSize(100, 12), SetDataTip(STR_JUST_STRING1, STR_NULL), SetAlignment(SA_RIGHT),
+			EndContainer(),
+		EndContainer(),
+	EndContainer(),
+};
+
+static const NWidgetPart _nested_social_plugins_none_widgets[] = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_TEXT, COLOUR_GREY), SetMinimalSize(0, 12), SetFill(1, 0), SetDataTip(STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE, STR_NULL),
+	EndContainer(),
+};
+
+class NWidgetSocialPlugins : public NWidgetVertical {
+public:
+	NWidgetSocialPlugins()
+	{
+		this->plugins = SocialIntegration::GetPlugins();
+
+		if (this->plugins.empty()) {
+			auto widget = MakeNWidgets(std::begin(_nested_social_plugins_none_widgets), std::end(_nested_social_plugins_none_widgets), nullptr);
+			this->Add(std::move(widget));
+		} else {
+			for (size_t i = 0; i < this->plugins.size(); i++) {
+				auto widget = MakeNWidgets(std::begin(_nested_social_plugins_widgets), std::end(_nested_social_plugins_widgets), nullptr);
+				this->Add(std::move(widget));
+			}
+		}
+
+		this->SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0);
+	}
+
+	void FillWidgetLookup(WidgetLookup &widget_lookup) override
+	{
+		widget_lookup[WID_GO_SOCIAL_PLUGINS] = this;
+		NWidgetVertical::FillWidgetLookup(widget_lookup);
+	}
+
+	void SetupSmallestSize(Window *w) override
+	{
+		this->current_index = -1;
+		NWidgetVertical::SetupSmallestSize(w);
+	}
+
+	/**
+	 * Find of all the plugins the one where the member is the widest (in pixels).
+	 *
+	 * @param member The member to check with.
+	 * @return The plugin that has the widest value (in pixels) for the given member.
+	 */
+	template <typename T>
+	std::string &GetWidestPlugin(T SocialIntegrationPlugin::*member) const
+	{
+		std::string *longest = &(this->plugins[0]->*member);
+		int longest_length = 0;
+
+		for (auto *plugin : this->plugins) {
+			int length = GetStringBoundingBox(plugin->*member).width;
+			if (length > longest_length) {
+				longest_length = length;
+				longest = &(plugin->*member);
+			}
+		}
+
+		return *longest;
+	}
+
+	void SetStringParameters(int widget) const
+	{
+		switch (widget) {
+			case WID_GO_SOCIAL_PLUGIN_TITLE:
+				/* For SetupSmallestSize, use the longest string we have. */
+				if (this->current_index < 0) {
+					SetDParamStr(0, GetWidestPlugin(&SocialIntegrationPlugin::name));
+					SetDParamStr(1, GetWidestPlugin(&SocialIntegrationPlugin::version));
+					break;
+				}
+
+				if (this->plugins[this->current_index]->name.empty()) {
+					SetDParam(0, STR_JUST_RAW_STRING);
+					SetDParamStr(1, this->plugins[this->current_index]->basepath);
+				} else {
+					SetDParam(0, STR_GAME_OPTIONS_SOCIAL_PLUGIN_TITLE);
+					SetDParamStr(1, this->plugins[this->current_index]->name);
+					SetDParamStr(2, this->plugins[this->current_index]->version);
+				}
+				break;
+
+			case WID_GO_SOCIAL_PLUGIN_PLATFORM:
+				/* For SetupSmallestSize, use the longest string we have. */
+				if (this->current_index < 0) {
+					SetDParamStr(0, GetWidestPlugin(&SocialIntegrationPlugin::social_platform));
+					break;
+				}
+
+				SetDParamStr(0, this->plugins[this->current_index]->social_platform);
+				break;
+
+			case WID_GO_SOCIAL_PLUGIN_STATE: {
+				static const std::pair<SocialIntegrationPlugin::State, StringID> state_to_string[] = {
+					{ SocialIntegrationPlugin::RUNNING, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_RUNNING },
+					{ SocialIntegrationPlugin::FAILED, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_FAILED },
+					{ SocialIntegrationPlugin::PLATFORM_NOT_RUNNING, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_PLATFORM_NOT_RUNNING },
+					{ SocialIntegrationPlugin::UNLOADED, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_UNLOADED },
+					{ SocialIntegrationPlugin::DUPLICATE, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_DUPLICATE },
+					{ SocialIntegrationPlugin::UNSUPPORTED_API, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_UNSUPPORTED_API },
+					{ SocialIntegrationPlugin::INVALID_SIGNATURE, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_INVALID_SIGNATURE },
+				};
+
+				/* For SetupSmallestSize, use the longest string we have. */
+				if (this->current_index < 0) {
+					auto longest_plugin = GetWidestPlugin(&SocialIntegrationPlugin::social_platform);
+
+					/* Set the longest plugin when looking for the longest status. */
+					SetDParamStr(0, longest_plugin);
+
+					StringID longest = STR_NULL;
+					int longest_length = 0;
+					for (auto state : state_to_string) {
+						int length = GetStringBoundingBox(state.second).width;
+						if (length > longest_length) {
+							longest_length = length;
+							longest = state.second;
+						}
+					}
+
+					SetDParam(0, longest);
+					SetDParamStr(1, longest_plugin);
+					break;
+				}
+
+				auto plugin = this->plugins[this->current_index];
+
+				/* Default string, in case no state matches. */
+				SetDParam(0, STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_FAILED);
+				SetDParamStr(1, plugin->social_platform);
+
+				/* Find the string for the state. */
+				for (auto state : state_to_string) {
+					if (plugin->state == state.first) {
+						SetDParam(0, state.second);
+						break;
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	void Draw(const Window *w) override
+	{
+		this->current_index = 0;
+
+		for (auto &wid : this->children) {
+			wid->Draw(w);
+			this->current_index++;
+		}
+	}
+
+private:
+	int current_index = -1;
+	std::vector<SocialIntegrationPlugin *> plugins;
+};
+
+/** Construct nested container widget for managing the list of social plugins. */
+std::unique_ptr<NWidgetBase> MakeNWidgetSocialPlugins()
+{
+	return std::make_unique<NWidgetSocialPlugins>();
+}
 
 struct GameOptionsWindow : Window {
 	GameSettings *opt;
@@ -372,6 +550,16 @@ struct GameOptionsWindow : Window {
 				}
 				break;
 			}
+
+			case WID_GO_SOCIAL_PLUGIN_TITLE:
+			case WID_GO_SOCIAL_PLUGIN_PLATFORM:
+			case WID_GO_SOCIAL_PLUGIN_STATE: {
+				const NWidgetSocialPlugins *plugin = this->GetWidget<NWidgetSocialPlugins>(WID_GO_SOCIAL_PLUGINS);
+				assert(plugin != nullptr);
+
+				plugin->SetStringParameters(widget);
+				break;
+			}
 		}
 	}
 
@@ -414,7 +602,7 @@ struct GameOptionsWindow : Window {
 
 	void SetTab(WidgetID widget)
 	{
-		this->SetWidgetsLoweredState(false, WID_GO_TAB_GENERAL, WID_GO_TAB_GRAPHICS, WID_GO_TAB_SOUND);
+		this->SetWidgetsLoweredState(false, WID_GO_TAB_GENERAL, WID_GO_TAB_GRAPHICS, WID_GO_TAB_SOUND, WID_GO_TAB_SOCIAL);
 		this->LowerWidget(widget);
 		GameOptionsWindow::active_tab = widget;
 
@@ -423,6 +611,7 @@ struct GameOptionsWindow : Window {
 			case WID_GO_TAB_GENERAL: pane = 0; break;
 			case WID_GO_TAB_GRAPHICS: pane = 1; break;
 			case WID_GO_TAB_SOUND: pane = 2; break;
+			case WID_GO_TAB_SOCIAL: pane = 3; break;
 			default: NOT_REACHED();
 		}
 
@@ -517,6 +706,7 @@ struct GameOptionsWindow : Window {
 			case WID_GO_TAB_GENERAL:
 			case WID_GO_TAB_GRAPHICS:
 			case WID_GO_TAB_SOUND:
+			case WID_GO_TAB_SOCIAL:
 				this->SetTab(widget);
 				break;
 
@@ -559,6 +749,7 @@ struct GameOptionsWindow : Window {
 				this->SetWidgetLoweredState(WID_GO_VIDEO_ACCEL_BUTTON, _video_hw_accel);
 				this->SetWidgetDirty(WID_GO_VIDEO_ACCEL_BUTTON);
 #ifndef __APPLE__
+				this->SetWidgetLoweredState(WID_GO_VIDEO_VSYNC_BUTTON, _video_hw_accel && _video_vsync);
 				this->SetWidgetDisabledState(WID_GO_VIDEO_VSYNC_BUTTON, !_video_hw_accel);
 				this->SetWidgetDirty(WID_GO_VIDEO_VSYNC_BUTTON);
 #endif
@@ -838,7 +1029,7 @@ struct GameOptionsWindow : Window {
 		this->SetWidgetDisabledState(WID_GO_REFRESH_RATE_DROPDOWN, _video_vsync);
 
 #ifndef __APPLE__
-		this->SetWidgetLoweredState(WID_GO_VIDEO_VSYNC_BUTTON, _video_vsync);
+		this->SetWidgetLoweredState(WID_GO_VIDEO_VSYNC_BUTTON, _video_hw_accel && _video_vsync);
 		this->SetWidgetDisabledState(WID_GO_VIDEO_VSYNC_BUTTON, !_video_hw_accel);
 #endif
 
@@ -879,6 +1070,7 @@ static constexpr NWidgetPart _nested_game_options_widgets[] = {
 			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_GENERAL),  SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_GENERAL, STR_GAME_OPTIONS_TAB_GENERAL_TT), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_GRAPHICS), SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_GRAPHICS, STR_GAME_OPTIONS_TAB_GRAPHICS_TT), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_SOUND),    SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_SOUND, STR_GAME_OPTIONS_TAB_SOUND_TT), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, COLOUR_YELLOW, WID_GO_TAB_SOCIAL),   SetMinimalTextLines(2, 0), SetDataTip(STR_GAME_OPTIONS_TAB_SOCIAL, STR_GAME_OPTIONS_TAB_SOCIAL_TT), SetFill(1, 0),
 		EndContainer(),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY),
@@ -1039,6 +1231,11 @@ static constexpr NWidgetPart _nested_game_options_widgets[] = {
 					EndContainer(),
 				EndContainer(),
 			EndContainer(),
+
+			/* Social tab */
+			NWidget(NWID_VERTICAL), SetPadding(WidgetDimensions::unscaled.sparse), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0),
+				NWidgetFunction(MakeNWidgetSocialPlugins),
+			EndContainer(),
 		EndContainer(),
 	EndContainer(),
 };
@@ -1146,9 +1343,7 @@ struct SettingEntry : BaseSettingEntry {
 	bool UpdateFilterState(SettingFilter &filter, bool force_visible) override;
 
 	void SetButtons(byte new_val);
-	StringID GetHelpText() const;
-
-	void SetValueDParams(uint first_param, int32_t value) const;
+	bool IsGUIEditable() const;
 
 protected:
 	SettingEntry(const IntSettingDesc *setting);
@@ -1158,24 +1353,6 @@ protected:
 private:
 	bool IsVisibleByRestrictionMode(RestrictionMode mode) const;
 };
-
-/**
- * Get the help text of a single setting.
- * @return The requested help text.
- */
-StringID SettingEntry::GetHelpText() const
-{
-	StringID str = this->setting->str_help;
-	if (this->setting->guiproc != nullptr) {
-		SettingOnGuiCtrlData data;
-		data.type = SOGCT_DESCRIPTION_TEXT;
-		data.text = str;
-		if (this->setting->guiproc(data)) {
-			str = data.text;
-		}
-	}
-	return str;
-}
 
 /** Cargodist per-cargo setting */
 struct CargoDestPerCargoSettingEntry : SettingEntry {
@@ -1414,7 +1591,21 @@ uint SettingEntry::Length() const
  */
 uint SettingEntry::GetMaxHelpHeight(int maxw)
 {
-	return GetStringHeight(this->GetHelpText(), maxw);
+	return GetStringHeight(this->setting->GetHelp(), maxw);
+}
+
+bool SettingEntry::IsGUIEditable() const
+{
+	bool editable = this->setting->IsEditable();
+	if (editable && this->setting->guiproc != nullptr) {
+		SettingOnGuiCtrlData data;
+		data.type = SOGCT_GUI_DISABLE;
+		data.val = 0;
+		if (this->setting->guiproc(data)) {
+			editable = (data.val == 0);
+		}
+	}
+	return editable;
 }
 
 /**
@@ -1480,8 +1671,8 @@ bool SettingEntry::UpdateFilterState(SettingFilter &filter, bool force_visible)
 		filter.string.ResetState();
 
 		SetDParam(0, STR_EMPTY);
-		filter.string.AddLine(sd->str);
-		filter.string.AddLine(this->GetHelpText());
+		filter.string.AddLine(sd->GetTitle());
+		filter.string.AddLine(sd->GetHelp());
 
 		visible = filter.string.GetState();
 	}
@@ -1514,52 +1705,6 @@ static const void *ResolveObject(const GameSettings *settings_ptr, const IntSett
 }
 
 /**
- * Set the DParams for drawing the value of a setting.
- * @param first_param First DParam to use
- * @param value Setting value to set params for.
- */
-void SettingEntry::SetValueDParams(uint first_param, int32_t value) const
-{
-	const uint initial_first_param = first_param;
-	if (this->setting->IsBoolSetting()) {
-		SetDParam(first_param++, value != 0 ? STR_CONFIG_SETTING_ON : STR_CONFIG_SETTING_OFF);
-	} else if (this->setting->flags & SF_DEC1SCALE) {
-		double scale = std::exp2(((double)value) / 10);
-		int log = -std::min(0, (int)std::floor(std::log10(scale)) - 2);
-
-		SetDParam(first_param++, STR_JUST_RAW_STRING);
-		auto tmp_params = MakeParameters(value, (int64_t)(scale * std::pow(10.f, (float)log)), log);
-		SetDParamStr(first_param++, GetStringWithArgs(this->setting->str_val, tmp_params));
-	} else {
-		if ((this->setting->flags & SF_ENUM) != 0) {
-			StringID str = STR_UNDEFINED;
-			for (const SettingDescEnumEntry *enumlist = this->setting->enumlist; enumlist != nullptr && enumlist->str != STR_NULL; enumlist++) {
-				if (enumlist->val == value) {
-					str = enumlist->str;
-					break;
-				}
-			}
-			SetDParam(first_param++, str);
-		} else if ((this->setting->flags & SF_GUI_DROPDOWN) != 0) {
-			SetDParam(first_param++, this->setting->str_val - this->setting->min + value);
-		} else if ((this->setting->flags & SF_GUI_NEGATIVE_IS_SPECIAL) != 0) {
-			SetDParam(first_param++, this->setting->str_val + ((value >= 0) ? 1 : 0));
-			value = abs(value);
-		} else {
-			SetDParam(first_param++, this->setting->str_val + ((value == 0 && (this->setting->flags & SF_GUI_0_IS_SPECIAL) != 0) ? 1 : 0));
-		}
-		SetDParam(first_param++, value);
-	}
-	if (this->setting->guiproc != nullptr) {
-		SettingOnGuiCtrlData data;
-		data.type = SOGCT_VALUE_DPARAMS;
-		data.offset = initial_first_param;
-		data.val = value;
-		this->setting->guiproc(data);
-	}
-}
-
-/**
  * Function to draw setting value (button + text + current value)
  * @param settings_ptr Pointer to current values of all settings
  * @param left         Left-most position in window/panel to start drawing
@@ -1579,7 +1724,7 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right, 
 	uint button_y = y + (SETTING_HEIGHT - SETTING_BUTTON_HEIGHT) / 2;
 
 	/* We do not allow changes of some items when we are a client in a networkgame */
-	bool editable = sd->IsEditable();
+	bool editable = this->IsGUIEditable();
 
 	SetDParam(0, STR_CONFIG_SETTING_VALUE);
 	int32_t value = sd->Read(ResolveObject(settings_ptr, sd));
@@ -1599,8 +1744,9 @@ void SettingEntry::DrawSetting(GameSettings *settings_ptr, int left, int right, 
 
 void SettingEntry::DrawSettingString(uint left, uint right, int y, bool highlight, int32_t value) const
 {
-	this->SetValueDParams(1, value);
-	int edge = DrawString(left, right, y, this->setting->str, highlight ? TC_WHITE : TC_LIGHT_BLUE);
+	const IntSettingDesc *sd = this->setting;
+	sd->SetValueDParams(1, value);
+	int edge = DrawString(left, right, y, sd->GetTitle(), highlight ? TC_WHITE : TC_LIGHT_BLUE);
 
 	if (this->setting->guiproc != nullptr && edge != 0) {
 		SettingOnGuiCtrlData data;
@@ -1632,7 +1778,7 @@ void CargoDestPerCargoSettingEntry::DrawSettingString(uint left, uint right, int
 	assert(this->setting->str == STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO);
 	SetDParam(0, CargoSpec::Get(this->cargo)->name);
 	SetDParam(1, STR_CONFIG_SETTING_VALUE);
-	this->SetValueDParams(2, value);
+	this->setting->SetValueDParams(2, value);
 	DrawString(left, right, y, STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM, highlight ? TC_WHITE : TC_LIGHT_BLUE);
 }
 
@@ -2272,6 +2418,7 @@ static SettingsContainer &GetSettingsTree()
 
 		SettingsPage *accounting = main->Add(new SettingsPage(STR_CONFIG_SETTING_ACCOUNTING));
 		{
+			accounting->Add(new SettingEntry("difficulty.infinite_money"));
 			accounting->Add(new SettingEntry("economy.inflation"));
 			accounting->Add(new SettingEntry("economy.inflation_fixed_dates"));
 			accounting->Add(new SettingEntry("difficulty.initial_interest"));
@@ -2432,6 +2579,8 @@ static SettingsContainer &GetSettingsTree()
 		{
 			SettingsPage *time = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_TIME));
 			{
+				time->Add(new SettingEntry("economy.timekeeping_units"));
+				time->Add(new SettingEntry("economy.minutes_per_calendar_year"));
 				time->Add(new SettingEntry("game_creation.ending_year"));
 				time->Add(new SettingEntry("gui.pause_on_newgame"));
 				time->Add(new SettingEntry("gui.fast_forward_speed_limit"));
@@ -2501,6 +2650,7 @@ static SettingsContainer &GetSettingsTree()
 				industries->Add(new SettingEntry("economy.type"));
 				industries->Add(new SettingEntry("station.serve_neutral_industries"));
 				industries->Add(new SettingEntry("station.station_delivery_mode"));
+				industries->Add(new SettingEntry("economy.spawn_primary_industry_only"));
 			}
 
 			SettingsPage *cdist = environment->Add(new SettingsPage(STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST));
@@ -2547,7 +2697,6 @@ static SettingsContainer &GetSettingsTree()
 		{
 			SettingsPage *npc = ai->Add(new SettingsPage(STR_CONFIG_SETTING_AI_NPC));
 			{
-				npc->Add(new SettingEntry("script.settings_profile"));
 				npc->Add(new SettingEntry("script.script_max_opcode_till_suspend"));
 				npc->Add(new SettingEntry("script.script_max_memory_megabytes"));
 				npc->Add(new SettingEntry("difficulty.competitor_speed"));
@@ -2822,7 +2971,7 @@ struct GameSettingsWindow : Window {
 					DrawString(tr, STR_CONFIG_SETTING_TYPE);
 					tr.top += GetCharacterHeight(FS_NORMAL);
 
-					this->last_clicked->SetValueDParams(0, sd->def);
+					sd->SetValueDParams(0, sd->def);
 					DrawString(tr, STR_CONFIG_SETTING_DEFAULT_VALUE);
 					tr.top += GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.vsep_normal;
 
@@ -2852,7 +3001,7 @@ struct GameSettingsWindow : Window {
 						}
 					}
 
-					DrawStringMultiLine(tr, this->last_clicked->GetHelpText(), TC_WHITE);
+					DrawStringMultiLine(tr, sd->GetHelp(), TC_WHITE);
 				}
 				break;
 
@@ -2942,7 +3091,7 @@ struct GameSettingsWindow : Window {
 		const IntSettingDesc *sd = pe->setting;
 
 		/* return if action is only active in network, or only settable by server */
-		if (!sd->IsEditable()) {
+		if (!pe->IsGUIEditable()) {
 			this->SetDisplayedHelpText(pe);
 			return;
 		}
@@ -2990,7 +3139,8 @@ struct GameSettingsWindow : Window {
 								}
 							}
 							assert_msg(val >= sd->min && val <= (int)sd->max, "min: %d, max: %d, val: %d", sd->min, sd->max, val);
-							list.push_back(std::make_unique<DropDownListStringItem>(sd->str_val + val - sd->min, val, false));
+							sd->SetValueDParams(0, val);
+							list.push_back(std::make_unique<DropDownListStringItem>(STR_JUST_STRING2, val, false));
 						}
 					} else if ((sd->flags & SF_ENUM)) {
 						for (const SettingDescEnumEntry *enumlist = sd->enumlist; enumlist != nullptr && enumlist->str != STR_NULL; enumlist++) {
@@ -3062,7 +3212,7 @@ struct GameSettingsWindow : Window {
 				if (sd->flags & SF_GUI_VELOCITY) value64 = ConvertKmhishSpeedToDisplaySpeed((uint)value64, VEH_TRAIN);
 
 				this->valuewindow_entry = pe;
-				if (sd->flags & SF_DECIMAL1 || (sd->flags & SF_GUI_VELOCITY && _settings_game.locale.units_velocity == 3)) {
+				if (sd->flags & SF_GUI_VELOCITY && _settings_game.locale.units_velocity == 3) {
 					CharSetFilter charset_filter = CS_NUMERAL_DECIMAL; //default, only numeric input and decimal point allowed
 					if (sd->min < 0) charset_filter = CS_NUMERAL_DECIMAL_SIGNED; // special case, also allow '-' sign for negative input
 
@@ -3101,7 +3251,7 @@ struct GameSettingsWindow : Window {
 		int32_t value;
 		if (!StrEmpty(str)) {
 			long long llvalue;
-			if (sd->flags & SF_DECIMAL1 || (sd->flags & SF_GUI_VELOCITY && _settings_game.locale.units_velocity == 3)) {
+			if (sd->flags & SF_GUI_VELOCITY && _settings_game.locale.units_velocity == 3) {
 				llvalue = atof(str) * 10;
 			} else {
 				llvalue = atoll(str);
@@ -3368,7 +3518,7 @@ struct CustomCurrencyWindow : Window {
 		this->SetWidgetDisabledState(WID_CC_RATE_DOWN, _custom_currency.rate == 1);
 		this->SetWidgetDisabledState(WID_CC_RATE_UP, _custom_currency.rate == UINT16_MAX);
 		this->SetWidgetDisabledState(WID_CC_YEAR_DOWN, _custom_currency.to_euro == CF_NOEURO);
-		this->SetWidgetDisabledState(WID_CC_YEAR_UP, _custom_currency.to_euro == MAX_YEAR);
+		this->SetWidgetDisabledState(WID_CC_YEAR_UP, _custom_currency.to_euro == CalTime::MAX_YEAR);
 	}
 
 	void SetStringParameters(WidgetID widget) const override
@@ -3475,8 +3625,8 @@ struct CustomCurrencyWindow : Window {
 				break;
 
 			case WID_CC_YEAR_UP:
-				_custom_currency.to_euro = Clamp(_custom_currency.to_euro + 1, 2000, MAX_YEAR);
-				if (_custom_currency.to_euro == MAX_YEAR) this->DisableWidget(WID_CC_YEAR_UP);
+				_custom_currency.to_euro = Clamp<CalTime::Year>(_custom_currency.to_euro + 1, 2000, CalTime::MAX_YEAR);
+				if (_custom_currency.to_euro == CalTime::MAX_YEAR) this->DisableWidget(WID_CC_YEAR_UP);
 				this->EnableWidget(WID_CC_YEAR_DOWN);
 				break;
 
@@ -3522,7 +3672,7 @@ struct CustomCurrencyWindow : Window {
 			case WID_CC_YEAR: { // Year to switch to euro
 				int val = atoi(str);
 
-				_custom_currency.to_euro = (val < 2000 ? CF_NOEURO : std::min(val, MAX_YEAR));
+				_custom_currency.to_euro = (val < 2000 ? CF_NOEURO : std::min<CalTime::Year>(val, CalTime::MAX_YEAR));
 				break;
 			}
 		}

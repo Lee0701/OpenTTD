@@ -73,15 +73,16 @@ NetworkHTTPRequest::NetworkHTTPRequest(const std::wstring &uri, HTTPCallback *ca
 
 static std::string GetLastErrorAsString()
 {
-	char buffer[512];
+	wchar_t buffer[512];
+
 	DWORD error_code = GetLastError();
 
-	if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS, GetModuleHandleA("winhttp.dll"), error_code,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, sizeof(buffer), nullptr) == 0) {
+	if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS, GetModuleHandle(L"winhttp.dll"), error_code,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, lengthof(buffer), nullptr) == 0) {
 		return fmt::format("unknown error {}", error_code);
 	}
 
-	return buffer;
+	return FS2OTTD(buffer);
 }
 
 /**
@@ -164,7 +165,7 @@ void NetworkHTTPRequest::WinHttpCallback(DWORD code, void *info, DWORD length)
 		} break;
 
 		case WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
-			Debug(net, 4, "HTTP callback: {} bytes", length);
+			Debug(net, 6, "HTTP callback: {} bytes", length);
 
 			this->callback.OnReceiveData(UniqueBuffer<char>(std::unique_ptr<char[]>(static_cast<char *>(info)), length));
 

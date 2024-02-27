@@ -239,6 +239,9 @@ class NIHVehicle : public NIHelper {
 					v->current_loading_time, v->current_loading_time / _settings_time.ticks_per_minute);
 			output.print(buffer);
 		}
+		seprintf(buffer, lastof(buffer), "  Speed: %u, sub-speed: %u, acceleration: %u",
+				v->cur_speed, v->subspeed, v->acceleration);
+		output.print(buffer);
 		seprintf(buffer, lastof(buffer), "  Reliability: %u, spd_dec: %u, needs service: %s",
 				v->reliability, v->reliability_spd_dec, v->NeedsServicing() ? "yes" : "no");
 		output.print(buffer);
@@ -263,7 +266,7 @@ class NIHVehicle : public NIHelper {
 			seprintf(buffer, lastof(buffer), "  V Last loading station: %u, %s", v->last_loading_station, BaseStation::Get(v->last_loading_station)->GetCachedName());
 			output.print(buffer);
 			seprintf(buffer, lastof(buffer), "  V Last loading tick: " OTTD_PRINTF64 " (" OTTD_PRINTF64 ", " OTTD_PRINTF64 " mins ago)",
-					v->last_loading_tick.base(), (_scaled_date_ticks - v->last_loading_tick).base(), (_scaled_date_ticks - v->last_loading_tick).base() / _settings_time.ticks_per_minute);
+					v->last_loading_tick.base(), (_state_ticks - v->last_loading_tick).base(), (_state_ticks - v->last_loading_tick).base() / _settings_time.ticks_per_minute);
 			output.print(buffer);
 		}
 		if (v->IsGroundVehicle()) {
@@ -504,18 +507,57 @@ class NIHVehicle : public NIHelper {
 				v->sprite_seq_bounds.left, v->sprite_seq_bounds.top, v->sprite_seq_bounds.right, v->sprite_seq_bounds.bottom, v->x_offs, v->y_offs);
 		output.print(buffer);
 
+		seprintf(buffer, lastof(buffer), "  Current image cacheable: %s (%X), spritenum: %X",
+				v->cur_image_valid_dir != INVALID_DIR ? "yes" : "no", v->cur_image_valid_dir, v->spritenum);
+		output.print(buffer);
+
 		if (HasBit(v->vehicle_flags, VF_SEPARATION_ACTIVE)) {
 			std::vector<TimetableProgress> progress_array = PopulateSeparationState(v);
 			if (!progress_array.empty()) {
-				output.print("Separation state:");
+				output.print("  Separation state:");
 			}
 			for (const auto &info : progress_array) {
-				b = buffer + seprintf(buffer, lastof(buffer), "  %s [%d, %d, %d], %u, ",
+				b = buffer + seprintf(buffer, lastof(buffer), "    %s [%d, %d, %d], %u, ",
 						info.id == v->index ? "*" : " ", info.order_count, info.order_ticks, info.cumulative_ticks, info.id);
 				SetDParam(0, info.id);
 				b = strecpy(b, GetString(STR_VEHICLE_NAME).c_str(), lastof(buffer), true);
 				b += seprintf(b, lastof(buffer), ", lateness: %d", Vehicle::Get(info.id)->lateness_counter);
 				output.print(buffer);
+			}
+		}
+
+		if (v->HasUnbunchingOrder()) {
+			output.print("  Unbunching state:");
+			for (const Vehicle *u = v->FirstShared(); u != nullptr; u = u->NextShared()) {
+				b = buffer + seprintf(buffer, lastof(buffer), "  %s %u (unit %u):", u == v ? "*" : " ", u->index, u->unitnumber);
+
+				if (u->unbunch_state == nullptr) {
+					b += seprintf(b, lastof(buffer), " [NO DATA]");
+				}
+				if (u->vehstatus & (VS_STOPPED | VS_CRASHED)) {
+					b += seprintf(b, lastof(buffer), " [STOPPED]");
+				}
+				output.print(buffer);
+
+				if (u->unbunch_state != nullptr) {
+					auto print_tick = [&](StateTicks tick, const char *label) {
+						b = buffer + seprintf(buffer, lastof(buffer), "      %s: ", label);
+						if (tick != INVALID_STATE_TICKS) {
+							if (tick > _state_ticks) {
+								b += seprintf(b, lastof(buffer), OTTD_PRINTF64 " (in " OTTD_PRINTF64 " mins)", tick.base(), (tick - _state_ticks).base() / _settings_time.ticks_per_minute);
+							} else {
+								b += seprintf(b, lastof(buffer), OTTD_PRINTF64 " (" OTTD_PRINTF64 " mins ago)", tick.base(), (_state_ticks - tick).base() / _settings_time.ticks_per_minute);
+							}
+						} else {
+							b += seprintf(b, lastof(buffer), "invalid");
+						}
+						output.print(buffer);
+					};
+					print_tick(u->unbunch_state->depot_unbunching_last_departure, "Last unbunch departure");
+					print_tick(u->unbunch_state->depot_unbunching_next_departure, "Next unbunch departure");
+					seprintf(buffer, lastof(buffer), "      RTT: %d (%d mins)", u->unbunch_state->round_trip_time, u->unbunch_state->round_trip_time / _settings_time.ticks_per_minute);
+					output.print(buffer);
+				}
 			}
 		}
 
@@ -578,11 +620,11 @@ class NIHVehicle : public NIHelper {
 						caps++;
 					}
 				}
-				YearMonthDay ymd = ConvertDateToYMD(e->intro_date);
-				YearMonthDay base_ymd = ConvertDateToYMD(e->info.base_intro);
+				CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(e->intro_date);
+				CalTime::YearMonthDay base_ymd = CalTime::ConvertDateToYMD(e->info.base_intro);
 				seprintf(buffer, lastof(buffer), "    Intro: %4i-%02i-%02i (base: %4i-%02i-%02i), Age: %u, Base life: %u, Durations: %u %u %u (sum: %u)",
-						ymd.year, ymd.month + 1, ymd.day, base_ymd.year, base_ymd.month + 1, base_ymd.day,
-						e->age, e->info.base_life, e->duration_phase_1, e->duration_phase_2, e->duration_phase_3,
+						ymd.year.base(), ymd.month + 1, ymd.day, base_ymd.year.base(), base_ymd.month + 1, base_ymd.day,
+						e->age, e->info.base_life.base(), e->duration_phase_1, e->duration_phase_2, e->duration_phase_3,
 						e->duration_phase_1 + e->duration_phase_2 + e->duration_phase_3);
 				output.print(buffer);
 				seprintf(buffer, lastof(buffer), "    Reliability: %u, spd_dec: %u, start: %u, max: %u, final: %u",
@@ -590,6 +632,9 @@ class NIHVehicle : public NIHelper {
 				output.print(buffer);
 				seprintf(buffer, lastof(buffer), "    Cargo type: %u, refit mask: 0x" OTTD_PRINTFHEX64 ", refit cost: %u",
 						e->info.cargo_type, e->info.refit_mask, e->info.refit_cost);
+				output.print(buffer);
+				seprintf(buffer, lastof(buffer), "    Cargo ageing: %u, cargo load speed: %u",
+						e->info.decay_speed, e->info.load_amount);
 				output.print(buffer);
 
 				output.register_next_line_click_flag_toggle(2 << flag_shift);
@@ -649,6 +694,11 @@ class NIHVehicle : public NIHelper {
 							e->u.road.capacity, e->u.road.weight, e->u.road.power, e->u.road.tractive_effort, e->u.road.air_drag, e->u.road.shorten_factor);
 					output.print(buffer);
 				}
+				if (e->type == VEH_SHIP) {
+					seprintf(buffer, lastof(buffer), "    Capacity: %u, Max speed: %u, Accel: %u, Ocean speed: %u, Canal speed: %u",
+							e->u.ship.capacity, e->u.ship.max_speed, e->u.ship.acceleration, e->u.ship.ocean_speed_frac, e->u.ship.canal_speed_frac);
+					output.print(buffer);
+				}
 
 				output.register_next_line_click_flag_toggle(4 << flag_shift);
 				if (output.flags & (4 << flag_shift)) {
@@ -674,10 +724,6 @@ class NIHVehicle : public NIHelper {
 				}
 			}
 		}
-
-		seprintf(buffer, lastof(buffer), "  Current image cacheable: %s (%X), spritenum: %X",
-				v->cur_image_valid_dir != INVALID_DIR ? "yes" : "no", v->cur_image_valid_dir, v->spritenum);
-		output.print(buffer);
 	}
 
 	/* virtual */ void SpriteDump(uint index, SpriteGroupDumper &dumper) const override
@@ -732,6 +778,7 @@ static const NIVariable _niv_stations[] = {
 	NIV(0x68, "station info of nearby tiles"),
 	NIV(0x69, "information about cargo accepted in the past"),
 	NIV(0x6A, "GRFID of nearby station tiles"),
+	NIV(0x6B, "station ID of nearby tiles"),
 	NIVF(A2VRI_STATION_INFO_NEARBY_TILES_V2, "station info of nearby tiles v2", NIVF_SHOW_PARAMS),
 	NIV_END()
 };
@@ -1299,7 +1346,7 @@ class NIHCargo : public NIHelper {
 		const CargoSpec *spec = CargoSpec::Get(index);
 		seprintf(buffer, lastof(buffer), "  Bit: %2u, Label: %c%c%c%c, Callback mask: 0x%02X",
 				spec->bitnum,
-				spec->label >> 24, spec->label >> 16, spec->label >> 8, spec->label,
+				spec->label.base() >> 24, spec->label.base() >> 16, spec->label.base() >> 8, spec->label.base(),
 				spec->callback_mask);
 		output.print(buffer);
 		int written = seprintf(buffer, lastof(buffer), "  Cargo class: %s%s%s%s%s%s%s%s%s%s%s",
@@ -1322,7 +1369,8 @@ class NIHCargo : public NIHelper {
 		seprintf(buffer, lastof(buffer), "  Initial payment: %d, Current payment: " OTTD_PRINTF64 ", Transit periods: (%u, %u)",
 				spec->initial_payment, (int64_t)spec->current_payment, spec->transit_periods[0], spec->transit_periods[1]);
 		output.print(buffer);
-		seprintf(buffer, lastof(buffer), "  Freight: %s, Town effect: %u", spec->is_freight ? "yes" : "no", spec->town_effect);
+		seprintf(buffer, lastof(buffer), "  Freight: %s, Town acceptance effect: %u, Town production effect: %u",
+				spec->is_freight ? "yes" : "no", spec->town_acceptance_effect, spec->town_production_effect);
 		output.print(buffer);
 	}
 
@@ -1448,7 +1496,7 @@ class NIHSignals : public NIHelper {
 				if (it.second.IsOutOfDate()) {
 					b += seprintf(b, lastof(buffer), ", expired");
 				} else {
-					b += seprintf(b, lastof(buffer), ", expires in %u ticks", (uint)(it.second.time_stamp - _scaled_date_ticks).base());
+					b += seprintf(b, lastof(buffer), ", expires in %u ticks", (uint)(it.second.time_stamp - _state_ticks).base());
 				}
 				output.print(buffer);
 			}
@@ -1567,13 +1615,13 @@ class NIHObject : public NIHelper {
 			output.print(buffer);
 
 			{
-				YearMonthDay ymd = ConvertDateToYMD(spec->introduction_date);
+				CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(spec->introduction_date);
 				char *b = buffer + seprintf(buffer, lastof(buffer), " intro: %4i-%02i-%02i",
-						ymd.year, ymd.month + 1, ymd.day);
-				if (spec->end_of_life_date < MAX_DATE) {
-					ymd = ConvertDateToYMD(spec->end_of_life_date);
+						ymd.year.base(), ymd.month + 1, ymd.day);
+				if (spec->end_of_life_date < CalTime::MAX_DATE) {
+					ymd = CalTime::ConvertDateToYMD(spec->end_of_life_date);
 					seprintf(b, lastof(buffer), ", end of life: %4i-%02i-%02i",
-							ymd.year, ymd.month + 1, ymd.day);
+							ymd.year.base(), ymd.month + 1, ymd.day);
 				}
 				output.print(buffer);
 			}
@@ -1717,8 +1765,8 @@ class NIHRailType : public NIHelper {
 			seprintf(buffer, lastof(buffer), "  Cost multiplier: %u/8, Maintenance multiplier: %u/8", info->cost_multiplier, info->maintenance_multiplier);
 			output.print(buffer);
 
-			YearMonthDay ymd = ConvertDateToYMD(info->introduction_date);
-			seprintf(buffer, lastof(buffer), "  Introduction date: %4i-%02i-%02i", ymd.year, ymd.month + 1, ymd.day);
+			CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(info->introduction_date);
+			seprintf(buffer, lastof(buffer), "  Introduction date: %4i-%02i-%02i", ymd.year.base(), ymd.month + 1, ymd.day);
 			output.print(buffer);
 			seprintf(buffer, lastof(buffer), "  Intro required railtypes: 0x" OTTD_PRINTFHEX64, info->introduction_required_railtypes);
 			output.print(buffer);
@@ -2389,9 +2437,10 @@ static const NIVariable _nif_roadstops[] = {
 	NIV(0x68, "road stop info of nearby tiles"),
 	NIV(0x69, "information about cargo accepted in the past"),
 	NIV(0x6A, "GRFID of nearby road stop tiles"),
-	NIV(0x6B, "Road info of nearby plain road tiles"),
+	NIV(0x6B, "road stop ID of nearby tiles"),
 	NIVF(A2VRI_ROADSTOP_INFO_NEARBY_TILES_EXT, "road stop info of nearby tiles ext", NIVF_SHOW_PARAMS),
 	NIVF(A2VRI_ROADSTOP_INFO_NEARBY_TILES_V2, "road stop info of nearby tiles v2", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_ROADSTOP_ROAD_INFO_NEARBY_TILES, "Road info of nearby plain road tiles", NIVF_SHOW_PARAMS),
 	NIV_END(),
 };
 

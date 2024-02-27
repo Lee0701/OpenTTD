@@ -32,11 +32,11 @@ enum DepartureType : uint8_t {
 
 struct CallAt {
 	StationID station;
-	DateTicksScaled scheduled_date;
+	StateTicks scheduled_tick;
 
-	CallAt(const StationID& s) : station(s), scheduled_date(0) { }
-	CallAt(const StationID& s, DateTicksScaled t) : station(s), scheduled_date(t) { }
-	CallAt(const CallAt& c) : station(c.station), scheduled_date(c.scheduled_date) { }
+	CallAt(const StationID& s) : station(s), scheduled_tick(0) { }
+	CallAt(const StationID& s, StateTicks t) : station(s), scheduled_tick(t) { }
+	CallAt(const CallAt& c) : station(c.station), scheduled_tick(c.scheduled_tick) { }
 
 	inline bool operator==(const CallAt& c) const {
 		return this->station == c.station;
@@ -48,14 +48,14 @@ struct CallAt {
 
 	inline bool operator>=(const CallAt& c) const {
 		return this->station == c.station &&
-				this->scheduled_date != 0 &&
-				c.scheduled_date != 0 &&
-				this->scheduled_date >= c.scheduled_date;
+				this->scheduled_tick != 0 &&
+				c.scheduled_tick != 0 &&
+				this->scheduled_tick >= c.scheduled_tick;
 	}
 
 	CallAt& operator=(const CallAt& c) {
 		this->station = c.station;
-		this->scheduled_date = c.scheduled_date;
+		this->scheduled_tick = c.scheduled_tick;
 		return *this;
 	}
 
@@ -71,7 +71,7 @@ struct RemoveVia {
 
 /** A scheduled departure. */
 struct Departure {
-	DateTicksScaled scheduled_date;        ///< The date this departure is scheduled to finish on (i.e. when the vehicle leaves the station)
+	StateTicks scheduled_tick;             ///< The tick this departure is scheduled to finish on (i.e. when the vehicle leaves the station)
 	Ticks lateness;                        ///< How delayed the departure is expected to be
 	StationID via;                         ///< The station the departure should list as going via
 	StationID via2;                        ///< Secondary station the departure should list as going via
@@ -92,8 +92,10 @@ struct Departure {
 			if (this->calling_at[i] != d.calling_at[i]) return false;
 		}
 
+		const Ticks timetable_unit_size = TimetableDisplayUnitSize();
+
 		return
-			(this->scheduled_date.base() / DATE_UNIT_SIZE) == (d.scheduled_date.base() / DATE_UNIT_SIZE) &&
+			(this->scheduled_tick.base() / timetable_unit_size) == (d.scheduled_tick.base() / timetable_unit_size) &&
 			this->vehicle->type == d.vehicle->type &&
 			this->via == d.via &&
 			this->via2 == d.via2 &&

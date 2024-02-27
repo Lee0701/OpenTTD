@@ -97,6 +97,7 @@ static bool IsExpensiveRoadStopsVariable(uint16_t variable)
 		case 0x6B:
 		case A2VRI_ROADSTOP_INFO_NEARBY_TILES_EXT:
 		case A2VRI_ROADSTOP_INFO_NEARBY_TILES_V2:
+		case A2VRI_ROADSTOP_ROAD_INFO_NEARBY_TILES:
 			return true;
 
 		default:
@@ -1856,7 +1857,7 @@ static bool CheckDeterministicSpriteGroupOutputVarBits(const DeterministicSprite
 			/* Unpredictable load */
 			bits.set();
 		}
-		if (adjust.variable == 0x7D && adjust.parameter) {
+		if (adjust.variable == 0x7D) {
 			bits.set(adjust.parameter & 0xFF, true);
 		}
 		if (adjust.variable == 0x7E) {
@@ -3070,6 +3071,17 @@ static std::bitset<256> HandleVarAction2DeadStoreElimination(DeterministicSprite
 			bool may_remove = !need_var1C;
 			if (may_remove && anno->unskippable) may_remove = false;
 			if (may_remove && (anno->stores & all_bits).any()) may_remove = false;
+
+			if (may_remove) {
+				for (size_t j = 0; j < substitution_candidates.size(); j++) {
+					if (anno->stores[substitution_candidates[j] & 0xFF]) {
+						/* The procedure makes a store which may be used by a later substitution candidate.
+						 * The procedure can't be removed, the substitution candidate will be removed below. */
+						may_remove = false;
+						break;
+					}
+				}
+			}
 
 			if (may_remove) {
 				if ((i + 1 < (int)group->adjusts.size() && group->adjusts[i + 1].operation == DSGA_OP_RST && group->adjusts[i + 1].variable != 0x7B) ||

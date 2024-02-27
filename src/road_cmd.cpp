@@ -13,6 +13,7 @@
 #include "road_internal.h"
 #include "viewport_func.h"
 #include "command_func.h"
+#include "company_func.h"
 #include "pathfinder/yapf/yapf_cache.h"
 #include "depot_base.h"
 #include "newgrf.h"
@@ -157,7 +158,7 @@ RoadType AllocateRoadType(RoadTypeLabel label, RoadTramType rtt)
 			rti->flags = ROTFB_NONE;
 			rti->extra_flags = RXTFB_NONE;
 			rti->collision_mode = RTCM_NORMAL;
-			rti->introduction_date = INVALID_DATE;
+			rti->introduction_date = CalTime::INVALID_DATE;
 
 			/* Make us compatible with ourself. */
 			rti->powered_roadtypes = (RoadTypes)(1ULL << rt);
@@ -1768,7 +1769,7 @@ CommandCost CmdBuildRoadDepot(TileIndex tile, DoCommandFlag flags, uint32_t p1, 
 
 	if (flags & DC_EXEC) {
 		Depot *dep = new Depot(tile);
-		dep->build_date = _date;
+		dep->build_date = CalTime::CurDate();
 
 		/* A road depot has two road bits. */
 		UpdateCompanyRoadInfrastructure(rt, _current_company, ROAD_DEPOT_TRACKBIT_FACTOR);
@@ -2249,8 +2250,18 @@ void DrawRoadBits(TileInfo *ti, RoadBits road, RoadBits tram, Roadside roadside,
 	/* If there are no road bits, return, as there is nothing left to do */
 	if (HasAtMostOneBit(road)) return;
 
+	/* Do not draw details when invisible. */
 	if (roadside == ROADSIDE_TREES && IsInvisibilitySet(TO_TREES)) return;
-	bool is_transparent = roadside == ROADSIDE_TREES && IsTransparencySet(TO_TREES);
+	if (roadside == ROADSIDE_STREET_LIGHTS && IsInvisibilitySet(TO_HOUSES)) return;
+
+	/* Check whether details should be transparent. */
+	bool is_transparent = false;
+	if (roadside == ROADSIDE_TREES && IsTransparencySet(TO_TREES)) {
+		is_transparent = true;
+	}
+	if (roadside == ROADSIDE_STREET_LIGHTS && IsTransparencySet(TO_HOUSES)) {
+		is_transparent = true;
+	}
 
 	/* Draw extra details. */
 	for (const DrawRoadTileStruct *drts = _road_display_table[roadside][road | tram]; drts->image != 0; drts++) {

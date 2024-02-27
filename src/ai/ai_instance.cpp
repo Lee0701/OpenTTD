@@ -63,9 +63,12 @@ void AIInstance::Died()
 	/* Intro is not supposed to use AI, but it may have 'dummy' AI which instant dies. */
 	if (_game_mode == GM_MENU) return;
 
+	/* Don't show errors while loading savegame. They will be shown at end of loading anyway. */
+	if (_switch_mode != SM_NONE) return;
+
 	ShowScriptDebugWindow(_current_company);
 
-	const AIInfo *info = AIConfig::GetConfig(_current_company, AIConfig::SSS_FORCE_GAME)->GetInfo();
+	const AIInfo *info = AIConfig::GetConfig(_current_company)->GetInfo();
 	if (info != nullptr) {
 		ShowErrorMessage(STR_ERROR_AI_PLEASE_REPORT_CRASH, INVALID_STRING_ID, WL_WARNING);
 

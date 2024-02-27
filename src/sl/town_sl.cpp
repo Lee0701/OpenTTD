@@ -183,43 +183,43 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               SLV_4, SLV_104),
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, SLV_104, SL_MAX_VERSION),
 
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[0].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[2].old_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[0].new_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[2].new_max, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[0].old_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[2].old_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[0].new_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
+	SLE_CONDVAR(Town, supplied[2].new_act, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION, SLV_9),
 
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[0].old_max, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[2].old_max, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(8, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[0].new_max, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[2].new_max, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(8, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[0].old_act, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[2].old_act, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[0].new_act, SLE_UINT32,                 SLV_9, SLV_165),
 	SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_UINT32,                 SLV_9, SLV_165),
+	SLE_CONDVAR(Town, supplied[2].new_act, SLE_UINT32,                 SLV_9, SLV_165),
 
 	SLE_CONDNULL(2, SL_MIN_VERSION, SLV_164),                 ///< pct_pass_transported / pct_mail_transported, now computed on the fly
 	SLE_CONDNULL_X(3, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
 
-	SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TAE_FOOD].old_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TAE_WATER].old_act,     SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
 	SLE_CONDNULL_X(2, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
-	SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
-	SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TAE_FOOD].new_act,      SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
+	SLE_CONDVAR(Town, received[TAE_WATER].new_act,     SLE_UINT16,                 SL_MIN_VERSION, SLV_165),
 	SLE_CONDNULL_X(2, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_CHILLPP, SL_CHILLPP_232)),
 
-	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TE, SLV_165, SL_MAX_VERSION),
+	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TAE, SLV_165, SL_MAX_VERSION),
 
 	SLE_CONDSSTR(Town, text,                 SLE_STR | SLF_ALLOW_CONTROL, SLV_168, SL_MAX_VERSION),
 
@@ -307,7 +307,7 @@ static void RealSave_Town(Town *t)
 	for (CargoID i = 0; i < NUM_CARGO; i++) {
 		SlObjectSaveFiltered(&t->supplied[i], _filtered_town_supplied_desc);
 	}
-	for (int i = TE_BEGIN; i < NUM_TE; i++) {
+	for (int i = TAE_BEGIN; i < NUM_TAE; i++) {
 		SlObjectSaveFiltered(&t->received[i], _filtered_town_received_desc);
 	}
 }
@@ -335,11 +335,11 @@ static void Load_TOWN()
 			SlObjectLoadFiltered(&t->supplied[i], _filtered_town_supplied_desc);
 		}
 		if (SlXvIsFeaturePresent(XSLFI_SPRINGPP)) {
-			for (int i = TE_BEGIN; i < NUM_TE; i++) {
+			for (int i = TAE_BEGIN; i < NUM_TAE; i++) {
 				SlObject(&t->received[i], _town_received_desc_spp);
 			}
 		} else {
-			for (int i = TE_BEGIN; i < NUM_TE; i++) {
+			for (int i = TAE_BEGIN; i < NUM_TAE; i++) {
 				SlObjectLoadFiltered(&t->received[i], _filtered_town_received_desc);
 			}
 		}
@@ -391,7 +391,7 @@ void Save_TNNC()
 
 	if (IsGetTownZonesCallbackHandlerPresent()) {
 		flags |= 1;
-		length += lengthof(TownCache::squared_town_zone_radius) * 4;
+		length += Town::GetNumItems() * lengthof(TownCache::squared_town_zone_radius) * 4;
 	}
 
 	SlSetLength(length);
@@ -402,7 +402,7 @@ void Save_TNNC()
 	for (const Town *t : Town::Iterate()) {
 		SlWriteUint32(t->index);
 		SlWriteUint16(t->noise_reached);
-		if (flags & 2) {
+		if (flags & 1) {
 			for (uint i = 0; i < lengthof(TownCache::squared_town_zone_radius); i++) {
 				SlWriteUint32(t->cache.squared_town_zone_radius[i]);
 			}
@@ -426,7 +426,8 @@ void Load_TNNC()
 	_town_zone_radii_no_update = (flags & 1);
 
 	for (uint32_t idx = 0; idx < count; idx++) {
-		Town *t = Town::Get(SlReadUint32());
+		Town *t = Town::GetIfValid(SlReadUint32());
+		if (t == nullptr) SlErrorCorrupt("TNNC: invalid town ID");
 		t->noise_reached = SlReadUint16();
 		if (flags & 1) {
 			for (uint i = 0; i < lengthof(TownCache::squared_town_zone_radius); i++) {
@@ -451,7 +452,7 @@ static ChunkSaveLoadSpecialOpResult Special_TNNC(uint32_t chunk_id, ChunkSaveLoa
 
 /** Chunk handler for towns. */
 static const ChunkHandler town_chunk_handlers[] = {
-	{ 'HIDS', Save_HIDS, Load_HIDS, nullptr,   nullptr, CH_ARRAY },
+	{ 'HIDS', Save_HIDS, Load_HIDS, nullptr,   nullptr, CH_TABLE },
 	{ 'CITY', Save_TOWN, Load_TOWN, Ptrs_TOWN, nullptr, CH_ARRAY },
 	{ 'TNNC', Save_TNNC, Load_TNNC, nullptr,   nullptr, CH_RIFF,  Special_TNNC },
 };

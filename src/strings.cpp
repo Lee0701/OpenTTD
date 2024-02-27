@@ -473,27 +473,14 @@ static void FormatBytes(StringBuilder builder, int64_t number)
 	fmt::format_to(builder, NBSP "{}B", iec_prefixes[id]);
 }
 
-static void FormatWallClockString(StringBuilder builder, DateTicksScaled ticks, bool show_date, uint case_index)
+static void FormatStateTicksHHMMString(StringBuilder builder, StateTicks ticks, uint case_index)
 {
 	TickMinutes minutes = _settings_time.ToTickMinutes(ticks);
 	char hour[3], minute[3];
 	seprintf(hour,   lastof(hour),   "%02i", minutes.ClockHour());
 	seprintf(minute, lastof(minute), "%02i", minutes.ClockMinute());
-	if (show_date) {
-		Date date = ScaledDateTicksToDate(ticks);
-		int64_t final_arg;
-		if (_settings_client.gui.date_with_time == 1) {
-			YearMonthDay ymd = ConvertDateToYMD(date);
-			final_arg = ymd.year;
-		} else {
-			final_arg = date.base();
-		}
-		auto tmp_params = MakeParameters(hour, minute, final_arg);
-		FormatString(builder, GetStringPtr(STR_FORMAT_DATE_MINUTES + _settings_client.gui.date_with_time), tmp_params, case_index);
-	} else {
-		auto tmp_params = MakeParameters(hour, minute);
-		FormatString(builder, GetStringPtr(STR_FORMAT_DATE_MINUTES), tmp_params, case_index);
-	}
+	auto tmp_params = MakeParameters(hour, minute);
+	FormatString(builder, GetStringPtr(STR_FORMAT_DATE_MINUTES), tmp_params, case_index);
 }
 
 static void FormatTimeHHMMString(StringBuilder builder, uint time, uint case_index)
@@ -505,25 +492,25 @@ static void FormatTimeHHMMString(StringBuilder builder, uint time, uint case_ind
 	return FormatString(builder, GetStringPtr(STR_FORMAT_DATE_MINUTES), tmp_params, case_index);
 }
 
-static void FormatYmdString(StringBuilder builder, Date date, uint case_index)
+static void FormatYmdString(StringBuilder builder, CalTime::Date date, uint case_index)
 {
-	YearMonthDay ymd = ConvertDateToYMD(date);
+	CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(date);
 
 	auto tmp_params = MakeParameters(ymd.day + STR_DAY_NUMBER_1ST - 1, STR_MONTH_ABBREV_JAN + ymd.month, ymd.year);
 	FormatString(builder, GetStringPtr(STR_FORMAT_DATE_LONG), tmp_params, case_index);
 }
 
-static void FormatMonthAndYear(StringBuilder builder, Date date, uint case_index)
+static void FormatMonthAndYear(StringBuilder builder, CalTime::Date date, uint case_index)
 {
-	YearMonthDay ymd = ConvertDateToYMD(date);
+	CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(date);
 
 	auto tmp_params = MakeParameters(STR_MONTH_JAN + ymd.month, ymd.year);
 	FormatString(builder, GetStringPtr(STR_FORMAT_DATE_SHORT), tmp_params, case_index);
 }
 
-static void FormatTinyOrISODate(StringBuilder builder, Date date, StringID str)
+static void FormatTinyOrISODate(StringBuilder builder, CalTime::Date date, StringID str)
 {
-	YearMonthDay ymd = ConvertDateToYMD(date);
+	CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(date);
 
 	/* Day and month are zero-padded with ZEROFILL_NUM, hence the two 2s. */
 	auto tmp_params = MakeParameters(ymd.day, 2, ymd.month + 1, 2, ymd.year);
@@ -535,7 +522,6 @@ static void FormatGenericCurrency(StringBuilder builder, const CurrencySpec *spe
 	/* We are going to make number absolute for printing, so
 	 * keep this piece of data as we need it later on */
 	bool negative = number < 0;
-	const char *multiplier = "";
 
 	number *= spec->rate;
 
@@ -552,16 +538,24 @@ static void FormatGenericCurrency(StringBuilder builder, const CurrencySpec *spe
 	 * The only remaining value is 1 (suffix), so everything that is not 1 */
 	if (spec->symbol_pos != 1) builder += spec->prefix;
 
-	/* for huge numbers, compact the number into k or M */
+	StringID number_str = STR_NULL;
+
+	/* For huge numbers, compact the number. */
 	if (compact) {
-		/* Take care of the 'k' rounding. Having 1 000 000 k
+		/* Take care of the thousand rounding. Having 1 000 000 k
 		 * and 1 000 M is inconsistent, so always use 1 000 M. */
-		if (number >= 1000000000 - 500) {
-			number = (number + 500000) / 1000000;
-			multiplier = NBSP "M";
-		} else if (number >= 1000000) {
-			number = (number + 500) / 1000;
-			multiplier = NBSP "k";
+		if (number >= Money(1'000'000'000'000'000) - 500'000'000) {
+			number = (number + Money(500'000'000'000)) / Money(1'000'000'000'000);
+			number_str = STR_CURRENCY_SHORT_TERA;
+		} else if (number >= Money(1'000'000'000'000) - 500'000) {
+			number = (number + 500'000'000) / 1'000'000'000;
+			number_str = STR_CURRENCY_SHORT_GIGA;
+		} else if (number >= 1'000'000'000 - 500) {
+			number = (number + 500'000) / 1'000'000;
+			number_str = STR_CURRENCY_SHORT_MEGA;
+		} else if (number >= 1'000'000) {
+			number = (number + 500) / 1'000;
+			number_str = STR_CURRENCY_SHORT_KILO;
 		}
 	}
 
@@ -569,7 +563,10 @@ static void FormatGenericCurrency(StringBuilder builder, const CurrencySpec *spe
 	if (StrEmpty(separator)) separator = _currency->separator.c_str();
 	if (StrEmpty(separator)) separator = _langpack.langpack->digit_group_separator_currency;
 	FormatNumber(builder, number, separator);
-	builder += multiplier;
+	if (number_str != STR_NULL) {
+		auto tmp_params = ArrayStringParameters<0>();
+		FormatString(builder, GetStringPtr(number_str), tmp_params);
+	}
 
 	/* Add suffix part, following symbol_pos specification.
 	 * Here, it can can be either 1 (suffix) or 2 (both prefix and suffix).
@@ -776,7 +773,7 @@ static const Units _units_velocity[] = {
 	{ { 1.0      }, STR_UNITS_VELOCITY_IMPERIAL,  0 },
 	{ { 1.609344 }, STR_UNITS_VELOCITY_METRIC,    0 },
 	{ { 0.44704  }, STR_UNITS_VELOCITY_SI,        0 },
-	{ { 0.578125 }, STR_UNITS_VELOCITY_GAMEUNITS, 1 },
+	{ { 0.578125 }, STR_UNITS_VELOCITY_GAMEUNITS_DAY, 1 },
 	{ { 0.868976 }, STR_UNITS_VELOCITY_KNOTS,     0 },
 };
 
@@ -826,6 +823,30 @@ static const Units _units_height[] = {
 	{ { 3.0 }, STR_UNITS_HEIGHT_IMPERIAL, 0 }, // "Wrong" conversion factor for more nicer GUI values
 	{ { 1.0 }, STR_UNITS_HEIGHT_METRIC,   0 },
 	{ { 1.0 }, STR_UNITS_HEIGHT_SI,       0 },
+};
+
+/** Unit conversions for time in calendar days or wallclock seconds */
+static const Units _units_time_days_or_seconds[] = {
+	{ { 1 }, STR_UNITS_DAYS,    0 },
+	{ { 2 }, STR_UNITS_SECONDS, 0 },
+};
+
+/** Unit conversions for time in calendar months or wallclock minutes */
+static const Units _units_time_months_or_minutes[] = {
+	{ { 1 }, STR_UNITS_MONTHS,  0 },
+	{ { 1 }, STR_UNITS_MINUTES, 0 },
+};
+
+/** Unit conversions for time in calendar years or economic periods */
+static const Units _units_time_years_or_periods[] = {
+	{ { 1 }, STR_UNITS_YEARS,  0 },
+	{ { 1 }, STR_UNITS_PERIODS, 0 },
+};
+
+/** Unit conversions for time in calendar years or wallclock minutes */
+static const Units _units_time_years_or_minutes[] = {
+	{ { 1  }, STR_UNITS_YEARS,  0 },
+	{ { 12 }, STR_UNITS_MINUTES, 0 },
 };
 
 /**
@@ -1523,57 +1544,21 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 					break;
 
 				case SCC_DATE_TINY: // {DATE_TINY}
-					FormatTinyOrISODate(builder, args.GetNextParameter<Date>(), STR_FORMAT_DATE_TINY);
+					FormatTinyOrISODate(builder, args.GetNextParameter<CalTime::Date>(), STR_FORMAT_DATE_TINY);
 					break;
 
 				case SCC_DATE_SHORT: // {DATE_SHORT}
-					FormatMonthAndYear(builder, args.GetNextParameter<Date>(), next_substr_case_index);
+					FormatMonthAndYear(builder, args.GetNextParameter<CalTime::Date>(), next_substr_case_index);
 					next_substr_case_index = 0;
 					break;
 
 				case SCC_DATE_LONG: // {DATE_LONG}
-					FormatYmdString(builder, args.GetNextParameter<Date>(), next_substr_case_index);
+					FormatYmdString(builder, args.GetNextParameter<CalTime::Date>(), next_substr_case_index);
 					next_substr_case_index = 0;
 					break;
 
-				case SCC_DATE_WALLCLOCK_LONG: { // {DATE_WALLCLOCK_LONG}
-					if (_settings_time.time_in_minutes) {
-						FormatWallClockString(builder, args.GetNextParameter<DateTicksScaled>(), _settings_client.gui.date_with_time, next_substr_case_index);
-					} else {
-						FormatYmdString(builder, ScaledDateTicksToDate(args.GetNextParameter<DateTicksScaled>()), next_substr_case_index);
-					}
-					break;
-				}
-
-				case SCC_DATE_WALLCLOCK_SHORT: { // {DATE_WALLCLOCK_SHORT}
-					if (_settings_time.time_in_minutes) {
-						FormatWallClockString(builder, args.GetNextParameter<DateTicksScaled>(), _settings_client.gui.date_with_time, next_substr_case_index);
-					} else {
-						FormatYmdString(builder, ScaledDateTicksToDate(args.GetNextParameter<DateTicksScaled>()), next_substr_case_index);
-					}
-					break;
-				}
-
-				case SCC_DATE_WALLCLOCK_TINY: { // {DATE_WALLCLOCK_TINY}
-					if (_settings_time.time_in_minutes) {
-						FormatWallClockString(builder, args.GetNextParameter<DateTicksScaled>(), false, next_substr_case_index);
-					} else {
-						FormatTinyOrISODate(builder, ScaledDateTicksToDate(args.GetNextParameter<DateTicksScaled>()), STR_FORMAT_DATE_TINY);
-					}
-					break;
-				}
-
-				case SCC_DATE_WALLCLOCK_ISO: { // {DATE_WALLCLOCK_ISO}
-					if (_settings_time.time_in_minutes) {
-						FormatWallClockString(builder, args.GetNextParameter<DateTicksScaled>(), false, next_substr_case_index);
-					} else {
-						FormatTinyOrISODate(builder, ScaledDateTicksToDate(args.GetNextParameter<DateTicksScaled>()), STR_FORMAT_DATE_ISO);
-					}
-					break;
-				}
-
 				case SCC_DATE_ISO: // {DATE_ISO}
-					FormatTinyOrISODate(builder, args.GetNextParameter<Date>(), STR_FORMAT_DATE_ISO);
+					FormatTinyOrISODate(builder, args.GetNextParameter<CalTime::Date>(), STR_FORMAT_DATE_ISO);
 					break;
 
 				case SCC_TIME_HHMM: // {TIME_HHMM}
@@ -1586,11 +1571,18 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 						auto tmp_params = MakeParameters(args.GetNextParameter<int64_t>());
 						FormatString(builder, GetStringPtr(STR_UNITS_TICKS), tmp_params);
 					} else {
-						StringID str = _settings_time.time_in_minutes ? STR_TIMETABLE_MINUTES : STR_UNITS_DAYS;
-						int64_t ticks = args.GetNextParameter<int64_t>();
-						int64_t ratio = DATE_UNIT_SIZE;
-						int64_t units = ticks / ratio;
-						int64_t leftover = _settings_client.gui.timetable_leftover_ticks ? ticks % ratio : 0;
+						StringID str;
+						if (_settings_time.time_in_minutes) {
+							str = STR_TIMETABLE_MINUTES;
+						} else if (EconTime::UsingWallclockUnits()) {
+							str = STR_UNITS_SECONDS;
+						} else {
+							str = STR_UNITS_DAYS;
+						}
+						const int64_t ticks = args.GetNextParameter<int64_t>();
+						const int64_t ratio = TimetableDisplayUnitSize();
+						const int64_t units = ticks / ratio;
+						const int64_t leftover = _settings_client.gui.timetable_leftover_ticks ? ticks % ratio : 0;
 						auto tmp_params = MakeParameters(units);
 						FormatString(builder, GetStringPtr(str), tmp_params);
 						if (b == SCC_TT_TICKS_LONG && _settings_time.time_in_minutes && units > 59) {
@@ -1609,6 +1601,21 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 						}
 					}
 					break;
+
+				case SCC_TT_TIME:       // {TT_TIME}
+				case SCC_TT_TIME_ABS: { // {TT_TIME_ABS}
+					if (_settings_time.time_in_minutes) {
+						FormatStateTicksHHMMString(builder, args.GetNextParameter<StateTicks>(), next_substr_case_index);
+					} else if (EconTime::UsingWallclockUnits() && b == SCC_TT_TIME) {
+						StateTicks tick = args.GetNextParameter<StateTicks>();
+						StateTicksDelta offset = tick - _state_ticks;
+						auto tmp_params = MakeParameters(offset / TICKS_PER_SECOND);
+						FormatString(builder, GetStringPtr(STR_UNITS_SECONDS_SHORT), tmp_params);
+					} else {
+						FormatTinyOrISODate(builder, StateTicksToCalendarDate(args.GetNextParameter<StateTicks>()), STR_FORMAT_DATE_TINY);
+					}
+					break;
+				}
 
 				case SCC_FORCE: { // {FORCE}
 					assert(_settings_game.locale.units_force < lengthof(_units_force));
@@ -1700,6 +1707,38 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 					assert(_settings_game.locale.units_weight < lengthof(_units_weight));
 
 					FormatUnitWeightRatio(builder, _units_force[_settings_game.locale.units_force], args.GetNextParameter<int64_t>());
+					break;
+				}
+
+				case SCC_UNITS_DAYS_OR_SECONDS: { // {UNITS_DAYS_OR_SECONDS}
+					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					const auto &x = _units_time_days_or_seconds[realtime];
+					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
+					FormatString(builder, GetStringPtr(x.s), tmp_params);
+					break;
+				}
+
+				case SCC_UNITS_MONTHS_OR_MINUTES: { // {UNITS_MONTHS_OR_MINUTES}
+					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					const auto &x = _units_time_months_or_minutes[realtime];
+					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
+					FormatString(builder, GetStringPtr(x.s), tmp_params);
+					break;
+				}
+
+				case SCC_UNITS_YEARS_OR_PERIODS: { // {UNITS_YEARS_OR_PERIODS}
+					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					const auto &x = _units_time_years_or_periods[realtime];
+					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
+					FormatString(builder, GetStringPtr(x.s), tmp_params);
+					break;
+				}
+
+				case SCC_UNITS_YEARS_OR_MINUTES: { // {UNITS_YEARS_OR_MINUTES}
+					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					const auto &x = _units_time_years_or_minutes[realtime];
+					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
+					FormatString(builder, GetStringPtr(x.s), tmp_params);
 					break;
 				}
 

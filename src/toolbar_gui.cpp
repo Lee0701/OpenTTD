@@ -61,6 +61,7 @@
 #include "newgrf_station.h"
 #include "zoom_func.h"
 #include "help_gui.h"
+#include "industry_map.h"
 
 #include "widgets/toolbar_widget.h"
 
@@ -122,7 +123,7 @@ DropDownListItem *MakeCompanyDropDownListItem(CompanyID cid)
  */
 static void PopupMainToolbarMenu(Window *w, WidgetID widget, DropDownList &&list, int def)
 {
-	ShowDropDownList(w, std::move(list), def, widget, 0, true);
+	ShowDropDownList(w, std::move(list), def, widget, 0, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 }
 
@@ -239,6 +240,7 @@ enum OptionMenuEntries {
 	OME_AI_SETTINGS,
 	OME_GAMESCRIPT_SETTINGS,
 	OME_NEWGRFSETTINGS,
+	OME_SANDBOX,
 	OME_ZONING,
 	OME_TRANSPARENCIES,
 	OME_SHOW_TOWNNAMES,
@@ -273,6 +275,9 @@ static CallBackFunction ToolbarOptionsClick(Window *w)
 		list.push_back(std::make_unique<DropDownListStringItem>(STR_SETTINGS_MENU_GAMESCRIPT_SETTINGS,  OME_GAMESCRIPT_SETTINGS, false));
 	}
 	list.push_back(std::make_unique<DropDownListStringItem>(STR_SETTINGS_MENU_NEWGRF_SETTINGS,          OME_NEWGRFSETTINGS, false));
+	if (CheatWindowMayBeShown()) {
+		list.push_back(std::make_unique<DropDownListStringItem>(STR_SETTINGS_MENU_SANDBOX_OPTIONS,      OME_SANDBOX, false));
+	}
 	list.push_back(std::make_unique<DropDownListStringItem>(STR_SETTINGS_MENU_ZONING,                   OME_ZONING, false));
 	list.push_back(std::make_unique<DropDownListStringItem>(STR_SETTINGS_MENU_TRANSPARENCY_OPTIONS,     OME_TRANSPARENCIES, false));
 	list.push_back(std::make_unique<DropDownListDividerItem>(-1, false));
@@ -290,7 +295,7 @@ static CallBackFunction ToolbarOptionsClick(Window *w)
 	list.push_back(std::make_unique<DropDownListCheckedItem>(IsTransparencySet(TO_SIGNS),                    STR_SETTINGS_MENU_TRANSPARENT_SIGNS,       OME_SHOW_STATIONSIGNS, false));
 	list.push_back(std::make_unique<DropDownListCheckedItem>(HasBit(_extra_display_opt, XDO_SHOW_MONEY_TEXT_EFFECTS), STR_SETTINGS_MENU_MONEY_TEXT_EFFECTS, OME_SHOW_MONEYTEXT, false));
 
-	ShowDropDownList(w, std::move(list), 0, WID_TN_SETTINGS, 140, true);
+	ShowDropDownList(w, std::move(list), 0, WID_TN_SETTINGS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -309,6 +314,7 @@ static CallBackFunction MenuClickSettings(int index)
 		case OME_AI_SETTINGS:          ShowAIConfigWindow();                            return CBF_NONE;
 		case OME_GAMESCRIPT_SETTINGS:  ShowGSConfigWindow();                            return CBF_NONE;
 		case OME_NEWGRFSETTINGS:       ShowNewGRFSettings(!_networking && _settings_client.gui.UserIsAllowedToChangeNewGRFs(), true, true, &_grfconfig); return CBF_NONE;
+		case OME_SANDBOX:              ShowCheatWindow();                               break;
 		case OME_ZONING:               ShowZoningToolbar();                             break;
 		case OME_TRANSPARENCIES:       ShowTransparencyToolbar();                       break;
 
@@ -672,7 +678,7 @@ static CallBackFunction ToolbarGraphsClick(Window *w)
 
 	if (_toolbar_mode != TB_NORMAL) AddDropDownLeagueTableOptions(list);
 
-	ShowDropDownList(w, std::move(list), GRMN_OPERATING_PROFIT_GRAPH, WID_TN_GRAPHS, 140, true);
+	ShowDropDownList(w, std::move(list), GRMN_OPERATING_PROFIT_GRAPH, WID_TN_GRAPHS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 
 	return CBF_NONE;
@@ -685,7 +691,7 @@ static CallBackFunction ToolbarLeagueClick(Window *w)
 	AddDropDownLeagueTableOptions(list);
 
 	int selected = list[0]->result;
-	ShowDropDownList(w, std::move(list), selected, WID_TN_LEAGUE, 140, true);
+	ShowDropDownList(w, std::move(list), selected, WID_TN_LEAGUE, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 
 	return CBF_NONE;
@@ -866,7 +872,7 @@ static CallBackFunction ToolbarZoomOutClick(Window *w)
 
 static CallBackFunction ToolbarBuildRailClick(Window *w)
 {
-	ShowDropDownList(w, GetRailTypeDropDownList(), _last_built_railtype, WID_TN_RAILS, 140, true);
+	ShowDropDownList(w, GetRailTypeDropDownList(), _last_built_railtype, WID_TN_RAILS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -888,7 +894,7 @@ static CallBackFunction MenuClickBuildRail(int index)
 
 static CallBackFunction ToolbarBuildRoadClick(Window *w)
 {
-	ShowDropDownList(w, GetRoadTypeDropDownList(RTTB_ROAD), _last_built_roadtype, WID_TN_ROADS, 140, true);
+	ShowDropDownList(w, GetRoadTypeDropDownList(RTTB_ROAD), _last_built_roadtype, WID_TN_ROADS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -910,7 +916,7 @@ static CallBackFunction MenuClickBuildRoad(int index)
 
 static CallBackFunction ToolbarBuildTramClick(Window *w)
 {
-	ShowDropDownList(w, GetRoadTypeDropDownList(RTTB_TRAM), _last_built_tramtype, WID_TN_TRAMS, 140, true);
+	ShowDropDownList(w, GetRoadTypeDropDownList(RTTB_TRAM), _last_built_tramtype, WID_TN_TRAMS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -934,7 +940,7 @@ static CallBackFunction ToolbarBuildWaterClick(Window *w)
 {
 	DropDownList list;
 	list.push_back(std::make_unique<DropDownListIconItem>(SPR_IMG_BUILD_CANAL, PAL_NONE, STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION, 0, false));
-	ShowDropDownList(w, std::move(list), 0, WID_TN_WATER, 140, true);
+	ShowDropDownList(w, std::move(list), 0, WID_TN_WATER, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -956,7 +962,7 @@ static CallBackFunction ToolbarBuildAirClick(Window *w)
 {
 	DropDownList list;
 	list.push_back(std::make_unique<DropDownListIconItem>(SPR_IMG_AIRPORT, PAL_NONE, STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION, 0, false));
-	ShowDropDownList(w, std::move(list), 0, WID_TN_AIR, 140, true);
+	ShowDropDownList(w, std::move(list), 0, WID_TN_AIR, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -980,7 +986,7 @@ static CallBackFunction ToolbarForestClick(Window *w)
 	list.push_back(std::make_unique<DropDownListIconItem>(SPR_IMG_LANDSCAPING, PAL_NONE, STR_LANDSCAPING_MENU_LANDSCAPING, 0, false));
 	list.push_back(std::make_unique<DropDownListIconItem>(SPR_IMG_PLANTTREES, PAL_NONE, STR_LANDSCAPING_MENU_PLANT_TREES, 1, false));
 	list.push_back(std::make_unique<DropDownListIconItem>(SPR_IMG_SIGN, PAL_NONE, STR_LANDSCAPING_MENU_PLACE_SIGN, 2, false));
-	ShowDropDownList(w, std::move(list), 0, WID_TN_LANDSCAPE, 100, true);
+	ShowDropDownList(w, std::move(list), 0, WID_TN_LANDSCAPE, 100, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -1136,6 +1142,11 @@ static void UsePickerTool(TileIndex tile)
 			break;
 		}
 
+		case MP_INDUSTRY: {
+			ShowBuildIndustryWindowForIndustryType(GetIndustryType(tile));
+			break;
+		}
+
 		default:
 			break;
 	}
@@ -1243,15 +1254,20 @@ void ToggleWidgetOutlines()
  * Set the starting year for a scenario.
  * @param year New starting year.
  */
-void SetStartingYear(Year year)
+void SetStartingYear(CalTime::Year year)
 {
-	_settings_game.game_creation.starting_year = Clamp(year, MIN_YEAR, MAX_YEAR);
-	Date new_date = ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1);
+	_settings_game.game_creation.starting_year = Clamp(year, CalTime::MIN_YEAR, CalTime::MAX_YEAR);
+	CalTime::Date new_date = CalTime::ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1);
+	EconTime::Date new_economy_date = new_date.base();
+
 	/* If you open a savegame as scenario there may already be link graphs.*/
-	LinkGraphSchedule::instance.ShiftDates(new_date - _date);
-	ShiftOrderDates(new_date - _date);
-	ShiftVehicleDates(new_date - _date);
-	SetDate(new_date, 0);
+	LinkGraphSchedule::instance.ShiftDates(new_economy_date - EconTime::CurDate());
+	ShiftVehicleDates(new_economy_date - EconTime::CurDate());
+
+	CalTime::Detail::SetDate(new_date, 0);
+	EconTime::Detail::SetDate(new_economy_date, 0);
+
+	UpdateOrderUIOnDateChange();
 }
 
 
@@ -1362,7 +1378,7 @@ static CallBackFunction ToolbarScenGenIndustry(Window *w)
 
 static CallBackFunction ToolbarScenBuildRoadClick(Window *w)
 {
-	ShowDropDownList(w, GetScenRoadTypeDropDownList(RTTB_ROAD), _last_built_roadtype, WID_TE_ROADS, 140, true);
+	ShowDropDownList(w, GetScenRoadTypeDropDownList(RTTB_ROAD), _last_built_roadtype, WID_TE_ROADS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -1382,7 +1398,7 @@ static CallBackFunction ToolbarScenBuildRoad(int index)
 
 static CallBackFunction ToolbarScenBuildTramClick(Window *w)
 {
-	ShowDropDownList(w, GetScenRoadTypeDropDownList(RTTB_TRAM), _last_built_tramtype, WID_TE_TRAMS, 140, true);
+	ShowDropDownList(w, GetScenRoadTypeDropDownList(RTTB_TRAM), _last_built_tramtype, WID_TE_TRAMS, 140, DDMF_INSTANT_CLOSE);
 	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
 	return CBF_NONE;
 }
@@ -2497,8 +2513,8 @@ struct ScenarioEditorToolbarWindow : Window {
 	{
 		MainToolbarScaleAdjuster scale_adjust;
 
-		this->SetWidgetDisabledState(WID_TE_DATE_BACKWARD, _settings_game.game_creation.starting_year <= MIN_YEAR);
-		this->SetWidgetDisabledState(WID_TE_DATE_FORWARD, _settings_game.game_creation.starting_year >= MAX_YEAR);
+		this->SetWidgetDisabledState(WID_TE_DATE_BACKWARD, _settings_game.game_creation.starting_year <= CalTime::MIN_YEAR);
+		this->SetWidgetDisabledState(WID_TE_DATE_FORWARD, _settings_game.game_creation.starting_year >= CalTime::MAX_YEAR);
 		this->SetWidgetDisabledState(WID_TE_ROADS, (GetRoadTypes(true) & ~_roadtypes_type) == ROADTYPES_NONE);
 		this->SetWidgetDisabledState(WID_TE_TRAMS, (GetRoadTypes(true) & _roadtypes_type) == ROADTYPES_NONE);
 
@@ -2509,7 +2525,7 @@ struct ScenarioEditorToolbarWindow : Window {
 	{
 		switch (widget) {
 			case WID_TE_DATE:
-				SetDParam(0, ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1));
+				SetDParam(0, CalTime::ConvertYMDToDate(_settings_game.game_creation.starting_year, 0, 1));
 				break;
 		}
 	}
@@ -2538,7 +2554,7 @@ struct ScenarioEditorToolbarWindow : Window {
 				break;
 
 			case WID_TE_DATE:
-				SetDParam(0, ConvertYMDToDate(MAX_YEAR, 0, 1));
+				SetDParam(0, CalTime::ConvertYMDToDate(CalTime::MAX_YEAR, 0, 1));
 				*size = GetStringBoundingBox(STR_JUST_DATE_LONG);
 				break;
 		}
@@ -2656,12 +2672,12 @@ struct ScenarioEditorToolbarWindow : Window {
 		/* Was 'cancel' pressed? */
 		if (str == nullptr) return;
 
-		int32_t value;
+		CalTime::Year value;
 		if (!StrEmpty(str)) {
 			value = atoi(str);
 		} else {
 			/* An empty string means revert to the default */
-			value = DEF_START_YEAR;
+			value = CalTime::DEF_START_YEAR;
 		}
 		SetStartingYear(value);
 

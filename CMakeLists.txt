@@ -350,6 +350,10 @@ if(NOT OPTION_NO_SPLIT_LIB)
     target_link_libraries(openttd openttd_lib)
 
     target_link_libraries(openttd_test PRIVATE openttd_lib)
+    if(ANDROID)
+        target_link_libraries(openttd_test PRIVATE log)
+    endif()
+
     include(Catch)
     catch_discover_tests(openttd_test)
 endif()
@@ -524,6 +528,7 @@ if(WIN32)
         usp10
         psapi
         winhttp
+        bcrypt
     )
 endif()
 

@@ -222,6 +222,7 @@ void RoadVehUpdateCache(RoadVehicle *v, bool same_length)
 
 	v->InvalidateNewGRFCacheOfChain();
 
+	const uint16_t old_total_length = v->gcache.cached_total_length;
 	v->gcache.cached_total_length = 0;
 
 	Vehicle *last_vis_effect = v;
@@ -257,6 +258,13 @@ void RoadVehUpdateCache(RoadVehicle *v, bool same_length)
 
 	uint max_speed = GetVehicleProperty(v, PROP_ROADVEH_SPEED, 0);
 	v->vcache.cached_max_speed = (max_speed != 0) ? max_speed * 4 : RoadVehInfo(v->engine_type)->max_speed;
+
+	if (same_length && old_total_length != v->gcache.cached_total_length) {
+		if (IsInsideMM(v->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END)) {
+			RoadStop *rs = RoadStop::GetByTile(v->tile, GetRoadStopType(v->tile));
+			rs->GetEntry(v)->AdjustOccupation((int)v->gcache.cached_total_length - (int)old_total_length);
+		}
+	}
 }
 
 /**
@@ -294,6 +302,7 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 
 		v->spritenum = rvi->image_index;
 		v->cargo_type = e->GetDefaultCargoType();
+		assert(IsValidCargoID(v->cargo_type));
 		v->cargo_cap = rvi->capacity;
 		v->refit_cap = 0;
 
@@ -310,9 +319,9 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 
 		v->SetServiceInterval(Company::Get(v->owner)->settings.vehicle.servint_roadveh);
 
-		v->date_of_last_service = _date;
-		v->date_of_last_service_newgrf = _date;
-		v->build_year = _cur_year;
+		v->date_of_last_service = EconTime::CurDate();
+		v->date_of_last_service_newgrf = CalTime::CurDate();
+		v->build_year = CalTime::CurYear();
 
 		v->sprite_seq.Set(SPR_IMG_QUERY);
 		v->random_bits = Random();
@@ -419,7 +428,12 @@ CommandCost CmdTurnRoadVeh(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 
 	if (IsTileType(v->tile, MP_TUNNELBRIDGE) && DirToDiagDir(v->direction) == GetTunnelBridgeDirection(v->tile)) return CMD_ERROR;
 
-	if (flags & DC_EXEC) v->reverse_ctr = 180;
+	if (flags & DC_EXEC) {
+		v->reverse_ctr = 180;
+
+		/* Unbunching data is no longer valid. */
+		v->ResetDepotUnbunching();
+	}
 
 	return CommandCost();
 }
@@ -521,9 +535,6 @@ static void DeleteLastRoadVeh(RoadVehicle *v)
 	for (; v->Next() != nullptr; v = v->Next()) u = v;
 	u->SetNext(nullptr);
 	v->last_station_visited = first->last_station_visited; // for PreDestructor
-
-	/* Only leave the road stop when we're really gone. */
-	if (IsInsideMM(v->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) RoadStop::GetByTile(v->tile, GetRoadStopType(v->tile))->Leave(v);
 
 	delete v;
 }
@@ -1330,6 +1341,7 @@ static bool RoadVehLeaveDepot(RoadVehicle *v, bool first)
 		if (RoadVehFindCloseTo(v, x, y, v->direction, false) != nullptr) return true;
 
 		VehicleServiceInDepot(v);
+		v->LeaveUnbunchingDepot();
 
 		StartRoadVehSound(v);
 
@@ -2146,7 +2158,11 @@ static bool RoadVehController(RoadVehicle *v)
 	v->HandleWaiting(false, true);
 	if (v->current_order.IsType(OT_WAITING)) return true;
 
-	if (v->IsInDepot() && RoadVehLeaveDepot(v, true)) return true;
+	if (v->IsInDepot()) {
+		/* Check if we should wait here for unbunching. */
+		if (v->IsWaitingForUnbunching()) return true;
+		if (RoadVehLeaveDepot(v, true)) return true;
+	}
 
 	int j;
 	{
@@ -2294,7 +2310,7 @@ static void CheckIfRoadVehNeedsService(RoadVehicle *v)
 
 void RoadVehicle::OnNewDay()
 {
-	AgeVehicle(this);
+	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
 
 	if (!this->IsFrontEngine()) return;
 

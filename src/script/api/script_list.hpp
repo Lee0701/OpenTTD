@@ -12,11 +12,12 @@
 #define SCRIPT_LIST_HPP
 
 #include "script_object.hpp"
+#include "script_controller.hpp"
 #include "../../3rdparty/cpp-btree/safe_btree_set.h"
 #include "../../3rdparty/cpp-btree/safe_btree_map.h"
 
 /** Maximum number of operations allowed for valuating a list. */
-static const int MAX_VALUATE_OPS = 500000;
+static const int MAX_VALUATE_OPS = 1000000;
 
 class ScriptListSorter;
 
@@ -62,11 +63,14 @@ protected:
 	template<typename T, class ItemValid, class ItemFilter>
 	static void FillList(ScriptList *list, ItemValid item_valid, ItemFilter item_filter)
 	{
+		int opcode_charge = 0;
 		for (const T *item : T::Iterate()) {
 			if (!item_valid(item)) continue;
 			if (!item_filter(item)) continue;
 			list->AddItem(item->index);
+			opcode_charge += 3;
 		}
+		ScriptController::DecreaseOps(opcode_charge + (int)(T::GetNumItems() / 2));
 	}
 
 	template<typename T, class ItemValid>
