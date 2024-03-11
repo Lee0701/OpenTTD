@@ -1508,7 +1508,7 @@ uint BaseSettingEntry::Draw(GameSettings *settings_ptr, int left, int right, int
 
 	int x = rtl ? right : left;
 	if (cur_row >= first_row) {
-		int colour = _colour_gradient[COLOUR_ORANGE][4];
+		int colour = GetColourGradient(COLOUR_ORANGE, SHADE_NORMAL);
 		y += (cur_row - first_row) * SETTING_HEIGHT; // Compute correct y start position
 
 		/* Draw vertical for parent nesting levels */
@@ -2281,7 +2281,9 @@ static SettingsContainer &GetSettingsTree()
 				vehicle_windows->Add(new ConditionallyHiddenSettingEntry("gui.show_vehicle_group_hierarchy_name", []() -> bool { return !_settings_client.gui.show_group_hierarchy_name; }));
 				vehicle_windows->Add(new SettingEntry("gui.enable_single_veh_shared_order_gui"));
 				vehicle_windows->Add(new SettingEntry("gui.show_order_number_vehicle_view"));
+				vehicle_windows->Add(new SettingEntry("gui.show_speed_first_vehicle_view"));
 				vehicle_windows->Add(new SettingEntry("gui.hide_default_stop_location"));
+				vehicle_windows->Add(new ConditionallyHiddenSettingEntry("gui.show_running_costs_calendar_year", []() -> bool { return GetGameSettings().economy.timekeeping_units != TKU_CALENDAR; }));
 			}
 
 			SettingsPage *departureboards = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_DEPARTUREBOARDS));
@@ -2699,6 +2701,7 @@ static SettingsContainer &GetSettingsTree()
 			{
 				npc->Add(new SettingEntry("script.script_max_opcode_till_suspend"));
 				npc->Add(new SettingEntry("script.script_max_memory_megabytes"));
+				npc->Add(new SettingEntry("script.script_disable_param_randomisation"));
 				npc->Add(new SettingEntry("difficulty.competitor_speed"));
 				npc->Add(new SettingEntry("ai.ai_in_multiplayer"));
 				npc->Add(new SettingEntry("ai.ai_disable_veh_train"));
@@ -3445,7 +3448,7 @@ void ShowGameSettings()
  */
 void DrawArrowButtons(int x, int y, Colours button_colour, byte state, bool clickable_left, bool clickable_right)
 {
-	int colour = _colour_gradient[button_colour][2];
+	int colour = GetColourGradient(button_colour, SHADE_DARKER);
 	Dimension dim = NWidgetScrollbar::GetHorizontalDimension();
 
 	Rect lr = {x,                  y, x + (int)dim.width     - 1, y + (int)dim.height - 1};
@@ -3476,7 +3479,7 @@ void DrawArrowButtons(int x, int y, Colours button_colour, byte state, bool clic
  */
 void DrawDropDownButton(int x, int y, Colours button_colour, bool state, bool clickable)
 {
-	int colour = _colour_gradient[button_colour][2];
+	int colour = GetColourGradient(button_colour, SHADE_DARKER);
 
 	Rect r = {x, y, x + SETTING_BUTTON_WIDTH - 1, y + SETTING_BUTTON_HEIGHT - 1};
 

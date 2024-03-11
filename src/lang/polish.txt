@@ -874,25 +874,25 @@ STR_INDUSTRY_MENU_INDUSTRY_CHAIN                                :Łańcuchy prod
 STR_INDUSTRY_MENU_FUND_NEW_INDUSTRY                             :Ufunduj nowe przedsiębiorstwo
 
 # URailway construction menu
-STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Konstrukcja linii kolejowej
-STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Konstrukcja linii zelektryfikowanej
-STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Konstrukcja linii jednoszynowej
-STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Konstrukcja linii Maglev
+STR_RAIL_MENU_RAILROAD_CONSTRUCTION                             :Budowa linii kolejowej
+STR_RAIL_MENU_ELRAIL_CONSTRUCTION                               :Budowa linii zelektryfikowanej
+STR_RAIL_MENU_MONORAIL_CONSTRUCTION                             :Budowa linii jednoszynowej
+STR_RAIL_MENU_MAGLEV_CONSTRUCTION                               :Budowa linii Maglev
 
 # Road construction menu
 STR_ROAD_MENU_ROAD_CONSTRUCTION                                 :Budowa drogi
 STR_ROAD_MENU_TRAM_CONSTRUCTION                                 :Budowa linii tramwajowej
 
 # Waterways construction menu
-STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Konstrukcja kanału wodnego
+STR_WATERWAYS_MENU_WATERWAYS_CONSTRUCTION                       :Budowa dróg wodnych
 
 # Aairport construction menu
-STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Konstrukcje lotnicze
+STR_AIRCRAFT_MENU_AIRPORT_CONSTRUCTION                          :Budowa lotnisk
 
 # Landscaping menu
 STR_LANDSCAPING_MENU_LANDSCAPING                                :Kształtowanie krajobrazu
-STR_LANDSCAPING_MENU_PLANT_TREES                                :Posadź drzewa
-STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Umieść napis
+STR_LANDSCAPING_MENU_PLANT_TREES                                :Sadzenie drzew
+STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Umieszczanie napisów
 
 # Music menu
 STR_TOOLBAR_SOUND_MUSIC                                         :Dźwięk/muzyka
@@ -1240,7 +1240,7 @@ STR_NEWS_COMPANY_LAUNCH_DESCRIPTION                             :{BIG_FONT}{BLAC
 STR_NEWS_MERGER_TAKEOVER_TITLE                                  :{BIG_FONT}{BLACK}{STRING} zostało przejęte przez {STRING} za nieujawnioną kwotę!
 STR_PRESIDENT_NAME_MANAGER                                      :{BLACK}{PRESIDENT_NAME}{}(Prezes)
 
-STR_NEWS_NEW_TOWN                                               :{BLACK}{BIG_FONT}{STRING} sponsoruje konstrukcję nowego miasta {TOWN}!
+STR_NEWS_NEW_TOWN                                               :{BLACK}{BIG_FONT}{STRING} sponsoruje budowę nowego miasta {TOWN}!
 STR_NEWS_NEW_TOWN_UNSPONSORED                                   :{BLACK}{BIG_FONT}Zostało wybudowane nowe miasto o nazwie {TOWN}!
 
 STR_NEWS_INDUSTRY_CONSTRUCTION                                  :{BIG_FONT}{BLACK}Rozpoczęto budowę nowe{G go j go} {STRING.d} blisko {TOWN}!
@@ -1330,7 +1330,7 @@ STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Wybierz 
 STR_GAME_OPTIONS_TAB_SOUND                                      :Dźwięk
 STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Wybierz opcje dźwięku i muzyki
 STR_GAME_OPTIONS_TAB_SOCIAL                                     :Społeczność
-STR_GAME_OPTIONS_TAB_SOCIAL_TT                                  :{BLACK}Wybierz ustawienia integracji sieci społecznościowych
+STR_GAME_OPTIONS_TAB_SOCIAL_TT                                  :{BLACK}Wybierz opcje integracji sieci społecznościowych
 
 STR_GAME_OPTIONS_VOLUME                                         :Głośność
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Efekty dźwiękowe
@@ -1498,11 +1498,11 @@ STR_CURRENCY_INCREASE_EXCHANGE_RATE_TOOLTIP                     :{BLACK}Zwiększ
 STR_CURRENCY_SET_EXCHANGE_RATE_TOOLTIP                          :{BLACK}Ustal kurs wymiany za jednego funta (£)
 
 STR_CURRENCY_SEPARATOR                                          :{LTBLUE}Separator: {ORANGE}{STRING}
-STR_CURRENCY_SET_CUSTOM_CURRENCY_SEPARATOR_TOOLTIP              :{BLACK}Ustaw znak oddzielający w twojej walucie
+STR_CURRENCY_SET_CUSTOM_CURRENCY_SEPARATOR_TOOLTIP              :{BLACK}Ustaw separator dla twojej waluty
 
-STR_CURRENCY_PREFIX                                             :{LTBLUE}Prefiks: {ORANGE}{STRING}
+STR_CURRENCY_PREFIX                                             :{LTBLUE}Przedrostek: {ORANGE}{STRING}
 STR_CURRENCY_SET_CUSTOM_CURRENCY_PREFIX_TOOLTIP                 :{BLACK}Ustaw przedrostek dla swojej waluty
-STR_CURRENCY_SUFFIX                                             :{LTBLUE}Sufiks: {ORANGE}{STRING}
+STR_CURRENCY_SUFFIX                                             :{LTBLUE}Przyrostek: {ORANGE}{STRING}
 STR_CURRENCY_SET_CUSTOM_CURRENCY_SUFFIX_TOOLTIP                 :{BLACK}Ustaw symbol dla twojej waluty
 
 STR_CURRENCY_SWITCH_TO_EURO                                     :{LTBLUE}Przejście na euro: {ORANGE}w {NUM} roku
@@ -1654,10 +1654,10 @@ STR_CONFIG_SETTING_INFINITE_MONEY                               :Nieskończona i
 STR_CONFIG_SETTING_INFINITE_MONEY_HELPTEXT                      :Pozwól na nieograniczone wydatki i wyłącz bankructwa firm
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Maksymalna wysokość początkowej pożyczki: {STRING}
-STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksymalna wysokość pożyczki, jaką firma może zaciągnąć (bez uwzględnienia inflacji)
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Maksymalna wysokość pożyczki, jaką firma może zaciągnąć (bez uwzględnienia inflacji). W przypadku ustawienia „Brak pożyczki” żadne pieniądze nie będą dostępne, chyba że zostaną dostarczone przez Game Script lub ustawienie „Nieskończona ilość pieniędzy”
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
 ###setting-zero-is-special
-STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :Brak pożyczki {RED}Wymagany Game Script, aby zapewnić początkowe fundusze
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :Brak pożyczki
 
 STR_CONFIG_SETTING_INTEREST_RATE                                :Oprocentowanie: {STRING}
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :Oprocentowanie pożyczki; kontroluje też inflację, jeśli jest włączona
@@ -1666,7 +1666,7 @@ STR_CONFIG_SETTING_RUNNING_COSTS                                :Koszty amortyza
 STR_CONFIG_SETTING_RUNNING_COSTS_HELPTEXT                       :Ustaw poziom kosztów utrzymania i amortyzacji pojazdów i infrastruktury
 
 STR_CONFIG_SETTING_CONSTRUCTION_SPEED                           :Szybkość budowy: {STRING}
-STR_CONFIG_SETTING_CONSTRUCTION_SPEED_HELPTEXT                  :Ogranicz ilość czynności konstrukcyjnych wykonywanych przez SI
+STR_CONFIG_SETTING_CONSTRUCTION_SPEED_HELPTEXT                  :Ogranicz ilość czynności budowlanych wykonywanych przez SI
 
 STR_CONFIG_SETTING_VEHICLE_BREAKDOWNS                           :Awarie pojazdów: {STRING}
 STR_CONFIG_SETTING_VEHICLE_BREAKDOWNS_HELPTEXT                  :Kontroluj jak często nieodpowiednio serwisowane pojazdy mogą się psuć
@@ -1683,8 +1683,8 @@ STR_CONFIG_SETTING_SUBSIDY_DURATION_VALUE                       :{UNITS_YEARS_OR
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SUBSIDY_DURATION_DISABLED                    :Brak dotacji
 
-STR_CONFIG_SETTING_CONSTRUCTION_COSTS                           :Koszty konstrukcji: {STRING}
-STR_CONFIG_SETTING_CONSTRUCTION_COSTS_HELPTEXT                  :Ustaw poziom kosztów konstrukcji i kupna
+STR_CONFIG_SETTING_CONSTRUCTION_COSTS                           :Koszty budowy: {STRING}
+STR_CONFIG_SETTING_CONSTRUCTION_COSTS_HELPTEXT                  :Ustaw poziom kosztów budowy i kupna
 
 STR_CONFIG_SETTING_RECESSIONS                                   :Kryzys: {STRING}
 STR_CONFIG_SETTING_RECESSIONS_HELPTEXT                          :Jeśli włączone, kryzys może występować okresowo. Podczas kryzysu produkcja jest znacznie niższa (powraca do poprzedniego poziomu, kiedy kryzys się kończy)
@@ -1756,7 +1756,7 @@ STR_CONFIG_SETTING_MAX_TUNNEL_LENGTH                            :Maksymalna dłu
 STR_CONFIG_SETTING_MAX_TUNNEL_LENGTH_HELPTEXT                   :Maksymalna długość budowanych tuneli
 
 STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD             :Budowa przedsiębiorstw wydobywczych: {STRING}
-STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD_HELPTEXT    :Metoda finansowania podstawowych przedsiębiorstw. „Niedostępna” oznacza brak możliwości finansowania czegokolwiek, „poszukiwania” oznacza, że finansowanie jest możliwe, ale konstrukcja pojawi się w losowym miejscu na mapie (oraz losowo budowa może zakończyć się porażką), „jak inne przedsiębiorstwa” oznacza, że przemysł wydobywczy może być budowany tak jak fabryki przetwórcze, w dowolnym miejscu
+STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD_HELPTEXT    :Metoda finansowania przedsiębiorstw wydobywczych. „Niedostępna” oznacza brak możliwości finansowania czegokolwiek, „poszukiwania” oznacza, że finansowanie jest możliwe, ale budowa pojawi się w losowym miejscu na mapie (oraz losowo budowa może zakończyć się porażką), „jak inne przedsiębiorstwa” oznacza, że przedsiębiorstwa wydobywcze mogą być budowane przez firmy tak jak przedsiębiorstwa przetwórcze, w dowolnym miejscu
 ###length 3
 STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD_NONE        :Niedostępna
 STR_CONFIG_SETTING_RAW_INDUSTRY_CONSTRUCTION_METHOD_NORMAL      :Jak inne przedsiębiorstwa
@@ -1874,7 +1874,7 @@ STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES                        :Pojazdy nigdy n
 STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES_HELPTEXT               :Kiedy włączone, wszystkie modele pojazdów pozostają dostępne na zawsze od daty ich wprowadzenia
 
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS                            :Miara czasu: {STRING}
-STR_CONFIG_SETTING_TIMEKEEPING_UNITS_HELPTEXT                   :Wybierz jednostki pomiaru czasu w grze. Nie można tego zmienić później.{}{}Kalendarz jest klasycznym trybem OpenTTD, z rokiem składającym się z 12 miesięcy, a każdy miesiąc ma 28-31 dni.{}{}W trybie zegarowym ruch pojazdów, produkcja ładunków oraz finanse są oparte na jednominutowych przyrostach, czyli mniej więcej tak długo, jak trwa 30-dniowy miesiąc w trybie kalendarzowym. Są one pogrupowane w 12-minutowe okresy, co z kolei odpowiada rokowi w trybie kalendarzowym.{}{}W obu metodach zawsze funkcjonuje klasyczny kalendarz, który jest używany do dat wprowadzenia pojazdów, domów i innej infrastruktury.
+STR_CONFIG_SETTING_TIMEKEEPING_UNITS_HELPTEXT                   :Wybierz jednostki pomiaru czasu w grze. Nie można tego zmienić później.{}{}Kalendarz jest klasycznym trybem OpenTTD, z rokiem składającym się z 12 miesięcy, a każdy miesiąc ma 28-31 dni.{}{}W trybie zegarowym produkcja ładunków oraz finanse są oparte na jednominutowych przyrostach, czyli mniej więcej tak długo, jak trwa 30-dniowy miesiąc w trybie kalendarzowym. Są one pogrupowane w 12-minutowe okresy, co z kolei odpowiada rokowi w trybie kalendarzowym.{}{}W obu metodach zawsze funkcjonuje klasyczny kalendarz, który jest używany do dat wprowadzenia pojazdów, domów i innej infrastruktury.
 ###length 2
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS_CALENDAR                   :Kalendarz
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS_WALLCLOCK                  :Tarcza zegara
@@ -1892,17 +1892,17 @@ STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE                         :Skala produkcji
 STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT                :Skaluj produkcję ładunków w przedsiębiorstwach w oparciu o ten procent.
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE                            :{NUM}%
 
-STR_CONFIG_SETTING_AUTORENEW_VEHICLE                            :Autoodnawianie pojazdów gdy stają się stare: {STRING}
+STR_CONFIG_SETTING_AUTORENEW_VEHICLE                            :Automatyczne odnawianie pojazdów, gdy stają się stare: {STRING}
 STR_CONFIG_SETTING_AUTORENEW_VEHICLE_HELPTEXT                   :Kiedy włączone, pojazd zbliżający się do końca swojej żywotności zostaje automatycznie zastąpiony, gdy warunki jego odnowienia są spełnione
 
-STR_CONFIG_SETTING_AUTORENEW_MONTHS                             :Automatyczna odnowa, gdy pojazd ma {STRING} maksymalnym wieku
+STR_CONFIG_SETTING_AUTORENEW_MONTHS                             :Automatyczne odnowienie, gdy pojazd ma {STRING} maksymalnym wieku
 STR_CONFIG_SETTING_AUTORENEW_MONTHS_HELPTEXT                    :Odpowiedni wiek pojazdu, kiedy powinien on zostać automatycznie odnowiony
 ###length 2
 STR_CONFIG_SETTING_AUTORENEW_MONTHS_VALUE_BEFORE                :{COMMA} miesi{P ąc ące ęcy} do
 STR_CONFIG_SETTING_AUTORENEW_MONTHS_VALUE_AFTER                 :{COMMA} miesi{P ąc ące ęcy} po
 
-STR_CONFIG_SETTING_AUTORENEW_MONEY                              :Min. ilość pieniędzy potrzebna do autoodnowienia: {STRING}
-STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Minimalna ilość pieniędzy, która musi znajdować się w banku zanim auto-odnawianie będzie brane pod uwagę
+STR_CONFIG_SETTING_AUTORENEW_MONEY                              :Minimalna ilość pieniędzy potrzebna do automatycznego odnowienia: {STRING}
+STR_CONFIG_SETTING_AUTORENEW_MONEY_HELPTEXT                     :Minimalna ilość pieniędzy, która musi znajdować się na koncie, zanim automatyczne odnawianie będzie brane pod uwagę
 
 STR_CONFIG_SETTING_ERRMSG_DURATION                              :Czas wyświetlania komunikatów o błędach: {STRING}
 STR_CONFIG_SETTING_ERRMSG_DURATION_HELPTEXT                     :Czas wyświetlania komunikatów o błędach w czerwonym oknie. Niektóre (krytyczne) komunikaty o błędach nie zamykają się automatycznie po tym czasie, tylko muszą zostać zamknięte ręcznie
@@ -1998,8 +1998,8 @@ STR_CONFIG_SETTING_STATION_SPREAD_HELPTEXT                      :Maksymalny obsz
 STR_CONFIG_SETTING_SERVICEATHELIPAD                             :Automatycznie serwisuj helikoptery na lądowiskach: {STRING}
 STR_CONFIG_SETTING_SERVICEATHELIPAD_HELPTEXT                    :Serwisuj helikoptery po każdym lądowaniu, nawet jeśli na lądowisku nie ma hangaru
 
-STR_CONFIG_SETTING_LINK_TERRAFORM_TOOLBAR                       :Przyłącz narzędzia krajobrazu do okien środków transportu: {STRING}
-STR_CONFIG_SETTING_LINK_TERRAFORM_TOOLBAR_HELPTEXT              :Otwierając pasek konstrukcji typu transportu, otwieraj też pasek formowania terenu
+STR_CONFIG_SETTING_LINK_TERRAFORM_TOOLBAR                       :Przyłącz narzędzia kształtowania krajobrazu do narzędzi budowy środków transportu: {STRING}
+STR_CONFIG_SETTING_LINK_TERRAFORM_TOOLBAR_HELPTEXT              :Otwierając pasek budowy typu transportu, otwieraj też pasek kształtowania terenu
 
 STR_CONFIG_SETTING_SMALLMAP_LAND_COLOUR                         :Kolor lądu używany w minimapie: {STRING}
 STR_CONFIG_SETTING_SMALLMAP_LAND_COLOUR_HELPTEXT                :Kolor terenu na minimapie
@@ -2093,7 +2093,7 @@ STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL                          :Zezwól w czasi
 STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_HELPTEXT                 :Wybierz, jakich akcji można dokonywać, gdy gra jest wstrzymana (włączona jest pauza)
 ###length 4
 STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_NO_ACTIONS               :Brak działań
-STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_NON_CONSTRUCTION     :Wszystkie niezwiązane z konstrukcją
+STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_NON_CONSTRUCTION     :Wszystkie niezwiązane z budowaniem
 STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_NON_LANDSCAPING      :Wszystkie oprócz modyfikowania terenu
 STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_ACTIONS              :Wszystkie działania
 
@@ -2489,7 +2489,7 @@ STR_CONFIG_SETTING_SOUND                                        :Dźwięk
 STR_CONFIG_SETTING_INTERFACE                                    :Interfejs
 STR_CONFIG_SETTING_INTERFACE_GENERAL                            :Ogólne
 STR_CONFIG_SETTING_INTERFACE_VIEWPORTS                          :Widok
-STR_CONFIG_SETTING_INTERFACE_CONSTRUCTION                       :Konstrukcje
+STR_CONFIG_SETTING_INTERFACE_CONSTRUCTION                       :Budowa
 STR_CONFIG_SETTING_ADVISORS                                     :Wiadomości i porady
 STR_CONFIG_SETTING_COMPANY                                      :Firma
 STR_CONFIG_SETTING_ACCOUNTING                                   :Finanse
@@ -3158,10 +3158,10 @@ STR_JOIN_WAYPOINT_CREATE_SPLITTED_WAYPOINT                      :{YELLOW}Zbuduj 
 STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE                       :{BLACK}Nieaktywne, ponieważ nie są dostępne pojazdy korzystające z takiej infrastruktury
 
 # Rail construction toolbar
-STR_RAIL_TOOLBAR_RAILROAD_CONSTRUCTION_CAPTION                  :Konstrukcja linii kolejowej
-STR_RAIL_TOOLBAR_ELRAIL_CONSTRUCTION_CAPTION                    :Konstrukcja linii zelektryfikowanej
-STR_RAIL_TOOLBAR_MONORAIL_CONSTRUCTION_CAPTION                  :Konstrukcja linii jednoszynowej
-STR_RAIL_TOOLBAR_MAGLEV_CONSTRUCTION_CAPTION                    :Konstrukcja linii Maglev
+STR_RAIL_TOOLBAR_RAILROAD_CONSTRUCTION_CAPTION                  :Budowa linii kolejowej
+STR_RAIL_TOOLBAR_ELRAIL_CONSTRUCTION_CAPTION                    :Budowa linii zelektryfikowanej
+STR_RAIL_TOOLBAR_MONORAIL_CONSTRUCTION_CAPTION                  :Budowa linii jednoszynowej
+STR_RAIL_TOOLBAR_MAGLEV_CONSTRUCTION_CAPTION                    :Budowa linii Maglev
 
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TRACK                   :{BLACK}Zbuduj tory kolejowe. Użyj Ctrl, aby usunąć tory. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_AUTORAIL                         :{BLACK}Zbuduj tory kolejowe za pomocą trybu Autotory. Użyj Ctrl, aby usunąć tory. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
@@ -3263,8 +3263,8 @@ STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_BRIDGE                      :{BLACK}Zbuduj m
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRAMWAY_BRIDGE                   :{BLACK}Zbuduj most tramwajowy. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_TUNNEL                      :{BLACK}Zbuduj tunel drogowy. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRAMWAY_TUNNEL                   :{BLACK}Zbuduj tunel tramwajowy. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
-STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR_ROAD           :{BLACK}Przełącz buduj/usuń dla konstrukcji dróg
-STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR_TRAMWAYS       :{BLACK}Przełącz buduj/usuń dla konstrukcji tramwajowej
+STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR_ROAD           :{BLACK}Przełącz budowanie/usuwanie dróg
+STR_ROAD_TOOLBAR_TOOLTIP_TOGGLE_BUILD_REMOVE_FOR_TRAMWAYS       :{BLACK}Przełącz budowanie/usuwanie linii tramwajowej
 STR_ROAD_TOOLBAR_TOOLTIP_CONVERT_ROAD                           :{BLACK}Zmień typ drogi. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_ROAD_TOOLBAR_TOOLTIP_CONVERT_TRAM                           :{BLACK}Zmień typ torów tramwajowych. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 
@@ -3288,7 +3288,7 @@ STR_STATION_BUILD_CARGO_TRAM_ORIENTATION                        :{WHITE}Ukierunk
 STR_STATION_BUILD_CARGO_TRAM_ORIENTATION_TOOLTIP                :{BLACK}Wybierz ukierunkowanie tramwajowej stacji załadunkowej
 
 # Waterways toolbar (last two for SE only)
-STR_WATERWAYS_TOOLBAR_CAPTION                                   :{WHITE}Konstrukcja kanału wodnego
+STR_WATERWAYS_TOOLBAR_CAPTION                                   :{WHITE}Budowa dróg wodnych
 STR_WATERWAYS_TOOLBAR_CAPTION_SE                                :{WHITE}Kanał wodny
 STR_WATERWAYS_TOOLBAR_BUILD_CANALS_TOOLTIP                      :{BLACK}Zbuduj kanał wodny. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_WATERWAYS_TOOLBAR_BUILD_LOCKS_TOOLTIP                       :{BLACK}Zbuduj śluzę wodną. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
@@ -3352,8 +3352,8 @@ STR_OBJECT_CLASS_TRNS                                           :Nadajniki
 
 # Tree planting window (last eight for SE only)
 STR_PLANT_TREE_CAPTION                                          :{WHITE}Drzewa
-STR_PLANT_TREE_TOOLTIP                                          :{BLACK}Wybierz typ drzew do sadzenia. Jeśli na wybranym miejscu są już drzewa, to dodasz więcej drzew różnego typu, bez względu na wybraną opcję.
-STR_TREES_RANDOM_TYPE                                           :{BLACK}Drzewa różnych rodzajów
+STR_PLANT_TREE_TOOLTIP                                          :{BLACK}Wybierz typ drzew do zasadzenia. Jeśli w wybranym miejscu są już drzewa, to zostanie dodanych więcej drzew różnego typu, bez względu na wybraną opcję
+STR_TREES_RANDOM_TYPE                                           :{BLACK}Drzewa różnego rodzaju
 STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Posadź drzewa różnego rodzaju. Przeciągnij z użyciem Ctrl, aby zaznaczyć obszar po przekątnej. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_TREES_RANDOM_TREES_BUTTON                                   :{BLACK}Losowe drzewa
 STR_TREES_RANDOM_TREES_TOOLTIP                                  :{BLACK}Pokryj losowo krajobraz drzewami
@@ -3946,7 +3946,7 @@ STR_NEWGRF_BROKEN_CAPACITY                                      :{WHITE}Zmienion
 STR_BROKEN_VEHICLE_LENGTH                                       :{WHITE}Pociąg „{VEHICLE}” należący do „{COMPANY}” ma nieprawidłową długość. Prawdopodobnie jest to spowodowane problemami z NewGRF-ami. Gra może się desychronizować lub zawiesić
 
 STR_NEWGRF_BUGGY                                                :{WHITE}NewGRF „{0:STRING}” dostarcza niepoprawne dane
-STR_NEWGRF_BUGGY_ARTICULATED_CARGO                              :{WHITE}Informacje o ładunku/naprawie dla „{1:ENGINE}” różnią się od listy zakupu po zbudowaniu. Może to spowodować, że autoodnowienie/-zamiana nie wykona remontu poprawnie
+STR_NEWGRF_BUGGY_ARTICULATED_CARGO                              :{WHITE}Informacje o ładunku/naprawie dla „{1:ENGINE}” różnią się od listy zakupu po zbudowaniu. Może to spowodować, że automatyczne odnowienie/zamiana nie wykona się poprawnie
 STR_NEWGRF_BUGGY_ENDLESS_PRODUCTION_CALLBACK                    :{WHITE}„{1:STRING}” spowodował nieskończoną pętlę w wywołaniu zwrotnym produkcji
 STR_NEWGRF_BUGGY_UNKNOWN_CALLBACK_RESULT                        :{WHITE}Wywołanie zwrotne {1:HEX} zwróciło nieznany/błędny wynik {2:HEX}
 STR_NEWGRF_BUGGY_INVALID_CARGO_PRODUCTION_CALLBACK              :{WHITE}„{1:STRING}” zwrócił niewłaściwy typ ładunku w wywołaniu zwrotnym produkcji w {2:HEX}
@@ -4218,7 +4218,7 @@ STR_FINANCES_CAPITAL_EXPENSES_TITLE                             :{WHITE}Wydatki 
 
 
 ###length 13
-STR_FINANCES_SECTION_CONSTRUCTION                               :{GOLD}Konstrukcje
+STR_FINANCES_SECTION_CONSTRUCTION                               :{GOLD}Budowa
 STR_FINANCES_SECTION_NEW_VEHICLES                               :{GOLD}Nowe pojazdy
 STR_FINANCES_SECTION_TRAIN_RUNNING_COSTS                        :{GOLD}Pociągi
 STR_FINANCES_SECTION_ROAD_VEHICLE_RUNNING_COSTS                 :{GOLD}Pojazdy drogowe
@@ -4271,11 +4271,11 @@ STR_COMPANY_VIEW_INFRASTRUCTURE_STATION                         :{WHITE}{COMMA} 
 STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT                         :{WHITE}{COMMA} lotnisk{P o a ""}
 STR_COMPANY_VIEW_INFRASTRUCTURE_NONE                            :{WHITE}Brak
 
-STR_COMPANY_VIEW_BUILD_HQ_BUTTON                                :{BLACK}Budowa Siedziby
+STR_COMPANY_VIEW_BUILD_HQ_BUTTON                                :{BLACK}Zbuduj Siedzibę
 STR_COMPANY_VIEW_BUILD_HQ_TOOLTIP                               :{BLACK}Zbuduj siedzibę firmy
-STR_COMPANY_VIEW_VIEW_HQ_BUTTON                                 :{BLACK}Zobacz SG
+STR_COMPANY_VIEW_VIEW_HQ_BUTTON                                 :{BLACK}Zobacz Siedzibę
 STR_COMPANY_VIEW_VIEW_HQ_TOOLTIP                                :{BLACK}Zobacz siedzibę firmy
-STR_COMPANY_VIEW_RELOCATE_HQ                                    :{BLACK}Przenieś SG
+STR_COMPANY_VIEW_RELOCATE_HQ                                    :{BLACK}Przenieś Siedzibę
 STR_COMPANY_VIEW_RELOCATE_COMPANY_HEADQUARTERS                  :{BLACK}Zbuduj siedzibę główną w innym miejscu za cenę 1% wartości firmy. Użyj Shift, aby tylko wyświetlić szacunkowy koszt
 STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON                          :{BLACK}Szczegóły
 STR_COMPANY_VIEW_INFRASTRUCTURE_TOOLTIP                         :{BLACK}Zobacz szczegółowe wartości infrastruktury
@@ -4770,22 +4770,22 @@ STR_VEHICLE_STATUS_WAITING_UNBUNCHING                           :{LTBLUE}Czeka n
 STR_VEHICLE_STATUS_CRASHED                                      :{RED}Wypadek!
 STR_VEHICLE_STATUS_BROKEN_DOWN                                  :{RED}Zepsuty
 STR_VEHICLE_STATUS_STOPPED                                      :{RED}Zatrzymany
-STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL                           :{RED}Hamowanie, {VELOCITY}
+STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL                           :{RED}{VELOCITY} - Hamowanie
 STR_VEHICLE_STATUS_TRAIN_NO_POWER                               :{RED}Brak zasilania
 STR_VEHICLE_STATUS_TRAIN_STUCK                                  :{ORANGE}Czeka na wolną drogę
 STR_VEHICLE_STATUS_AIRCRAFT_TOO_FAR                             :{ORANGE}Zbyt daleko do następnego celu
 
-STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL                      :{LTBLUE}Zmierza do {STATION}, {VELOCITY}
-STR_VEHICLE_STATUS_NO_ORDERS_VEL                                :{LTBLUE}Bez poleceń, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL                     :{LTBLUE}Zmierza do {WAYPOINT}, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL                        :{ORANGE}Zmierza do {DEPOT}, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL                :{LTBLUE}Serwisuj w {DEPOT}, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL                :{LTBLUE}Separuj i serwisuj w {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL                      :{LTBLUE}{1:VELOCITY} - Zmierza do {0:STATION}
+STR_VEHICLE_STATUS_NO_ORDERS_VEL                                :{LTBLUE}{VELOCITY} - Bez poleceń
+STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL                     :{LTBLUE}{1:VELOCITY} - Zmierza do {0:WAYPOINT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL                        :{ORANGE}{1:VELOCITY} - Zmierza do {0:DEPOT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL                :{LTBLUE}{1:VELOCITY} - Serwisuj w {0:DEPOT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL                :{LTBLUE}{1:VELOCITY} - Separuj i serwisuj w {0:DEPOT}
 
-STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL                     :{LTBLUE}Nie może dotrzeć do {STATION}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL                    :{LTBLUE}Nie może dotrzeć do {WAYPOINT}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL                       :{ORANGE}Nie może dotrzeć do {DEPOT}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL               : {LTBLUE}Nie może dotrzeć do {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL                     :{LTBLUE}{1:VELOCITY} - Nie może dotrzeć do {0:STATION}
+STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL                    :{LTBLUE}{1:VELOCITY} - Nie może dotrzeć do {0:WAYPOINT}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL                       :{ORANGE}{1:VELOCITY} - Nie może dotrzeć do {0:DEPOT}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL               :{LTBLUE}{1:VELOCITY} - Nie może dotrzeć do {0:DEPOT}
 
 # Vehicle stopped/started animations
 ###length 2
@@ -4999,7 +4999,7 @@ STR_ORDER_GO_TO_NEAREST_DEPOT                                   :Idź do najbli�
 STR_ORDER_GO_TO_NEAREST_HANGAR                                  :Leć do najbliższego hangaru
 STR_ORDER_CONDITIONAL                                           :Warunkowy skok poleceń
 STR_ORDER_SHARE                                                 :Współdzielenie poleceń
-STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Dodaj nowe polecenie na końcu listy lub przed zaznaczonym poleceniem. Użyj Ctrl, aby ustawić polecenie stacji na „pełny załadunek któregoś z towarów”, posterunku na odwrotność opcji „domyślnie bez zatrzymywania się”, a zajezdni na „serwisuj”. Kliknij na inny pojazd, aby skopiować jego polecenia lub użyj Ctrl, aby współdzielić z nim jego polecenia. Polecenie do zajezdni wyłącza automatyczne serwisowanie tego pojazdu
+STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Dodaj nowe polecenie na końcu listy lub przed zaznaczonym poleceniem. Użyj Ctrl, aby ustawić polecenie stacji na „pełny załadunek któregoś z towarów”, posterunku na odwrotność opcji „domyślnie bez zatrzymywania się”, a zajezdni na „separuj”. Kliknij na inny pojazd, aby skopiować jego polecenia lub użyj Ctrl, aby współdzielić z nim jego polecenia. Polecenie do zajezdni wyłącza automatyczne serwisowanie tego pojazdu
 
 STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP                  :{BLACK}Pokaż wszystkie pojazdy współdzielące te polecenia
 
@@ -6251,10 +6251,10 @@ STR_TOWN_NAME                                                   :{TOWN}
 STR_VEHICLE_NAME                                                :{VEHICLE}
 STR_WAYPOINT_NAME                                               :{WAYPOINT}
 
-STR_CURRENCY_SHORT_KILO                                         :{NBSP}k
-STR_CURRENCY_SHORT_MEGA                                         :{NBSP}M
-STR_CURRENCY_SHORT_GIGA                                         :{NBSP}G
-STR_CURRENCY_SHORT_TERA                                         :{NBSP}T
+STR_CURRENCY_SHORT_KILO                                         :{NBSP}tys.
+STR_CURRENCY_SHORT_MEGA                                         :{NBSP}mln
+STR_CURRENCY_SHORT_GIGA                                         :{NBSP}mld
+STR_CURRENCY_SHORT_TERA                                         :{NBSP}bln
 
 STR_JUST_CARGO                                                  :{CARGO_LONG}
 STR_JUST_RIGHT_ARROW                                            :{RIGHT_ARROW}

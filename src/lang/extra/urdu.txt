@@ -26,6 +26,9 @@ STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}لوڈ �
 
 # Town tooltip
 
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL_END                    :{ORANGE} روانگی {DEPOT} کی طرف، {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL_END            :{LTBLUE} {DEPOT} پر خدمات، {VELOCITY}
+
 # Cargo type orders Window
 
 # Plans window
@@ -39,3 +42,5 @@ STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}لوڈ �
 # Modifier key toggle window
 
 STR_CONFIG_SETTING_ALLOW_SHARES                                 :دوسری کمپنیوں کے حصص خریدنے کی اجازت: {STRING}
+
+STR_CONFIG_SETTING_CYCLE_SIGNAL_PBS                             :صرف راستے کے اشارے

@@ -66,9 +66,9 @@ CommandCost CmdInsertOrderIntl(DoCommandFlag flags, Vehicle *v, VehicleOrderID s
 void IntialiseOrderDestinationRefcountMap()
 {
 	ClearOrderDestinationRefcountMap();
-	for (const Vehicle *v : Vehicle::Iterate()) {
+	for (const Vehicle *v : Vehicle::IterateFrontOnly()) {
 		if (v != v->FirstShared()) continue;
-		for(const Order *order : v->Orders()) {
+		for (const Order *order : v->Orders()) {
 			if (order->IsType(OT_GOTO_STATION) || order->IsType(OT_GOTO_WAYPOINT) || order->IsType(OT_IMPLICIT)) {
 				_order_destination_refcount_map[OrderDestinationRefcountMapKey(order->GetDestination(), v->owner, order->GetType(), v->type)]++;
 			}
@@ -231,7 +231,9 @@ void Order::MakeImplicit(StationID destination)
 
 void Order::MakeWaiting()
 {
+	const bool wait_timetabled = this->IsWaitTimetabled();
 	this->type = OT_WAITING;
+	this->SetWaitTimetabled(wait_timetabled);
 }
 
 void Order::MakeLoadingAdvance(StationID destination)
@@ -2916,6 +2918,51 @@ void CheckOrders(const Vehicle *v)
 	}
 }
 
+static bool _remove_order_from_all_vehicles_batch = false;
+std::vector<uint32_t> _remove_order_from_all_vehicles_depots;
+
+static bool IsBatchRemoveOrderDepotRemoved(DestinationID destination)
+{
+	if (static_cast<size_t>(destination / 32) >= _remove_order_from_all_vehicles_depots.size()) return false;
+
+	return HasBit(_remove_order_from_all_vehicles_depots[destination / 32], destination % 32);
+}
+
+void StartRemoveOrderFromAllVehiclesBatch()
+{
+	assert(_remove_order_from_all_vehicles_batch == false);
+	_remove_order_from_all_vehicles_batch = true;
+}
+
+void StopRemoveOrderFromAllVehiclesBatch()
+{
+	assert(_remove_order_from_all_vehicles_batch == true);
+	_remove_order_from_all_vehicles_batch = false;
+
+	/* Go through all vehicles */
+	for (Vehicle *v : Vehicle::IterateFrontOnly()) {
+		if (v->type == VEH_AIRCRAFT) continue;
+
+		Order *order = &v->current_order;
+		if (order->IsType(OT_GOTO_DEPOT) && IsBatchRemoveOrderDepotRemoved(order->GetDestination())) {
+			order->MakeDummy();
+			SetWindowDirty(WC_VEHICLE_VIEW, v->index);
+		}
+
+		/* order list */
+		if (v->FirstShared() != v) continue;
+
+		RemoveVehicleOrdersIf(v, [&](const Order *o) {
+			OrderType ot = o->GetType();
+			if (ot != OT_GOTO_DEPOT) return false;
+			if ((o->GetDepotActionType() & ODATFB_NEAREST_DEPOT) != 0) return false;
+			return IsBatchRemoveOrderDepotRemoved(o->GetDestination());
+		});
+	}
+
+	_remove_order_from_all_vehicles_depots.clear();
+}
+
 /**
  * Removes an order from all vehicles. Triggers when, say, a station is removed.
  * @param type The type of the order (OT_GOTO_[STATION|DEPOT|WAYPOINT]).
@@ -2926,12 +2973,24 @@ void CheckOrders(const Vehicle *v)
  */
 void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination, bool hangar)
 {
+	if (destination == ((type == OT_GOTO_DEPOT) ? (DestinationID)INVALID_DEPOT : (DestinationID)INVALID_STATION)) return;
+
+	OrderBackup::RemoveOrder(type, destination, hangar);
+
+	if (_remove_order_from_all_vehicles_batch && type == OT_GOTO_DEPOT && !hangar) {
+		std::vector<uint32_t> &ids = _remove_order_from_all_vehicles_depots;
+		uint32_t word_idx = destination / 32;
+		if (word_idx >= ids.size()) ids.resize(word_idx + 1);
+		SetBit(ids[word_idx], destination % 32);
+		return;
+	}
+
 	/* Aircraft have StationIDs for depot orders and never use DepotIDs
 	 * This fact is handled specially below
 	 */
 
 	/* Go through all vehicles */
-	for (Vehicle *v : Vehicle::Iterate()) {
+	for (Vehicle *v : Vehicle::IterateFrontOnly()) {
 		Order *order = &v->current_order;
 		if ((v->type == VEH_AIRCRAFT && order->IsType(OT_GOTO_DEPOT) && !hangar ? OT_GOTO_STATION : order->GetType()) == type &&
 				(!hangar || v->type == VEH_AIRCRAFT) && order->GetDestination() == destination) {
@@ -2960,8 +3019,6 @@ void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination, bool 
 			return (ot == type && o->GetDestination() == destination);
 		});
 	}
-
-	OrderBackup::RemoveOrder(type, destination, hangar);
 }
 
 /**
@@ -3784,8 +3841,8 @@ CommandCost CmdMassChangeOrder(TileIndex tile, DoCommandFlag flags, uint32_t p1,
 	DestinationID to_dest = GB(p2, 0, 16);
 
 	if (flags & DC_EXEC) {
-		for (Vehicle *v : Vehicle::Iterate()) {
-			if (v->type == vehtype && v->IsPrimaryVehicle() && CheckOwnership(v->owner).Succeeded() && VehicleCargoFilter(v, cargo_filter)) {
+		for (Vehicle *v : Vehicle::IterateTypeFrontOnly(vehtype)) {
+			if (v->IsPrimaryVehicle() && CheckOwnership(v->owner).Succeeded() && VehicleCargoFilter(v, cargo_filter)) {
 				int index = 0;
 				bool changed = false;
 

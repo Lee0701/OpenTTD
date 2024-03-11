@@ -638,7 +638,7 @@ static void DrawVehicleRefitWindow(const RefitOptions &refits, const RefitOption
 	bool rtl = _current_text_dir == TD_RTL;
 	uint iconwidth = std::max(GetSpriteSize(SPR_CIRCLE_FOLDED).width, GetSpriteSize(SPR_CIRCLE_UNFOLDED).width);
 	uint iconheight = GetSpriteSize(SPR_CIRCLE_FOLDED).height;
-	int linecolour = _colour_gradient[COLOUR_ORANGE][4];
+	int linecolour = GetColourGradient(COLOUR_ORANGE, SHADE_NORMAL);
 
 	int iconleft   = rtl ? ir.right - iconwidth     : ir.left;
 	int iconcenter = rtl ? ir.right - iconwidth / 2 : ir.left + iconwidth / 2;
@@ -1882,9 +1882,9 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 
 	int vehicle_button_x = rtl ? ir.right - profit.width : ir.left;
 
-	uint max = static_cast<uint>(std::min<size_t>(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), this->vehgroups.size()));
-	for (uint i = this->vscroll->GetPosition(); i < max; ++i) {
-		const GUIVehicleGroup &vehgroup = this->vehgroups[i];
+	auto [first, last] = this->vscroll->GetVisibleRangeIterators(this->vehgroups);
+	for (auto it = first; it != last; ++it) {
+		const GUIVehicleGroup &vehgroup = *it;
 		if (this->grouping == GB_NONE) {
 			const Vehicle *v = vehgroup.GetSingleVehicle();
 
@@ -1997,7 +1997,7 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 				byte ccolour = 0;
 				Company *c = Company::Get(v->owner);
 				if (c != nullptr) {
-					ccolour = _colour_gradient[c->colour][6];
+					ccolour = GetColourGradient(c->colour, SHADE_LIGHTER);
 				}
 				GfxFillRect((tr.right - 1) - (GetCharacterHeight(FS_SMALL) - 2), ir.top + 1, tr.right - 1, (ir.top + 1) + (GetCharacterHeight(FS_SMALL) - 2), ccolour, FILLRECT_OPAQUE);
 			}
@@ -3106,7 +3106,7 @@ struct VehicleDetailsWindow : Window {
 	{
 		if (EconTime::UsingWallclockUnits()) {
 			return STR_VEHICLE_INFO_AGE_RUNNING_COST_PERIOD;
-		} else if (DayLengthFactor() > 1) {
+		} else if (DayLengthFactor() > 1 && !_settings_client.gui.show_running_costs_calendar_year) {
 			return STR_VEHICLE_INFO_AGE_RUNNING_COST_ORIG_YR;
 		} else {
 			return STR_VEHICLE_INFO_AGE_RUNNING_COST_YR;
@@ -3615,6 +3615,22 @@ static bool IsVehicleRefitable(const Vehicle *v)
 	return false;
 }
 
+static StringID AdjustVehicleViewVelocityStringID(StringID str)
+{
+	if (_settings_client.gui.show_speed_first_vehicle_view) return str;
+
+	if (str == STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL) return STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL_END;
+
+	static_assert(STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL_END - STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL_END ==
+			STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL - STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL);
+
+	if (str >= STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL && str <= STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL) {
+		return str + STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL_END - STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL;
+	}
+
+	return str;
+}
+
 /** Window manager class for viewing a vehicle. */
 struct VehicleViewWindow : Window {
 private:
@@ -3969,6 +3985,8 @@ public:
 				}
 			}
 		}
+
+		str = AdjustVehicleViewVelocityStringID(str);
 
 		if (_settings_client.gui.show_order_number_vehicle_view && show_order_number && v->cur_implicit_order_index < v->GetNumOrders()) {
 			_temp_special_strings[0] = GetString(str);

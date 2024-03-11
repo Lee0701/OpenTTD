@@ -5,7 +5,7 @@ if(NOT BINARY_NAME)
 endif()
 
 project(${BINARY_NAME}
-    VERSION 14.0
+    VERSION 15.0
 )
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -534,6 +534,10 @@ endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_definitions(-DPOINTER_IS_64BIT)
+endif()
+
+if(OPTION_NO_TAGGED_PTRS)
+    add_definitions(-DNO_TAGGED_PTRS)
 endif()
 
 enable_testing()

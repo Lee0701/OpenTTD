@@ -1434,6 +1434,18 @@ STR_VEHICLE_STATUS_TRAIN_WAITING_TIMETABLE                      :{ORANGE}等待�
 STR_VEHICLE_STATUS_TRAIN_REVERSING                              :{ORANGE}换向中，{VELOCITY}
 STR_VEHICLE_STATUS_TRAIN_MOVING_DEPOT                           :{ORANGE}正在移动至车库
 
+STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL_END                       :{RED}正在停止，{VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL_END                  :{LTBLUE}正在前往 {STATION}，{VELOCITY}
+STR_VEHICLE_STATUS_NO_ORDERS_VEL_END                            :{LTBLUE}没有目标，{VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL_END                 :{LTBLUE}正在前往{WAYPOINT}，{VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL_END                    :{ORANGE}正在前往 {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL_END            :{LTBLUE}正在服务于 {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL_END            :{LTBLUE}正前往 {DEPOT} 以维护与调节班次, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL_END                 :{LTBLUE}不能到达 {STATION}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL_END                :{LTBLUE}不能到达 {WAYPOINT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL_END                   :{ORANGE}不能到达 {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL_END           :{LTBLUE}不能到达 {DEPOT}, {VELOCITY}
+
 STR_BREAKDOWN_TYPE_CRITICAL                                     :机械故障
 STR_BREAKDOWN_TYPE_EM_STOP                                      :紧急停车
 STR_BREAKDOWN_TYPE_LOW_SPEED                                    :速度限制至 {VELOCITY}
@@ -1532,6 +1544,8 @@ STR_ORDERS_MANAGE_LIST_TOOLTIP                                  :{BLACK}管理�
 
 STR_ORDERS_MANAGE_ORDER                                         :{BLACK}管理调度计划
 STR_ORDERS_MANAGE_ORDER_TOOLTIP                                 :{BLACK}管理此调度计划
+
+STR_ORDERS_GO_TO_TOOLTIP_EXTRA                                  :{BLACK}在调度列表的结尾或选定项目前{}增加一条新指令，按住Ctrl使命令为“装满任意货物”{}路点命令为“不停车”{}车库命令为“保养”
 
 STR_ORDER_REVERSE_ORDER_LIST                                    :反转调度列表
 STR_ORDER_APPEND_REVERSED_ORDER_LIST                            :添加反转调度列表
@@ -2109,6 +2123,8 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :详细
 
 STR_CONFIG_SETTING_CITY_IN_LABEL                                :在城镇名中显示是否为都市: {STRING}
 STR_CONFIG_SETTING_CITY_IN_LABEL_HELPTEXT                       :显示一个城镇是否为都市
+
+STR_CONFIG_SETTING_CYCLE_SIGNAL_PBS                             :仅路径信号灯
 
 STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
 STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR} ({COMMA})

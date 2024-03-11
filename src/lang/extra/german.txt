@@ -1268,6 +1268,18 @@ STR_VEHICLE_STATUS_TRAIN_WAITING_TIMETABLE                      :{ORANGE}Warte a
 STR_VEHICLE_STATUS_TRAIN_REVERSING                              :{ORANGE}Wende, {VELOCITY}
 STR_VEHICLE_STATUS_TRAIN_MOVING_DEPOT                           :{ORANGE}Fahre ins Depot
 
+STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL_END                       :{RED}Halte an, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL_END                  :{LTBLUE}Unterwegs nach {STATION}, {VELOCITY}
+STR_VEHICLE_STATUS_NO_ORDERS_VEL_END                            :{LTBLUE}Keine Aufträge, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL_END                 :{LTBLUE}Fahre zu {WAYPOINT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL_END                    :{ORANGE}Fährt zu {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL_END            :{LTBLUE}Wartung in {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL_END            :{LTBLUE}Entladen und Wartung am Depot {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL_END                 :{LTBLUE} Kann nicht {STATION}, ´{VELOCITY} erreichen
+STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL_END                :{LTBLUE}Kann nicht {WAYPOINT},{VELOCITY} erreichen
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL_END                   :{ORANGE}Kann nicht {DEPOT},{VELOCITY} erreichen
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL_END           :{LTBLUE}Kann {DEPOT},{VELOCITY} nicht erreichen
+
 STR_BREAKDOWN_TYPE_CRITICAL                                     :Mechanische Störung
 STR_BREAKDOWN_TYPE_EM_STOP                                      :Nothalt
 STR_BREAKDOWN_TYPE_LOW_SPEED                                    :Auf {VELOCITY} beschränkte Geschwindigkeit
@@ -1355,6 +1367,8 @@ STR_ORDER_CONDITIONAL_COMPARATOR_DISPATCH_SLOT_IS_NOT_LAST      :ist nicht letzt
 
 STR_ORDERS_MANAGE_LIST                                          :{BLACK}Liste verwalten
 STR_ORDERS_MANAGE_LIST_TOOLTIP                                  :{BLACK}Verwalte diese Auftragsliste
+
+STR_ORDERS_GO_TO_TOOLTIP_EXTRA                                  :{BLACK}Einen neuen Auftrag vor dem markierten Auftrag oder am Ende der Liste einfügen. Strg+Klick auf einer Station für den Auftrag „Vollladen einer Fracht“, auf Wegpunkten, um die Einstellung „standardmäßig ohne Zwischenhalt“ zu invertieren und auf Depots für den Auftrag „Wartung“. Mit einem Klick auf ein anderes Fahrzeug werden seine Aufträge kopiert, mit Strg+Klick werden gemeinsame Aufträge erzeugt. Ein Depotauftrag schaltet die automatische Wartung für das Fahrzeug aus.
 
 STR_ORDER_REVERSE_ORDER_LIST                                    :Kehre Auftragsliste um
 STR_ORDER_APPEND_REVERSED_ORDER_LIST                            :Füge umgekehrte Auftragsliste an
@@ -1757,6 +1771,8 @@ STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_HELPTEXT         :Legt die Anzeig
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_OFF              :Aus
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_SIMPLE           :Einfach
 STR_CONFIG_SETTING_STATION_RATING_TOOLTIP_MODE_DETAILED         :Detailliert
+
+STR_CONFIG_SETTING_CYCLE_SIGNAL_PBS                             :Nur Pfadsignale
 
 STR_VIEWPORT_TOWN_COLOUR                                        :{1:COLOUR}{0:TOWN}
 STR_VIEWPORT_TOWN_COLOUR_POP                                    :{WHITE}{TOWN} {COLOUR}({COMMA})

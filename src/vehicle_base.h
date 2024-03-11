@@ -25,6 +25,7 @@
 #include "landscape.h"
 #include "network/network.h"
 #include "core/mem_func.hpp"
+#include "core/endian_type.hpp"
 #include "sl/saveload_common.h"
 #include <list>
 #include <map>
@@ -234,7 +235,36 @@ struct PendingSpeedRestrictionChange {
 };
 
 /** A vehicle pool for a little over 1 million vehicles. */
+#if OTTD_UPPER_TAGGED_PTR
+struct VehiclePoolOps {
+	using Tptr = uintptr_t;
+	using Tparam_type = VehicleType;
+
+	static inline Vehicle *GetPtr(uintptr_t ptr) {
+		return reinterpret_cast<Vehicle *>(ptr & ((static_cast<uintptr_t>(1) << 60) - 1)); // GB can't be used here because its return type is limited to 32 bits
+	}
+
+	static inline uintptr_t PutPtr(Vehicle *v, VehicleType vtype)
+	{
+		uintptr_t ptr = reinterpret_cast<uintptr_t>(v);
+		SB(ptr, 60, 3, vtype & 7);
+		return ptr;
+	}
+
+	static constexpr uintptr_t NullValue() { return 0; }
+	static constexpr VehicleType DefaultItemParam() { return VEH_INVALID; }
+
+	static constexpr VehicleType GetVehicleType(uintptr_t ptr) { return static_cast<VehicleType>(GB(ptr, 60, 3)); }
+	static constexpr bool IsNonFrontVehiclePtr(uintptr_t ptr) { return HasBit(ptr, 63); }
+
+	static constexpr void SetIsNonFrontVehiclePtr(uintptr_t &ptr, bool non_front) { SB(ptr, 63, 1, non_front ? 1 : 0); }
+};
+
+typedef Pool<Vehicle, VehicleID, 512, 0xFF000, PT_NORMAL, false, true, VehiclePoolOps> VehiclePool;
+#else
 typedef Pool<Vehicle, VehicleID, 512, 0xFF000> VehiclePool;
+#endif
+
 extern VehiclePool _vehicle_pool;
 
 /* Some declarations of functions, so we can make them friendly */
@@ -697,11 +727,7 @@ public:
 	 */
 	virtual Trackdir GetVehicleTrackdir() const { return INVALID_TRACKDIR; }
 
-	/**
-	 * Gets the running cost of a vehicle  that can be sent into SetDParam for string processing.
-	 * @return the vehicle's running cost
-	 */
-	Money GetDisplayRunningCost() const { return this->GetRunningCost() >> 8; }
+	Money GetDisplayRunningCost() const;
 
 	/**
 	 * Gets the profit vehicle had this year. It can be sent into SetDParam for string processing.
@@ -886,7 +912,7 @@ public:
 	 * and that shall not be resetted for the new vehicle.
 	 * @param src The old vehicle
 	 */
-	inline void CopyVehicleConfigAndStatistics(const Vehicle *src)
+	inline void CopyVehicleConfigAndStatistics(Vehicle *src)
 	{
 		this->CopyConsistPropertiesFrom(src);
 
@@ -906,6 +932,8 @@ public:
 		if (HasBit(src->vehicle_flags, VF_AUTOFILL_PRES_WAIT_TIME)) SetBit(this->vehicle_flags, VF_AUTOFILL_PRES_WAIT_TIME);
 
 		this->service_interval = src->service_interval;
+
+		src->unitnumber = 0;
 	}
 
 
@@ -1262,6 +1290,77 @@ public:
 
 	uint32_t GetDisplayMaxWeight() const;
 	uint32_t GetDisplayMinPowerToWeight() const;
+
+	struct VehicleTypeFilter {
+		VehicleType vt;
+
+		bool operator() (size_t index)
+		{
+#if OTTD_UPPER_TAGGED_PTR
+			return VehiclePoolOps::GetVehicleType(_vehicle_pool.GetRaw(index)) == this->vt;
+#else
+			return Vehicle::Get(index)->type == this->vt;
+#endif
+		}
+	};
+
+	struct VehicleFrontOnlyFilter {
+		bool operator() (size_t index)
+		{
+#if OTTD_UPPER_TAGGED_PTR
+			return !VehiclePoolOps::IsNonFrontVehiclePtr(_vehicle_pool.GetRaw(index));
+#else
+			return Vehicle::Get(index)->Previous() == nullptr;
+#endif
+		}
+	};
+
+	struct VehicleFrontOnlyTypeFilter {
+		VehicleType vt;
+
+		bool operator() (size_t index)
+		{
+#if OTTD_UPPER_TAGGED_PTR
+			uintptr_t vptr = _vehicle_pool.GetRaw(index);
+			return !VehiclePoolOps::IsNonFrontVehiclePtr(vptr) && VehiclePoolOps::GetVehicleType(vptr) == this->vt;
+#else
+			const Vehicle *v = Vehicle::Get(index);
+			return v->type == this->vt && v->Previous() == nullptr;
+#endif
+		}
+	};
+
+	/**
+	 * Returns an iterable ensemble of all valid vehicles of the given type
+	 * @param vt the VehicleType to filter
+	 * @param from index of the first vehicle to consider
+	 * @return an iterable ensemble of all valid vehicles of the given type
+	 */
+	static Pool::IterateWrapperFiltered<Vehicle, VehicleTypeFilter> IterateType(VehicleType vt, size_t from = 0)
+	{
+		return Pool::IterateWrapperFiltered<Vehicle, VehicleTypeFilter>(from, VehicleTypeFilter{ vt });
+	}
+
+	/**
+	 * Returns an iterable ensemble of all valid front vehicles (i.e. Previous() == nullptr)
+	 * @param from index of the first vehicle to consider
+	 * @return an iterable ensemble of all valid front vehicles
+	 */
+	static Pool::IterateWrapperFiltered<Vehicle, VehicleFrontOnlyFilter> IterateFrontOnly(size_t from = 0)
+	{
+		return Pool::IterateWrapperFiltered<Vehicle, VehicleFrontOnlyFilter>(from, VehicleFrontOnlyFilter{});
+	}
+
+	/**
+	 * Returns an iterable ensemble of all valid front vehicles of the given type
+	 * @param vt the VehicleType to filter
+	 * @param from index of the first vehicle to consider
+	 * @return an iterable ensemble of all valid front vehicles of the given type
+	 */
+	static Pool::IterateWrapperFiltered<Vehicle, VehicleFrontOnlyTypeFilter> IterateTypeFrontOnly(VehicleType vt, size_t from = 0)
+	{
+		return Pool::IterateWrapperFiltered<Vehicle, VehicleFrontOnlyTypeFilter>(from, VehicleFrontOnlyTypeFilter{ vt });
+	}
 };
 
 inline bool IsPointInViewportVehicleRedrawArea(const std::vector<Rect> &viewport_redraw_rects, const Point &pt)
@@ -1286,6 +1385,25 @@ struct SpecializedVehicle : public Vehicle {
 	static const VehicleType EXPECTED_TYPE = Type; ///< Specialized type
 
 	typedef SpecializedVehicle<T, Type> SpecializedVehicleBase; ///< Our type
+
+#if OTTD_UPPER_TAGGED_PTR
+	inline void *operator new(size_t size)
+	{
+		return Vehicle::NewWithParam(size, Type);
+	}
+
+	inline void *operator new(size_t size, size_t index)
+	{
+		return Vehicle::NewWithParam(size, index, Type);
+	}
+
+	inline void operator delete(void *p)
+	{
+		Vehicle::operator delete(p);
+	}
+
+	void *operator new(size_t, void *ptr) = delete;
+#endif
 
 	/**
 	 * Set vehicle type correctly
@@ -1376,7 +1494,11 @@ struct SpecializedVehicle : public Vehicle {
 	 */
 	static inline bool IsValidID(size_t index)
 	{
+#if OTTD_UPPER_TAGGED_PTR
+		return Vehicle::IsValidID(index) && VehiclePoolOps::GetVehicleType(_vehicle_pool.GetRaw(index)) == Type;
+#else
 		return Vehicle::IsValidID(index) && Vehicle::Get(index)->type == Type;
+#endif
 	}
 
 	/**
@@ -1534,19 +1656,16 @@ public:
 	 * @return an iterable ensemble of all valid vehicles of type T
 	 */
 	static Pool::IterateWrapper<T> Iterate(size_t from = 0) { return Pool::IterateWrapper<T>(from); }
-};
 
-/** Generates sequence of free UnitID numbers */
-struct FreeUnitIDGenerator {
-	bool *cache;  ///< array of occupied unit id numbers
-	UnitID maxid; ///< maximum ID at the moment of constructor call
-	UnitID curid; ///< last ID returned; 0 if none
-
-	FreeUnitIDGenerator(VehicleType type, CompanyID owner);
-	UnitID NextID();
-
-	/** Releases allocated memory */
-	~FreeUnitIDGenerator() { free(this->cache); }
+	/**
+	 * Returns an iterable ensemble of all valid front vehicles (i.e. Previous() == nullptr) of type T
+	 * @param from index of the first vehicle to consider
+	 * @return an iterable ensemble of all valid front vehicles of type T
+	 */
+	static Pool::IterateWrapperFiltered<T, VehicleFrontOnlyFilter> IterateFrontOnly(size_t from = 0)
+	{
+		return Pool::IterateWrapperFiltered<T, VehicleFrontOnlyFilter>(from, VehicleFrontOnlyFilter{});
+	}
 };
 
 /** Sentinel for an invalid coordinate. */

@@ -236,7 +236,7 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 		bool min_profit_first = true;
 		uint num = 0;
 
-		for (const Vehicle *v : Vehicle::Iterate()) {
+		for (const Vehicle *v : Vehicle::IterateFrontOnly()) {
 			if (v->owner != owner) continue;
 			if (IsCompanyBuildableVehicleType(v->type) && v->IsPrimaryVehicle() && !HasBit(v->subtype, GVSF_VIRTUAL)) {
 				if (v->profit_last_year > 0) num++; // For the vehicle score only count profitable vehicles
@@ -501,17 +501,13 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 
 	/* Change ownership of vehicles */
 	if (new_owner != INVALID_OWNER) {
-		FreeUnitIDGenerator unitidgen[] = {
-			FreeUnitIDGenerator(VEH_TRAIN, new_owner), FreeUnitIDGenerator(VEH_ROAD,     new_owner),
-			FreeUnitIDGenerator(VEH_SHIP,  new_owner), FreeUnitIDGenerator(VEH_AIRCRAFT, new_owner)
-		};
+		Company *new_company = Company::Get(new_owner);
 
 		/* Override company settings to new company defaults in case we need to convert them.
 		 * This is required as the CmdChangeServiceInt doesn't copy the supplied value when it is non-custom
 		 */
-		if (new_owner != INVALID_OWNER) {
+		{
 			Company *old_company = Company::Get(old_owner);
-			Company *new_company = Company::Get(new_owner);
 
 			old_company->settings.vehicle.servint_aircraft = new_company->settings.vehicle.servint_aircraft;
 			old_company->settings.vehicle.servint_trains = new_company->settings.vehicle.servint_trains;
@@ -522,14 +518,10 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 
 		for (Vehicle *v : Vehicle::Iterate()) {
 			if (v->owner == old_owner && IsCompanyBuildableVehicleType(v->type)) {
-				assert(new_owner != INVALID_OWNER);
-
 				/* Correct default values of interval settings while maintaining custom set ones.
 				 * This prevents invalid values on mismatching company defaults being accepted.
 				 */
 				if (!v->ServiceIntervalIsCustom()) {
-					Company *new_company = Company::Get(new_owner);
-
 					/* Technically, passing the interval is not needed as the command will query the default value itself.
 					 * However, do not rely on that behaviour.
 					 */
@@ -549,7 +541,8 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 				}
 				if (v->IsPrimaryVehicle() && !HasBit(v->subtype, GVSF_VIRTUAL)) {
 					GroupStatistics::CountVehicle(v, 1);
-					v->unitnumber = unitidgen[v->type].NextID();
+					auto &unitidgen = new_company->freeunits[v->type];
+					v->unitnumber = unitidgen.UseID(unitidgen.NextID());
 				}
 
 				/* Invalidate the vehicle's cargo payment "owner cache". */
@@ -585,6 +578,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	}
 
 	/*  Change ownership of tiles */
+	StartRemoveOrderFromAllVehiclesBatch();
 	{
 		TileIndex tile = 0;
 		do {
@@ -606,6 +600,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 		/* Update any signals in the buffer */
 		UpdateSignalsInBuffer();
 	}
+	StopRemoveOrderFromAllVehiclesBatch();
 
 	/* Add airport infrastructure count of the old company to the new one. */
 	if (new_owner != INVALID_OWNER) Company::Get(new_owner)->infrastructure.airport += Company::Get(old_owner)->infrastructure.airport;
@@ -809,7 +804,7 @@ static void CompaniesGenStatistics()
 	cur_company.Restore();
 
 	/* Only run the economic statics and update company stats every 3rd month (1st of quarter). */
-	if ((EconTime::CurMonth() % 3) == 0) return;
+	if ((EconTime::CurMonth() % 3) != 0) return;
 
 	for (Company *c : Company::Iterate()) {
 		/* Drop the oldest history off the end */
@@ -2532,7 +2527,7 @@ CommandCost CmdBuyShareInCompany(TileIndex tile, DoCommandFlag flags, uint32_t p
 	if (c == nullptr || !_settings_game.economy.allow_shares || _current_company == target_company) return CMD_ERROR;
 
 	/* Protect new companies from hostile takeovers */
-	if (CalTime::CurYear() - c->inaugurated_year < _settings_game.economy.min_years_for_shares) return_cmd_error(STR_ERROR_PROTECTED);
+	if (c->age_years < _settings_game.economy.min_years_for_shares) return_cmd_error(STR_ERROR_PROTECTED);
 
 	/* Those lines are here for network-protection (clients can be slow) */
 	if (GetAmountOwnedBy(c, COMPANY_SPECTATOR) == 0) return cost;

@@ -393,14 +393,14 @@ struct ScriptSettingsWindow : public Window {
 			TextColour colour;
 			uint idx = 0;
 			if (config_item.description.empty()) {
-				if (this->slot != OWNER_DEITY && !Company::IsValidID(this->slot) && config_item.random_deviation != 0) {
+				if (this->slot != OWNER_DEITY && !Company::IsValidID(this->slot) && config_item.random_deviation != 0 && !GetGameSettings().script.script_disable_param_randomisation) {
 					str = STR_AI_SETTINGS_JUST_DEVIATION;
 				} else {
 					str = STR_JUST_STRING1;
 				}
 				colour = TC_ORANGE;
 			} else {
-				if (this->slot != OWNER_DEITY && !Company::IsValidID(this->slot) && config_item.random_deviation != 0) {
+				if (this->slot != OWNER_DEITY && !Company::IsValidID(this->slot) && config_item.random_deviation != 0 && !GetGameSettings().script.script_disable_param_randomisation) {
 					str = STR_AI_SETTINGS_SETTING_DEVIATION;
 				} else {
 					str = STR_AI_SETTINGS_SETTING;
@@ -419,7 +419,7 @@ struct ScriptSettingsWindow : public Window {
 					DrawArrowButtons(br.left, y + button_y_offset, COLOUR_YELLOW, (this->clicked_button == i) ? 1 + (this->clicked_increase != rtl) : 0, editable && current_value > config_item.min_value, editable && current_value < config_item.max_value);
 				}
 
-				if (this->slot == OWNER_DEITY || Company::IsValidID(this->slot) || config_item.random_deviation == 0) {
+				if (this->slot == OWNER_DEITY || Company::IsValidID(this->slot) || config_item.random_deviation == 0 || GetGameSettings().script.script_disable_param_randomisation) {
 					auto config_iterator = config_item.labels.find(current_value);
 					if (config_iterator != config_item.labels.end()) {
 						SetDParam(idx++, STR_JUST_RAW_STRING);
@@ -945,7 +945,7 @@ struct ScriptDebugWindow : public Window {
 	{
 		if (this->filter.script_debug_company == INVALID_COMPANY) return;
 
-		ScriptLogTypes::LogData &log = this->GetLogData();
+		const ScriptLogTypes::LogData &log = this->GetLogData();
 		if (log.empty()) return;
 
 		Rect fr = r.Shrink(WidgetDimensions::scaled.framerect);
@@ -961,8 +961,9 @@ struct ScriptDebugWindow : public Window {
 
 		fr.left -= this->hscroll->GetPosition();
 
-		for (int i = this->vscroll->GetPosition(); this->vscroll->IsVisible(i) && (size_t)i < log.size(); i++) {
-			const ScriptLogTypes::LogLine &line = log[i];
+		auto [first, last] = this->vscroll->GetVisibleRangeIterators(log);
+		for (auto it = first; it != last; ++it) {
+			const ScriptLogTypes::LogLine &line = *it;
 
 			TextColour colour;
 			switch (line.type) {
@@ -975,7 +976,7 @@ struct ScriptDebugWindow : public Window {
 			}
 
 			/* Check if the current line should be highlighted */
-			if (i == this->highlight_row) {
+			if (std::distance(std::begin(log), it) == this->highlight_row) {
 				fr.bottom = fr.top + this->resize.step_height - 1;
 				GfxFillRect(fr, PC_BLACK);
 				if (colour == TC_BLACK) colour = TC_WHITE; // Make black text readable by inverting it to white.

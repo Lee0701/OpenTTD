@@ -1006,7 +1006,7 @@ void Window::ReInit(int rx, int ry, bool reposition)
 		this->FindWindowPlacementAndResize(this->window_desc->GetDefaultWidth(), this->window_desc->GetDefaultHeight());
 	}
 
-	ResizeWindow(this, dx, dy);
+	ResizeWindow(this, dx, dy, true, false);
 	/* ResizeWindow() does this->SetDirty() already, no need to do it again here. */
 }
 
@@ -1577,11 +1577,11 @@ void Window::FindWindowPlacementAndResize(int def_width, int def_height)
 		if (this->resize.step_width  > 1) enlarge_x -= enlarge_x % (int)this->resize.step_width;
 		if (this->resize.step_height > 1) enlarge_y -= enlarge_y % (int)this->resize.step_height;
 
-		ResizeWindow(this, enlarge_x, enlarge_y);
+		ResizeWindow(this, enlarge_x, enlarge_y, true, false);
 		/* ResizeWindow() calls this->OnResize(). */
 	} else {
-		/* Schedule OnResize; that way the scrollbars and matrices get initialized. */
-		this->ScheduleResize();
+		/* Always call OnResize; that way the scrollbars and matrices get initialized. */
+		this->OnResize();
 	}
 
 	int nx = this->left;
@@ -2174,7 +2174,7 @@ static void EnsureVisibleCaption(Window *w, int nx, int ny)
  * @param delta_y Delta y-size of changed window
  * @param clamp_to_screen Whether to make sure the whole window stays visible
  */
-void ResizeWindow(Window *w, int delta_x, int delta_y, bool clamp_to_screen)
+void ResizeWindow(Window *w, int delta_x, int delta_y, bool clamp_to_screen, bool schedule_resize)
 {
 	if (delta_x != 0 || delta_y != 0) {
 		if (clamp_to_screen) {
@@ -2201,7 +2201,12 @@ void ResizeWindow(Window *w, int delta_x, int delta_y, bool clamp_to_screen)
 	EnsureVisibleCaption(w, w->left, w->top);
 
 	/* Schedule OnResize to make sure everything is initialised correctly if it needs to be. */
-	w->ScheduleResize();
+	if (schedule_resize) {
+		w->ScheduleResize();
+	} else {
+		w->OnResize();
+	}
+
 	extern bool _gfx_draw_active;
 	if (_gfx_draw_active) {
 		SetWindowDirtyPending(w);
@@ -3612,7 +3617,7 @@ void ReInitAllWindows(bool zoom_changed)
 		ReInitWindow(FindWindowById(WC_MAIN_TOOLBAR, 0), zoom_changed);
 	}
 	ReInitWindow(FindWindowById(WC_STATUS_BAR, 0), zoom_changed);
-	for (Window *w : Window::IterateFromBack()) {
+	for (Window *w : Window::Iterate()) {
 		if (w->window_class == WC_MAIN_TOOLBAR || w->window_class == WC_STATUS_BAR) continue;
 		ReInitWindow(w, zoom_changed);
 	}
@@ -3726,7 +3731,7 @@ void RelocateAllWindows(int neww, int newh)
 		switch (w->window_class) {
 			case WC_MAIN_WINDOW:
 			case WC_BOOTSTRAP:
-				ResizeWindow(w, neww, newh);
+				ResizeWindow(w, neww, newh, true, false);
 				continue;
 
 			case WC_MAIN_TOOLBAR:

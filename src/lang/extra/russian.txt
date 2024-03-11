@@ -57,6 +57,18 @@ STR_PURCHASE_INFO_DESIGNED                                      :{BLACK}Разр
 STR_BUY_REFIT_VEHICLE_BUY_VEHICLE_BUTTON                        :{BLACK}Переоборудовать
 STR_BUY_REFIT_VEHICLE_BUY_VEHICLE_TOOLTIP                       :{BLACK}Переоборудовать купленное транспортное средство сразу после покупки для выделенного вида груза
 
+STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL_END                       :{RED}Останавливается; {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL_END                  :{LTBLUE}Идёт к {STATION}; {VELOCITY}
+STR_VEHICLE_STATUS_NO_ORDERS_VEL_END                            :{LTBLUE}Нет заданий; {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL_END                 :{LTBLUE}Идёт к {WAYPOINT}; {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL_END                    :{ORANGE}Идёт в {DEPOT}; {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL_END            :{LTBLUE}Идёт в {DEPOT} для ТО; {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL_END            :{LTBLUE}Идёт в {DEPOT} для ТО и распред., {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL_END                 :{LTBLUE}Нет пути до {STATION}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL_END                :{LTBLUE}Нет пути до {WAYPOINT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL_END                   :{ORANGE}Нет пути до {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL_END           :{LTBLUE}Нет пути до {DEPOT}, {VELOCITY}
+
 STR_ORDER_CONDITIONAL_COMPARATOR_ACCEPTS                        :принимает
 STR_ORDER_CONDITIONAL_COMPARATOR_DOES_NOT_ACCEPT                :не принимает
 STR_ORDER_CONDITIONAL_COMPARATOR_HAS                            :имеет
@@ -65,6 +77,8 @@ STR_ORDER_CONDITIONAL_COMPARATOR_HAS_LESS_THAN                  :имеет ме
 STR_ORDER_CONDITIONAL_COMPARATOR_HAS_LESS_EQUALS                :имеет меньше или равно
 STR_ORDER_CONDITIONAL_COMPARATOR_HAS_MORE_THAN                  :имеет больше чем
 STR_ORDER_CONDITIONAL_COMPARATOR_HAS_MORE_EQUALS                :имеет больше или равно
+
+STR_ORDERS_GO_TO_TOOLTIP_EXTRA                                  :{BLACK}Вставить новое задание перед выделенным, либо в конец списка. Ctrl+щелчок по станции добавит задание «полная загрузка любым грузом», по маршрутной точке{NBSP}- инвертирует настройку «без остановки по умолчанию», по депо{NBSP}- «прохождение ТО». Щелчок по другому ТС скопирует его задания, Ctrl+щелчок{NBSP}- сделает маршрут общим. Если в списке заданий есть депо, автоматическое ТО для этого ТС отключается.
 
 STR_ORDER_CONDITIONAL_PERCENT_DISPLAY                           :Перейти к заданию {COMMA} {COMMA} процентов времени
 
@@ -106,3 +120,5 @@ STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Прод
 STR_ERROR_CAN_T_BUY_25_SHARE_IN_THIS                            :{WHITE}Невозможно купить 25% акций этой компании...
 STR_ERROR_CAN_T_SELL_25_SHARE_IN                                :{WHITE}Невозможно продать 25% акций этой компании...
 STR_ERROR_PROTECTED                                             :{WHITE}Эта компания ещё не выпускает акции...
+
+STR_CONFIG_SETTING_CYCLE_SIGNAL_PBS                             :только маршрутные

@@ -649,7 +649,7 @@ public:
 		for (CompanyID k = COMPANY_FIRST; k < MAX_COMPANIES; k++) {
 			const Company *c = Company::GetIfValid(k);
 			if (c != nullptr) {
-				this->colours[numd] = _colour_gradient[c->colour][6];
+				this->colours[numd] = GetColourGradient(c->colour, SHADE_LIGHTER);
 				for (int j = this->num_on_x_axis, i = 0; --j >= 0;) {
 					if (j >= c->num_valid_stat_ent) {
 						this->cost[numd][i] = INVALID_DATAPOINT;
@@ -1384,13 +1384,11 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 
 		bool rtl = _current_text_dir == TD_RTL;
 
-		int pos = this->vscroll->GetPosition();
-		int max = pos + this->vscroll->GetCapacity();
+		auto [first, last] = this->vscroll->GetVisibleRangeIterators(_sorted_standard_cargo_specs);
 
 		Rect line = r.WithHeight(this->line_height);
-		for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
-			if (pos-- > 0) continue;
-			if (--max < 0) break;
+		for (auto it = first; it != last; ++it) {
+			const CargoSpec *cs = *it;
 
 			bool lowered = !HasBit(_legend_excluded_cargo, cs->Index());
 
@@ -1695,8 +1693,8 @@ struct PerformanceRatingDetailWindow : Window {
 		ScoreID score_type = (ScoreID)(widget - WID_PRD_SCORE_FIRST);
 
 		/* The colours used to show how the progress is going */
-		int colour_done = _colour_gradient[COLOUR_GREEN][4];
-		int colour_notdone = _colour_gradient[COLOUR_RED][4];
+		int colour_done = GetColourGradient(COLOUR_GREEN, SHADE_NORMAL);
+		int colour_notdone = GetColourGradient(COLOUR_RED, SHADE_NORMAL);
 
 		/* Draw all the score parts */
 		int64_t val    = _score_part[company][score_type];

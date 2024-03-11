@@ -273,6 +273,9 @@ void AfterLoadVehicles(bool part_of_load)
 		/* Reinstate the previous pointer */
 		if (v->Next() != nullptr) {
 			v->Next()->previous = v;
+#if OTTD_UPPER_TAGGED_PTR
+			VehiclePoolOps::SetIsNonFrontVehiclePtr(_vehicle_pool.GetRawRef(v->Next()->index), true);
+#endif
 			if (v->type == VEH_TRAIN && (HasBit(v->subtype, GVSF_VIRTUAL) != HasBit(v->Next()->subtype, GVSF_VIRTUAL))) {
 				SlErrorCorrupt("Mixed virtual/non-virtual train consist");
 			}
@@ -387,7 +390,7 @@ void AfterLoadVehicles(bool part_of_load)
 
 		if (IsSavegameVersionBefore(SLV_180)) {
 			/* Set service interval flags */
-			for (Vehicle *v : Vehicle::Iterate()) {
+			for (Vehicle *v : Vehicle::IterateFrontOnly()) {
 				si_v = v;
 				if (!v->IsPrimaryVehicle()) continue;
 
@@ -429,7 +432,7 @@ void AfterLoadVehicles(bool part_of_load)
 
 	CheckValidVehicles();
 
-	for (Vehicle *v : Vehicle::Iterate()) {
+	for (Vehicle *v : Vehicle::IterateFrontOnly()) {
 		si_v = v;
 		assert(v->first != nullptr);
 
@@ -561,6 +564,10 @@ void AfterLoadVehicles(bool part_of_load)
 			default: break;
 		}
 
+		if (part_of_load && v->unitnumber != 0) {
+			Company::Get(v->owner)->freeunits[v->type].UseID(v->unitnumber);
+		}
+
 		v->UpdateDeltaXY();
 		v->coord.left = INVALID_COORD;
 		v->UpdatePosition();
@@ -595,12 +602,12 @@ void FixupTrainLengths()
 {
 	/* Vehicle center was moved from 4 units behind the front to half the length
 	 * behind the front. Move vehicles so they end up on the same spot. */
-	for (Vehicle *v : Vehicle::Iterate()) {
-		if (v->type == VEH_TRAIN && v->IsPrimaryVehicle()) {
+	for (Train *v : Train::IterateFrontOnly()) {
+		if (v->IsPrimaryVehicle()) {
 			/* The vehicle center is now more to the front depending on vehicle length,
 			 * so we need to move all vehicles forward to cover the difference to the
 			 * old center, otherwise wagon spacing in trains would be broken upon load. */
-			for (Train *u = Train::From(v); u != nullptr; u = u->Next()) {
+			for (Train *u = v; u != nullptr; u = u->Next()) {
 				if (u->track == TRACK_BIT_DEPOT || (u->vehstatus & VS_CRASHED)) continue;
 
 				Train *next = u->Next();
@@ -670,7 +677,7 @@ void FixupTrainLengths()
 			}
 
 			/* Update all cached properties after moving the vehicle chain around. */
-			Train::From(v)->ConsistChanged(CCF_TRACK);
+			v->ConsistChanged(CCF_TRACK);
 		}
 	}
 }
@@ -1622,7 +1629,7 @@ const SaveLoadTable GetVehicleUnbunchStateDescription()
 
 void Save_VUBS()
 {
-	for (Vehicle *v : Vehicle::Iterate()) {
+	for (Vehicle *v : Vehicle::IterateFrontOnly()) {
 		if (v->unbunch_state != nullptr) {
 			SlSetArrayIndex(v->index);
 			SlObject(v->unbunch_state.get(), GetVehicleUnbunchStateDescription());

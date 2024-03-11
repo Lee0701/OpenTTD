@@ -424,10 +424,10 @@ struct CompanyFinancesWindow : Window {
 			case WID_CF_EXPS_PRICE2:
 			case WID_CF_EXPS_PRICE3: {
 				const Company *c = Company::Get((CompanyID)this->window_number);
-				YearDelta age = std::min<YearDelta>(CalTime::CurYear() - c->inaugurated_year, 2);
+				YearDelta age = std::min<YearDelta>(c->age_years, 2);
 				int wid_offset = widget - WID_CF_EXPS_PRICE1;
 				if (wid_offset <= age.base()) {
-					DrawYearColumn(r, CalTime::CurYear().base() - (age.base() - wid_offset), c->yearly_expenses[age.base() - wid_offset]);
+					DrawYearColumn(r, EconTime::YearToDisplay(EconTime::CurYear().base() - (age.base() - wid_offset)), c->yearly_expenses[age.base() - wid_offset]);
 				}
 				break;
 			}
@@ -1845,12 +1845,12 @@ struct CompanyInfrastructureWindow : Window
 	{
 		this->UpdateRailRoadTypes();
 
-		this->owner = (Owner)this->window_number;
-
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_CI_SCROLLBAR);
 		this->vscroll->SetStepSize(GetCharacterHeight(FS_NORMAL));
 		this->FinishInitNested(window_number);
+
+		this->owner = (Owner)this->window_number;
 	}
 
 	void UpdateRailRoadTypes()
@@ -2595,7 +2595,7 @@ struct CompanyWindow : Window
 				break;
 
 			case WID_C_DESC_INAUGURATION:
-				SetDParam(0, Company::Get((CompanyID)this->window_number)->inaugurated_year);
+				SetDParam(0, Company::Get((CompanyID)this->window_number)->InauguratedDisplayYear());
 				break;
 
 			case WID_C_DESC_COMPANY_VALUE:

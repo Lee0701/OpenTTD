@@ -29,6 +29,7 @@
 #include "linkgraph/linkgraphschedule.h"
 #include "tracerestrict.h"
 #include "newgrf_debug.h"
+#include "3rdparty/cpp-btree/btree_set.h"
 
 #include "table/strings.h"
 
@@ -452,12 +453,24 @@ void Station::RemoveIndustryToDeliver(Industry *ind)
 
 
 /**
- * Remove this station from the nearby stations lists of all towns and industries.
+ * Remove this station from the nearby stations lists of nearby towns and industries.
  */
 void Station::RemoveFromAllNearbyLists()
 {
-	for (Town *t : Town::Iterate()) { t->stations_near.erase(this); }
-	for (Industry *i : Industry::Iterate()) { i->stations_near.erase(this); }
+	btree::btree_set<TownID> towns;
+	btree::btree_set<IndustryID> industries;
+
+	for (TileIndex tile : this->catchment_tiles) {
+		TileType type = GetTileType(tile);
+		if (type == MP_HOUSE) {
+			towns.insert(GetTownIndex(tile));
+		} else if (type == MP_INDUSTRY) {
+			industries.insert(GetIndustryIndex(tile));
+		}
+	}
+
+	for (const TownID &townid : towns) { Town::Get(townid)->stations_near.erase(this); }
+	for (const IndustryID &industryid : industries) { Industry::Get(industryid)->stations_near.erase(this); }
 }
 
 /**

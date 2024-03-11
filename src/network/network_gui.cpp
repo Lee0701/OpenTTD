@@ -536,10 +536,9 @@ public:
 			case WID_NG_MATRIX: {
 				uint16_t y = r.top;
 
-				const int max = std::min(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), (int)this->servers.size());
-
-				for (int i = this->vscroll->GetPosition(); i < max; ++i) {
-					const NetworkGameList *ngl = this->servers[i];
+				auto [first, last] = this->vscroll->GetVisibleRangeIterators(this->servers);
+				for (auto it = first; it != last; ++it) {
+					const NetworkGameList *ngl = *it;
 					this->DrawServerLine(ngl, y, ngl == this->server);
 					y += this->resize.step_height;
 				}
@@ -1957,7 +1956,7 @@ public:
 			DrawFrameRect(r, button->colour, FR_NONE);
 			DrawSprite(button->sprite, PAL_NONE, r.left + WidgetDimensions::scaled.framerect.left, r.top + WidgetDimensions::scaled.framerect.top);
 			if (button->disabled) {
-				GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), _colour_gradient[button->colour & 0xF][2], FILLRECT_CHECKER);
+				GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), GetColourGradient(button->colour, SHADE_DARKER), FILLRECT_CHECKER);
 			}
 
 			int width = button->width + WidgetDimensions::scaled.hsep_normal;

@@ -1190,6 +1190,8 @@ void Vehicle::PreDestructor()
 		}
 	}
 
+	Company::Get(this->owner)->freeunits[this->type].ReleaseID(this->unitnumber);
+
 	if (this->type == VEH_AIRCRAFT && this->IsPrimaryVehicle()) {
 		Aircraft *a = Aircraft::From(this);
 		Station *st = GetTargetAirportIfValid(a);
@@ -1426,8 +1428,19 @@ static void ShowAutoReplaceAdviceMessage(const CommandCost &res, const Vehicle *
 	AddVehicleAdviceNewsItem(message, v->index);
 }
 
+static std::vector<VehicleID> _train_news_too_heavy_this_tick;
+
+void ShowTrainTooHeavyAdviceMessage(const Vehicle *v)
+{
+	if (find_index(_train_news_too_heavy_this_tick, v->index) < 0) {
+		_train_news_too_heavy_this_tick.push_back(v->index);
+		SetDParam(0, v->index);
+		AddNewsItem(STR_ERROR_TRAIN_TOO_HEAVY, NT_ADVICE, NF_INCOLOUR | NF_SMALL | NF_VEHICLE_PARAM0,
+				NR_VEHICLE, v->index);
+	}
+}
+
 bool _tick_caches_valid = false;
-std::vector<Train *> _tick_train_too_heavy_cache;
 std::vector<Train *> _tick_train_front_cache;
 std::vector<RoadVehicle *> _tick_road_veh_front_cache;
 std::vector<Aircraft *> _tick_aircraft_front_cache;
@@ -1439,7 +1452,6 @@ btree::btree_set<VehicleID> _tick_effect_veh_cache;
 
 void ClearVehicleTickCaches()
 {
-	_tick_train_too_heavy_cache.clear();
 	_tick_train_front_cache.clear();
 	_tick_road_veh_front_cache.clear();
 	_tick_aircraft_front_cache.clear();
@@ -1458,37 +1470,45 @@ void RemoveFromOtherVehicleTickCache(const Vehicle *v)
 
 void RebuildVehicleTickCaches()
 {
-	Vehicle *si_v = nullptr;
-	SCOPE_INFO_FMT([&si_v], "RebuildVehicleTickCaches: %s", scope_dumper().VehicleInfo(si_v));
-
 	ClearVehicleTickCaches();
 
-	for (Vehicle *v : Vehicle::Iterate()) {
-		si_v = v;
-		switch (v->type) {
+	for (VehicleID i = 0; i < Vehicle::GetPoolSize(); i++) {
+		Vehicle *v = Vehicle::Get(i);
+		if (v == nullptr) continue;
+
+#if OTTD_UPPER_TAGGED_PTR
+		/* Avoid needing to de-reference v */
+		uintptr_t ptr = _vehicle_pool.GetRaw(i);
+		const VehicleType vtype = VehiclePoolOps::GetVehicleType(ptr);
+		const bool is_front = !VehiclePoolOps::IsNonFrontVehiclePtr(ptr);
+#else
+		const VehicleType vtype = v->type;
+		const bool is_front = (v->Previous() == nullptr);
+#endif
+
+		switch (vtype) {
 			default:
 				_tick_other_veh_cache.push_back(v);
 				break;
 
 			case VEH_TRAIN:
-				if (HasBit(Train::From(v)->flags, VRF_TOO_HEAVY)) _tick_train_too_heavy_cache.push_back(Train::From(v));
-				if (v->Previous() == nullptr) _tick_train_front_cache.push_back(Train::From(v));
+				if (is_front) _tick_train_front_cache.push_back(Train::From(v));
 				break;
 
 			case VEH_ROAD:
-				if (v->Previous() == nullptr) _tick_road_veh_front_cache.push_back(RoadVehicle::From(v));
+				if (is_front) _tick_road_veh_front_cache.push_back(RoadVehicle::From(v));
 				break;
 
 			case VEH_AIRCRAFT:
-				if (v->Previous() == nullptr) _tick_aircraft_front_cache.push_back(Aircraft::From(v));
+				if (is_front) _tick_aircraft_front_cache.push_back(Aircraft::From(v));
 				break;
 
 			case VEH_SHIP:
-				if (v->Previous() == nullptr) _tick_ship_cache.push_back(Ship::From(v));
+				if (is_front) _tick_ship_cache.push_back(Ship::From(v));
 				break;
 
 			case VEH_EFFECT:
-				_tick_effect_veh_cache.insert(v->index);
+				_tick_effect_veh_cache.insert(i);
 				break;
 		}
 	}
@@ -1499,11 +1519,6 @@ void ValidateVehicleTickCaches()
 {
 	if (!_tick_caches_valid) return;
 
-	std::vector<Train *> saved_tick_train_too_heavy_cache = std::move(_tick_train_too_heavy_cache);
-	std::sort(saved_tick_train_too_heavy_cache.begin(), saved_tick_train_too_heavy_cache.end(), [&](const Vehicle *a, const Vehicle *b) {
-		return a->index < b->index;
-	});
-    saved_tick_train_too_heavy_cache.erase(std::unique(saved_tick_train_too_heavy_cache.begin(), saved_tick_train_too_heavy_cache.end()), saved_tick_train_too_heavy_cache.end());
 	std::vector<Train *> saved_tick_train_front_cache = std::move(_tick_train_front_cache);
 	std::vector<RoadVehicle *> saved_tick_road_veh_front_cache = std::move(_tick_road_veh_front_cache);
 	std::vector<Aircraft *> saved_tick_aircraft_front_cache = std::move(_tick_aircraft_front_cache);
@@ -1517,7 +1532,6 @@ void ValidateVehicleTickCaches()
 
 	RebuildVehicleTickCaches();
 
-	assert(saved_tick_train_too_heavy_cache == _tick_train_too_heavy_cache);
 	assert(saved_tick_train_front_cache == saved_tick_train_front_cache);
 	assert(saved_tick_road_veh_front_cache == _tick_road_veh_front_cache);
 	assert(saved_tick_aircraft_front_cache == _tick_aircraft_front_cache);
@@ -1565,6 +1579,8 @@ void CallVehicleTicks()
 	_vehicles_to_templatereplace.clear();
 	_vehicles_to_pay_repair.clear();
 	_vehicles_to_sell.clear();
+
+	_train_news_too_heavy_this_tick.clear();
 
 	if (TickSkipCounter() == 0) RunVehicleDayProc();
 
@@ -1643,17 +1659,6 @@ void CallVehicleTicks()
 	if (!_tick_effect_veh_cache.empty()) RecordSyncEvent(NSRE_VEH_EFFECT);
 	{
 		PerformanceMeasurer framerate(PFE_GL_TRAINS);
-		for (Train *t : _tick_train_too_heavy_cache) {
-			if (HasBit(t->flags, VRF_TOO_HEAVY)) {
-				if (t->owner == _local_company) {
-					SetDParam(0, t->index);
-					AddNewsItem(STR_ERROR_TRAIN_TOO_HEAVY, NT_ADVICE, NF_INCOLOUR | NF_SMALL | NF_VEHICLE_PARAM0,
-							NR_VEHICLE, t->index);
-				}
-				ClrBit(t->flags, VRF_TOO_HEAVY);
-			}
-		}
-		_tick_train_too_heavy_cache.clear();
 		for (Train *front : _tick_train_front_cache) {
 			v = front;
 			if (!front->Train::Tick()) continue;
@@ -2932,44 +2937,50 @@ VehicleEnterTileStatus VehicleEnterTile(Vehicle *v, TileIndex tile, int x, int y
 }
 
 /**
- * Initializes the structure. Vehicle unit numbers are supposed not to change after
- * struct initialization, except after each call to this->NextID() the returned value
- * is assigned to a vehicle.
- * @param type type of vehicle
- * @param owner owner of vehicles
+ * Find first unused unit number.
+ * This does not mark the unit number as used.
+ * @returns First unused unit number.
  */
-FreeUnitIDGenerator::FreeUnitIDGenerator(VehicleType type, CompanyID owner) : cache(nullptr), maxid(0), curid(0)
+UnitID FreeUnitIDGenerator::NextID() const
 {
-	/* Find maximum */
-	for (const Vehicle *v : Vehicle::Iterate()) {
-		if (v->type == type && v->owner == owner) {
-			this->maxid = std::max<UnitID>(this->maxid, v->unitnumber);
-		}
+	for (auto it = std::begin(this->used_bitmap); it != std::end(this->used_bitmap); ++it) {
+		BitmapStorage available = ~(*it);
+		if (available == 0) continue;
+		return static_cast<UnitID>(std::distance(std::begin(this->used_bitmap), it) * BITMAP_SIZE + FindFirstBit(available) + 1);
 	}
-
-	if (this->maxid == 0) return;
-
-	/* Reserving 'maxid + 2' because we need:
-	 * - space for the last item (with v->unitnumber == maxid)
-	 * - one free slot working as loop terminator in FreeUnitIDGenerator::NextID() */
-	this->cache = CallocT<bool>(this->maxid + 2);
-
-	/* Fill the cache */
-	for (const Vehicle *v : Vehicle::Iterate()) {
-		if (v->type == type && v->owner == owner) {
-			this->cache[v->unitnumber] = true;
-		}
-	}
+	return static_cast<UnitID>(this->used_bitmap.size() * BITMAP_SIZE + 1);
 }
 
-/** Returns next free UnitID. Supposes the last returned value was assigned to a vehicle. */
-UnitID FreeUnitIDGenerator::NextID()
+/**
+ * Use a unit number. If the unit number is not valid it is ignored.
+ * @param index Unit number to use.
+ * @returns Unit number used.
+ */
+UnitID FreeUnitIDGenerator::UseID(UnitID index)
 {
-	if (this->maxid <= this->curid) return ++this->curid;
+	if (index == 0 || index == UINT16_MAX) return index;
 
-	while (this->cache[++this->curid]) { } // it will stop, we reserved more space than needed
+	index--;
 
-	return this->curid;
+	size_t slot = index / BITMAP_SIZE;
+	if (slot >= this->used_bitmap.size()) this->used_bitmap.resize(slot + 1);
+	SetBit(this->used_bitmap[index / BITMAP_SIZE], index % BITMAP_SIZE);
+
+	return index + 1;
+}
+
+/**
+ * Release a unit number. If the unit number is not valid it is ignored.
+ * @param index Unit number to release.
+ */
+void FreeUnitIDGenerator::ReleaseID(UnitID index)
+{
+	if (index == 0 || index == UINT16_MAX) return;
+
+	index--;
+
+	assert(index / BITMAP_SIZE < this->used_bitmap.size());
+	ClrBit(this->used_bitmap[index / BITMAP_SIZE], index % BITMAP_SIZE);
 }
 
 /**
@@ -2992,9 +3003,7 @@ UnitID GetFreeUnitNumber(VehicleType type)
 	const Company *c = Company::Get(_current_company);
 	if (c->group_all[type].num_vehicle >= max_veh) return UINT16_MAX; // Currently already at the limit, no room to make a new one.
 
-	FreeUnitIDGenerator gen(type, _current_company);
-
-	return gen.NextID();
+	return c->freeunits[type].NextID();
 }
 
 
@@ -3038,9 +3047,9 @@ bool CanBuildVehicleInfrastructure(VehicleType type, byte subtype)
 	}
 
 	/* We should be able to build infrastructure when we have the actual vehicle type */
-	for (const Vehicle *v : Vehicle::Iterate()) {
-		if (v->type == VEH_ROAD && GetRoadTramType(RoadVehicle::From(v)->roadtype) != (RoadTramType)subtype) continue;
-		if (v->owner == _local_company && v->type == type) return true;
+	for (const Vehicle *v : Vehicle::IterateType(type)) {
+		if (type == VEH_ROAD && GetRoadTramType(RoadVehicle::From(v)->roadtype) != (RoadTramType)subtype) continue;
+		if (v->owner == _local_company) return true;
 	}
 
 	return false;
@@ -3509,6 +3518,7 @@ void Vehicle::LeaveStation()
 	dbg_assert(this->cargo_payment == nullptr); // cleared by ~CargoPayment
 
 	ClrBit(this->vehicle_flags, VF_COND_ORDER_WAIT);
+	ClrBit(this->vehicle_flags, VF_STOP_LOADING);
 
 	TileIndex station_tile = INVALID_TILE;
 
@@ -3797,10 +3807,27 @@ bool Vehicle::HasUnbunchingOrder() const
 }
 
 /**
+ * Check if the previous order is a depot unbunching order.
+ * @return true Iff the previous order is a depot order with the unbunch flag.
+ */
+static bool PreviousOrderIsUnbunching(const Vehicle *v)
+{
+	/* If we are headed for the first order, we must wrap around back to the last order. */
+	bool is_first_order = (v->GetOrder(v->cur_real_order_index) == v->GetFirstOrder());
+	Order *previous_order = (is_first_order) ? v->GetLastOrder() : v->GetOrder(v->cur_real_order_index - 1);
+
+	if (previous_order == nullptr || !previous_order->IsType(OT_GOTO_DEPOT)) return false;
+	return (previous_order->GetDepotActionType() & ODATFB_UNBUNCH) != 0;
+}
+
+/**
  * Leave an unbunching depot and calculate the next departure time for shared order vehicles.
  */
 void Vehicle::LeaveUnbunchingDepot()
 {
+	/* Don't do anything if this is not our unbunching order. */
+	if (!PreviousOrderIsUnbunching(this)) return;
+
 	if (this->unbunch_state == nullptr) this->unbunch_state.reset(new VehicleUnbunchState());
 
 	/* Set the start point for this round trip time. */
@@ -3855,13 +3882,8 @@ bool Vehicle::IsWaitingForUnbunching() const
 	/* Don't do anything if there aren't enough orders. */
 	if (this->GetNumOrders() <= 1) return false;
 
-	/*
-	 * Make sure this is the correct depot for unbunching.
-	 * If we are headed for the first order, we must wrap around back to the last order.
-	 */
-	bool is_first_order = (this->GetOrder(this->cur_real_order_index) == this->GetFirstOrder());
-	Order *previous_order = (is_first_order) ? this->GetLastOrder() : this->GetOrder(this->cur_real_order_index - 1);
-	if (previous_order == nullptr || !previous_order->IsType(OT_GOTO_DEPOT) || !(previous_order->GetDepotActionType() & ODATFB_UNBUNCH)) return false;
+	/* Don't do anything if this is not our unbunching order. */
+	if (!PreviousOrderIsUnbunching(this)) return false;
 
 	return (this->unbunch_state != nullptr) && (this->unbunch_state->depot_unbunching_next_departure > _state_ticks);
 };
@@ -4323,6 +4345,9 @@ void Vehicle::SetNext(Vehicle *next)
 			v->first = this->next;
 		}
 		this->next->previous = nullptr;
+#if OTTD_UPPER_TAGGED_PTR
+		VehiclePoolOps::SetIsNonFrontVehiclePtr(_vehicle_pool.GetRawRef(this->next->index), false);
+#endif
 	}
 
 	this->next = next;
@@ -4331,10 +4356,24 @@ void Vehicle::SetNext(Vehicle *next)
 		/* A new next vehicle. Update the first and previous pointers */
 		if (this->next->previous != nullptr) this->next->previous->next = nullptr;
 		this->next->previous = this;
+#if OTTD_UPPER_TAGGED_PTR
+		VehiclePoolOps::SetIsNonFrontVehiclePtr(_vehicle_pool.GetRawRef(this->next->index), true);
+#endif
 		for (Vehicle *v = this->next; v != nullptr; v = v->Next()) {
 			v->first = this->first;
 		}
 	}
+}
+
+/**
+ * Gets the running cost of a vehicle  that can be sent into SetDParam for string processing.
+ * @return the vehicle's running cost
+ */
+Money Vehicle::GetDisplayRunningCost() const
+{
+	Money cost = this->GetRunningCost() >> 8;
+	if (_settings_client.gui.show_running_costs_calendar_year) cost *= DayLengthFactor();
+	return cost;
 }
 
 /**
@@ -4475,7 +4514,6 @@ void DumpVehicleFlagsGeneric(const Vehicle *v, T dump, U dump_header)
 		dump('v', "VRF_BREAKDOWN_SPEED",               HasBit(t->flags, VRF_BREAKDOWN_SPEED));
 		dump('z', "VRF_BREAKDOWN_STOPPED",             HasBit(t->flags, VRF_BREAKDOWN_STOPPED));
 		dump('F', "VRF_NEED_REPAIR",                   HasBit(t->flags, VRF_NEED_REPAIR));
-		dump('H', "VRF_TOO_HEAVY",                     HasBit(t->flags, VRF_TOO_HEAVY));
 		dump('B', "VRF_BEYOND_PLATFORM_END",           HasBit(t->flags, VRF_BEYOND_PLATFORM_END));
 		dump('Y', "VRF_NOT_YET_IN_PLATFORM",           HasBit(t->flags, VRF_NOT_YET_IN_PLATFORM));
 		dump('A', "VRF_ADVANCE_IN_PLATFORM",           HasBit(t->flags, VRF_ADVANCE_IN_PLATFORM));
@@ -4556,7 +4594,7 @@ char *Vehicle::DumpVehicleFlagsMultiline(char *b, const char *last, const char *
 
 void VehiclesYearlyLoop()
 {
-	for (Vehicle *v : Vehicle::Iterate()) {
+	for (Vehicle *v : Vehicle::IterateFrontOnly()) {
 		if (v->IsPrimaryVehicle()) {
 			/* show warning if vehicle is not generating enough income last 2 years (corresponds to a red icon in the vehicle list) */
 			Money profit = v->GetDisplayProfitThisYear();

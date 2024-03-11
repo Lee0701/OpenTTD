@@ -421,11 +421,11 @@ int Ship::GetEffectiveMaxSpeed() const
 }
 
 /**
- * Test-procedure for HasVehicleOnPos to check for any ships which are visible and not stopped by the player.
+ * Test-procedure for HasVehicleOnPos to check for any ships which are moving.
  */
 static Vehicle *EnsureNoMovingShipProc(Vehicle *v, void *)
 {
-	return (v->vehstatus & (VS_HIDDEN | VS_STOPPED)) == 0 ? v : nullptr;
+	return (v->cur_speed != 0) ? v : nullptr;
 }
 
 static bool CheckReverseShip(const Ship *v, Trackdir *trackdir = nullptr)
@@ -1115,7 +1115,7 @@ static void ShipController(Ship *v)
 				v->x_pos = gp.x;
 				v->y_pos = gp.y;
 				v->UpdatePosition();
-				if ((v->vehstatus & VS_HIDDEN) == 0) v->Vehicle::UpdateViewport(true);
+				if ((v->vehstatus & VS_HIDDEN) == 0) v->UpdateViewport(true, false);
 				return;
 			}
 			/* Bridge exit */
