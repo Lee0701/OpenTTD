@@ -374,7 +374,7 @@ struct MAP8 {
 
 struct MAP9 {
 	typedef uint16 FieldT;
-	static const FieldT &GetField(TileIndex t) { return _me[t].m8; }
+	static const FieldT &GetField(TileIndex t) { return _me[t].m9; }
 };
 
 template <typename T>
