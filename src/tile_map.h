@@ -186,7 +186,7 @@ inline Owner GetTileOwner(TileIndex tile)
 	dbg_assert_msg(IsValidTile(tile), "tile: 0x%X, size: 0x%X", tile, MapSize());
 	dbg_assert_msg(!IsTileType(tile, MP_HOUSE) && !IsTileType(tile, MP_INDUSTRY), "tile: 0x%X (%d)", tile, GetTileType(tile));
 
-	return (Owner)GB(_m[tile].m1, 0, 5);
+	return (Owner)GB(_me[tile].m9, 0, 8);
 }
 
 /**
@@ -205,7 +205,7 @@ inline void SetTileOwner(TileIndex tile, Owner owner)
 	dbg_assert_msg(IsValidTile(tile), "tile: 0x%X, size: 0x%X, owner: %d", tile, MapSize(), owner);
 	dbg_assert_msg(!IsTileType(tile, MP_HOUSE) && !IsTileType(tile, MP_INDUSTRY), "tile: 0x%X (%d), owner: %d", tile, GetTileType(tile), owner);
 
-	SB(_m[tile].m1, 0, 5, owner);
+	SB(_me[tile].m9, 0, 8, owner);
 }
 
 /**
