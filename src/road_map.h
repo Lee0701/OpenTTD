@@ -267,6 +267,7 @@ inline bool HasTileAnyRoadType(TileIndex t, RoadTypes rts)
  * @param rtt RoadTramType.
  * @return Owner of the given road type.
  */
+<<<<<<< ours
 inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 {
 	dbg_assert(MayHaveRoad(t));
@@ -276,6 +277,16 @@ inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 	 * to OWNER_TOWN makes it use one bit less */
 	Owner o = (Owner)GB(_m[t].m3, 4, 4);
 	return o == OWNER_TOWN ? OWNER_NONE : o;
+=======
+static inline Owner GetRoadOwner(TileIndex t, RoadType rt)
+{
+	assert(IsTileType(t, MP_ROAD) || IsTileType(t, MP_STATION) || IsTileType(t, MP_TUNNELBRIDGE));
+	switch (rt) {
+		default: NOT_REACHED();
+		case ROADTYPE_ROAD: return (Owner)(IsNormalRoadTile(t) ? GetTileOwner(t) : ((_me[t].m7 & 0x1F) | (_m[t].m4 & 0xE0)));
+		case ROADTYPE_TRAM: return (Owner)(((_m[t].m3 & 0xF0) >> 4) | ((_m[t].m4 & 0x0F) << 4));
+	}
+>>>>>>> theirs
 }
 
 /**
@@ -286,10 +297,28 @@ inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
  */
 inline void SetRoadOwner(TileIndex t, RoadTramType rtt, Owner o)
 {
+<<<<<<< ours
 	if (rtt == RTT_ROAD) {
 		SB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5, o);
 	} else {
 		SB(_m[t].m3, 4, 4, o == OWNER_NONE ? OWNER_TOWN : o);
+=======
+	switch (rt) {
+		default: NOT_REACHED();
+		case ROADTYPE_ROAD:
+			if (IsNormalRoadTile(t))
+				SetTileOwner(t, o);
+			else
+			{
+				_me[t].m7 = (_me[t].m7 & (~0x1F)) | (o & 0x1F);
+				_m[t].m4 = (_m[t].m4 & (~0xE0)) | (o & 0xE0);
+			}
+			break;
+		case ROADTYPE_TRAM:
+			_m[t].m3 = (_m[t].m3 & (~0xF0)) | (o << 4);
+			_m[t].m4 = (_m[t].m4 & (~0x0F)) | ((o & 0xF0) >> 4);
+			break;
+>>>>>>> theirs
 	}
 }
 
@@ -742,10 +771,16 @@ inline void MakeRoadCrossing(TileIndex t, Owner road, Owner tram, Owner rail, Ax
 	_m[t].m4 = INVALID_ROADTYPE;
 	_m[t].m5 = ROAD_TILE_CROSSING << 6 | roaddir;
 	SB(_me[t].m6, 2, 4, 0);
+<<<<<<< ours
 	_me[t].m7 = road;
 	_me[t].m8 = INVALID_ROADTYPE << 6 | rat;
 	SetRoadTypes(t, road_rt, tram_rt);
 	SetRoadOwner(t, RTT_TRAM, tram);
+=======
+	_me[t].m7 = rot << 6;
+	SetRoadOwner(t, ROADTYPE_ROAD, road);
+	SetRoadOwner(t, ROADTYPE_TRAM, tram);
+>>>>>>> theirs
 }
 
 /**
@@ -765,10 +800,16 @@ inline void MakeRoadDepot(TileIndex t, Owner owner, DepotID did, DiagDirection d
 	_m[t].m4 = INVALID_ROADTYPE;
 	_m[t].m5 = ROAD_TILE_DEPOT << 6 | dir;
 	SB(_me[t].m6, 2, 4, 0);
+<<<<<<< ours
 	_me[t].m7 = owner;
 	_me[t].m8 = INVALID_ROADTYPE << 6;
 	SetRoadType(t, GetRoadTramType(rt), rt);
 	SetRoadOwner(t, RTT_TRAM, owner);
+=======
+	_me[t].m7 = RoadTypeToRoadTypes(rt) << 6;
+	SetRoadOwner(t, ROADTYPE_ROAD, owner);
+	SetRoadOwner(t, ROADTYPE_TRAM, owner);
+>>>>>>> theirs
 }
 
 #endif /* ROAD_MAP_H */

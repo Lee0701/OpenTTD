@@ -568,7 +568,7 @@ void Window::RaiseButtons(bool autoraise)
  * Invalidate a widget, i.e. mark it as being changed and in need of redraw.
  * @param widget_index the widget to redraw.
  */
-void Window::SetWidgetDirty(WidgetID widget_index)
+void Window::SetWidgetDirty(WidgetID widget_index) const
 {
 	/* Sometimes this function is called before the window is even fully initialized */
 	auto it = this->widget_lookup.find(widget_index);

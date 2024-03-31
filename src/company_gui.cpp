@@ -653,13 +653,6 @@ private:
 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
 		byte default_col = 0;
 
-		/* Disallow other company colours for the primary colour */
-		if (this->livery_class < LC_GROUP_RAIL && HasBit(this->sel, LS_DEFAULT) && primary) {
-			for (const Company *c : Company::Iterate()) {
-				if (c->index != _local_company) SetBit(used_colours, c->colour);
-			}
-		}
-
 		const Company *c = Company::Get((CompanyID)this->window_number);
 
 		if (this->livery_class < LC_GROUP_RAIL) {
