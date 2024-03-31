@@ -160,6 +160,8 @@ enum SlXvFeatureIndex {
 	XSLFI_SHIP_ACCELERATION,                      ///< See: SLV_SHIP_ACCELERATION (PR #10734)
 	XSLFI_DEPOT_UNBUNCHING,                       ///< See: SLV_DEPOT_UNBUNCHING (PR #11945)
 
+	XSLFI_EXTEND_OWNERSHIP,                       ///< Extend tile ownership info with new field m9
+
 	XSLFI_TABLE_PATS,                             ///< Use upstream table format for PATS
 	XSLFI_TABLE_MISC_SL,                          ///< Use upstream table format for miscellaneous chunks:
 	                                              ///<     v1: DATE, VIEW, MAPS
