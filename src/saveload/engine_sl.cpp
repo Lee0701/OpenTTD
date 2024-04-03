@@ -75,7 +75,7 @@ struct ENGNChunkHandler : ChunkHandler {
 				 * Just cancel any previews. */
 				e->flags &= ~4; // ENGINE_OFFER_WINDOW_OPEN
 				e->preview_company = INVALID_COMPANY;
-				e->preview_asked = MAX_UVALUE(CompanyMask);
+				e->preview_asked.set();
 			}
 		}
 	}

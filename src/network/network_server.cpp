@@ -895,9 +895,12 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendCompanyUpdate()
 {
 	auto p = std::make_unique<Packet>(PACKET_SERVER_COMPANY_UPDATE, TCP_MTU);
 
-	static_assert(sizeof(_network_company_passworded) <= sizeof(uint16_t));
-	p->Send_uint16(_network_company_passworded);
+	// TODO
+	// static_assert(sizeof(_network_company_passworded) <= sizeof(uint16_t));
+	for (uint i = 0; i < CompanyMask::bsize; i++)
+		p->Send_uint64(_network_company_passworded.data[i]);
 	this->SendPacket(std::move(p));
+
 	return NETWORK_RECV_STATUS_OKAY;
 }
 
@@ -1815,20 +1818,20 @@ void NetworkUpdateClientInfo(ClientID client_id)
  */
 static void NetworkAutoCleanCompanies()
 {
-	CompanyMask has_clients = 0;
-	CompanyMask has_vehicles = 0;
+	CompanyMask has_clients;
+	CompanyMask has_vehicles;
 
 	if (!_settings_client.network.autoclean_companies) return;
 
 	/* Detect the active companies */
 	for (const NetworkClientInfo *ci : NetworkClientInfo::Iterate()) {
-		if (Company::IsValidID(ci->client_playas)) SetBit(has_clients, ci->client_playas);
+		if (Company::IsValidID(ci->client_playas)) has_clients.set(ci->client_playas);
 	}
 
 	if (!_network_dedicated) {
 		const NetworkClientInfo *ci = NetworkClientInfo::GetByClientID(CLIENT_ID_SERVER);
 		assert(ci != nullptr);
-		if (Company::IsValidID(ci->client_playas)) SetBit(has_clients, ci->client_playas);
+		if (Company::IsValidID(ci->client_playas)) has_clients.set(ci->client_playas);
 	}
 
 	if (_settings_client.network.autoclean_novehicles != 0) {
@@ -1842,7 +1845,7 @@ static void NetworkAutoCleanCompanies()
 		/* Skip the non-active once */
 		if (c->is_ai) continue;
 
-		if (!HasBit(has_clients, c->index)) {
+		if (!has_clients.at(c->index)) {
 			/* The company is empty for one month more */
 			_network_company_states[c->index].months_empty++;
 
@@ -2251,7 +2254,7 @@ void NetworkServerUpdateCompanyPassworded(CompanyID company_id, bool passworded)
 {
 	if (NetworkCompanyIsPassworded(company_id) == passworded) return;
 
-	SB(_network_company_passworded, company_id, 1, !!passworded);
+	_network_company_passworded.set(company_id, passworded);
 	SetWindowClassesDirty(WC_COMPANY);
 
 	for (NetworkClientSocket *cs : NetworkClientSocket::Iterate()) {

@@ -407,8 +407,13 @@ static bool FixTTOEngines()
 			/* Make sure for example monorail and maglev are available when they should be */
 			if (CalTime::CurDate() >= e->intro_date && HasBit(e->info.climates, 0)) {
 				e->flags |= ENGINE_AVAILABLE;
+<<<<<<< ours
 				e->company_avail = MAX_UVALUE(CompanyMask);
 				e->age = CalTime::CurDate() > e->intro_date ? (CalTime::CurDate() - e->intro_date).base() / 30 : 0;
+=======
+				e->company_avail.set();
+				e->age = _date > e->intro_date ? (_date - e->intro_date) / 30 : 0;
+>>>>>>> theirs
 			}
 		} else {
 			/* Using data from TTO savegame */
@@ -426,13 +431,18 @@ static bool FixTTOEngines()
 			e->duration_phase_3    = oe->duration_phase_3;
 			e->flags               = oe->flags;
 
-			e->company_avail = 0;
+			e->company_avail.reset();
 
 			/* One or more engines were remapped to this one. Make this engine available
 			 * if at least one of them was available. */
 			for (uint j = 0; j < lengthof(tto_to_ttd); j++) {
+<<<<<<< ours
 				if (tto_to_ttd[j] == i && _old_engines[j].company_avail != 0) {
 					e->company_avail = MAX_UVALUE(CompanyMask);
+=======
+				if (tto_to_ttd[j] == i && _old_engines[j].company_avail.any()) {
+					e->company_avail.set();
+>>>>>>> theirs
 					e->flags |= ENGINE_AVAILABLE;
 					break;
 				}
@@ -442,7 +452,11 @@ static bool FixTTOEngines()
 		}
 
 		e->preview_company = INVALID_COMPANY;
+<<<<<<< ours
 		e->preview_asked = MAX_UVALUE(CompanyMask);
+=======
+		e->preview_asked.set();
+>>>>>>> theirs
 		e->preview_wait = 0;
 		e->name = nullptr;
 	}

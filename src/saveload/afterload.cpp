@@ -667,6 +667,22 @@ void IterateVehicleAndOrderListOrders(F func)
 	}
 }
 
+static Owner UpdateOwnerEnum(Owner o)
+{
+	switch (o) {
+		case OLD_OWNER_TOWN: return OWNER_TOWN;
+		case OLD_OWNER_NONE: return OWNER_NONE;
+		case OLD_OWNER_WATER: return OWNER_WATER;
+		case OLD_OWNER_DEITY: return OWNER_DEITY;
+		default: return o;
+	}
+}
+
+static Owner UpdateOwnerEnumTram(Owner o)
+{
+	return UpdateOwnerEnum(o == OLD_OWNER_TOWN ? OLD_OWNER_NONE : o);
+}
+
 /**
  * Perform a (large) amount of savegame conversion *magic* in order to
  * load older savegames and to fill the caches for various purposes.
@@ -792,8 +808,8 @@ bool AfterLoadGame()
 	 * walk through the whole map.. */
 	if (IsSavegameVersionBefore(SLV_4, 3)) {
 		for (TileIndex t = 0; t < map_size; t++) {
-			if (IsTileType(t, MP_WATER) && GetTileOwner(t) >= MAX_COMPANIES) {
-				SetTileOwner(t, OWNER_WATER);
+			if (IsTileType(t, MP_WATER) && GetTileOwner(t) >= OLD_MAX_COMPANIES) {
+				SetTileOwner(t, OLD_OWNER_WATER);
 			}
 		}
 	}
@@ -1092,7 +1108,7 @@ bool AfterLoadGame()
 				default: break;
 
 				case MP_WATER:
-					if (GetWaterTileType(t) == WATER_TILE_LOCK && GetTileOwner(t) == OWNER_WATER) SetTileOwner(t, OWNER_NONE);
+					if (GetWaterTileType(t) == WATER_TILE_LOCK && GetTileOwner(t) == OLD_OWNER_WATER) SetTileOwner(t, OLD_OWNER_NONE);
 					break;
 
 				case MP_STATION: {
@@ -1229,7 +1245,7 @@ bool AfterLoadGame()
 
 				case MP_ROAD:
 					_m[t].m4 |= (_m[t].m2 << 4);
-					if ((GB(_m[t].m5, 4, 2) == ROAD_TILE_CROSSING ? (Owner)_m[t].m3 : GetTileOwner(t)) == OWNER_TOWN) {
+					if ((GB(_m[t].m5, 4, 2) == ROAD_TILE_CROSSING ? (Owner)_m[t].m3 : GetTileOwner(t)) == OLD_OWNER_TOWN) {
 						SetTownIndex(t, CalcClosestTownFromTile(t)->index);
 					} else {
 						SetTownIndex(t, 0);
@@ -1384,8 +1400,8 @@ bool AfterLoadGame()
 				case MP_STATION:
 					if (!IsStationRoadStop(t)) break;
 
-					if (fix_roadtypes) SB(_me[t].m7, 6, 2, (RoadTypes)GB(_m[t].m3, 0, 3));
-					SB(_me[t].m7, 0, 5, HasBit(_me[t].m6, 2) ? OWNER_TOWN : GetTileOwner(t));
+					if (fix_roadtypes) SetRoadTypes(t, (RoadTypes)GB(_m[t].m3, 0, 3));
+					SB(_me[t].m7, 0, 5, HasBit(_me[t].m6, 2) ? OLD_OWNER_TOWN : GetTileOwner(t));
 					SB(_m[t].m3, 4, 4, _m[t].m1);
 					_m[t].m4 = 0;
 					break;
@@ -1397,7 +1413,7 @@ bool AfterLoadGame()
 
 						Owner o = GetTileOwner(t);
 						SB(_me[t].m7, 0, 5, o); // road owner
-						SB(_m[t].m3, 4, 4, o == OWNER_NONE ? OWNER_TOWN : o); // tram owner
+						SB(_m[t].m3, 4, 4, o == OLD_OWNER_NONE ? OLD_OWNER_TOWN : o); // tram owner
 					}
 					SB(_me[t].m6, 2, 4, GB(_m[t].m2, 4, 4)); // bridge type
 					SB(_me[t].m7, 5, 1, GB(_m[t].m4, 7, 1)); // snow/desert
@@ -1465,7 +1481,7 @@ bool AfterLoadGame()
 								GetRailType(t)
 							);
 						} else {
-							TownID town = IsTileOwner(t, OWNER_TOWN) ? ClosestTownFromTile(t, UINT_MAX)->index : 0;
+							TownID town = IsTileOwner(t, OLD_OWNER_TOWN) ? ClosestTownFromTile(t, UINT_MAX)->index : 0;
 
 							/* MakeRoadNormal */
 							SetTileType(t, MP_ROAD);
@@ -1474,7 +1490,7 @@ bool AfterLoadGame()
 							_m[t].m5 = (axis == AXIS_X ? ROAD_Y : ROAD_X) | ROAD_TILE_NORMAL << 6;
 							SB(_me[t].m6, 2, 4, 0);
 							_me[t].m7 = 1 << 6;
-							SetRoadOwner(t, RTT_TRAM, OWNER_NONE);
+							SetRoadOwner(t, RTT_TRAM, OLD_OWNER_NONE);
 						}
 					} else {
 						if (GB(_m[t].m5, 3, 2) == 0) {
@@ -1483,7 +1499,7 @@ bool AfterLoadGame()
 							if (!IsTileFlat(t)) {
 								MakeShore(t);
 							} else {
-								if (GetTileOwner(t) == OWNER_WATER) {
+								if (GetTileOwner(t) == OLD_OWNER_WATER) {
 									MakeSea(t);
 								} else {
 									MakeCanal(t, GetTileOwner(t), Random());
@@ -1980,7 +1996,7 @@ bool AfterLoadGame()
 	 * be OWNER_NONE. So replace OWNER_NONE with OWNER_WATER. */
 	if (IsSavegameVersionBefore(SLV_46)) {
 		for (Waypoint *wp : Waypoint::Iterate()) {
-			if ((wp->facilities & FACIL_DOCK) != 0 && IsTileOwner(wp->xy, OWNER_NONE) && TileHeight(wp->xy) == 0) SetTileOwner(wp->xy, OWNER_WATER);
+			if ((wp->facilities & FACIL_DOCK) != 0 && IsTileOwner(wp->xy, OLD_OWNER_NONE) && TileHeight(wp->xy) == 0) SetTileOwner(wp->xy, OLD_OWNER_WATER);
 		}
 	}
 
@@ -2086,9 +2102,9 @@ bool AfterLoadGame()
 		for (TileIndex t = 0; t < map_size; t++) {
 			if (IsTileType(t, MP_WATER) &&
 					GetWaterTileType(t) == WATER_TILE_CLEAR &&
-					GetTileOwner(t) == OWNER_WATER &&
+					GetTileOwner(t) == OLD_OWNER_WATER &&
 					TileHeight(t) != 0) {
-				SetTileOwner(t, OWNER_NONE);
+				SetTileOwner(t, OLD_OWNER_NONE);
 			}
 		}
 	}
@@ -2102,7 +2118,7 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SLV_83)) {
 		for (TileIndex t = 0; t < map_size; t++) {
 			if (IsShipDepotTile(t)) {
-				_m[t].m4 = (TileHeight(t) == 0) ? OWNER_WATER : OWNER_NONE;
+				_m[t].m4 = (TileHeight(t) == 0) ? OLD_OWNER_WATER : OLD_OWNER_NONE;
 			}
 		}
 	}
@@ -2264,14 +2280,14 @@ bool AfterLoadGame()
 				if (GetWaterClass(t) != WATER_CLASS_RIVER) {
 					if (IsWater(t)) {
 						Owner o = GetTileOwner(t);
-						if (o == OWNER_WATER) {
+						if (o == OLD_OWNER_WATER) {
 							MakeSea(t);
 						} else {
 							MakeCanal(t, o, Random());
 						}
 					} else if (IsShipDepot(t)) {
 						Owner o = (Owner)_m[t].m4; // Original water owner
-						SetWaterClass(t, o == OWNER_WATER ? WATER_CLASS_SEA : WATER_CLASS_CANAL);
+						SetWaterClass(t, o == OLD_OWNER_WATER ? WATER_CLASS_SEA : WATER_CLASS_CANAL);
 					}
 				}
 			}
@@ -2300,7 +2316,7 @@ bool AfterLoadGame()
 
 			if (IsBuoyTile(t) || IsDriveThroughStopTile(t) || IsTileType(t, MP_WATER)) {
 				Owner o = GetTileOwner(t);
-				if (o < MAX_COMPANIES && !Company::IsValidID(o)) {
+				if (o < OLD_MAX_COMPANIES && !Company::IsValidID(o)) {
 					Backup<CompanyID> cur_company(_current_company, o, FILE_LINE);
 					ChangeTileOwner(t, o, INVALID_OWNER);
 					cur_company.Restore();
@@ -2315,7 +2331,7 @@ bool AfterLoadGame()
 				for (RoadTramType rtt : _roadtramtypes) {
 					/* update even non-existing road types to update tile owner too */
 					Owner o = GetRoadOwner(t, rtt);
-					if (o < MAX_COMPANIES && !Company::IsValidID(o)) SetRoadOwner(t, rtt, OWNER_NONE);
+					if (o < OLD_MAX_COMPANIES && !Company::IsValidID(o)) SetRoadOwner(t, rtt, OLD_OWNER_NONE);
 				}
 				if (IsLevelCrossing(t)) {
 					if (!Company::IsValidID(GetTileOwner(t))) FixOwnerOfRailTrack(t);
@@ -2482,8 +2498,8 @@ bool AfterLoadGame()
 
 		/* signs with invalid owner left from older savegames */
 		for (Sign *si : Sign::Iterate()) {
-			if (si->owner != OWNER_NONE && !Company::IsValidID(si->owner)) si->owner = OWNER_NONE;
-		}
+			if (si->owner != OLD_OWNER_NONE && !Company::IsValidID(si->owner)) si->owner = OWNER_NONE;
+>>>>>>> theirs
 
 		/* Station can get named based on an industry type, but the current ones
 		 * are not, so mark them as if they are not named by an industry. */
@@ -2502,16 +2518,16 @@ bool AfterLoadGame()
 
 		/* More companies ... */
 		for (Company *c : Company::Iterate()) {
-			if (c->bankrupt_asked == 0xFF) c->bankrupt_asked = MAX_UVALUE(CompanyMask);
+			if (c->bankrupt_asked.data[0] == 0x00000000000000FF) c->bankrupt_asked.set();
 		}
 
 		for (Engine *e : Engine::Iterate()) {
-			if (e->company_avail == 0xFF) e->company_avail = MAX_UVALUE(CompanyMask);
+			if (e->company_avail.data[0] == 0x00000000000000FF) e->company_avail.set();
 		}
 
 		for (Town *t : Town::Iterate()) {
-			if (t->have_ratings == 0xFF) t->have_ratings = MAX_UVALUE(CompanyMask);
-			for (uint i = 8; i != MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
+			if (t->have_ratings.data[0] == 0x00000000000000FF) t->have_ratings.set();
+			for (uint i = 8; i != OLD_MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
 		}
 	}
 
@@ -2968,7 +2984,7 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SLV_148)) {
 		for (Object *o : Object::Iterate()) {
 			Owner owner = GetTileOwner(o->location.tile);
-			o->colour = (owner == OWNER_NONE) ? static_cast<Colours>(GB(Random(), 0, 4)) : Company::Get(owner)->livery->colour1;
+			o->colour = (owner == OLD_OWNER_NONE) ? static_cast<Colours>(GB(Random(), 0, 4)) : Company::Get(owner)->livery->colour1;
 		}
 	}
 
@@ -4459,6 +4475,50 @@ bool AfterLoadGame()
 	/* This needs to be done after conversion. */
 	RebuildViewportKdtree();
 	ViewportMapBuildTunnelCache();
+
+	/* More companies */
+	if (IsSavegameVersionBefore(196)) {
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (IsTileType(t, MP_HOUSE))
+				continue;
+			if (IsTileType(t, MP_INDUSTRY))
+				continue;
+
+			SetTileOwner(t, UpdateOwnerEnum(GetTileOwner(t)));
+
+			if (IsTileType(t, MP_ROAD) || IsTileType(t, MP_TUNNELBRIDGE) || IsRoadStopTile(t)) {
+				SetRoadOwner(t, ROADTYPE_ROAD, UpdateOwnerEnum(GetRoadOwner(t, ROADTYPE_ROAD)));
+				SetRoadOwner(t, ROADTYPE_TRAM, UpdateOwnerEnumTram(GetRoadOwner(t, ROADTYPE_TRAM)));
+			}
+		}
+
+		Sign *i;
+		FOR_ALL_SIGNS(i) {
+			i->owner = UpdateOwnerEnum(i->owner);
+		}
+
+		Station *s;
+		FOR_ALL_STATIONS(s) {
+			s->owner = UpdateOwnerEnum(s->owner);
+		}
+
+		Company *c;
+		FOR_ALL_COMPANIES(c) {
+			if (c->bankrupt_asked.data[0] >= 0x0000000000007FFF) c->bankrupt_asked.set();
+		}
+
+		Engine *e;
+		FOR_ALL_ENGINES(e) {
+			if (e->company_avail.data[0] >= 0x0000000000007FFF) e->company_avail.set();
+			if (e->preview_asked.data[0] >= 0x0000000000007FFF) e->preview_asked.set();
+		}
+
+		Town *t;
+		FOR_ALL_TOWNS(t) {
+			if (t->have_ratings.data[0] >= 0x0000000000007FFF) t->have_ratings.set();
+			for (uint i = OLD_MAX_COMPANIES; i != MAX_COMPANIES; i++) t->ratings[i] = RATING_INITIAL;
+		}
+	}
 
 	/* Road stops is 'only' updating some caches */
 	AfterLoadRoadStops();

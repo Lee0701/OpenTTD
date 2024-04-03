@@ -167,6 +167,7 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDSTR(Town, name,                  SLE_STR | SLF_ALLOW_CONTROL, 0, SLV_84, SL_MAX_VERSION),
 
 	    SLE_VAR(Town, flags,                 SLE_UINT8),
+<<<<<<< ours
 	SLE_CONDVAR_X(Town, church_count,        SLE_UINT16, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TOWN_MULTI_BUILDING)),
 	SLE_CONDVAR_X(Town, stadium_count,       SLE_UINT16, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_TOWN_MULTI_BUILDING)),
 	SLE_CONDVAR(Town, statues,               SLE_FILE_U8  | SLE_VAR_U16, SL_MIN_VERSION, SLV_104),
@@ -235,6 +236,63 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_I16 | SLE_VAR_U16, SLV_54, SLV_165),
 	SLE_CONDNULL_X(2, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_JOKERPP, SL_JOKER_1_26)),
 	SLE_CONDVAR(Town, growth_rate,           SLE_UINT16,                 SLV_165, SL_MAX_VERSION),
+=======
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U8  | SLE_VAR_U64, 0, 103),
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U16 | SLE_VAR_U64, 104, 195),
+	SLE_CONDARR(Town, statues.data,          SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
+
+	SLE_CONDNULL(1, 0, 1),                   ///< sort_index, no longer in use
+
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U8  | SLE_VAR_U64, 0, 103),
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U16 | SLE_VAR_U64, 104, 195),
+	SLE_CONDARR(Town, have_ratings.data,     SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, 8,               0, 103),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, OLD_MAX_COMPANIES, 104, 195),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, 196, SL_MAX_VERSION),
+	/* failed bribe attempts are stored since savegame format 4 */
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               4, 103),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  OLD_MAX_COMPANIES, 104, 195),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, 196, SL_MAX_VERSION),
+
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
+
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_max, SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].new_max,       SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_act, SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].old_act,       SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].new_act, SLE_UINT32,                 9, 164),
+	SLE_CONDVAR(Town, supplied[CT_MAIL].new_act,       SLE_UINT32,                 9, 164),
+
+	SLE_CONDNULL(2, 0, 163),                 ///< pct_pass_transported / pct_mail_transported, now computed on the fly
+
+	SLE_CONDVAR(Town, received[TE_FOOD].old_act,       SLE_UINT16,                 0, 164),
+	SLE_CONDVAR(Town, received[TE_WATER].old_act,      SLE_UINT16,                 0, 164),
+	SLE_CONDVAR(Town, received[TE_FOOD].new_act,       SLE_UINT16,                 0, 164),
+	SLE_CONDVAR(Town, received[TE_WATER].new_act,      SLE_UINT16,                 0, 164),
+
+	SLE_CONDARR(Town, goal, SLE_UINT32, NUM_TE, 165, SL_MAX_VERSION),
+
+	SLE_CONDSTR(Town, text,                  SLE_STR | SLF_ALLOW_CONTROL, 0, 168, SL_MAX_VERSION),
+
+	SLE_CONDVAR(Town, time_until_rebuild,    SLE_FILE_U8 | SLE_VAR_U16,  0, 53),
+	SLE_CONDVAR(Town, grow_counter,          SLE_FILE_U8 | SLE_VAR_U16,  0, 53),
+	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_U8 | SLE_VAR_I16,  0, 53),
+
+	SLE_CONDVAR(Town, time_until_rebuild,    SLE_UINT16,                54, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, grow_counter,          SLE_UINT16,                54, SL_MAX_VERSION),
+
+	SLE_CONDVAR(Town, growth_rate,           SLE_FILE_I16 | SLE_VAR_U16, 54, 164),
+	SLE_CONDVAR(Town, growth_rate,           SLE_UINT16,                 165, SL_MAX_VERSION),
+>>>>>>> theirs
 
 	    SLE_VAR(Town, fund_buildings_months, SLE_UINT8),
 	    SLE_VAR(Town, road_build_months,     SLE_UINT8),

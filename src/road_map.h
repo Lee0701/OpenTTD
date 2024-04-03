@@ -289,7 +289,7 @@ inline Owner GetRoadOwner(TileIndex t, RoadTramType rtt)
 inline void SetRoadOwner(TileIndex t, RoadTramType rtt, Owner o)
 {
 	if (rtt == RTT_ROAD) {
-		if(IsNormalRoadTile(t)) _me[t].m9 = o;
+		if(IsNormalRoadTile(t)) SetTileOwner(t, o);
 		else _me[t].m7 = o;
 	} else {
 		_m[t].m1 = o;
