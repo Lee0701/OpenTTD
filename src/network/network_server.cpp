@@ -896,7 +896,8 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendCompanyUpdate()
 	auto p = std::make_unique<Packet>(PACKET_SERVER_COMPANY_UPDATE, TCP_MTU);
 
 	static_assert(sizeof(_network_company_passworded) <= sizeof(uint16_t));
-	p->Send_uint16(_network_company_passworded);
+	for (uint i = 0; i < CompanyMask::bsize; i++)
+		p->Send_uint64(_network_company_passworded.data[i]);
 	this->SendPacket(std::move(p));
 	return NETWORK_RECV_STATUS_OKAY;
 }
@@ -2251,7 +2252,7 @@ void NetworkServerUpdateCompanyPassworded(CompanyID company_id, bool passworded)
 {
 	if (NetworkCompanyIsPassworded(company_id) == passworded) return;
 
-	SB(_network_company_passworded, company_id, 1, !!passworded);
+	_network_company_passworded.set(company_id, passworded);
 	SetWindowClassesDirty(WC_COMPANY);
 
 	for (NetworkClientSocket *cs : NetworkClientSocket::Iterate()) {

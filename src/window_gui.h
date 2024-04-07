@@ -1085,7 +1085,7 @@ Window *FindWindowFromPt(int x, int y);
  * @return %Window pointer of the newly created window, or the existing one if \a return_existing is set, or \c nullptr.
  */
 template <typename Wcls>
-Wcls *AllocateWindowDescFront(WindowDesc *desc, int window_number, bool return_existing = false)
+Wcls *AllocateWindowDescFront(WindowDesc *desc, WindowNumber window_number, bool return_existing = false)
 {
 	Wcls *w = static_cast<Wcls *>(BringWindowToFrontById(desc->cls, window_number));
 	if (w != nullptr) return return_existing ? w : nullptr;

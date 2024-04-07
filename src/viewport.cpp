@@ -5314,7 +5314,7 @@ HandleViewportClickedResult HandleViewportClicked(const Viewport *vp, int x, int
 void RebuildViewportOverlay(Window *w, bool incremental)
 {
 	if (w->viewport->overlay != nullptr &&
-			w->viewport->overlay->GetCompanyMask() != 0 &&
+			w->viewport->overlay->GetCompanyMask().any() &&
 			w->viewport->overlay->GetCargoMask() != 0) {
 		w->viewport->overlay->RebuildCache(incremental);
 		if (!incremental) w->SetDirty();

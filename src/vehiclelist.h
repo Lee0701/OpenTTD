@@ -36,8 +36,8 @@ struct VehicleListIdentifier {
 	uint32_t index;       ///< A vehicle list type specific index.
 
 	uint32_t Pack() const;
-	bool UnpackIfValid(uint32_t data);
-	static VehicleListIdentifier UnPack(uint32_t data);
+	bool UnpackIfValid(uint64_t data);
+	static VehicleListIdentifier UnPack(uint64_t data);
 
 	/**
 	 * Create a simple vehicle list.
