@@ -212,10 +212,21 @@ static void Load_MAP8()
 	}
 }
 
+static void Load_MAP9()
+{
+	std::array<uint16_t, MAP_SL_BUF_SIZE> buf;
+	TileIndex size = MapSize();
+
+	for (TileIndex i = 0; i != size;) {
+		SlArray(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+		for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _me[i++].m9 = buf[j];
+	}
+}
+
 static void Load_WMAP()
 {
 	static_assert(sizeof(Tile) == 8);
-	static_assert(sizeof(TileExtended) == 4);
+	static_assert(sizeof(TileExtended) == 6);
 	assert(_sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 1 || _sl_xv_feature_versions[XSLFI_WHOLE_MAP_CHUNK] == 2);
 
 	ReadBuffer *reader = ReadBuffer::GetCurrent();
@@ -415,6 +426,7 @@ static const ChunkHandler map_chunk_handlers[] = {
 	{ 'MAPE', Save_MAP<MAP6>, Load_MAP6, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'MAP7', Save_MAP<MAP7>, Load_MAP7, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'MAP8', Save_MAP<MAP8>, Load_MAP8, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
+	{ 'MAP8', Save_MAP<MAP9>, Load_MAP9, nullptr, nullptr,    CH_RIFF, Special_MAP_Chunks },
 	{ 'WMAP', Save_WMAP,      Load_WMAP, nullptr, nullptr,    CH_RIFF, Special_WMAP },
 };
 

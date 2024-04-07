@@ -361,6 +361,33 @@ struct MAP9ChunkHandler : ChunkHandler {
 
 	void Load() const override
 	{
+		std::array<uint16_t, MAP_SL_BUF_SIZE> buf;
+		TileIndex size = MapSize();
+
+		for (TileIndex i = 0; i != size;) {
+			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _me[i++].m9 = buf[j];
+		}
+	}
+
+	void Save() const override
+	{
+		std::array<uint16_t, MAP_SL_BUF_SIZE> buf;
+		TileIndex size = MapSize();
+
+		SlSetLength(size * sizeof(uint16_t));
+		for (TileIndex i = 0; i != size;) {
+			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) buf[j] = _me[i++].m9;
+			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT16);
+		}
+	}
+};
+
+struct MAP9ChunkHandler : ChunkHandler {
+	MAP9ChunkHandler() : ChunkHandler('MAP9', CH_RIFF) {}
+
+	void Load() const override
+	{
 		std::array<uint16, MAP_SL_BUF_SIZE> buf;
 		TileIndex size = MapSize();
 
