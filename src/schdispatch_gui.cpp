@@ -508,7 +508,8 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 					}
 
 					bool have_last = false;
-					if (ds.GetScheduledDispatchLastDispatch() % ds.GetScheduledDispatchDuration() == slot->offset) {
+					int32_t last_dispatch = ds.GetScheduledDispatchLastDispatch();
+					if (last_dispatch != INVALID_SCHEDULED_DISPATCH_OFFSET && (last_dispatch % ds.GetScheduledDispatchDuration() == slot->offset)) {
 						_temp_special_strings[0] += '\n';
 						_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_LAST);
 						if (_settings_time.time_in_minutes) {
@@ -521,7 +522,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 						have_last = true;
 					}
 					StateTicks next_slot = GetScheduledDispatchTime(ds, _state_ticks);
-					if ((next_slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration() == slot->offset) {
+					if (next_slot != INVALID_STATE_TICKS && ((next_slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration() == slot->offset)) {
 						if (!have_last) _temp_special_strings[0] += '\n';
 						_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_NEXT);
 						if (_settings_time.time_in_minutes) {
@@ -631,9 +632,14 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 				const StateTicks end_tick = ds.GetScheduledDispatchStartTick() + ds.GetScheduledDispatchDuration();
 
 				StateTicks slot = GetScheduledDispatchTime(ds, _state_ticks);
-				int32_t next_offset = (slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration();
+				int32_t next_offset = (slot != INVALID_STATE_TICKS) ? (slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration() : INT32_MIN;
 
-				int32_t last_dispatch = ds.GetScheduledDispatchLastDispatch() % ds.GetScheduledDispatchDuration();
+				int32_t last_dispatch;
+				if (ds.GetScheduledDispatchLastDispatch() != INVALID_SCHEDULED_DISPATCH_OFFSET) {
+					last_dispatch = ds.GetScheduledDispatchLastDispatch() % ds.GetScheduledDispatchDuration();
+				} else {
+					last_dispatch = INT32_MIN;
+				}
 
 				for (int y = r.top + 1; num < maxval; y += this->resize.step_height) { /* Draw the rows */
 					for (uint i = 0; i < this->num_columns && num < maxval; i++, num++) {
@@ -829,9 +835,11 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 					}
 
 					const StateTicks next_departure = GetScheduledDispatchTime(ds, _state_ticks);
-					set_next_departure_update(next_departure + ds.GetScheduledDispatchDelay());
-					SetDParam(0, next_departure);
-					DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_NEXT_AVAILABLE_DEPARTURE);
+					if (next_departure != INVALID_STATE_TICKS) {
+						set_next_departure_update(next_departure + ds.GetScheduledDispatchDelay());
+						SetDParam(0, next_departure);
+						DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_NEXT_AVAILABLE_DEPARTURE);
+					}
 					y += GetCharacterHeight(FS_NORMAL);
 
 					departure_time_warnings(next_departure);
@@ -842,14 +850,6 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 						DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_REUSE_SLOTS_ENABLED);
 						extra_lines++;
 						y += GetCharacterHeight(FS_NORMAL);
-					} else if (!have_conditional) {
-						const int required_vehicle = CalculateMaxRequiredVehicle(v->orders->GetTimetableTotalDuration(), ds.GetScheduledDispatchDuration(), ds.GetScheduledDispatch());
-						if (required_vehicle > 0) {
-							SetDParam(0, required_vehicle);
-							DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_L1);
-							extra_lines++;
-							y += GetCharacterHeight(FS_NORMAL);
-						}
 					}
 
 					SetTimetableParams(0, ds.GetScheduledDispatchDuration(), true);
@@ -864,6 +864,16 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 					SetTimetableParams(0, ds.GetScheduledDispatchDelay());
 					DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_L4);
 					y += GetCharacterHeight(FS_NORMAL);
+
+					if (!ds.GetScheduledDispatchReuseSlots() && !have_conditional) {
+						const int required_vehicle = CalculateMaxRequiredVehicle(v->orders->GetTimetableTotalDuration(), ds.GetScheduledDispatchDuration(), ds.GetScheduledDispatch());
+						if (required_vehicle > 0) {
+							SetDParam(0, required_vehicle);
+							DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_L1);
+							extra_lines++;
+							y += GetCharacterHeight(FS_NORMAL);
+						}
+					}
 
 					uint32_t duration = ds.GetScheduledDispatchDuration();
 					for (const DispatchSlot &slot : ds.GetScheduledDispatch()) {
@@ -904,7 +914,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		int xm = x % this->resize.step_width;
 		if (xt >= this->num_columns) return { nullptr, false };
 
-		uint row = y / this->resize.step_height;
+		int32_t row = y / this->resize.step_height;
 		if (row >= this->vscroll->GetCapacity()) return { nullptr, false };
 
 		uint pos = ((row + this->vscroll->GetPosition()) * this->num_columns) + xt;

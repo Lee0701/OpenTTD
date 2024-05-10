@@ -58,9 +58,8 @@ bool _check_special_modes;
 std::atomic<bool> _exit_game;
 GameMode _game_mode;
 SwitchMode _switch_mode;  ///< The next mainloop command.
-bool _switch_mode_time_valid = false;
-std::chrono::steady_clock::time_point _switch_mode_time; ///< The time when the switch mode was requested.
 PauseMode _pause_mode;
+GameSessionStats _game_session_stats; ///< Statistics about the current session.
 uint32_t _pause_countdown;
 std::string _switch_baseset;
 static bool _adjust_gui_zoom_startup_done = false;
@@ -623,7 +622,7 @@ static int DrawLayoutLine(const ParagraphLayouter::Line &line, int y, int left, 
 
 			FontCache *fc = f->fc;
 			TextColour colour = f->colour;
-			colour_has_shadow = (colour & TC_NO_SHADE) == 0 && colour != TC_BLACK;
+			colour_has_shadow = (colour & TC_NO_SHADE) == 0 && (colour & ~TC_FORCED) != TC_BLACK;
 			ctx.SetColourRemap(do_shadow ? TC_BLACK : colour); // the last run also sets the colour for the truncation dots
 			if (do_shadow && (!fc->GetDrawGlyphShadow() || !colour_has_shadow)) continue;
 
@@ -1248,9 +1247,7 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
 	const Sprite *sprite = GetSprite(real_sprite, SpriteType::Normal, ZoomMask(zoom));
 	Dimension dim = GetSpriteSize(real_sprite, nullptr, zoom);
 	size_t dim_size = static_cast<size_t>(dim.width) * dim.height;
-	std::unique_ptr<uint32_t[]> result(new uint32_t[dim_size]);
-	/* Set buffer to fully transparent. */
-	MemSetT(result.get(), 0, dim_size);
+	std::unique_ptr<uint32_t[]> result = std::make_unique<uint32_t[]>(dim_size);
 
 	/* Prepare new DrawPixelInfo - Normally this would be the screen but we want to draw to another buffer here.
 	 * Normally, pitch would be scaled screen width, but in our case our "screen" is only the sprite width wide. */
@@ -1268,9 +1265,7 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
 	/* If the current blitter is a paletted blitter, we have to render to an extra buffer and resolve the palette later. */
 	std::unique_ptr<byte[]> pal_buffer{};
 	if (blitter->GetScreenDepth() == 8) {
-		pal_buffer.reset(new byte[dim_size]);
-		MemSetT(pal_buffer.get(), 0, dim_size);
-
+		pal_buffer = std::make_unique<byte[]>(dim_size);
 		dpi.dst_ptr = pal_buffer.get();
 	}
 
@@ -2211,7 +2206,6 @@ bool AdjustGUIZoom(AdjustGUIZoomMode mode)
 
 	SetupWidgetDimensions();
 	UpdateAllVirtCoords();
-	if (mode != AGZM_STARTUP) FixTitleGameZoom();
 
 	extern void FlushDeparturesWindowTextCaches();
 	FlushDeparturesWindowTextCaches();

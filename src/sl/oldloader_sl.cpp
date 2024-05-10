@@ -399,7 +399,7 @@ static bool FixTTOEngines()
 			CalTime::State backup = CalTime::Detail::now;
 			CalTime::Detail::now.cal_date += CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 			CalTime::Detail::now.cal_ymd = CalTime::ConvertDateToYMD(CalTime::Detail::now.cal_date);
-			StartupOneEngine(e, aging_date, aging_ymd, 0, INT_MAX);
+			StartupOneEngine(e, aging_ymd, aging_ymd, 0, INT_MAX);
 			CalcEngineReliability(e, false);
 			e->intro_date -= CalTime::DAYS_TILL_ORIGINAL_BASE_YEAR.AsDelta();
 			CalTime::Detail::now = backup;
@@ -822,18 +822,18 @@ static const OldChunks industry_chunk[] = {
 
 	OCL_SVAR(  OC_UINT8, Industry, prod_level ),
 
-	OCL_SVAR( OC_UINT16, Industry, this_month_production[0] ),
-	OCL_SVAR( OC_UINT16, Industry, this_month_production[1] ),
-	OCL_SVAR( OC_UINT16, Industry, this_month_transported[0] ),
-	OCL_SVAR( OC_UINT16, Industry, this_month_transported[1] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, this_month_production[0] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, this_month_production[1] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, this_month_transported[0] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, this_month_transported[1] ),
 
 	OCL_SVAR(  OC_UINT8, Industry, last_month_pct_transported[0] ),
 	OCL_SVAR(  OC_UINT8, Industry, last_month_pct_transported[1] ),
 
-	OCL_SVAR( OC_UINT16, Industry, last_month_production[0] ),
-	OCL_SVAR( OC_UINT16, Industry, last_month_production[1] ),
-	OCL_SVAR( OC_UINT16, Industry, last_month_transported[0] ),
-	OCL_SVAR( OC_UINT16, Industry, last_month_transported[1] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, last_month_production[0] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, last_month_production[1] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, last_month_transported[0] ),
+	OCL_SVAR( OC_FILE_U16 | OC_VAR_U32, Industry, last_month_transported[1] ),
 
 	OCL_SVAR(  OC_UINT8, Industry, type ),
 	OCL_SVAR( OC_TTO | OC_FILE_U8 | OC_VAR_U16, Industry, counter ),
@@ -1701,7 +1701,7 @@ static const OldChunks main_chunk[] = {
 
 	OCL_ASSERT( OC_TTO, 0x496CE ),
 
-	OCL_VAR ( OC_FILE_U16 | OC_VAR_U32,   1, &_new_competitor_timeout.period ),
+	OCL_VAR ( OC_FILE_U16 | OC_VAR_U32,   1, &_new_competitor_timeout.period.value ),
 
 	OCL_CNULL( OC_TTO, 2 ),  ///< available monorail bitmask
 

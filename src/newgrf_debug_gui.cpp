@@ -23,6 +23,7 @@
 #include "zoom_func.h"
 #include "scope.h"
 #include "debug_settings.h"
+#include "viewport_func.h"
 
 #include "engine_base.h"
 #include "industry.h"
@@ -339,7 +340,7 @@ struct NewGRFInspectWindow : Window {
 
 	Scrollbar *vscroll;
 
-	int first_variable_line_index = 0;
+	int32_t first_variable_line_index = 0;
 	bool redraw_panel = false;
 	bool redraw_scrollbar = false;
 
@@ -569,7 +570,7 @@ struct NewGRFInspectWindow : Window {
 		const void *base      = nih->GetInstance(index);
 		const void *base_spec = nih->GetSpec(index);
 
-		uint i = 0;
+		int32_t i = 0;
 
 		auto guard = scope_guard([&]() {
 			if (this->log_console) {
@@ -577,12 +578,12 @@ struct NewGRFInspectWindow : Window {
 				DEBUG(misc, 0, "*** END ***");
 			}
 
-			uint count = std::min<uint>(UINT16_MAX, i);
+			const int32_t count = i;
 			if (vscroll->GetCount() != count) {
 				/* Not nice and certainly a hack, but it beats duplicating
 				 * this whole function just to count the actual number of
 				 * elements. Especially because they need to be redrawn. */
-				uint position = this->vscroll->GetPosition();
+				const int32_t position = this->vscroll->GetPosition();
 				const_cast<NewGRFInspectWindow*>(this)->vscroll->SetCount(count);
 				const_cast<NewGRFInspectWindow*>(this)->redraw_scrollbar = true;
 				if (position != this->vscroll->GetPosition()) {
@@ -652,20 +653,20 @@ struct NewGRFInspectWindow : Window {
 
 				TextColour colour = (this->selected_sprite_group == group && group != nullptr) ? TC_LIGHT_BLUE : TC_BLACK;
 				if (highlight_tag != 0) {
-					for (uint i = 0; i < lengthof(this->selected_highlight_tags); i++) {
+					for (uint i = 0; i < std::size(this->selected_highlight_tags); i++) {
 						if (this->selected_highlight_tags[i] == highlight_tag) {
 							static const TextColour text_colours[] = { TC_YELLOW, TC_GREEN, TC_ORANGE, TC_CREAM, TC_BROWN, TC_RED };
-							static_assert(lengthof(this->selected_highlight_tags) == lengthof(text_colours));
+							static_assert(std::tuple_size_v<decltype(this->selected_highlight_tags)> == lengthof(text_colours));
 							colour = text_colours[i];
 							break;
 						}
 					}
 				}
 				if (group != nullptr) {
-					for (uint i = 0; i < lengthof(this->marked_groups); i++) {
+					for (uint i = 0; i < std::size(this->marked_groups); i++) {
 						if (this->marked_groups[i] == group) {
 							static const uint8_t mark_colours[] = { PC_YELLOW, PC_GREEN, PC_ORANGE, PC_DARK_BLUE, PC_RED, PC_LIGHT_BLUE, 0xAE /* purple */, 0x6C /* brown */ };
-							static_assert(lengthof(this->marked_groups) == lengthof(mark_colours));
+							static_assert(std::tuple_size_v<decltype(this->marked_groups)> == lengthof(mark_colours));
 							Rect mark_ir = ir.Indent(WidgetDimensions::scaled.hsep_normal, rtl).WithWidth(WidgetDimensions::scaled.hsep_normal, rtl).Translate(0, (scroll_offset * this->resize.step_height));
 							GfxFillRect(mark_ir.left, mark_ir.top, mark_ir.right, mark_ir.top + this->resize.step_height - 1, mark_colours[i]);
 							break;
@@ -921,8 +922,8 @@ struct NewGRFInspectWindow : Window {
 
 			case WID_NGRFI_MAINPANEL: {
 				/* Get the line, make sure it's within the boundaries. */
-				int line = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NGRFI_MAINPANEL, WidgetDimensions::scaled.framerect.top);
-				if (line == INT_MAX) return;
+				int32_t line = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NGRFI_MAINPANEL, WidgetDimensions::scaled.framerect.top);
+				if (line == INT32_MAX) return;
 
 				if (this->sprite_dump) {
 					if (_ctrl_pressed) {
@@ -1580,6 +1581,9 @@ struct SpriteAlignerWindow : Window {
 			case WID_SA_DOWN:
 			case WID_SA_LEFT:
 			case WID_SA_RIGHT: {
+				/* Make sure that there are no concurrent draw jobs executing */
+				ViewportDoDrawProcessAllPending();
+
 				/*
 				 * Yes... this is a hack.
 				 *
@@ -1593,19 +1597,21 @@ struct SpriteAlignerWindow : Window {
 				 * used by someone and the sprite cache isn't big enough for that
 				 * particular NewGRF developer.
 				 */
-				Sprite *spr = const_cast<Sprite *>(GetSprite(this->current_sprite, SpriteType::Normal, 0));
+				Sprite *spr = const_cast<Sprite *>(GetSprite(this->current_sprite, SpriteType::Normal, UINT8_MAX));
 
 				/* Remember the original offsets of the current sprite, if not already in mapping. */
 				if (this->offs_start_map.count(this->current_sprite) == 0) {
 					this->offs_start_map[this->current_sprite] = XyOffs(spr->x_offs, spr->y_offs);
 				}
 				int amt = ScaleByZoom(_ctrl_pressed ? 8 : 1, SpriteAlignerWindow::zoom);
-				switch (widget) {
-					/* Move eight units at a time if ctrl is pressed. */
-					case WID_SA_UP:    spr->y_offs -= amt; break;
-					case WID_SA_DOWN:  spr->y_offs += amt; break;
-					case WID_SA_LEFT:  spr->x_offs -= amt; break;
-					case WID_SA_RIGHT: spr->x_offs += amt; break;
+				for (Sprite *s = spr; s != nullptr; s = s->next) {
+					switch (widget) {
+						/* Move eight units at a time if ctrl is pressed. */
+						case WID_SA_UP:    s->y_offs -= amt; break;
+						case WID_SA_DOWN:  s->y_offs += amt; break;
+						case WID_SA_LEFT:  s->x_offs -= amt; break;
+						case WID_SA_RIGHT: s->x_offs += amt; break;
+					}
 				}
 				/* Of course, we need to redraw the sprite, but where is it used?
 				 * Everywhere is a safe bet. */

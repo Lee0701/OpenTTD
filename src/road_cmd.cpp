@@ -520,10 +520,10 @@ Foundation GetRoadFoundation(Slope tileh, RoadBits bits);
 void NotifyRoadLayoutChangedIfTileNonLeaf(TileIndex tile, RoadTramType rtt, RoadBits present_bits)
 {
 	uint connections = 0;
-	if ((present_bits & ROAD_NE) && (GetAnyRoadBits(TILE_ADDXY(tile, -1,  0), rtt) & ROAD_SW)) connections++;
-	if ((present_bits & ROAD_SE) && (GetAnyRoadBits(TILE_ADDXY(tile,  0,  1), rtt) & ROAD_NW)) connections++;
-	if ((present_bits & ROAD_SW) && (GetAnyRoadBits(TILE_ADDXY(tile,  1,  0), rtt) & ROAD_NE)) connections++;
-	if ((present_bits & ROAD_NW) && (GetAnyRoadBits(TILE_ADDXY(tile,  0, -1), rtt) & ROAD_SE)) connections++;
+	if ((present_bits & ROAD_NE) && (GetAnyRoadBits(TileAddXY(tile, -1,  0), rtt) & ROAD_SW)) connections++;
+	if ((present_bits & ROAD_SE) && (GetAnyRoadBits(TileAddXY(tile,  0,  1), rtt) & ROAD_NW)) connections++;
+	if ((present_bits & ROAD_SW) && (GetAnyRoadBits(TileAddXY(tile,  1,  0), rtt) & ROAD_NE)) connections++;
+	if ((present_bits & ROAD_NW) && (GetAnyRoadBits(TileAddXY(tile,  0, -1), rtt) & ROAD_SE)) connections++;
 	if (connections >= 2) {
 		NotifyRoadLayoutChanged();
 	}
@@ -580,10 +580,10 @@ CommandCost CheckAllowRemoveRoad(TileIndex tile, RoadBits remove, Owner owner, R
 	/* Get a bitmask of which neighbouring roads has a tile */
 	RoadBits n = ROAD_NONE;
 	RoadBits present = GetAnyRoadBits(tile, rtt);
-	if ((present & ROAD_NE) && (GetAnyRoadBits(TILE_ADDXY(tile, -1,  0), rtt) & ROAD_SW)) n |= ROAD_NE;
-	if ((present & ROAD_SE) && (GetAnyRoadBits(TILE_ADDXY(tile,  0,  1), rtt) & ROAD_NW)) n |= ROAD_SE;
-	if ((present & ROAD_SW) && (GetAnyRoadBits(TILE_ADDXY(tile,  1,  0), rtt) & ROAD_NE)) n |= ROAD_SW;
-	if ((present & ROAD_NW) && (GetAnyRoadBits(TILE_ADDXY(tile,  0, -1), rtt) & ROAD_SE)) n |= ROAD_NW;
+	if ((present & ROAD_NE) && (GetAnyRoadBits(TileAddXY(tile, -1,  0), rtt) & ROAD_SW)) n |= ROAD_NE;
+	if ((present & ROAD_SE) && (GetAnyRoadBits(TileAddXY(tile,  0,  1), rtt) & ROAD_NW)) n |= ROAD_SE;
+	if ((present & ROAD_SW) && (GetAnyRoadBits(TileAddXY(tile,  1,  0), rtt) & ROAD_NE)) n |= ROAD_SW;
+	if ((present & ROAD_NW) && (GetAnyRoadBits(TileAddXY(tile,  0, -1), rtt) & ROAD_SE)) n |= ROAD_NW;
 
 	int rating_decrease = RATING_ROAD_DOWN_STEP_EDGE;
 	/* If 0 or 1 bits are set in n, or if no bits that match the bits to remove,
@@ -601,6 +601,15 @@ CommandCost CheckAllowRemoveRoad(TileIndex tile, RoadBits remove, Owner owner, R
 	return CommandCost();
 }
 
+static void UpdateRoadStopTileDisallowedRoadDirection(TileIndex tile, DisallowedRoadDirections drd)
+{
+	if (IsRoadWaypoint(tile)) {
+		SetDriveThroughStopDisallowedRoadDirections(tile, drd);
+	} else {
+		RoadStop *rs = RoadStop::GetByTile(tile, GetRoadStopType(tile));
+		rs->ChangeDriveThroughDisallowedRoadDirections(drd);
+	}
+}
 
 /**
  * Delete a piece of road.
@@ -742,8 +751,8 @@ static CommandCost RemoveRoad(TileIndex tile, DoCommandFlag flags, RoadBits piec
 			if (flags & DC_EXEC) {
 				/* A full diagonal road tile has two road bits. */
 				UpdateCompanyRoadInfrastructure(existing_rt, GetRoadOwner(tile, rtt), -2);
-				if (rtt == RTT_ROAD) {
-					SetDriveThroughStopDisallowedRoadDirections(tile, DRD_NONE);
+				if (rtt == RTT_ROAD && GetDriveThroughStopDisallowedRoadDirections(tile) != DRD_NONE) {
+					UpdateRoadStopTileDisallowedRoadDirection(tile, DRD_NONE);
 				}
 				SetRoadType(tile, rtt, INVALID_ROADTYPE);
 				MarkTileDirtyByTile(tile);
@@ -1206,12 +1215,7 @@ CommandCost CmdBuildRoad(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint3
 					}
 
 					if (flags & DC_EXEC) {
-						if (IsRoadWaypoint(tile)) {
-							SetDriveThroughStopDisallowedRoadDirections(tile, dis_new);
-						} else {
-							RoadStop *rs = RoadStop::GetByTile(tile, GetRoadStopType(tile));
-							rs->ChangeDriveThroughDisallowedRoadDirections(dis_new);
-						}
+						UpdateRoadStopTileDisallowedRoadDirection(tile, dis_new);
 						MarkTileDirtyByTile(tile, VMDF_NOT_MAP_MODE);
 						NotifyRoadLayoutChanged(CountBits(dis_existing) > CountBits(dis_new));
 						UpdateRoadCachedOneWayStatesAroundTile(tile);
@@ -2528,12 +2532,11 @@ static int GetSlopePixelZ_Road(TileIndex tile, uint x, uint y, bool)
 {
 
 	if (IsNormalRoad(tile)) {
-		int z;
-		Slope tileh = GetTilePixelSlope(tile, &z);
+		auto [tileh, z] = GetTilePixelSlope(tile);
 		if (tileh == SLOPE_FLAT) return z;
 
 		Foundation f = GetRoadFoundation(tileh, GetAllRoadBits(tile));
-		z += ApplyPixelFoundationToSlope(f, &tileh);
+		z += ApplyPixelFoundationToSlope(f, tileh);
 		return z + GetPartialPixelZ(x & 0xF, y & 0xF, tileh);
 	} else {
 		return GetTileMaxPixelZ(tile);
@@ -2577,7 +2580,7 @@ static void TileLoop_Road(TileIndex tile)
 			/* Flat foundation tiles should look the same as the tiles they visually connect to. */
 			int tile_z = GetTileZ(tile);
 			if (tile_z == GetSnowLine()) {
-				GetFoundationSlope(tile, &tile_z);
+				std::tie(std::ignore, tile_z) = GetFoundationSlope(tile);
 			}
 
 			if (IsOnSnow(tile) != (tile_z > GetSnowLine())) {
@@ -2608,7 +2611,7 @@ static void TileLoop_Road(TileIndex tile)
 			if ((t->road_build_months != 0 || Chance16(_settings_game.economy.random_road_reconstruction, 1000)) &&
 					(DistanceManhattan(t->xy, tile) < 8 || grp != HZB_TOWN_EDGE) &&
 					IsNormalRoad(tile) && !HasAtMostOneBit(GetAllRoadBits(tile))) {
-				if (GetFoundationSlope(tile) == SLOPE_FLAT && EnsureNoVehicleOnGround(tile).Succeeded() && Chance16(1, 40)) {
+				if (std::get<0>(GetFoundationSlope(tile)) == SLOPE_FLAT && EnsureNoVehicleOnGround(tile).Succeeded() && Chance16(1, 40)) {
 					StartRoadWorks(tile);
 
 					if (_settings_client.sound.ambient) SndPlayTileFx(SND_21_ROAD_WORKS, tile);
@@ -2994,12 +2997,11 @@ static CommandCost TerraformTile_Road(TileIndex tile, DoCommandFlag flags, int z
 				if (CheckRoadSlope(tileh_new, &bits_copy, ROAD_NONE, ROAD_NONE).Succeeded()) {
 					/* CheckRoadSlope() sometimes changes the road_bits, if it does not agree with them. */
 					if (bits == bits_copy) {
-						int z_old;
-						Slope tileh_old = GetTileSlope(tile, &z_old);
+						auto [tileh_old, z_old] = GetTileSlopeZ(tile);
 
 						/* Get the slope on top of the foundation */
-						z_old += ApplyFoundationToSlope(GetRoadFoundation(tileh_old, bits), &tileh_old);
-						z_new += ApplyFoundationToSlope(GetRoadFoundation(tileh_new, bits), &tileh_new);
+						z_old += ApplyFoundationToSlope(GetRoadFoundation(tileh_old, bits), tileh_old);
+						z_new += ApplyFoundationToSlope(GetRoadFoundation(tileh_new, bits), tileh_new);
 
 						/* The surface slope must not be changed */
 						if ((z_old == z_new) && (tileh_old == tileh_new)) return CommandCost(EXPENSES_CONSTRUCTION, _price[PR_BUILD_FOUNDATION]);

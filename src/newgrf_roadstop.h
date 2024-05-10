@@ -71,8 +71,8 @@ enum RoadStopSpecFlags {
 	RSF_NO_AUTO_ROAD_CONNECTION, ///< No auto road connection.
 	RSF_BUILD_MENU_ROAD_ONLY, ///< Only show in the road build menu (not tram).
 	RSF_BUILD_MENU_TRAM_ONLY, ///< Only show in the tram build menu (not road).
-	RSF_BUILD_MENU_DRAW_DISABLED_VIEWS, ///< Use custom road stop graphics for disabled views
-	RSF_DRAW_MODE_REGISTER,   ///< Use custom road stop graphics for disabled views
+	RSF_BUILD_MENU_DRAW_DISABLED_VIEWS, ///< Use custom road stop graphics for disabled views.
+	RSF_DRAW_MODE_REGISTER,   ///< Read draw mode from register 0x100.
 };
 
 enum RoadStopSpecIntlFlags {
@@ -145,7 +145,6 @@ struct RoadStopSpec {
 	 */
 	GRFFilePropsBase<NUM_CARGO + 3> grf_prop;
 	RoadStopClassID cls_id;     ///< The class to which this spec belongs.
-	int spec_id;                ///< The ID of this spec inside the class.
 	StringID name;              ///< Name of this stop
 
 	RoadStopAvailabilityType stop_type = ROADSTOPTYPE_ALL;

@@ -518,18 +518,24 @@ std::vector<int> VideoDriver_SDL_Base::GetListOfMonitorRefreshRates()
 }
 
 struct SDLVkMapping {
-	SDL_Keycode vk_from;
-	byte vk_count;
-	byte map_to;
-	bool unprintable;
+	const SDL_Keycode vk_from;
+	const uint8_t vk_count;
+	const uint8_t map_to;
+	const bool unprintable;
+
+	constexpr SDLVkMapping(SDL_Keycode vk_first, SDL_Keycode vk_last, uint8_t map_first, [[maybe_unused]] uint8_t map_last, bool unprintable)
+		: vk_from(vk_first), vk_count(vk_first - vk_last + 1), map_to(map_first), unprintable(unprintable)
+	{
+		assert((vk_last - vk_first) == (map_last - map_first));
+	}
 };
 
-#define AS(x, z) {x, 0, z, false}
-#define AM(x, y, z, w) {x, (byte)(y - x), z, false}
-#define AS_UP(x, z) {x, 0, z, true}
-#define AM_UP(x, y, z, w) {x, (byte)(y - x), z, true}
+#define AS(x, z) {x, x, z, z, false}
+#define AM(x, y, z, w) {x, y, z, w, false}
+#define AS_UP(x, z) {x, x, z, z, true}
+#define AM_UP(x, y, z, w) {x, y, z, w, true}
 
-static const SDLVkMapping _vk_mapping[] = {
+static constexpr SDLVkMapping _vk_mapping[] = {
 	/* Pageup stuff + up/down */
 	AS_UP(SDLK_PAGEUP,   WKC_PAGEUP),
 	AS_UP(SDLK_PAGEDOWN, WKC_PAGEDOWN),
@@ -560,7 +566,16 @@ static const SDLVkMapping _vk_mapping[] = {
 	AM_UP(SDLK_F1, SDLK_F12, WKC_F1, WKC_F12),
 
 	/* Numeric part. */
-	AM(SDLK_KP_0, SDLK_KP_9, '0', '9'),
+	AS(SDLK_KP_1,        '1'),
+	AS(SDLK_KP_2,        '2'),
+	AS(SDLK_KP_3,        '3'),
+	AS(SDLK_KP_4,        '4'),
+	AS(SDLK_KP_5,        '5'),
+	AS(SDLK_KP_6,        '6'),
+	AS(SDLK_KP_7,        '7'),
+	AS(SDLK_KP_8,        '8'),
+	AS(SDLK_KP_9,        '9'),
+	AS(SDLK_KP_0,        '0'),
 	AS(SDLK_KP_DIVIDE,   WKC_NUM_DIV),
 	AS(SDLK_KP_MULTIPLY, WKC_NUM_MUL),
 	AS(SDLK_KP_MINUS,    WKC_NUM_MINUS),
@@ -865,6 +880,15 @@ const char *VideoDriver_SDL_Base::Start(const StringList &param)
 
 	const char *error = this->Initialize();
 	if (error != nullptr) return error;
+
+#ifdef SDL_HINT_MOUSE_AUTO_CAPTURE
+	if (GetDriverParamBool(param, "no_mouse_capture")) {
+		/* By default SDL captures the mouse, while a button is pressed.
+		 * This is annoying during debugging, when OpenTTD is suspended while the button was pressed.
+		 */
+		if (!SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0")) return SDL_GetError();
+	}
+#endif
 
 	this->startup_display = FindStartupDisplay(GetDriverParamInt(param, "display", -1));
 

@@ -907,6 +907,11 @@ bool IntSettingDesc::IsDefaultValue(void *object) const
 	return this->def == object_value;
 }
 
+void IntSettingDesc::ResetToDefault(void *object) const
+{
+	this->Write(object, this->def);
+}
+
 char *StringSettingDesc::FormatValue(char *buf, const char *last, const void *object) const
 {
 	const std::string &str = this->Read(object);
@@ -942,6 +947,11 @@ bool StringSettingDesc::IsDefaultValue(void *object) const
 	return this->def == str;
 }
 
+void StringSettingDesc::ResetToDefault(void *object) const
+{
+	this->Write(object, this->def);
+}
+
 bool ListSettingDesc::IsSameValue(const IniItem *item, void *object) const
 {
 	/* Checking for equality is way more expensive than just writing the value. */
@@ -952,6 +962,12 @@ bool ListSettingDesc::IsDefaultValue(void *) const
 {
 	/* Defaults of lists are often complicated, and hard to compare. */
 	return false;
+}
+
+void ListSettingDesc::ResetToDefault(void *) const
+{
+	/* Resetting a list to default is not supported. */
+	NOT_REACHED();
 }
 
 /**
@@ -1077,6 +1093,12 @@ static StringID SettingTitleWallclock(const IntSettingDesc &sd)
 static StringID SettingHelpWallclock(const IntSettingDesc &sd)
 {
 	return EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? sd.str_help + 1 : sd.str_help;
+}
+
+/** Switch setting help depending on wallclock setting */
+static StringID SettingHelpWallclockTriple(const IntSettingDesc &sd)
+{
+	return EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? sd.str_help + ((GetGameSettings().economy.day_length_factor > 1) ? 2 : 1) : sd.str_help;
 }
 
 /** Setting values for velocity unit localisation */
@@ -1885,7 +1907,8 @@ bool CheckMapEdgesAreWater(bool allow_non_flat_void)
 {
 	auto check_tile = [&](uint x, uint y, Slope inner_edge) -> bool {
 		int h = 0;
-		Slope slope = GetTilePixelSlopeOutsideMap(x, y, &h);
+		Slope slope;
+		std::tie(slope, h) = GetTilePixelSlopeOutsideMap(x, y);
 		if (slope == SLOPE_FLAT && h == 0) return true;
 		if (allow_non_flat_void && h == 0 && (slope & inner_edge) == 0 && IsTileType(TileXY(x, y), MP_VOID)) return true;
 		return false;
@@ -2271,7 +2294,13 @@ static bool TownCargoScaleGUI(SettingOnGuiCtrlData &data)
 {
 	switch (data.type) {
 		case SOGCT_VALUE_DPARAMS:
-			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.town_cargo_scale_mode);
+			if (GetGameSettings().economy.day_length_factor > 1) {
+				if (GetGameSettings().economy.town_cargo_scale_mode) {
+					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
+				} else {
+					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
+				}
+			}
 			return true;
 
 		default:
@@ -2288,7 +2317,27 @@ static bool IndustryCargoScaleGUI(SettingOnGuiCtrlData &data)
 			return true;
 
 		case SOGCT_VALUE_DPARAMS:
-			if (!EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY + GetGameSettings().economy.industry_cargo_scale_mode);
+			if (GetGameSettings().economy.day_length_factor > 1) {
+				if (GetGameSettings().economy.town_cargo_scale_mode) {
+					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
+				} else {
+					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
+				}
+			}
+			return true;
+
+		default:
+			return false;
+	}
+}
+
+static bool TownCargoScaleModeGUI(SettingOnGuiCtrlData &data)
+{
+	switch (data.type) {
+		case SOGCT_VALUE_DPARAMS:
+			if (data.text == STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY && EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) {
+				data.text = STR_CONFIG_SETTING_CARGO_SCALE_MODE_PER_PRODUCTION_INTERVAL;
+			}
 			return true;
 
 		default:
@@ -2305,7 +2354,7 @@ static bool IndustryCargoScaleModeGUI(SettingOnGuiCtrlData &data)
 			return true;
 
 		default:
-			return WallclockModeDisabledGUI(data);
+			return TownCargoScaleModeGUI(data);
 	}
 }
 
@@ -2467,7 +2516,7 @@ static void GraphicsSetLoadConfig(IniFile &ini)
 
 		if (const IniItem *item = group->GetItem("extra_params"); item != nullptr && item->value) {
 			auto &extra_params = BaseGraphics::ini_data.extra_params;
-			extra_params.resize(lengthof(GRFConfig::param));
+			extra_params.resize(0x80); // TODO: make ParseIntList work nicely with C++ containers
 			int count = ParseIntList(item->value->c_str(), &extra_params.front(), extra_params.size());
 			if (count < 0) {
 				SetDParamStr(0, BaseGraphics::ini_data.name);
@@ -3936,4 +3985,14 @@ std::initializer_list<SettingTable> GetSaveLoadSettingsTables()
 const SettingTable &GetLinkGraphSettingTable()
 {
 	return _linkgraph_settings;
+}
+
+void ResetSettingsToDefaultForLoad()
+{
+	for (auto &sd : IterateSettingTables(GetSaveLoadSettingsTables())) {
+		if (sd->flags & SF_NOT_IN_SAVE) continue;
+		if ((sd->flags & SF_NO_NETWORK_SYNC) && _networking && !_network_server) continue;
+
+		sd->ResetToDefault(&_settings_game);
+	}
 }

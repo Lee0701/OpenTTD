@@ -133,7 +133,7 @@ static StationID FindNearestHangar(const Aircraft *v)
 	const Station *next_dest = nullptr;
 	if (max_range != 0) {
 		if (v->current_order.IsType(OT_GOTO_STATION) ||
-				(v->current_order.IsType(OT_GOTO_DEPOT) && v->current_order.GetDepotActionType() != ODATFB_NEAREST_DEPOT)) {
+				(v->current_order.IsType(OT_GOTO_DEPOT) && (v->current_order.GetDepotActionType() & ODATFB_NEAREST_DEPOT) == 0)) {
 			last_dest = Station::GetIfValid(v->last_station_visited);
 			next_dest = Station::GetIfValid(v->current_order.GetDestination());
 		} else {
@@ -486,6 +486,7 @@ void Aircraft::OnNewDay()
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 
 	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
+	EconomyAgeVehicle(this);
 }
 
 void Aircraft::OnPeriodic()
@@ -1268,10 +1269,13 @@ static bool HandleCrashedAircraft(Aircraft *v)
 	if (v->crashed_counter < 500 && st == nullptr && ((v->crashed_counter % 3) == 0) ) {
 		int z = GetSlopePixelZ(Clamp(v->x_pos, 0, MapMaxX() * TILE_SIZE), Clamp(v->y_pos, 0, MapMaxY() * TILE_SIZE));
 		v->z_pos -= 1;
-		if (v->z_pos == z) {
+		if (v->z_pos <= z) {
 			v->crashed_counter = 500;
-			v->z_pos++;
+			v->z_pos = z + 1;
+		} else {
+			v->crashed_counter = 0;
 		}
+		SetAircraftPosition(v, v->x_pos, v->y_pos, v->z_pos);
 	}
 
 	if (v->crashed_counter < 650) {

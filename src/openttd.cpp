@@ -117,6 +117,7 @@
 
 void CallLandscapeTick();
 void IncreaseDate();
+void IncreaseCalendarDate();
 void DoPaletteAnimations();
 void MusicLoop();
 void CallWindowGameTickEvent();
@@ -396,7 +397,7 @@ static void WriteSavegameInfo(const char *name)
 		for (GRFConfig *c = _load_check_data.grfconfig; c != nullptr; c = c->next) {
 			char md5sum[33];
 			md5sumToString(md5sum, lastof(md5sum), HasBit(c->flags, GCF_COMPATIBLE) ? c->original_md5sum : c->ident.md5sum);
-			p += seprintf(p, lastof(buf), "%08X %s %s\n", c->ident.grfid, md5sum, c->filename.c_str());
+			p += seprintf(p, lastof(buf), "%08X %s %s\n", BSWAP32(c->ident.grfid), md5sum, c->filename.c_str());
 		}
 	}
 
@@ -772,8 +773,8 @@ int openttd_main(int argc, char *argv[])
 	PerThreadSetup();
 	SlXvSetStaticCurrentVersions();
 
-	_switch_mode_time = std::chrono::steady_clock::now();
-	_switch_mode_time_valid = true;
+	_game_session_stats.start_time = std::chrono::steady_clock::now();
+	_game_session_stats.savegame_size = std::nullopt;
 
 	std::string musicdriver;
 	std::string sounddriver;
@@ -1430,8 +1431,8 @@ void SwitchToMode(SwitchMode new_mode)
 
 	/* Keep track when we last switch mode. Used for survey, to know how long someone was in a game. */
 	if (new_mode != SM_SAVE_GAME) {
-		_switch_mode_time = std::chrono::steady_clock::now();
-		_switch_mode_time_valid = true;
+		_game_session_stats.start_time = std::chrono::steady_clock::now();
+		_game_session_stats.savegame_size = std::nullopt;
 	}
 
 	switch (new_mode) {
@@ -2236,7 +2237,7 @@ void StateGameLoop()
 			_state_ticks++;   // This must update in lock-step with _tick_skip_counter, such that _state_ticks_offset doesn't need to be changed.
 		}
 
-		if (!(_game_mode == GM_MENU || _game_mode == GM_BOOTSTRAP) && !_settings_client.gui.autosave_realtime &&
+		if (!(_game_mode == GM_MENU || _game_mode == GM_BOOTSTRAP) && !_settings_client.gui.autosave_realtime && _settings_client.gui.autosave_interval != 0 &&
 				(_state_ticks.base() % (_settings_client.gui.autosave_interval * (_settings_game.economy.tick_rate == TRM_MODERN ? (60000 / 27) : (60000 / 30)))) == 0) {
 			_do_autosave = true;
 			_check_special_modes = true;
@@ -2245,6 +2246,9 @@ void StateGameLoop()
 
 		RunAuxiliaryTileLoop();
 		if (DateDetail::_tick_skip_counter < DayLengthFactor()) {
+			if (_settings_game.economy.timekeeping_units == TKU_WALLCLOCK && !(_game_mode == GM_MENU || _game_mode == GM_BOOTSTRAP)) {
+				IncreaseCalendarDate();
+			}
 			AnimateAnimatedTiles();
 			RunTileLoop(true);
 			CallVehicleTicks();

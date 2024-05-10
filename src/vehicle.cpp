@@ -1204,7 +1204,7 @@ void Vehicle::PreDestructor()
 
 	if (this->type == VEH_ROAD && this->IsPrimaryVehicle()) {
 		RoadVehicle *v = RoadVehicle::From(this);
-		if (IsInsideMM(v->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END) || IsInsideMM(v->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) {
+		if ((!(v->vehstatus & VS_CRASHED) && IsInsideMM(v->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END)) || IsInsideMM(v->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) {
 			/* Leave the roadstop (bay or drive-through), when you have not already left it. */
 			RoadStop::GetByTile(v->tile, GetRoadStopType(v->tile))->Leave(v);
 		}
@@ -1665,7 +1665,7 @@ void CallVehicleTicks()
 			for (Train *u = front; u != nullptr; u = u->Next()) {
 				u->tick_counter++;
 				VehicleTickCargoAging(u);
-				if (!u->IsWagon() && !((front->vehstatus & VS_STOPPED) && front->cur_speed == 0)) VehicleTickMotion(u, front);
+				if (u->IsEngine() && !((front->vehstatus & VS_STOPPED) && front->cur_speed == 0)) VehicleTickMotion(u, front);
 			}
 		}
 	}
@@ -2064,7 +2064,7 @@ void ViewportMapDrawVehicles(DrawPixelInfo *dpi, Viewport *vp)
 
 					while (v != nullptr) {
 						if (!(v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) && (v->type != VEH_EFFECT)) {
-							Point pt = RemapCoords(v->x_pos, v->y_pos, v->z_pos);
+							Point pt = { v->coord.left, v->coord.top };
 							if (pt.x >= l && pt.x < r && pt.y >= t && pt.y < b) {
 								const int pixel_x = UnScaleByZoomLower(pt.x - l, dpi->zoom);
 								const int pixel_y = UnScaleByZoomLower(pt.y - t, dpi->zoom);
@@ -2490,6 +2490,21 @@ bool Vehicle::HandleBreakdown()
 }
 
 /**
+ * Update economy age of a vehicle.
+ * @param v Vehicle to update.
+ */
+void EconomyAgeVehicle(Vehicle *v)
+{
+	/* Stop if a virtual vehicle */
+	if (HasBit(v->subtype, GVSF_VIRTUAL)) return;
+
+	if (v->economy_age < EconTime::MAX_DATE.AsDelta()) {
+		v->economy_age++;
+		if (v->IsPrimaryVehicle() && v->economy_age == VEHICLE_PROFIT_MIN_AGE + 1) GroupStatistics::VehicleReachedMinAge(v);
+	}
+}
+
+/**
  * Update age of a vehicle.
  * @param v Vehicle to update.
  */
@@ -2498,10 +2513,7 @@ void AgeVehicle(Vehicle *v)
 	/* Stop if a virtual vehicle */
 	if (HasBit(v->subtype, GVSF_VIRTUAL)) return;
 
-	if (v->age < CalTime::MAX_DATE.AsDelta()) {
-		v->age++;
-		if (v->IsPrimaryVehicle() && v->age == VEHICLE_PROFIT_MIN_AGE + 1) GroupStatistics::VehicleReachedMinAge(v);
-	}
+	if (v->age < CalTime::MAX_DATE.AsDelta()) v->age++;
 
 	if (!v->IsPrimaryVehicle() && (v->type != VEH_TRAIN || !Train::From(v)->IsEngine())) return;
 
@@ -3698,6 +3710,17 @@ void Vehicle::ResetRefitCaps()
 	for (Vehicle *v = this; v != nullptr; v = v->Next()) v->refit_cap = v->cargo_cap;
 }
 
+/**
+ * Release the vehicle's unit number.
+ */
+void Vehicle::ReleaseUnitNumber()
+{
+	if (this->unitnumber != 0) {
+		Company::Get(this->owner)->freeunits[this->type].ReleaseID(this->unitnumber);
+		this->unitnumber = 0;
+	}
+}
+
 static bool ShouldVehicleContinueWaiting(Vehicle *v)
 {
 	if (v->GetNumOrders() < 1) return false;
@@ -3709,7 +3732,7 @@ static bool ShouldVehicleContinueWaiting(Vehicle *v)
 	if (v->cur_implicit_order_index < v->GetNumOrders() && v->GetOrder(v->cur_implicit_order_index)->IsType(OT_IMPLICIT)) return false;
 
 	/* If conditional orders lead back to this order, just keep waiting without leaving the order */
-	bool loop = AdvanceOrderIndexDeferred(v, v->cur_implicit_order_index) == v->cur_implicit_order_index;
+	bool loop = AdvanceOrderIndexDeferred(v, v->cur_implicit_order_index + 1) == v->cur_implicit_order_index;
 	FlushAdvanceOrderIndexDeferred(v, loop);
 	if (loop) SetBit(v->vehicle_flags, VF_COND_ORDER_WAIT);
 	return loop;
@@ -3795,12 +3818,41 @@ void Vehicle::HandleWaiting(bool stop_waiting, bool process_orders)
 }
 
 /**
+ * Check if the current vehicle has a full load order.
+ * @return true Iff this vehicle has a full load order.
+ */
+bool Vehicle::HasFullLoadOrder() const
+{
+	for (const Order *o : this->Orders()) {
+		if (o->IsType(OT_GOTO_STATION) && o->GetLoadType() & (OLFB_FULL_LOAD | OLF_FULL_LOAD_ANY)) return true;
+		if (o->IsType(OT_GOTO_STATION) && o->GetLoadType() == OLFB_CARGO_TYPE_LOAD) {
+			for (CargoID cid = 0; cid < NUM_CARGO; cid++) {
+				if (o->GetCargoLoadType(cid) & (OLFB_FULL_LOAD | OLF_FULL_LOAD_ANY)) return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * Check if the current vehicle has a conditional order.
+ * @return true Iff this vehicle has a conditional order.
+ */
+bool Vehicle::HasConditionalOrder() const
+{
+	for (const Order *o : this->Orders()) {
+		if (o->IsType(OT_CONDITIONAL)) return true;
+	}
+	return false;
+}
+
+/**
  * Check if the current vehicle has an unbunching order.
  * @return true Iff this vehicle has an unbunching order.
  */
 bool Vehicle::HasUnbunchingOrder() const
 {
-	for (Order *o : this->Orders()) {
+	for (const Order *o : this->Orders()) {
 		if (o->IsType(OT_GOTO_DEPOT) && o->GetDepotActionType() & ODATFB_UNBUNCH) return true;
 	}
 	return false;
@@ -3813,8 +3865,8 @@ bool Vehicle::HasUnbunchingOrder() const
 static bool PreviousOrderIsUnbunching(const Vehicle *v)
 {
 	/* If we are headed for the first order, we must wrap around back to the last order. */
-	bool is_first_order = (v->GetOrder(v->cur_real_order_index) == v->GetFirstOrder());
-	Order *previous_order = (is_first_order) ? v->GetLastOrder() : v->GetOrder(v->cur_real_order_index - 1);
+	bool is_first_order = (v->GetOrder(v->cur_implicit_order_index) == v->GetFirstOrder());
+	Order *previous_order = (is_first_order) ? v->GetLastOrder() : v->GetOrder(v->cur_implicit_order_index - 1);
 
 	if (previous_order == nullptr || !previous_order->IsType(OT_GOTO_DEPOT)) return false;
 	return (previous_order->GetDepotActionType() & ODATFB_UNBUNCH) != 0;
@@ -4598,7 +4650,7 @@ void VehiclesYearlyLoop()
 		if (v->IsPrimaryVehicle()) {
 			/* show warning if vehicle is not generating enough income last 2 years (corresponds to a red icon in the vehicle list) */
 			Money profit = v->GetDisplayProfitThisYear();
-			if (v->age >= 730 && profit < 0) {
+			if (v->economy_age >= VEHICLE_PROFIT_MIN_AGE && profit < 0) {
 				if (_settings_client.gui.vehicle_income_warn && v->owner == _local_company) {
 					SetDParam(0, v->index);
 					SetDParam(1, profit);

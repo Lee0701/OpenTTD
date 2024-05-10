@@ -262,7 +262,7 @@ void Train::ConsistChanged(ConsistChangeFlags allowed_changes)
 
 	bool train_can_tilt = true;
 	bool speed_varies_by_railtype = false;
-	int min_curve_speed_mod = INT_MAX;
+	int16_t min_curve_speed_mod = INT16_MAX;
 
 	for (Train *u = this; u != nullptr; u = u->Next()) {
 		const RailVehicleInfo *rvi_u = RailVehInfo(u->engine_type);
@@ -607,7 +607,7 @@ int GetTrainStopLocation(StationID station_id, TileIndex tile, Train *v, bool up
  * Computes train speed limit caused by curves
  * @return imposed speed limit
  */
-int Train::GetCurveSpeedLimit() const
+uint16_t Train::GetCurveSpeedLimit() const
 {
 	dbg_assert(this->First() == this);
 
@@ -674,7 +674,7 @@ int Train::GetCurveSpeedLimit() const
 		max_speed = Clamp(max_speed, 2, absolute_max_speed);
 	}
 
-	return max_speed;
+	return static_cast<uint16_t>(max_speed);
 }
 
 void AdvanceOrderIndex(const Vehicle *v, VehicleOrderID &index)
@@ -2225,8 +2225,7 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1,
 			}
 			/* Remove stuff not valid anymore for non-front engines. */
 			DeleteVehicleOrders(src);
-			Company::Get(src->owner)->freeunits[src->type].ReleaseID(src->unitnumber);
-			src->unitnumber = 0;
+			src->ReleaseUnitNumber();
 			if (!_settings_game.vehicle.non_leading_engines_keep_name) {
 				src->name.clear();
 			}
@@ -6903,6 +6902,7 @@ static void CheckIfTrainNeedsService(Train *v)
 void Train::OnNewDay()
 {
 	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
+	EconomyAgeVehicle(this);
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 }
@@ -7367,10 +7367,15 @@ CommandCost CmdTemplateReplaceVehicle(TileIndex tile, DoCommandFlag flags, uint3
 			if (!tv->IsSetKeepRemainingVehicles()) {
 				/* Sell leftovers */
 				for (const Train *u : in) {
-					buy.AddCost(DoCommand(u->tile, u->index, 0, flags, CMD_SELL_VEHICLE));
+					/* Do not dry-run selling each part using CMD_SELL_VEHICLE because this can fail due to consist/wagon-attachment callbacks */
+					buy.AddCost(-u->value);
+					if (u->other_multiheaded_part != nullptr) {
+						buy.AddCost(-u->other_multiheaded_part->value);
+					}
 				}
 			}
 		}
+		if (buy.Failed()) buy.MultiplyCost(0);
 		return buy;
 	}
 
@@ -7441,7 +7446,7 @@ CommandCost CmdTemplateReplaceVehicle(TileIndex tile, DoCommandFlag flags, uint3
 
 		// If we bought a new engine or reused one from the depot, copy some parameters from the incoming primary engine
 		if (incoming != new_chain) {
-			CopyHeadSpecificThings(incoming, new_chain, flags);
+			CopyHeadSpecificThings(incoming, new_chain, flags, false);
 			NeutralizeStatus(incoming);
 
 			// additionally, if we don't want to use the template refit, refit as incoming
@@ -7731,4 +7736,36 @@ uint16_t Train::GetMaxWeight() const
 	}
 
 	return weight;
+}
+
+/**
+ * Set train speed restriction
+ * @param tile unused
+ * @param flags type of operation
+ * @param p1 vehicle
+ * @param p2 new speed restriction value
+ * @param text unused
+ * @return the cost of this operation or an error
+ */
+CommandCost CmdSetTrainSpeedRestriction(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
+{
+	Vehicle *v = Vehicle::GetIfValid(p1);
+	if (v == nullptr || v->type != VEH_TRAIN || !v->IsPrimaryVehicle()) return CMD_ERROR;
+
+	CommandCost ret = CheckVehicleControlAllowed(v);
+	if (ret.Failed()) return ret;
+
+	if (v->vehstatus & VS_CRASHED) return_cmd_error(STR_ERROR_VEHICLE_IS_DESTROYED);
+
+	if (flags & DC_EXEC) {
+		Train *t = Train::From(v);
+		if (HasBit(t->flags, VRF_PENDING_SPEED_RESTRICTION)) {
+			_pending_speed_restriction_change_map.erase(t->index);
+			ClrBit(t->flags, VRF_PENDING_SPEED_RESTRICTION);
+		}
+		t->speed_restriction = (uint16_t)p2;
+
+		SetWindowDirty(WC_VEHICLE_DETAILS, t->index);
+	}
+	return CommandCost();
 }

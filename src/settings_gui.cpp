@@ -2283,7 +2283,7 @@ static SettingsContainer &GetSettingsTree()
 				vehicle_windows->Add(new SettingEntry("gui.show_order_number_vehicle_view"));
 				vehicle_windows->Add(new SettingEntry("gui.show_speed_first_vehicle_view"));
 				vehicle_windows->Add(new SettingEntry("gui.hide_default_stop_location"));
-				vehicle_windows->Add(new ConditionallyHiddenSettingEntry("gui.show_running_costs_calendar_year", []() -> bool { return GetGameSettings().economy.timekeeping_units != TKU_CALENDAR; }));
+				vehicle_windows->Add(new SettingEntry("gui.show_running_costs_calendar_year"));
 			}
 
 			SettingsPage *departureboards = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_DEPARTUREBOARDS));
@@ -2693,6 +2693,7 @@ static SettingsContainer &GetSettingsTree()
 			environment->Add(new SettingEntry("construction.map_edge_mode"));
 			environment->Add(new SettingEntry("station.cargo_class_rating_wait_time"));
 			environment->Add(new SettingEntry("station.station_size_rating_cargo_amount"));
+			environment->Add(new SettingEntry("construction.purchased_land_clear_ground"));
 		}
 
 		SettingsPage *ai = main->Add(new SettingsPage(STR_CONFIG_SETTING_AI));
@@ -2701,7 +2702,6 @@ static SettingsContainer &GetSettingsTree()
 			{
 				npc->Add(new SettingEntry("script.script_max_opcode_till_suspend"));
 				npc->Add(new SettingEntry("script.script_max_memory_megabytes"));
-				npc->Add(new SettingEntry("script.script_disable_param_randomisation"));
 				npc->Add(new SettingEntry("difficulty.competitor_speed"));
 				npc->Add(new SettingEntry("ai.ai_in_multiplayer"));
 				npc->Add(new SettingEntry("ai.ai_disable_veh_train"));
@@ -3066,8 +3066,8 @@ struct GameSettingsWindow : Window {
 
 		if (widget != WID_GS_OPTIONSPANEL) return;
 
-		uint btn = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_GS_OPTIONSPANEL, WidgetDimensions::scaled.framerect.top);
-		if (btn == INT_MAX || (int)btn < this->warn_lines) return;
+		int32_t btn = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_GS_OPTIONSPANEL, WidgetDimensions::scaled.framerect.top);
+		if (btn == INT32_MAX || btn < this->warn_lines) return;
 		btn -= this->warn_lines;
 
 		uint cur_row = 0;

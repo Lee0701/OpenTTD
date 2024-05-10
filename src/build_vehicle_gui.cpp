@@ -36,6 +36,7 @@
 #include "querystring_gui.h"
 #include "stringfilter_type.h"
 #include "hotkeys.h"
+#include "3rdparty/cpp-btree/btree_map.h"
 
 #include "widgets/build_vehicle_widget.h"
 
@@ -204,6 +205,29 @@ bool _engine_sort_show_hidden_engines[] = {false, false, false, false}; ///< Las
 bool _engine_sort_show_hidden_locos     = false;                        ///< Last set 'show hidden locos' setting.
 bool _engine_sort_show_hidden_wagons    = false;                        ///< Last set 'show hidden wagons' setting.
 static CargoID _engine_sort_last_cargo_criteria[] = {CargoFilterCriteria::CF_ANY, CargoFilterCriteria::CF_ANY, CargoFilterCriteria::CF_ANY, CargoFilterCriteria::CF_ANY}; ///< Last set filter criteria, for each vehicle type.
+
+struct BuildVehicleWindowBase;
+
+struct EngineCapacityCache {
+	const BuildVehicleWindowBase *parent = nullptr;
+	CargoID current_cargo = INVALID_CARGO;
+	btree::btree_map<EngineID, uint> capacities;
+
+	void UpdateCargoFilter(const BuildVehicleWindowBase *parent, CargoID cargo_filter_criteria)
+	{
+		this->parent = parent;
+
+		if (cargo_filter_criteria >= NUM_CARGO) cargo_filter_criteria = INVALID_CARGO;
+
+		if (cargo_filter_criteria != this->current_cargo) {
+			this->current_cargo = cargo_filter_criteria;
+			this->capacities.clear();
+		}
+	}
+
+	uint GetArticulatedCapacity(EngineID eng, bool dual_headed = false);
+};
+static EngineCapacityCache *_engine_sort_capacity_cache = nullptr;
 
 static byte _last_sort_criteria_loco      = 0;
 static bool _last_sort_order_loco         = false;
@@ -449,8 +473,8 @@ static bool TrainEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngin
 	const RailVehicleInfo *rvi_a = RailVehInfo(a.engine_id);
 	const RailVehicleInfo *rvi_b = RailVehInfo(b.engine_id);
 
-	int va = GetTotalCapacityOfArticulatedParts(a.engine_id) * (rvi_a->railveh_type == RAILVEH_MULTIHEAD ? 2 : 1);
-	int vb = GetTotalCapacityOfArticulatedParts(b.engine_id) * (rvi_b->railveh_type == RAILVEH_MULTIHEAD ? 2 : 1);
+	int va = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id, rvi_a->railveh_type == RAILVEH_MULTIHEAD);
+	int vb = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id, rvi_b->railveh_type == RAILVEH_MULTIHEAD);
 	int r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
@@ -469,8 +493,8 @@ static bool TrainEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a, c
 	const RailVehicleInfo *rvi_a = RailVehInfo(a.engine_id);
 	const RailVehicleInfo *rvi_b = RailVehInfo(b.engine_id);
 
-	uint va = GetTotalCapacityOfArticulatedParts(a.engine_id) * (rvi_a->railveh_type == RAILVEH_MULTIHEAD ? 2 : 1);
-	uint vb = GetTotalCapacityOfArticulatedParts(b.engine_id) * (rvi_b->railveh_type == RAILVEH_MULTIHEAD ? 2 : 1);
+	uint va = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id, rvi_a->railveh_type == RAILVEH_MULTIHEAD);
+	uint vb = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id, rvi_b->railveh_type == RAILVEH_MULTIHEAD);
 
 	return GenericEngineValueVsRunningCostSorter(a, va, b, vb);
 }
@@ -502,8 +526,8 @@ static bool TrainEnginesThenWagonsSorter(const GUIEngineListItem &a, const GUIEn
  */
 static bool RoadVehEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	int va = GetTotalCapacityOfArticulatedParts(a.engine_id);
-	int vb = GetTotalCapacityOfArticulatedParts(b.engine_id);
+	int va = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id);
+	int vb = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id);
 	int r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
@@ -519,7 +543,9 @@ static bool RoadVehEngineCapacitySorter(const GUIEngineListItem &a, const GUIEng
  */
 static bool RoadVehEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	return GenericEngineValueVsRunningCostSorter(a, GetTotalCapacityOfArticulatedParts(a.engine_id), b, GetTotalCapacityOfArticulatedParts(b.engine_id));
+	int capacity_a = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id);
+	int capacity_b = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id);
+	return GenericEngineValueVsRunningCostSorter(a, capacity_a, b, capacity_b);
 }
 
 /* Ship vehicle sorting functions */
@@ -532,8 +558,8 @@ static bool RoadVehEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a,
  */
 static bool ShipEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	int va = GetTotalCapacityOfArticulatedParts(a.engine_id);
-	int vb = GetTotalCapacityOfArticulatedParts(b.engine_id);
+	int va = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id);
+	int vb = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id);
 	int r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
@@ -549,7 +575,9 @@ static bool ShipEngineCapacitySorter(const GUIEngineListItem &a, const GUIEngine
  */
 static bool ShipEngineCapacityVsRunningCostSorter(const GUIEngineListItem &a, const GUIEngineListItem &b)
 {
-	return GenericEngineValueVsRunningCostSorter(a, GetTotalCapacityOfArticulatedParts(a.engine_id), b, GetTotalCapacityOfArticulatedParts(b.engine_id));
+	int capacity_a = _engine_sort_capacity_cache->GetArticulatedCapacity(a.engine_id);
+	int capacity_b = _engine_sort_capacity_cache->GetArticulatedCapacity(b.engine_id);
+	return GenericEngineValueVsRunningCostSorter(a, capacity_a, b, capacity_b);
 }
 
 /* Aircraft sorting functions */
@@ -788,10 +816,10 @@ static int DrawCargoCapacityInfo(int left, int right, int y, TestedEngineDetails
 
 static StringID GetRunningCostString()
 {
-	if (EconTime::UsingWallclockUnits()) {
-		return STR_PURCHASE_INFO_RUNNINGCOST_PERIOD;
-	} else if (DayLengthFactor() > 1 && !_settings_client.gui.show_running_costs_calendar_year) {
+	if (DayLengthFactor() > 1 && !_settings_client.gui.show_running_costs_calendar_year) {
 		return STR_PURCHASE_INFO_RUNNINGCOST_ORIG_YEAR;
+	} else if (EconTime::UsingWallclockUnits()) {
+		return STR_PURCHASE_INFO_RUNNINGCOST_PERIOD;
 	} else {
 		return STR_PURCHASE_INFO_RUNNINGCOST_YEAR;
 	}
@@ -1425,7 +1453,73 @@ struct BuildVehicleWindowBase : Window {
 
 		return list;
 	}
+
+	void FillTestedEngineCapacity(EngineID engine, CargoID cargo, TestedEngineDetails &te) const
+	{
+		const Engine *e = Engine::Get(engine);
+		if (!e->CanPossiblyCarryCargo()) {
+			te.cost = 0;
+			te.cargo = INVALID_CARGO;
+			te.all_capacities.Clear();
+			return;
+		}
+
+		if (this->virtual_train_mode) {
+			if (cargo != INVALID_CARGO && cargo != e->GetDefaultCargoType()) {
+				SavedRandomSeeds saved_seeds;
+				SaveRandomSeeds(&saved_seeds);
+				StringID err;
+				Train *t = BuildVirtualRailVehicle(engine, err, 0, false);
+				if (t != nullptr) {
+					const CommandCost ret = CmdRefitVehicle(0, DC_QUERY_COST, t->index, cargo | (1 << 16), nullptr);
+					te.cost          = ret.GetCost();
+					te.capacity      = _returned_refit_capacity;
+					te.mail_capacity = _returned_mail_refit_capacity;
+					te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
+					te.all_capacities = _returned_vehicle_capacities;
+					delete t;
+					RestoreRandomSeeds(saved_seeds);
+					return;
+				} else {
+					RestoreRandomSeeds(saved_seeds);
+				}
+			}
+		} else if (!this->listview_mode) {
+			/* Query for cost and refitted capacity */
+			CommandCost ret = DoCommand(this->window_number, engine | (cargo << 24), 0, DC_QUERY_COST, GetCmdBuildVeh(this->vehicle_type), nullptr);
+			if (ret.Succeeded()) {
+				te.cost          = ret.GetCost() - e->GetCost();
+				te.capacity      = _returned_refit_capacity;
+				te.mail_capacity = _returned_mail_refit_capacity;
+				te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
+				te.all_capacities = _returned_vehicle_capacities;
+				return;
+			}
+		}
+
+		/* Purchase test was not possible or failed, fill in the defaults instead. */
+		te = {};
+		te.FillDefaultCapacities(e);
+	}
 };
+
+uint EngineCapacityCache::GetArticulatedCapacity(EngineID eng, bool dual_headed)
+{
+	auto iter = this->capacities.insert({ eng, 0 });
+	if (iter.second) {
+		/* New cache entry */
+		const Engine *e = Engine::Get(eng);
+		if (this->current_cargo != INVALID_CARGO && this->current_cargo != e->GetDefaultCargoType() && HasBit(e->info.callback_mask, CBM_VEHICLE_REFIT_CAPACITY) && e->refit_capacity_values == nullptr) {
+			/* Expensive path simulating vehicle construction is required to determine capacity */
+			TestedEngineDetails te{};
+			this->parent->FillTestedEngineCapacity(eng, this->current_cargo, te);
+			iter.first->second = te.all_capacities.GetSum<uint>();
+		} else {
+			iter.first->second = GetTotalCapacityOfArticulatedParts(eng, this->current_cargo) * (dual_headed ? 2 : 1);
+		}
+	}
+	return iter.first->second;
+}
 
 /** GUI for building vehicles. */
 struct BuildVehicleWindow : BuildVehicleWindowBase {
@@ -1443,6 +1537,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 	int details_height;                         ///< Minimal needed height of the details panels, in text lines (found so far).
 	Scrollbar *vscroll;
 	TestedEngineDetails te;                     ///< Tested cost and capacity after refit.
+	EngineCapacityCache capacity_cache;         ///< Engine capacity cache.
 
 	StringFilter string_filter;                 ///< Filter for vehicle name
 	QueryString vehicle_editbox;                ///< Filter editbox
@@ -1579,50 +1674,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 		if (this->sel_engine == INVALID_ENGINE) return;
 
-		const Engine *e = Engine::Get(this->sel_engine);
-		if (!e->CanPossiblyCarryCargo()) {
-			this->te.cost = 0;
-			this->te.cargo = INVALID_CARGO;
-			this->te.all_capacities.Clear();
-			return;
-		}
-
-		if (this->virtual_train_mode) {
-			if (cargo != INVALID_CARGO && cargo != e->GetDefaultCargoType()) {
-				SavedRandomSeeds saved_seeds;
-				SaveRandomSeeds(&saved_seeds);
-				StringID err;
-				Train *t = BuildVirtualRailVehicle(this->sel_engine, err, 0, false);
-				if (t != nullptr) {
-					const CommandCost ret = CmdRefitVehicle(0, DC_QUERY_COST, t->index, cargo | (1 << 16), nullptr);
-					this->te.cost          = ret.GetCost();
-					this->te.capacity      = _returned_refit_capacity;
-					this->te.mail_capacity = _returned_mail_refit_capacity;
-					this->te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
-					this->te.all_capacities = _returned_vehicle_capacities;
-					delete t;
-					RestoreRandomSeeds(saved_seeds);
-					return;
-				} else {
-					RestoreRandomSeeds(saved_seeds);
-				}
-			}
-		} else if (!this->listview_mode) {
-			/* Query for cost and refitted capacity */
-			CommandCost ret = DoCommand(this->window_number, this->sel_engine | (cargo << 24), 0, DC_QUERY_COST, GetCmdBuildVeh(this->vehicle_type), nullptr);
-			if (ret.Succeeded()) {
-				this->te.cost          = ret.GetCost() - e->GetCost();
-				this->te.capacity      = _returned_refit_capacity;
-				this->te.mail_capacity = _returned_mail_refit_capacity;
-				this->te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
-				this->te.all_capacities = _returned_vehicle_capacities;
-				return;
-			}
-		}
-
-		/* Purchase test was not possible or failed, fill in the defaults instead. */
-		this->te = {};
-		this->te.FillDefaultCapacities(e);
+		this->FillTestedEngineCapacity(this->sel_engine, cargo, this->te);
 	}
 
 	void OnInit() override
@@ -1721,6 +1773,10 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 		/* invalidate cached values for name sorter - engine names could change */
 		_last_engine[0] = _last_engine[1] = INVALID_ENGINE;
+
+		/* setup engine capacity cache */
+		this->capacity_cache.UpdateCargoFilter(this, this->cargo_filter_criteria);
+		_engine_sort_capacity_cache = &(this->capacity_cache);
 
 		/* make engines first, and then wagons, sorted by selected sort_criteria */
 		_engine_sort_direction = false;
@@ -1858,6 +1914,10 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 				this->eng_list.emplace_back(variant, e->info.variant_id, e->display_flags | EngineDisplayFlags::Shaded, 0);
 			}
 		}
+
+		/* setup engine capacity cache */
+		this->capacity_cache.UpdateCargoFilter(this, this->cargo_filter_criteria);
+		_engine_sort_capacity_cache = &(this->capacity_cache);
 
 		_engine_sort_direction = this->descending_sort_order;
 		EngList_Sort(this->eng_list, _engine_sort_functions[this->vehicle_type][this->sort_criteria]);
@@ -2192,7 +2252,7 @@ static Hotkey buildvehicle_hotkeys[] = {
 };
 HotkeyList BuildVehicleWindow::hotkeys("buildvehicle", buildvehicle_hotkeys);
 
-static EngList_SortTypeFunction * const  _sorter_loco[11] = {
+static EngList_SortTypeFunction * const  _sorter_loco[12] = {
 	/* Locomotives */
 	&EngineNumberSorter,
 	&EngineCostSorter,
@@ -2204,10 +2264,11 @@ static EngList_SortTypeFunction * const  _sorter_loco[11] = {
 	&EngineRunningCostSorter,
 	&EnginePowerVsRunningCostSorter,
 	&EngineReliabilitySorter,
-	&TrainEngineCapacitySorter
+	&TrainEngineCapacitySorter,
+	&TrainEngineCapacityVsRunningCostSorter
 };
 
-static EngList_SortTypeFunction * const _sorter_wagon[7] = {
+static EngList_SortTypeFunction * const _sorter_wagon[8] = {
 	/* Wagons */
 	&EngineNumberSorter,
 	&EngineCostSorter,
@@ -2215,10 +2276,11 @@ static EngList_SortTypeFunction * const _sorter_wagon[7] = {
 	&EngineIntroDateSorter,
 	&EngineNameSorter,
 	&EngineRunningCostSorter,
-	&TrainEngineCapacitySorter
+	&TrainEngineCapacitySorter,
+	&TrainEngineCapacityVsRunningCostSorter
 };
 
-static const StringID _sort_listing_loco[12] = {
+static const StringID _sort_listing_loco[13] = {
 	/* Locomotives */
 	STR_SORT_BY_ENGINE_ID,
 	STR_SORT_BY_COST,
@@ -2231,10 +2293,11 @@ static const StringID _sort_listing_loco[12] = {
 	STR_SORT_BY_POWER_VS_RUNNING_COST,
 	STR_SORT_BY_RELIABILITY,
 	STR_SORT_BY_CARGO_CAPACITY,
+	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	INVALID_STRING_ID
 };
 
-static const StringID _sort_listing_wagon[8] = {
+static const StringID _sort_listing_wagon[9] = {
 	/* Wagons */
 	STR_SORT_BY_ENGINE_ID,
 	STR_SORT_BY_COST,
@@ -2243,6 +2306,7 @@ static const StringID _sort_listing_wagon[8] = {
 	STR_SORT_BY_NAME,
 	STR_SORT_BY_RUNNING_COST,
 	STR_SORT_BY_CARGO_CAPACITY,
+	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	INVALID_STRING_ID
 };
 
@@ -2294,6 +2358,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		bool show_hidden;                              ///< State of the 'show hidden' button.
 		int details_height;                            ///< Minimal needed height of the details panels (found so far).
 		TestedEngineDetails te;                        ///< Tested cost and capacity after refit.
+		EngineCapacityCache capacity_cache;            ///< Engine capacity cache.
 		StringFilter string_filter;                    ///< Filter for vehicle name
 		QueryString vehicle_editbox { MAX_LENGTH_VEHICLE_NAME_CHARS * MAX_CHAR_LENGTH, MAX_LENGTH_VEHICLE_NAME_CHARS }; ///< Filter editbox
 	};
@@ -2482,50 +2547,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 
 		if (state.sel_engine == INVALID_ENGINE) return;
 
-		const Engine *e = Engine::Get(state.sel_engine);
-		if (!e->CanPossiblyCarryCargo()) {
-			state.te.cost = 0;
-			state.te.cargo = INVALID_CARGO;
-			state.te.all_capacities.Clear();
-			return;
-		}
-
-		if (this->virtual_train_mode) {
-			if (cargo != INVALID_CARGO && cargo != e->GetDefaultCargoType()) {
-				SavedRandomSeeds saved_seeds;
-				SaveRandomSeeds(&saved_seeds);
-				StringID err;
-				Train *t = BuildVirtualRailVehicle(state.sel_engine, err, 0, false);
-				if (t != nullptr) {
-					const CommandCost ret = CmdRefitVehicle(0, DC_QUERY_COST, t->index, cargo | (1 << 16), nullptr);
-					state.te.cost          = ret.GetCost();
-					state.te.capacity      = _returned_refit_capacity;
-					state.te.mail_capacity = _returned_mail_refit_capacity;
-					state.te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
-					state.te.all_capacities = _returned_vehicle_capacities;
-					delete t;
-					RestoreRandomSeeds(saved_seeds);
-					return;
-				} else {
-					RestoreRandomSeeds(saved_seeds);
-				}
-			}
-		} else if (!this->listview_mode) {
-			/* Query for cost and refitted capacity */
-			const CommandCost ret = DoCommand(this->window_number, state.sel_engine | (cargo << 24), 0, DC_QUERY_COST, GetCmdBuildVeh(this->vehicle_type), nullptr);
-			if (ret.Succeeded()) {
-				state.te.cost          = ret.GetCost() - e->GetCost();
-				state.te.capacity      = _returned_refit_capacity;
-				state.te.mail_capacity = _returned_mail_refit_capacity;
-				state.te.cargo         = (cargo == INVALID_CARGO) ? e->GetDefaultCargoType() : cargo;
-				state.te.all_capacities = _returned_vehicle_capacities;
-				return;
-			}
-		}
-
-		/* Purchase test was not possible or failed, fill in the defaults instead. */
-		state.te = {};
-		state.te.FillDefaultCapacities(e);
+		this->FillTestedEngineCapacity(state.sel_engine, cargo, state.te);
 	}
 
 	void SelectColumn(bool wagon)
@@ -2574,7 +2596,8 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 
 		/* Filter engine name */
 		state.string_filter.ResetState();
-		state.string_filter.AddLine(GetString(e->info.string_id));
+		SetDParam(0, PackEngineNameDParam(e->index, EngineNameContext::PurchaseList));
+		state.string_filter.AddLine(GetString(STR_ENGINE_NAME));
 
 		/* Filter NewGRF extra text */
 		auto text = GetNewGRFAdditionalText(e->index);
@@ -2639,6 +2662,10 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 
 		/* invalidate cached values for name sorter - engine names could change */
 		_last_engine[0] = _last_engine[1] = INVALID_ENGINE;
+
+		/* setup engine capacity cache */
+		state.capacity_cache.UpdateCargoFilter(this, state.cargo_filter_criteria);
+		_engine_sort_capacity_cache = &(state.capacity_cache);
 
 		/* Sort */
 		_engine_sort_direction = state.descending_sort_order;

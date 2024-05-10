@@ -240,7 +240,7 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 			if (v->owner != owner) continue;
 			if (IsCompanyBuildableVehicleType(v->type) && v->IsPrimaryVehicle() && !HasBit(v->subtype, GVSF_VIRTUAL)) {
 				if (v->profit_last_year > 0) num++; // For the vehicle score only count profitable vehicles
-				if (v->age > 730) {
+				if (v->economy_age > VEHICLE_PROFIT_MIN_AGE) {
 					/* Find the vehicle with the lowest amount of profit */
 					if (min_profit_first || min_profit > v->profit_last_year) {
 						min_profit = v->profit_last_year;
@@ -1403,11 +1403,11 @@ static void TriggerIndustryProduction(Industry *i)
 			SetWindowDirty(WC_INDUSTRY_VIEW, i->index);
 		}
 	} else {
-		for (uint ci_in = 0; ci_in < lengthof(i->incoming_cargo_waiting); ci_in++) {
+		for (size_t ci_in = 0; ci_in < std::size(i->incoming_cargo_waiting); ci_in++) {
 			uint cargo_waiting = i->incoming_cargo_waiting[ci_in];
 			if (cargo_waiting == 0 || i->accepts_cargo[ci_in] == INVALID_CARGO) continue;
 
-			for (uint ci_out = 0; ci_out < lengthof(i->produced_cargo_waiting); ci_out++) {
+			for (size_t ci_out = 0; ci_out < std::size(i->produced_cargo_waiting); ci_out++) {
 				if (i->produced_cargo[ci_out] == INVALID_CARGO) continue;
 				i->produced_cargo_waiting[ci_out] = ClampTo<uint16_t>(i->produced_cargo_waiting[ci_out] + (cargo_waiting * indspec->input_cargo_multiplier[ci_in][ci_out] / 256));
 			}
@@ -1569,7 +1569,7 @@ void PrepareUnload(Vehicle *front_v)
 						front_v->last_station_visited, next_station.Get(v->cargo_type),
 						GetUnloadType(v), ge,
 						front_v->cargo_payment,
-						v->tile);
+						v->GetCargoTile());
 				if (v->cargo.UnloadCount() > 0) SetBit(v->vehicle_flags, VF_CARGO_UNLOADING);
 			}
 		}
@@ -1727,7 +1727,7 @@ struct ReturnCargoAction
 	 */
 	bool operator()(Vehicle *v)
 	{
-		v->cargo.Return(UINT_MAX, &this->st->goods[v->cargo_type].CreateData().cargo, this->next_hop, v->tile);
+		v->cargo.Return(UINT_MAX, &this->st->goods[v->cargo_type].CreateData().cargo, this->next_hop, v->GetCargoTile());
 		return true;
 	}
 };
@@ -1764,7 +1764,7 @@ struct FinalizeRefitAction
 	{
 		if (this->do_reserve || (cargo_type_loading == nullptr || (cargo_type_loading->current_order.GetCargoLoadTypeRaw(v->cargo_type) & OLFB_FULL_LOAD))) {
 			this->st->goods[v->cargo_type].CreateData().cargo.Reserve(v->cargo_cap - v->cargo.RemainingCount(),
-					&v->cargo, this->next_station.Get(v->cargo_type), v->tile);
+					&v->cargo, this->next_station.Get(v->cargo_type), v->GetCargoTile());
 		}
 		this->consist_capleft[v->cargo_type] += v->cargo_cap - v->cargo.RemainingCount();
 		return true;
@@ -1869,7 +1869,7 @@ struct ReserveCargoAction {
 		}
 		if (v->cargo_cap > v->cargo.RemainingCount() && MayLoadUnderExclusiveRights(st, v)) {
 			st->goods[v->cargo_type].CreateData().cargo.Reserve(v->cargo_cap - v->cargo.RemainingCount(),
-					&v->cargo, next_station.Get(v->cargo_type), v->tile);
+					&v->cargo, next_station.Get(v->cargo_type), v->GetCargoTile());
 		}
 
 		return true;
@@ -2107,7 +2107,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 					uint new_remaining = v->cargo.RemainingCount() + v->cargo.ActionCount(VehicleCargoList::MTA_DELIVER);
 					if (v->cargo_cap < new_remaining) {
 						/* Return some of the reserved cargo to not overload the vehicle. */
-						v->cargo.Return(new_remaining - v->cargo_cap, &ged->cargo, INVALID_STATION, v->tile);
+						v->cargo.Return(new_remaining - v->cargo_cap, &ged->cargo, INVALID_STATION, v->GetCargoTile());
 					}
 
 					/* Keep instead of delivering. This may lead to no cargo being unloaded, so ...*/
@@ -2134,7 +2134,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 				}
 			}
 
-			amount_unloaded = v->cargo.Unload(amount_unloaded, &ged->cargo, payment, v->tile);
+			amount_unloaded = v->cargo.Unload(amount_unloaded, &ged->cargo, payment, v->GetCargoTile());
 			remaining = v->cargo.UnloadCount() > 0;
 			if (amount_unloaded > 0) {
 				dirty_vehicle = true;
@@ -2210,7 +2210,7 @@ static void LoadUnloadVehicle(Vehicle *front)
 				if (v->cargo.StoredCount() == 0) TriggerVehicle(v, VEHICLE_TRIGGER_NEW_CARGO);
 				if (_settings_game.order.gradual_loading) cap_left = std::min(cap_left, GetLoadAmount(v));
 
-				uint loaded = ged->cargo.Load(cap_left, &v->cargo, next_station.Get(v->cargo_type), v->tile);
+				uint loaded = ged->cargo.Load(cap_left, &v->cargo, next_station.Get(v->cargo_type), v->GetCargoTile());
 				if (v->cargo.ActionCount(VehicleCargoList::MTA_LOAD) > 0) {
 					/* Remember if there are reservations left so that we don't stop
 					 * loading before they're loaded. */

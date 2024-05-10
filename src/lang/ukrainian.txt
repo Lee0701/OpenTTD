@@ -331,6 +331,7 @@ STR_COLOUR_SECONDARY_ORANGE                                     :Помаран�
 STR_COLOUR_SECONDARY_BROWN                                      :Коричневий
 STR_COLOUR_SECONDARY_GREY                                       :Сірий
 STR_COLOUR_SECONDARY_WHITE                                      :Білий
+STR_COLOUR_SECONDARY_SAME_AS_PRIMARY                            :Як базовий
 
 
 # Units used in OpenTTD
@@ -380,8 +381,24 @@ STR_UNITS_HEIGHT_METRIC                                         :{DECIMAL}{NBSP}
 STR_UNITS_HEIGHT_SI                                             :{DECIMAL}{NBSP}м
 
 # Time units used in string control characters
+STR_UNITS_DAYS                                                  :{COMMA}{NBSP}день
+STR_UNITS_DAYS.z                                                :{COMMA}{NBSP}днів
+STR_UNITS_SECONDS                                               :{COMMA}{NBSP}секунда
+STR_UNITS_SECONDS.d                                             :{COMMA}{NBSP}секунди
+STR_UNITS_SECONDS.z                                             :{COMMA}{NBSP}секунд
+STR_UNITS_TICKS                                                 :{COMMA}{NBSP}цок
+STR_UNITS_TICKS.d                                               :{COMMA}{NBSP}цоки
+STR_UNITS_TICKS.z                                               :{COMMA}{NBSP}цоків
 
+STR_UNITS_MONTHS                                                :{NUM}{NBSP}місяц{P ь я ів}
+STR_UNITS_MINUTES                                               :{NUM}{NBSP}хвилин{P а и ""}
 
+STR_UNITS_YEARS                                                 :{NUM}{NBSP}рік
+STR_UNITS_YEARS.d                                               :{NUM}{NBSP}роки
+STR_UNITS_YEARS.z                                               :{NUM}{NBSP}ріків
+STR_UNITS_PERIODS                                               :{NUM}{NBSP}період
+STR_UNITS_PERIODS.d                                             :{NUM}{NBSP}періоди
+STR_UNITS_PERIODS.z                                             :{NUM}{NBSP}періодів
 
 # Common window strings
 STR_LIST_FILTER_TITLE                                           :{BLACK}Фільтр:
@@ -562,6 +579,7 @@ STR_SETTINGS_MENU_CONFIG_SETTINGS_TREE                          :Налашту�
 STR_SETTINGS_MENU_AI_SETTINGS                                   :Налаштування ШІ
 STR_SETTINGS_MENU_GAMESCRIPT_SETTINGS                           :Налаштування ігрового скрипту
 STR_SETTINGS_MENU_NEWGRF_SETTINGS                               :Налаштування NewGRF
+STR_SETTINGS_MENU_SANDBOX_OPTIONS                               :Налаштування пісочниці
 STR_SETTINGS_MENU_TRANSPARENCY_OPTIONS                          :Налаштування прозорості
 STR_SETTINGS_MENU_TOWN_NAMES_DISPLAYED                          :Показувати назви міст
 STR_SETTINGS_MENU_STATION_NAMES_DISPLAYED                       :Показувати назви станцій
@@ -650,6 +668,7 @@ STR_ABOUT_MENU_ABOUT_OPENTTD                                    :Про гру '
 STR_ABOUT_MENU_SPRITE_ALIGNER                                   :Вирівнювання спрайтів
 STR_ABOUT_MENU_TOGGLE_BOUNDING_BOXES                            :Вкл./відкл. обмежуючі рамки
 STR_ABOUT_MENU_TOGGLE_DIRTY_BLOCKS                              :Вкл./відкл. підсвічування застарілих блоків
+STR_ABOUT_MENU_TOGGLE_WIDGET_OUTLINES                           :Увімкнути межі віджета
 
 ###length 31
 STR_DAY_NUMBER_1ST                                              :1
@@ -732,6 +751,8 @@ STR_GRAPH_COMPANY_VALUES_CAPTION                                :{WHITE}Варт
 STR_GRAPH_LAST_72_MINUTES_TIME_LABEL                            :{TINY_FONT}{BLACK}Останні 72 хвилини
 
 STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION                           :{WHITE}Тарифи на доставку вантажів
+STR_GRAPH_CARGO_PAYMENT_RATES_DAYS                              :{TINY_FONT}{BLACK}Днів у русі
+STR_GRAPH_CARGO_PAYMENT_RATES_SECONDS                           :{TINY_FONT}{BLACK}Секунд у русі
 STR_GRAPH_CARGO_PAYMENT_RATES_TITLE                             :{TINY_FONT}{BLACK}Плата за доставку 10 одиниць (або 10,000 літрів) вантажу на відстань 20 квадратів
 STR_GRAPH_CARGO_ENABLE_ALL                                      :{TINY_FONT}{BLACK}Включити всі
 STR_GRAPH_CARGO_DISABLE_ALL                                     :{TINY_FONT}{BLACK}Відключити усі
@@ -766,7 +787,7 @@ STR_PERFORMANCE_DETAIL_KEY                                      :{BLACK}Дета
 STR_PERFORMANCE_DETAIL_AMOUNT_CURRENCY                          :{BLACK}({CURRENCY_SHORT}/{CURRENCY_SHORT})
 STR_PERFORMANCE_DETAIL_AMOUNT_INT                               :{BLACK}({COMMA}/{COMMA})
 STR_PERFORMANCE_DETAIL_PERCENT                                  :{WHITE}{NUM}%
-STR_PERFORMANCE_DETAIL_SELECT_COMPANY_TOOLTIP                   :{BLACK}Проглянути деталі рейтинга цієї компанії
+STR_PERFORMANCE_DETAIL_SELECT_COMPANY_TOOLTIP                   :{BLACK}Проглянути деталі рейтингу цієї компанії
 
 ###length 10
 STR_PERFORMANCE_DETAIL_VEHICLES                                 :{BLACK}Транспорт:
@@ -781,7 +802,11 @@ STR_PERFORMANCE_DETAIL_LOAN                                     :{BLACK}Кред
 STR_PERFORMANCE_DETAIL_TOTAL                                    :{BLACK}Підсумок:
 ###next-name-looks-similar
 
+STR_PERFORMANCE_DETAIL_VEHICLES_TOOLTIP_YEARS                   :{BLACK}Кількість транспортних засобів, які були прибутковими минулого року (дорожній транспорт, потяги, кораблі, літаки).
+STR_PERFORMANCE_DETAIL_VEHICLES_TOOLTIP_PERIODS                 :{BLACK}Кількість транспортних засобів, які були прибутковими минулого періоду (дорожній транспорт, потяги, кораблі, літаки).
 STR_PERFORMANCE_DETAIL_STATIONS_TOOLTIP                         :{BLACK}Кількість нещодавно обслуговуваних частин станцій. Кожна частина станції (залізнична станція, автобусна зупинка, аеропорт) враховується окремо, навіть якщо вони об'єднані в одну станцію
+STR_PERFORMANCE_DETAIL_MIN_PROFIT_TOOLTIP_YEARS                 :{BLACK}Прибуток транспортного засобу з найменшим заробітком (враховується тільки транспорт старший за два роки)
+STR_PERFORMANCE_DETAIL_MIN_PROFIT_TOOLTIP_PERIODS               :{BLACK}Прибуток транспортного засобу з найменшим заробітком (враховується тільки транспорт старший за два періоди)
 STR_PERFORMANCE_DETAIL_MIN_INCOME_TOOLTIP                       :{BLACK}Найменший квартальний прибуток за останні 12 кварталів
 STR_PERFORMANCE_DETAIL_MAX_INCOME_TOOLTIP                       :{BLACK}Найбільший квартальний прибуток за останні 12 кварталів
 STR_PERFORMANCE_DETAIL_DELIVERED_TOOLTIP                        :{BLACK}Кількість одиниць вантажу, доставлених за останні 4 квартали
@@ -914,7 +939,7 @@ STR_SMALLMAP_ENABLE_ALL                                         :{BLACK}Пока
 STR_SMALLMAP_SHOW_HEIGHT                                        :{BLACK}Показати рельєф
 STR_SMALLMAP_TOOLTIP_DISABLE_ALL_INDUSTRIES                     :{BLACK}Не показувати жодного виду підприємств на карті
 STR_SMALLMAP_TOOLTIP_ENABLE_ALL_INDUSTRIES                      :{BLACK}Показати всі види підприємств на карті
-STR_SMALLMAP_TOOLTIP_SHOW_HEIGHT                                :{BLACK}Вкл./відкл. карту висот
+STR_SMALLMAP_TOOLTIP_SHOW_HEIGHT                                :{BLACK}Увімкнути/вимкнути мапу висот
 STR_SMALLMAP_TOOLTIP_DISABLE_ALL_COMPANIES                      :{BLACK}Не показувати власність жодної компанії на карті
 STR_SMALLMAP_TOOLTIP_ENABLE_ALL_COMPANIES                       :{BLACK}Показати власність всіх компаній на карті
 STR_SMALLMAP_TOOLTIP_DISABLE_ALL_CARGOS                         :{BLACK}Не показувати вантажі на карті
@@ -1027,6 +1052,8 @@ STR_NEWS_NEW_VEHICLE_NOW_AVAILABLE_WITH_TYPE                    :{BLACK}Відт
 
 STR_NEWS_SHOW_VEHICLE_GROUP_TOOLTIP                             :{BLACK}Відкрити вікно групи з центром на групах транспорту
 
+STR_NEWS_STATION_NO_LONGER_ACCEPTS_CARGO_LIST                   :{WHITE}{STATION} більше не приймає: {CARGO_LIST}
+STR_NEWS_STATION_NOW_ACCEPTS_CARGO_LIST                         :{WHITE}{STATION} тепер приймає: {CARGO_LIST}
 
 STR_NEWS_OFFER_OF_SUBSIDY_EXPIRED                               :{BIG_FONT}{BLACK}Субсидія більше не пропонується:{}{}Перевезення {STRING.r} з {STRING} до {STRING}
 STR_NEWS_SUBSIDY_WITHDRAWN_SERVICE                              :{BIG_FONT}{BLACK}Субсидію скасовано:{}{}Перевезення {STRING.r} з {STRING.r} до {STRING.r}
@@ -1037,6 +1064,8 @@ STR_NEWS_SERVICE_SUBSIDY_AWARDED_DOUBLE                         :{BIG_FONT}{BLAC
 STR_NEWS_SERVICE_SUBSIDY_AWARDED_TRIPLE                         :{BIG_FONT}{BLACK}Компанія {STRING} отримала субсидію!{}{}Перевезення {STRING.r} з {STRING} до {STRING} принесе втричі більше прибутків впродовж {UNITS_YEARS_OR_MINUTES}!
 STR_NEWS_SERVICE_SUBSIDY_AWARDED_QUADRUPLE                      :{BIG_FONT}{BLACK}Компанія {STRING} отримала субсидію!{}{}Перевезення {STRING.r} з {STRING} до {STRING} принесе вчетверо більше прибутків впродовж {UNITS_YEARS_OR_MINUTES}!
 
+STR_NEWS_ROAD_REBUILDING_MONTHS                                 :{BIG_FONT}{BLACK}Дорожній хаос у місті {TOWN}!{}{}Програма реконструкції міських доріг, яку профінансувала компанія {STRING}, спричинила 6 місяців страждань для автомобілістів!
+STR_NEWS_ROAD_REBUILDING_MINUTES                                :{BIG_FONT}{BLACK}Дорожній хаос у місті {TOWN}!{}{}Програма реконструкції міських доріг, яку профінансувала компанія {STRING}, спричинила 6 хвилин страждань для автомобілістів!
 STR_NEWS_EXCLUSIVE_RIGHTS_TITLE                                 :{BIG_FONT}{BLACK}Транспортна монополія!
 STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MONTHS                    :{BIG_FONT}{BLACK}Влада міста {TOWN} підписала з компанією {STRING} договір про ексклюзивні транспортні права на 1 рік!
 STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MINUTES                   :{BIG_FONT}{BLACK}Влада міста {TOWN} підписала з компанією {STRING} договір про ексклюзивні транспортні права на 12 хвилин!
@@ -1057,6 +1086,8 @@ STR_GAME_OPTIONS_TAB_GRAPHICS                                   :Графіка
 STR_GAME_OPTIONS_TAB_GRAPHICS_TT                                :{BLACK}Виберіть налаштування графіки
 STR_GAME_OPTIONS_TAB_SOUND                                      :Звук
 STR_GAME_OPTIONS_TAB_SOUND_TT                                   :{BLACK}Виберіть налаштування звуку та музики
+STR_GAME_OPTIONS_TAB_SOCIAL                                     :Соціальні платформи
+STR_GAME_OPTIONS_TAB_SOCIAL_TT                                  :{BLACK}Оберіть налаштування інтеграції соціальних мереж
 
 STR_GAME_OPTIONS_VOLUME                                         :Гучність
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Звукові ефекти
@@ -1073,7 +1104,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Вибе
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 43
+###length 44
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Британський фунт
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Американський долар
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Євро
@@ -1117,6 +1148,7 @@ STR_GAME_OPTIONS_CURRENCY_INR                                   :Індійсь�
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Індонезійська рупія
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Малайзійський рингіт
 STR_GAME_OPTIONS_CURRENCY_LVL                                   :Латвійські лати
+STR_GAME_OPTIONS_CURRENCY_PTE                                   :Португальське ескудо
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Автозбереження
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Виберіть період автозбереження гри
@@ -1159,9 +1191,9 @@ STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Межі
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :BLACK}Увімкнутий прапорець дозволить змінити розмір інтерфейсу
 
 STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}Використовувати шрифт звичайної роздільності
-STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Натисніть цю кнопку для використання шрифтів незмінних розмірів
+STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Увімкніть прапорець для використання шрифтів незмінних розмірів
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Згладжування шрифтів
-STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Натисніть цю кнопку для згладження шрифтів змінних розмірів
+STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Увімкніть прапорець для згладження шрифтів змінних розмірів
 
 STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
 STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
@@ -1170,6 +1202,12 @@ STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
 STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Автоматизований збір даних
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Участь в автоматизованому зборі даних
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_TOOLTIP                     :{BLACK}Якщо увімкнено, OpenTTD передаватиме зібрані дані при виході з гри
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK                        :{BLACK}Про збір даних і приватність
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_LINK_TOOLTIP                :{BLACK}Відкриє переглядач з детальнішою інформацією про автоматичний збір даних
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW                     :{BLACK}Попередній перегляд збору даних
+STR_GAME_OPTIONS_PARTICIPATE_SURVEY_PREVIEW_TOOLTIP             :{BLACK}Перегляд збору даних поточної гри
 
 STR_GAME_OPTIONS_GRAPHICS                                       :{BLACK}Графіка
 
@@ -1179,11 +1217,11 @@ STR_GAME_OPTIONS_REFRESH_RATE_ITEM                              :{NUM}Гц
 STR_GAME_OPTIONS_REFRESH_RATE_WARNING                           :{WHITE}Оновлення з частотою понад 60ГГц може зашкодити роботі гри.
 
 STR_GAME_OPTIONS_BASE_GRF                                       :{BLACK}Базовий набір графіки
-STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Оберіть, яку основну графіку використовувати
+STR_GAME_OPTIONS_BASE_GRF_TOOLTIP                               :{BLACK}Оберіть, яку основну графіку використовувати (неможливо змінити у грі, тільки з головного меню)
 STR_GAME_OPTIONS_BASE_GRF_DESCRIPTION_TOOLTIP                   :{BLACK}Додаткова інформація про базовий набір графіки
 
 STR_GAME_OPTIONS_BASE_SFX                                       :{BLACK}Базовий набір звуків
-STR_GAME_OPTIONS_BASE_SFX_TOOLTIP                               :{BLACK}Оберіть базовий набір звуків для використання
+STR_GAME_OPTIONS_BASE_SFX_TOOLTIP                               :{BLACK}Оберіть базовий набір звуків для використання (неможливо змінити у грі, тільки з головного меню)
 STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Додаткова інформація про базовий набір звуків
 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Базовий музичний набір
@@ -1192,13 +1230,16 @@ STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Допо
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(не встановлено додатків для інтеграції з соціальними платформами)
 
+STR_GAME_OPTIONS_SOCIAL_PLUGIN_TITLE                            :{BLACK}{STRING} ({STRING})
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_PLATFORM                         :{BLACK}Платформа:
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE                            :{BLACK}Стан додатка:
 
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_RUNNING                    :{GREEN}Працює
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_FAILED                     :{RED}Не вдалося з'єднатися
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_PLATFORM_NOT_RUNNING       :{ORANGE}{STRING} не працює
+STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_UNLOADED                   :{RED}Вивантажено
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_DUPLICATE                  :{RED}Подвоєння додатка
+STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_UNSUPPORTED_API            :{RED}Версія не підтримується
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE_INVALID_SIGNATURE          :{RED}Неправильний підпис
 
 STR_BASESET_STATUS                                              :{STRING} {RED}(відсутніх або зіпсованих файлів: {NUM})
@@ -1214,6 +1255,8 @@ STR_CURRENCY_DECREASE_EXCHANGE_RATE_TOOLTIP                     :{BLACK}Змен
 STR_CURRENCY_INCREASE_EXCHANGE_RATE_TOOLTIP                     :{BLACK}Збільшити кількість своєї валюти за 1 фунт (£)
 STR_CURRENCY_SET_EXCHANGE_RATE_TOOLTIP                          :{BLACK}Встановити обмінний курс своєї валюти до 1 фунта (£)
 
+STR_CURRENCY_SEPARATOR                                          :{LTBLUE}Роздільник: {ORANGE}{STRING}
+STR_CURRENCY_SET_CUSTOM_CURRENCY_SEPARATOR_TOOLTIP              :{BLACK}Встановити роздільник для своєї валюти
 
 STR_CURRENCY_PREFIX                                             :{LTBLUE}Префікс: {ORANGE}{STRING}
 STR_CURRENCY_SET_CUSTOM_CURRENCY_PREFIX_TOOLTIP                 :{BLACK}Встановити префікс для своєї валюти
@@ -1365,11 +1408,13 @@ STR_CONFIG_SETTING_HORIZONTAL_POS_RIGHT                         :правору�
 
 
 STR_CONFIG_SETTING_INFINITE_MONEY                               :Нескінченні гроші: {STRING}
+STR_CONFIG_SETTING_INFINITE_MONEY_HELPTEXT                      :Дозволяє необмежені витрати і вимикає банкрутство компаній
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Максимальна сума позики: {STRING}
-STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Максимальна сума позики для компанії (без урахування інфляції)
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Максимальна сума позики для компанії (без урахування інфляції). Якщо обрати "Ніяких позик", гроші будуть недоступні, окрім ігрових скриптів або налаштування "Безкінечні гроші"
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
 ###setting-zero-is-special
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :Ніяких позик
 
 STR_CONFIG_SETTING_INTEREST_RATE                                :Процентна ставка: {STRING}
 STR_CONFIG_SETTING_INTEREST_RATE_HELPTEXT                       :Процентна ставка за позиками; також контролює інфляцію, якщо вона увімкнена
@@ -1539,7 +1584,7 @@ STR_CONFIG_SETTING_PLANE_SPEED_HELPTEXT                         :Налашту�
 STR_CONFIG_SETTING_PLANE_SPEED_VALUE                            :1 / {COMMA}
 
 STR_CONFIG_SETTING_PLANE_CRASHES                                :Частота повітряних катастроф: {STRING}
-STR_CONFIG_SETTING_PLANE_CRASHES_HELPTEXT                       :Налаштування частоти повітряних катастроф.{}* Великі літаки мають більший ризик катастрофив малих аеропортах
+STR_CONFIG_SETTING_PLANE_CRASHES_HELPTEXT                       :Налаштування частоти повітряних катастроф.{}* Великі літаки мають більший ризик катастроф у малих аеропортах
 ###length 3
 STR_CONFIG_SETTING_PLANE_CRASHES_NONE                           :Немає
 STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :Низька
@@ -1584,8 +1629,10 @@ STR_CONFIG_SETTING_WARN_INCOME_LESS_HELPTEXT_PERIOD             :При вклю
 STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES                        :Транспортні засоби не застарівають: {STRING}
 STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES_HELPTEXT               :При включенні будь-яка модель транспортного засобу буде доступна для придбання безстроково після її впровадження.
 
+STR_CONFIG_SETTING_TIMEKEEPING_UNITS                            :Дотримання розкладу: {STRING}
 ###length 2
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS_CALENDAR                   :Календар
+STR_CONFIG_SETTING_TIMEKEEPING_UNITS_WALLCLOCK                  :Настінний годинник
 
 STR_CONFIG_SETTING_MINUTES_PER_YEAR                             :Хвилин у році: {STRING}
 
@@ -1593,6 +1640,10 @@ STR_CONFIG_SETTING_MINUTES_PER_YEAR_VALUE                       :{NUM}
 ###setting-zero-is-special
 STR_CONFIG_SETTING_MINUTES_PER_YEAR_FROZEN                      :0 (час календаря зупинено)
 
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE                             :Зміна виробництва вантажів у містах: {STRING}
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE_HELPTEXT                    :Змінити виробництво вантажів у містах на цей відсоток
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE                         :Змінити виробництво вантажів підприємствами: {STRING}
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT                :Змінити виробництво вантажів підприємствами на цей відсоток
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE                            :{NUM}%
 
 STR_CONFIG_SETTING_AUTORENEW_VEHICLE                            :Автозаміна зношених транспортних засобів: {STRING}
@@ -1684,7 +1735,8 @@ STR_CONFIG_SETTING_ROAD_SIDE_HELPTEXT                           :Виберіт�
 STR_CONFIG_SETTING_ROAD_SIDE_LEFT                               :лівосторонній рух
 STR_CONFIG_SETTING_ROAD_SIDE_RIGHT                              :правосторонній рух
 
-STR_CONFIG_SETTING_HEIGHTMAP_ROTATION                           :Поворот карти висот: {STRING}
+STR_CONFIG_SETTING_HEIGHTMAP_ROTATION                           :Поворот мапи висот: {STRING}
+STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_TOOLTIP                   :Обрати напрям обертання мапи висот для припасування в ігровий світ
 ###length 2
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_COUNTER_CLOCKWISE         :проти годинникової стрілки
 STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_CLOCKWISE                 :за годинниковою стрілкою
@@ -1900,7 +1952,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_OPCODES                           :Максима�
 STR_CONFIG_SETTING_SCRIPT_MAX_OPCODES_HELPTEXT                  :Максимально допустима кількість розрахунків, які може виконати скрипт впродовж одного ходу
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY                            :Максимальне використання пам'яті скриптом: {STRING}
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Скільки пам'яті може зайняти один скрипт до примусового припинення. Це може знадобитися збільшити для великих карт.
-STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
+STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MБ
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Інтервали техогляду вказано у відсотках: {STRING}
 STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Налаштування способу визначення необхідності проведення техогляду: через вказаний проміжок часу після попереднього техогляду чи коли поточна надійність транспортного засобу стане нижчою від максимальної його надійності на вказаний процент.
@@ -1968,7 +2020,7 @@ STR_CONFIG_SETTING_NEWS_ADVICE_HELPTEXT                         :Показат�
 STR_CONFIG_SETTING_NEWS_NEW_VEHICLES                            :Новий транспорт: {STRING}
 STR_CONFIG_SETTING_NEWS_NEW_VEHICLES_HELPTEXT                   :Показати газету, коли стає доступним новий засіб пересування
 
-STR_CONFIG_SETTING_NEWS_CHANGES_ACCEPTANCE                      :Зміни в списку грузів, що приймаються: {STRING}
+STR_CONFIG_SETTING_NEWS_CHANGES_ACCEPTANCE                      :Зміни в списку вантажів, що приймаються: {STRING}
 STR_CONFIG_SETTING_NEWS_CHANGES_ACCEPTANCE_HELPTEXT             :Показати повідомлення, якщо станція змінює приймані типи вантажів
 
 STR_CONFIG_SETTING_NEWS_SUBSIDIES                               :Субсидії: {STRING}
@@ -2011,8 +2063,9 @@ STR_CONFIG_SETTING_SEMAPHORE_BUILD_BEFORE_DATE                  :Автомат�
 STR_CONFIG_SETTING_SEMAPHORE_BUILD_BEFORE_DATE_HELPTEXT         :Налаштування року впровадження світлофорів замість семафорів. До цього року будуть встановлюватись лише семафори.
 
 STR_CONFIG_SETTING_CYCLE_SIGNAL_TYPES                           :Сигнали, доступні при циклічному переборі: {STRING}
-STR_CONFIG_SETTING_CYCLE_SIGNAL_TYPES_HELPTEXT                  :Налаштування типу сигналів, що доступні при зміні типу за допомогою Ctrl+клац мишею
+STR_CONFIG_SETTING_CYCLE_SIGNAL_TYPES_HELPTEXT                  :Налаштування типу сигналів, що доступні при циклічному переборі в панелі будівництва сигналів за допомогою Ctrl+клац мишею
 ###length 2
+STR_CONFIG_SETTING_CYCLE_SIGNAL_GROUP                           :Тільки поточна група
 STR_CONFIG_SETTING_CYCLE_SIGNAL_ALL                             :всі видимі
 
 STR_CONFIG_SETTING_SIGNAL_GUI_MODE                              :Показувати типи сигналів: {STRING}
@@ -2046,7 +2099,7 @@ STR_CONFIG_SETTING_TOWN_FOUNDING_ALLOWED                        :Дозволе�
 STR_CONFIG_SETTING_TOWN_FOUNDING_ALLOWED_CUSTOM_LAYOUT          :Дозволено (з вибором дорожньої сітки)
 
 STR_CONFIG_SETTING_TOWN_CARGOGENMODE                            :Кількість вантажів та пасажирів у містах: {STRING}
-STR_CONFIG_SETTING_TOWN_CARGOGENMODE_HELPTEXT                   :Скільки вантажів генерується будинками в містах відносно населення.{}Квадратична залежність: Вдвічі більше місто генерує вчетверо більше вантажів.{}Лінійна:  Вдвічі більше місто генерує вдвічі більше вантажів.
+STR_CONFIG_SETTING_TOWN_CARGOGENMODE_HELPTEXT                   :Скільки вантажів створюється будинками в містах відносно населення.{}Квадратична залежність: Вдвічі більше місто створює вчетверо більше вантажів.{}Лінійна:  Вдвічі більше місто створює вдвічі більше вантажів.
 ###length 2
 STR_CONFIG_SETTING_TOWN_CARGOGENMODE_ORIGINAL                   :Квадратична(оригінальна)
 STR_CONFIG_SETTING_TOWN_CARGOGENMODE_BITCOUNT                   :лінійна залежність
@@ -2110,7 +2163,9 @@ STR_CONFIG_SETTING_LARGER_TOWNS_DISABLED                        :Жодного
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER                         :Множник розміру мегаполісів: {STRING}
 STR_CONFIG_SETTING_CITY_SIZE_MULTIPLIER_HELPTEXT                :Середньостатистичне відношення початкового розміру мегаполісів порівняно зі звичайними містами.
 
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL                    :Оновлення обрахунку зв'язків, час {STRING}
 STR_CONFIG_SETTING_LINKGRAPH_RECALC_INTERVAL_HELPTEXT           :Час між перерозрахунками графа зв'язків. Кожен розрахунок обчислює однин компонент графа, тобто лише деякі компоненти оновляться після закінчення кожного проміжку часу, а не весь граф. Чим менше це значення, тим більше часу процесора буде витрачатися. Чим більше це значення, тим довше буде очікувати розподілення вантажів на нових маршрутах
+STR_CONFIG_SETTING_LINKGRAPH_RECALC_TIME                        :Час між перерахунками графа зв'язків: {STRING}
 
 STR_CONFIG_SETTING_DISTRIBUTION_PAX                             :Режим розподілу для пасажирів: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PAX_HELPTEXT                    :В "симетричному" режимі від станції A до станції B відправлятиметься приблизно стільки ж пасажирів, як від B до A. В "асиметричному" режимі дозволяється відправляти довільну кількість пасажирів в обох напрямках. Ручний режим означає, що розподіл пасажирів не здійснюватиметься автоматично.
@@ -2142,6 +2197,9 @@ STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_HELPTEXT         :Показув�
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_IMPERIAL         :Імперські (милі/год)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_METRIC           :Метричні (км/год)
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_SI               :СІ (м/с)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS_DAYS   :Ігрових одиниць (клітинок/день)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_GAMEUNITS_SECS   :Ігрових одиниць (клітинок/секунду)
+STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS            :вузли
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER                     :Одиниці потужності: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_POWER_HELPTEXT            :Показувати потужності в таких одиницях:
@@ -2191,6 +2249,7 @@ STR_CONFIG_SETTING_ACCOUNTING                                   :Облік
 STR_CONFIG_SETTING_VEHICLES                                     :Транспорт
 STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :Фізика
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :Маршрути
+STR_CONFIG_SETTING_VEHICLES_ORDERS                              :Накази
 STR_CONFIG_SETTING_LIMITATIONS                                  :Обмеження
 STR_CONFIG_SETTING_ACCIDENTS                                    :Катастрофи
 STR_CONFIG_SETTING_GENWORLD                                     :Створення світу
@@ -2250,12 +2309,13 @@ STR_INTRO_CAPTION                                               :{WHITE}OpenTTD 
 STR_INTRO_NEW_GAME                                              :{BLACK}Нова гра
 STR_INTRO_LOAD_GAME                                             :{BLACK}Завантажити гру
 STR_INTRO_PLAY_SCENARIO                                         :{BLACK}Грати за сценарієм
-STR_INTRO_PLAY_HEIGHTMAP                                        :{BLACK}Грати з картою висот
+STR_INTRO_PLAY_HEIGHTMAP                                        :{BLACK}Грати з мапою висот
 STR_INTRO_SCENARIO_EDITOR                                       :{BLACK}Редактор сценаріїв
 STR_INTRO_MULTIPLAYER                                           :{BLACK}Мережева гра
 
 STR_INTRO_GAME_OPTIONS                                          :{BLACK}Налаштування гри
 STR_INTRO_HIGHSCORE                                             :{BLACK}Таблиця рекордів
+STR_INTRO_HELP                                                  :{BLACK}Допомога й довідка
 STR_INTRO_CONFIG_SETTINGS_TREE                                  :{BLACK}Налаштування
 STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}Налаштування NewGRF
 STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Додатковий контент
@@ -2275,13 +2335,14 @@ STR_INTRO_TOOLTIP_SUB_ARCTIC_LANDSCAPE                          :{BLACK}Вибр
 STR_INTRO_TOOLTIP_SUB_TROPICAL_LANDSCAPE                        :{BLACK}Вибрати 'тропічний' ландшафт
 STR_INTRO_TOOLTIP_TOYLAND_LANDSCAPE                             :{BLACK}Вибрати 'іграшковий' ландшафт
 
-STR_INTRO_TOOLTIP_GAME_OPTIONS                                  :{BLACK}Показати налаштування гри
-STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Показати таблицю рекордів
+STR_INTRO_TOOLTIP_GAME_OPTIONS                                  :{BLACK}Відкрити налаштування гри
+STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Відкрити таблицю рекордів
+STR_INTRO_TOOLTIP_HELP                                          :{BLACK}Отримати доступ до довідки й мережевих ресурсів
 STR_INTRO_TOOLTIP_CONFIG_SETTINGS_TREE                          :{BLACK}Показати налаштування
-STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Показати налаштування NewGRF
+STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Відкрити налаштування NewGRF
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Перевірити доступний для завантаження додатковий контент
 STR_INTRO_TOOLTIP_AI_SETTINGS                                   :{BLACK}Показати налаштування ШІ
-STR_INTRO_TOOLTIP_GAMESCRIPT_SETTINGS                           :{BLACK}Показати налаштування ігрового скрипту
+STR_INTRO_TOOLTIP_GAMESCRIPT_SETTINGS                           :{BLACK}Відкрити налаштування ігрового скрипту
 STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Вийти з OpenTTD
 
 STR_INTRO_BASESET                                               :{BLACK}В обраному наборі базової графіки немає {NUM} спрайт{P а ів ів}. Будь ласка, оновіть набір графіки.
@@ -2300,12 +2361,14 @@ STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Ви д
 
 # Help window
 STR_HELP_WINDOW_CAPTION                                         :Допомога й довідка
+STR_HELP_WINDOW_WEBSITES                                        :{BLACK}Вебсайти
 STR_HELP_WINDOW_DOCUMENTS                                       :{BLACK}Документація
 STR_HELP_WINDOW_README                                          :{BLACK}Інструкція
 STR_HELP_WINDOW_CHANGELOG                                       :{BLACK}Зміни
 STR_HELP_WINDOW_KNOWN_BUGS                                      :{BLACK}Відомі збої
 STR_HELP_WINDOW_LICENSE                                         :{BLACK}Ліцензія
 STR_HELP_WINDOW_MAIN_WEBSITE                                    :{BLACK}OpenTTD
+STR_HELP_WINDOW_MANUAL_WIKI                                     :{BLACK}Довідка / Вікі
 STR_HELP_WINDOW_BUGTRACKER                                      :{BLACK}Повідомити про помилку
 STR_HELP_WINDOW_COMMUNITY                                       :{BLACK}Спільнота
 
@@ -2332,13 +2395,16 @@ STR_LIVERY_ROAD_VEHICLE_TOOLTIP                                 :{BLACK}Пока
 STR_LIVERY_SHIP_TOOLTIP                                         :{BLACK}Показати фарбування кораблів
 STR_LIVERY_AIRCRAFT_TOOLTIP                                     :{BLACK}Показати фарбування авіації
 STR_LIVERY_TRAIN_GROUP_TOOLTIP                                  :{BLACK}Показати кольори груп поїздів
+STR_LIVERY_ROAD_VEHICLE_GROUP_TOOLTIP                           :{BLACK}Показати кольори груп дорожнього транспорту
 STR_LIVERY_SHIP_GROUP_TOOLTIP                                   :{BLACK}Показати кольори груп кораблів
 STR_LIVERY_AIRCRAFT_GROUP_TOOLTIP                               :{BLACK}Показати кольори груп повітряних апаратів
 STR_LIVERY_PRIMARY_TOOLTIP                                      :{BLACK}Оберіть основний колір для обраної схеми. Ctrl+клац мишею встановить обраний колір для всіх схем
 STR_LIVERY_SECONDARY_TOOLTIP                                    :{BLACK}Оберіть другорядний колір для обраної схеми. Ctrl+клац мишею встановить обраний колір для всіх схем
 STR_LIVERY_PANEL_TOOLTIP                                        :{BLACK}Оберіть кольорову схему для зміни, чи декілька з Ctrl+клац мишею. Клацніть на прямокутнику, щоб ввімкнути/вимкнути використання схем
 STR_LIVERY_TRAIN_GROUP_EMPTY                                    :Кольори груп поїздів відсутні
+STR_LIVERY_ROAD_VEHICLE_GROUP_EMPTY                             :Не налаштовано груп дорожнього транспорту
 STR_LIVERY_SHIP_GROUP_EMPTY                                     :Групи корабілв не налаштовано
+STR_LIVERY_AIRCRAFT_GROUP_EMPTY                                 :Не налаштовано груп повітряного транспорту
 
 ###length 23
 STR_LIVERY_DEFAULT                                              :Стандартний колір
@@ -2446,6 +2512,7 @@ STR_NETWORK_SERVER_LIST_DATE_CAPTION                            :{BLACK}Дата
 STR_NETWORK_SERVER_LIST_DATE_CAPTION_TOOLTIP                    :{BLACK}Поточна дата
 STR_NETWORK_SERVER_LIST_PLAY_TIME_SHORT                         :{BLACK}{NUM}год {NUM}хв
 STR_NETWORK_SERVER_LIST_PLAY_TIME_CAPTION                       :{BLACK}Тривалість гри
+STR_NETWORK_SERVER_LIST_PLAY_TIME_CAPTION_TOOLTIP               :{BLACK}Тривалість гри{}без паузи
 STR_NETWORK_SERVER_LIST_INFO_ICONS_TOOLTIP                      :{BLACK}Мова, версія сервера, та інше.
 
 STR_NETWORK_SERVER_LIST_CLICK_GAME_TO_SELECT                    :{BLACK}Натисніть на гру із списку, щоб вибрати її
@@ -2562,6 +2629,7 @@ STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP                     :{BLACK}Ство
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_SELF_TOOLTIP                :{BLACK}Це ти
 STR_NETWORK_CLIENT_LIST_PLAYER_ICON_HOST_TOOLTIP                :{BLACK}Організатор гри
 STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT                    :{BLACK}{NUM} клієнт{P "" и ів} - {NUM}/{NUM} компан{P ія ії ій}
+STR_NETWORK_CLIENT_LIST_CLIENT_COMPANY_COUNT_TOOLTIP            :{BLACK}Кількість поточно з'єднаних клієнтів, кількість компаній і максимум компаній, дозволених адміністратором сервера
 
 # Matches ConnectionType
 ###length 5
@@ -2589,6 +2657,9 @@ STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}Так, 
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Так, більше не питати
 
 STR_NETWORK_ASK_SURVEY_CAPTION                                  :Дозволити автоматизований збір даних?
+STR_NETWORK_ASK_SURVEY_TEXT                                     :Бажаєте долучитись до автоматичного збору даних?{}OpenTTD передаватиме дані при виході з гри.{}Це можна будь-коли змінити в "Налаштуваннях гри".
+STR_NETWORK_ASK_SURVEY_PREVIEW                                  :Попередній перегляд збору даних
+STR_NETWORK_ASK_SURVEY_LINK                                     :Про збір даних і приватність
 STR_NETWORK_ASK_SURVEY_NO                                       :Ні
 STR_NETWORK_ASK_SURVEY_YES                                      :Так
 
@@ -2721,12 +2792,12 @@ STR_CONTENT_SELECT_UPDATES_CAPTION                              :{BLACK}Вибр
 STR_CONTENT_SELECT_UPDATES_CAPTION_TOOLTIP                      :{BLACK}Позначити весь вміст, що є оновленням існуючого, для завантаження
 STR_CONTENT_UNSELECT_ALL_CAPTION                                :{BLACK}Зняти позначки
 STR_CONTENT_UNSELECT_ALL_CAPTION_TOOLTIP                        :{BLACK}Не завантажувати нічого
-STR_CONTENT_SEARCH_EXTERNAL                                     :{BLACK}Шукати на сторонніх веб-сайтах
-STR_CONTENT_SEARCH_EXTERNAL_TOOLTIP                             :{BLACK}Шукати додатки, недоступні на серверах OpenTTD на сторонніх веб-сайтах
+STR_CONTENT_SEARCH_EXTERNAL                                     :{BLACK}Шукати на сторонніх вебсайтах
+STR_CONTENT_SEARCH_EXTERNAL_TOOLTIP                             :{BLACK}Шукати додатки, недоступні на серверах OpenTTD на сторонніх вебсайтах
 STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER_CAPTION                  :{WHITE}Ви виходите з OpenTTD!
-STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER                          :{WHITE}Умови використання додатків з зовнішніх веб-сайтів можуть відрізнятися.{}Інструкції по встановленню даних додатків у OpenTTD шукайте на відповідних веб-сайтах.{}Продовжити?
+STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER                          :{WHITE}Умови використання додатків з зовнішніх вебсайтів можуть відрізнятися.{}Інструкції по встановленню даних додатків у OpenTTD шукайте на відповідних вебсайтах.{}Продовжити?
 STR_CONTENT_FILTER_TITLE                                        :{BLACK}Фільтр за назвою:
-STR_CONTENT_OPEN_URL                                            :{BLACK}Відвідати вебсайт
+STR_CONTENT_OPEN_URL                                            :{BLACK}Вебсайт
 STR_CONTENT_OPEN_URL_TOOLTIP                                    :{BLACK}Відвітати вебсайт цього контенту
 STR_CONTENT_DOWNLOAD_CAPTION                                    :{BLACK}Завантажити
 STR_CONTENT_DOWNLOAD_CAPTION_TOOLTIP                            :{BLACK}Почати завантаження обраного вмісту
@@ -2759,7 +2830,7 @@ STR_CONTENT_TYPE_NEWGRF                                         :NewGRF
 STR_CONTENT_TYPE_AI                                             :AI
 STR_CONTENT_TYPE_AI_LIBRARY                                     :Бібліотека ШІ
 STR_CONTENT_TYPE_SCENARIO                                       :Сценарій
-STR_CONTENT_TYPE_HEIGHTMAP                                      :Карта висот
+STR_CONTENT_TYPE_HEIGHTMAP                                      :Мапа висот
 STR_CONTENT_TYPE_BASE_SOUNDS                                    :Основні звуки
 STR_CONTENT_TYPE_BASE_MUSIC                                     :Основна музика
 STR_CONTENT_TYPE_GAME_SCRIPT                                    :Ігровий скрипт
@@ -2888,7 +2959,9 @@ STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Вибе
 
 STR_STATION_CLASS_DFLT                                          :Звичайна
 STR_STATION_CLASS_DFLT_STATION                                  :Звичайна станція
+STR_STATION_CLASS_DFLT_ROADSTOP                                 :Звичайна зупинка
 STR_STATION_CLASS_WAYP                                          :Пункт
+STR_STATION_CLASS_WAYP_WAYPOINT                                 :Звичайна точка маршруту
 
 # Signal window
 STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Вибір сигналів
@@ -3141,8 +3214,9 @@ STR_LAND_AREA_INFORMATION_TRAM_OWNER                            :{BLACK}Влас
 STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Власник залізниці: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Місцева влада: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :Немає
-STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Координати: {LTBLUE}{NUM} x {NUM} x {NUM} ({STRING})
-STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Рік випуску: {LTBLUE}{DATE_LONG}
+STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Координати: {LTBLUE}{NUM} x {NUM} x {NUM}
+STR_LAND_AREA_INFORMATION_LANDINFO_INDEX                        :{BLACK}Координати клітинки: {LTBLUE}{NUM} ({HEX})
+STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Рік випуску чи оновлення: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Клас станції: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Тип станції: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_AIRPORT_CLASS                         :{BLACK}Клас аеропорта: {LTBLUE}{STRING}
@@ -3346,16 +3420,18 @@ STR_SAVELOAD_OSKTITLE                                           :{BLACK}Введ
 # World generation
 STR_MAPGEN_WORLD_GENERATION_CAPTION                             :{WHITE}Створення світу
 STR_MAPGEN_MAPSIZE                                              :{BLACK}Розмір карти:
-STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Оберіть розмір карти в клітинках. Кількість доступних клітинок буде трохи меншою
+STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Оберіть розмір мапи в клітинках. Кількість доступних клітинок буде трохи меншою
 STR_MAPGEN_BY                                                   :{BLACK}*
 STR_MAPGEN_NUMBER_OF_TOWNS                                      :{BLACK}Міста:
 STR_MAPGEN_NUMBER_OF_TOWNS_TOOLTIP                              :BLACK}Оберіть щільність міст або випадкову кількість
 STR_MAPGEN_TOWN_NAME_LABEL                                      :{BLACK}Назви міст:
 STR_MAPGEN_TOWN_NAME_DROPDOWN_TOOLTIP                           :{BLACK}Виберіть стиль назв міст
 STR_MAPGEN_DATE                                                 :{BLACK}Дата:
+STR_MAPGEN_DATE_TOOLTIP                                         :{BLACK}Обрати початкову дату
 STR_MAPGEN_NUMBER_OF_INDUSTRIES                                 :{BLACK}Кількість виробництв:
 STR_MAPGEN_NUMBER_OF_INDUSTRIES_TOOLTIP                         :BLACK}Оберіть щільність виробництв або випадкову кількість
 STR_MAPGEN_HEIGHTMAP_HEIGHT                                     :{BLACK}Найвища гора:
+STR_MAPGEN_HEIGHTMAP_HEIGHT_TOOLTIP                             :{BLACK}Обрати найвищу гору відносно рівня моря, яку гра спробує створити.
 STR_MAPGEN_HEIGHTMAP_HEIGHT_UP                                  :{BLACK}Збільшити на одиницю максимальну висоту найвищої гори на мапі
 STR_MAPGEN_HEIGHTMAP_HEIGHT_DOWN                                :{BLACK}Зменшити на одиницю максимальну висоту найвищої гори на мапі
 STR_MAPGEN_SNOW_COVERAGE                                        :{BLACK}Покриття снігом:
@@ -3373,6 +3449,7 @@ STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Ріки
 STR_MAPGEN_SMOOTHNESS                                           :{BLACK}Гладкість:
 STR_MAPGEN_VARIETY                                              :{BLACK}Розподіл різноманітності:
 STR_MAPGEN_GENERATE                                             :{WHITE}Генерувати
+STR_MAPGEN_GENERATE_TOOLTIP                                     :{BLACK}Створити світ для гри в OpenTTD!
 STR_MAPGEN_NEWGRF_SETTINGS                                      :{BLACK}Налаштування NewGRF
 STR_MAPGEN_NEWGRF_SETTINGS_TOOLTIP                              :{BLACK}Показати налаштування NewGRF
 STR_MAPGEN_AI_SETTINGS                                          :{BLACK}Налаштування ШІ
@@ -3417,9 +3494,10 @@ STR_MAPGEN_BORDER_RANDOMIZE                                     :{BLACK}дові
 STR_MAPGEN_BORDER_MANUAL                                        :{BLACK}вручну
 
 STR_MAPGEN_HEIGHTMAP_ROTATION                                   :{BLACK}Поворот рельєфу
-STR_MAPGEN_HEIGHTMAP_NAME                                       :{BLACK}Назва рельєфу:
-STR_MAPGEN_HEIGHTMAP_NAME_TOOLTIP                               :{BLACK}Назва файлу мапи висот
+STR_MAPGEN_HEIGHTMAP_NAME                                       :{BLACK}Назва мапи висот:
+STR_MAPGEN_HEIGHTMAP_NAME_TOOLTIP                               :{BLACK}Назва образу мапи висот
 STR_MAPGEN_HEIGHTMAP_SIZE_LABEL                                 :{BLACK}Розмір:
+STR_MAPGEN_HEIGHTMAP_SIZE_LABEL_TOOLTIP                         :{BLACK}Розмір образу мапи висот. Найкращим буде розмір, однаковий з довжиною мапи в OpenTTD, тобто 256, 512, 1024, тощо.
 STR_MAPGEN_HEIGHTMAP_SIZE                                       :{ORANGE}{NUM} x {NUM}
 
 STR_MAPGEN_TERRAIN_TYPE_QUERY_CAPT                              :{WHITE}Висота обраної гори
@@ -3521,6 +3599,7 @@ STR_SAVE_PRESET_SAVE                                            :{BLACK}Збер
 STR_SAVE_PRESET_SAVE_TOOLTIP                                    :{BLACK}Зберегти шаблон для поточного обраного імені
 
 # NewGRF parameters window
+STR_BASEGRF_PARAMETERS_CAPTION                                  :{WHITE}Змінити параметри базового набору графіки
 STR_NEWGRF_PARAMETERS_CAPTION                                   :{WHITE}Змінити параметри NewGRF
 STR_NEWGRF_PARAMETERS_CLOSE                                     :{BLACK}Закрити
 STR_NEWGRF_PARAMETERS_RESET                                     :{BLACK}Очистити
@@ -3671,6 +3750,7 @@ STR_TOWN_VIEW_TOWN_CAPTION                                      :{WHITE}{TOWN}
 STR_TOWN_VIEW_CITY_CAPTION                                      :{WHITE}{TOWN} (місто)
 STR_TOWN_VIEW_POPULATION_HOUSES                                 :{BLACK}Населення: {ORANGE}{COMMA}{BLACK}  Будинки: {ORANGE}{COMMA}
 STR_TOWN_VIEW_CARGO_LAST_MONTH_MAX                              :{BLACK}{CARGO_LIST} минулого місяця: {ORANGE}{COMMA}{BLACK}  макс: {ORANGE}{COMMA}
+STR_TOWN_VIEW_CARGO_LAST_MINUTE_MAX                             :{BLACK}{CARGO_LIST} минулої хвилини: {ORANGE}{COMMA}{BLACK}  найбільше: {ORANGE}{COMMA}
 STR_TOWN_VIEW_CARGO_FOR_TOWNGROWTH                              :{BLACK}Вантаж, потрібний для зростання міста:
 STR_TOWN_VIEW_CARGO_FOR_TOWNGROWTH_REQUIRED_GENERAL             :{ORANGE}{STRING}{RED} потрібно
 STR_TOWN_VIEW_CARGO_FOR_TOWNGROWTH_REQUIRED_WINTER              :{ORANGE}{STRING}{BLACK} потрібно взимку
@@ -3805,6 +3885,7 @@ STR_STATION_LIST_CARGO_FILTER_ALL_AND_NO_RATING                 :Всі типи
 STR_STATION_LIST_CARGO_FILTER_MULTIPLE                          :Кілька типів вантажів
 STR_STATION_LIST_CARGO_FILTER_NO_CARGO_TYPES                    :Жодного типу вантажів
 STR_STATION_LIST_CARGO_FILTER_ONLY_NO_RATING                    :тільки без рейтингу вантажів
+STR_STATION_LIST_CARGO_FILTER_SELECT_ALL                        :Обрати усі без рейтингу
 STR_STATION_LIST_CARGO_FILTER_NO_RATING                         :жодного рейтингу вантажів
 STR_STATION_LIST_CARGO_FILTER_EXPAND                            :Показати ще...
 
@@ -3957,6 +4038,8 @@ STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON                          :{BLACK}Дета
 STR_COMPANY_VIEW_INFRASTRUCTURE_TOOLTIP                         :{BLACK}Переглянути детальну інформацію про інфраструктуру
 STR_COMPANY_VIEW_GIVE_MONEY_BUTTON                              :{BLACK}Дати грошей
 STR_COMPANY_VIEW_GIVE_MONEY_TOOLTIP                             :{BLACK}Дати грошей цій компанії
+STR_COMPANY_VIEW_HOSTILE_TAKEOVER_BUTTON                        :{BLACK}Агресивне захоплення
+STR_COMPANY_VIEW_HOSTILE_TAKEOVER_TOOLTIP                       :{BLACK}Агресивно захопити компанію
 
 STR_COMPANY_VIEW_NEW_FACE_BUTTON                                :{BLACK}Нове обличчя
 STR_COMPANY_VIEW_NEW_FACE_TOOLTIP                               :{BLACK}Вибрати нове обличчя керівника
@@ -3972,6 +4055,7 @@ STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Ім'я кер�
 STR_COMPANY_VIEW_GIVE_MONEY_QUERY_CAPTION                       :Введіть суму грошей, яку бажаєте передати
 
 STR_BUY_COMPANY_MESSAGE                                         :{WHITE}Ми шукаємо нового власника нашої компанії.{}{}Чи бажаєте Ви купити {COMPANY} за {CURRENCY_LONG}?
+STR_BUY_COMPANY_HOSTILE_TAKEOVER                                :{WHITE}Для агресивного захоплення компанії {COMPANY} необхідно прдбати усі активи, виплатити усі позики і сплатити дворічний прибуток.{}{}Приблизна вартість {CURRENCY_LONG}.{}{}Бажаєте продовжити агресивне захоплення?
 
 # Company infrastructure window
 STR_COMPANY_INFRASTRUCTURE_VIEW_CAPTION                         :{WHITE}Інфраструктура {COMPANY}
@@ -4005,6 +4089,7 @@ STR_INDUSTRY_DIRECTORY_FILTER_NONE                              :Нема
 # Industry view
 STR_INDUSTRY_VIEW_CAPTION                                       :{WHITE}{INDUSTRY}
 STR_INDUSTRY_VIEW_PRODUCTION_LAST_MONTH_TITLE                   :{BLACK}Вироблено за місяць:
+STR_INDUSTRY_VIEW_PRODUCTION_LAST_MINUTE_TITLE                  :{BLACK}Вироблено за минулу хвилину:
 STR_INDUSTRY_VIEW_TRANSPORTED                                   :{YELLOW}{CARGO_LONG}{STRING}{BLACK} ({COMMA}% перевезено)
 STR_INDUSTRY_VIEW_LOCATION_TOOLTIP                              :{BLACK}Показати підприємство у центрі екрану. Ctrl+клац мишею відкриє нове вікно з видом на підприємство
 STR_INDUSTRY_VIEW_PRODUCTION_LEVEL                              :{BLACK}Обсяг виробництва: {YELLOW}{COMMA}%
@@ -4043,15 +4128,16 @@ STR_VEHICLE_LIST_AVAILABLE_AIRCRAFT                             :Доступн�
 STR_VEHICLE_LIST_MANAGE_LIST                                    :{BLACK}Редагувати список
 STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Дати завдання всьому транспорту зі списку
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Оновлення
-STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Відправити на техогляд
+STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Направити на техогляд
+STR_VEHICLE_LIST_CREATE_GROUP                                   :Створити групу
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Прибуток цього року: {CURRENCY_LONG} (торік: {CURRENCY_LONG})
 STR_VEHICLE_LIST_PROFIT_THIS_PERIOD_LAST_PERIOD                 :{TINY_FONT}{BLACK}Прибуток цього періо:ду: {CURRENCY_LONG} (минулого періоду: {CURRENCY_LONG})
 STR_VEHICLE_LIST_CARGO                                          :[{CARGO_LIST}]
 STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{STRING} {STRING}
 
-STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Відправити до депо
-STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Відправити в гараж
-STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT                             :Відправити до депо
+STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Направити до депо
+STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Направити в гараж
+STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT                             :Направити до депо
 STR_VEHICLE_LIST_SEND_AIRCRAFT_TO_HANGAR                        :Направити в ангар
 
 STR_VEHICLE_LIST_MASS_STOP_LIST_TOOLTIP                         :{BLACK}Натисніть для зупинки всіх авто, що у списку
@@ -4091,7 +4177,9 @@ STR_GROUP_REMOVE_ALL_VEHICLES                                   :Позбути�
 STR_GROUP_RENAME_CAPTION                                        :{BLACK}Перейменувати групу
 
 STR_GROUP_PROFIT_THIS_YEAR                                      :Прибуток цього року:
+STR_GROUP_PROFIT_THIS_PERIOD                                    :Прибуток цього періоду:
 STR_GROUP_PROFIT_LAST_YEAR                                      :Прибуток минулого року:
+STR_GROUP_PROFIT_LAST_PERIOD                                    :Прибуток минулого періоду:
 STR_GROUP_OCCUPANCY                                             :Використання:
 STR_GROUP_OCCUPANCY_VALUE                                       :{NUM}%
 
@@ -4383,13 +4471,13 @@ STR_VEHICLE_VIEW_CAPTION                                        :{WHITE}{VEHICLE
 STR_VEHICLE_VIEW_TRAIN_CENTER_TOOLTIP                           :{BLACK}Показати місце розташування потяга в центрі екрану. Подвійний клац для показу потяга в центрі екрану.Ctrl+клац мишею відкриє нове вікно у місці розташування потяга
 STR_VEHICLE_VIEW_ROAD_VEHICLE_CENTER_TOOLTIP                    :{BLACK}Показати транспорт у вікні. Подвійний клац для показу транспорту в центрі екрану. Ctrl+клац мишою для руху за транспортом.
 STR_VEHICLE_VIEW_SHIP_CENTER_TOOLTIP                            :{BLACK}Показати місце розташування корабля в центрі екрану. Подвійний клац для показу корабля в центрі екрану.Ctrl+клац мишою відкриє нове вікно у місці розташування корабля
-STR_VEHICLE_VIEW_AIRCRAFT_CENTER_TOOLTIP                        :{BLACK}Показати авіатранспорт у вікні. Подвійний клац для показу авіатранспорту в центрі екрану. Ctrl+клац мишою для руху за авіатранспортом.
+STR_VEHICLE_VIEW_AIRCRAFT_CENTER_TOOLTIP                        :{BLACK}Показати авіатранспорт у центрі головного вікна. Подвійний клац для руху за авіатранспортом у головному вікні. Ctrl+клац мишою для показу авіатранспорту в додатковому вікні
 
 ###length VEHICLE_TYPES
 STR_VEHICLE_VIEW_TRAIN_SEND_TO_DEPOT_TOOLTIP                    :{BLACK}Направити поїзд у депо
 STR_VEHICLE_VIEW_ROAD_VEHICLE_SEND_TO_DEPOT_TOOLTIP             :{BLACK}Направити авто в депо
 STR_VEHICLE_VIEW_SHIP_SEND_TO_DEPOT_TOOLTIP                     :{BLACK}Направити корабель в депо
-STR_VEHICLE_VIEW_AIRCRAFT_SEND_TO_DEPOT_TOOLTIP                 :{BLACK}Направити літак в ангар
+STR_VEHICLE_VIEW_AIRCRAFT_SEND_TO_DEPOT_TOOLTIP                 :{BLACK}Направити літак в ангар. Ctrl+клац тільки для техогляду
 
 ###length VEHICLE_TYPES
 STR_VEHICLE_VIEW_CLONE_TRAIN_INFO                               :{BLACK}Купити копію поїзда з усіма вагонами. Утримуйте Ctrl для спільного завдання. Утримуйте Shift для показу витрат на придбання
@@ -4429,24 +4517,26 @@ STR_VEHICLE_VIEW_AIRCRAFT_STATUS_START_STOP_TOOLTIP             :{BLACK}Пото
 # Messages in the start stop button in the vehicle view
 STR_VEHICLE_STATUS_LOADING_UNLOADING                            :{LTBLUE}Вантаження
 STR_VEHICLE_STATUS_LEAVING                                      :{LTBLUE}Відходить
+STR_VEHICLE_STATUS_WAITING_UNBUNCHING                           :{LTBLUE}Чекає на звільнення
 STR_VEHICLE_STATUS_CRASHED                                      :{RED}Аварія!
 STR_VEHICLE_STATUS_BROKEN_DOWN                                  :{RED}Зламався
 STR_VEHICLE_STATUS_STOPPED                                      :{RED}Зупинено
-STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL                           :{RED}Зупиняється, {VELOCITY}
+STR_VEHICLE_STATUS_TRAIN_STOPPING_VEL                           :{RED}{VELOCITY} - Зупиняється
 STR_VEHICLE_STATUS_TRAIN_NO_POWER                               :{RED}Не достатньо потужності
 STR_VEHICLE_STATUS_TRAIN_STUCK                                  :{ORANGE}Очікування вільного шляху
 STR_VEHICLE_STATUS_AIRCRAFT_TOO_FAR                             :{ORANGE}Занадто далеко до наступного місця призначення
 
-STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL                      :{LTBLUE}Прямує до {STATION}, {VELOCITY}
-STR_VEHICLE_STATUS_NO_ORDERS_VEL                                :{LTBLUE}Без завдань, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL                     :{LTBLUE}Прямує до {WAYPOINT}, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL                        :{ORANGE}Прямує до {DEPOT}, {VELOCITY}
-STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL                :{LTBLUE}Техогляд у {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_HEADING_FOR_STATION_VEL                      :{LTBLUE}{1:VELOCITY} - Прямує до {0:STATION}
+STR_VEHICLE_STATUS_NO_ORDERS_VEL                                :{LTBLUE}{VELOCITY} - Без наказів
+STR_VEHICLE_STATUS_HEADING_FOR_WAYPOINT_VEL                     :{LTBLUE}{1:VELOCITY} - Прямує до {0:WAYPOINT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_VEL                        :{ORANGE}{1:VELOCITY} - Прямує до  {0:DEPOT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_SERVICE_VEL                :{LTBLUE}{1:VELOCITY} - Техогляд у {0:DEPOT}
+STR_VEHICLE_STATUS_HEADING_FOR_DEPOT_UNBUNCH_VEL                :{LTBLUE}{1:VELOCITY} - Звільнити і обслужити в {0:DEPOT}
 
-STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL                     :{LTBLUE}Неможливо досягти {STATION}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL                    :{LTBLUE}Неможливо досягти {WAYPOINT}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL                       :{ORANGE}Неможливо досягти {DEPOT}, {VELOCITY}
-STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL               :{LTBLUE}Неможливо досягти {DEPOT}, {VELOCITY}
+STR_VEHICLE_STATUS_CANNOT_REACH_STATION_VEL                     :{LTBLUE}{1:VELOCITY} - Неможливо досягти {0:STATION}
+STR_VEHICLE_STATUS_CANNOT_REACH_WAYPOINT_VEL                    :{LTBLUE}{1:VELOCITY} - Неможливо досягти {0:WAYPOINT}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_VEL                       :{ORANGE}{1:VELOCITY} - Неможливо досягти {0:DEPOT}
+STR_VEHICLE_STATUS_CANNOT_REACH_DEPOT_SERVICE_VEL               :{LTBLUE}{1:VELOCITY} - Неможливо досягти {0:DEPOT}
 
 # Vehicle stopped/started animations
 ###length 2
@@ -4480,6 +4570,7 @@ STR_VEHICLE_INFO_WEIGHT_POWER_MAX_SPEED_MAX_TE                  :{BLACK}Вага
 STR_VEHICLE_INFO_PROFIT_THIS_YEAR_LAST_YEAR                     :{BLACK}Дохід цього року: {LTBLUE}{CURRENCY_LONG} (торік: {CURRENCY_LONG})
 STR_VEHICLE_INFO_PROFIT_THIS_YEAR_LAST_YEAR_MIN_PERFORMANCE     :{BLACK}Дохід цього року: {LTBLUE}{CURRENCY_LONG} (минулого року: {CURRENCY_LONG}) {BLACK}Найгірше: {LTBLUE}{POWER_TO_WEIGHT}
 STR_VEHICLE_INFO_PROFIT_THIS_PERIOD_LAST_PERIOD                 :{BLACK}Прибуток цього періоду: {LTBLUE}{CURRENCY_LONG} (минулого періоду: {CURRENCY_LONG})
+STR_VEHICLE_INFO_PROFIT_THIS_PERIOD_LAST_PERIOD_MIN_PERFORMANCE :{BLACK}Прибуток цього періоду: {LTBLUE}{CURRENCY_LONG} (минулого періоду: {CURRENCY_LONG}) {BLACK}Питома потужність: {LTBLUE}{POWER_TO_WEIGHT}
 STR_VEHICLE_INFO_RELIABILITY_BREAKDOWNS                         :{BLACK}Надійність: {LTBLUE}{COMMA}%  {BLACK}Аварії після останнього техогляду: {LTBLUE}{COMMA}
 
 STR_VEHICLE_INFO_BUILT_VALUE                                    :{LTBLUE}{ENGINE} {BLACK}Побудований: {LTBLUE}{NUM}{BLACK} Вартість: {LTBLUE}{CURRENCY_LONG}
@@ -4505,6 +4596,7 @@ STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_PERCENT :{BLACK}Змен
 STR_SERVICE_INTERVAL_DROPDOWN_TOOLTIP                           :{BLACK}Відлік інтервалу між техоглядами
 STR_VEHICLE_DETAILS_DEFAULT                                     :Стандартно
 STR_VEHICLE_DETAILS_DAYS                                        :Днів
+STR_VEHICLE_DETAILS_MINUTES                                     :Хвилин
 STR_VEHICLE_DETAILS_PERCENT                                     :Проценти
 
 ###length VEHICLE_TYPES
@@ -4650,14 +4742,14 @@ STR_ORDERS_DELETE_BUTTON                                        :{BLACK}Вида
 STR_ORDERS_DELETE_TOOLTIP                                       :{BLACK}Видалити виділене завдання
 STR_ORDERS_DELETE_ALL_TOOLTIP                                   :{BLACK}Видалити всі накази
 STR_ORDERS_STOP_SHARING_BUTTON                                  :{BLACK}Скасувати спільні накази
-STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Перестати використовути спільні накази. Ctrl+клац мишою видаляє всі накази для цього транспорту
+STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Припинити використовути спільні накази. Ctrl+клац мишою видаляє всі накази для цього транспорту
 
 STR_ORDERS_GO_TO_BUTTON                                         :{BLACK}Прямувати
 STR_ORDER_GO_TO_NEAREST_DEPOT                                   :Прямувати до найближчого депо
 STR_ORDER_GO_TO_NEAREST_HANGAR                                  :Прямувати в найближчий ангар
 STR_ORDER_CONDITIONAL                                           :Зміна наказу з умовою
 STR_ORDER_SHARE                                                 :Спільні накази
-STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Вставити новий наказ перед вибраним, або додати в кінець списку. Утримуйте Ctrl аби створити наказ як "повне завантаження будь-якого вантажу", для точок маршруту - "без зупинок", і для депо - "обслуговування". Пункт "Спільні накази" або утримування Ctrl дозволяє поділитися спільними наказами з виділеним транспортом. Клац мишою на транспорті копіює з нього накази
+STR_ORDERS_GO_TO_TOOLTIP                                        :{BLACK}Вставити новий наказ перед обраним або додати в кінець списку. Ctrl+клац на станції аби наказати "повне завантаження будь-якого вантажу". Ctrl+клац на точці маршруту аби змінити налаштування "без зупинок" на протилежне. Ctrl+клаці на гаражі для "звільнення". Клац мишею на авто копіює його накази. Ctrl+клац на авто сворює спільні накази. Наказ із гаражем вимикає автоматичний техогляд авто
 
 STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP                  :{BLACK}Показати транспорт з таким самим маршрутом
 
@@ -4683,6 +4775,7 @@ STR_ORDER_REFIT_ORDER                                           :(Переобл
 STR_ORDER_REFIT_STOP_ORDER                                      :(Переобладнати на {STRING} і зупинити)
 STR_ORDER_STOP_ORDER                                            :(зупинити)
 
+STR_ORDER_WAIT_TO_UNBUNCH                                       :(чекає звільнення)
 
 STR_ORDER_GO_TO_STATION                                         :{STRING} {STATION} {STRING}
 STR_ORDER_GO_TO_STATION_CAN_T_USE_STATION                       :{PUSH_COLOUR}{RED}(Неможливо використати станцію){POP_COLOUR} {STRING} {STATION} {STRING}
@@ -4767,21 +4860,22 @@ STR_TIMETABLE_STATUS_START_IN_SECONDS.d                         :{BLACK}Цей �
 
 STR_TIMETABLE_START                                             :{BLACK}Початок розкладу
 
+STR_TIMETABLE_START_SECONDS_QUERY                               :Секунд до початку розкладу
 
 STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Змінити час
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Змінити час, впродовж якого має виконуватись наказ. Ctrl+клац змінить час в усіх завданнях
 
 STR_TIMETABLE_CLEAR_TIME                                        :{BLACK}Скасувати час
-STR_TIMETABLE_CLEAR_TIME_TOOLTIP                                :{BLACK}Скасувати час виконання виділеного наказу. Ctrl+клац видалить час в усіх завданнях
+STR_TIMETABLE_CLEAR_TIME_TOOLTIP                                :{BLACK}Скасувати час виконання виділеного наказу. Ctrl+клац скасує обмеження часу в усіх наказах
 
 STR_TIMETABLE_CHANGE_SPEED                                      :{BLACK}Змінити обмеж. швидкості
 STR_TIMETABLE_CHANGE_SPEED_TOOLTIP                              :{BLACK}Змінити обмеження швидкості для виділеного пункту. Ctrl+клац змінить швидкість в усіх завданнях
 
 STR_TIMETABLE_CLEAR_SPEED                                       :{BLACK}Скасувати обмеж. швидкості
-STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Скасувати обмеження швидкості для виділеного пункту. Ctrl+клац видалить швидкість в усіх завданнях
+STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Скасувати обмеження швидкості для виділеного пункту. Ctrl+клац скасує обмеження швидкості в усіх наказах
 
 STR_TIMETABLE_RESET_LATENESS                                    :{BLACK}Скасувати відхилення
-STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Скасувати лічильник відхилення від графіка, щоб транспорт встигнув. Ctrl+клац щоб скасувати лічильник для всіх транспортів. При цьому останній транспорт стане йти за графіком, а інщі опереджати графік.
+STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Скасувати лічильник відхилення від графіка, щоб транспорт встигав. Ctrl+клац, щоб скасувати лічильник для всієї групи транспорту. При цьому останній транспорт йтиме за графіком, а інші випереджатимуть графік.
 
 STR_TIMETABLE_AUTOFILL                                          :{BLACK}Авторозрахунок
 STR_TIMETABLE_AUTOFILL_TOOLTIP                                  :{BLACK}Автоматично розрахувати розклад впродовж наступної поїздки. Ctrl+клац, щоб спробувати зберегти час очікування
@@ -4791,6 +4885,7 @@ STR_TIMETABLE_SCHEDULED                                         :{BLACK}Приз
 STR_TIMETABLE_EXPECTED_TOOLTIP                                  :{BLACK}Перемкнути очікуване на заплановане
 
 STR_TIMETABLE_ARRIVAL_DATE                                      :В: {COLOUR}{DATE_TINY}
+STR_TIMETABLE_DEPARTURE_DATE                                    :В: {COLOUR}{DATE_TINY}
 STR_TIMETABLE_ARRIVAL_SECONDS_IN_FUTURE                         :В: {COLOUR}{COMMA} сек
 STR_TIMETABLE_DEPARTURE_SECONDS_IN_FUTURE                       :П: {COLOUR}{COMMA} сек
 
@@ -4832,7 +4927,7 @@ STR_ERROR_AI_DEBUG_SERVER_ONLY                                  :{YELLOW}Вік�
 STR_AI_CONFIG_CAPTION_AI                                        :{WHITE}Налаштування ШІ
 STR_AI_CONFIG_CAPTION_GAMESCRIPT                                :{WHITE}Налаштування ігрового скрипту
 STR_AI_CONFIG_GAMELIST_TOOLTIP                                  :{BLACK}Ігровий скрипт, який буде завантажено в наступній грі
-STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}АІ, які будуть завантажені в наступній грі
+STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}ШІ, які будуть завантажені в наступній грі
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Гравець-людина
 STR_AI_CONFIG_RANDOM_AI                                         :Випадковий ШІ
 STR_AI_CONFIG_NONE                                              :(нема)
@@ -4885,24 +4980,26 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :Ігровий 
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Закрити
 STR_AI_SETTINGS_RESET                                           :{BLACK}Скидання
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_SETTING_DEVIATION                               :{STRING}: {ORANGE}[{STRING}, {STRING}]
-STR_AI_SETTINGS_JUST_DEVIATION                                  :[{STRING}, {STRING}]
 
 
 # Textfile window
 STR_TEXTFILE_JUMPLIST                                           :{WHITE}Зміст
 STR_TEXTFILE_JUMPLIST_ITEM                                      :{WHITE}{STRING}
-STR_TEXTFILE_NAVBACK_TOOLTIP                                    :{BLACK}Повернутися до історії навігації
+STR_TEXTFILE_NAVBACK_TOOLTIP                                    :{BLACK}Крок назад в історії навігації
+STR_TEXTFILE_NAVFORWARD_TOOLTIP                                 :{BLACK}Крок вперед в історії навігації
 STR_TEXTFILE_WRAP_TEXT                                          :{WHITE}Розмістити текст
 STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Розмістити текст у вікні без необхідності прокрутки
 STR_TEXTFILE_VIEW_README                                        :{BLACK}Інструкція
+STR_TEXTFILE_VIEW_README_TOOLTIP                                :Показати довідку вмісту
 STR_TEXTFILE_VIEW_CHANGELOG                                     :{BLACK}Зміни
+STR_TEXTFILE_VIEW_CHANGELOG_TOOLTIP                             :Показати зміни вмісту
 STR_TEXTFILE_VIEW_LICENCE                                       :{BLACK}Ліцензія
+STR_TEXTFILE_VIEW_LICENCE_TOOLTIP                               :Показати ліцензію вмісту
 ###length 5
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}Документація до {STRING} {STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}Зміни в {STRING} {STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}Ліцензія до {STRING} {STRING}
-STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{BLACK}Попередній перегляд геологічної розвідки
+STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Попередній перегляд збору даних
 STR_TEXTFILE_GAME_MANUAL_CAPTION                                :{WHITE}документ OpenTTD '{STRING}'
 
 
@@ -5039,7 +5136,7 @@ STR_ERROR_TOO_CLOSE_TO_ANOTHER_TOWN                             :{WHITE}... на
 STR_ERROR_TOO_MANY_TOWNS                                        :{WHITE}... забагато міст
 STR_ERROR_NO_SPACE_FOR_TOWN                                     :{WHITE}... на карті немає вільного місця
 STR_ERROR_ROAD_WORKS_IN_PROGRESS                                :{WHITE}Дорога ремонтується
-STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Не можна видалити це місто...{}Станція або депо, що відносяться до міста або знаходяться на землі у власності міста, не можуть бути видалені
+STR_ERROR_TOWN_CAN_T_DELETE                                     :{WHITE}Не можна видалити це місто...{}Станція або депо, що належать місту або перебувають на землі у власності міста, не можуть бути видалені
 STR_ERROR_STATUE_NO_SUITABLE_PLACE                              :{WHITE}... немає придатного місця для статуї в центрі цього міста
 
 # Industry related errors
@@ -5148,6 +5245,11 @@ STR_ERROR_UNABLE_TO_FIND_LOCAL_DEPOT                            :{WHITE}Немо
 STR_ERROR_DEPOT_WRONG_DEPOT_TYPE                                :Неправильний тип депо
 
 # Depot unbunching related errors
+STR_ERROR_UNBUNCHING_ONLY_ONE_ALLOWED                           :{WHITE}... можливий тільки один звільнений наказ
+STR_ERROR_UNBUNCHING_NO_FULL_LOAD                               :{WHITE}... неможливо використати наказ "повне завантаження", якщо транспорт звільнено
+STR_ERROR_UNBUNCHING_NO_UNBUNCHING_FULL_LOAD                    :{WHITE}... неможливо звільнити транспорт з наказом "повне завантаження"
+STR_ERROR_UNBUNCHING_NO_CONDITIONAL                             :{WHITE}... неможливо використати стандартні накази, якщо транспорт звільнено
+STR_ERROR_UNBUNCHING_NO_UNBUNCHING_CONDITIONAL                  :{WHITE}... неможливо звільнити транспорт зі стандартним наказом
 
 # Autoreplace related errors
 STR_ERROR_TRAIN_TOO_LONG_AFTER_REPLACEMENT                      :{WHITE}{VEHICLE} дуже довгий після оновлення
@@ -5278,7 +5380,7 @@ STR_ERROR_CAN_T_STOP_START_SHIP                                 :{WHITE}Немо
 STR_ERROR_CAN_T_STOP_START_AIRCRAFT                             :{WHITE}Неможливо зупинити літак...
 
 ###length VEHICLE_TYPES
-STR_ERROR_CAN_T_SEND_TRAIN_TO_DEPOT                             :{WHITE}Неможливо відправити поїзд в депо...
+STR_ERROR_CAN_T_SEND_TRAIN_TO_DEPOT                             :{WHITE}Неможливо направити поїзд в депо...
 STR_ERROR_CAN_T_SEND_ROAD_VEHICLE_TO_DEPOT                      :{WHITE}Неможливо направити авто в депо...
 STR_ERROR_CAN_T_SEND_SHIP_TO_DEPOT                              :{WHITE}Неможливо направити корабель в депо...
 STR_ERROR_CAN_T_SEND_AIRCRAFT_TO_HANGAR                         :{WHITE}Неможливо направити літак до ангару...
@@ -5351,6 +5453,7 @@ STR_ERROR_NO_DOCK                                               :{WHITE}Нема
 STR_ERROR_NO_AIRPORT                                            :{WHITE}Немає аеропорту або геліпорту
 STR_ERROR_NO_STOP_COMPATIBLE_ROAD_TYPE                          :{WHITE}Немає зупинок із сумісним типом дороги
 STR_ERROR_NO_STOP_COMPATIBLE_TRAM_TYPE                          :{WHITE}Немає зупинок із сумісним типом трамвайної колії
+STR_ERROR_NO_STOP_ARTICULATED_VEHICLE                           :{WHITE}Відсутні зупинки для зчленованого транспорту.{}Зчленований транспорт потребує проїзної зупинки, не кінцевої
 STR_ERROR_AIRPORT_NO_PLANES                                     :{WHITE}Цей літак не може приземлятися у цьому геліпорті
 STR_ERROR_AIRPORT_NO_HELICOPTERS                                :{WHITE}Цей гелікоптер не може приземлятися у цьому аеропорту
 STR_ERROR_NO_RAIL_WAYPOINT                                      :{WHITE}Немає точки залізничного маршруту
@@ -5361,6 +5464,7 @@ STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Не м�
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Транспорт може чекати тільки на станціях
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Цей транспорт не зупиняється на цій станції.
 STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... розклад незавершений
+STR_ERROR_TIMETABLE_NOT_STARTED                                 :{WHITE}... розклад ще не почався
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... дуже багато позначень
@@ -5843,6 +5947,7 @@ STR_UNKNOWN_STATION                                             :невідом�
 STR_DEFAULT_SIGN_NAME                                           :Позначка
 STR_COMPANY_SOMEONE                                             :дехто
 
+STR_SAVEGAME_DURATION_REALTIME                                  :{NUM}год {NUM}хв
 STR_SAVEGAME_NAME_DEFAULT                                       :{COMPANY}, {STRING}
 STR_SAVEGAME_NAME_SPECTATOR                                     :Спостерігач, {1:STRING}
 

@@ -64,6 +64,10 @@ public:
 	{
 		size_t len = SlGetStructListLength(INDUSTRY_NUM_INPUTS);
 
+		for (size_t j = 0; j < INDUSTRY_NUM_INPUTS; j++) {
+			i->accepts_cargo[j] = INVALID_CARGO;
+		}
+
 		for (size_t j = 0; j < len; j++) {
 			AcceptedCargo a = {};
 			SlObject(&a, this->GetDescription());
@@ -119,6 +123,17 @@ public:
 	{
 		size_t len = SlGetStructListLength(INDUSTRY_NUM_OUTPUTS);
 
+		for (size_t j = 0; j < INDUSTRY_NUM_OUTPUTS; j++) {
+			i->produced_cargo[j] = INVALID_CARGO;
+			i->produced_cargo_waiting[j] = 0;
+			i->production_rate[j] = 0;
+			i->this_month_production[j] = 0;
+			i->this_month_transported[j] = 0;
+			i->last_month_production[j] = 0;
+			i->last_month_transported[j] = 0;
+			i->last_month_pct_transported[j] = 0;
+		}
+
 		for (size_t j = 0; j < len; j++) {
 			ProducedCargo p = {};
 			SlObject(&p, this->GetDescription());
@@ -156,16 +171,16 @@ static const SaveLoad _industry_desc[] = {
 	SLE_CONDARR(Industry, accepts_cargo,              SLE_UINT8,   3,              SLV_78, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
 	SLE_CONDARR(Industry, accepts_cargo,              SLE_UINT8,  16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
 	    SLE_VAR(Industry, prod_level,                 SLE_UINT8),
-	SLE_CONDARR(Industry, this_month_production,      SLE_UINT16,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
-	SLE_CONDARR(Industry, this_month_production,      SLE_UINT16, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
-	SLE_CONDARR(Industry, this_month_transported,     SLE_UINT16,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
-	SLE_CONDARR(Industry, this_month_transported,     SLE_UINT16, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
-	SLE_CONDARR(Industry, last_month_pct_transported, SLE_UINT8,   2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
-	SLE_CONDARR(Industry, last_month_pct_transported, SLE_UINT8,  16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
-	SLE_CONDARR(Industry, last_month_production,      SLE_UINT16,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
-	SLE_CONDARR(Industry, last_month_production,      SLE_UINT16, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
-	SLE_CONDARR(Industry, last_month_transported,     SLE_UINT16,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
-	SLE_CONDARR(Industry, last_month_transported,     SLE_UINT16, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
+	SLE_CONDARR(Industry, this_month_production,      SLE_FILE_U16 | SLE_VAR_U32,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
+	SLE_CONDARR(Industry, this_month_production,      SLE_FILE_U16 | SLE_VAR_U32, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
+	SLE_CONDARR(Industry, this_month_transported,     SLE_FILE_U16 | SLE_VAR_U32,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
+	SLE_CONDARR(Industry, this_month_transported,     SLE_FILE_U16 | SLE_VAR_U32, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
+	SLE_CONDARR(Industry, last_month_pct_transported, SLE_UINT8,                   2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
+	SLE_CONDARR(Industry, last_month_pct_transported, SLE_UINT8,                  16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
+	SLE_CONDARR(Industry, last_month_production,      SLE_FILE_U16 | SLE_VAR_U32,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
+	SLE_CONDARR(Industry, last_month_production,      SLE_FILE_U16 | SLE_VAR_U32, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
+	SLE_CONDARR(Industry, last_month_transported,     SLE_FILE_U16 | SLE_VAR_U32,  2,               SL_MIN_VERSION, SLV_EXTEND_INDUSTRY_CARGO_SLOTS),
+	SLE_CONDARR(Industry, last_month_transported,     SLE_FILE_U16 | SLE_VAR_U32, 16,             SLV_EXTEND_INDUSTRY_CARGO_SLOTS, SLV_INDUSTRY_CARGO_REORGANISE),
 
 	    SLE_VAR(Industry, counter,                    SLE_UINT16),
 

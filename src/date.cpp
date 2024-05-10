@@ -436,6 +436,8 @@ static void OnNewEconomyMonth()
  */
 static void OnNewCalendarDay()
 {
+	EnginesDailyLoop();
+
 	if (!_settings_time.time_in_minutes || _settings_client.gui.date_with_time > 0) {
 		SetWindowWidgetDirty(WC_STATUS_BAR, 0, WID_S_LEFT);
 	}
@@ -455,7 +457,6 @@ static void OnNewEconomyDay()
 	IndustryDailyLoop();
 	StationDailyLoop();
 
-	EnginesDailyLoop();
 	ClearOutOfDateSignalSpeedRestrictions();
 
 	if (_quit_after_days > 0) {
@@ -466,7 +467,7 @@ static void OnNewEconomyDay()
 	}
 }
 
-static void IncreaseCalendarDate()
+void IncreaseCalendarDate()
 {
 	/* If calendar day progress is frozen, don't try to advance time. */
 	if (CalTime::IsCalendarFrozen()) return;

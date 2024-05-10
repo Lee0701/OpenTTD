@@ -403,9 +403,9 @@ public:
 				/* We need to find the departure corresponding to where the user clicked. */
 				uint32_t id_v = (pt.y - this->GetWidget<NWidgetBase>(WID_DB_LIST)->pos_y) / this->entry_height;
 
-				if (id_v >= this->vscroll->GetCapacity()) return; // click out of bounds
+				if (id_v >= (uint32_t)this->vscroll->GetCapacity()) return; // click out of bounds
 
-				id_v += this->vscroll->GetPosition();
+				id_v += (uint32_t)this->vscroll->GetPosition();
 
 				if (id_v >= (this->departures->size() + this->arrivals->size())) return; // click out of list bound
 
@@ -748,7 +748,6 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 	uint arrival = 0;
 
 	StateTicks now_date = _state_ticks;
-	StateTicks max_date = now_date + GetDeparturesMaxTicksAhead();
 
 	/* Draw each departure. */
 	for (uint i = 0; i < max_departures; ++i) {
@@ -770,12 +769,7 @@ void DeparturesWindow<Twaypoint>::DrawDeparturesListItems(const Rect &r) const
 			}
 		}
 
-		if (i < this->vscroll->GetPosition()) {
-			continue;
-		}
-
-		/* If for some reason the departure is too far in the future or is at a negative time, skip it. */
-		if (d->scheduled_tick > max_date || d->scheduled_tick < 0) {
+		if (i < (uint32_t)this->vscroll->GetPosition()) {
 			continue;
 		}
 

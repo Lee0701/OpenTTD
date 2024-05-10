@@ -1850,7 +1850,7 @@ uint GetVehicleListHeight(VehicleType type, uint divisor)
 	/* Name + vehicle + profit */
 	uint base = ScaleGUITrad(GetVehicleHeight(type)) + 2 * GetCharacterHeight(FS_SMALL) + ScaleGUITrad(1);
 	/* Drawing of the 4 small orders + profit*/
-	if (type >= VEH_SHIP) base = std::max(base, 5U * GetCharacterHeight(FS_SMALL) + ScaleGUITrad(1));
+	if (type >= VEH_SHIP) base = std::max(base, 6U * GetCharacterHeight(FS_SMALL) + WidgetDimensions::scaled.matrix.Vertical());
 
 	if (divisor == 1) return base;
 
@@ -2058,7 +2058,7 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 					DrawString(tr.left, tr.right, ir.top, STR_GROUP_NAME, TC_BLACK, SA_LEFT, false, FS_SMALL);
 				}
 
-				if (show_orderlist) DrawSmallOrderList(v, olr.left, olr.right, ir.top, this->order_arrow_width, v->cur_real_order_index);
+				if (show_orderlist) DrawSmallOrderList(v, olr.left, olr.right, ir.top + GetCharacterHeight(FS_SMALL), this->order_arrow_width, v->cur_real_order_index);
 
 				TextColour tc;
 				if (v->IsChainInDepot()) {
@@ -2096,7 +2096,7 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 					}
 				}
 
-				if (show_orderlist) DrawSmallOrderList((vehgroup.vehicles_begin[0])->GetFirstOrder(), olr.left, olr.right, ir.top, this->order_arrow_width);
+				if (show_orderlist) DrawSmallOrderList((vehgroup.vehicles_begin[0])->GetFirstOrder(), olr.left, olr.right, ir.top + GetCharacterHeight(FS_SMALL), this->order_arrow_width);
 
 				SetDParam(0, vehgroup.NumVehicles());
 				DrawString(ir.left, ir.right, ir.top + WidgetDimensions::scaled.framerect.top, STR_JUST_COMMA, TC_BLACK);
@@ -2757,6 +2757,7 @@ static_assert(WID_VD_DETAILS_TOTAL_CARGO      == WID_VD_DETAILS_CARGO_CARRIED + 
 static constexpr NWidgetPart _nested_nontrain_vehicle_details_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
+		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_VD_EXTRA_ACTIONS), SetDataTip(SPR_ARROW_DOWN, STR_VEHICLE_DETAILS_EXTRA_ACTIONS_TOOLTIP),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_VD_CAPTION), SetDataTip(STR_VEHICLE_DETAILS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
@@ -2780,6 +2781,7 @@ static constexpr NWidgetPart _nested_nontrain_vehicle_details_widgets[] = {
 static constexpr NWidgetPart _nested_train_vehicle_details_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
+		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_VD_EXTRA_ACTIONS), SetDataTip(SPR_ARROW_DOWN, STR_VEHICLE_DETAILS_EXTRA_ACTIONS_TOOLTIP),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_VD_CAPTION), SetDataTip(STR_VEHICLE_DETAILS_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
@@ -2833,6 +2835,22 @@ static StringID _service_interval_dropdown_wallclock[] = {
 	INVALID_STRING_ID,
 };
 
+static StringID _service_interval_dropdown_wallclock_daylength[] = {
+	STR_VEHICLE_DETAILS_DEFAULT,
+	STR_VEHICLE_DETAILS_PRODUCTION_INTERVALS,
+	STR_VEHICLE_DETAILS_PERCENT,
+	INVALID_STRING_ID,
+};
+
+const StringID *GetServiceIntervalDropDownTexts()
+{
+	if (EconTime::UsingWallclockUnits()) {
+		return DayLengthFactor() > 1 ? _service_interval_dropdown_wallclock_daylength : _service_interval_dropdown_wallclock;
+	} else {
+		return _service_interval_dropdown_calendar;
+	}
+}
+
 /** Class for managing the vehicle details window. */
 struct VehicleDetailsWindow : Window {
 	TrainDetailsWindowTabs tab; ///< For train vehicles: which tab is displayed.
@@ -2842,6 +2860,12 @@ struct VehicleDetailsWindow : Window {
 	bool vehicle_slots_line_shown;
 	bool vehicle_speed_restriction_line_shown;
 	bool vehicle_speed_adaptation_exempt_line_shown;
+
+	enum DropDownAction {
+		VDWDDA_CLEAR_SPEED_RESTRICTION,
+		VDWDDA_SET_SPEED_RESTRICTION,
+		VDWDDA_REMOVE_FROM_SLOT,
+	};
 
 	/** Initialize a newly created vehicle details window */
 	VehicleDetailsWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
@@ -2948,6 +2972,19 @@ struct VehicleDetailsWindow : Window {
 		return HasBit(Train::From(v)->flags, VRF_SPEED_ADAPTATION_EXEMPT);
 	}
 
+	std::vector<TraceRestrictSlotID> GetVehicleSlots(const Vehicle *v) const
+	{
+		std::vector<TraceRestrictSlotID> slots;
+		TraceRestrictGetVehicleSlots(v->index, slots);
+
+		std::sort(slots.begin(), slots.end(), [&](TraceRestrictSlotID a, TraceRestrictSlotID b) -> bool {
+			int r = StrNaturalCompare(TraceRestrictSlot::Get(a)->name, TraceRestrictSlot::Get(b)->name);
+			if (r == 0) return a < b;
+			return r < 0;
+		});
+		return slots;
+	}
+
 	void UpdateWidgetSize(WidgetID widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
@@ -3031,7 +3068,8 @@ struct VehicleDetailsWindow : Window {
 
 			case WID_VD_SERVICE_INTERVAL_DROPDOWN: {
 				Dimension d{0, 0};
-				for (const StringID *strs : {_service_interval_dropdown_calendar, _service_interval_dropdown_wallclock}) {
+				{
+					const StringID *strs = GetServiceIntervalDropDownTexts();
 					while (*strs != INVALID_STRING_ID) {
 						d = maxdim(d, GetStringBoundingBox(*strs++));
 					}
@@ -3223,14 +3261,7 @@ struct VehicleDetailsWindow : Window {
 
 				bool should_show_slots = this->ShouldShowSlotsLine(v);
 				if (should_show_slots) {
-					std::vector<TraceRestrictSlotID> slots;
-					TraceRestrictGetVehicleSlots(v->index, slots);
-
-					std::sort(slots.begin(), slots.end(), [&](TraceRestrictSlotID a, TraceRestrictSlotID b) -> bool {
-						int r = StrNaturalCompare(TraceRestrictSlot::Get(a)->name, TraceRestrictSlot::Get(b)->name);
-						if (r == 0) return a < b;
-						return r < 0;
-					});
+					std::vector<TraceRestrictSlotID> slots = this->GetVehicleSlots(v);
 
 					SetDParam(0, slots.size());
 					std::string buffer = GetString(STR_TRACE_RESTRICT_SLOT_LIST_HEADER);
@@ -3299,10 +3330,15 @@ struct VehicleDetailsWindow : Window {
 				/* We're using wallclock units. Show minutes since last serviced. */
 				if (EconTime::UsingWallclockUnits()) {
 					int minutes_since_serviced = (EconTime::CurDate() - v->date_of_last_service).base() / EconTime::DAYS_IN_ECONOMY_WALLCLOCK_MONTH;
-					SetDParam(1, STR_VEHICLE_DETAILS_LAST_SERVICE_MINUTES_AGO);
+					SetDParam(1, DayLengthFactor() > 1 ? STR_VEHICLE_DETAILS_LAST_SERVICE_PRODUCTION_INTERVALS_AGO : STR_VEHICLE_DETAILS_LAST_SERVICE_MINUTES_AGO);
 					SetDParam(2, minutes_since_serviced);
-					DrawString(tr.left, tr.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)),
-						v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT : STR_VEHICLE_DETAILS_SERVICING_INTERVAL_MINUTES);
+					StringID str;
+					if (v->ServiceIntervalIsPercent()) {
+						str = STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT;
+					} else {
+						str = DayLengthFactor() > 1 ? STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PRODUCTION_INTERVALS : STR_VEHICLE_DETAILS_SERVICING_INTERVAL_MINUTES;
+					}
+					DrawString(tr.left, tr.right, CenterBounds(r.top, r.bottom, GetCharacterHeight(FS_NORMAL)), str);
 					break;
 				}
 
@@ -3331,10 +3367,10 @@ struct VehicleDetailsWindow : Window {
 			WID_VD_INCREASE_SERVICING_INTERVAL,
 			WID_VD_DECREASE_SERVICING_INTERVAL);
 
-		StringID str =
-			!v->ServiceIntervalIsCustom() ? STR_VEHICLE_DETAILS_DEFAULT :
-			v->ServiceIntervalIsPercent() ? STR_VEHICLE_DETAILS_PERCENT :
-			EconTime::UsingWallclockUnits() ? STR_VEHICLE_DETAILS_MINUTES : STR_VEHICLE_DETAILS_DAYS;
+		this->SetWidgetDisabledState(WID_VD_EXTRA_ACTIONS, v->type != VEH_TRAIN && !HasBit(v->vehicle_flags, VF_HAVE_SLOT));
+
+		const StringID *texts = GetServiceIntervalDropDownTexts();
+		StringID str = !v->ServiceIntervalIsCustom() ? texts[0] : (v->ServiceIntervalIsPercent() ? texts[2] : texts[1]);
 		this->GetWidget<NWidgetCore>(WID_VD_SERVICE_INTERVAL_DROPDOWN)->widget_data = str;
 
 		this->DrawWidgets();
@@ -3364,7 +3400,7 @@ struct VehicleDetailsWindow : Window {
 			case WID_VD_SERVICE_INTERVAL_DROPDOWN: {
 				const Vehicle *v = Vehicle::Get(this->window_number);
 				ShowDropDownMenu(this,
-						EconTime::UsingWallclockUnits() ? _service_interval_dropdown_wallclock : _service_interval_dropdown_calendar,
+						GetServiceIntervalDropDownTexts(),
 						v->ServiceIntervalIsCustom() ? (v->ServiceIntervalIsPercent() ? 2 : 1) : 0, widget, 0, 0, 0, DDSF_SHARED);
 				break;
 			}
@@ -3382,6 +3418,28 @@ struct VehicleDetailsWindow : Window {
 				this->tab = (TrainDetailsWindowTabs)(widget - WID_VD_DETAILS_CARGO_CARRIED);
 				this->SetDirty();
 				break;
+
+			case WID_VD_EXTRA_ACTIONS: {
+				const Vehicle *v = Vehicle::Get(this->window_number);
+				DropDownList list;
+				if (v->type == VEH_TRAIN) {
+					bool change_allowed = IsVehicleControlAllowed(v, _local_company);
+					list.emplace_back(new DropDownListStringItem(STR_VEHICLE_DETAILS_REMOVE_SPEED_RESTRICTION, VDWDDA_CLEAR_SPEED_RESTRICTION, !change_allowed || Train::From(v)->speed_restriction == 0));
+					list.emplace_back(new DropDownListStringItem(STR_VEHICLE_DETAILS_SET_SPEED_RESTRICTION, VDWDDA_SET_SPEED_RESTRICTION, !change_allowed));
+				}
+				if (HasBit(v->vehicle_flags, VF_HAVE_SLOT)) {
+					if (!list.empty()) list.push_back(std::make_unique<DropDownListDividerItem>(-1, false));
+					list.push_back(std::make_unique<DropDownUnselectable<DropDownListStringItem>>(STR_VEHICLE_DETAILS_REMOVE_FROM_SLOT, -1));
+
+					std::vector<TraceRestrictSlotID> slots = this->GetVehicleSlots(v);
+					for (TraceRestrictSlotID slot_id : slots) {
+						SetDParam(0, slot_id);
+						list.emplace_back(new DropDownListCheckedItem(false, STR_TRACE_RESTRICT_SLOT_NAME, VDWDDA_REMOVE_FROM_SLOT | (slot_id << 8), TraceRestrictSlot::Get(slot_id)->owner != _local_company));
+					}
+				}
+				ShowDropDownList(this, std::move(list), -1, WID_VD_EXTRA_ACTIONS, 140);
+				break;
+			}
 		}
 	}
 
@@ -3393,7 +3451,11 @@ struct VehicleDetailsWindow : Window {
 			if (v->ServiceIntervalIsPercent()) {
 				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_PERCENT : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_PERCENT;
 			} else if (EconTime::UsingWallclockUnits()) {
-				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES;
+				if (DayLengthFactor() > 1) {
+					tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_PRODINT : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_PRODINT;
+				} else {
+					tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_MINUTES;
+				}
 			} else {
 				tool_tip = widget == WID_VD_INCREASE_SERVICING_INTERVAL ? STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_DAYS : STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_DAYS;
 			}
@@ -3415,7 +3477,36 @@ struct VehicleDetailsWindow : Window {
 				DoCommandP(v->tile, v->index, interval | (iscustom << 16) | (ispercent << 17), CMD_CHANGE_SERVICE_INT | CMD_MSG(STR_ERROR_CAN_T_CHANGE_SERVICING));
 				break;
 			}
+
+			case WID_VD_EXTRA_ACTIONS: {
+				const Vehicle *v = Vehicle::Get(this->window_number);
+				switch (GB(index, 0, 8)) {
+					case VDWDDA_CLEAR_SPEED_RESTRICTION:
+						DoCommandP(v->tile, v->index, 0, CMD_SET_TRAIN_SPEED_RESTRICTION | CMD_MSG(STR_ERROR_CAN_T_CHANGE_SPEED_RESTRICTION));
+						break;
+
+					case VDWDDA_SET_SPEED_RESTRICTION: {
+						SetDParam(0, ConvertKmhishSpeedToDisplaySpeed(Train::From(v)->speed_restriction, VEH_TRAIN));
+						ShowQueryString(STR_JUST_INT, STR_TIMETABLE_CHANGE_SPEED, 10, this, CS_NUMERAL, QSF_NONE);
+						break;
+					}
+
+					case VDWDDA_REMOVE_FROM_SLOT: {
+						DoCommandP(0, GB(index, 8, 16), v->index, CMD_REMOVE_VEHICLE_TRACERESTRICT_SLOT | CMD_MSG(STR_TRACE_RESTRICT_ERROR_SLOT_CAN_T_REMOVE_VEHICLE));
+						break;
+					}
+				}
+				break;
+			}
 		}
+	}
+
+	void OnQueryTextFinished(char *str) override
+	{
+		if (str == nullptr || StrEmpty(str)) return;
+
+		const Vehicle *v = Vehicle::Get(this->window_number);
+		DoCommandP(v->tile, v->index, ConvertDisplaySpeedToKmhishSpeed(std::strtoul(str, nullptr, 10), VEH_TRAIN), CMD_SET_TRAIN_SPEED_RESTRICTION | CMD_MSG(STR_ERROR_CAN_T_CHANGE_SPEED_RESTRICTION));
 	}
 
 	void OnResize() override

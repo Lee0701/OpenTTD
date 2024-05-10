@@ -335,7 +335,7 @@ enum Commands {
 	CMD_DUPLICATE_ORDER,              ///< duplicate an order
 	CMD_MASS_CHANGE_ORDER,            ///< mass change the target of an order
 
-	CMD_CHANGE_SERVICE_INT,           ///< change the server interval of a vehicle
+	CMD_CHANGE_SERVICE_INT,           ///< change the service interval of a vehicle
 
 	CMD_BUILD_INDUSTRY,               ///< build a new industry
 	CMD_INDUSTRY_SET_FLAGS,           ///< change industry control flags
@@ -352,8 +352,6 @@ enum Commands {
 
 	CMD_WANT_ENGINE_PREVIEW,          ///< confirm the preview of an engine
 	CMD_ENGINE_CTRL,                  ///< control availability of the engine for companies
-
-	CMD_SET_VEHICLE_UNIT_NUMBER,      ///< sets the unit number of a vehicle
 
 	CMD_RENAME_VEHICLE,               ///< rename a whole vehicle
 	CMD_RENAME_ENGINE,                ///< rename a engine (in the engine list)
@@ -462,6 +460,7 @@ enum Commands {
 	CMD_TEMPLATE_REPLACE_VEHICLE,     ///< template replace a vehicle while it is in a depot
 	CMD_DEPOT_SELL_ALL_VEHICLES,      ///< sell all vehicles which are in a given depot
 	CMD_DEPOT_MASS_AUTOREPLACE,       ///< force the autoreplace to take action in a given depot
+	CMD_SET_TRAIN_SPEED_RESTRICTION,  ///< manually set train speed restriction
 
 	CMD_CREATE_GROUP,                 ///< create a new group
 	CMD_DELETE_GROUP,                 ///< delete a group
@@ -504,7 +503,7 @@ enum Commands {
 	CMD_INSERT_SIGNAL_INSTRUCTION,    ///< insert a signal instruction
 	CMD_MODIFY_SIGNAL_INSTRUCTION,    ///< modifies a signal instruction
 	CMD_REMOVE_SIGNAL_INSTRUCTION,    ///< removes a signal instruction
-	CMD_SIGNAL_PROGRAM_MGMT,          ///< removes a signal program management command
+	CMD_SIGNAL_PROGRAM_MGMT,          ///< signal program management command
 
 	CMD_SCHEDULED_DISPATCH,                     ///< scheduled dispatch start
 	CMD_SCHEDULED_DISPATCH_ADD,                 ///< scheduled dispatch add

@@ -97,7 +97,7 @@ struct EnginePreviewWindow : Window {
 		}
 		this->vehicle_space = std::max<int>(ScaleSpriteTrad(40), y - y_offs);
 
-		size->width = std::max(size->width, x - x_offs);
+		size->width = std::max(size->width, x + std::abs(x_offs));
 		SetDParam(0, GetEngineCategoryName(engine));
 		size->height = GetStringHeight(STR_ENGINE_PREVIEW_MESSAGE, size->width) + WidgetDimensions::scaled.vsep_wide + GetCharacterHeight(FS_NORMAL) + this->vehicle_space;
 		SetDParam(0, engine);
@@ -159,11 +159,12 @@ void ShowEnginePreviewWindow(EngineID engine)
 /**
  * Get the capacity of an engine with articulated parts.
  * @param engine The engine to get the capacity of.
+ * @param attempt_refit Attempt to get capacity when refitting to this cargo.
  * @return The capacity.
  */
-uint GetTotalCapacityOfArticulatedParts(EngineID engine)
+uint GetTotalCapacityOfArticulatedParts(EngineID engine, CargoID attempt_refit)
 {
-	CargoArray cap = GetCapacityOfArticulatedParts(engine);
+	CargoArray cap = GetCapacityOfArticulatedParts(engine, attempt_refit);
 	return cap.GetSum<uint>();
 }
 
@@ -204,10 +205,10 @@ static StringID ProcessEngineCapacityString(StringID str)
 
 static StringID GetRunningCostString()
 {
-	if (EconTime::UsingWallclockUnits()) {
-		return STR_ENGINE_PREVIEW_RUNCOST_PERIOD;
-	} else if (DayLengthFactor() > 1 && !_settings_client.gui.show_running_costs_calendar_year) {
+	if (DayLengthFactor() > 1 && !_settings_client.gui.show_running_costs_calendar_year) {
 		return STR_ENGINE_PREVIEW_RUNCOST_ORIG_YEAR;
+	} else if (EconTime::UsingWallclockUnits()) {
+		return STR_ENGINE_PREVIEW_RUNCOST_PERIOD;
 	} else {
 		return STR_ENGINE_PREVIEW_RUNCOST_YEAR;
 	}

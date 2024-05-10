@@ -228,8 +228,7 @@ void MakeWaterKeepingClass(TileIndex tile, Owner o)
 	WaterClass wc = GetWaterClass(tile);
 
 	/* Autoslope might turn an originally canal or river tile into land */
-	int z;
-	Slope slope = GetTileSlope(tile, &z);
+	auto [slope, z] = GetTileSlopeZ(tile);
 
 	if (slope != SLOPE_FLAT) {
 		if (wc == WATER_CLASS_CANAL) {
@@ -789,10 +788,10 @@ static void DrawWaterEdges(bool canal, uint offset, TileIndex tile)
 	uint wa;
 
 	/* determine the edges around with water. */
-	wa  = IsWateredTile(TILE_ADDXY(tile, -1,  0), DIR_SW) << 0;
-	wa += IsWateredTile(TILE_ADDXY(tile,  0,  1), DIR_NW) << 1;
-	wa += IsWateredTile(TILE_ADDXY(tile,  1,  0), DIR_NE) << 2;
-	wa += IsWateredTile(TILE_ADDXY(tile,  0, -1), DIR_SE) << 3;
+	wa  = IsWateredTile(TileAddXY(tile, -1,  0), DIR_SW) << 0;
+	wa += IsWateredTile(TileAddXY(tile,  0,  1), DIR_NW) << 1;
+	wa += IsWateredTile(TileAddXY(tile,  1,  0), DIR_NE) << 2;
+	wa += IsWateredTile(TileAddXY(tile,  0, -1), DIR_SE) << 3;
 
 	if (!(wa & 1)) DrawWaterSprite(base, offset,     feature, tile);
 	if (!(wa & 2)) DrawWaterSprite(base, offset + 1, feature, tile);
@@ -802,25 +801,25 @@ static void DrawWaterEdges(bool canal, uint offset, TileIndex tile)
 	/* right corner */
 	switch (wa & 0x03) {
 		case 0: DrawWaterSprite(base, offset + 4, feature, tile); break;
-		case 3: if (!IsWateredTile(TILE_ADDXY(tile, -1, 1), DIR_W)) DrawWaterSprite(base, offset + 8, feature, tile); break;
+		case 3: if (!IsWateredTile(TileAddXY(tile, -1, 1), DIR_W)) DrawWaterSprite(base, offset + 8, feature, tile); break;
 	}
 
 	/* bottom corner */
 	switch (wa & 0x06) {
 		case 0: DrawWaterSprite(base, offset + 5, feature, tile); break;
-		case 6: if (!IsWateredTile(TILE_ADDXY(tile, 1, 1), DIR_N)) DrawWaterSprite(base, offset + 9, feature, tile); break;
+		case 6: if (!IsWateredTile(TileAddXY(tile, 1, 1), DIR_N)) DrawWaterSprite(base, offset + 9, feature, tile); break;
 	}
 
 	/* left corner */
 	switch (wa & 0x0C) {
 		case  0: DrawWaterSprite(base, offset + 6, feature, tile); break;
-		case 12: if (!IsWateredTile(TILE_ADDXY(tile, 1, -1), DIR_E)) DrawWaterSprite(base, offset + 10, feature, tile); break;
+		case 12: if (!IsWateredTile(TileAddXY(tile, 1, -1), DIR_E)) DrawWaterSprite(base, offset + 10, feature, tile); break;
 	}
 
 	/* upper corner */
 	switch (wa & 0x09) {
 		case 0: DrawWaterSprite(base, offset + 7, feature, tile); break;
-		case 9: if (!IsWateredTile(TILE_ADDXY(tile, -1, -1), DIR_S)) DrawWaterSprite(base, offset + 11, feature, tile); break;
+		case 9: if (!IsWateredTile(TileAddXY(tile, -1, -1), DIR_S)) DrawWaterSprite(base, offset + 11, feature, tile); break;
 	}
 }
 
@@ -1017,8 +1016,7 @@ void DrawShipDepotSprite(int x, int y, Axis axis, DepotPart part)
 
 static int GetSlopePixelZ_Water(TileIndex tile, uint x, uint y, bool)
 {
-	int z;
-	Slope tileh = GetTilePixelSlope(tile, &z);
+	auto [tileh, z] = GetTilePixelSlope(tile);
 
 	return z + GetPartialPixelZ(x & 0xF, y & 0xF, tileh);
 }
@@ -1249,6 +1247,11 @@ void DoFloodTile(TileIndex target)
 					SetObjectGroundTypeDensity(target, OBJECT_GROUND_SHORE, 3);
 					MarkTileDirtyByTile(target, VMDF_NOT_MAP_MODE);
 					flooded = true;
+				} else if ((spec->ctrl_flags & OBJECT_CTRL_FLAG_USE_LAND_GROUND) && (spec->flags & OBJECT_FLAG_HAS_NO_FOUNDATION)) {
+					SetWaterClass(target, WATER_CLASS_SEA);
+					SetObjectGroundTypeDensity(target, OBJECT_GROUND_SHORE, 3);
+					MarkTileDirtyByTile(target, VMDF_NOT_MAP_MODE);
+					flooded = true;
 				}
 				break;
 			}
@@ -1368,11 +1371,10 @@ void TileLoopWaterFlooding(FloodingBehaviour flooding_behaviour, TileIndex tile)
 				if (IsTileType(dest, MP_TREES) && GetTreeGround(dest) == TREE_GROUND_SHORE) continue;
 				if (IsTileType(dest, MP_OBJECT) && (GetObjectEffectiveFoundationType(dest) != OEFT_NONE || GetObjectGroundType(dest) == OBJECT_GROUND_SHORE)) continue;
 
-				int z_dest;
-				Slope slope_dest = GetFoundationSlope(dest, &z_dest) & ~SLOPE_HALFTILE_MASK & ~SLOPE_STEEP;
+				auto [slope_dest, z_dest] = GetFoundationSlope(dest);
 				if (z_dest > 0) continue;
 
-				if (!HasBit(_flood_from_dirs[slope_dest], ReverseDir(dir))) continue;
+				if (!HasBit(_flood_from_dirs[slope_dest & ~SLOPE_HALFTILE_MASK & ~SLOPE_STEEP], ReverseDir(dir))) continue;
 
 				DoFloodTile(dest);
 			}
@@ -1381,7 +1383,7 @@ void TileLoopWaterFlooding(FloodingBehaviour flooding_behaviour, TileIndex tile)
 		}
 
 		case FLOOD_DRYUP: {
-			Slope slope_here = GetFoundationSlope(tile) & ~SLOPE_HALFTILE_MASK & ~SLOPE_STEEP;
+			Slope slope_here = std::get<0>(GetFoundationSlope(tile)) & ~SLOPE_HALFTILE_MASK & ~SLOPE_STEEP;
 			for (uint dir : SetBitIterator(_flood_from_dirs[slope_here])) {
 				TileIndex dest = tile + TileOffsByDir((Direction)dir);
 				if (dest >= MapSize()) continue;
@@ -1399,10 +1401,8 @@ void TileLoopWaterFlooding(FloodingBehaviour flooding_behaviour, TileIndex tile)
 
 void ConvertGroundTilesIntoWaterTiles()
 {
-	int z;
-
 	for (TileIndex tile = 0; tile < MapSize(); ++tile) {
-		Slope slope = GetTileSlope(tile, &z);
+		auto [slope, z] = GetTileSlopeZ(tile);
 		if (IsTileType(tile, MP_CLEAR) && z == 0) {
 			/* Make both water for tiles at level 0
 			 * and make shore, as that looks much better

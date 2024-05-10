@@ -804,6 +804,12 @@ void UpdateSeparationOrder(Vehicle *v_start)
 	}
 }
 
+/**
+ * Get next scheduled dispatch time
+ * @param ds Dispatch schedule.
+ * @param leave_time Leave time.
+ * @return Dispatch time, or INVALID_STATE_TICKS
+ */
 StateTicks GetScheduledDispatchTime(const DispatchSchedule &ds, StateTicks leave_time)
 {
 	const uint32_t dispatch_duration = ds.GetScheduledDispatchDuration();
@@ -821,7 +827,7 @@ StateTicks GetScheduledDispatchTime(const DispatchSchedule &ds, StateTicks leave
 		last_dispatched_offset = ds.GetScheduledDispatchLastDispatch();
 	}
 
-	StateTicks first_slot = -1;
+	StateTicks first_slot = INVALID_STATE_TICKS;
 
 	/* Find next available slots */
 	for (const DispatchSlot &slot : ds.GetScheduledDispatch()) {
@@ -839,7 +845,7 @@ StateTicks GetScheduledDispatchTime(const DispatchSchedule &ds, StateTicks leave
 			current_departure += dispatch_duration * ((minimum + dispatch_duration - current_departure - 1) / dispatch_duration);
 		}
 
-		if (first_slot == -1 || first_slot > current_departure) {
+		if (first_slot == INVALID_STATE_TICKS || first_slot > current_departure) {
 			first_slot = current_departure;
 		}
 	}
@@ -891,7 +897,7 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 
 			const int wait_offset = real_current_order->GetTimetabledWait();
 			StateTicks slot = GetScheduledDispatchTime(ds, _state_ticks + wait_offset);
-			if (slot > -1) {
+			if (slot != INVALID_STATE_TICKS) {
 				just_started = !HasBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
 				SetBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
 				v->lateness_counter = (_state_ticks - slot + wait_offset).AsTicks();
@@ -1004,10 +1010,12 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 				/* Possible jam, clear time and restart timetable for all vehicles.
 				 * Otherwise we risk trains blocking 1-lane stations for long times. */
 				ChangeTimetable(v, v->cur_timetable_order_index, 0, travel_field ? MTF_TRAVEL_TIME : MTF_WAIT_TIME, false);
-				for (Vehicle *v2 = v->FirstShared(); v2 != nullptr; v2 = v2->NextShared()) {
-					/* Clear VF_TIMETABLE_STARTED but do not call ClearSeparation */
-					ClrBit(v2->vehicle_flags, VF_TIMETABLE_STARTED);
-					v2->lateness_counter = 0;
+				if (!HasBit(v->vehicle_flags, VF_SCHEDULED_DISPATCH)) {
+					for (Vehicle *v2 = v->FirstShared(); v2 != nullptr; v2 = v2->NextShared()) {
+						/* Clear VF_TIMETABLE_STARTED but do not call ClearSeparation */
+						ClrBit(v2->vehicle_flags, VF_TIMETABLE_STARTED);
+						v2->lateness_counter = 0;
+					}
 				}
 				SetTimetableWindowsDirty(v);
 				return;

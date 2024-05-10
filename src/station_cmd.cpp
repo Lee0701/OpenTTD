@@ -166,7 +166,7 @@ static bool CMSAMine(TileIndex tile)
 	/* No extractive industry */
 	if ((GetIndustrySpec(ind->type)->life_type & INDUSTRYLIFE_EXTRACTIVE) == 0) return false;
 
-	for (uint i = 0; i < lengthof(ind->produced_cargo); i++) {
+	for (uint i = 0; i < std::size(ind->produced_cargo); i++) {
 		/* The industry extracts something non-liquid, i.e. no oil or plastic, so it is a mine.
 		 * Also the production of passengers and mail is ignored. */
 		if (ind->produced_cargo[i] != INVALID_CARGO &&
@@ -639,7 +639,7 @@ CargoArray GetProductionAroundTiles(TileIndex north_tile, int w, int h, int rad)
 		/* Skip industry with neutral station */
 		if (i->neutral_station != nullptr && !_settings_game.station.serve_neutral_industries) continue;
 
-		for (uint j = 0; j < lengthof(i->produced_cargo); j++) {
+		for (uint j = 0; j < std::size(i->produced_cargo); j++) {
 			CargoID cargo = i->produced_cargo[j];
 			if (cargo != INVALID_CARGO) produced[cargo]++;
 		}
@@ -884,8 +884,7 @@ CommandCost CheckBuildableTile(TileIndex tile, uint invalid_dirs, int &allowed_z
 	CommandCost ret = EnsureNoVehicleOnGround(tile);
 	if (ret.Failed()) return ret;
 
-	int z;
-	Slope tileh = GetTileSlope(tile, &z);
+	auto [tileh, z] = GetTileSlopeZ(tile);
 
 	/* Prohibit building if
 	 *   1) The tile is "steep" (i.e. stretches two height levels).
@@ -3426,8 +3425,7 @@ static void DrawTile_Station(TileInfo *ti, DrawTileProcParams params)
 			/* Station has custom foundations.
 			 * Check whether the foundation continues beyond the tile's upper sides. */
 			uint edge_info = 0;
-			int z;
-			Slope slope = GetFoundationPixelSlope(ti->tile, &z);
+			auto [slope, z] = GetFoundationPixelSlope(ti->tile);
 			if (!HasFoundationNW(ti->tile, slope, z)) SetBit(edge_info, 0);
 			if (!HasFoundationNE(ti->tile, slope, z)) SetBit(edge_info, 1);
 			SpriteID image = GetCustomStationFoundationRelocation(statspec, st, ti->tile, tile_layout, edge_info);
@@ -3484,7 +3482,7 @@ static void DrawTile_Station(TileInfo *ti, DrawTileProcParams params)
 			}
 
 			OffsetGroundSprite(0, -8);
-			ti->z += ApplyPixelFoundationToSlope(FOUNDATION_LEVELED, &ti->tileh);
+			ti->z += ApplyPixelFoundationToSlope(FOUNDATION_LEVELED, ti->tileh);
 		} else {
 draw_default_foundation:
 			DrawFoundation(ti, FOUNDATION_LEVELED);
@@ -3592,7 +3590,7 @@ draw_default_foundation:
 					stop_draw_mode = (RoadStopDrawMode)GetRegister(0x100);
 				}
 				t = dts;
-				if (type == STATION_ROADWAYPOINT && (stopspec->draw_mode & ROADSTOP_DRAW_MODE_WAYP_GROUND)) {
+				if (type == STATION_ROADWAYPOINT && (stop_draw_mode & ROADSTOP_DRAW_MODE_WAYP_GROUND)) {
 					draw_ground = true;
 				}
 			}
@@ -5083,6 +5081,19 @@ void BuildOilRig(TileIndex tile)
 	st->rect.BeforeAddTile(tile, StationRect::ADD_FORCE);
 
 	st->UpdateVirtCoord();
+
+	/* An industry tile has now been replaced with a station tile, this may change the overlap between station catchments and industry tiles.
+	 * Recalculate the station catchment for all stations currently in the industry's nearby list.
+	 * Clear the industry's station nearby list first because Station::RecomputeCatchment cannot remove nearby industries in this case. */
+	if (_settings_game.station.serve_neutral_industries) {
+		StationList nearby = std::move(st->industry->stations_near);
+		st->industry->stations_near.clear();
+		for (Station *st_near : nearby) {
+			st_near->RecomputeCatchment(true);
+			UpdateStationAcceptance(st_near, true);
+		}
+	}
+
 	st->RecomputeCatchment();
 	UpdateStationAcceptance(st, false);
 	ZoningMarkDirtyStationCoverageArea(st);
@@ -5202,29 +5213,37 @@ static void ChangeTileOwner_Station(TileIndex tile, Owner old_owner, Owner new_o
  * Check if a drive-through road stop tile can be cleared.
  * Road stops built on town-owned roads check the conditions
  * that would allow clearing of the original road.
- * @param tile road stop tile to check
- * @param flags command flags
- * @return true if the road can be cleared
+ * @param tile The road stop tile to check.
+ * @param flags Command flags.
+ * @return A succeeded command if the road can be removed, a failed command with the relevant error message otherwise.
  */
-static bool CanRemoveRoadWithStop(TileIndex tile, DoCommandFlag flags)
+static CommandCost CanRemoveRoadWithStop(TileIndex tile, DoCommandFlag flags)
 {
-	/* Yeah... water can always remove stops, right? */
-	if (_current_company == OWNER_WATER) return true;
+	/* Water flooding can always clear road stops. */
+	if (_current_company == OWNER_WATER) return CommandCost();
+
+	CommandCost ret;
 
 	if (GetRoadTypeTram(tile) != INVALID_ROADTYPE) {
 		Owner tram_owner = GetRoadOwner(tile, RTT_TRAM);
-		if (tram_owner != OWNER_NONE && CheckOwnership(tram_owner).Failed()) return false;
-	}
-	if (GetRoadTypeRoad(tile) != INVALID_ROADTYPE) {
-		Owner road_owner = GetRoadOwner(tile, RTT_ROAD);
-		if (road_owner != OWNER_TOWN) {
-			if (road_owner != OWNER_NONE && CheckOwnership(road_owner).Failed()) return false;
-		} else {
-			if (CheckAllowRemoveRoad(tile, GetAnyRoadBits(tile, RTT_ROAD), OWNER_TOWN, RTT_ROAD, flags).Failed()) return false;
+		if (tram_owner != OWNER_NONE) {
+			ret = CheckOwnership(tram_owner);
+			if (ret.Failed()) return ret;
 		}
 	}
 
-	return true;
+	if (GetRoadTypeRoad(tile) != INVALID_ROADTYPE) {
+		Owner road_owner = GetRoadOwner(tile, RTT_ROAD);
+		if (road_owner == OWNER_TOWN) {
+			ret = CheckAllowRemoveRoad(tile, GetAnyRoadBits(tile, RTT_ROAD), OWNER_TOWN, RTT_ROAD, flags);
+			if (ret.Failed()) return ret;
+		} else if (road_owner != OWNER_NONE) {
+			ret = CheckOwnership(road_owner);
+			if (ret.Failed()) return ret;
+		}
+	}
+
+	return CommandCost();
 }
 
 static CommandCost RemoveRoadStopAndUpdateRoadCachedOneWayState(TileIndex tile, DoCommandFlag flags)
@@ -5263,21 +5282,19 @@ CommandCost ClearTile_Station(TileIndex tile, DoCommandFlag flags)
 		case STATION_RAIL:     return RemoveRailStation(tile, flags);
 		case STATION_WAYPOINT: return RemoveRailWaypoint(tile, flags);
 		case STATION_AIRPORT:  return RemoveAirport(tile, flags);
-		case STATION_TRUCK:
-			if (IsDriveThroughStopTile(tile) && !CanRemoveRoadWithStop(tile, flags)) {
-				return_cmd_error(STR_ERROR_MUST_DEMOLISH_TRUCK_STATION_FIRST);
-			}
-			return RemoveRoadStopAndUpdateRoadCachedOneWayState(tile, flags);
+		case STATION_TRUCK:    [[fallthrough]];
 		case STATION_BUS:
-			if (IsDriveThroughStopTile(tile) && !CanRemoveRoadWithStop(tile, flags)) {
-				return_cmd_error(STR_ERROR_MUST_DEMOLISH_BUS_STATION_FIRST);
+			if (IsDriveThroughStopTile(tile)) {
+				CommandCost remove_road = CanRemoveRoadWithStop(tile, flags);
+				if (remove_road.Failed()) return remove_road;
 			}
 			return RemoveRoadStopAndUpdateRoadCachedOneWayState(tile, flags);
 		case STATION_BUOY:     return RemoveBuoy(tile, flags);
 		case STATION_DOCK:     return RemoveDock(tile, flags);
 		case STATION_ROADWAYPOINT:
-			if (IsDriveThroughStopTile(tile) && !CanRemoveRoadWithStop(tile, flags)) {
-				return_cmd_error(STR_ERROR_BUILDING_MUST_BE_DEMOLISHED);
+			if (IsDriveThroughStopTile(tile)) {
+				CommandCost remove_road = CanRemoveRoadWithStop(tile, flags);
+				if (remove_road.Failed()) return remove_road;
 			}
 			return RemoveRoadStopAndUpdateRoadCachedOneWayState(tile, flags);
 		default: break;

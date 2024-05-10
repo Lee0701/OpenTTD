@@ -74,6 +74,12 @@ STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM         :Every {COMMA}{N
 STR_RIVERS_VERY_MANY                                            :{RED}Very many
 STR_RIVERS_EXTREMELY_MANY                                       :{RED}Extremely many
 
+##after STR_CONFIG_SETTING_BRIBE_HELPTEXT_MINUTES
+STR_CONFIG_SETTING_BRIBE_HELPTEXT_PERIODS                       :Allow companies to try bribing the local town authority. If the bribe is noticed by an inspector, the company will not be able to act in the town for half a period
+
+##after STR_CONFIG_SETTING_ALLOW_EXCLUSIVE_HELPTEXT_MINUTES
+STR_CONFIG_SETTING_ALLOW_EXCLUSIVE_HELPTEXT_PERIODS              :If a company buys exclusive transport rights for a town, opponents' stations (passenger and cargo) won't receive any cargo for one period
+
 ##end-after
 
 STR_COMMA_SEPARATOR                                             :,{SP}
@@ -82,8 +88,10 @@ STR_UNIT_NAME_VELOCITY_IMPERIAL                                 :mph
 STR_UNIT_NAME_VELOCITY_METRIC                                   :km/h
 STR_UNIT_NAME_VELOCITY_SI                                       :m/s
 STR_UNIT_NAME_VELOCITY_GAMEUNITS                                :tiles/day
+STR_UNIT_NAME_VELOCITY_GAMEUNITS_WALLCLOCK                      :tiles/sec
 
 STR_UNITS_SECONDS_SHORT                                         :{COMMA}{NBSP}s
+STR_UNITS_PRODUCTION_INTERVALS                                  :{NUM}{NBSP}production interval{P "" s}
 
 STR_BUTTON_RENAME                                               :{BLACK}Rename
 
@@ -127,10 +135,15 @@ STR_GRAPH_DELIVERED_CARGO_BY_CARGO_MODE                         :{TINY_FONT}{BLA
 STR_GRAPH_DELIVERED_CARGO_BY_COMPANY_MODE_TOOLTIP               :{BLACK}Display one line for each selected company
 STR_GRAPH_DELIVERED_CARGO_BY_CARGO_MODE_TOOLTIP                 :{BLACK}Display one line for each selected cargo
 
+STR_GRAPH_LAST_72_PRODUCTION_INTERVALS_TIME_LABEL               :{TINY_FONT}{BLACK}Last 72 production intervals
+
 STR_SMALLMAP_SCREENSHOT                                         :{BLACK}Screenshot
 
 STR_NEWS_VEHICLE_NO_DEPOT_ORDER                                 :{WHITE}{VEHICLE} does not have a depot order in its schedule
 STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE} failed to stop at {STRING1} due to excessive speed
+
+STR_NEWS_ROAD_REBUILDING_PERIODS                                :{BIG_FONT}{BLACK}Traffic chaos in {TOWN}!{}{}Road rebuilding programme funded by {RAW_STRING} brings half a period of misery to motorists!
+STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_PERIOD                    :{BIG_FONT}{BLACK}Local authority of {TOWN} signs contract with {RAW_STRING} for 1 period of exclusive transport rights!
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Custom interval (real-time minutes)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Autosave interval in real-time minutes
@@ -326,8 +339,8 @@ STR_CONFIG_SETTING_HIDE_DEFAULT_STOP_LOCATION_HELPTEXT          :When enabled, h
 STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL                              :Show rail polyline tool: {STRING2}
 STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL_HELPTEXT                     :When enabled, the rail construction toolbar includes a button to build using the polyline mode.
 
-STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR             :Show vehicle running costs per calendar year: {STRING2}
-STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR_HELPTEXT    :When using a day length factor greater than one, show vehicle running costs per calendar year instead of per original year.
+STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR             :Show vehicle running costs calendar year/period: {STRING2}
+STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR_HELPTEXT    :When using a day length factor greater than one, show vehicle running costs per calendar year (in calendar mode) or per period (in wallclock mode) instead of per original year.
 
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES                     :Enable signals on bridges/tunnels advanced modes: {STRING2}
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :Enables use of advanced modes of signal simulation on bridges and tunnels. When disabled, bridges/tunnels which are not already in an advanced mode cannot be changed to an advanced mode, however other players may choose to enable this setting and use an advanced mode.
@@ -570,14 +583,18 @@ STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT_EXTRA          :{STRING}{}This 
 STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Time interval for town cargo production scaling: {STRING2}
 STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE                    :Time interval for industry cargo production scaling: {STRING2}
 
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Monthly: The cargo production per month is scaled.{}{}Game-time: The cargo production per unit of game time is scaled, (the cargo production per month is also scaled by the day length factor). Very high scaling factors may not be achievable.
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Monthly/per production interval: The cargo production per month or production interval is scaled.{}{}Game-time: The cargo production per unit of game time is scaled, (the cargo production per month or production interval is also scaled by the day length factor). Very high scaling factors may not be achievable.
 STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA     :{STRING}{}Game-time mode is not guaranteed to be fully compatible with all industry NewGRFs.
 
 STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY                     :Monthly
 STR_CONFIG_SETTING_CARGO_SCALE_MODE_GAME_TIME                   :Game-time
 
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_PER_PRODUCTION_INTERVAL     :Per production interval
+
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY                    :{NUM}% (monthly)
 STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME                  :{NUM}% (game-time)
+
+STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL    :{NUM}% (per production interval)
 
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :No towns above height level: {STRING2}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :No towns above the specified height level are built during map creation.
@@ -733,6 +750,9 @@ STR_CONFIG_SETTING_IGNORE_OBJECT_INTRO_DATES_HELPTEXT           :Set whether pla
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES            :Allow converting town roads to non-house types: {STRING2}
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES_HELPTEXT   :Whether to allow players to convert town-owned roads to a road type which does not allow houses.{}This is off by default because doing so can prevent towns from building houses at all, resulting in them shrinking.
 
+STR_CONFIG_SETTING_PURCHASED_LAND_CLEAR_GROUND                  :Use clear ground tile for purchased land: {STRING2}
+STR_CONFIG_SETTING_PURCHASED_LAND_CLEAR_GROUND_HELPTEXT         :If enabled, purchased land is shown using the same ground type as clear ground tiles, i.e. bare ground to grass, coast, snow, desert, etc.
+
 STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY                  :Only generate primary industries: {STRING2}
 STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY_HELPTEXT         :If enabled, only primary industries are generated during game play and map generation.
 
@@ -816,6 +836,8 @@ STR_LINKGRAPH_STATS_TOOLTIP_CAPACITY                            :{}Capacity: {CA
 STR_LINKGRAPH_STATS_TOOLTIP_USAGE                               :{}Usage: {CARGO_LONG}
 STR_LINKGRAPH_STATS_TOOLTIP_PLANNED                             :{}Planned: {CARGO_LONG}
 STR_LINKGRAPH_STATS_TOOLTIP_DISTANCE                            :Manhattan Distance: {COMMA} tile{P 0 "" s}{}Bird Fly Distance: {COMMA} tile{P 1 "" s}
+
+STR_LINKGRAPH_STATS_TOOLTIP_PRODUCTION_INTERVAL                 :{BLACK}{CARGO_LONG} to be transported per production interval from {STATION} to {STATION} ({COMMA}% of capacity){RAW_STRING}
 
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_POLYRAIL                         :{BLACK}Build railway track using the polyline mode. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
 
@@ -1331,6 +1353,8 @@ STR_NEWGRF_TOO_MANY_STRINGS_DETAIL                              :{WHITE}Some nam
 
 STR_TOWN_VIEW_NOISE_IN_TOWN_NO_LIMIT                            :{BLACK}Noise limit in town: {ORANGE}{COMMA}
 
+STR_TOWN_VIEW_CARGO_LAST_PRODUCTION_INTERVAL_MAX                :{BLACK}{CARGO_LIST} last interval: {ORANGE}{COMMA}{BLACK}  max: {ORANGE}{COMMA}
+
 ###length 6
 STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_ALLOW_ROADS                :Allowed to build roads
 STR_LOCAL_AUTHORITY_SETTING_OVERRIDE_ALLOW_LEVEL_CROSSINGS      :Allowed to build level crossings
@@ -1469,6 +1493,8 @@ STR_INDUSTRY_VIEW_REQUIRED_TOOLTIP_NEXT                         :, {STRING}{RAW_
 STR_INDUSTRY_VIEW_STOCKPILED_TOOLTIP                            :{CARGO_LONG} waiting{RAW_STRING}
 STR_INDUSTRY_VIEW_TRANSPORTED_TOOLTIP_EXTENSION                 :{CARGO_LONG}{RAW_STRING} ({COMMA}%)
 
+STR_INDUSTRY_VIEW_PRODUCTION_LAST_PRODUCTION_INTERVAL_TITLE     :{BLACK}Production last interval:
+
 STR_DEPOT_VIEW_COUNT_TOOLTIP                                    :{BLACK}{COMMA} vehicle{P "" s} inside
 STR_DEPOT_VIEW_COUNT_STOPPED_TOOLTIP                            :{BLACK}{COMMA} stopped vehicle{P "" s} inside
 STR_DEPOT_VIEW_COUNT_WAITING_TOOLTIP                            :{BLACK}{COMMA} waiting vehicle{P "" s} inside
@@ -1480,6 +1506,8 @@ STR_DEPOT_VIEW_MIXED_CONTENTS_TOOLTIP                           :{BLACK}{STRING1
 
 STR_STATION_VIEW_NAME_TOOLTIP                                   :{STATION}{NBSP}{STATION_FEATURES}
 STR_STATION_VIEW_CARGO_LINE_TOOLTIP                             :{STRING} ({COMMA}%): {CARGO_SHORT}
+
+STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_PRODUCTION_INTERVAL       :{BLACK}Supply per production interval and local rating:
 
 STR_VEHICLE_LIST_AGE                                            :{STRING2}, Age: {COMMA} year{P "" s} ({COMMA})
 STR_VEHICLE_LIST_AGE_RED                                        :{STRING2}, Age: {RED}{COMMA} {BLACK}year{P "" s} ({COMMA})
@@ -1499,11 +1527,11 @@ STR_VEHICLE_LIST_TIMETABLE_DELAY_ON_TIME                        :{STRING2}, Time
 STR_VEHICLE_LIST_ORDER_OCCUPANCY_AVERAGE                        :{STRING2}, Average order occupancy: {COMMA}%
 
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR_LIFETIME            :{STRING2} (lifetime: {CURRENCY_LONG})
-STR_VEHICLE_LIST_CANCEL_DEPOT_SERVICE                           :Cancel Servicing/Send to
-STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT_SELL                       :Send to Depot and sell
-STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT_SELL                :Send to Depot and sell
-STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT_SELL                        :Send to Depot and sell
-STR_VEHICLE_LIST_SEND_AIRCRAFT_TO_HANGAR_SELL                   :Send to Hangar and sell
+STR_VEHICLE_LIST_CANCEL_DEPOT_SERVICE                           :Cancel servicing/send to
+STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT_SELL                       :Send to depot and sell
+STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT_SELL                :Send to depot and sell
+STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT_SELL                        :Send to depot and sell
+STR_VEHICLE_LIST_SEND_AIRCRAFT_TO_HANGAR_SELL                   :Send to hangar and sell
 
 STR_VEHICLE_LIST_CHANGE_ORDER_STATION                           :Move order to another station
 STR_VEHICLE_LIST_CHANGE_ORDER_WAYPOINT                          :Move order to another waypoint
@@ -1615,6 +1643,19 @@ STR_VEHICLE_DETAILS_TRAIN_ENGINE_BUILT_AND_VALUE_AND_SPEED      :{LTBLUE}{ENGINE
 STR_VEHICLE_DETAILS_TRAIN_WAGON_VALUE_AND_SPEED                 :{LTBLUE}{ENGINE}{BLACK}   Value: {LTBLUE}{CURRENCY_LONG} {BLACK}Max. speed: {LTBLUE}{VELOCITY}
 STR_VEHICLE_DETAILS_TRAIN_TOTAL_WEIGHT                          :{BLACK}Total weight: {LTBLUE}{WEIGHT_SHORT} {BLACK}(empty) - {LTBLUE}{WEIGHT_SHORT} {BLACK}(loaded)
 STR_VEHICLE_DETAILS_TRAIN_MAX_SPEED                             :{BLACK}Max. speed: {LTBLUE}{VELOCITY} {BLACK}(empty) - {LTBLUE}{VELOCITY} {BLACK}(loaded)
+
+STR_VEHICLE_DETAILS_EXTRA_ACTIONS_TOOLTIP                       :{BLACK}Extra vehicle actions
+STR_VEHICLE_DETAILS_REMOVE_SPEED_RESTRICTION                    :Remove speed restriction
+STR_VEHICLE_DETAILS_SET_SPEED_RESTRICTION                       :Set speed restriction
+STR_VEHICLE_DETAILS_REMOVE_FROM_SLOT                            :Remove from slot:
+
+STR_VEHICLE_DETAILS_PRODUCTION_INTERVALS                        :Production intervals
+
+STR_VEHICLE_DETAILS_LAST_SERVICE_PRODUCTION_INTERVALS_AGO       :Last service: {LTBLUE}{NUM} interval{P "" s} ago
+STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PRODUCTION_INTERVALS     :{BLACK}Servicing interval: {LTBLUE}{COMMA}{NBSP}interval{P "" s}{BLACK}   {STRING1}
+
+STR_VEHICLE_DETAILS_INCREASE_SERVICING_INTERVAL_TOOLTIP_PRODINT :{BLACK}Increase servicing interval by 5 production intervals. Ctrl+Click to increase servicing interval by 1 production interval
+STR_VEHICLE_DETAILS_DECREASE_SERVICING_INTERVAL_TOOLTIP_PRODINT :{BLACK}Decrease servicing interval by 5 production intervals. Ctrl+Click to decrease servicing interval by 1 production interval
 
 STR_ORDER_DROP_CARGO_TYPE_LOAD                                  :Load by cargo type
 STR_ORDER_DROP_CARGO_TYPE_UNLOAD                                :Unload by cargo type
@@ -1932,6 +1973,7 @@ STR_FORMAT_GROUP_VEHICLE_NAME_LONG                              :{GROUP} - {STRI
 
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP                            :{BROWN}{NUM} {STRING}
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_STATION                    :{BLACK}ST
+STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_VIA_STATION                :{GRAY}VS
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_WAYPOINT                   :{GRAY}WP
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_IMPLICIT                   :{GRAY}IM
 STR_VIEWPORT_SHOW_VEHICLE_ROUTE_STEP_DEPOT                      :{RED}DE
@@ -1998,7 +2040,7 @@ STR_STATION_RATING_TOOLTIP_AIRCRAFT                             :Aircraft
 STR_STATION_RATING_TOOLTIP_INVALID                              :N/A
 
 STR_TMPL_RPL_TITLE                                              :{WHITE}Template Replacement
-STR_TMPL_TEMPLATE_REPLACEMENT                                   :Template Replacement
+STR_TMPL_TEMPLATE_REPLACEMENT                                   :Template replacement
 STR_TMPL_TRAINS_IN_GROUP                                        :{BLACK}Trains in group
 STR_TMPL_AVAILABLE_TEMPLATES                                    :{BLACK}Available Templates
 STR_TMPL_DEFINE_TEMPLATE                                        :{BLACK}New
@@ -2158,7 +2200,7 @@ STR_SCHDISPATCH_SLOT_TOOLTIP_TAG                                :{}Tag {NUM}
 STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE                       :{BLACK}No previous departures.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Last departure at {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}Last departure has not left yet, it will depart at {TT_TIME}.
-STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}This schedule requires {COMMA} vehicle{P "" s}.
+STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}This schedule is estimated to require at least {COMMA} vehicle{P "" s}.
 STR_SCHDISPATCH_SUMMARY_L2                                      :{BLACK}This schedule repeats every {STRING1}.
 STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}This schedule began at {TT_TIME}, and ends at {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_L4                                      :{BLACK}Maximum delay of {STRING1} is allowed before the slot is skipped.
@@ -2298,9 +2340,6 @@ STR_CONFIG_SETTING_CITY_IN_LABEL_HELPTEXT                       :Display if a to
 
 STR_CONFIG_SETTING_CYCLE_SIGNAL_PBS                             :Path signals only
 
-STR_CONFIG_SETTING_SCRIPT_DISABLE_PARAM_RANDOM                  :Disable script parameter randomisation: {STRING2}
-STR_CONFIG_SETTING_SCRIPT_DISABLE_PARAM_RANDOM_HELPTEXT         :Disable the randomisation of AI/GS script paraneters.
-
 STR_CONFIG_SETTING_RESTRICT_PATCH                               :Non-standard settings which are not in vanilla OpenTTD
 
 ###length 4
@@ -2311,3 +2350,5 @@ STR_VIEWPORT_TOWN_COLOUR_CITY_POP                               :{WHITE}{TOWN} {
 
 STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Picker tool
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Modifier key window
+
+STR_ERROR_CAN_T_CHANGE_SPEED_RESTRICTION                        :{WHITE}Can't change vehicle's speed restriction...

@@ -103,7 +103,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_VEHICLE_REPAIR_COST,              XSCF_NULL,                2,   2, "vehicle_repair_cost",              nullptr, nullptr, nullptr          },
 	{ XSLFI_ENH_VIEWPORT_PLANS,               XSCF_IGNORABLE_ALL,       4,   4, "enh_viewport_plans",               nullptr, nullptr, "PLAN"           },
 	{ XSLFI_INFRA_SHARING,                    XSCF_NULL,                2,   2, "infra_sharing",                    nullptr, nullptr, "CPDP"           },
-	{ XSLFI_VARIABLE_DAY_LENGTH,              XSCF_NULL,                6,   6, "variable_day_length",              nullptr, nullptr, nullptr          },
+	{ XSLFI_VARIABLE_DAY_LENGTH,              XSCF_NULL,                7,   7, "variable_day_length",              nullptr, nullptr, nullptr          },
 	{ XSLFI_ORDER_OCCUPANCY,                  XSCF_NULL,                2,   2, "order_occupancy",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_MORE_COND_ORDERS,                 XSCF_NULL,               17,  17, "more_cond_orders",                 nullptr, nullptr, nullptr          },
 	{ XSLFI_EXTRA_LARGE_MAP,                  XSCF_NULL,                0,   1, "extra_large_map",                  nullptr, nullptr, nullptr          },
@@ -168,7 +168,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_DEPOT_ORDER_EXTRA_FLAGS,          XSCF_IGNORABLE_UNKNOWN,   1,   1, "depot_order_extra_flags",          nullptr, nullptr, nullptr          },
 	{ XSLFI_EXTRA_SIGNAL_TYPES,               XSCF_NULL,                1,   1, "extra_signal_types",               nullptr, nullptr, nullptr          },
 	{ XSLFI_BANKRUPTCY_EXTRA,                 XSCF_NULL,                2,   2, "bankruptcy_extra",                 nullptr, nullptr, nullptr          },
-	{ XSLFI_OBJECT_GROUND_TYPES,              XSCF_NULL,                3,   3, "object_ground_types",              nullptr, nullptr, nullptr          },
+	{ XSLFI_OBJECT_GROUND_TYPES,              XSCF_NULL,                4,   4, "object_ground_types",              nullptr, nullptr, nullptr          },
 	{ XSLFI_LINKGRAPH_AIRCRAFT,               XSCF_NULL,                1,   1, "linkgraph_aircraft",               nullptr, nullptr, nullptr          },
 	{ XSLFI_COMPANY_PW,                       XSCF_IGNORABLE_ALL,       2,   2, "company_password",                 nullptr, nullptr, "PLYP"           },
 	{ XSLFI_ST_INDUSTRY_CARGO_MODE,           XSCF_IGNORABLE_UNKNOWN,   1,   1, "st_industry_cargo_mode",           nullptr, nullptr, nullptr          },
@@ -193,6 +193,7 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_VARIABLE_TICK_RATE,               XSCF_IGNORABLE_ALL,       1,   1, "variable_tick_rate",               nullptr, nullptr, nullptr          },
 	{ XSLFI_ROAD_VEH_FLAGS,                   XSCF_NULL,                1,   1, "road_veh_flags",                   nullptr, nullptr, nullptr          },
 	{ XSLFI_STATION_TILE_CACHE_FLAGS,         XSCF_IGNORABLE_ALL,       1,   1, "station_tile_cache_flags",         saveSTC, loadSTC, nullptr          },
+	{ XSLFI_INDUSTRY_CARGO_TOTALS,            XSCF_NULL,                1,   1, "industry_cargo_totals",            nullptr, nullptr, nullptr          },
 
 	{ XSLFI_SCRIPT_INT64,                     XSCF_NULL,                1,   1, "script_int64",                     nullptr, nullptr, nullptr          },
 	{ XSLFI_U64_TICK_COUNTER,                 XSCF_NULL,                1,   1, "u64_tick_counter",                 nullptr, nullptr, nullptr          },
@@ -210,11 +211,12 @@ const SlxiSubChunkInfo _sl_xv_sub_chunk_infos[] = {
 	{ XSLFI_CARGO_TRAVELLED,                  XSCF_NULL,                1,   1, "slv_cargo_travelled",              nullptr, nullptr, nullptr          },
 	{ XSLFI_SHIP_ACCELERATION,                XSCF_NULL,                1,   1, "slv_ship_acceleration",            nullptr, nullptr, nullptr          },
 	{ XSLFI_DEPOT_UNBUNCHING,                 XSCF_NULL,                1,   1, "slv_depot_unbunching",             nullptr, nullptr, "VUBS"           },
+	{ XSLFI_VEHICLE_ECONOMY_AGE,              XSCF_NULL,                1,   1, "slv_vehicle_economy_age",          nullptr, nullptr, nullptr          },
 
 	{ XSLFI_TABLE_PATS,                       XSCF_NULL,                1,   1, "table_pats",                       nullptr, nullptr, nullptr          },
 	{ XSLFI_TABLE_MISC_SL,                    XSCF_NULL,                2,   2, "table_misc_sl",                    nullptr, nullptr, nullptr          },
 	{ XSLFI_TABLE_SCRIPT_SL,                  XSCF_NULL,                1,   1, "table_script_sl",                  nullptr, nullptr, nullptr          },
-	{ XSLFI_TABLE_NEWGRF_SL,                  XSCF_NULL,                1,   1, "table_newgrf_sl",                  nullptr, nullptr, nullptr          },
+	{ XSLFI_TABLE_NEWGRF_SL,                  XSCF_NULL,                2,   2, "table_newgrf_sl",                  nullptr, nullptr, nullptr          },
 	{ XSLFI_TABLE_INDUSTRY_SL,                XSCF_NULL,                1,   1, "table_industry_sl",                nullptr, nullptr, nullptr          },
 
 	{ XSLFI_NULL, XSCF_NULL, 0, 0, nullptr, nullptr, nullptr, nullptr }, // This is the end marker
@@ -261,7 +263,7 @@ bool SlXvIsFeaturePresent(const std::array<uint16_t, XSLFI_SIZE> &feature_versio
 }
 
 /**
- * Returns true if @p feature is present and has a version inclusively bounded by @p min_version and @p max_version
+ * Returns the feature name for the given feature index
  */
 const char *SlXvGetFeatureName(SlXvFeatureIndex feature)
 {

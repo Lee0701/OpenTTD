@@ -291,6 +291,7 @@ void Ship::OnNewDay()
 		DecreaseVehicleValue(this);
 	}
 	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
+	EconomyAgeVehicle(this);
 }
 
 void Ship::OnPeriodic()
@@ -396,11 +397,10 @@ bool RecentreShipSpriteBounds(Vehicle *v)
 	Ship *ship = Ship::From(v);
 	if (ship->rotation != ship->cur_image_valid_dir) {
 		ship->cur_image_valid_dir  = INVALID_DIR;
-		Point offset = RemapCoords(ship->x_offs, ship->y_offs, 0);
-		ship->sprite_seq_bounds.left = -offset.x - 16;
-		ship->sprite_seq_bounds.right = ship->sprite_seq_bounds.left + 32;
-		ship->sprite_seq_bounds.top = -offset.y - 16;
-		ship->sprite_seq_bounds.bottom = ship->sprite_seq_bounds.top + 32;
+		ship->sprite_seq_bounds.left = -16;
+		ship->sprite_seq_bounds.right = 16;
+		ship->sprite_seq_bounds.top = -16;
+		ship->sprite_seq_bounds.bottom = 16;
 		return true;
 	}
 	return false;
@@ -472,9 +472,9 @@ static bool CheckShipLeaveDepot(Ship *v)
 	Axis axis = GetShipDepotAxis(tile);
 
 	DiagDirection north_dir = ReverseDiagDir(AxisToDiagDir(axis));
-	TileIndex north_neighbour = TILE_ADD(tile, TileOffsByDiagDir(north_dir));
+	TileIndex north_neighbour = TileAdd(tile, TileOffsByDiagDir(north_dir));
 	DiagDirection south_dir = AxisToDiagDir(axis);
-	TileIndex south_neighbour = TILE_ADD(tile, 2 * TileOffsByDiagDir(south_dir));
+	TileIndex south_neighbour = TileAdd(tile, 2 * TileOffsByDiagDir(south_dir));
 
 	TrackBits north_tracks = DiagdirReachesTracks(north_dir) & GetTileShipTrackStatus(north_neighbour);
 	TrackBits south_tracks = DiagdirReachesTracks(south_dir) & GetTileShipTrackStatus(south_neighbour);

@@ -427,6 +427,13 @@ void AfterLoadVehicles(bool part_of_load)
 				}
 			}
 		}
+
+		if (IsSavegameVersionBefore(SLV_VEHICLE_ECONOMY_AGE) && SlXvIsFeatureMissing(XSLFI_VEHICLE_ECONOMY_AGE)) {
+			/* Set vehicle economy age based on calendar age. */
+			for (Vehicle *v : Vehicle::Iterate()) {
+				v->economy_age = v->age.base();
+			}
+		}
 	}
 	si_v = nullptr;
 
@@ -565,7 +572,11 @@ void AfterLoadVehicles(bool part_of_load)
 		}
 
 		if (part_of_load && v->unitnumber != 0) {
-			Company::Get(v->owner)->freeunits[v->type].UseID(v->unitnumber);
+			if (v->IsPrimaryVehicle()) {
+				Company::Get(v->owner)->freeunits[v->type].UseID(v->unitnumber);
+			} else {
+				v->unitnumber = 0;
+			}
 		}
 
 		v->UpdateDeltaXY();
@@ -806,6 +817,7 @@ SaveLoadTable GetVehicleDescription(VehicleType vt)
 
 		 SLE_CONDVAR(Vehicle, age,                   SLE_FILE_U16 | SLE_VAR_I32,   SL_MIN_VERSION,  SLV_31),
 		 SLE_CONDVAR(Vehicle, age,                   SLE_INT32,                   SLV_31, SL_MAX_VERSION),
+		SLE_CONDVAR_X(Vehicle, economy_age,          SLE_INT32,           SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VEHICLE_ECONOMY_AGE)),
 		 SLE_CONDVAR(Vehicle, max_age,               SLE_FILE_U16 | SLE_VAR_I32,   SL_MIN_VERSION,  SLV_31),
 		 SLE_CONDVAR(Vehicle, max_age,               SLE_INT32,                   SLV_31, SL_MAX_VERSION),
 		 SLE_CONDVAR(Vehicle, date_of_last_service,  SLE_FILE_U16 | SLE_VAR_I32,   SL_MIN_VERSION,  SLV_31),
@@ -1260,7 +1272,6 @@ struct vehicle_venc {
 struct train_venc {
 	VehicleID id;
 	GroundVehicleCache gvcache;
-	int cached_curve_speed_mod;
 	uint8_t cached_tflags;
 	uint8_t cached_num_engines;
 	uint16_t cached_centre_mass;
@@ -1269,7 +1280,8 @@ struct train_venc {
 	uint16_t cached_uncapped_decel;
 	uint8_t cached_deceleration;
 	byte user_def_data;
-	int cached_max_curve_speed;
+	int16_t cached_curve_speed_mod;
+	uint16_t cached_max_curve_speed;
 };
 
 struct roadvehicle_venc {
@@ -1332,7 +1344,6 @@ void Save_VENC()
 		for (Train *t : Train::Iterate()) {
 			SlWriteUint32(t->index);
 			write_gv_cache(t->gcache);
-			SlWriteUint32(t->tcache.cached_curve_speed_mod);
 			SlWriteByte(t->tcache.cached_tflags);
 			SlWriteByte(t->tcache.cached_num_engines);
 			SlWriteUint16(t->tcache.cached_centre_mass);
@@ -1341,7 +1352,8 @@ void Save_VENC()
 			SlWriteUint16(t->tcache.cached_uncapped_decel);
 			SlWriteByte(t->tcache.cached_deceleration);
 			SlWriteByte(t->tcache.user_def_data);
-			SlWriteUint32(t->tcache.cached_max_curve_speed);
+			SlWriteUint16((uint16_t)t->tcache.cached_curve_speed_mod);
+			SlWriteUint16(t->tcache.cached_max_curve_speed);
 		}
 
 		/* road vehicle */
@@ -1395,7 +1407,6 @@ void Load_VENC()
 	for (train_venc &venc : _train_vencs) {
 		venc.id = SlReadUint32();
 		read_gv_cache(venc.gvcache);
-		venc.cached_curve_speed_mod = SlReadUint32();
 		venc.cached_tflags = SlReadByte();
 		venc.cached_num_engines = SlReadByte();
 		venc.cached_centre_mass = SlReadUint16();
@@ -1404,7 +1415,8 @@ void Load_VENC()
 		venc.cached_uncapped_decel = SlReadUint16();
 		venc.cached_deceleration = SlReadByte();
 		venc.user_def_data = SlReadByte();
-		venc.cached_max_curve_speed = SlReadUint32();
+		venc.cached_curve_speed_mod = (int16_t)SlReadUint16();
+		venc.cached_max_curve_speed = SlReadUint16();
 	}
 
 	_roadvehicle_vencs.resize(SlReadUint32());

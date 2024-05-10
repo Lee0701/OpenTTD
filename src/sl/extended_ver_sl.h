@@ -142,6 +142,7 @@ enum SlXvFeatureIndex {
 	XSLFI_VARIABLE_TICK_RATE,                     ///< Variable tick rate
 	XSLFI_ROAD_VEH_FLAGS,                         ///< Road vehicle flags
 	XSLFI_STATION_TILE_CACHE_FLAGS,               ///< Station tile cache flags
+	XSLFI_INDUSTRY_CARGO_TOTALS,                  ///< Industry cargo totals are 32 bit
 
 	XSLFI_SCRIPT_INT64,                           ///< See: SLV_SCRIPT_INT64
 	XSLFI_U64_TICK_COUNTER,                       ///< See: SLV_U64_TICK_COUNTER
@@ -159,6 +160,7 @@ enum SlXvFeatureIndex {
 	XSLFI_CARGO_TRAVELLED,                        ///< See: SLV_CARGO_TRAVELLED (PR #11283)
 	XSLFI_SHIP_ACCELERATION,                      ///< See: SLV_SHIP_ACCELERATION (PR #10734)
 	XSLFI_DEPOT_UNBUNCHING,                       ///< See: SLV_DEPOT_UNBUNCHING (PR #11945)
+	XSLFI_VEHICLE_ECONOMY_AGE,                    ///< See: SLV_VEHICLE_ECONOMY_AGE (PR #12141)
 
 	XSLFI_TABLE_PATS,                             ///< Use upstream table format for PATS
 	XSLFI_TABLE_MISC_SL,                          ///< Use upstream table format for miscellaneous chunks:
@@ -166,6 +168,7 @@ enum SlXvFeatureIndex {
 	                                              ///<     v2: SUBS, CMDL, CMPU, ERNW, DEPT, CAPY, ECMY, EIDS, ENGN, GOAL, GRPS, RAIL, OBJS, SIGN, PSAC, STPE, STPA
 	XSLFI_TABLE_SCRIPT_SL,                        ///< Use upstream table format for script chunks
 	XSLFI_TABLE_NEWGRF_SL,                        ///< Use upstream table format for NewGRF/ID mapping chunks
+	                                              ///<     In v1, NGRF chunks were saved incorrectly: see SLBF_TABLE_ARRAY_LENGTH_PREFIX_MISSING
 	XSLFI_TABLE_INDUSTRY_SL,                      ///< Use upstream table format for industry chunks: IBLD, ITBL
 
 	XSLFI_RIFF_HEADER_60_BIT,                     ///< Size field in RIFF chunk header is 60 bit

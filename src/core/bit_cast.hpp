@@ -5,25 +5,31 @@
  * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file script_timemode.cpp Implementation of ScriptTimeMode. */
+/** @file bit_cast.hpp std::bit_cast fallback */
 
-#include "../../stdafx.h"
-#include "script_timemode.hpp"
+#ifndef BIT_CAST_HPP
+#define BIT_CAST_HPP
 
-#include "../../safeguards.h"
+#ifdef __cpp_lib_bit_cast
 
-ScriptTimeMode::ScriptTimeMode(bool calendar)
+#include <bit>
+
+#else
+
+#include <type_traits>
+
+namespace std {
+template <typename To, typename From>
+constexpr To bit_cast(const From& from) noexcept
 {
-	this->last_time_mode = ScriptObject::IsCalendarTimeMode();
-	ScriptObject::SetTimeMode(calendar);
+	static_assert(std::is_trivially_constructible_v<To>);
+
+	To to;
+	memcpy(&to, &from, sizeof(To));
+	return to;
+}
 }
 
-ScriptTimeMode::~ScriptTimeMode()
-{
-	ScriptObject::SetTimeMode(this->last_time_mode);
-}
+#endif
 
-/* static */ bool ScriptTimeMode::IsCalendarMode()
-{
-	return ScriptObject::IsCalendarTimeMode();
-}
+#endif /* BIT_CAST_HPP */

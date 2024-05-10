@@ -367,6 +367,7 @@ public:
 	/* Related to age and service time */
 	CalTime::Year build_year;           ///< Year the vehicle has been built.
 	DateDelta age;                      ///< Age in days
+	DateDelta economy_age;              ///< Age in economy days.
 	DateDelta max_age;                  ///< Maximum age
 	EconTime::Date date_of_last_service;       ///< Last date the vehicle had a service at a depot.
 	CalTime::Date date_of_last_service_newgrf; ///< Last date the vehicle had a service at a depot, unchanged by the date cheat to protect against unsafe NewGRF behavior.
@@ -906,6 +907,8 @@ public:
 
 	void ResetRefitCaps();
 
+	void ReleaseUnitNumber();
+
 	/**
 	 * Copy certain configurations and statistics of a vehicle after successful autoreplace/renew
 	 * The function shall copy everything that cannot be copied by a command (like orders / group etc),
@@ -916,6 +919,7 @@ public:
 	{
 		this->CopyConsistPropertiesFrom(src);
 
+		this->ReleaseUnitNumber();
 		this->unitnumber = src->unitnumber;
 
 		this->current_order = src->current_order;
@@ -952,6 +956,8 @@ public:
 	 * @return the location (tile) to aim for.
 	 */
 	virtual TileIndex GetOrderStationLocation([[maybe_unused]] StationID station) { return INVALID_TILE; }
+
+	virtual TileIndex GetCargoTile() const { return this->tile; }
 
 	/**
 	 * Find the closest depot for this vehicle and tell us the location,
@@ -996,6 +1002,8 @@ public:
 
 	inline void ResetDepotUnbunching() { this->unbunch_state.reset(); }
 
+	bool HasFullLoadOrder() const;
+	bool HasConditionalOrder() const;
 	bool HasUnbunchingOrder() const;
 	void LeaveUnbunchingDepot();
 	bool IsWaitingForUnbunching() const;

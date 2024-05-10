@@ -613,6 +613,7 @@ uint RoadVehicle::Crash(bool flooded)
 		/* If we're in a drive through road stop we ought to leave it */
 		if (IsInsideMM(this->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END)) {
 			RoadStop::GetByTile(this->tile, GetRoadStopType(this->tile))->Leave(this);
+			this->state &= RVSB_ROAD_STOP_TRACKDIR_MASK;
 		}
 	}
 	this->crashed_ctr = flooded ? 2000 : 1; // max 2220, disappear pretty fast when flooded
@@ -1608,6 +1609,7 @@ static bool CheckRestartLoadingAtRoadStop(RoadVehicle *v)
 	const Order *next_order = v->GetOrder(next_order_idx);
 	FlushAdvanceOrderIndexDeferred(v, false);
 	if (next_order != nullptr && next_order->IsType(OT_GOTO_STATION) && next_order->GetDestination() == station_id &&
+			(next_order->GetRoadVehTravelDirection() == INVALID_DIAGDIR || next_order->GetRoadVehTravelDirection() == DirToDiagDir(v->direction)) &&
 			!(next_order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION) &&
 			IsInfraTileUsageAllowed(VEH_ROAD, v->owner, v->tile) &&
 			GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK)) {
@@ -2310,9 +2312,10 @@ static void CheckIfRoadVehNeedsService(RoadVehicle *v)
 
 void RoadVehicle::OnNewDay()
 {
-	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
-
 	if (!this->IsFrontEngine()) return;
+
+	if (!EconTime::UsingWallclockUnits()) AgeVehicle(this);
+	EconomyAgeVehicle(this);
 
 	if ((++this->day_counter & 7) == 0) DecreaseVehicleValue(this);
 }

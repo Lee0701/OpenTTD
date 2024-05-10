@@ -32,7 +32,6 @@ extern TileIndex _aux_tileloop_tile;
 extern uint16_t _disaster_delay;
 extern byte _trees_tick_ctr;
 extern uint64_t _aspect_cfg_hash;
-extern std::string _savegame_id;
 
 /* Keep track of current game position */
 int _saved_scrollpos_x;
@@ -106,8 +105,8 @@ static const NamedSaveLoad _date_desc[] = {
 	NSL("",                             SLE_CONDNULL(1,                                                     SL_MIN_VERSION,         SLV_10)),
 	NSL("",                             SLE_CONDNULL(4,                                                             SLV_10,        SLV_120)),
 	NSL("company_tick_counter",         SLEG_VAR(_cur_company_tick_index,       SLE_FILE_U8  | SLE_VAR_U32)),
-	NSL("",                             SLEG_CONDVAR(_new_competitor_timeout.period, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION,   SLV_109)),
-	NSL("",                             SLEG_CONDVAR_X(_new_competitor_timeout.period,          SLE_UINT32,        SLV_109, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE, 0, 0))),
+	NSL("",                             SLEG_CONDVAR(_new_competitor_timeout.period.value, SLE_FILE_U16 | SLE_VAR_U32, SL_MIN_VERSION,   SLV_109)),
+	NSL("",                             SLEG_CONDVAR_X(_new_competitor_timeout.period.value,    SLE_UINT32,        SLV_109, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE, 0, 0))),
 	NSL("trees_tick_counter",           SLEG_VAR(_trees_tick_ctr,                                SLE_UINT8)),
 	NSL("pause_mode",                   SLEG_CONDVAR(_pause_mode,                                SLE_UINT8,          SLV_4, SL_MAX_VERSION)),
 	NSL("game_events_overall",          SLEG_CONDVAR_X(_game_events_overall,                    SLE_UINT32, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_GAME_EVENTS))),
@@ -116,12 +115,12 @@ static const NamedSaveLoad _date_desc[] = {
 	NSL("aspect_cfg_hash",              SLEG_CONDVAR_X(_aspect_cfg_hash,                        SLE_UINT64, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_REALISTIC_TRAIN_BRAKING, 7))),
 	NSL("aux_tileloop_tile",            SLEG_CONDVAR_X(_aux_tileloop_tile,                      SLE_UINT32, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AUX_TILE_LOOP))),
 	NSL("",                             SLE_CONDNULL(4,                                                             SLV_11,        SLV_120)),
-	NSL("competitors_interval",         SLEG_CONDVAR_X(_new_competitor_timeout.period,          SLE_UINT32, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE))),
+	NSL("competitors_interval",         SLEG_CONDVAR_X(_new_competitor_timeout.period.value,    SLE_UINT32, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE))),
 	NSL("competitors_interval_elapsed", SLEG_CONDVAR_X(_new_competitor_timeout.storage.elapsed, SLE_UINT32, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE))),
 	NSL("competitors_interval_fired",   SLEG_CONDVAR_X(_new_competitor_timeout.fired,             SLE_BOOL, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE))),
 
 	/* New (table only) fields below */
-	NSLT("id",                          SLEG_CONDSSTR_X(_savegame_id,                              SLE_STR, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SAVEGAME_ID))),
+	NSLT("id",                          SLEG_CONDSSTR_X(_game_session_stats.savegame_id,           SLE_STR,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SAVEGAME_ID))),
 	NSLT("economy_date",                SLEG_CONDVAR_X(EconTime::Detail::now.econ_date,          SLE_INT32,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VARIABLE_DAY_LENGTH, 5))),
 	NSLT("economy_date_fract",          SLEG_CONDVAR_X(EconTime::Detail::now.econ_date_fract,   SLE_UINT16,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VARIABLE_DAY_LENGTH, 5))),
 	NSLT("calendar_sub_date_fract",     SLEG_CONDVAR_X(CalTime::Detail::now.sub_date_fract,     SLE_UINT16,                   SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_VARIABLE_DAY_LENGTH, 5))),
@@ -152,8 +151,8 @@ static const NamedSaveLoad _date_check_desc[] = {
 	NSL("",     SLE_CONDNULL(1,  SL_MIN_VERSION,  SLV_10)),
 	NSL("",     SLE_CONDNULL(4, SLV_10, SLV_120)),
 	NSL("",         SLE_NULL(1)),                       // _cur_company_tick_index
-	NSL("",     SLE_CONDNULL(2, SL_MIN_VERSION, SLV_109)),                                                           // _new_competitor_timeout.period
-	NSL("",     SLE_CONDNULL_X(4, SLV_109, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE, 0, 0))), // _new_competitor_timeout.period
+	NSL("",     SLE_CONDNULL(2, SL_MIN_VERSION, SLV_109)),                                                           // _new_competitor_timeout.period.value
+	NSL("",     SLE_CONDNULL_X(4, SLV_109, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_AI_START_DATE, 0, 0))), // _new_competitor_timeout.period.value
 	NSL("",         SLE_NULL(1)),                       // _trees_tick_ctr
 	NSL("",     SLE_CONDNULL(1, SLV_4, SL_MAX_VERSION)),    // _pause_mode
 	NSL("",     SLE_CONDNULL_X(4, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_GAME_EVENTS))), // _game_events_overall
@@ -200,7 +199,7 @@ static void Load_VIEW()
 }
 
 static const SaveLoad _misc_desc[] = {
-	SLEG_CONDSSTR_X(_savegame_id, SLE_STR, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SAVEGAME_ID)),
+	SLEG_CONDSSTR_X(_game_session_stats.savegame_id, SLE_STR, SL_MIN_VERSION, SL_MAX_VERSION, SlXvFeatureTest(XSLFTO_AND, XSLFI_SAVEGAME_ID)),
 };
 
 static void Load_MISC()

@@ -610,7 +610,7 @@ const Order *OrderList::GetNextDecisionNode(const Order *next, uint hops, CargoT
 	}
 
 	if (next->IsType(OT_GOTO_DEPOT)) {
-		if (next->GetDepotActionType() & ODATFB_HALT) return nullptr;
+		if ((next->GetDepotActionType() & ODATFB_HALT) != 0) return nullptr;
 		if (next->IsRefit()) return next;
 	}
 
@@ -957,6 +957,30 @@ TileIndex Order::GetLocation(const Vehicle *v, bool airport) const
 }
 
 /**
+ * Returns a tile somewhat representing the order's auxiliary location (not related to vehicle movement).
+ * @param secondary Whether to return a second auxiliary location, if available.
+ * @return auxiliary location of order, or INVALID_TILE if none.
+ */
+TileIndex Order::GetAuxiliaryLocation(bool secondary) const
+{
+	if (this->IsType(OT_CONDITIONAL)) {
+		if (secondary && this->GetConditionVariable() == OCV_CARGO_WAITING_AMOUNT && GB(this->GetXData(), 16, 16) != 0) {
+			const Station *st = Station::GetIfValid(GB(this->GetXData(), 16, 16) - 2);
+			if (st != nullptr) return st->xy;
+		}
+		if (ConditionVariableHasStationID(this->GetConditionVariable())) {
+			const Station *st = Station::GetIfValid(GB(this->GetXData2(), 0, 16) - 1);
+			if (st != nullptr) return st->xy;
+		}
+	}
+	if (this->IsType(OT_LABEL) && IsDestinationOrderLabelSubType(this->GetLabelSubType())) {
+		const BaseStation *st = BaseStation::GetIfValid(this->GetDestination());
+		if (st != nullptr) return st->xy;
+	}
+	return INVALID_TILE;
+}
+
+/**
  * Get the distance between two orders of a vehicle. Conditional orders are resolved
  * and the bigger distance of the two order branches is returned.
  * @param prev Origin order.
@@ -1170,8 +1194,17 @@ CommandCost CmdInsertOrderIntl(DoCommandFlag flags, Vehicle *v, VehicleOrderID s
 			if (new_order.GetNonStopType() != ONSF_STOP_EVERYWHERE && !v->IsGroundVehicle()) return CMD_ERROR;
 			if (_settings_game.order.nonstop_only && !(new_order.GetNonStopType() & ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS) && v->IsGroundVehicle()) return CMD_ERROR;
 			if (new_order.GetDepotOrderType() & ~(ODTFB_PART_OF_ORDERS | ((new_order.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) != 0 ? ODTFB_SERVICE : 0))) return CMD_ERROR;
-			if (new_order.GetDepotActionType() & ~(ODATFB_HALT | ODATFB_SELL | ODATFB_NEAREST_DEPOT)) return CMD_ERROR;
-			if ((new_order.GetDepotOrderType() & ODTFB_SERVICE) && (new_order.GetDepotActionType() & ODATFB_HALT)) return CMD_ERROR;
+			if (new_order.GetDepotActionType() & ~(ODATFB_HALT | ODATFB_SELL | ODATFB_NEAREST_DEPOT | ODATFB_UNBUNCH)) return CMD_ERROR;
+
+			/* Vehicles cannot have a "service if needed" order that also has a depot action. */
+			if ((new_order.GetDepotOrderType() & ODTFB_SERVICE) && (new_order.GetDepotActionType() & (ODATFB_HALT | ODATFB_UNBUNCH))) return CMD_ERROR;
+
+			/* Check if we're allowed to have a new unbunching order. */
+			if ((new_order.GetDepotActionType() & ODATFB_UNBUNCH)) {
+				if (v->HasFullLoadOrder()) return CommandCost::DualErrorMessage(STR_ERROR_CAN_T_ADD_ORDER, STR_ERROR_UNBUNCHING_NO_UNBUNCHING_FULL_LOAD);
+				if (v->HasUnbunchingOrder()) return CommandCost::DualErrorMessage(STR_ERROR_CAN_T_ADD_ORDER, STR_ERROR_UNBUNCHING_ONLY_ONE_ALLOWED);
+				if (v->HasConditionalOrder()) return CommandCost::DualErrorMessage(STR_ERROR_CAN_T_ADD_ORDER, STR_ERROR_UNBUNCHING_NO_UNBUNCHING_CONDITIONAL);
+			}
 			break;
 		}
 
@@ -1951,19 +1984,14 @@ CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 			if (data == DA_UNBUNCH) {
 				/* Only one unbunching order is allowed in a vehicle's orders. If this order already has an unbunching action, no error is needed. */
 				if (v->HasUnbunchingOrder() && !(order->GetDepotActionType() & ODATFB_UNBUNCH)) return_cmd_error(STR_ERROR_UNBUNCHING_ONLY_ONE_ALLOWED);
+
 				if (HasBit(v->vehicle_flags, VF_SCHEDULED_DISPATCH)) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_SCHED_DISPATCH);
 				if (HasBit(v->vehicle_flags, VF_TIMETABLE_SEPARATION)) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_AUTO_SEPARATION);
-				for (Order *o : v->Orders()) {
-					/* We don't allow unbunching if the vehicle has a conditional order. */
-					if (o->IsType(OT_CONDITIONAL)) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_CONDITIONAL);
-					/* We don't allow unbunching if the vehicle has a full load order. */
-					if (o->IsType(OT_GOTO_STATION) && o->GetLoadType() & (OLFB_FULL_LOAD | OLF_FULL_LOAD_ANY)) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_FULL_LOAD);
-					if (o->IsType(OT_GOTO_STATION) && o->GetLoadType() == OLFB_CARGO_TYPE_LOAD) {
-						for (CargoID cid = 0; cid < NUM_CARGO; cid++) {
-							if (o->GetCargoLoadType(cid) & (OLFB_FULL_LOAD | OLF_FULL_LOAD_ANY)) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_FULL_LOAD);
-						}
-					}
-				}
+
+				/* We don't allow unbunching if the vehicle has a conditional order. */
+				if (v->HasConditionalOrder()) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_CONDITIONAL);
+				/* We don't allow unbunching if the vehicle has a full load order. */
+				if (v->HasFullLoadOrder()) return_cmd_error(STR_ERROR_UNBUNCHING_NO_UNBUNCHING_FULL_LOAD);
 			}
 			break;
 
@@ -3188,6 +3216,10 @@ bool EvaluateDispatchSlotConditionalOrder(const Order *order, const Vehicle *v, 
 		offset = last % sched.GetScheduledDispatchDuration();
 	} else {
 		StateTicks slot = GetScheduledDispatchTime(sched, state_ticks);
+		if (slot == INVALID_STATE_TICKS) {
+			/* No next dispatch */
+			return OrderConditionCompare(order->GetConditionComparator(), 0, 0);
+		}
 		offset = (slot - sched.GetScheduledDispatchStartTick()).base() % sched.GetScheduledDispatchDuration();
 	}
 
@@ -3390,7 +3422,6 @@ VehicleOrderID ProcessConditionalOrder(const Order *order, const Vehicle *v, Pro
 VehicleOrderID AdvanceOrderIndexDeferred(const Vehicle *v, VehicleOrderID index)
 {
 	int depth = 0;
-	++index;
 
 	do {
 		/* Wrap around. */

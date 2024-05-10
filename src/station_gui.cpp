@@ -303,8 +303,8 @@ protected:
 		this->stations_per_cargo_type_no_rating = 0;
 
 		for (const Station *st : Station::Iterate()) {
-			if (st->owner == owner || (st->owner == OWNER_NONE && HasStationInUse(st->index, true, owner))) {
-				if (this->filter.facilities & st->facilities) { // only stations with selected facilities
+			if ((this->filter.facilities & st->facilities) != 0) { // only stations with selected facilities
+				if (st->owner == owner || (st->owner == OWNER_NONE && HasStationInUse(st->index, true, owner))) {
 					bool has_rating = false;
 					/* Add to the station/cargo counts. */
 					for (CargoID j = 0; j < NUM_CARGO; j++) {
@@ -2034,7 +2034,11 @@ struct StationViewWindow : public Window {
 			tr.top += WidgetDimensions::scaled.vsep_wide;
 		}
 
-		DrawString(tr, EconTime::UsingWallclockUnits() ? STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_MINUTE : STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_MONTH);
+		if (EconTime::UsingWallclockUnits()) {
+			DrawString(tr, (DayLengthFactor() > 1) ? STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_PRODUCTION_INTERVAL : STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_MINUTE);
+		} else {
+			DrawString(tr, STR_STATION_VIEW_SUPPLY_RATINGS_TITLE_MONTH);
+		}
 		tr.top += GetCharacterHeight(FS_NORMAL);
 
 		this->ratings_list_y = tr.top;
@@ -2486,7 +2490,7 @@ static const T *FindStationsNearby(TileArea ta, bool distant_join, IsSpecialized
 	for (const BaseStation *st : BaseStation::Iterate()) {
 		if (T::IsExpected(st) && !st->IsInUse() && st->owner == _local_company && is_right_type(T::From(st))) {
 			/* Include only within station spread (yes, it is strictly less than) */
-			if (std::max(DistanceMax(ta.tile, st->xy), DistanceMax(TILE_ADDXY(ta.tile, ta.w - 1, ta.h - 1), st->xy)) < _settings_game.station.station_spread) {
+			if (std::max(DistanceMax(ta.tile, st->xy), DistanceMax(TileAddXY(ta.tile, ta.w - 1, ta.h - 1), st->xy)) < _settings_game.station.station_spread) {
 				_deleted_stations_nearby.push_back({st->xy, st->index});
 
 				/* Add the station when it's within where we're going to build */
@@ -2587,7 +2591,7 @@ struct SelectStationWindow : Window {
 			tr.top += this->resize.step_height;
 		}
 
-		for (uint i = std::max<uint>(1, this->vscroll->GetPosition()); i <= _stations_nearby_list.size(); ++i, tr.top += this->resize.step_height) {
+		for (int32_t i = std::max<int32_t>(1, this->vscroll->GetPosition()); (size_t)i <= _stations_nearby_list.size(); ++i, tr.top += this->resize.step_height) {
 			/* Don't draw anything if it extends past the end of the window. */
 			if (i - this->vscroll->GetPosition() >= this->vscroll->GetCapacity()) break;
 

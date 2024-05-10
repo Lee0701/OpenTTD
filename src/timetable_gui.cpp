@@ -196,7 +196,7 @@ static void FillTimetableArrivalDepartureTable(const Vehicle *v, VehicleOrderID 
 				predicted_ds.UpdateScheduledDispatchToDate(_state_ticks + sum);
 				StateTicks slot = GetScheduledDispatchTime(predicted_ds, _state_ticks + sum + order->GetTimetabledWait());
 				predicted_ds.ReturnSchedule(ds);
-				if (slot <= -1) return;
+				if (slot == INVALID_STATE_TICKS) return;
 				sum = (slot - _state_ticks).AsTicks();
 				predicted = true;
 				no_offset = true;
@@ -431,8 +431,8 @@ struct TimetableWindow : GeneralVehicleWindow {
 
 	int GetOrderFromTimetableWndPt(int y, [[maybe_unused]] const Vehicle *v)
 	{
-		int sel = this->vscroll->GetScrolledRowFromWidget(y, this, WID_VT_TIMETABLE_PANEL, WidgetDimensions::scaled.framerect.top);
-		if (sel == INT_MAX) return INVALID_ORDER;
+		int32_t sel = this->vscroll->GetScrolledRowFromWidget(y, this, WID_VT_TIMETABLE_PANEL, WidgetDimensions::scaled.framerect.top);
+		if (sel == INT32_MAX) return INVALID_ORDER;
 		assert(IsInsideBS(sel, 0, v->GetNumOrders() * 2));
 		return sel;
 	}

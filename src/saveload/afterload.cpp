@@ -647,11 +647,11 @@ static void StartScripts()
 
 	/* Start the AIs. */
 	for (const Company *c : Company::Iterate()) {
-		if (Company::IsValidAiID(c->index)) AI::StartNew(c->index, false);
+		if (Company::IsValidAiID(c->index)) AI::StartNew(c->index);
 	}
 
 	/* Start the GameScript. */
-	Game::StartNew(false);
+	Game::StartNew();
 
 	ShowScriptDebugWindowIfScriptError();
 }
@@ -681,6 +681,10 @@ bool AfterLoadGame()
 	/* Only new games can use wallclock units. */
 	if (SlXvIsFeatureMissing(XSLFI_VARIABLE_DAY_LENGTH, 5) && IsSavegameVersionBefore(SLV_ECONOMY_MODE_TIMEKEEPING_UNITS)) {
 		_settings_game.economy.timekeeping_units = TKU_CALENDAR;
+	}
+	/* Wallclock unit games which previously ran at an effective day length of 1 should remain that way */
+	if (SlXvIsFeatureMissing(XSLFI_VARIABLE_DAY_LENGTH, 7) && _settings_game.economy.timekeeping_units == TKU_WALLCLOCK) {
+		_settings_game.economy.day_length_factor = 1;
 	}
 	UpdateEffectiveDayLengthFactor();
 
@@ -1200,7 +1204,7 @@ bool AfterLoadGame()
 						 * an oil rig which got shut down, but not completely removed from
 						 * the map
 						 */
-						TileIndex t1 = TILE_ADDXY(t, 0, 1);
+						TileIndex t1 = TileAddXY(t, 0, 1);
 						if (!IsTileType(t1, MP_INDUSTRY) || GetIndustryGfx(t1) != GFX_OILRIG_1) {
 							DeleteOilRig(t);
 						}
@@ -2116,14 +2120,15 @@ bool AfterLoadGame()
 		}
 	}
 
+	/* At version 78, industry cargo types can be changed, and are stored with the industry. For older save versions
+	 * copy the IndustrySpec's cargo types over to the Industry. */
 	if (IsSavegameVersionBefore(SLV_78)) {
-		uint j;
-		for (Industry * i : Industry::Iterate()) {
+		for (Industry *i : Industry::Iterate()) {
 			const IndustrySpec *indsp = GetIndustrySpec(i->type);
-			for (j = 0; j < lengthof(i->produced_cargo); j++) {
+			for (size_t j = 0; j < std::size(i->produced_cargo); j++) {
 				i->produced_cargo[j] = indsp->produced_cargo[j];
 			}
-			for (j = 0; j < lengthof(i->accepts_cargo); j++) {
+			for (size_t j = 0; j < std::size(i->accepts_cargo); j++) {
 				i->accepts_cargo[j] = indsp->accepts_cargo[j];
 			}
 		}
@@ -3290,12 +3295,12 @@ bool AfterLoadGame()
 			if (!IsTileType(t, MP_CLEAR) && !IsTileType(t, MP_TREES)) continue;
 			if (IsTileType(t, MP_CLEAR) && IsClearGround(t, CLEAR_FIELDS)) continue;
 			uint fence = GB(_m[t].m4, 5, 3);
-			if (fence != 0 && IsTileType(TILE_ADDXY(t, 1, 0), MP_CLEAR) && IsClearGround(TILE_ADDXY(t, 1, 0), CLEAR_FIELDS)) {
-				SetFence(TILE_ADDXY(t, 1, 0), DIAGDIR_NE, fence);
+			if (fence != 0 && IsTileType(TileAddXY(t, 1, 0), MP_CLEAR) && IsClearGround(TileAddXY(t, 1, 0), CLEAR_FIELDS)) {
+				SetFence(TileAddXY(t, 1, 0), DIAGDIR_NE, fence);
 			}
 			fence = GB(_m[t].m4, 2, 3);
-			if (fence != 0 && IsTileType(TILE_ADDXY(t, 0, 1), MP_CLEAR) && IsClearGround(TILE_ADDXY(t, 0, 1), CLEAR_FIELDS)) {
-				SetFence(TILE_ADDXY(t, 0, 1), DIAGDIR_NW, fence);
+			if (fence != 0 && IsTileType(TileAddXY(t, 0, 1), MP_CLEAR) && IsClearGround(TileAddXY(t, 0, 1), CLEAR_FIELDS)) {
+				SetFence(TileAddXY(t, 0, 1), DIAGDIR_NW, fence);
 			}
 			SB(_m[t].m4, 2, 3, 0);
 			SB(_m[t].m4, 5, 3, 0);
@@ -3649,7 +3654,7 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SLV_EXTEND_INDUSTRY_CARGO_SLOTS)) {
 		/* Make sure added industry cargo slots are cleared */
 		for (Industry *i : Industry::Iterate()) {
-			for (size_t ci = 2; ci < lengthof(i->produced_cargo); ci++) {
+			for (size_t ci = 2; ci < std::size(i->produced_cargo); ci++) {
 				i->produced_cargo[ci] = INVALID_CARGO;
 				i->produced_cargo_waiting[ci] = 0;
 				i->production_rate[ci] = 0;
@@ -3659,13 +3664,13 @@ bool AfterLoadGame()
 				i->this_month_production[ci] = 0;
 				i->this_month_transported[ci] = 0;
 			}
-			for (size_t ci = 3; ci < lengthof(i->accepts_cargo); ci++) {
+			for (size_t ci = 3; ci < std::size(i->accepts_cargo); ci++) {
 				i->accepts_cargo[ci] = INVALID_CARGO;
 				i->incoming_cargo_waiting[ci] = 0;
 			}
 			/* Make sure last_cargo_accepted_at is copied to elements for every valid input cargo.
 			 * The loading routine should put the original singular value into the first array element. */
-			for (size_t ci = 0; ci < lengthof(i->accepts_cargo); ci++) {
+			for (size_t ci = 0; ci < std::size(i->accepts_cargo); ci++) {
 				if (i->accepts_cargo[ci] != INVALID_CARGO) {
 					i->last_cargo_accepted_at[ci] = i->last_cargo_accepted_at[0];
 				} else {
@@ -4409,7 +4414,7 @@ bool AfterLoadGame()
 		/* We did load the "period" of the timer, but not the fired/elapsed. We can deduce that here. */
 		extern TimeoutTimer<TimerGameTick> _new_competitor_timeout;
 		_new_competitor_timeout.storage.elapsed = 0;
-		_new_competitor_timeout.fired = _new_competitor_timeout.period == 0;
+		_new_competitor_timeout.fired = _new_competitor_timeout.period.value == 0;
 	}
 
 	if (SlXvIsFeatureMissing(XSLFI_SAVEGAME_ID) && IsSavegameVersionBefore(SLV_SAVEGAME_ID)) {

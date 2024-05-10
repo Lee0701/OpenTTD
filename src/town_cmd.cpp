@@ -647,10 +647,10 @@ static void AdvanceSingleHouseConstruction(TileIndex tile)
 static void AdvanceHouseConstruction(TileIndex tile)
 {
 	uint flags = HouseSpec::Get(GetHouseType(tile))->building_flags;
-	if (flags & BUILDING_HAS_1_TILE)  AdvanceSingleHouseConstruction(TILE_ADDXY(tile, 0, 0));
-	if (flags & BUILDING_2_TILES_Y)   AdvanceSingleHouseConstruction(TILE_ADDXY(tile, 0, 1));
-	if (flags & BUILDING_2_TILES_X)   AdvanceSingleHouseConstruction(TILE_ADDXY(tile, 1, 0));
-	if (flags & BUILDING_HAS_4_TILES) AdvanceSingleHouseConstruction(TILE_ADDXY(tile, 1, 1));
+	if (flags & BUILDING_HAS_1_TILE)  AdvanceSingleHouseConstruction(TileAddXY(tile, 0, 0));
+	if (flags & BUILDING_2_TILES_Y)   AdvanceSingleHouseConstruction(TileAddXY(tile, 0, 1));
+	if (flags & BUILDING_2_TILES_X)   AdvanceSingleHouseConstruction(TileAddXY(tile, 1, 0));
+	if (flags & BUILDING_HAS_4_TILES) AdvanceSingleHouseConstruction(TileAddXY(tile, 1, 1));
 }
 
 /**
@@ -821,11 +821,11 @@ static void TileLoop_Town(TileIndex tile)
 				int y = Clamp(grid_pos.y, 0, 1);
 
 				if (hs->building_flags & TILE_SIZE_2x2) {
-					tile = TILE_ADDXY(tile, x, y);
+					tile = TileAddXY(tile, x, y);
 				} else if (hs->building_flags & TILE_SIZE_1x2) {
-					tile = TILE_ADDXY(tile, 0, y);
+					tile = TileAddXY(tile, 0, y);
 				} else if (hs->building_flags & TILE_SIZE_2x1) {
-					tile = TILE_ADDXY(tile, x, 0);
+					tile = TileAddXY(tile, x, 0);
 				}
 			}
 
@@ -1119,7 +1119,7 @@ static bool IsNeighborRoadTile(TileIndex tile, const DiagDirection dir, uint dis
 
 		/* Test for roadbit parallel to dir and facing towards the middle axis */
 		if (IsValidTile(tile + cur) &&
-				GetTownRoadBits(TILE_ADD(tile, cur)) & DiagDirToRoadBits((pos & 2) ? dir : ReverseDiagDir(dir))) return true;
+				GetTownRoadBits(TileAdd(tile, cur)) & DiagDirToRoadBits((pos & 2) ? dir : ReverseDiagDir(dir))) return true;
 	}
 	return false;
 }
@@ -1151,7 +1151,7 @@ static bool IsRoadAllowedHere(Town *t, TileIndex tile, DiagDirection dir)
 		}
 	}
 
-	Slope cur_slope = _settings_game.construction.build_on_slopes ? GetFoundationSlope(tile) : GetTileSlope(tile);
+	Slope cur_slope = _settings_game.construction.build_on_slopes ? std::get<0>(GetFoundationSlope(tile)) : GetTileSlope(tile);
 	bool ret = !IsNeighborRoadTile(tile, dir, t->layout == TL_ORIGINAL ? 1 : 2);
 	if (cur_slope == SLOPE_FLAT) return ret;
 
@@ -1697,7 +1697,7 @@ static void GrowTownInTile(TileIndex *tile_ptr, RoadBits cur_rb, DiagDirection t
 			auto get_road_slope = [rcmd](TileIndex t) -> Slope {
 				Slope slope = GetTileSlope(t);
 				extern Foundation GetRoadFoundation(Slope tileh, RoadBits bits);
-				ApplyFoundationToSlope(GetRoadFoundation(slope, rcmd), &slope);
+				ApplyFoundationToSlope(GetRoadFoundation(slope, rcmd), slope);
 				return slope;
 			};
 
@@ -2074,7 +2074,7 @@ static bool GrowTown(Town *t)
 			cur_company.Restore();
 			return success;
 		}
-		tile = TILE_ADD(tile, ToTileIndexDiff(*ptr));
+		tile = TileAdd(tile, ToTileIndexDiff(*ptr));
 	}
 
 	/* No road available, try to build a random road block by
@@ -2091,7 +2091,7 @@ static bool GrowTown(Town *t)
 					return true;
 				}
 			}
-			tile = TILE_ADD(tile, ToTileIndexDiff(*ptr));
+			tile = TileAdd(tile, ToTileIndexDiff(*ptr));
 		}
 	}
 
@@ -3663,8 +3663,13 @@ static CommandCost TownActionRoadRebuild(Town *t, DoCommandFlag flags)
 		SetDParam(0, t->index);
 		SetDParamStr(1, company_name->string);
 
-		AddNewsItem(EconTime::UsingWallclockUnits() ? STR_NEWS_ROAD_REBUILDING_MINUTES : STR_NEWS_ROAD_REBUILDING_MONTHS,
-				NT_GENERAL, NF_NORMAL, NR_TOWN, t->index, NR_NONE, UINT32_MAX, company_name);
+		StringID msg;
+		if (EconTime::UsingWallclockUnits()) {
+			msg = (DayLengthFactor() > 1) ? STR_NEWS_ROAD_REBUILDING_PERIODS : STR_NEWS_ROAD_REBUILDING_MINUTES;
+		} else {
+			msg = STR_NEWS_ROAD_REBUILDING_MONTHS;
+		}
+		AddNewsItem(msg, NT_GENERAL, NF_NORMAL, NR_TOWN, t->index, NR_NONE, UINT32_MAX, company_name);
 		AI::BroadcastNewEvent(new ScriptEventRoadReconstruction((ScriptCompany::CompanyID)(Owner)_current_company, t->index));
 		Game::NewEvent(new ScriptEventRoadReconstruction((ScriptCompany::CompanyID)(Owner)_current_company, t->index));
 	}
@@ -3816,7 +3821,11 @@ static CommandCost TownActionBuyRights(Town *t, DoCommandFlag flags)
 		/* Spawn news message */
 		CompanyNewsInformation *cni = new CompanyNewsInformation(Company::Get(_current_company));
 		SetDParam(0, STR_NEWS_EXCLUSIVE_RIGHTS_TITLE);
-		SetDParam(1, EconTime::UsingWallclockUnits() ? STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MINUTES : STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MONTHS);
+		if (EconTime::UsingWallclockUnits()) {
+			SetDParam(1, (DayLengthFactor() > 1) ? STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_PERIOD : STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MINUTES);
+		} else {
+			SetDParam(1, STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_MONTHS);
+		}
 		SetDParam(2, t->index);
 		SetDParamStr(3, cni->company_name);
 		AddNewsItem(STR_MESSAGE_NEWS_FORMAT, NT_GENERAL, NF_COMPANY, NR_TOWN, t->index, NR_NONE, UINT32_MAX, cni);

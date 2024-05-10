@@ -1112,7 +1112,7 @@ STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Смен
 
 STR_GAME_OPTIONS_CURRENCY_CODE                                  :{STRING} ({STRING})
 
-###length 43
+###length 44
 STR_GAME_OPTIONS_CURRENCY_GBP                                   :Английский фунт
 STR_GAME_OPTIONS_CURRENCY_USD                                   :Доллар США
 STR_GAME_OPTIONS_CURRENCY_EUR                                   :Евро
@@ -1156,6 +1156,7 @@ STR_GAME_OPTIONS_CURRENCY_INR                                   :Индийск�
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Индонезийская рупия
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Малайзийский ринггит
 STR_GAME_OPTIONS_CURRENCY_LVL                                   :Латвийский лат
+STR_GAME_OPTIONS_CURRENCY_PTE                                   :Португальский эскудо
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Автосохранение
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Интервал автосохранения игры
@@ -1425,7 +1426,7 @@ STR_CONFIG_SETTING_INFINITE_MONEY                               :Неогран�
 STR_CONFIG_SETTING_INFINITE_MONEY_HELPTEXT                      :Разрешить компаниям неограниченные расходы; банкротство им в таком случае грозить не будет.
 
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN                         :Максимальная сумма кредита: {STRING}
-STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Максимальная сумма кредита для компании (без учета инфляции). Если установлено значение «нет», деньги не будут доступны, если их не предоставит игровой скрипт или настройка «Неограниченные финансы».
+STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_HELPTEXT                :Максимальная сумма кредита для компании (без учета инфляции). Если установлено значение «нет», у компаний не будет средств, если их не предоставит игровой скрипт или настройка «Неограниченные финансы».
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_VALUE                   :{CURRENCY_LONG}
 ###setting-zero-is-special
 STR_CONFIG_SETTING_MAXIMUM_INITIAL_LOAN_DISABLED                :нет
@@ -1469,7 +1470,7 @@ STR_CONFIG_SETTING_DISASTERS_HELPTEXT                           :Включен�
 STR_CONFIG_SETTING_CITY_APPROVAL                                :Отношение городской администрации к компаниям: {STRING}
 STR_CONFIG_SETTING_CITY_APPROVAL_HELPTEXT                       :Выберите уровень влияния шума и загрязнения окружающей среды компаниями на их рейтинг в городах и возможность дальнейшего строительства в городах
 
-STR_CONFIG_SETTING_MAP_HEIGHT_LIMIT                             :Максимальная высота объектов на карте: {STRING}
+STR_CONFIG_SETTING_MAP_HEIGHT_LIMIT                             :Ограничение высоты ландшафта: {STRING}
 STR_CONFIG_SETTING_MAP_HEIGHT_LIMIT_HELPTEXT                    :Установить максимальное значение высоты гор на карте. «(Автовыбор)» подберёт приемлемое значение после создания ландшафта.
 STR_CONFIG_SETTING_MAP_HEIGHT_LIMIT_VALUE                       :{NUM}
 ###setting-zero-is-special
@@ -1645,13 +1646,13 @@ STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES                        :Транспо�
 STR_CONFIG_SETTING_NEVER_EXPIRE_VEHICLES_HELPTEXT               :При включении все транспортные средства остаются доступными для покупки в любое время после начала их производства
 
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS                            :Игровое время: {STRING}
-STR_CONFIG_SETTING_TIMEKEEPING_UNITS_HELPTEXT                   :Выбор системы отсчёта времени, используемой в игре. После старта сменить её невозможно.{}{}Календарь - это классическая система, изначально использовавшаяся в OpenTTD: год состоит из 12 месяцев, в каждом из которых 28-31{NBSP}день.{}{}В режиме реального времени расчёты производства и финансовых показателей основаны на интервалах длительностью в 1{NBSP}минуту, что примерно соответствует 30{NBSP}дням в режиме календаря. Эти интервалы группируются в 12-минутные циклы, соответствующие 1{NBSP}году в классическом режиме.{}{}В любом случае, появление новых транспортных средств, зданий и инфраструктуры будет сопровождаться календарём с понятными датами.
+STR_CONFIG_SETTING_TIMEKEEPING_UNITS_HELPTEXT                   :Выбор системы отсчёта времени, используемой в игре. После старта сменить её невозможно.{}{}Календарь - это классическая система, изначально использовавшаяся в OpenTTD: год состоит из 12 месяцев, в каждом из которых 28-31 день.{}{}В режиме реального времени расчёты производства и финансовых показателей основаны на интервалах длительностью в 1 минуту, что примерно соответствует 30 дням в режиме календаря. Эти интервалы группируются в 12-минутные циклы, соответствующие 1 году в классическом режиме.{}{}В любом случае, появление новых транспортных средств, зданий и инфраструктуры будет сопровождаться календарём с понятными датами.
 ###length 2
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS_CALENDAR                   :Календарь
 STR_CONFIG_SETTING_TIMEKEEPING_UNITS_WALLCLOCK                  :Реальное время
 
 STR_CONFIG_SETTING_MINUTES_PER_YEAR                             :Продолжительность года: {STRING} мин.
-STR_CONFIG_SETTING_MINUTES_PER_YEAR_HELPTEXT                    :Выберите, сколько минут реального времени длится год в игре. По умолчанию{NBSP}- 12{NBSP}минут. Значение «0» остановит календарное время. Эта настройка не влияет на расчёт экономической модели в игре, и работает только в режиме реального времени.
+STR_CONFIG_SETTING_MINUTES_PER_YEAR_HELPTEXT                    :Выберите, сколько минут реального времени длится год в игре. По умолчанию - 12 минут. Значение «0» остановит календарное время. Эта настройка не влияет на расчёт экономической модели в игре, и работает только в режиме реального времени.
 
 STR_CONFIG_SETTING_MINUTES_PER_YEAR_VALUE                       :{NUM}
 ###setting-zero-is-special
@@ -1717,7 +1718,7 @@ STR_CONFIG_SETTING_SNOWLINE_HEIGHT                              :Высота с
 STR_CONFIG_SETTING_SNOWLINE_HEIGHT_HELPTEXT                     :Выберите, на какой высоте в субарктическом климате устанавливается снеговой покров. Наличие снега влияет на расстановку предприятий и на условия роста городов.{}Значение может быть изменено только в редакторе сценариев; иначе оно рассчитывается в зависимости от значения «снежного покрытия».
 
 STR_CONFIG_SETTING_SNOW_COVERAGE                                :Снежное покрытие: {STRING}
-STR_CONFIG_SETTING_SNOW_COVERAGE_HELPTEXT                       :Выберите примерную относительную площадь суши, покрытой снегом в субарктическом климате. Наличие снега влияет на расположение предприятий и на условия роста городов.{}Это значение используется только при создании карты. Земля на уровне моря и береговые клетки никогда не покрываются снегом.
+STR_CONFIG_SETTING_SNOW_COVERAGE_HELPTEXT                       :Выберите примерную относительную площадь суши, покрытой снегом в субарктическом климате. Наличие снега влияет на расположение предприятий и на условия роста городов.{}Это значение используется только при создании карты. Земля на уровне моря и береговые поля никогда не покрываются снегом.
 STR_CONFIG_SETTING_SNOW_COVERAGE_VALUE                          :{NUM}%
 
 STR_CONFIG_SETTING_DESERT_COVERAGE                              :Песчаное покрытие: {STRING}
@@ -1760,8 +1761,8 @@ STR_CONFIG_SETTING_HEIGHTMAP_ROTATION_CLOCKWISE                 :По часов
 
 STR_CONFIG_SETTING_SE_FLAT_WORLD_HEIGHT                         :Уровень высоты для карт с плоским рельефом: {STRING}
 ###length 2
-STR_CONFIG_SETTING_EDGES_NOT_EMPTY                              :{WHITE}Одна или несколько клеток в северном углу не пусты
-STR_CONFIG_SETTING_EDGES_NOT_WATER                              :{WHITE}Одна или несколько клеток берега без воды
+STR_CONFIG_SETTING_EDGES_NOT_EMPTY                              :{WHITE}Как минимум одно поле в северном углу карты не пустое
+STR_CONFIG_SETTING_EDGES_NOT_WATER                              :{WHITE}Как минимум одно поле у края карты - суша
 
 STR_CONFIG_SETTING_STATION_SPREAD                               :Максимальный размер станции: {STRING}
 STR_CONFIG_SETTING_STATION_SPREAD_HELPTEXT                      :Максимальный размер области, которую может занимать станция или её составные части.{}Имейте в виду, что большие значения замедляют игру.
@@ -1972,7 +1973,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Объём па
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} МиБ
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Интервал тех. обслуживания в процентах: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :При включении транспортные средства будут отправляться на техническое обслуживание после падения надёжности на указанный процент от максимальной.{}Например, при максимальной надёжности 90% и указанном интервале ТО 20% транспортное средство уйдёт на обслуживание при падении надёжности до 72%.
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :При включении - транспортные средства будут отправляться на техническое обслуживание после падения надёжности на указанный процент от максимальной.{}Например, при максимальной надёжности 90% и указанном интервале ТО 20% транспортное средство уйдёт на обслуживание при падении надёжности до 72%.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Интервал ТО по умолчанию для поездов: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Настройка периодичности технического обслуживания для новых поездов
@@ -2055,13 +2056,13 @@ STR_CONFIG_SETTING_COLOURED_NEWS_YEAR_HELPTEXT                  :Обычно в
 STR_CONFIG_SETTING_STARTING_YEAR                                :Год начала игры: {STRING}
 
 STR_CONFIG_SETTING_ENDING_YEAR                                  :Последний год игры: {STRING}
-STR_CONFIG_SETTING_ENDING_YEAR_HELPTEXT                         :По прошествии указанного года рассчитывается рейтинг компании и выводится таблица рекордов. После этого игру можно продолжить.{}Если указанный год предшествует году начала игры, то таблица рекордов не отображается.
+STR_CONFIG_SETTING_ENDING_YEAR_HELPTEXT                         :По прошествии указанного года рейтинг компании рассчитывается, записывается и выводится таблица рекордов. После этого игру можно продолжить.{}Если указанный год предшествует году начала игры, то таблица рекордов не отображается.
 STR_CONFIG_SETTING_ENDING_YEAR_VALUE                            :{NUM}
 ###setting-zero-is-special
 STR_CONFIG_SETTING_ENDING_YEAR_ZERO                             :Никогда
 
 STR_CONFIG_SETTING_ECONOMY_TYPE                                 :Экономика: {STRING}
-STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :При плавной экономике изменения в производительности предприятий небольшие и происходят чаще.{}При стабильной экономике предприятия не закрываются и не меняют производительность.{}Типы предприятий, добавленные с помощью NewGRF, могут игнорировать эту настройку.
+STR_CONFIG_SETTING_ECONOMY_TYPE_HELPTEXT                        :При плавной экономике изменения в производительности предприятий небольшие и происходят чаще.{}При стабильной экономике предприятия не закрываются и не меняют производительность.{}Типы предприятий, добавленные с помощью модулей NewGRF, могут игнорировать эту настройку.
 ###length 3
 STR_CONFIG_SETTING_ECONOMY_TYPE_ORIGINAL                        :классическая
 STR_CONFIG_SETTING_ECONOMY_TYPE_SMOOTH                          :плавная
@@ -2072,7 +2073,7 @@ STR_CONFIG_SETTING_FEEDER_PAYMENT_SHARE_HELPTEXT                :Процент 
 
 STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY                         :При перетаскивании ставить сигналы каждые: {STRING}
 STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY_HELPTEXT                :Настройка периодичности расстановки сигналов методом перетаскивания. Сигналы будут устанавливаться до первого встреченного препятствия (пересечения или другого сигнала).
-STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY_VALUE                   :{COMMA} клет{P ку ки ок}
+STR_CONFIG_SETTING_DRAG_SIGNALS_DENSITY_VALUE                   :{COMMA} пол{P е я ей}
 STR_CONFIG_SETTING_DRAG_SIGNALS_FIXED_DISTANCE                  :Равномерная расстановка сигналов при перетаскивании: {STRING}
 STR_CONFIG_SETTING_DRAG_SIGNALS_FIXED_DISTANCE_HELPTEXT         :Настройка расстановки сигналов с помощью Ctrl+перетаскивания. Если равномерная расстановка отключена, то сигналы дополнительно ставятся перед мостами, туннелями и после них. Если включена, то сигналы ставятся ровно на каждой N-й клетке.
 
@@ -2202,12 +2203,12 @@ STR_CONFIG_SETTING_LINKGRAPH_ACCURACY                           :Точност�
 STR_CONFIG_SETTING_LINKGRAPH_ACCURACY_HELPTEXT                  :Чем выше данное значение, тем больше процессорного времени используется для расчёта графа грузоперевозок. При высоких значениях возможны задержки в игре. Однако при низких значениях расчёты грузопотоков будут неточными, и грузы, возможно, будут отправляться не туда, куда нужно.
 
 STR_CONFIG_SETTING_DEMAND_DISTANCE                              :Зависимость спроса от расстояния: {STRING}
-STR_CONFIG_SETTING_DEMAND_DISTANCE_HELPTEXT                     :Если это значение больше 0, то количество груза, отправляемого с одной станции на другую, будет зависеть от расстояния между станциями. Чем выше это значение, тем больше груза будет отправляться к ближним станциям и меньше{NBSP}- к дальним.
+STR_CONFIG_SETTING_DEMAND_DISTANCE_HELPTEXT                     :Если это значение больше 0, то количество груза, отправляемого с одной станции на другую, будет зависеть от расстояния между станциями. Чем выше это значение, тем больше груза будет отправляться к ближним станциям и меньше - к дальним.
 STR_CONFIG_SETTING_DEMAND_SIZE                                  :Количество возвращаемого груза при симметричном распределении: {STRING}
 STR_CONFIG_SETTING_DEMAND_SIZE_HELPTEXT                         :Установка этого значения ниже 100% заставит распределение быть менее «симметричным»: количество возвращаемого груза сможет быть меньше, чем количество отправленного. Установка в 0% сделает распределение полностью асимметричным.
 
 STR_CONFIG_SETTING_SHORT_PATH_SATURATION                        :Предел загрузки коротких маршрутов перед использованием вместительных: {STRING}
-STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :При наличии нескольких маршрутов между станциями алгоритм распределения грузов будет использовать кратчайший маршрут до его загрузки, потом следующий по длине и т.{NBSP}д. При избытке груза маршруты будут перегружаться начиная с самых производительных. Загрузка рассчитывается исходя из оценки пропускной способности (которая может быть неточной) и интенсивности использования. Эта настройка определяет, насколько загружать маршрут перед тем, как начать использовать следующий. Установите значение ниже 100% для того, чтобы избежать задержки груза, если пропускная способность маршрута будет переоценена алгоритмом.
+STR_CONFIG_SETTING_SHORT_PATH_SATURATION_HELPTEXT               :При наличии нескольких маршрутов между станциями алгоритм распределения грузов будет использовать кратчайший маршрут до его загрузки, потом следующий по длине и{NBSP}т.{NBSP}д. При избытке груза маршруты будут перегружаться начиная с самых производительных. Загрузка рассчитывается исходя из оценки пропускной способности (которая может быть неточной) и интенсивности использования. Эта настройка определяет, насколько загружать маршрут перед тем, как начать использовать следующий. Установите значение ниже 100% для того, чтобы избежать задержки груза, если пропускная способность маршрута будет переоценена алгоритмом.
 
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY                  :Система единиц скорости наземных ТС: {STRING}
 STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_NAUTICAL         :Система единиц скорости водных и воздушных ТС: {STRING}
@@ -3253,7 +3254,8 @@ STR_LAND_AREA_INFORMATION_TRAM_OWNER                            :{BLACK}Влад
 STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Владелец ж/д пути: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Администрация: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :Нет
-STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Координаты: {LTBLUE}{NUM} × {NUM} × {NUM} ({STRING})
+STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Координаты: {LTBLUE}{NUM} × {NUM} × {NUM}
+STR_LAND_AREA_INFORMATION_LANDINFO_INDEX                        :{BLACK}Номер поля: {LTBLUE}{NUM} ({HEX})
 STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Построено/обновлено: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Класс станции: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Тип станции: {LTBLUE}{STRING}
@@ -3371,9 +3373,9 @@ STR_ABOUT_COPYRIGHT_OPENTTD                                     :{BLACK}OpenTTD 
 STR_FRAMERATE_CAPTION                                           :{WHITE}Скорость игры
 STR_FRAMERATE_CAPTION_SMALL                                     :{STRING}{WHITE} ({DECIMAL}x)
 STR_FRAMERATE_RATE_GAMELOOP                                     :{BLACK}Скорость расчёта игры: {STRING}
-STR_FRAMERATE_RATE_GAMELOOP_TOOLTIP                             :{BLACK}Кол-во игровых циклов, рассчитываемых в секунду.
+STR_FRAMERATE_RATE_GAMELOOP_TOOLTIP                             :{BLACK}Кол-во игровых циклов, рассчитываемых в секунду
 STR_FRAMERATE_RATE_BLITTER                                      :{BLACK}Вывод на экран: {STRING}
-STR_FRAMERATE_RATE_BLITTER_TOOLTIP                              :{BLACK}Кол-во отображаемых кадров в секунду.
+STR_FRAMERATE_RATE_BLITTER_TOOLTIP                              :{BLACK}Кол-во отображаемых кадров в секунду
 STR_FRAMERATE_SPEED_FACTOR                                      :{BLACK}Текущая скорость игры: {DECIMAL}x
 STR_FRAMERATE_SPEED_FACTOR_TOOLTIP                              :{BLACK}Фактическая скорость игры (по сравнению с ожидаемой скоростью при нормальной скорости симуляции).
 STR_FRAMERATE_CURRENT                                           :{WHITE}Сейчас
@@ -4061,8 +4063,8 @@ STR_COMPANY_VIEW_COMPANY_VALUE                                  :{GOLD}Стои�
 STR_COMPANY_VIEW_INFRASTRUCTURE                                 :{GOLD}Инфраструктура:
 STR_COMPANY_VIEW_INFRASTRUCTURE_RAIL                            :{WHITE}{COMMA} ж/д участ{P ок ка ков}
 STR_COMPANY_VIEW_INFRASTRUCTURE_ROAD                            :{WHITE}{COMMA} дорожны{P й х х} участ{P ок ка ков}
-STR_COMPANY_VIEW_INFRASTRUCTURE_WATER                           :{WHITE}{COMMA} водны{P й х х} участ{P ок ка ков}
-STR_COMPANY_VIEW_INFRASTRUCTURE_STATION                         :{WHITE}{COMMA} участ{P ок ка ков} занято станциями
+STR_COMPANY_VIEW_INFRASTRUCTURE_WATER                           :{WHITE}{COMMA} водн{P ое ых ых} пол{P е я ей}
+STR_COMPANY_VIEW_INFRASTRUCTURE_STATION                         :{WHITE}{COMMA} пол{P е я ей} занято станциями
 STR_COMPANY_VIEW_INFRASTRUCTURE_AIRPORT                         :{WHITE}{COMMA} аэропорт{P "" а ов}
 STR_COMPANY_VIEW_INFRASTRUCTURE_NONE                            :{WHITE}Нет
 
@@ -4101,7 +4103,7 @@ STR_COMPANY_INFRASTRUCTURE_VIEW_RAIL_SECT                       :{GOLD}Ж/д у�
 STR_COMPANY_INFRASTRUCTURE_VIEW_SIGNALS                         :{WHITE}Сигналы
 STR_COMPANY_INFRASTRUCTURE_VIEW_ROAD_SECT                       :{GOLD}Дорожные участки:
 STR_COMPANY_INFRASTRUCTURE_VIEW_TRAM_SECT                       :{GOLD}Трамвайные участки:
-STR_COMPANY_INFRASTRUCTURE_VIEW_WATER_SECT                      :{GOLD}Водные участки:
+STR_COMPANY_INFRASTRUCTURE_VIEW_WATER_SECT                      :{GOLD}Водные поля:
 STR_COMPANY_INFRASTRUCTURE_VIEW_CANALS                          :{WHITE}Каналы
 STR_COMPANY_INFRASTRUCTURE_VIEW_STATION_SECT                    :{GOLD}Станции:
 STR_COMPANY_INFRASTRUCTURE_VIEW_STATIONS                        :{WHITE}Площадь станций
@@ -5030,8 +5032,6 @@ STR_AI_SETTINGS_CAPTION_GAMESCRIPT                              :игровых 
 STR_AI_SETTINGS_CLOSE                                           :{BLACK}Закрыть
 STR_AI_SETTINGS_RESET                                           :{BLACK}Сброс
 STR_AI_SETTINGS_SETTING                                         :{STRING}: {ORANGE}{STRING}
-STR_AI_SETTINGS_SETTING_DEVIATION                               :{STRING}: {ORANGE}[{STRING}, {STRING}]
-STR_AI_SETTINGS_JUST_DEVIATION                                  :[{STRING}, {STRING}]
 
 
 # Textfile window

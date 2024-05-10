@@ -525,7 +525,7 @@ protected:
 		if (EconTime::UsingWallclockUnits()) {
 			auto *wid = this->GetWidget<NWidgetCore>(WID_GRAPH_FOOTER);
 			if (wid != nullptr) {
-				wid->SetDataTip(STR_GRAPH_LAST_72_MINUTES_TIME_LABEL, STR_NULL);
+				wid->SetDataTip((DayLengthFactor() > 1) ? STR_GRAPH_LAST_72_PRODUCTION_INTERVALS_TIME_LABEL : STR_GRAPH_LAST_72_MINUTES_TIME_LABEL, STR_NULL);
 			}
 		}
 
@@ -887,7 +887,7 @@ struct ExcludingCargoBaseGraphWindow : BaseGraphWindow {
 			}
 
 			case WID_ECBG_MATRIX: {
-				uint row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_ECBG_MATRIX);
+				int32_t row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_ECBG_MATRIX);
 				if (row >= this->vscroll->GetCount()) return;
 
 				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {
@@ -929,7 +929,7 @@ struct DeliveredCargoGraphWindow : ExcludingCargoBaseGraphWindow {
 		if (EconTime::UsingWallclockUnits()) {
 			auto *wid = this->GetWidget<NWidgetCore>(WID_GRAPH_FOOTER);
 			if (wid != nullptr) {
-				wid->SetDataTip(STR_GRAPH_LAST_72_MINUTES_TIME_LABEL, STR_NULL);
+				wid->SetDataTip((DayLengthFactor() > 1) ? STR_GRAPH_LAST_72_PRODUCTION_INTERVALS_TIME_LABEL : STR_GRAPH_LAST_72_MINUTES_TIME_LABEL, STR_NULL);
 			}
 		}
 
@@ -1301,6 +1301,8 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			}
 			val *= 74;
 			val /= _settings_time.ticks_per_minute;
+		} else if (EconTime::UsingWallclockUnits()) {
+			decimals = 0;
 		} else {
 			if ((10 % DayLengthFactor()) == 0) {
 				decimals = 0;
@@ -1501,7 +1503,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			case WID_GRAPH_FOOTER_CUSTOM:
 				if (_cargo_payment_x_mode) {
 					SetDParam(0, STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_SPEED);
-					SetDParam(1, STR_UNIT_NAME_VELOCITY_IMPERIAL + _settings_game.locale.units_velocity);
+					SetDParam(1, GetVelocityUnitName(VEH_TRAIN));
 				} else {
 					if (_settings_time.time_in_minutes) {
 						SetDParam(0, STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES);
@@ -1897,7 +1899,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		this->num_on_x_axis = MAX_STATION_CARGO_HISTORY_DAYS; // Four weeks
 		this->num_vert_lines = MAX_STATION_CARGO_HISTORY_DAYS;
 		this->draw_dates = false;
-		const uint16_t x_unit = EconTime::UsingWallclockUnits() ? 4 : 2;
+		const uint16_t x_unit = EconTime::UsingWallclockUnits() ? 4 * DayLengthFactor() : 2;
 		this->x_values_start = x_unit;
 		this->x_values_increment = x_unit;
 
@@ -1924,7 +1926,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 		}
 		if (widget == WID_GRAPH_FOOTER_CUSTOM) {
 			SetDParam(0, EconTime::UsingWallclockUnits() ? STR_GRAPH_STATION_CARGO_X_LABEL_SECONDS : STR_GRAPH_STATION_CARGO_X_LABEL_DAYS);
-			SetDParam(1, EconTime::UsingWallclockUnits() ? 96 : 48);
+			SetDParam(1, EconTime::UsingWallclockUnits() ? 96 * DayLengthFactor() : 48);
 		}
 	}
 
@@ -2027,7 +2029,7 @@ struct StationCargoGraphWindow final : BaseGraphWindow {
 			}
 
 			case WID_SCG_MATRIX: {
-				uint row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_SCG_MATRIX);
+				int32_t row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_SCG_MATRIX);
 				if (row >= this->vscroll->GetCount()) return;
 
 				for (const CargoSpec *cs : _sorted_standard_cargo_specs) {

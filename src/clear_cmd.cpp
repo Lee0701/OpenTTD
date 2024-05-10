@@ -199,8 +199,7 @@ static void DrawTile_Clear(TileInfo *ti, DrawTileProcParams params)
 
 static int GetSlopePixelZ_Clear(TileIndex tile, uint x, uint y, bool)
 {
-	int z;
-	Slope tileh = GetTilePixelSlope(tile, &z);
+	auto [tileh, z] = GetTilePixelSlope(tile);
 
 	return z + GetPartialPixelZ(x & 0xF, y & 0xF, tileh);
 }
@@ -215,25 +214,25 @@ static void UpdateFences(TileIndex tile)
 	assert_tile(IsTileType(tile, MP_CLEAR) && IsClearGround(tile, CLEAR_FIELDS), tile);
 	bool dirty = false;
 
-	bool neighbour = (IsTileType(TILE_ADDXY(tile, 1, 0), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 1, 0), CLEAR_FIELDS));
+	bool neighbour = (IsTileType(TileAddXY(tile, 1, 0), MP_CLEAR) && IsClearGround(TileAddXY(tile, 1, 0), CLEAR_FIELDS));
 	if (!neighbour && GetFence(tile, DIAGDIR_SW) == 0) {
 		SetFence(tile, DIAGDIR_SW, 3);
 		dirty = true;
 	}
 
-	neighbour = (IsTileType(TILE_ADDXY(tile, 0, 1), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 0, 1), CLEAR_FIELDS));
+	neighbour = (IsTileType(TileAddXY(tile, 0, 1), MP_CLEAR) && IsClearGround(TileAddXY(tile, 0, 1), CLEAR_FIELDS));
 	if (!neighbour && GetFence(tile, DIAGDIR_SE) == 0) {
 		SetFence(tile, DIAGDIR_SE, 3);
 		dirty = true;
 	}
 
-	neighbour = (IsTileType(TILE_ADDXY(tile, -1, 0), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, -1, 0), CLEAR_FIELDS));
+	neighbour = (IsTileType(TileAddXY(tile, -1, 0), MP_CLEAR) && IsClearGround(TileAddXY(tile, -1, 0), CLEAR_FIELDS));
 	if (!neighbour && GetFence(tile, DIAGDIR_NE) == 0) {
 		SetFence(tile, DIAGDIR_NE, 3);
 		dirty = true;
 	}
 
-	neighbour = (IsTileType(TILE_ADDXY(tile, 0, -1), MP_CLEAR) && IsClearGround(TILE_ADDXY(tile, 0, -1), CLEAR_FIELDS));
+	neighbour = (IsTileType(TileAddXY(tile, 0, -1), MP_CLEAR) && IsClearGround(TileAddXY(tile, 0, -1), CLEAR_FIELDS));
 	if (!neighbour && GetFence(tile, DIAGDIR_NW) == 0) {
 		SetFence(tile, DIAGDIR_NW, 3);
 		dirty = true;

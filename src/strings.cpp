@@ -769,12 +769,21 @@ struct UnitsLong {
 };
 
 /** Unit conversions for velocity. */
-static const Units _units_velocity[] = {
-	{ { 1.0      }, STR_UNITS_VELOCITY_IMPERIAL,  0 },
-	{ { 1.609344 }, STR_UNITS_VELOCITY_METRIC,    0 },
-	{ { 0.44704  }, STR_UNITS_VELOCITY_SI,        0 },
+static const Units _units_velocity_calendar[] = {
+	{ { 1.0      }, STR_UNITS_VELOCITY_IMPERIAL,      0 },
+	{ { 1.609344 }, STR_UNITS_VELOCITY_METRIC,        0 },
+	{ { 0.44704  }, STR_UNITS_VELOCITY_SI,            0 },
 	{ { 0.578125 }, STR_UNITS_VELOCITY_GAMEUNITS_DAY, 1 },
-	{ { 0.868976 }, STR_UNITS_VELOCITY_KNOTS,     0 },
+	{ { 0.868976 }, STR_UNITS_VELOCITY_KNOTS,         0 },
+};
+
+/** Unit conversions for velocity. */
+static const Units _units_velocity_realtime[] = {
+	{ { 1.0      }, STR_UNITS_VELOCITY_IMPERIAL,      0 },
+	{ { 1.609344 }, STR_UNITS_VELOCITY_METRIC,        0 },
+	{ { 0.44704  }, STR_UNITS_VELOCITY_SI,            0 },
+	{ { 0.289352 }, STR_UNITS_VELOCITY_GAMEUNITS_SEC, 1 },
+	{ { 0.868976 }, STR_UNITS_VELOCITY_KNOTS,         0 },
 };
 
 /** Unit conversions for power. */
@@ -835,6 +844,7 @@ static const Units _units_time_days_or_seconds[] = {
 static const Units _units_time_months_or_minutes[] = {
 	{ { 1 }, STR_UNITS_MONTHS,  0 },
 	{ { 1 }, STR_UNITS_MINUTES, 0 },
+	{ { 1 }, STR_UNITS_PRODUCTION_INTERVALS, 0 },
 };
 
 /** Unit conversions for time in calendar years or economic periods */
@@ -847,18 +857,49 @@ static const Units _units_time_years_or_periods[] = {
 static const Units _units_time_years_or_minutes[] = {
 	{ { 1  }, STR_UNITS_YEARS,  0 },
 	{ { 12 }, STR_UNITS_MINUTES, 0 },
+	{ { 1  }, STR_UNITS_PERIODS, 0 },
 };
 
-/**
- * Get index for velocity conversion units for a vehicle type.
- * @param type VehicleType to convert velocity for.
- * @return Index within velocity conversion units for vehicle type.
- */
-static byte GetVelocityUnits(VehicleType type)
+StringID GetVelocityUnitName(VehicleType type)
 {
-	if (type == VEH_SHIP || type == VEH_AIRCRAFT) return _settings_game.locale.units_velocity_nautical;
+	uint8_t setting = (type == VEH_SHIP || type == VEH_AIRCRAFT) ? _settings_game.locale.units_velocity_nautical : _settings_game.locale.units_velocity;
 
-	return _settings_game.locale.units_velocity;
+	assert(setting < lengthof(_units_velocity_calendar));
+	assert(setting < lengthof(_units_velocity_realtime));
+	static_assert(lengthof(_units_velocity_calendar) == 5 && lengthof(_units_velocity_realtime) == 5);
+
+	switch (setting) {
+		case 0:
+		case 1:
+		case 2:
+			return STR_UNIT_NAME_VELOCITY_IMPERIAL + setting;
+
+		case 3:
+			return EconTime::UsingWallclockUnits() ? STR_UNIT_NAME_VELOCITY_GAMEUNITS_WALLCLOCK : STR_UNIT_NAME_VELOCITY_GAMEUNITS;
+
+		case 4:
+			return STR_CONFIG_SETTING_LOCALISATION_UNITS_VELOCITY_KNOTS;
+
+		default:
+			NOT_REACHED();
+	}
+}
+
+/**
+ * Get the correct velocity units depending on the vehicle type and whether we're using real-time units.
+ * @param type VehicleType to convert velocity for.
+ * @return The Units for the proper vehicle and time mode.
+ */
+static const Units GetVelocityUnits(VehicleType type)
+{
+	uint8_t setting = (type == VEH_SHIP || type == VEH_AIRCRAFT) ? _settings_game.locale.units_velocity_nautical : _settings_game.locale.units_velocity;
+
+	assert(setting < lengthof(_units_velocity_calendar));
+	assert(setting < lengthof(_units_velocity_realtime));
+
+	if (EconTime::UsingWallclockUnits()) return _units_velocity_realtime[setting];
+
+	return _units_velocity_calendar[setting];
 }
 
 /**
@@ -871,7 +912,7 @@ uint ConvertSpeedToDisplaySpeed(uint speed, VehicleType type)
 	/* For historical reasons we don't want to mess with the
 	 * conversion for speed. So, don't round it and keep the
 	 * original conversion factors instead of the real ones. */
-	return _units_velocity[GetVelocityUnits(type)].c.ToDisplay(speed, false);
+	return GetVelocityUnits(type).c.ToDisplay(speed, false);
 }
 
 /**
@@ -881,8 +922,9 @@ uint ConvertSpeedToDisplaySpeed(uint speed, VehicleType type)
  */
 uint ConvertSpeedToUnitDisplaySpeed(uint speed, VehicleType type)
 {
-	uint result = ConvertSpeedToDisplaySpeed(speed, type);
-	for (uint i = 0; i < _units_velocity[_settings_game.locale.units_velocity].decimal_places; i++) {
+	const Units &units = GetVelocityUnits(type);
+	uint result = units.c.ToDisplay(speed, false);
+	for (uint i = 0; i < units.decimal_places; i++) {
 		result /= 10;
 	}
 	return result;
@@ -895,7 +937,7 @@ uint ConvertSpeedToUnitDisplaySpeed(uint speed, VehicleType type)
  */
 uint ConvertDisplaySpeedToSpeed(uint speed, VehicleType type)
 {
-	return _units_velocity[GetVelocityUnits(type)].c.FromDisplay(speed);
+	return GetVelocityUnits(type).c.FromDisplay(speed);
 }
 
 /**
@@ -905,7 +947,7 @@ uint ConvertDisplaySpeedToSpeed(uint speed, VehicleType type)
  */
 uint ConvertKmhishSpeedToDisplaySpeed(uint speed, VehicleType type)
 {
-	return _units_velocity[GetVelocityUnits(type)].c.ToDisplay(speed * 10, false) / 16;
+	return GetVelocityUnits(type).c.ToDisplay(speed * 10, false) / 16;
 }
 
 /**
@@ -915,7 +957,7 @@ uint ConvertKmhishSpeedToDisplaySpeed(uint speed, VehicleType type)
  */
 uint ConvertDisplaySpeedToKmhishSpeed(uint speed, VehicleType type)
 {
-	return _units_velocity[GetVelocityUnits(type)].c.FromDisplay(speed * 16, true, 10);
+	return GetVelocityUnits(type).c.FromDisplay(speed * 16, true, 10);
 }
 
 /**
@@ -1654,9 +1696,7 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 					int64_t arg = args.GetNextParameter<int64_t>();
 					// Unpack vehicle type from packed argument to get desired units.
 					VehicleType vt = static_cast<VehicleType>(GB(arg, 56, 8));
-					byte units = GetVelocityUnits(vt);
-					assert(units < lengthof(_units_velocity));
-					const auto &x = _units_velocity[units];
+					const auto &x = GetVelocityUnits(vt);
 					auto tmp_params = MakeParameters(ConvertKmhishSpeedToDisplaySpeed(GB(arg, 0, 56), vt), x.decimal_places);
 					FormatString(builder, GetStringPtr(x.s), tmp_params);
 					break;
@@ -1713,13 +1753,16 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 				case SCC_UNITS_DAYS_OR_SECONDS: { // {UNITS_DAYS_OR_SECONDS}
 					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
 					const auto &x = _units_time_days_or_seconds[realtime];
-					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
+					int64_t duration = args.GetNextParameter<int64_t>();
+					if (realtime) duration *= DayLengthFactor();
+					auto tmp_params = MakeParameters(x.c.ToDisplay(duration), x.decimal_places);
 					FormatString(builder, GetStringPtr(x.s), tmp_params);
 					break;
 				}
 
 				case SCC_UNITS_MONTHS_OR_MINUTES: { // {UNITS_MONTHS_OR_MINUTES}
 					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					if (realtime > 0 && DayLengthFactor() > 1) realtime++;
 					const auto &x = _units_time_months_or_minutes[realtime];
 					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
 					FormatString(builder, GetStringPtr(x.s), tmp_params);
@@ -1736,6 +1779,7 @@ static void FormatString(StringBuilder builder, const char *str_arg, StringParam
 
 				case SCC_UNITS_YEARS_OR_MINUTES: { // {UNITS_YEARS_OR_MINUTES}
 					uint8_t realtime = EconTime::UsingWallclockUnits(_game_mode == GM_MENU);
+					if (realtime > 0 && DayLengthFactor() > 1) realtime++;
 					const auto &x = _units_time_years_or_minutes[realtime];
 					auto tmp_params = MakeParameters(x.c.ToDisplay(args.GetNextParameter<int64_t>()), x.decimal_places);
 					FormatString(builder, GetStringPtr(x.s), tmp_params);

@@ -539,6 +539,7 @@ struct ConstructionSettings {
 	CalTime::Year no_expire_objects_after;   ///< do not expire objects after this year
 	bool     ignore_object_intro_dates;      ///< allow players to build objects before their introduction dates (does not include during map generation)
 	bool     convert_town_road_no_houses;    ///< allow converting town roads to a type which does not allow houses
+	bool     purchased_land_clear_ground;    ///< purchased land uses clear ground
 
 	uint32_t terraform_per_64k_frames;       ///< how many tile heights may, over a long period, be terraformed per 65536 frames?
 	uint16_t terraform_frame_burst;          ///< how many tile heights may, over a short period, be terraformed?
@@ -568,7 +569,6 @@ struct AISettings {
 struct ScriptSettings {
 	uint32_t script_max_opcode_till_suspend;   ///< max opcode calls till scripts will suspend
 	uint32_t script_max_memory_megabytes;      ///< limit on memory a single script instance may have allocated
-	bool     script_disable_param_randomisation; ///< disable script parameter randomisation
 };
 
 /** Settings related to the new pathfinder. */
@@ -902,7 +902,7 @@ struct GameSettings {
 
 	uint8_t EffectiveDayLengthFactor() const
 	{
-		return this->economy.timekeeping_units == TKU_CALENDAR ? this->economy.day_length_factor : 1;
+		return this->economy.day_length_factor;
 	}
 };
 

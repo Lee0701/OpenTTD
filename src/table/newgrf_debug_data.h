@@ -627,14 +627,17 @@ class NIHVehicle : public NIHelper {
 						e->age, e->info.base_life.base(), e->duration_phase_1, e->duration_phase_2, e->duration_phase_3,
 						e->duration_phase_1 + e->duration_phase_2 + e->duration_phase_3);
 				output.print(buffer);
-				seprintf(buffer, lastof(buffer), "    Reliability: %u, spd_dec: %u, start: %u, max: %u, final: %u",
-						e->reliability, e->reliability_spd_dec, e->reliability_start, e->reliability_max, e->reliability_final);
+				seprintf(buffer, lastof(buffer), "    Reliability: %u, spd_dec: %u (%u), start: %u, max: %u, final: %u",
+						e->reliability, e->reliability_spd_dec, e->info.decay_speed, e->reliability_start, e->reliability_max, e->reliability_final);
 				output.print(buffer);
 				seprintf(buffer, lastof(buffer), "    Cargo type: %u, refit mask: 0x" OTTD_PRINTFHEX64 ", refit cost: %u",
 						e->info.cargo_type, e->info.refit_mask, e->info.refit_cost);
 				output.print(buffer);
-				seprintf(buffer, lastof(buffer), "    Cargo ageing: %u, cargo load speed: %u",
-						e->info.decay_speed, e->info.load_amount);
+				seprintf(buffer, lastof(buffer), "    Cargo age period: %u, cargo load speed: %u",
+						e->info.cargo_age_period, e->info.load_amount);
+				output.print(buffer);
+				seprintf(buffer, lastof(buffer), "    Company availability: %X, climates: %X",
+						e->company_avail, e->info.climates);
 				output.print(buffer);
 
 				output.register_next_line_click_flag_toggle(2 << flag_shift);
@@ -1242,7 +1245,7 @@ class NIHIndustry : public NIHelper {
 					output.print(buffer);
 				}
 				output.print("  Produces:");
-				for (uint i = 0; i < lengthof(ind->produced_cargo); i++) {
+				for (uint i = 0; i < std::size(ind->produced_cargo); i++) {
 					if (ind->produced_cargo[i] != INVALID_CARGO) {
 						seprintf(buffer, lastof(buffer), "    %s:", GetStringPtr(CargoSpec::Get(ind->produced_cargo[i])->name));
 						output.print(buffer);
@@ -1258,7 +1261,7 @@ class NIHIndustry : public NIHelper {
 					}
 				}
 				output.print("  Accepts:");
-				for (uint i = 0; i < lengthof(ind->accepts_cargo); i++) {
+				for (uint i = 0; i < std::size(ind->accepts_cargo); i++) {
 					if (ind->accepts_cargo[i] != INVALID_CARGO) {
 						seprintf(buffer, lastof(buffer), "    %s: waiting: %u",
 								GetStringPtr(CargoSpec::Get(ind->accepts_cargo[i])->name), ind->incoming_cargo_waiting[i]);
@@ -2469,7 +2472,7 @@ class NIHRoadStop : public NIHelper {
 		const RoadStopSpec *spec = GetRoadStopSpec(index);
 		if (spec) {
 			uint class_id = RoadStopClass::Get(spec->cls_id)->global_id;
-			char *b = buffer + seprintf(buffer, lastof(buffer), "  class ID: %c%c%c%c, spec ID: %u", class_id >> 24, class_id >> 16, class_id >> 8, class_id, spec->spec_id);
+			char *b = buffer + seprintf(buffer, lastof(buffer), "  class ID: %c%c%c%c", class_id >> 24, class_id >> 16, class_id >> 8, class_id);
 			if (spec->grf_prop.grffile != nullptr) {
 				b += seprintf(b, lastof(buffer), "  (local ID: %u)", spec->grf_prop.local_id);
 			}
@@ -2531,7 +2534,7 @@ class NIHNewLandscape : public NIHelper {
 		TileInfo ti;
 		ti.x = TileX(index);
 		ti.y = TileY(index);
-		ti.tileh = GetTilePixelSlope(index, &ti.z);
+		std::tie(ti.tileh, ti.z) = GetTilePixelSlope(index);
 		ti.tile = index;
 
 		NewLandscapeResolverObject ro(nullptr, &ti, NEW_LANDSCAPE_ROCKS);

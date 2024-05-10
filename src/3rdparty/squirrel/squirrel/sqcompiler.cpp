@@ -15,6 +15,8 @@
 #include "sqvm.h"
 #include "sqtable.h"
 
+#include "../../../core/bit_cast.hpp"
+
 #include "../../../string_func.h"
 
 #include "../../../safeguards.h"
@@ -660,8 +662,7 @@ public:
 							_fs->AddInstruction(_OP_LOADINT, _exst._deref,_integer(constval));
 						}
 						else if(ctype == OT_FLOAT && sizeof(SQFloat) == sizeof(SQInt32)) {
-							SQFloat f = _float(constval);
-							_fs->AddInstruction(_OP_LOADFLOAT, _exst._deref,*((SQInt32 *)&f));
+							_fs->AddInstruction(_OP_LOADFLOAT, _exst._deref, std::bit_cast<SQInt32>(_float(constval)));
 						}
 						else {
 							_fs->AddInstruction(_OP_LOAD, _exst._deref, _fs->GetConstant(constval));
@@ -707,7 +708,7 @@ public:
 			break;
 		case TK_FLOAT:
 			if(sizeof(SQFloat) == sizeof(SQInt32)) {
-				_fs->AddInstruction(_OP_LOADFLOAT, _fs->PushTarget(),*((SQInt32 *)&_lex._fvalue));
+				_fs->AddInstruction(_OP_LOADFLOAT, _fs->PushTarget(), std::bit_cast<SQInt32>(_lex._fvalue));
 			}
 			else {
 				_fs->AddInstruction(_OP_LOAD, _fs->PushTarget(), _fs->GetNumericConstant(_lex._fvalue));

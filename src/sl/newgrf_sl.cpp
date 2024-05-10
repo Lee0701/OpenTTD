@@ -11,6 +11,7 @@
 #include "../fios.h"
 #include "../load_check.h"
 #include "../string_func.h"
+#include "../debug.h"
 
 #include "saveload.h"
 #include "newgrf_sl.h"
@@ -104,6 +105,9 @@ static void Save_NGRF()
 
 static void Load_NGRF_common(GRFConfig *&grfconfig)
 {
+	if (SlXvIsFeaturePresent(XSLFI_TABLE_NEWGRF_SL, 1, 1)) {
+		SlLoadTableWithArrayLengthPrefixesMissing();
+	}
 	std::vector<SaveLoad> sld = SlTableHeaderOrRiff(_grfconfig_desc);
 	ClearGRFConfigList(&grfconfig);
 	while (SlIterateArray() != -1) {
@@ -115,6 +119,7 @@ static void Load_NGRF_common(GRFConfig *&grfconfig)
 		if (IsSavegameVersionBefore(SLV_101)) c->SetSuitablePalette();
 		AppendToGRFConfigList(&grfconfig, c);
 	}
+	DEBUG(sl, 2, "Loaded %u NewGRFs", GetGRFConfigListNonStaticCount(grfconfig));
 }
 
 static void Load_NGRF()

@@ -49,9 +49,14 @@
 #include "../timer/timer_game_tick.h"
 #include <atomic>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #ifdef __EMSCRIPTEN__
 #	include <emscripten.h>
 #endif
+#ifndef _WIN32
+#	include <unistd.h>
+#endif /* _WIN32 */
 
 #include "../tbtr_template_vehicle.h"
 #include "../3rdparty/cpp-btree/btree_map.h"
@@ -185,9 +190,11 @@ void MemoryDumper::Flush(SaveFilter &writer)
 	this->FinaliseBlock();
 
 	size_t block_count = this->blocks.size();
+	DEBUG(sl, 3, "About to serialise " PRINTF_SIZE " bytes in " PRINTF_SIZE " blocks", this->completed_block_bytes, block_count);
 	for (size_t i = 0; i < block_count; i++) {
 		writer.Write(this->blocks[i].data, this->blocks[i].size);
 	}
+	DEBUG(sl, 3, "Serialised " PRINTF_SIZE " bytes in " PRINTF_SIZE " blocks",  this->completed_block_bytes, block_count);
 
 	writer.Finish();
 }
@@ -223,11 +230,16 @@ size_t MemoryDumper::GetSize() const
 	return this->completed_block_bytes + (this->bufe ? (MEMORY_CHUNK_SIZE - (this->bufe - this->buf)) : 0);
 }
 
+enum SaveLoadBlockFlags {
+	SLBF_TABLE_ARRAY_LENGTH_PREFIX_MISSING, ///< Table chunk arrays were incorrectly saved without the length prefix, skip reading the length prefix on load
+};
+
 /** The saveload struct, containing reader-writer functions, buffer, version, etc. */
 struct SaveLoadParams {
 	SaveLoadAction action;               ///< are we doing a save or a load atm.
 	NeedLength need_length;              ///< working in NeedLength (Autolength) mode?
 	byte block_mode;                     ///< ???
+	uint8_t block_flags;                 ///< block flags: SaveLoadBlockFlags
 	bool error;                          ///< did an error occur or not
 
 	size_t obj_len;                      ///< the length of the current object we are busy with
@@ -1301,6 +1313,36 @@ void SlArray(void *array, size_t length, VarType conv)
 {
 	if (_sl.action == SLA_PTRS || _sl.action == SLA_NULL) return;
 
+	if (SlIsTableChunk()) {
+		assert(_sl.need_length == NL_NONE);
+
+		switch (_sl.action) {
+			case SLA_SAVE:
+				SlWriteArrayLength(length);
+				break;
+
+			case SLA_LOAD_CHECK:
+			case SLA_LOAD: {
+				if (!HasBit(_sl.block_flags, SLBF_TABLE_ARRAY_LENGTH_PREFIX_MISSING)) {
+					size_t sv_length = SlReadArrayLength();
+					if (GetVarMemType(conv) == SLE_VAR_NULL) {
+						/* We don't know this field, so we assume the length in the savegame is correct. */
+						length = sv_length;
+					} else if (sv_length != length) {
+						/* If the SLE_ARR changes size, a savegame bump is required
+						 * and the developer should have written conversion lines.
+						 * Error out to make this more visible. */
+						SlErrorCorrupt("Fixed-length array is of wrong length");
+					}
+				}
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+
 	/* Automatically calculate the length? */
 	if (_sl.need_length != NL_NONE) {
 		SlSetLength(SlCalcArrayLen(length, conv));
@@ -2279,6 +2321,11 @@ void SlLoadTableOrRiffFiltered(const SaveLoadTable &slt)
 	}
 }
 
+void SlLoadTableWithArrayLengthPrefixesMissing()
+{
+	SetBit(_sl.block_flags, SLBF_TABLE_ARRAY_LENGTH_PREFIX_MISSING);
+}
+
 /**
  * Save or Load (a list of) global variables.
  * @param slt The SaveLoad table with objects to save/load.
@@ -2421,6 +2468,7 @@ static void SlLoadChunk(const ChunkHandler &ch)
 	size_t endoffs;
 
 	_sl.block_mode = m;
+	_sl.block_flags = 0;
 	_sl.obj_len = 0;
 
 	SaveLoadChunkExtHeaderFlags ext_flags = static_cast<SaveLoadChunkExtHeaderFlags>(0);
@@ -2507,6 +2555,7 @@ static void SlLoadCheckChunk(const ChunkHandler *ch, uint32_t chunk_id)
 	size_t endoffs;
 
 	_sl.block_mode = m;
+	_sl.block_flags = 0;
 	_sl.obj_len = 0;
 
 	SaveLoadChunkExtHeaderFlags ext_flags = static_cast<SaveLoadChunkExtHeaderFlags>(0);
@@ -2630,6 +2679,7 @@ static void SlSaveChunk(const ChunkHandler &ch)
 	if (_debug_sl_level >= 3) written = SlGetBytesWritten();
 
 	_sl.block_mode = ch.type;
+	_sl.block_flags = 0;
 	_sl.expect_table_header = (_sl.block_mode == CH_TABLE || _sl.block_mode == CH_SPARSE_TABLE);
 	_sl.need_length = (_sl.expect_table_header || _sl.block_mode == CH_RIFF) ? NL_WANTLENGTH : NL_NONE;
 
@@ -2780,7 +2830,10 @@ struct FileReader : LoadFilter {
 	/** Make sure everything is cleaned up. */
 	~FileReader()
 	{
-		if (this->file != nullptr) fclose(this->file);
+		if (this->file != nullptr) {
+			_game_session_stats.savegame_size = ftell(this->file) - this->begin;
+			fclose(this->file);
+		}
 		this->file = nullptr;
 	}
 
@@ -2804,19 +2857,24 @@ struct FileReader : LoadFilter {
 /** Yes, simply writing to a file. */
 struct FileWriter : SaveFilter {
 	FILE *file; ///< The file to write to.
+	std::string temp_name;
+	std::string target_name;
 
 	/**
 	 * Create the file writer, so it writes to a specific file.
 	 * @param file The file to write to.
+	 * @param temp_name The temporary name of the file being written to.
+	 * @param target_name The target name of the file to rename to, on success.
 	 */
-	FileWriter(FILE *file) : SaveFilter(nullptr), file(file)
+	FileWriter(FILE *file, std::string temp_name, std::string target_name) : SaveFilter(nullptr), file(file), temp_name(std::move(temp_name)), target_name(std::move(target_name))
 	{
 	}
 
 	/** Make sure everything is cleaned up. */
 	~FileWriter()
 	{
-		this->Finish();
+		this->CloseFile();
+		if (!this->temp_name.empty()) unlink(this->temp_name.c_str());
 	}
 
 	void Write(byte *buf, size_t size) override
@@ -2829,7 +2887,40 @@ struct FileWriter : SaveFilter {
 
 	void Finish() override
 	{
-		if (this->file != nullptr) fclose(this->file);
+		this->CloseFile();
+
+		size_t save_size = 0;
+		if (_game_session_stats.savegame_size.has_value()) save_size = _game_session_stats.savegame_size.value();
+
+		if (save_size <= 8) SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE, "Insufficient bytes written");
+
+#if defined(_WIN32)
+		struct _stat st;
+		int stat_result = _wstat(OTTD2FS(this->temp_name).c_str(), &st);
+#else
+		struct stat st;
+		int stat_result = stat(this->temp_name.c_str(), &st);
+#endif
+		if (stat_result != 0) {
+			SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE, "Failed to stat temporary save file");
+		}
+		if ((size_t)st.st_size != save_size) {
+			SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE, stdstr_fmt("Temporary save file does not have expected file size: " PRINTF_SIZE " != " PRINTF_SIZE, (size_t)st.st_size, save_size));
+		}
+
+		if (!FioRenameFile(this->temp_name, this->target_name)) SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE, "Failed to rename temporary save file to target name");
+		this->temp_name.clear(); // Now no need to unlink temporary name
+	}
+
+private:
+	void CloseFile()
+	{
+		if (this->file != nullptr) {
+			_game_session_stats.savegame_size = ftell(this->file);
+			if (fclose(this->file) != 0) {
+				SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE);
+			}
+		}
 		this->file = nullptr;
 	}
 };
@@ -3879,8 +3970,7 @@ static SaveOrLoadResult DoLoad(std::shared_ptr<LoadFilter> reader, bool load_che
 		 * No pools are loaded. References are not possible, and thus do not need resolving. */
 		SlLoadCheckChunks();
 	} else {
-		/* Unconditionally default this to 0 when loading a savegame */
-		_settings_game.construction.map_edge_mode = 0;
+		ResetSettingsToDefaultForLoad();
 
 		/* Load chunks and resolve references */
 		SlLoadChunks();
@@ -4014,8 +4104,7 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
 
 			InitializeGame(256, 256, true, true); // set a mapsize of 256x256 for TTDPatch games or it might get confused
 
-			/* Unconditionally default this to 0 when loading a savegame */
-			_settings_game.construction.map_edge_mode = 0;
+			ResetSettingsToDefaultForLoad();
 
 			/* TTD/TTO savegames have no NewGRFs, TTDP savegame have them
 			 * and if so a new NewGRF list will be made in LoadOldSaveGame.
@@ -4055,22 +4144,32 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
 		}
 		_sl.save_flags = save_flags;
 
-		FILE *fh = (fop == SLO_SAVE) ? FioFOpenFile(filename, "wb", sb) : FioFOpenFile(filename, "rb", sb);
+		FILE *fh = nullptr;
+		std::string temp_save_filename;
+		std::string temp_save_filename_suffix;
 
-		/* Make it a little easier to load savegames from the console */
-		if (fh == nullptr && fop != SLO_SAVE) fh = FioFOpenFile(filename, "rb", SAVE_DIR);
-		if (fh == nullptr && fop != SLO_SAVE) fh = FioFOpenFile(filename, "rb", BASE_DIR);
-		if (fh == nullptr && fop != SLO_SAVE) fh = FioFOpenFile(filename, "rb", SCENARIO_DIR);
+		if (fop == SLO_SAVE) {
+			temp_save_filename_suffix = stdstr_fmt(".tmp-%08x", InteractiveRandom());
+			fh = FioFOpenFile(filename + temp_save_filename_suffix, "wb", sb, nullptr, &temp_save_filename);
+		} else {
+			fh = FioFOpenFile(filename, "rb", sb);
+
+			/* Make it a little easier to load savegames from the console */
+			if (fh == nullptr) fh = FioFOpenFile(filename, "rb", SAVE_DIR);
+			if (fh == nullptr) fh = FioFOpenFile(filename, "rb", BASE_DIR);
+			if (fh == nullptr) fh = FioFOpenFile(filename, "rb", SCENARIO_DIR);
+		}
 
 		if (fh == nullptr) {
 			SlError(fop == SLO_SAVE ? STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE : STR_GAME_SAVELOAD_ERROR_FILE_NOT_READABLE);
 		}
 
 		if (fop == SLO_SAVE) { // SAVE game
+			if (temp_save_filename.size() <= temp_save_filename_suffix.size()) SlError(STR_GAME_SAVELOAD_ERROR_FILE_NOT_WRITEABLE, "Failed to get temporary file name");
 			DEBUG(desync, 1, "save: %s; %s", debug_date_dumper().HexDate(), filename.c_str());
 			if (!_settings_client.gui.threaded_saves) threaded = false;
 
-			return DoSave(std::make_shared<FileWriter>(fh), threaded);
+			return DoSave(std::make_shared<FileWriter>(fh, temp_save_filename, temp_save_filename.substr(0, temp_save_filename.size() - temp_save_filename_suffix.size())), threaded);
 		}
 
 		/* LOAD game */

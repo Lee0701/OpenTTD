@@ -981,8 +981,8 @@ void DrawOrderString(const Vehicle *v, const Order *order, int order_index, int 
 				timetable_wait_time_valid = !(order->GetDepotActionType() & ODATFB_HALT);
 			}
 
-			/* Do not show unbunching in the depot in the timetable window. */
-			if (!timetable && (order->GetDepotActionType() & ODATFB_UNBUNCH)) {
+			/* Show unbunching depot in both order and timetable windows. */
+			if (order->GetDepotActionType() & ODATFB_UNBUNCH) {
 				SetDParam(10, STR_ORDER_WAIT_TO_UNBUNCH);
 			}
 
@@ -1577,8 +1577,8 @@ private:
 	 */
 	VehicleOrderID GetOrderFromPt(int y)
 	{
-		int sel = this->vscroll->GetScrolledRowFromWidget(y, this, WID_O_ORDER_LIST, WidgetDimensions::scaled.framerect.top);
-		if (sel == INT_MAX) return INVALID_VEH_ORDER_ID;
+		int32_t sel = this->vscroll->GetScrolledRowFromWidget(y, this, WID_O_ORDER_LIST, WidgetDimensions::scaled.framerect.top);
+		if (sel == INT32_MAX) return INVALID_VEH_ORDER_ID;
 		/* One past the orders is the 'End of Orders' line. */
 		assert(IsInsideBS(sel, 0, vehicle->GetNumOrders() + 1));
 		return sel;
@@ -2811,6 +2811,7 @@ public:
 
 				if (_ctrl_pressed && sel < this->vehicle->GetNumOrders()) {
 					TileIndex xy = this->vehicle->GetOrder(sel)->GetLocation(this->vehicle);
+					if (xy == INVALID_TILE) xy = this->vehicle->GetOrder(sel)->GetAuxiliaryLocation(_shift_pressed);
 					if (xy != INVALID_TILE) ScrollMainWindowToTile(xy);
 					return;
 				}
