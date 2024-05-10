@@ -3954,7 +3954,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 					for (int x = -1; x <= 1; x++) {
 						for (int y = -1; y <= 1; y++) {
 							if (x == 0 && y == 0) continue;
-							off_tile = TILE_ADDXY(tile, x, y);
+							off_tile = TileAddXY(tile, x, y);
 							if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
 								success = DoCommandP(off_tile, town_size | city << 2 | town_layout << 3, 0, CMD_FOUND_TOWN, NULL, buf);
 							}
@@ -3970,7 +3970,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 				Town *town = nullptr;
 				for (int x = -1; x <= 1; x++) {
 					for (int y = -1; y <= 1; y++) {
-						off_tile = TILE_ADDXY(tile, x, y);
+						off_tile = TileAddXY(tile, x, y);
 						if(!(IsTileType(off_tile, MP_HOUSE) || (IsTileType(off_tile, MP_ROAD) && !IsRoadDepot(off_tile)))) continue;
 						town = Town::GetByTile(off_tile);
 						if(town != nullptr) break;
@@ -4083,7 +4083,7 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 					for (int x = -1; x <= 1; x++) {
 						for (int y = -1; y <= 1; y++) {
 							if (x == 0 && y == 0) continue;
-							off_tile = TILE_ADDXY(tile, x, y);
+							off_tile = TileAddXY(tile, x, y);
 							if(IsTileType(off_tile, MP_CLEAR) || IsTileType(off_tile, MP_TREES)) {
 								success = DoCommandP(off_tile, industry_type, InteractiveRandom(), CMD_BUILD_INDUSTRY);
 							}
