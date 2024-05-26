@@ -609,14 +609,13 @@ private:
 	{
 		uint32_t used_colours = 0;
 		const Livery *livery, *default_livery = nullptr;
+ 		LiveryScheme scheme;
 		bool primary = widget == WID_SCL_PRI_COL_DROPDOWN;
 		byte default_col = 0;
 
-		/* Disallow other company colours for the primary colour */
-		if (this->livery_class < LC_GROUP_RAIL && HasBit(this->sel, LS_DEFAULT) && primary) {
-			for (const Company *c : Company::Iterate()) {
-				if (c->index != _local_company) SetBit(used_colours, c->colour);
-			}
+		/* Get the first selected livery to use as the default dropdown item */
+		for (scheme = LS_BEGIN; scheme < LS_END; scheme++) {
+			if (HasBit(this->sel, scheme)) break;
 		}
 
 		const Company *c = Company::Get((CompanyID)this->window_number);

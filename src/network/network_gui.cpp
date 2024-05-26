@@ -1076,7 +1076,7 @@ struct NetworkStartServerWindow : public Window {
 			case WID_NSS_COMPANIES_TXT:  // Click on number of companies
 				this->widget_id = WID_NSS_COMPANIES_TXT;
 				SetDParam(0, _settings_client.network.max_companies);
-				ShowQueryString(STR_JUST_INT, STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES,  3, this, CS_NUMERAL, QSF_NONE);
+				ShowQueryString(STR_JUST_INT, STR_NETWORK_START_SERVER_NUMBER_OF_COMPANIES,  4, this, CS_NUMERAL, QSF_NONE);
 				break;
 
 			case WID_NSS_GENERATE_GAME: // Start game
@@ -1591,6 +1591,9 @@ private:
 		this->player_host_index = -1;
 		this->player_self_index = -1;
 
+		/* Spectators */
+		this->RebuildListCompany(COMPANY_SPECTATOR, client_playas);
+
 		/* As spectator, show a line to create a new company. */
 		if (client_playas == COMPANY_SPECTATOR && !NetworkMaxCompaniesReached()) {
 			this->buttons[line_count].push_back(std::make_unique<CompanyButton>(SPR_JOIN, STR_NETWORK_CLIENT_LIST_NEW_COMPANY_TOOLTIP, COLOUR_ORANGE, COMPANY_SPECTATOR, &NetworkClientListWindow::OnClickCompanyNew));
@@ -1607,9 +1610,6 @@ private:
 
 			this->RebuildListCompany(c->index, client_playas);
 		}
-
-		/* Spectators */
-		this->RebuildListCompany(COMPANY_SPECTATOR, client_playas);
 
 		this->vscroll->SetCount(this->line_count);
 	}
@@ -2055,6 +2055,9 @@ public:
 				NetworkClientInfo *own_ci = NetworkClientInfo::GetByClientID(_network_own_client_id);
 				CompanyID client_playas = own_ci == nullptr ? COMPANY_SPECTATOR : own_ci->client_playas;
 
+				/* Spectators */
+				this->DrawCompany(COMPANY_SPECTATOR, ir, line);
+
 				if (client_playas == COMPANY_SPECTATOR && !NetworkMaxCompaniesReached()) {
 					this->DrawCompany(COMPANY_NEW_COMPANY, ir, line);
 				}
@@ -2067,9 +2070,6 @@ public:
 					if (client_playas == c->index) continue;
 					this->DrawCompany(c->index, ir, line);
 				}
-
-				/* Spectators */
-				this->DrawCompany(COMPANY_SPECTATOR, ir, line);
 
 				break;
 			}

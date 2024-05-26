@@ -464,8 +464,4 @@ enable_testing()
 
 add_subdirectory(regression)
 
-if(APPLE OR WIN32)
-    find_package(Pandoc)
-endif()
-
 include(InstallAndPackage)

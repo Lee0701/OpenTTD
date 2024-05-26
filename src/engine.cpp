@@ -620,12 +620,12 @@ void CalcEngineReliability(Engine *e, bool new_month)
 	if (new_month && re->index > e->index && age != INT32_MAX) age++; /* parent variant's age has not yet updated. */
 
 	/* Check for early retirement */
-	if (e->company_avail != 0 && !_settings_game.vehicle.never_expire_vehicles && e->info.base_life != 0xFF) {
+	if (e->company_avail.any() && !_settings_game.vehicle.never_expire_vehicles && e->info.base_life != 0xFF) {
 		int retire_early = e->info.retire_early;
 		uint retire_early_max_age = std::max(0, e->duration_phase_1 + e->duration_phase_2 - retire_early * 12);
 		if (retire_early != 0 && age >= retire_early_max_age) {
 			/* Early retirement is enabled and we're past the date... */
-			e->company_avail = 0;
+			e->company_avail.reset();
 			ClearLastVariant(e->index, e->type);
 			AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
 		}
@@ -644,7 +644,7 @@ void CalcEngineReliability(Engine *e, bool new_month)
 	} else {
 		/* time's up for this engine.
 		 * We will now completely retire this design */
-		e->company_avail = 0;
+		e->company_avail.reset();
 		e->reliability = e->reliability_final;
 		/* Kick this engine out of the lists */
 		ClearLastVariant(e->index, e->type);
@@ -685,8 +685,8 @@ void StartupOneEngine(Engine *e, const TimerGameCalendar::YearMonthDay &aging_ym
 
 	e->age = 0;
 	e->flags = 0;
-	e->company_avail = 0;
-	e->company_hidden = 0;
+	e->company_avail.reset();
+	e->company_hidden.reset();
 
 	/* Vehicles with the same base_intro date shall be introduced at the same time.
 	 * Make sure they use the same randomisation of the date. */
@@ -708,7 +708,7 @@ void StartupOneEngine(Engine *e, const TimerGameCalendar::YearMonthDay &aging_ym
 		int intro_months = intro_ymd.year.base() * 12 + intro_ymd.month;
 		if (intro_ymd.day > 1) intro_months++; // Engines are introduced at the first month start at/after intro date.
 		e->age = aging_months - intro_months;
-		e->company_avail = MAX_UVALUE(CompanyMask);
+		e->company_avail.set();
 		e->flags |= ENGINE_AVAILABLE;
 	}
 
@@ -752,7 +752,7 @@ void StartupOneEngine(Engine *e, const TimerGameCalendar::YearMonthDay &aging_ym
 	/* prevent certain engines from ever appearing. */
 	if (!HasBit(ei->climates, _settings_game.game_creation.landscape)) {
 		e->flags |= ENGINE_AVAILABLE;
-		e->company_avail = 0;
+		e->company_avail.reset();
 	}
 }
 
@@ -797,7 +797,7 @@ static void EnableEngineForCompany(EngineID eid, CompanyID company)
 	Engine *e = Engine::Get(eid);
 	Company *c = Company::Get(company);
 
-	SetBit(e->company_avail, company);
+	e->company_avail.set(company, true);
 	if (e->type == VEH_TRAIN) {
 		c->avail_railtypes = GetCompanyRailTypes(c->index);
 	} else if (e->type == VEH_ROAD) {
@@ -825,7 +825,7 @@ static void DisableEngineForCompany(EngineID eid, CompanyID company)
 	Engine *e = Engine::Get(eid);
 	Company *c = Company::Get(company);
 
-	ClrBit(e->company_avail, company);
+	e->company_avail.reset(company);
 	if (e->type == VEH_TRAIN) {
 		c->avail_railtypes = GetCompanyRailTypes(c->index);
 	} else if (e->type == VEH_ROAD) {
@@ -849,7 +849,7 @@ static void AcceptEnginePreview(EngineID eid, CompanyID company, int recursion_d
 	Engine *e = Engine::Get(eid);
 
 	e->preview_company = INVALID_COMPANY;
-	e->preview_asked = MAX_UVALUE(CompanyMask);
+	e->preview_asked.set();
 
 	EnableEngineForCompany(eid, company);
 
@@ -885,7 +885,7 @@ static CompanyID GetPreviewCompany(Engine *e)
 
 	int32_t best_hist = -1;
 	for (const Company *c : Company::Iterate()) {
-		if (c->block_preview == 0 && !HasBit(e->preview_asked, c->index) &&
+		if (c->block_preview == 0 && !e->preview_asked.at(c->index) &&
 				c->old_economy[0].performance_history > best_hist) {
 
 			/* Check whether the company uses similar vehicles */
@@ -940,15 +940,15 @@ static IntervalTimer<TimerGameCalendar> _calendar_engines_daily({TimerGameCalend
 					CloseWindowById(WC_ENGINE_PREVIEW, i);
 					e->preview_company = INVALID_COMPANY;
 				}
-			} else if (CountBits(e->preview_asked) < MAX_COMPANIES) {
+			} else if (!e->preview_asked.all()) {
 				e->preview_company = GetPreviewCompany(e);
 
 				if (e->preview_company == INVALID_COMPANY) {
-					e->preview_asked = MAX_UVALUE(CompanyMask);
+					e->preview_asked.set();
 					continue;
 				}
 
-				SetBit(e->preview_asked, e->preview_company);
+				e->preview_asked.set(e->preview_company, true);
 				e->preview_wait = 20;
 				/* AIs are intentionally not skipped for preview even if they cannot build a certain
 				 * vehicle type. This is done to not give poor performing human companies an "unfair"
@@ -969,7 +969,7 @@ static IntervalTimer<TimerGameCalendar> _calendar_engines_daily({TimerGameCalend
 void ClearEnginesHiddenFlagOfCompany(CompanyID cid)
 {
 	for (Engine *e : Engine::Iterate()) {
-		SB(e->company_hidden, cid, 1, 0);
+		e->company_hidden.set(cid, false);
 	}
 }
 
@@ -987,7 +987,7 @@ CommandCost CmdSetVehicleVisibility(DoCommandFlag flags, EngineID engine_id, boo
 	if (!IsEngineBuildable(e->index, e->type, _current_company)) return CMD_ERROR;
 
 	if ((flags & DC_EXEC) != 0) {
-		SB(e->company_hidden, _current_company, 1, hide ? 1 : 0);
+		e->company_hidden.set(_current_company, hide);
 		AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
 	}
 
@@ -1051,7 +1051,7 @@ static void NewVehicleAvailable(Engine *e)
 		for (Company *c : Company::Iterate()) {
 			uint block_preview = c->block_preview;
 
-			if (!HasBit(e->company_avail, c->index)) continue;
+			if (!e->company_avail.at(c->index)) continue;
 
 			/* We assume the user did NOT build it.. prove me wrong ;) */
 			c->block_preview = 20;
@@ -1073,7 +1073,7 @@ static void NewVehicleAvailable(Engine *e)
 	AddRemoveEngineFromAutoreplaceAndBuildWindows(e->type);
 
 	/* Now available for all companies */
-	e->company_avail = MAX_UVALUE(CompanyMask);
+	e->company_avail.set();
 
 	/* Do not introduce new rail wagons */
 	if (IsWagon(index)) return;
@@ -1142,7 +1142,7 @@ void CalendarEnginesMonthlyLoop()
 				/* Show preview dialog to one of the companies. */
 				e->flags |= ENGINE_EXCLUSIVE_PREVIEW;
 				e->preview_company = INVALID_COMPANY;
-				e->preview_asked = 0;
+				e->preview_asked.reset();
 			}
 		}
 
@@ -1228,10 +1228,10 @@ bool IsEngineBuildable(EngineID engine, VehicleType type, CompanyID company)
 	/* check if it's available ... */
 	if (company == OWNER_DEITY) {
 		/* ... for any company (preview does not count) */
-		if (!(e->flags & ENGINE_AVAILABLE) || e->company_avail == 0) return false;
+		if (!(e->flags & ENGINE_AVAILABLE) || e->company_avail.none()) return false;
 	} else {
 		/* ... for this company */
-		if (!HasBit(e->company_avail, company)) return false;
+		if (!e->company_avail.at(company)) return false;
 	}
 
 	if (!e->IsEnabled()) return false;
@@ -1293,7 +1293,7 @@ void CheckEngines()
 		if (e->type == VEH_TRAIN && e->u.rail.railveh_type == RAILVEH_WAGON) continue;
 
 		/* We have an available engine... yay! */
-		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail != 0) return;
+		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail.any()) return;
 
 		/* Okay, try to find the earliest date. */
 		min_date = std::min(min_date, e->info.base_intro);

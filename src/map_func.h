@@ -49,6 +49,7 @@ private:
 		byte m6;   ///< General purpose
 		byte m7;   ///< Primarily used for newgrf support
 		uint16_t m8; ///< General purpose
+		uint16_t m9; ///< Extended ownership information
 	};
 
 	static TileBase *base_tiles;         ///< Pointer to the tile-array.
