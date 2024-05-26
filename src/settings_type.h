@@ -315,6 +315,7 @@ struct GUISettings : public TimeSettings {
 	bool        show_vehicle_group_hierarchy_name;               ///< Show the full group hierarchy in vehicle names
 	bool        show_order_number_vehicle_view;                  ///< Show order number in vehicle view window
 	bool        show_speed_first_vehicle_view;                   ///< Show speed before destination in vehicle view window
+	bool        shorten_vehicle_view_status;                     ///< Show status text in vehicle view window
 	bool        hide_default_stop_location;                      ///< Hide default stop location for orders
 	bool        show_rail_polyline_tool;                         ///< Show rail polyline tool
 	bool        show_running_costs_calendar_year;                ///< Show vehicle running costs in calendar years
@@ -367,11 +368,11 @@ struct SoundSettings {
 
 /** Settings related to music. */
 struct MusicSettings {
-	byte playlist;     ///< The playlist (number) to play
-	byte music_vol;    ///< The requested music volume
-	byte effect_vol;   ///< The requested effects volume
-	byte custom_1[33]; ///< The order of the first custom playlist
-	byte custom_2[33]; ///< The order of the second custom playlist
+	uint8_t playlist;     ///< The playlist (number) to play
+	uint8_t music_vol;    ///< The requested music volume
+	uint8_t effect_vol;   ///< The requested effects volume
+	uint8_t custom_1[33]; ///< The order of the first custom playlist
+	uint8_t custom_2[33]; ///< The order of the second custom playlist
 	bool playing;      ///< Whether music is playing
 	bool shuffle;      ///< Whether to shuffle the music
 };

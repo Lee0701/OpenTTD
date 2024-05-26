@@ -144,8 +144,8 @@ inline void ClearLookAheadIfInvalid(Train *v)
 	if (v->lookahead != nullptr && !ValidateLookAhead(v)) v->lookahead.reset();
 }
 
-static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
-static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
+static const uint8_t _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
+static const uint8_t _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
 
 template <>
 bool IsValidImageIndex<VEH_TRAIN>(uint8_t image_index)
@@ -159,7 +159,7 @@ bool IsValidImageIndex<VEH_TRAIN>(uint8_t image_index)
  * @param cargo Cargo type to get multiplier for
  * @return Cargo weight multiplier
  */
-byte FreightWagonMult(CargoID cargo)
+uint8_t FreightWagonMult(CargoID cargo)
 {
 	if (!CargoSpec::Get(cargo)->is_freight) return 1;
 	return _settings_game.vehicle.freight_trains;
@@ -1119,6 +1119,7 @@ Train::MaxSpeedInfo Train::GetCurrentMaxSpeedInfoInternal(bool update_state) con
 				LimitSpeedFromLookAhead(max_speed, stats, this->lookahead->current_position, this->lookahead->reservation_end_position,
 						0, this->lookahead->reservation_end_z - stats.z_pos);
 			}
+			advisory_max_speed = std::min(advisory_max_speed, max_speed);
 			VehicleOrderID current_order_index = this->cur_real_order_index;
 			const Order *order = &(this->current_order);
 			StationID last_station_visited = this->last_station_visited;
@@ -3793,7 +3794,7 @@ void FreeTrainTrackReservation(Train *v, TileIndex origin, Trackdir orig_td)
 	}
 }
 
-static const byte _initial_tile_subcoord[6][4][3] = {
+static const uint8_t _initial_tile_subcoord[6][4][3] = {
 {{ 15, 8, 1 }, { 0, 0, 0 }, { 0, 8, 5 }, { 0,  0, 0 }},
 {{  0, 0, 0 }, { 8, 0, 3 }, { 0, 0, 0 }, { 8, 15, 7 }},
 {{  0, 0, 0 }, { 7, 0, 2 }, { 0, 7, 6 }, { 0,  0, 0 }},
@@ -4916,10 +4917,10 @@ static inline bool CheckCompatibleRail(const Train *v, TileIndex tile, DiagDirec
 
 /** Data structure for storing engine speed changes of an acceleration type. */
 struct AccelerationSlowdownParams {
-	byte small_turn; ///< Speed change due to a small turn.
-	byte large_turn; ///< Speed change due to a large turn.
-	byte z_up;       ///< Fraction to remove when moving up.
-	byte z_down;     ///< Fraction to add when moving down.
+	uint8_t small_turn; ///< Speed change due to a small turn.
+	uint8_t large_turn; ///< Speed change due to a large turn.
+	uint8_t z_up;       ///< Fraction to remove when moving up.
+	uint8_t z_down;     ///< Fraction to add when moving down.
 };
 
 /** Speed update fractions for each acceleration type. */
@@ -5594,7 +5595,7 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 			}
 			if (old_direction != v->direction) notify_direction_changed(old_direction, v->direction);
 			DiagDirection dir = GetTunnelBridgeDirection(gp.old_tile);
-			const byte *b = _initial_tile_subcoord[AxisToTrack(DiagDirToAxis(dir))][dir];
+			const uint8_t *b = _initial_tile_subcoord[AxisToTrack(DiagDirToAxis(dir))][dir];
 			gp.x = (gp.x & ~0xF) | b[0];
 			gp.y = (gp.y & ~0xF) | b[1];
 		}
@@ -5780,7 +5781,7 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 						chosen_track == TRACK_BIT_LEFT  || chosen_track == TRACK_BIT_RIGHT);
 
 				/* Update XY to reflect the entrance to the new tile, and select the direction to use */
-				const byte *b = _initial_tile_subcoord[FindFirstBit(chosen_track)][enterdir];
+				const uint8_t *b = _initial_tile_subcoord[FindFirstBit(chosen_track)][enterdir];
 				gp.x = (gp.x & ~0xF) | b[0];
 				gp.y = (gp.y & ~0xF) | b[1];
 				Direction chosen_dir = (Direction)b[2];
@@ -6606,7 +6607,7 @@ static bool TrainLocoHandler(Train *v, bool mode)
 		return mode ? true : HandleCrashedTrain(v); // 'this' can be deleted here
 	} else if (v->crash_anim_pos > 0) {
 		/* Reduce realistic braking brake overheating */
-		v->crash_anim_pos--;
+		v->crash_anim_pos -= (v->crash_anim_pos + 255) >> 8;
 	}
 
 	if (v->force_proceed != TFP_NONE) {
@@ -7564,8 +7565,9 @@ void TrainRoadVehicleCrashBreakdown(Vehicle *v)
 	t->reliability = 0;
 }
 
-void TrainBrakesOverheatedBreakdown(Vehicle *v)
+void TrainBrakesOverheatedBreakdown(Vehicle *v, int speed, int max_speed)
 {
+	if (v->type != VEH_TRAIN) return;
 	Train *t = Train::From(v)->First();
 	if (t->breakdown_ctr != 0 || (t->vehstatus & VS_CRASHED)) return;
 
@@ -7573,7 +7575,7 @@ void TrainBrakesOverheatedBreakdown(Vehicle *v)
 		ShowVehicleViewWindow(t);
 	}
 
-	t->crash_anim_pos = std::min<uint>(1500, t->crash_anim_pos + 200);
+	t->crash_anim_pos = std::min<uint>(1500, t->crash_anim_pos + Clamp(((speed - max_speed) * speed) / 2, 0, 500));
 	if (t->crash_anim_pos < 1500) return;
 
 	t->breakdown_ctr = 2;

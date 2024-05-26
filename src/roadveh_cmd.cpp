@@ -1311,7 +1311,7 @@ found_best_track:;
 }
 
 struct RoadDriveEntry {
-	byte x, y;
+	uint8_t x, y;
 };
 
 #include "table/roadveh_movement.h"
@@ -1374,7 +1374,7 @@ static Trackdir FollowPreviousRoadVehicle(const RoadVehicle *v, const RoadVehicl
 		return _road_reverse_table[entry_dir];
 	}
 
-	byte prev_state = prev->state;
+	uint8_t prev_state = prev->state;
 	Trackdir dir;
 
 	if (prev_state == RVSB_WORMHOLE || prev_state == RVSB_IN_DEPOT) {
@@ -1594,7 +1594,7 @@ static void RoadVehCheckFinishOvertake(RoadVehicle *v)
 	v->SetRoadVehicleOvertaking(0);
 }
 
-inline byte IncreaseOvertakingCounter(RoadVehicle *v)
+inline uint8_t IncreaseOvertakingCounter(RoadVehicle *v)
 {
 	if (v->overtaking_ctr != 255) v->overtaking_ctr++;
 	return v->overtaking_ctr;
@@ -1604,6 +1604,8 @@ static bool CheckRestartLoadingAtRoadStop(RoadVehicle *v)
 {
 	if (v->GetNumOrders() < 1 || !Company::Get(v->owner)->settings.remain_if_next_order_same_station) return false;
 
+	if (v->cur_implicit_order_index < v->GetNumOrders() && v->GetOrder(v->cur_implicit_order_index)->IsType(OT_IMPLICIT)) return false;
+
 	StationID station_id = v->current_order.GetDestination();
 	VehicleOrderID next_order_idx = AdvanceOrderIndexDeferred(v, v->cur_implicit_order_index);
 	const Order *next_order = v->GetOrder(next_order_idx);
@@ -1612,7 +1614,8 @@ static bool CheckRestartLoadingAtRoadStop(RoadVehicle *v)
 			(next_order->GetRoadVehTravelDirection() == INVALID_DIAGDIR || next_order->GetRoadVehTravelDirection() == DirToDiagDir(v->direction)) &&
 			!(next_order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION) &&
 			IsInfraTileUsageAllowed(VEH_ROAD, v->owner, v->tile) &&
-			GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK)) {
+			GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK) &&
+			GetStationIndex(v->tile) == station_id) {
 		v->current_order.Free();
 		ProcessOrders(v);
 
@@ -1692,7 +1695,7 @@ bool IndividualRoadVehicleController(RoadVehicle *v, const RoadVehicle *prev)
 			if (u != nullptr) {
 				u = u->First();
 				/* There is a vehicle in front overtake it if possible */
-				byte old_overtaking = v->overtaking;
+				uint8_t old_overtaking = v->overtaking;
 				if (v->overtaking == 0) RoadVehCheckOvertake(v, u);
 				if (v->overtaking == old_overtaking) {
 					v->cur_speed = u->cur_speed;
@@ -1884,7 +1887,7 @@ again:
 			TileIndex old_tile = v->tile;
 
 			v->tile = tile;
-			v->state = (byte)dir;
+			v->state = (uint8_t)dir;
 			v->frame = start_frame;
 			RoadTramType rtt = GetRoadTramType(v->roadtype);
 			if (GetRoadType(old_tile, rtt) != GetRoadType(tile, rtt)) {
@@ -2003,7 +2006,7 @@ again:
 		if (u != nullptr) {
 			u = u->First();
 			/* There is a vehicle in front overtake it if possible */
-			byte old_overtaking = v->overtaking;
+			uint8_t old_overtaking = v->overtaking;
 			if (v->overtaking == 0) RoadVehCheckOvertake(v, u);
 			if (v->overtaking == old_overtaking) v->cur_speed = u->cur_speed;
 
@@ -2012,7 +2015,7 @@ again:
 					v->current_order.ShouldStopAtStation(v, GetStationIndex(v->tile), false) &&
 					IsInfraTileUsageAllowed(VEH_ROAD, v->owner, v->tile) && !v->current_order.IsType(OT_LEAVESTATION) &&
 					GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK)) {
-				byte cur_overtaking = IsRoadVehicleOnOtherSideOfRoad(v) ? RVSB_DRIVE_SIDE : 0;
+				uint8_t cur_overtaking = IsRoadVehicleOnOtherSideOfRoad(v) ? RVSB_DRIVE_SIDE : 0;
 				if (cur_overtaking != v->overtaking) v->SetRoadVehicleOvertaking(cur_overtaking);
 				Station *st = Station::GetByTile(v->tile);
 				v->last_station_visited = st->index;
@@ -2255,7 +2258,7 @@ void RoadVehicle::SetDestTile(TileIndex tile)
 	this->dest_tile = tile;
 }
 
-void RoadVehicle::SetRoadVehicleOvertaking(byte overtaking)
+void RoadVehicle::SetRoadVehicleOvertaking(uint8_t overtaking)
 {
 	if (IsInsideMM(this->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END)) RoadStop::GetByTile(this->tile, GetRoadStopType(this->tile))->Leave(this);
 

@@ -343,7 +343,7 @@ static CommandCost BuildReplacementMultiPartShipSimple(EngineID e, const Vehicle
 	for (; v != nullptr && old != nullptr; v = v->Next(), old = old->Next()) {
 		if (old->cargo_type == INVALID_CARGO) continue;
 
-		byte subtype = GetBestFittingSubType(old, v, old->cargo_type);
+		uint8_t subtype = GetBestFittingSubType(old, v, old->cargo_type);
 		CommandCost refit_cost = DoCommand(0, v->index, old->cargo_type | (subtype << 8) | (1 << 16), DC_EXEC, GetCmdRefitVeh(v));
 		if (refit_cost.Succeeded()) cost.AddCost(refit_cost);
 	}
@@ -396,7 +396,7 @@ static CommandCost BuildReplacementMultiPartShip(EngineID e, const Vehicle *old_
 				CargoID c = FindFirstBit(available);
 				assert(old_cargo_vehs[c] != nullptr);
 
-				byte subtype = GetBestFittingSubType(old_cargo_vehs[c], v, c);
+				uint8_t subtype = GetBestFittingSubType(old_cargo_vehs[c], v, c);
 				CommandCost refit_cost = DoCommand(0, v->index, c | (subtype << 8) | (1 << 16), DC_EXEC, GetCmdRefitVeh(v));
 				if (refit_cost.Succeeded()) cost.AddCost(refit_cost);
 			}
@@ -453,7 +453,7 @@ static CommandCost BuildReplacementMultiPartShip(EngineID e, const Vehicle *old_
 		if (c == INVALID_CARGO) continue;
 
 		assert(old_cargo_vehs[c] != nullptr);
-		byte subtype = GetBestFittingSubType(old_cargo_vehs[c], v, c);
+		uint8_t subtype = GetBestFittingSubType(old_cargo_vehs[c], v, c);
 		CommandCost refit_cost = DoCommand(0, v->index, c | (subtype << 8) | (1 << 16), DC_EXEC, GetCmdRefitVeh(v));
 		if (refit_cost.Succeeded()) cost.AddCost(refit_cost);
 	}
@@ -514,7 +514,7 @@ static CommandCost BuildReplacementVehicle(const Vehicle *old_veh, Vehicle **new
 
 	/* Refit the vehicle if needed */
 	if (refit_cargo != CARGO_NO_REFIT) {
-		byte subtype = GetBestFittingSubType(old_veh, new_veh, refit_cargo);
+		uint8_t subtype = GetBestFittingSubType(old_veh, new_veh, refit_cargo);
 
 		cost.AddCost(DoCommand(0, new_veh->index, refit_cargo | (subtype << 8), DC_EXEC, GetCmdRefitVeh(new_veh)));
 		assert(cost.Succeeded()); // This should be ensured by GetNewCargoTypeForReplace()
@@ -778,7 +778,6 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 
 			/* Sell superfluous new vehicles that could not be inserted. */
 			if (cost.Succeeded() && wagon_removal) {
-				assert(Train::From(new_head)->gcache.cached_total_length <= _settings_game.vehicle.max_train_length * TILE_SIZE);
 				for (auto it = std::next(std::begin(replacements)); it != std::end(replacements); ++it) {
 					Vehicle *wagon = it->new_veh;
 					if (wagon == nullptr) continue;

@@ -237,12 +237,23 @@ bool Vehicle::NeedsServicing() const
 	 * vehicles to go for service is lame. */
 	if (this->vehstatus & (VS_STOPPED | VS_CRASHED)) return false;
 
+	bool service_not_due;
+	/* Service intervals can be measured in different units, which we handle individually. */
+	if (this->ServiceIntervalIsPercent()) {
+		/* Service interval is in percents. */
+		service_not_due = (this->reliability >= this->GetEngine()->reliability * (100 - this->GetServiceInterval()) / 100);
+	} else if (EconTime::UsingWallclockUnits()) {
+		/* Service interval is in minutes. */
+		service_not_due = (this->date_of_last_service + (this->GetServiceInterval() * EconTime::DAYS_IN_ECONOMY_WALLCLOCK_MONTH) >= EconTime::CurDate());
+	} else {
+		/* Service interval is in days. */
+		service_not_due = (this->date_of_last_service + this->GetServiceInterval() >= EconTime::CurDate());
+	}
+
 	/* Are we ready for the next service cycle? */
 	bool needs_service = true;
 	const Company *c = Company::Get(this->owner);
-	if ((this->ServiceIntervalIsPercent() ?
-			(this->reliability >= this->GetEngine()->reliability * (100 - this->service_interval) / 100) :
-			(this->date_of_last_service + this->service_interval >= EconTime::CurDate()))
+	if (service_not_due
 			&& !(this->type == VEH_TRAIN && HasBit(Train::From(this)->flags, VRF_CONSIST_BREAKDOWN) && Train::From(this)->ConsistNeedsRepair())
 			&& !(this->type == VEH_ROAD && RoadVehicle::From(this)->critical_breakdown_count > 0)
 			&& !(this->type == VEH_SHIP && Ship::From(this)->critical_breakdown_count > 0)) {
@@ -1278,8 +1289,10 @@ Vehicle::~Vehicle()
 
 	if (this->type < VEH_COMPANY_END) UpdateVehicleTileHash(this, true);
 	UpdateVehicleViewportHash(this, INVALID_COORD, 0);
-	DeleteVehicleNews(this->index, INVALID_STRING_ID);
-	DeleteNewGRFInspectWindow(GetGrfSpecFeature(this->type), this->index);
+	if (this->type != VEH_EFFECT) {
+		DeleteVehicleNews(this->index, INVALID_STRING_ID);
+		DeleteNewGRFInspectWindow(GetGrfSpecFeature(this->type), this->index);
+	}
 }
 
 /**
@@ -2161,7 +2174,7 @@ void DecreaseVehicleValue(Vehicle *v)
 
 /** The chances for the different types of vehicles to suffer from different types of breakdowns
  * The chance for a given breakdown type n is _breakdown_chances[vehtype][n] - _breakdown_chances[vehtype][n-1] */
-static const byte _breakdown_chances[4][4] = {
+static const uint8_t _breakdown_chances[4][4] = {
 	{ //Trains:
 		25,  ///< 10% chance for BREAKDOWN_CRITICAL.
 		51,  ///< 10% chance for BREAKDOWN_EM_STOP.
@@ -2201,15 +2214,15 @@ void DetermineBreakdownType(Vehicle *v, uint32_t r) {
 		v->breakdown_severity = 40; //only used by aircraft (321 km/h)
 		return;
 	}
-	byte rand = GB(r, 8, 8);
-	const byte *breakdown_type_chance = _breakdown_chances[v->type];
+	uint8_t rand = GB(r, 8, 8);
+	const uint8_t *breakdown_type_chance = _breakdown_chances[v->type];
 
 	if (v->type == VEH_AIRCRAFT) {
 		if (rand <= breakdown_type_chance[BREAKDOWN_AIRCRAFT_SPEED]) {
 			v->breakdown_type = BREAKDOWN_AIRCRAFT_SPEED;
 			/* all speed values here are 1/8th of the real max speed in km/h */
-			byte max_speed = std::max(1, std::min(v->vcache.cached_max_speed >> 3, 255));
-			byte min_speed = std::max(1, std::min(15 + (max_speed >> 2), v->vcache.cached_max_speed >> 4));
+			uint8_t max_speed = std::max(1, std::min(v->vcache.cached_max_speed >> 3, 255));
+			uint8_t min_speed = std::max(1, std::min(15 + (max_speed >> 2), v->vcache.cached_max_speed >> 4));
 			v->breakdown_severity = min_speed + (((v->reliability + GB(r, 16, 16)) * (max_speed - min_speed)) >> 17);
 		} else if (rand <= breakdown_type_chance[BREAKDOWN_AIRCRAFT_DEPOT]) {
 			v->breakdown_type = BREAKDOWN_AIRCRAFT_DEPOT;
@@ -2248,7 +2261,7 @@ void DetermineBreakdownType(Vehicle *v, uint32_t r) {
 			(v->type == VEH_SHIP) ?
 			GetVehicleProperty(v, PROP_SHIP_SPEED, ShipVehInfo(v->engine_type)->max_speed ) :
 			GetVehicleProperty(v, PROP_AIRCRAFT_SPEED, AircraftVehInfo(v->engine_type)->max_speed);
-		byte min_speed = std::min(41, max_speed >> 2);
+		uint8_t min_speed = std::min(41, max_speed >> 2);
 		/* we use the min() function here because we want to use the real value of max_speed for the min_speed calculation */
 		max_speed = std::min<uint16_t>(max_speed, 255);
 		v->breakdown_severity = Clamp((max_speed * rand2) >> 16, min_speed, max_speed);
@@ -3027,7 +3040,7 @@ UnitID GetFreeUnitNumber(VehicleType type)
  * @return true if there is any reason why you may build
  *         the infrastructure for the given vehicle type
  */
-bool CanBuildVehicleInfrastructure(VehicleType type, byte subtype)
+bool CanBuildVehicleInfrastructure(VehicleType type, uint8_t subtype)
 {
 	assert(IsCompanyBuildableVehicleType(type));
 
@@ -3170,7 +3183,7 @@ LiveryScheme GetEngineLiveryScheme(EngineID engine_type, EngineID parent_engine_
  * @param ignore_group Ignore group overrides.
  * @return livery to use
  */
-const Livery *GetEngineLivery(EngineID engine_type, CompanyID company, EngineID parent_engine_type, const Vehicle *v, byte livery_setting, bool ignore_group)
+const Livery *GetEngineLivery(EngineID engine_type, CompanyID company, EngineID parent_engine_type, const Vehicle *v, uint8_t livery_setting, bool ignore_group)
 {
 	const Company *c = Company::Get(company);
 	LiveryScheme scheme = LS_DEFAULT;
@@ -4111,7 +4124,7 @@ void Vehicle::UpdateVisualEffect(bool allow_power_change)
 	const Engine *e = this->GetEngine();
 
 	/* Evaluate properties */
-	byte visual_effect;
+	uint8_t visual_effect;
 	switch (e->type) {
 		case VEH_TRAIN: visual_effect = e->u.rail.visual_effect; break;
 		case VEH_ROAD:  visual_effect = e->u.road.visual_effect; break;

@@ -367,7 +367,7 @@ static bool LoadIntList(const char *str, void *array, int nelems, VarType type)
 		case SLE_VAR_BL:
 		case SLE_VAR_I8:
 		case SLE_VAR_U8:
-			for (i = 0; i != nitems; i++) ((byte*)array)[i] = items[i];
+			for (i = 0; i != nitems; i++) ((uint8_t*)array)[i] = items[i];
 			break;
 
 		case SLE_VAR_I16:
@@ -398,7 +398,7 @@ static bool LoadIntList(const char *str, void *array, int nelems, VarType type)
  */
 char *ListSettingDesc::FormatValue(char *buf, const char *last, const void *object) const
 {
-	const byte *p = static_cast<const byte *>(GetVariableAddress(object, this->save));
+	const uint8_t *p = static_cast<const uint8_t *>(GetVariableAddress(object, this->save));
 	int i, v = 0;
 
 	for (i = 0; i != this->save.length; i++) {
@@ -2295,7 +2295,7 @@ static bool TownCargoScaleGUI(SettingOnGuiCtrlData &data)
 	switch (data.type) {
 		case SOGCT_VALUE_DPARAMS:
 			if (GetGameSettings().economy.day_length_factor > 1) {
-				if (GetGameSettings().economy.town_cargo_scale_mode) {
+				if (GetGameSettings().economy.town_cargo_scale_mode == CSM_DAYLENGTH) {
 					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
 				} else {
 					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
@@ -2318,7 +2318,7 @@ static bool IndustryCargoScaleGUI(SettingOnGuiCtrlData &data)
 
 		case SOGCT_VALUE_DPARAMS:
 			if (GetGameSettings().economy.day_length_factor > 1) {
-				if (GetGameSettings().economy.town_cargo_scale_mode) {
+				if (GetGameSettings().economy.industry_cargo_scale_mode == CSM_DAYLENGTH) {
 					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
 				} else {
 					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
