@@ -55,12 +55,13 @@
 #include "company_gui.h"
 #include "linkgraph/linkgraph_base.h"
 #include "linkgraph/refresh.h"
-#include "widgets/station_widget.h"
 #include "zoning.h"
 #include "tunnelbridge_map.h"
 #include "cheat_type.h"
 #include "newgrf_roadstop.h"
 #include "core/math_func.hpp"
+
+#include "widgets/station_widget.h"
 
 #include "table/strings.h"
 
@@ -318,13 +319,13 @@ static StringID GenerateStationName(Station *st, TileIndex tile, StationNaming n
 		return STR_SV_STNAME;
 	}
 
-	bool use_extra_names = _extra_station_names_used > 0;
+	bool use_extra_names = !_extra_station_names.empty();
 	auto check_extra_names = [&]() -> bool {
 		if (use_extra_names) {
 			use_extra_names = false;
 			const bool near_water = CountMapSquareAround(tile, CMSAWater) >= 5;
 			std::vector<uint16_t> candidates;
-			for (uint i = 0; i < _extra_station_names_used; i++) {
+			for (size_t i = 0; i < _extra_station_names.size(); i++) {
 				const ExtraStationNameInfo &info = _extra_station_names[i];
 				if (extra_names[i]) continue;
 				if (!HasBit(info.flags, name_class)) continue;
@@ -332,7 +333,7 @@ static StringID GenerateStationName(Station *st, TileIndex tile, StationNaming n
 				if (HasBit(info.flags, ESNIF_NOT_CENTRAL) && is_central) continue;
 				if (HasBit(info.flags, ESNIF_NEAR_WATER) && !near_water) continue;
 				if (HasBit(info.flags, ESNIF_NOT_NEAR_WATER) && near_water) continue;
-				candidates.push_back(i);
+				candidates.push_back(static_cast<uint16_t>(i));
 			}
 
 			if (!candidates.empty()) {
@@ -511,8 +512,8 @@ void Station::UpdateVirtCoord()
 	if (IsHeadless()) return;
 	Point pt = RemapCoords2(TileX(this->xy) * TILE_SIZE, TileY(this->xy) * TILE_SIZE);
 
-	pt.y -= 32 * ZOOM_LVL_BASE;
-	if ((this->facilities & FACIL_AIRPORT) && this->airport.type == AT_OILRIG) pt.y -= 16 * ZOOM_LVL_BASE;
+	pt.y -= 32 * ZOOM_BASE;
+	if ((this->facilities & FACIL_AIRPORT) && this->airport.type == AT_OILRIG) pt.y -= 16 * ZOOM_BASE;
 
 	if (_viewport_sign_kdtree_valid && this->sign.kdtree_valid) _viewport_sign_kdtree.Remove(ViewportSignKdtreeItem::MakeStation(this->index));
 
@@ -1143,7 +1144,7 @@ CommandCost CheckFlatLandRoadStop(TileArea tile_area, const RoadStopSpec *spec, 
 					return ClearTile_Station(cur_tile, DC_AUTO); // Get error message.
 				}
 				/* Drive-through station in the wrong direction. */
-				if (is_drive_through && IsDriveThroughStopTile(cur_tile) && DiagDirToAxis(GetRoadStopDir(cur_tile)) != axis){
+				if (is_drive_through && IsDriveThroughStopTile(cur_tile) && DiagDirToAxis(GetRoadStopDir(cur_tile)) != axis) {
 					return_cmd_error(STR_ERROR_DRIVE_THROUGH_DIRECTION);
 				}
 				StationID st = GetStationIndex(cur_tile);
@@ -1458,6 +1459,24 @@ static void RestoreTrainReservation(Train *v)
 }
 
 /**
+ * Set rail station tile flags for the given tile.
+ * @param tile Tile to set flags on.
+ * @param statspec Statspec of the tile.
+ */
+void SetRailStationTileFlags(TileIndex tile, const StationSpec *statspec)
+{
+	const StationGfx gfx = GetStationGfx(tile);
+	bool blocked = statspec != nullptr && HasBit(statspec->blocked, gfx);
+	/* Default stations do not draw pylons under roofs (gfx >= 4) */
+	bool pylons = statspec != nullptr ? HasBit(statspec->pylons, gfx) : gfx < 4;
+	bool wires = statspec == nullptr || !HasBit(statspec->wires, gfx);
+
+	SetStationTileBlocked(tile, blocked);
+	SetStationTileHavePylons(tile, pylons);
+	SetStationTileHaveWires(tile, wires);
+}
+
+/**
  * Build rail station
  * @param tile_org northern most position of station dragging/placement
  * @param flags operation to perform
@@ -1468,7 +1487,7 @@ static void RestoreTrainReservation(Train *v)
  * - p1 = (bit 16-23) - platform length
  * - p1 = (bit 24)    - allow stations directly adjacent to other stations.
  * @param p2 various bitstuffed elements
- * - p2 = (bit  0- 7) - custom station class
+ * - p2 = (bit  0-15) - custom station class
  * - p2 = (bit 16-31) - station ID to join (NEW_STATION if build new one)
  * @param p3 various bitstuffed elements
  * - p3 = (bit  0-15) - custom station id
@@ -1484,7 +1503,7 @@ CommandCost CmdBuildRailStation(TileIndex tile_org, DoCommandFlag flags, uint32_
 	uint8_t plat_len  = GB(p1, 16, 8);
 	bool adjacent     = HasBit(p1, 24);
 
-	StationClassID spec_class = Extract<StationClassID, 0, 8>(p2);
+	StationClassID spec_class = Extract<StationClassID, 0, 16>(p2);
 	uint16_t spec_index         = GB(p3, 0, 16);
 	StationID station_to_join = GB(p2, 16, 16);
 
@@ -1658,18 +1677,9 @@ CommandCost CmdBuildRailStation(TileIndex tile_org, DoCommandFlag flags, uint32_
 					TriggerStationAnimation(st, tile, SAT_BUILT);
 				}
 
-				/* Should be the same as layout but axis component could be wrong... */
-				StationGfx gfx = GetStationGfx(tile);
-				bool blocked = statspec != nullptr && HasBit(statspec->blocked, gfx);
-				/* Default stations do not draw pylons under roofs (gfx >= 4) */
-				bool pylons = statspec != nullptr ? HasBit(statspec->pylons, gfx) : gfx < 4;
-				bool wires = statspec == nullptr || !HasBit(statspec->wires, gfx);
+				SetRailStationTileFlags(tile, statspec);
 
-				SetStationTileBlocked(tile, blocked);
-				SetStationTileHavePylons(tile, pylons);
-				SetStationTileHaveWires(tile, wires);
-
-				if (!blocked) c->infrastructure.rail[rt]++;
+				if (!IsStationTileBlocked(tile)) c->infrastructure.rail[rt]++;
 				c->infrastructure.station++;
 
 				tile += tile_delta;
@@ -2107,7 +2117,7 @@ static CommandCost FindJoiningRoadStop(StationID existing_stop, StationID statio
  *           bit 3: #Axis of the road for drive-through stops.
  *           bit 5..10: The roadtype.
  *           bit 16..31: Station ID to join (NEW_STATION if build new one).
- * @param p3 bit 0..7: Roadstop class.
+ * @param p3 bit 0..15: Roadstop class.
  *           bit 16..31: Roadstopspec index.
  * @param text Unused.
  * @return The cost of this operation or an error.
@@ -2126,7 +2136,7 @@ CommandCost CmdBuildRoadStop(TileIndex tile, DoCommandFlag flags, uint32_t p1, u
 	uint8_t width = (uint8_t)GB(p1, 0, 8);
 	uint8_t length = (uint8_t)GB(p1, 8, 8);
 
-	RoadStopClassID spec_class = Extract<RoadStopClassID, 0, 8>(p3);
+	RoadStopClassID spec_class = Extract<RoadStopClassID, 0, 16>(p3);
 	uint16_t spec_index          = GB(p3, 16, 16);
 
 	/* Check if the given station class is valid */

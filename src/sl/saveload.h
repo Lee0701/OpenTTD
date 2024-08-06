@@ -68,7 +68,8 @@ extern FileToSaveLoad _file_to_saveload;
 
 std::string GenerateDefaultSaveName();
 void SetSaveLoadError(StringID str);
-std::string GetSaveLoadErrorString();
+StringID GetSaveLoadErrorType();
+StringID GetSaveLoadErrorMessage();
 SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, DetailedFileType dft, Subdirectory sb, bool threaded = true, SaveModeFlags flags = SMF_NONE);
 void WaitTillSaved();
 void ProcessAsyncSaveFinish();
@@ -111,7 +112,7 @@ enum ChunkType {
 	CH_SPARSE_TABLE = 4,
 	CH_EXT_HDR      = 15, ///< Extended chunk header
 
-	CH_UNUSED = 0x80,
+	CH_READONLY = 0x80,
 };
 
 /** Handlers and description of chunk. */
@@ -179,7 +180,7 @@ namespace upstream_sl {
 			SlUnreachablePlaceholder,
 			SlUnreachablePlaceholder,
 			SlUnreachablePlaceholder,
-			CH_UNUSED
+			CH_READONLY
 		};
 		ch.special_proc = [](uint32_t chunk_id, ChunkSaveLoadSpecialOp op) -> ChunkSaveLoadSpecialOpResult {
 			assert(id == chunk_id);
@@ -261,7 +262,7 @@ namespace upstream_sl {
 	template <uint32_t id, SlXvFeatureIndex feature, uint16_t min_version = 1, uint16_t max_version = 0xFFFF>
 	ChunkHandler MakeSaveUpstreamFeatureConditionalLoadUpstreamChunkHandler(ChunkSaveLoadProc *load_proc, ChunkSaveLoadProc *ptrs_proc, ChunkSaveLoadProc *load_check_proc)
 	{
-		return MakeConditionallyUpstreamChunkHandler<id, SaveUpstreamFeatureConditionalLoadUpstreamChunkInfo<feature, min_version, max_version>>(nullptr, load_proc, ptrs_proc, load_check_proc, CH_UNUSED);
+		return MakeConditionallyUpstreamChunkHandler<id, SaveUpstreamFeatureConditionalLoadUpstreamChunkInfo<feature, min_version, max_version>>(nullptr, load_proc, ptrs_proc, load_check_proc, CH_READONLY);
 	}
 }
 
@@ -1060,6 +1061,7 @@ void SlLoadFromBuffer(const uint8_t *buffer, size_t length, F proc)
 }
 
 void SlGlobList(const SaveLoadTable &slt);
+void SlStdString(std::string *str, VarType conv);
 void SlArray(void *array, size_t length, VarType conv);
 void SlObject(void *object, const SaveLoadTable &slt);
 bool SlObjectMember(void *object, const SaveLoad &sld);
@@ -1076,6 +1078,8 @@ std::vector<SaveLoad> SlTableHeaderOrRiff(const NamedSaveLoadTable &slt);
 void SlSaveTableObjectChunk(const SaveLoadTable &slt);
 void SlLoadTableOrRiffFiltered(const SaveLoadTable &slt);
 void SlLoadTableWithArrayLengthPrefixesMissing();
+
+void SlSkipChunkContents();
 
 inline void SlSaveTableObjectChunk(const NamedSaveLoadTable &slt)
 {

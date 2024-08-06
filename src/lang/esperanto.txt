@@ -2555,7 +2555,7 @@ STR_NETWORK_ERROR_INVALID_CLIENT_NAME                           :{WHITE}Via luda
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION_CAPTION            :{WHITE}Ebla konektoperdo
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION                    :{WHITE}Ne alvenis datumoj de la servilo dum la pasinta{P 0 "" j} {NUM} sekundo{P 0 "" j}
 
-###length 21
+###length 22
 STR_NETWORK_ERROR_CLIENT_GENERAL                                :ĝenerala eraro
 STR_NETWORK_ERROR_CLIENT_DESYNC                                 :sensinkroneca eraro
 STR_NETWORK_ERROR_CLIENT_SAVEGAME                               :ne povis ŝarĝi mapon
@@ -4772,9 +4772,7 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Atendata
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Ankoraŭ konservas,{}bv atendi ĝis finiĝo!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Fiaskis aŭtomate konservi
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Ne eblas legi diskon
-STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Ludkonservado Fiaskis{}{STRING}
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Ne eblas forviŝi dosieron
-STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Ludŝarĝado Fiaskis{}{STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Interna eraro: {STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Rompa konservludo - {STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Tiu ĉi ludo estis konservita per pli nova versio
@@ -5145,6 +5143,7 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL                          :{WHITE}Neniuj v
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Ŝanĝu viajn NewGRF-agordojn
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Neniuj veturiloj dume haveblas
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Komencu novan ludon post {DATE_SHORT} aŭ uzu NewGRF-on kiu havebligas frutempajn veturilojn
+
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Ne povas igi vagonaron transiri signalon je danĝero...

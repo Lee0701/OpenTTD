@@ -2095,7 +2095,7 @@ STR_NETWORK_ERROR_TIMEOUT_JOIN                                  :{WHITE}Datamask
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION_CAPTION            :{WHITE}Mogleg tilkoblingsbrot
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION                    :{WHITE}Dei siste {NUM} sekund er ingen data mottatt frå serveren
 
-###length 21
+###length 22
 STR_NETWORK_ERROR_CLIENT_GENERAL                                :generell feil
 STR_NETWORK_ERROR_CLIENT_DESYNC                                 :synkroniseringsfeil
 STR_NETWORK_ERROR_CLIENT_SAVEGAME                               :klarte ikkje å laste inn kartet
@@ -2844,7 +2844,6 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_RAIL_TYPE                  :Jernbanetype
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}NewGRF-variabel 60+x parameter (heksadesimal)
 
 # Sprite aligner window
-STR_SPRITE_ALIGNER_CAPTION                                      :{WHITE}Forskyver sprite {COMMA} ({STRING})
 STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Neste sprite
 STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Fortsett til neste normale sprite og hopp over einhver pseudo-/omfargings-/skrifttype- sprite, samt start om ved byrjinga
 STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Gå til sprite
@@ -4036,9 +4035,7 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Berekna 
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Lagring foregår framleis,{}ver venleg å vente til det er ferdig!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Autolagring gjekk gale
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Kan ikkje lese frå disk
-STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Lagring av spelet mislukkast{}{STRING}
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Kan ikkje slette fil
-STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Feil ved henting av spel{}{STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Intern feil: {STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Øydelagd lagra spel - {STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Spelet er lagra i ein nyare versjon
@@ -4398,6 +4395,7 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL                          :{WHITE}Ingen k�
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Byt NewGRF-innstillingar
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Det finst ikkje nokon køyretøy enno
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Start spelet etter {DATE_SHORT} eller bruk ein GRF som har køyretøy frå tidlegare tider
+
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Kan ikkje tvinge tog til å passere signal ved fare...

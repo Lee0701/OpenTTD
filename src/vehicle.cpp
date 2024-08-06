@@ -82,13 +82,13 @@ static const uint GEN_HASHX_BUCKET_BITS = 7;
 static const uint GEN_HASHY_BUCKET_BITS = 6;
 
 /* Compute hash for vehicle coord */
-#define GEN_HASHX(x)    GB((x), GEN_HASHX_BUCKET_BITS + ZOOM_LVL_SHIFT, GEN_HASHX_BITS)
-#define GEN_HASHY(y)   (GB((y), GEN_HASHY_BUCKET_BITS + ZOOM_LVL_SHIFT, GEN_HASHY_BITS) << GEN_HASHX_BITS)
+#define GEN_HASHX(x)    GB((x), GEN_HASHX_BUCKET_BITS + ZOOM_BASE_SHIFT, GEN_HASHX_BITS)
+#define GEN_HASHY(y)   (GB((y), GEN_HASHY_BUCKET_BITS + ZOOM_BASE_SHIFT, GEN_HASHY_BITS) << GEN_HASHX_BITS)
 #define GEN_HASH(x, y) (GEN_HASHY(y) + GEN_HASHX(x))
 
 /* Maximum size until hash repeats */
-//static const int GEN_HASHX_SIZE = 1 << (GEN_HASHX_BUCKET_BITS + GEN_HASHX_BITS + ZOOM_LVL_SHIFT);
-//static const int GEN_HASHY_SIZE = 1 << (GEN_HASHY_BUCKET_BITS + GEN_HASHY_BITS + ZOOM_LVL_SHIFT);
+//static const int GEN_HASHX_SIZE = 1 << (GEN_HASHX_BUCKET_BITS + GEN_HASHX_BITS + ZOOM_BASE_SHIFT);
+//static const int GEN_HASHY_SIZE = 1 << (GEN_HASHY_BUCKET_BITS + GEN_HASHY_BITS + ZOOM_BASE_SHIFT);
 
 /* Increments to reach next bucket in hash table */
 //static const int GEN_HASHX_INC = 1;
@@ -556,6 +556,7 @@ Vehicle *VehicleFromPosXY(int x, int y, VehicleType type, void *data, VehicleFro
  * Helper function for FindVehicleOnPos/HasVehicleOnPos.
  * @note Do not call this function directly!
  * @param tile The location on the map
+ * @param type The vehicle type
  * @param data Arbitrary data passed to \a proc.
  * @param proc The proc that determines whether a vehicle will be "found".
  * @param find_first Whether to return on the first found or iterate over
@@ -578,6 +579,25 @@ Vehicle *VehicleFromPos(TileIndex tile, VehicleType type, void *data, VehicleFro
 	}
 
 	return nullptr;
+}
+
+/**
+ * Returns the first vehicle on a specific location, this should be iterated using Vehicle::HashTileNext.
+ * @note Use #GetFirstVehicleOnPos when you have the intention that all vehicles should be iterated over using Vehicle::HashTileNext. The iteration order is non-deterministic.
+ * @param tile The location on the map
+ * @param type The vehicle type
+ * @return First vehicle or nullptr.
+ */
+Vehicle *GetFirstVehicleOnPos(TileIndex tile, VehicleType type)
+{
+	VehicleTypeTileHash &vhash = _vehicle_tile_hashes[type];
+
+	auto iter = vhash.find(tile);
+	if (iter != vhash.end()) {
+		return Vehicle::Get(iter->second);
+	} else {
+		return nullptr;
+	}
 }
 
 /**
@@ -1955,8 +1975,8 @@ struct ViewportHashBound {
 static const int VHB_BASE_MARGIN = 70;
 
 static ViewportHashBound GetViewportHashBound(int l, int r, int t, int b, int x_margin, int y_margin) {
-	int xl = (l - ((VHB_BASE_MARGIN + x_margin) * ZOOM_LVL_BASE)) >> (7 + ZOOM_LVL_SHIFT);
-	int xu = (r + (x_margin * ZOOM_LVL_BASE))                 >> (7 + ZOOM_LVL_SHIFT);
+	int xl = (l - ((VHB_BASE_MARGIN + x_margin) * ZOOM_BASE)) >> (7 + ZOOM_BASE_SHIFT);
+	int xu = (r + (x_margin * ZOOM_BASE))                     >> (7 + ZOOM_BASE_SHIFT);
 	/* compare after shifting instead of before, so that lower bits don't affect comparison result */
 	if (xu - xl < (1 << 6)) {
 		xl &= 0x3F;
@@ -1967,8 +1987,8 @@ static ViewportHashBound GetViewportHashBound(int l, int r, int t, int b, int x_
 		xu = 0x3F;
 	}
 
-	int yl = (t - ((VHB_BASE_MARGIN + y_margin) * ZOOM_LVL_BASE)) >> (6 + ZOOM_LVL_SHIFT);
-	int yu = (b + (y_margin * ZOOM_LVL_BASE))                 >> (6 + ZOOM_LVL_SHIFT);
+	int yl = (t - ((VHB_BASE_MARGIN + y_margin) * ZOOM_BASE)) >> (6 + ZOOM_BASE_SHIFT);
+	int yu = (b + (y_margin * ZOOM_BASE))                     >> (6 + ZOOM_BASE_SHIFT);
 	/* compare after shifting instead of before, so that lower bits don't affect comparison result */
 	if (yu - yl < (1 << 6)) {
 		yl = (yl & 0x3F) << 6;
@@ -1994,10 +2014,10 @@ void ViewportAddVehiclesIntl(DrawPixelInfo *dpi)
 	const ViewportHashBound vhb = GetViewportHashBound(l, r, t, b,
 			update_vehicles ? MAX_VEHICLE_PIXEL_X - VHB_BASE_MARGIN : 0, update_vehicles ? MAX_VEHICLE_PIXEL_Y - VHB_BASE_MARGIN : 0);
 
-	const int ul = l - (MAX_VEHICLE_PIXEL_X * ZOOM_LVL_BASE);
-	const int ur = r + (MAX_VEHICLE_PIXEL_X * ZOOM_LVL_BASE);
-	const int ut = t - (MAX_VEHICLE_PIXEL_Y * ZOOM_LVL_BASE);
-	const int ub = b + (MAX_VEHICLE_PIXEL_Y * ZOOM_LVL_BASE);
+	const int ul = l - (MAX_VEHICLE_PIXEL_X * ZOOM_BASE);
+	const int ur = r + (MAX_VEHICLE_PIXEL_X * ZOOM_BASE);
+	const int ut = t - (MAX_VEHICLE_PIXEL_Y * ZOOM_BASE);
+	const int ub = b + (MAX_VEHICLE_PIXEL_Y * ZOOM_BASE);
 
 	for (int y = vhb.yl;; y = (y + (1 << 6)) & (0x3F << 6)) {
 		for (int x = vhb.xl;; x = (x + 1) & 0x3F) {
@@ -2081,7 +2101,8 @@ void ViewportMapDrawVehicles(DrawPixelInfo *dpi, Viewport *vp)
 							if (pt.x >= l && pt.x < r && pt.y >= t && pt.y < b) {
 								const int pixel_x = UnScaleByZoomLower(pt.x - l, dpi->zoom);
 								const int pixel_y = UnScaleByZoomLower(pt.y - t, dpi->zoom);
-								vp->map_draw_vehicles_cache.vehicle_pixels[pixel_x + (pixel_y) * vp->width] = true;
+								const int pos = pixel_x + (pixel_y) * vp->width;
+								SetBit(vp->map_draw_vehicles_cache.vehicle_pixels[pos / VP_BLOCK_BITS], pos % VP_BLOCK_BITS);
 							}
 						}
 						v = v->hash_viewport_next;
@@ -2103,9 +2124,17 @@ void ViewportMapDrawVehicles(DrawPixelInfo *dpi, Viewport *vp)
 	const int db = UnScaleByZoomLower(dpi->top + dpi->height - (vp->virtual_top & mask), dpi->zoom);
 	int y_ptr = vp->width * dt;
 	for (int y = dt; y < db; y++, y_ptr += vp->width) {
-		for (int x = dl; x < dr; x++) {
-			if (vp->map_draw_vehicles_cache.vehicle_pixels[y_ptr + x]) {
-				blitter->SetPixel32(dpi->dst_ptr, x - dl, y - dt, PC_WHITE, Colour(0xFC, 0xFC, 0xFC).data);
+		const uint row_start = static_cast<uint>(y_ptr + dl);
+		const uint row_end = static_cast<uint>(y_ptr + dr);
+
+		ViewPortBlockT ignore_mask = GetBitMaskSC<ViewPortBlockT>(0, row_start % VP_BLOCK_BITS);
+		const ViewPortBlockT *ptr = vp->map_draw_vehicles_cache.vehicle_pixels.data() + (row_start / VP_BLOCK_BITS);
+		for (uint block = row_start - (row_start % VP_BLOCK_BITS); block < row_end; block += VP_BLOCK_BITS, ignore_mask = 0, ptr++) {
+			const ViewPortBlockT value = *ptr & ~ignore_mask;
+			for (uint8_t bit : SetBitIterator(value)) {
+				uint pos = block + bit;
+				if (pos >= row_end) break;
+				blitter->SetPixel32(dpi->dst_ptr, pos - row_start, y - dt, PC_WHITE, Colour(0xFC, 0xFC, 0xFC).data);
 			}
 		}
 	}
@@ -2805,7 +2834,15 @@ void VehicleEnterDepot(Vehicle *v)
 
 		/* If we've entered our unbunching depot, record the round trip duration. */
 		if (v->current_order.GetDepotActionType() & ODATFB_UNBUNCH && v->unbunch_state != nullptr && v->unbunch_state->depot_unbunching_last_departure != INVALID_STATE_TICKS) {
-			v->unbunch_state->round_trip_time = (_state_ticks - v->unbunch_state->depot_unbunching_last_departure).AsTicks();
+			Ticks measured_round_trip = (_state_ticks - v->unbunch_state->depot_unbunching_last_departure).AsTicks();
+			Ticks &rtt = v->unbunch_state->round_trip_time;
+			if (rtt == 0) {
+				/* This might be our first round trip. */
+				rtt = measured_round_trip;
+			} else {
+				/* If we have a previous trip, smooth the effects of outlier trip calculations caused by jams or other interference. */
+				rtt = Clamp(measured_round_trip, (rtt / 2), ClampTo<Ticks>(rtt * 2));
+			}
 		}
 
 		v->current_order.MakeDummy();
@@ -2827,8 +2864,8 @@ void Vehicle::UpdateViewport(bool dirty)
 	Point pt = RemapCoords(this->x_pos + this->x_offs, this->y_pos + this->y_offs, this->z_pos);
 	new_coord.left   += pt.x;
 	new_coord.top    += pt.y;
-	new_coord.right  += pt.x + 2 * ZOOM_LVL_BASE;
-	new_coord.bottom += pt.y + 2 * ZOOM_LVL_BASE;
+	new_coord.right  += pt.x + 2 * ZOOM_BASE;
+	new_coord.bottom += pt.y + 2 * ZOOM_BASE;
 
 	UpdateVehicleViewportHash(this, new_coord.left, new_coord.top);
 
@@ -2857,8 +2894,8 @@ void Vehicle::UpdateViewportDeferred()
 	Point pt = RemapCoords(this->x_pos + this->x_offs, this->y_pos + this->y_offs, this->z_pos);
 	new_coord.left   += pt.x;
 	new_coord.top    += pt.y;
-	new_coord.right  += pt.x + 2 * ZOOM_LVL_BASE;
-	new_coord.bottom += pt.y + 2 * ZOOM_LVL_BASE;
+	new_coord.right  += pt.x + 2 * ZOOM_BASE;
+	new_coord.bottom += pt.y + 2 * ZOOM_BASE;
 
 	UpdateVehicleViewportHashDeferred(this, new_coord.left, new_coord.top);
 
@@ -3903,7 +3940,7 @@ void Vehicle::LeaveUnbunchingDepot()
 	SetWindowDirty(WC_VEHICLE_TIMETABLE, this->index);
 
 	/* Find the average travel time of vehicles that we share orders with. */
-	uint num_vehicles = 0;
+	int num_vehicles = 0;
 	Ticks total_travel_time = 0;
 
 	Vehicle *u = this->FirstShared();
@@ -3916,10 +3953,10 @@ void Vehicle::LeaveUnbunchingDepot()
 	}
 
 	/* Make sure we cannot divide by 0. */
-	num_vehicles = std::max(num_vehicles, 1u);
+	num_vehicles = std::max(num_vehicles, 1);
 
 	/* Calculate the separation by finding the average travel time, then calculating equal separation (minimum 1 tick) between vehicles. */
-	Ticks separation = std::max((total_travel_time / num_vehicles / num_vehicles), 1u);
+	Ticks separation = std::max((total_travel_time / num_vehicles / num_vehicles), 1);
 	StateTicks next_departure = _state_ticks + separation;
 
 	/* Set the departure time of all vehicles that we share orders with. */
@@ -3930,6 +3967,7 @@ void Vehicle::LeaveUnbunchingDepot()
 
 		if (u->unbunch_state == nullptr) u->unbunch_state.reset(new VehicleUnbunchState());
 		u->unbunch_state->depot_unbunching_next_departure = next_departure;
+		SetWindowDirty(WC_VEHICLE_VIEW, u->index);
 	}
 }
 
@@ -4647,8 +4685,8 @@ char *Vehicle::DumpVehicleFlagsMultiline(char *b, const char *last, const char *
 	DumpVehicleFlagsGeneric(this, dump, dump_header);
 	if (this->type == VEH_TRAIN) {
 		const Train *t = Train::From(this);
-		b += seprintf(b, last, "%strack: 0x%02X", base_indent, (uint) t->track);
-		if (t->reverse_distance > 0) b += seprintf(b, last, "%sreverse_distance: %u", base_indent, t->reverse_distance);
+		b += seprintf(b, last, "%strack: 0x%02X\n", base_indent, (uint) t->track);
+		if (t->reverse_distance > 0) b += seprintf(b, last, "%sreverse_distance: %u\n", base_indent, t->reverse_distance);
 	} else if (this->type == VEH_ROAD) {
 		const RoadVehicle *r = RoadVehicle::From(this);
 		b += seprintf(b, last, "%sRV state:%X\n%sRV frame:%X\n", base_indent, r->state, base_indent, r->frame);

@@ -50,8 +50,7 @@ struct ExtraStationNameInfo {
 	uint16_t flags;
 };
 
-extern std::array<ExtraStationNameInfo, MAX_EXTRA_STATION_NAMES> _extra_station_names;
-extern uint _extra_station_names_used;
+extern std::vector<ExtraStationNameInfo> _extra_station_names;
 extern uint8_t _extra_station_names_probability;
 
 class FlowStatMap;
@@ -716,6 +715,11 @@ struct GoodsEntry {
 	{
 		return this->data != nullptr ? this->data->flows : _empty_flows;
 	}
+
+	void RemoveDataIfUnused()
+	{
+		if (this->data != nullptr && this->data->MayBeRemoved()) this->data.reset();
+	}
 };
 
 /** All airport-related information. Only valid if tile != INVALID_TILE. */
@@ -902,6 +906,8 @@ public:
 	uint8_t time_since_load;
 	uint8_t time_since_unload;
 
+	uint8_t station_cargo_history_offset = 0;                                                ///< Start offset in station_cargo_history cargo ring buffer, here for alignment
+
 	std::vector<Vehicle *> loading_vehicles;
 	GoodsEntry goods[NUM_CARGO];  ///< Goods at this station
 	CargoTypes always_accepted;       ///< Bitmask of always accepted cargo types (by houses, HQs, industry tiles when industry doesn't accept cargo)
@@ -909,8 +915,7 @@ public:
 	IndustryList industries_near; ///< Cached list of industries near the station that can accept cargo, @see DeliverGoodsToIndustry()
 	Industry *industry;           ///< NOSAVE: Associated industry for neutral stations. (Rebuilt on load from Industry->st)
 
-	CargoTypes station_cargo_history_cargoes;                                                ///< Bitmask of cargoes in station_cargo_history
-	uint8_t station_cargo_history_offset;                                                    ///< Start offset in station_cargo_history cargo ring buffer
+	CargoTypes station_cargo_history_cargoes = 0;                                            ///< Bitmask of cargoes in station_cargo_history
 	std::vector<std::array<uint16_t, MAX_STATION_CARGO_HISTORY_DAYS>> station_cargo_history; ///< Station history of waiting cargo, dynamic range compressed (see RXCompressUint)
 
 	Station(TileIndex tile = INVALID_TILE);

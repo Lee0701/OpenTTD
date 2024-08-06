@@ -14,6 +14,7 @@
 #include "strings_type.h"
 #include "table/strings.h"
 
+#include <limits>
 #include <vector>
 
 class LinkGraphOverlay;
@@ -30,9 +31,12 @@ enum ViewportMapType {
 	VPMT_MAX = VPMT_INDUSTRY,
 };
 
+using ViewPortBlockT = size_t;
+static constexpr uint VP_BLOCK_BITS = std::numeric_limits<ViewPortBlockT>::digits;
+
 struct ViewPortMapDrawVehiclesCache {
 	uint64_t done_hash_bits[64];
-	std::vector<bool> vehicle_pixels;
+	std::vector<ViewPortBlockT> vehicle_pixels;
 };
 
 /**
@@ -54,7 +58,8 @@ struct Viewport {
 
 	LinkGraphOverlay *overlay;
 
-	std::vector<bool> dirty_blocks;
+	std::vector<ViewPortBlockT> dirty_blocks;
+	uint dirty_blocks_column_pitch;
 	uint dirty_blocks_per_column;
 	uint dirty_blocks_per_row;
 	uint8_t dirty_block_left_margin;
@@ -92,7 +97,7 @@ private:
 	uint GetDirtyBlockShift() const
 	{
 		if (this->zoom >= ZOOM_LVL_DRAW_MAP) return 3;
-		if (this->zoom >= ZOOM_LVL_OUT_8X) return 4;
+		if (this->zoom >= ZOOM_LVL_OUT_2X) return 4;
 		return 7 - this->zoom;
 	}
 };

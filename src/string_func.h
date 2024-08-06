@@ -41,7 +41,7 @@ int CDECL vseprintf(char *str, const char *last, const char *format, va_list ap)
 std::string CDECL stdstr_fmt(const char *str, ...) WARN_FORMAT(1, 2);
 std::string stdstr_vfmt(const char *str, va_list va) WARN_FORMAT(1, 0);
 
-std::string FormatArrayAsHex(std::span<const uint8_t> data, bool upper_case = false);
+std::string FormatArrayAsHex(std::span<const uint8_t> data, bool upper_case = true);
 
 char *StrMakeValidInPlace(char *str, const char *last, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK) NOACCESS(2);
 [[nodiscard]] std::string StrMakeValid(std::string_view str, StringValidationSettings settings = SVS_REPLACE_WITH_QUESTION_MARK);
@@ -305,5 +305,18 @@ inline bool IsWhitespace(char32_t c)
 #	define DEFINE_STRCASESTR
 char *strcasestr(const char *haystack, const char *needle);
 #endif /* strcasestr is available */
+
+/**
+ * The use of a struct is so that when used as an argument to seprintf/etc, the buffer lives
+ * on the stack with a lifetime which lasts until the end of the statement.
+ * This avoids using a static buffer which is thread-unsafe, or needing to call malloc, which would then need to be freed.
+ */
+struct StrErrorDumper {
+	const char *Get(int errornum);
+	const char *GetLast();
+
+private:
+	char buf[128];
+};
 
 #endif /* STRING_FUNC_H */

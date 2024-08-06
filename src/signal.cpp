@@ -395,7 +395,7 @@ static SigInfo ExploreSegment(Owner owner)
 						 * ANY conventional signal in REVERSE direction
 						 * (if it is a presignal EXIT and it changes, it will be added to 'to-be-done' set later) */
 						if (HasSignalOnTrackdir(tile, reversedir)) {
-							if (IsPbsSignalNonExtended(sig)) {
+							if (IsPbsSignalNonExtended(sig) || IsNoEntrySignal(sig)) {
 								info.flags |= SF_PBS;
 								if (_extra_aspects > 0 && GetSignalStateByTrackdir(tile, reversedir) == SIGNAL_STATE_GREEN && !IsRailSpecialSignalAspect(tile, track)) {
 									_tbpset.Add(tile, reversedir);
@@ -407,7 +407,7 @@ static SigInfo ExploreSegment(Owner owner)
 						}
 
 						if (HasSignalOnTrackdir(tile, trackdir)) {
-							if (!IsOnewaySignal(sig)) info.flags |= SF_PBS;
+							if (!IsOnewaySignal(sig) || IsNoEntrySignal(sig)) info.flags |= SF_PBS;
 							if (_extra_aspects > 0) {
 								info.out_signal_tile = tile;
 								info.out_signal_trackdir = trackdir;
@@ -1576,7 +1576,7 @@ void DetermineCombineNormalShuntModeWithLookahead(Train *v, TileIndex tile, Trac
 
 			if (IsRestrictedSignal(tile)) {
 				const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
-				if (prog && prog->actions_used_flags & TRPAUF_CMB_SIGNAL_MODE_CTRL) {
+				if (prog != nullptr && prog->actions_used_flags & TRPAUF_CMB_SIGNAL_MODE_CTRL) {
 					TraceRestrictProgramResult out;
 					TraceRestrictProgramInput input(tile, trackdir, [](const Train *v, const void *, TraceRestrictPBSEntrySignalAuxField mode) {
 						if (mode == TRPESAF_RES_END_TILE) {
@@ -1973,7 +1973,7 @@ void UpdateSignalReserveThroughBit(TileIndex tile, Track track, bool update_sign
 	} else {
 		if (IsRestrictedSignal(tile)) {
 			const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, track);
-			if (prog && prog->actions_used_flags & TRPAUF_RESERVE_THROUGH_ALWAYS) reserve_through = true;
+			if (prog != nullptr && prog->actions_used_flags & TRPAUF_RESERVE_THROUGH_ALWAYS) reserve_through = true;
 		}
 	}
 

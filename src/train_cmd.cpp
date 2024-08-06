@@ -1504,17 +1504,22 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 		CheckConsistencyOfArticulatedVehicle(v);
 
 		/* Try to connect the vehicle to one of free chains of wagons. */
-		for (Train *w : Train::IterateFrontOnly()) {
-			if (w->tile == tile &&              ///< Same depot
-					w->IsFreeWagon() &&             ///< A free wagon chain
+		std::vector<Train *> candidates;
+		for (Train *w = Train::From(GetFirstVehicleOnPos(tile, VEH_TRAIN)); w != nullptr; w = w->HashTileNext()) {
+			if (w->IsFreeWagon() &&                 ///< A free wagon chain
 					w->engine_type == e->index &&   ///< Same type
 					w->First() != v &&              ///< Don't connect to ourself
 					!(w->vehstatus & VS_CRASHED) && ///< Not crashed/flooded
-					w->owner == v->owner &&         ///< Same owner
-					!w->IsVirtual()) {              ///< Not virtual
-					if (DoCommand(0, v->index | 1 << 20, w->Last()->index, DC_EXEC, CMD_MOVE_RAIL_VEHICLE).Succeeded()) {
-						break;
-					}
+					w->owner == v->owner) {         ///< Same owner
+				candidates.push_back(w);
+			}
+		}
+		std::sort(candidates.begin(), candidates.end(), [](const Train *a, const Train *b) {
+			return a->index < b->index;
+		});
+		for (Train *w : candidates) {
+			if (DoCommand(0, v->index | 1 << 20, w->Last()->index, DC_EXEC, CMD_MOVE_RAIL_VEHICLE).Succeeded()) {
+				break;
 			}
 		}
 
@@ -1528,15 +1533,19 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 void NormalizeTrainVehInDepot(const Train *u)
 {
 	assert(u->IsEngine());
-	for (const Train *v : Train::IterateFrontOnly()) {
-		if (v->IsFreeWagon() && v->tile == u->tile &&
+	std::vector<Train *> candidates;
+	for (Train *v = Train::From(GetFirstVehicleOnPos(u->tile, VEH_TRAIN)); v != nullptr; v = v->HashTileNext()) {
+		if (v->IsFreeWagon() &&
 				v->track == TRACK_BIT_DEPOT &&
-				v->owner == u->owner &&
-				!v->IsVirtual()) {
-			if (DoCommand(0, v->index | 1 << 20, u->index, DC_EXEC,
-					CMD_MOVE_RAIL_VEHICLE).Failed())
-				break;
+				v->owner == u->owner) {
+			candidates.push_back(v);
 		}
+	}
+	std::sort(candidates.begin(), candidates.end(), [](const Train *a, const Train *b) {
+		return a->index < b->index;
+	});
+	for (Train *v : candidates) {
+		if (DoCommand(0, v->index | 1 << 20, u->index, DC_EXEC, CMD_MOVE_RAIL_VEHICLE).Failed()) break;
 	}
 }
 
@@ -1670,23 +1679,32 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 	return CommandCost();
 }
 
-static Train *FindGoodVehiclePos(const Train *src)
+static std::vector<Train *> FindGoodVehiclePosList(const Train *src)
 {
 	EngineID eng = src->engine_type;
 	TileIndex tile = src->tile;
 
-	for (Train *dst : Train::IterateFrontOnly()) {
-		if (dst->IsFreeWagon() && dst->tile == tile && !(dst->vehstatus & VS_CRASHED) && dst->owner == src->owner && !dst->IsVirtual()) {
+	std::vector<Train *> candidates;
+
+	for (Train *dst = Train::From(GetFirstVehicleOnPos(tile, VEH_TRAIN)); dst != nullptr; dst = dst->HashTileNext()) {
+		if (dst->IsFreeWagon() && !(dst->vehstatus & VS_CRASHED) && dst->owner == src->owner) {
 			/* check so all vehicles in the line have the same engine. */
 			Train *t = dst;
 			while (t->engine_type == eng) {
 				t = t->Next();
-				if (t == nullptr) return dst;
+				if (t == nullptr) {
+					candidates.push_back(dst);
+					break;
+				}
 			}
 		}
 	}
 
-	return nullptr;
+	std::sort(candidates.begin(), candidates.end(), [](const Train *a, const Train *b) {
+		return a->index < b->index;
+	});
+
+	return candidates;
 }
 
 /** Helper type for lists/vectors of trains */
@@ -2084,7 +2102,17 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1,
 	/* if nothing is selected as destination, try and find a matching vehicle to drag to. */
 	Train *dst;
 	if (d == INVALID_VEHICLE) {
-		dst = (src->IsEngine() || (flags & DC_AUTOREPLACE)) ? nullptr : FindGoodVehiclePos(src);
+		if (!src->IsEngine() && !src->IsVirtual() && !(flags & DC_AUTOREPLACE)) {
+			/* Try each possible destination target, if none succeed do not append to a free wagon chain */
+			std::vector<Train *> destination_candidates = FindGoodVehiclePosList(src);
+			for (Train *try_dest : destination_candidates) {
+				uint32_t try_p2 = p2;
+				SB(try_p2, 0, 20, try_dest->index);
+				CommandCost cost = CmdMoveRailVehicle(tile, flags, p1, try_p2, text);
+				if (cost.Succeeded()) return cost;
+			}
+		}
+		dst = nullptr;
 	} else {
 		dst = Train::GetIfValid(d);
 		if (dst == nullptr) return check_on_failure(CMD_ERROR);
@@ -2100,7 +2128,7 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32_t p1,
 	src = src->GetFirstEnginePart();
 	if (dst != nullptr) {
 		dst = dst->GetFirstEnginePart();
-		assert(HasBit(dst->subtype, GVSF_VIRTUAL) == HasBit(src->subtype, GVSF_VIRTUAL));
+		if (HasBit(dst->subtype, GVSF_VIRTUAL) != HasBit(src->subtype, GVSF_VIRTUAL)) return CMD_ERROR;
 	}
 
 	/* don't move the same vehicle.. */
@@ -3781,6 +3809,8 @@ void FreeTrainTrackReservation(Train *v, TileIndex origin, Trackdir orig_td)
 			TileIndex end = GetOtherTunnelBridgeEnd(tile);
 			bool free = TunnelBridgeIsFree(tile, end, v, TBIFM_ACROSS_ONLY).Succeeded();
 			if (!free) break;
+		} else if (IsTunnelBridgeWithSignalSimulation(tile) && IsTunnelBridgeSignalSimulationExitOnly(tile) && TrackdirEntersTunnelBridge(tile, td)) {
+			break;
 		}
 
 		/* Don't free first station/bridge/tunnel if we are on it. */
@@ -4228,7 +4258,7 @@ static bool HasLongReservePbsSignalOnTrackdir(Train* v, TileIndex tile, Trackdir
 		if (IsNoEntrySignal(tile, TrackdirToTrack(trackdir))) return false;
 		if (IsRestrictedSignal(tile)) {
 			const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
-			if (prog && prog->actions_used_flags & TRPAUF_LONG_RESERVE) {
+			if (prog != nullptr && prog->actions_used_flags & TRPAUF_LONG_RESERVE) {
 				TraceRestrictProgramResult out;
 				if (default_value) out.flags |= TRPRF_LONG_RESERVE;
 				TraceRestrictProgramInput input(tile, trackdir, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr);
@@ -4411,7 +4441,7 @@ static Track ChooseTrainTrack(Train *v, TileIndex tile, DiagDirection enterdir, 
 		if (track != INVALID_TRACK && HasPbsSignalOnTrackdir(tile, TrackEnterdirToTrackdir(track, enterdir)) && !IsNoEntrySignal(tile, track)) {
 			if (IsRestrictedSignal(tile) && v->force_proceed != TFP_SIGNAL) {
 				const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, track);
-				if (prog && prog->actions_used_flags & (TRPAUF_WAIT_AT_PBS | TRPAUF_SLOT_ACQUIRE | TRPAUF_TRAIN_NOT_STUCK)) {
+				if (prog != nullptr && prog->actions_used_flags & (TRPAUF_WAIT_AT_PBS | TRPAUF_SLOT_ACQUIRE | TRPAUF_TRAIN_NOT_STUCK)) {
 					TraceRestrictProgramResult out;
 					TraceRestrictProgramInput input(tile, TrackEnterdirToTrackdir(track, enterdir), nullptr, nullptr);
 					input.permitted_slot_operations = TRPISP_ACQUIRE;
@@ -5296,7 +5326,7 @@ static bool CheckTrainStayInWormHolePathReserve(Train *t, TileIndex tile)
 	auto try_exit_reservation = [&]() -> bool {
 		if (IsTunnelBridgeRestrictedSignal(tile)) {
 			const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(td));
-			if (prog && prog->actions_used_flags & (TRPAUF_WAIT_AT_PBS | TRPAUF_SLOT_ACQUIRE)) {
+			if (prog != nullptr && prog->actions_used_flags & (TRPAUF_WAIT_AT_PBS | TRPAUF_SLOT_ACQUIRE)) {
 				TraceRestrictProgramResult out;
 				TraceRestrictProgramInput input(tile, td, nullptr, nullptr);
 				input.permitted_slot_operations = TRPISP_ACQUIRE;
@@ -5723,6 +5753,10 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 							return false;
 						}
 						goto reverse_train_direction;
+					} else if (!(v->track & TRACK_BIT_WORMHOLE) && IsTunnelBridgeWithSignalSimulation(gp.new_tile) &&
+							IsTunnelBridgeSignalSimulationExitOnly(gp.new_tile) && TrackdirEntersTunnelBridge(gp.new_tile, FindFirstTrackdir(trackdirbits)) &&
+							v->force_proceed == TFP_NONE) {
+						goto reverse_train_direction;
 					} else {
 						TryReserveRailTrack(gp.new_tile, TrackBitsToTrack(chosen_track), false);
 
@@ -5899,7 +5933,7 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 
 						if (IsTunnelBridgeRestrictedSignal(old_tile)) {
 							const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(old_tile, track);
-							if (prog && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
+							if (prog != nullptr && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
 								TraceRestrictProgramResult out;
 								TraceRestrictProgramInput input(old_tile, trackdir, nullptr, nullptr);
 								input.permitted_slot_operations = TRPISP_RELEASE_BACK;
@@ -6140,7 +6174,7 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 					if (HasSignalOnTrack(gp.old_tile, track)) {
 						if (IsRestrictedSignal(gp.old_tile)) {
 							const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(gp.old_tile, track);
-							if (prog && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
+							if (prog != nullptr && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
 								TraceRestrictProgramResult out;
 								TraceRestrictProgramInput input(gp.old_tile, ReverseTrackdir(rev_trackdir), nullptr, nullptr);
 								input.permitted_slot_operations = TRPISP_RELEASE_BACK;
@@ -6158,7 +6192,7 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 					if (TrackdirEntersTunnelBridge(gp.old_tile, rev_trackdir)) {
 						if (IsTunnelBridgeRestrictedSignal(gp.old_tile)) {
 							const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(gp.old_tile, track);
-							if (prog && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
+							if (prog != nullptr && prog->actions_used_flags & TRPAUF_SLOT_RELEASE_BACK) {
 								TraceRestrictProgramResult out;
 								TraceRestrictProgramInput input(gp.old_tile, ReverseTrackdir(rev_trackdir), nullptr, nullptr);
 								input.permitted_slot_operations = TRPISP_RELEASE_BACK;

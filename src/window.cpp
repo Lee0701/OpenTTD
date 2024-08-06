@@ -23,7 +23,7 @@
 #include "tilehighlight_func.h"
 #include "network/network.h"
 #include "querystring_gui.h"
-#include "widgets/dropdown_func.h"
+#include "dropdown_func.h"
 #include "strings_func.h"
 #include "settings_type.h"
 #include "settings_func.h"
@@ -899,7 +899,7 @@ void DrawOverlappedWindow(Window *w, int left, int top, int right, int bottom, D
 	dp->top = top - w->top;
 	dp->pitch = _screen.pitch;
 	dp->dst_ptr = BlitterFactory::GetCurrentBlitter()->MoveTo(_screen.dst_ptr, left, top);
-	dp->zoom = ZOOM_LVL_NORMAL;
+	dp->zoom = ZOOM_LVL_MIN;
 	w->OnPaint();
 	if (unlikely(flags & DOWF_SHOW_DEBUG)) {
 		if (w->viewport != nullptr) ViewportDoDrawProcessAllPending();
@@ -3803,10 +3803,10 @@ char *DumpWindowInfo(char *b, const char *last, const Window *w)
 			w->window_class, w->window_number, w->flags, w->left, w->top, w->width, w->height, w->owner);
 	if (w->viewport != nullptr) {
 		const ViewportData *vd = w->viewport;
-		b += seprintf(b, last, ", viewport: (veh: 0x%X, x: (%d, %d), y: (%d, %d), z: %u, l: %d, t: %d, w: %d, h: %d, vl: %d, vt: %d, vw: %d, vh: %d, dbc: %u, dbr: %u, dblm: %u, db: %u)",
+		b += seprintf(b, last, ", viewport: (veh: 0x%X, x: (%d, %d), y: (%d, %d), z: %u, l: %d, t: %d, w: %d, h: %d, vl: %d, vt: %d, vw: %d, vh: %d, dbc: %u, dbr: %u, dblm: %u, dbcp: %u, db: %u)",
 				vd->follow_vehicle, vd->scrollpos_x, vd->dest_scrollpos_x, vd->scrollpos_y, vd->dest_scrollpos_y, vd->zoom, vd->left, vd->top, vd->width, vd->height,
 				vd->virtual_left, vd->virtual_top, vd->virtual_width, vd->virtual_height, vd->dirty_blocks_per_column, vd->dirty_blocks_per_row, vd->dirty_block_left_margin,
-				(uint) vd->dirty_blocks.size());
+				vd->dirty_blocks_column_pitch, (uint) vd->dirty_blocks.size());
 	}
 	if (w->parent != nullptr) {
 		b += seprintf(b, last, ", parent ");

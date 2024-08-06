@@ -199,7 +199,7 @@ void FiosGetDrives(FileList &file_list)
 	wchar_t drives[256];
 	const wchar_t *s;
 
-	GetLogicalDriveStrings(lengthof(drives), drives);
+	GetLogicalDriveStrings(static_cast<DWORD>(std::size(drives)), drives);
 	for (s = drives; *s != '\0';) {
 		FiosItem *fios = &file_list.emplace_back();
 		fios->type = FIOS_TYPE_DRIVE;
@@ -278,7 +278,7 @@ void CreateConsole()
 		return;
 	}
 
-#if defined(_MSC_VER) && _MSC_VER >= 1900
+#if defined(_MSC_VER)
 	freopen("CONOUT$", "a", stdout);
 	freopen("CONIN$", "r", stdin);
 	freopen("CONOUT$", "a", stderr);
@@ -301,31 +301,34 @@ void CreateConsole()
 }
 
 /** Temporary pointer to get the help message to the window */
-static const char *_help_msg;
+static std::string_view _help_msg;
 
 /** Callback function to handle the window */
 static INT_PTR CALLBACK HelpDialogFunc(HWND wnd, UINT msg, WPARAM wParam, LPARAM)
 {
 	switch (msg) {
 		case WM_INITDIALOG: {
-			char help_msg[8192];
-			const char *p = _help_msg;
-			char *q = help_msg;
-			while (q != lastof(help_msg) && *p != '\0') {
-				if (*p == '\n') {
+			const size_t help_msg_size = 1 + _help_msg.size() + std::count(_help_msg.begin(), _help_msg.end(), '\n');
+			auto help_msg = std::make_unique<char[]>(help_msg_size);
+			char *q = help_msg.get();
+			char *last = q + help_msg_size - 1;
+			for (char c : _help_msg) {
+				if (q == last) break;
+				if (c == '\n') {
 					*q++ = '\r';
-					if (q == lastof(help_msg)) {
+					if (q == last) {
 						q[-1] = '\0';
 						break;
 					}
 				}
-				*q++ = *p++;
+				*q++ = c;
 			}
-			*q = '\0';
+			*q++ = '\0';
 			/* We need to put the text in a separate buffer because the default
 			 * buffer in OTTD2FS might not be large enough (512 chars). */
-			wchar_t help_msg_buf[8192];
-			SetDlgItemText(wnd, 11, convert_to_fs(help_msg, help_msg_buf, lengthof(help_msg_buf)));
+			const size_t help_msg_buf_size = ((q - help_msg.get()) * 3) / 2;
+			auto help_msg_buf = std::make_unique<wchar_t[]>(help_msg_buf_size);
+			SetDlgItemText(wnd, 11, convert_to_fs(help_msg.get(), help_msg_buf.get(), help_msg_buf_size));
 			SendDlgItemMessage(wnd, 11, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), FALSE);
 		} return TRUE;
 
@@ -419,7 +422,7 @@ void DetermineBasePaths(const char *exe)
 		/* Use the folder of the config file as working directory. */
 		wchar_t config_dir[MAX_PATH];
 		wcsncpy(path, convert_to_fs(_config_file, path, lengthof(path)), lengthof(path));
-		if (!GetFullPathName(path, lengthof(config_dir), config_dir, nullptr)) {
+		if (!GetFullPathName(path, static_cast<DWORD>(std::size(config_dir)), config_dir, nullptr)) {
 			DEBUG(misc, 0, "GetFullPathName failed (%lu)\n", GetLastError());
 			_searchpaths[SP_WORKING_DIR].clear();
 		} else {
@@ -431,13 +434,13 @@ void DetermineBasePaths(const char *exe)
 		}
 	}
 
-	if (!GetModuleFileName(nullptr, path, lengthof(path))) {
+	if (!GetModuleFileName(nullptr, path, static_cast<DWORD>(std::size(path)))) {
 		DEBUG(misc, 0, "GetModuleFileName failed (%lu)\n", GetLastError());
 		_searchpaths[SP_BINARY_DIR].clear();
 	} else {
 		wchar_t exec_dir[MAX_PATH];
-		wcsncpy(path, convert_to_fs(exe, path, lengthof(path)), lengthof(path));
-		if (!GetFullPathName(path, lengthof(exec_dir), exec_dir, nullptr)) {
+		wcsncpy(path, convert_to_fs(exe, path, std::size(path)), lengthof(path));
+		if (!GetFullPathName(path, static_cast<DWORD>(std::size(exec_dir)), exec_dir, nullptr)) {
 			DEBUG(misc, 0, "GetFullPathName failed (%lu)\n", GetLastError());
 			_searchpaths[SP_BINARY_DIR].clear();
 		} else {
@@ -551,8 +554,8 @@ const char *GetCurrentLocale(const char *)
 	const LCID userUiLocale = MAKELCID(userUiLang, SORT_DEFAULT);
 
 	char lang[9], country[9];
-	if (GetLocaleInfoA(userUiLocale, LOCALE_SISO639LANGNAME, lang, lengthof(lang)) == 0 ||
-	    GetLocaleInfoA(userUiLocale, LOCALE_SISO3166CTRYNAME, country, lengthof(country)) == 0) {
+	if (GetLocaleInfoA(userUiLocale, LOCALE_SISO639LANGNAME, lang, static_cast<int>(std::size(lang))) == 0 ||
+	    GetLocaleInfoA(userUiLocale, LOCALE_SISO3166CTRYNAME, country, static_cast<int>(std::size(country))) == 0) {
 		/* Unable to retrieve the locale. */
 		return nullptr;
 	}
@@ -578,7 +581,7 @@ void Win32SetCurrentLocaleName(std::string iso_code)
 		}
 	}
 
-	MultiByteToWideChar(CP_UTF8, 0, iso_code.c_str(), -1, _cur_iso_locale, lengthof(_cur_iso_locale));
+	MultiByteToWideChar(CP_UTF8, 0, iso_code.c_str(), -1, _cur_iso_locale, static_cast<int>(std::size(_cur_iso_locale)));
 }
 
 int OTTDStringCompare(std::string_view s1, std::string_view s2)

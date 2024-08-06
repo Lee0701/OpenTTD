@@ -985,17 +985,6 @@ bool AfterLoadGame()
 	 * filled; and that could eventually lead to desyncs. */
 	CargoPacket::AfterLoad();
 
-	/* Oilrig was moved from id 15 to 9. We have to do this conversion
-	 * here as AfterLoadVehicles can check it indirectly via the newgrf
-	 * code. */
-	if (IsSavegameVersionBefore(SLV_139)) {
-		for (Station *st : Station::Iterate()) {
-			if (st->airport.tile != INVALID_TILE && st->airport.type == 15) {
-				st->airport.type = AT_OILRIG;
-			}
-		}
-	}
-
 	if (SlXvIsFeaturePresent(XSLFI_SPRINGPP)) {
 		/*
 		 * Reject huge airports
@@ -1061,8 +1050,8 @@ bool AfterLoadGame()
 	extern void AnalyseHouseSpriteGroups();
 	AnalyseHouseSpriteGroups();
 
-	/* Update all vehicles */
-	AfterLoadVehicles(true);
+	/* Update all vehicles: Phase 1 */
+	AfterLoadVehiclesPhase1(true);
 
 	CargoPacket::PostVehiclesAfterLoad();
 
@@ -1747,11 +1736,6 @@ bool AfterLoadGame()
 				SetSecondaryRailType(t, GetRailType(t));
 			}
 		}
-
-		for (Train *v : Train::IterateFrontOnly()) {
-			if (v->IsFrontEngine() || v->IsFreeWagon()) v->ConsistChanged(CCF_TRACK);
-		}
-
 	}
 
 	/* In version 16.1 of the savegame a company can decide if trains, which get
@@ -1900,7 +1884,7 @@ bool AfterLoadGame()
 	 * preference of a user, let elrails enabled; it can be disabled manually */
 	if (IsSavegameVersionBefore(SLV_38)) _settings_game.vehicle.disable_elrails = false;
 	/* do the same as when elrails were enabled/disabled manually just now */
-	SettingsDisableElrail(_settings_game.vehicle.disable_elrails);
+	UpdateDisableElrailSettingState(_settings_game.vehicle.disable_elrails, false);
 	InitializeRailGUI();
 
 	/* From version 53, the map array was changed for house tiles to allow
@@ -2841,7 +2825,7 @@ bool AfterLoadGame()
 			uint8_t old_start;
 			uint8_t num_frames;
 		};
-		static const AirportTileConversion atc[] = {
+		static const AirportTileConversion atcs[] = {
 			{31,  12}, // APT_RADAR_GRASS_FENCE_SW
 			{50,   4}, // APT_GRASS_FENCE_NE_FLAG
 			{62,   2}, // 1 unused tile
@@ -2856,18 +2840,26 @@ bool AfterLoadGame()
 			if (IsAirportTile(t)) {
 				StationGfx old_gfx = GetStationGfx(t);
 				uint8_t offset = 0;
-				for (uint i = 0; i < lengthof(atc); i++) {
-					if (old_gfx < atc[i].old_start) {
+				for (const auto &atc : atcs) {
+					if (old_gfx < atc.old_start) {
 						SetStationGfx(t, old_gfx - offset);
 						break;
 					}
-					if (old_gfx < atc[i].old_start + atc[i].num_frames) {
-						SetAnimationFrame(t, old_gfx - atc[i].old_start);
-						SetStationGfx(t, atc[i].old_start - offset);
+					if (old_gfx < atc.old_start + atc.num_frames) {
+						SetAnimationFrame(t, old_gfx - atc.old_start);
+						SetStationGfx(t, atc.old_start - offset);
 						break;
 					}
-					offset += atc[i].num_frames - 1;
+					offset += atc.num_frames - 1;
 				}
+			}
+		}
+	}
+
+	if (IsSavegameVersionBefore(SLV_139)) {
+		for (Station *st : Station::Iterate()) {
+			if (st->airport.tile != INVALID_TILE && st->airport.type == 15) {
+				st->airport.type = AT_OILRIG;
 			}
 		}
 	}
@@ -3325,9 +3317,9 @@ bool AfterLoadGame()
 
 	if (IsSavegameVersionBefore(SLV_165)) {
 		/* Adjust zoom level to account for new levels */
-		_saved_scrollpos_zoom = static_cast<ZoomLevel>(_saved_scrollpos_zoom + ZOOM_LVL_SHIFT);
-		_saved_scrollpos_x *= ZOOM_LVL_BASE;
-		_saved_scrollpos_y *= ZOOM_LVL_BASE;
+		_saved_scrollpos_zoom = static_cast<ZoomLevel>(_saved_scrollpos_zoom + ZOOM_BASE_SHIFT);
+		_saved_scrollpos_x *= ZOOM_BASE;
+		_saved_scrollpos_y *= ZOOM_BASE;
 	}
 
 	/* When any NewGRF has been changed the availability of some vehicles might
@@ -3468,6 +3460,14 @@ bool AfterLoadGame()
 			}
 		}
 	}
+
+	/* Beyond this point, tile types which can be accessed by vehicles must be in a valid state. */
+
+	/* Update all vehicles: Phase 2 */
+	AfterLoadVehiclesPhase2(true);
+
+	/* The center of train vehicles was changed, fix up spacing. */
+	if (IsSavegameVersionBefore(SLV_164)) FixupTrainLengths();
 
 	/* In version 2.2 of the savegame, we have new airports, so status of all aircraft is reset.
 	 * This has to be called after all map array updates */
@@ -4580,7 +4580,8 @@ void ReloadNewGRFData()
 	AnalyseIndustryTileSpriteGroups();
 	extern void AnalyseHouseSpriteGroups();
 	AnalyseHouseSpriteGroups();
-	AfterLoadVehicles(false);
+	AfterLoadVehiclesPhase1(false);
+	AfterLoadVehiclesPhase2(false);
 	StartupEngines();
 	GroupStatistics::UpdateAfterLoad();
 	/* update station graphics */

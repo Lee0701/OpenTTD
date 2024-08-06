@@ -41,16 +41,22 @@
 #include "../core/serialisation.hpp"
 #include "../3rdparty/monocypher/monocypher.h"
 #include "../settings_internal.h"
+#ifdef DEBUG_DUMP_COMMANDS
+#	include "../fileio_func.h"
+#	include "../command_aux.h"
+#	include "../3rdparty/nlohmann/json.hpp"
+#	include <charconv>
+#endif
 #include <sstream>
 #include <iomanip>
 #include <tuple>
 
 #ifdef DEBUG_DUMP_COMMANDS
-#include "../fileio_func.h"
-#include "../command_aux.h"
-#include "../3rdparty/nlohmann/json.hpp"
-#include <charconv>
-/** When running the server till the wait point, run as fast as we can! */
+/** Helper variable to make the dedicated server go fast until the (first) join.
+ * Used to load the desync debug logs, i.e. for reproducing a desync.
+ * There's basically no need to ever enable this, unless you really know what
+ * you are doing, i.e. debugging a desync.
+ * See docs/desync.md for details. */
 bool _ddc_fastforward = true;
 #endif /* DEBUG_DUMP_COMMANDS */
 
@@ -151,6 +157,57 @@ NetworkClientInfo::~NetworkClientInfo()
 	return nullptr;
 }
 
+
+/**
+ * Simple helper to find the location of the given authorized key in the authorized keys.
+ * @param authorized_keys The keys to look through.
+ * @param authorized_key The key to look for.
+ * @return The iterator to the location of the authorized key, or \c authorized_keys.end().
+ */
+static auto FindKey(auto *authorized_keys, std::string_view authorized_key)
+{
+	return std::find_if(authorized_keys->begin(), authorized_keys->end(), [authorized_key](auto &value) { return StrEqualsIgnoreCase(value, authorized_key); });
+}
+
+/**
+ * Check whether the given key is contains in these authorized keys.
+ * @param key The key to look for.
+ * @return \c true when the key has been found, otherwise \c false.
+ */
+bool NetworkAuthorizedKeys::Contains(std::string_view key) const
+{
+	return FindKey(this, key) != this->end();
+}
+
+/**
+ * Add the given key to the authorized keys, when it is not already contained.
+ * @param key The key to add.
+ * @return \c true when the key was added, \c false when the key already existed.
+ */
+bool NetworkAuthorizedKeys::Add(std::string_view key)
+{
+	auto iter = FindKey(this, key);
+	if (iter != this->end()) return false;
+
+	this->emplace_back(key);
+	return true;
+}
+
+/**
+ * Remove the given key from the authorized keys, when it is exists.
+ * @param key The key to remove.
+ * @return \c true when the key was removed, \c false when the key did not exist.
+ */
+bool NetworkAuthorizedKeys::Remove(std::string_view key)
+{
+	auto iter = FindKey(this, key);
+	if (iter == this->end()) return false;
+
+	this->erase(iter);
+	return true;
+}
+
+
 uint8_t NetworkSpectatorCount()
 {
 	uint8_t count = 0;
@@ -219,7 +276,7 @@ std::string GenerateCompanyPasswordHash(const std::string &password, const std::
 	checksum.Append(salted_password_string.data(), salted_password_string.size());
 	checksum.Finish(digest);
 
-	return FormatArrayAsHex(digest);
+	return FormatArrayAsHex(digest, false);
 }
 
 /**
@@ -386,6 +443,7 @@ StringID GetNetworkErrorMsg(NetworkErrorCode err)
 		STR_NETWORK_ERROR_CLIENT_TIMEOUT_MAP,
 		STR_NETWORK_ERROR_CLIENT_TIMEOUT_JOIN,
 		STR_NETWORK_ERROR_CLIENT_INVALID_CLIENT_NAME,
+		STR_NETWORK_ERROR_CLIENT_NOT_ON_ALLOW_LIST,
 	};
 	static_assert(lengthof(network_error_strings) == NETWORK_ERROR_END);
 
@@ -1186,7 +1244,7 @@ void NetworkGameLoop()
 		}
 
 		while (f != nullptr && !feof(f)) {
-			if (EconTime::CurDate() == next_date && EconTime::CurDateFract() == next_date_fract) {
+			if (EconTime::CurDate() == next_date && EconTime::CurDateFract() == next_date_fract && TickSkipCounter() == next_tick_skip_counter) {
 				if (cp != nullptr) {
 					NetworkSendCommand(cp->tile, cp->p1, cp->p2, cp->p3, cp->cmd & ~CMD_FLAGS_MASK, nullptr, cp->text.c_str(), cp->company, cp->aux_data.get());
 					DEBUG(net, 0, "injecting: %s; %02x; %06x; %08x; %08x; " OTTD_PRINTFHEX64PAD " %08x; \"%s\"%s (%s)",
@@ -1203,6 +1261,13 @@ void NetworkGameLoop()
 					}
 					check_sync_state = false;
 				}
+			}
+
+			/* Skip all entries in the command-log till we caught up with the current game again. */
+			if (std::make_tuple(EconTime::CurDate(), EconTime::CurDateFract(), TickSkipCounter()) > std::make_tuple(next_date, next_date_fract, next_tick_skip_counter)) {
+				DEBUG(net, 0, "Skipping to next command at %s", debug_date_dumper().HexDate(next_date, next_date_fract, next_tick_skip_counter));
+				cp.reset();
+				check_sync_state = false;
 			}
 
 			if (cp != nullptr || check_sync_state) break;
@@ -1284,7 +1349,8 @@ void NetworkGameLoop()
 			} else if (strncmp(p, "msg: ", 5) == 0 || strncmp(p, "client: ", 8) == 0 ||
 						strncmp(p, "load: ", 6) == 0 || strncmp(p, "save: ", 6) == 0 ||
 						strncmp(p, "new_company: ", 13) == 0 || strncmp(p, "new_company_ai: ", 16) == 0 ||
-						strncmp(p, "buy_company: ", 13) == 0 || strncmp(p, "delete_company: ", 16) == 0) {
+						strncmp(p, "buy_company: ", 13) == 0 || strncmp(p, "delete_company: ", 16) == 0 ||
+						strncmp(p, "merge_companies: ", 17) == 0) {
 				/* A message that is not very important to the log playback, but part of the log. */
 #ifndef DEBUG_FAILED_DUMP_COMMANDS
 			} else if (strncmp(p, "cmdf: ", 6) == 0) {
@@ -1375,7 +1441,7 @@ std::string NetworkGenerateRandomKeyString(uint bytes)
 	uint8_t *key = AllocaM(uint8_t, bytes);
 	RandomBytesWithFallback({ key, bytes });
 
-	return FormatArrayAsHex({key, bytes});
+	return FormatArrayAsHex({key, bytes}, false);
 }
 
 /** This tries to launch the network for a given OS */

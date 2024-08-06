@@ -12,7 +12,7 @@
 
 /**
  * Uncomment the following define to enable command replaying.
- * See docs/desync.txt for details.
+ * See docs/desync.md for details.
  */
 // #define DEBUG_DUMP_COMMANDS
 // #define DEBUG_FAILED_DUMP_COMMANDS
@@ -67,6 +67,7 @@ bool NetworkCompanyIsPassworded(CompanyID company_id);
 uint NetworkMaxCompaniesAllowed();
 bool NetworkMaxCompaniesReached();
 void NetworkPrintClients();
+std::string_view NetworkGetPublicKeyOfClient(ClientID client_id);
 void NetworkHandlePauseChange(PauseMode prev_mode, PauseMode changed_mode);
 
 /*** Commands ran by the server ***/

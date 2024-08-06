@@ -31,12 +31,12 @@ struct CompanyEconomyEntry {
 };
 
 struct CompanyInfrastructure {
-	uint32_t road[ROADTYPE_END]; ///< Count of company owned track bits for each road type.
-	uint32_t signal;             ///< Count of company owned signals.
-	uint32_t rail[RAILTYPE_END]; ///< Count of company owned track bits for each rail type.
-	uint32_t water;              ///< Count of company owned track bits for canals.
-	uint32_t station;            ///< Count of company owned station tiles.
-	uint32_t airport;            ///< Count of company owned airports.
+	std::array<uint32_t, ROADTYPE_END> road{}; ///< Count of company owned track bits for each road type.
+	uint32_t signal{};                         ///< Count of company owned signals.
+	std::array<uint32_t, RAILTYPE_END> rail{}; ///< Count of company owned track bits for each rail type.
+	uint32_t water{};                          ///< Count of company owned track bits for canals.
+	uint32_t station{};                        ///< Count of company owned station tiles.
+	uint32_t airport{};                        ///< Count of company owned airports.
 
 	/** Get total sum of all owned track bits. */
 	uint32_t GetRailTotal() const
@@ -50,6 +50,8 @@ struct CompanyInfrastructure {
 	uint32_t GetTramTotal() const;
 
 	char *Dump(char *buffer, const char *last) const;
+
+	bool operator==(const CompanyInfrastructure &) const = default;
 };
 
 class FreeUnitIDGenerator {
@@ -105,6 +107,7 @@ struct CompanyProperties {
 	int32_t display_inaugurated_period;///< Wallclock display period of starting the company.
 	YearDelta age_years;             ///< Number of economy years that the company has been operational.
 
+	uint8_t months_empty = 0;        ///< NOSAVE: Number of months this company has not had a client in multiplayer.
 	uint8_t months_of_bankruptcy;    ///< Number of months that the company is unable to pay its debts
 	CompanyID bankrupt_last_asked;   ///< Which company was most recently asked about buying it?
 	CompanyBankruptcyFlags bankrupt_flags; ///< bankruptcy flags

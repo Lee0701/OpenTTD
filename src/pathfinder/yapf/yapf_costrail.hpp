@@ -300,7 +300,7 @@ private:
 		if (GetSignalType(tile, TrackdirToTrack(trackdir)) == SIGTYPE_PBS && !HasSignalOnTrackdir(tile, trackdir)) {
 			flags_to_check |= TRPAUF_REVERSE;
 		}
-		if (prog && prog->actions_used_flags & flags_to_check) {
+		if (prog != nullptr && prog->actions_used_flags & flags_to_check) {
 			prog->Execute(Yapf().GetVehicle(), TraceRestrictProgramInput(tile, trackdir, &TraceRestrictPreviousSignalCallback, &n), out);
 			if (out.flags & TRPRF_RESERVE_THROUGH && is_res_through != nullptr) {
 				*is_res_through = true;
@@ -326,7 +326,7 @@ private:
 	{
 		const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
 		TraceRestrictProgramActionsUsedFlags flags_to_check = TRPAUF_PF;
-		if (prog && prog->actions_used_flags & flags_to_check) {
+		if (prog != nullptr && prog->actions_used_flags & flags_to_check) {
 			prog->Execute(Yapf().GetVehicle(), TraceRestrictProgramInput(tile, trackdir, &TraceRestrictPreviousSignalCallback, &n), out);
 			if (out.flags & TRPRF_DENY) {
 				n.m_segment->m_end_segment_reason |= ESRB_DEAD_END;
@@ -428,7 +428,7 @@ public:
 					if (IsNoEntrySignal(sig_type)) {
 						if (ShouldCheckTraceRestrict(n, tile)) {
 							const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
-							if (prog && prog->actions_used_flags & TRPAUF_PF) {
+							if (prog != nullptr && prog->actions_used_flags & TRPAUF_PF) {
 								TraceRestrictProgramResult out;
 								prog->Execute(Yapf().GetVehicle(), TraceRestrictProgramInput(tile, trackdir, &TraceRestrictPreviousSignalCallback, &n), out);
 								if (out.flags & TRPRF_DENY) {
@@ -473,7 +473,7 @@ public:
 					return -1;
 				}
 			}
-			if (n.flags_u.flags_s.m_reverse_pending && entering && IsTunnelBridgeSignalSimulationEntrance(tile)) {
+			if ((TrackFollower::DoTrackMasking() || n.flags_u.flags_s.m_reverse_pending) && entering && IsTunnelBridgeSignalSimulationEntrance(tile)) {
 				n.m_segment->m_end_segment_reason |= ESRB_SAFE_TILE;
 			}
 		}
@@ -774,6 +774,15 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 					end_segment_reason |= ESRB_SAFE_TILE | ESRB_DEAD_END;
 					extra_cost += Yapf().PfGetSettings().rail_lastred_exit_penalty;
 				}
+			} else if (TrackFollower::DoTrackMasking() &&
+					_settings_game.pf.back_of_one_way_pbs_waiting_point &&
+					IsTunnelBridgeWithSignalSimulation(next.tile) &&
+					IsTunnelBridgeSignalSimulationExitOnly(next.tile) &&
+					IsTunnelBridgePBS(next.tile) &&
+					TrackdirEntersTunnelBridge(next.tile, next.td)) {
+				/* Possible safe tile, but not so good as it's the back of a signal... */
+				end_segment_reason |= ESRB_SAFE_TILE | ESRB_DEAD_END;
+				extra_cost += Yapf().PfGetSettings().rail_lastred_exit_penalty;
 			}
 
 			/* Check the next tile for the rail type. */

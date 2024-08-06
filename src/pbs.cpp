@@ -366,7 +366,7 @@ static uint16_t ApplyTunnelBridgeLookaheadSignalSpeedRestriction(TileIndex tile,
 			trackdir = GetTunnelBridgeExitTrackdir(tile);
 		}
 		const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
-		if (prog && prog->actions_used_flags & TRPAUF_SPEED_RESTRICTION) {
+		if (prog != nullptr && prog->actions_used_flags & TRPAUF_SPEED_RESTRICTION) {
 			TraceRestrictProgramResult out;
 			TraceRestrictProgramInput input(tile, trackdir, nullptr, nullptr);
 			prog->Execute(v, input, out);
@@ -650,7 +650,7 @@ static PBSTileInfo FollowReservation(Owner o, RailTypes rts, TileIndex tile, Tra
 				uint16_t speed_restriction = lookahead->speed_restriction;
 				if (v != nullptr) {
 					const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(tile, TrackdirToTrack(trackdir));
-					if (prog && prog->actions_used_flags & au_flags) {
+					if (prog != nullptr && prog->actions_used_flags & au_flags) {
 						TraceRestrictProgramResult out;
 						TraceRestrictProgramInput input(tile, trackdir, nullptr, nullptr);
 						prog->Execute(v, input, out);
@@ -1353,7 +1353,7 @@ Train *GetTrainForReservation(TileIndex tile, Track track)
 
 CommandCost CheckTrainReservationPreventsTrackModification(TileIndex tile, Track track)
 {
-	if (_settings_game.vehicle.train_braking_model == TBM_REALISTIC) {
+	if (_settings_game.vehicle.train_braking_model == TBM_REALISTIC && !_settings_game.vehicle.track_edit_ignores_realistic_braking) {
 		return CheckTrainReservationPreventsTrackModification(GetTrainForReservation(tile, track));
 	}
 	return CommandCost();
@@ -1361,7 +1361,8 @@ CommandCost CheckTrainReservationPreventsTrackModification(TileIndex tile, Track
 
 CommandCost CheckTrainReservationPreventsTrackModification(const Train *v)
 {
-	if (_settings_game.vehicle.train_braking_model == TBM_REALISTIC && v != nullptr && v->UsingRealisticBraking() && (v->cur_speed > 0 || !(v->vehstatus & (VS_STOPPED | VS_CRASHED)))) {
+	if (_settings_game.vehicle.train_braking_model == TBM_REALISTIC && !_settings_game.vehicle.track_edit_ignores_realistic_braking &&
+			v != nullptr && v->UsingRealisticBraking() && (v->cur_speed > 0 || !(v->vehstatus & (VS_STOPPED | VS_CRASHED)))) {
 		return_cmd_error(STR_ERROR_CANNOT_MODIFY_TRACK_TRAIN_APPROACHING);
 	}
 	return CommandCost();
@@ -1376,7 +1377,7 @@ static Vehicle *TrainInTunnelBridgePreventsTrackModificationEnum(Vehicle *v, voi
 
 CommandCost CheckTrainInTunnelBridgePreventsTrackModification(TileIndex start, TileIndex end)
 {
-	if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC) return CommandCost();
+	if (_settings_game.vehicle.train_braking_model != TBM_REALISTIC || _settings_game.vehicle.track_edit_ignores_realistic_braking) return CommandCost();
 
 	if (HasVehicleOnPos(start, VEH_TRAIN, nullptr, &TrainInTunnelBridgePreventsTrackModificationEnum) ||
 			HasVehicleOnPos(end, VEH_TRAIN, nullptr, &TrainInTunnelBridgePreventsTrackModificationEnum)) {
@@ -1506,7 +1507,7 @@ bool IsSafeWaitingPosition(const Train *v, TileIndex tile, Trackdir trackdir, bo
 			if (GetSignalAlwaysReserveThrough(ft.m_new_tile, TrackdirToTrack(td))) return false;
 			if (IsRestrictedSignal(ft.m_new_tile)) {
 				const TraceRestrictProgram *prog = GetExistingTraceRestrictProgram(ft.m_new_tile, TrackdirToTrack(td));
-				if (prog && prog->actions_used_flags & TRPAUF_RESERVE_THROUGH) {
+				if (prog != nullptr && prog->actions_used_flags & TRPAUF_RESERVE_THROUGH) {
 					TraceRestrictProgramResult out;
 					prog->Execute(v, TraceRestrictProgramInput(ft.m_new_tile, td, &VehiclePosTraceRestrictPreviousSignalCallback, nullptr), out);
 					if (out.flags & TRPRF_RESERVE_THROUGH) {

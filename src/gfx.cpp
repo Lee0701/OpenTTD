@@ -79,11 +79,11 @@ struct GfxBlitterCtx {
 };
 
 static void GfxMainBlitterViewport(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub = nullptr, SpriteID sprite_id = SPR_CURSOR_MOUSE);
-static void GfxMainBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub = nullptr, SpriteID sprite_id = SPR_CURSOR_MOUSE, ZoomLevel zoom = ZOOM_LVL_NORMAL);
+static void GfxMainBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub = nullptr, SpriteID sprite_id = SPR_CURSOR_MOUSE, ZoomLevel zoom = ZOOM_LVL_MIN);
 
 static ReusableBuffer<uint8_t> _cursor_backup;
 
-ZoomLevel _gui_zoom  = ZOOM_LVL_OUT_4X;     ///< GUI Zoom level
+ZoomLevel _gui_zoom  = ZOOM_LVL_NORMAL;     ///< GUI Zoom level
 ZoomLevel _font_zoom = _gui_zoom;           ///< Sprite font Zoom level (not clamped)
 int _gui_scale       = MIN_INTERFACE_SCALE; ///< GUI scale, 100 is 100%.
 int _gui_scale_cfg;                         ///< GUI scale in config.
@@ -113,7 +113,7 @@ uint32_t _gfx_debug_flags;
 /**
  * Applies a certain FillRectMode-operation to a rectangle [left, right] x [top, bottom] on the screen.
  *
- * @pre dpi->zoom == ZOOM_LVL_NORMAL, right >= left, bottom >= top
+ * @pre dpi->zoom == ZOOM_LVL_MIN, right >= left, bottom >= top
  * @param blitter Blitter to use
  * @param dpi Draw pixel info
  * @param left Minimum X (inclusive)
@@ -132,7 +132,7 @@ void GfxFillRect(Blitter *blitter, const DrawPixelInfo *dpi, int left, int top, 
 	const int otop = top;
 	const int oleft = left;
 
-	if (dpi->zoom != ZOOM_LVL_NORMAL) return;
+	if (dpi->zoom != ZOOM_LVL_MIN) return;
 	if (left > right || top > bottom) return;
 	if (right < dpi->left || left >= dpi->left + dpi->width) return;
 	if (bottom < dpi->top || top >= dpi->top + dpi->height) return;
@@ -219,7 +219,7 @@ static std::vector<LineSegment> MakePolygonSegments(const std::vector<Point> &sh
  * The odd-even winding rule is used, i.e. self-intersecting polygons will have holes in them.
  * Left and top edges are inclusive, right and bottom edges are exclusive.
  * @note For rectangles the GfxFillRect function will be faster.
- * @pre dpi->zoom == ZOOM_LVL_NORMAL
+ * @pre dpi->zoom == ZOOM_LVL_MIN
  * @param shape List of points on the polygon.
  * @param colour An 8 bit palette index (FILLRECT_OPAQUE and FILLRECT_CHECKER) or a recolour spritenumber (FILLRECT_RECOLOUR).
  * @param mode
@@ -232,7 +232,7 @@ void GfxFillPolygon(const std::vector<Point> &shape, int colour, FillRectMode mo
 {
 	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 	const DrawPixelInfo *dpi = _cur_dpi;
-	if (dpi->zoom != ZOOM_LVL_NORMAL) return;
+	if (dpi->zoom != ZOOM_LVL_MIN) return;
 
 	std::vector<LineSegment> segments = MakePolygonSegments(shape, Point{ dpi->left, dpi->top });
 
@@ -1289,7 +1289,7 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
 
 static void GfxMainBlitterViewport(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub, SpriteID sprite_id)
 {
-	GfxBlitter<ZOOM_LVL_BASE, false>(ctx, sprite, x, y, mode, sub, sprite_id, ctx.dpi->zoom);
+	GfxBlitter<ZOOM_BASE, false>(ctx, sprite, x, y, mode, sub, sprite_id, ctx.dpi->zoom);
 }
 
 static void GfxMainBlitter(const GfxBlitterCtx &ctx, const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub, SpriteID sprite_id, ZoomLevel zoom)
@@ -1632,7 +1632,7 @@ void DrawDirtyBlocks()
 					_cur_dpi->height = _screen.height;
 					_cur_dpi->pitch = _screen.pitch;
 					_cur_dpi->dst_ptr = _screen.dst_ptr;
-					_cur_dpi->zoom = ZOOM_LVL_NORMAL;
+					_cur_dpi->zoom = ZOOM_LVL_MIN;
 
 					_dirty_viewport = vp;
 					_dirty_viewport_disp_flags = w->viewport_widget->disp_flags;
@@ -1667,52 +1667,93 @@ void DrawDirtyBlocks()
 					}
 
 					const uint grid_w = vp->dirty_blocks_per_row;
-					const uint grid_h = vp->dirty_blocks_per_column;
 
-					uint pos = 0;
-					uint x = 0;
-					do {
-						uint y = 0;
-						do {
-							if (vp->dirty_blocks[pos]) {
-								uint left = x;
-								uint top = y;
+					uint column_pos = 0;
+					for (uint x = 0; x < grid_w; x++, column_pos += vp->dirty_blocks_column_pitch) {
+						for (uint offset = 0; offset < vp->dirty_blocks_column_pitch; offset++) {
+							const uint start = column_pos + offset;
+							while (vp->dirty_blocks[start] != 0) {
+								const ViewPortBlockT first_block = vp->dirty_blocks[start];
+								const uint first_block_start = FindFirstBit(first_block);
+								const uint left = x;
 								uint right = x + 1;
-								uint bottom = y;
-								uint p = pos;
+								const uint top = (offset * VP_BLOCK_BITS) + first_block_start;
 
 								/* First try coalescing downwards */
-								do {
-									vp->dirty_blocks[p] = false;
-									p++;
-									bottom++;
-								} while (bottom != grid_h && vp->dirty_blocks[p]);
+
+								/* First block */
+								const uint first_block_count = std::countr_one(first_block >> first_block_start);
+								vp->dirty_blocks[start] &= ~GetBitMaskSC<ViewPortBlockT>(0, first_block_start + first_block_count);
+
+								const ViewPortBlockT first_block_bits = first_block ^ vp->dirty_blocks[start];
+
+								uint bottom = top + first_block_count;
+								uint non_first_complete_blocks = 0;
+								ViewPortBlockT last_partial_block_bits = 0;
+
+								if (bottom % VP_BLOCK_BITS == 0) {
+									/* First block ended at the block boundary, continue at the next block */
+									for (uint block_y = offset + 1; block_y < vp->dirty_blocks_column_pitch; block_y++) {
+										ViewPortBlockT &current_block = vp->dirty_blocks[column_pos + block_y];
+										if (current_block == 0) break;
+										const uint count = std::countr_one(current_block);
+										bottom += count;
+										if (count == VP_BLOCK_BITS) {
+											/* Complete block */
+											current_block = 0;
+											non_first_complete_blocks++;
+										} else {
+											/* Partial block, stop here */
+											last_partial_block_bits = GetBitMaskSC<ViewPortBlockT>(0, count);
+											current_block &= ~last_partial_block_bits;
+											break;
+										}
+									}
+								}
 
 								/* Try coalescing to the right too. */
-								uint block_h = (bottom - y);
-								p = pos;
-
+								uint next_col_pos = start;
 								while (right != grid_w) {
-									uint p2 = (p += grid_h);
-									uint check_h = block_h;
-									/* Check if a full line of dirty flags is set. */
-									do {
-										if (!vp->dirty_blocks[p2]) goto no_more_coalesc;
-										p2++;
-									} while (--check_h != 0);
+									next_col_pos += vp->dirty_blocks_column_pitch;
+									uint pos = next_col_pos;
+
+									if ((vp->dirty_blocks[pos] & first_block_bits) != first_block_bits) {
+										/* First block doesn't match, give up */
+										break;
+									}
+									pos++;
+									if (non_first_complete_blocks > 0) {
+										auto iter = vp->dirty_blocks.begin() + pos;
+										auto not_all_bits_set = [](const ViewPortBlockT &val) {
+											return (~val) != 0;
+										};
+										if (std::any_of(iter, iter + non_first_complete_blocks, not_all_bits_set)) {
+											/* Complete blocks don't match, give up */
+											break;
+										}
+										pos += non_first_complete_blocks;
+									}
+									if (last_partial_block_bits != 0 && (vp->dirty_blocks[pos] & last_partial_block_bits) != last_partial_block_bits) {
+										/* Last block doesn't match, give up */
+										break;
+									}
 
 									/* Wohoo, can combine it one step to the right!
 									 * Do that, and clear the bits. */
 									right++;
 
-									check_h = block_h;
-									p2 = p;
-									do {
-										vp->dirty_blocks[p2] = false;
-										p2++;
-									} while (--check_h != 0);
+									pos = next_col_pos;
+									vp->dirty_blocks[pos] &= ~first_block_bits;
+									pos++;
+									if (non_first_complete_blocks > 0) {
+										auto iter = vp->dirty_blocks.begin() + pos;
+										std::fill(iter, iter + non_first_complete_blocks, 0);
+										pos += non_first_complete_blocks;
+									}
+									if (last_partial_block_bits != 0) {
+										vp->dirty_blocks[pos] &= ~last_partial_block_bits;
+									}
 								}
-								no_more_coalesc:
 
 								assert(_cur_dpi == &bk);
 								int draw_left = std::max<int>(0, ((left == 0) ? 0 : vp->dirty_block_left_margin + (left << vp->GetDirtyBlockWidthShift())) + vp->left);
@@ -1723,8 +1764,8 @@ void DrawDirtyBlocks()
 									DrawDirtyViewport(0, draw_left, draw_top, draw_right, draw_bottom);
 								}
 							}
-						} while (pos++, ++y != grid_h);
-					} while (++x != grid_w);
+						}
+					}
 
 					_transparency_opt = to_backup;
 					w->viewport->ClearDirty();
@@ -1932,7 +1973,7 @@ bool FillDrawPixelInfo(DrawPixelInfo *n, int left, int top, int width, int heigh
 	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 	const DrawPixelInfo *o = _cur_dpi;
 
-	n->zoom = ZOOM_LVL_NORMAL;
+	n->zoom = ZOOM_LVL_MIN;
 
 	assert(width > 0);
 	assert(height > 0);
@@ -2158,7 +2199,7 @@ void UpdateGUIZoom()
 		_gui_scale = Clamp(_gui_scale_cfg, MIN_INTERFACE_SCALE, MAX_INTERFACE_SCALE);
 	}
 
-	int8_t new_zoom = ScaleGUITrad(1) <= 1 ? ZOOM_LVL_OUT_4X : ScaleGUITrad(1) >= 4 ? ZOOM_LVL_MIN : ZOOM_LVL_OUT_2X;
+	int8_t new_zoom = ScaleGUITrad(1) <= 1 ? ZOOM_LVL_NORMAL : ScaleGUITrad(1) >= 4 ? ZOOM_LVL_IN_4X : ZOOM_LVL_IN_2X;
 	/* Font glyphs should not be clamped to min/max zoom. */
 	_font_zoom = static_cast<ZoomLevel>(new_zoom);
 	/* Ensure the gui_zoom is clamped between min/max. */

@@ -39,8 +39,7 @@
 StationPool _station_pool("Station");
 INSTANTIATE_POOL_METHODS(Station)
 
-std::array<ExtraStationNameInfo, MAX_EXTRA_STATION_NAMES> _extra_station_names;
-uint _extra_station_names_used;
+std::vector<ExtraStationNameInfo> _extra_station_names;
 uint8_t _extra_station_names_probability;
 
 const StationCargoList _empty_cargo_list{};
@@ -78,9 +77,7 @@ Station::Station(TileIndex tile) :
 	indtype(IT_INVALID),
 	extra_name_index(UINT16_MAX),
 	time_since_load(255),
-	time_since_unload(255),
-	station_cargo_history_cargoes(0),
-	station_cargo_history_offset(0)
+	time_since_unload(255)
 {
 	/* this->random_bits is set in Station::AddFacility() */
 }
@@ -545,7 +542,7 @@ void Station::RecomputeCatchment(bool no_clear_nearby_lists)
 
 		/* This tile sub-loop doesn't need to test any tiles, they are simply added to the catchment set. */
 		TileArea ta2 = TileArea(tile, 1, 1).Expand(r);
-		for (TileIndex tile2 : ta2) this->catchment_tiles.SetTile(tile2);
+		this->catchment_tiles.SetTiles(ta2);
 	}
 
 	/* Search catchment tiles for towns and industries */
@@ -768,4 +765,12 @@ Money AirportMaintenanceCost(Owner owner)
 bool StationCompare::operator() (const Station *lhs, const Station *rhs) const
 {
 	return lhs->index < rhs->index;
+}
+
+void ClearExtraStationNames()
+{
+	_extra_station_names.clear();
+	_extra_station_names.shrink_to_fit();
+
+	_extra_station_names_probability = 0;
 }

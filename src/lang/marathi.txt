@@ -1147,7 +1147,7 @@ STR_NETWORK_CONNECTING_DOWNLOADING_2                            :{BLACK}{BYTES} 
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION_CAPTION            :{WHITE} संपर्क तुटला असण्याची शक्यता
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION                    :{WHITE} गेल्या {NUM} सेकंदांत सर्वरकडून काहीच माहिती आलेली नाही
 
-###length 21
+###length 22
 
 # Network related errors
 STR_NETWORK_SERVER_MESSAGE                                      :*** {1:STRING}
@@ -1862,6 +1862,7 @@ STR_ERROR_BRIDGE_THROUGH_MAP_BORDER                             :{WHITE}पू�
 ###length VEHICLE_TYPES
 
 ###length VEHICLE_TYPES
+
 
 
 

@@ -1226,7 +1226,7 @@ STR_NETWORK_SERVER_LIST_MAP_SIZE_SHORT                          :{BLACK}{COMMA}x
 STR_NETWORK_ERROR_TOO_MANY_COMMANDS                             :{WHITE}Ти беше испраќање премногу команди на серверот
 
 
-###length 21
+###length 22
 STR_NETWORK_ERROR_CLIENT_TOO_MANY_COMMANDS                      :испраќа премногу команди
 
 # Network related errors
@@ -2114,6 +2114,7 @@ STR_ERROR_TOO_MANY_VEHICLES_IN_GAME                             :{WHITE}Има �
 STR_ERROR_CAN_T_CHANGE_SERVICING                                :{WHITE}Не може да се смени интервалот за сервисирање...
 
 STR_ERROR_VEHICLE_IS_DESTROYED                                  :{WHITE}... возилото е уништено
+
 
 
 

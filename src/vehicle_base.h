@@ -323,7 +323,7 @@ private:
 public:
 	friend SaveLoadTable GetVehicleDescription(VehicleType vt); ///< So we can use private/protected variables in the saveload code
 	friend void FixOldVehicles();
-	friend void AfterLoadVehicles(bool part_of_load);           ///< So we can set the #previous and #first pointers while loading
+	friend void AfterLoadVehiclesPhase1(bool part_of_load);     ///< So we can set the #previous and #first pointers while loading
 	friend bool LoadOldVehicle(LoadgameState *ls, int num);     ///< So we can set the proper next pointer while loading
 
 	friend upstream_sl::SlVehicleCommon;
@@ -792,6 +792,12 @@ public:
 		while (v->Next() != nullptr) v = v->Next();
 		return v;
 	}
+
+	/**
+	 * Get the next vehicle in the tile hash chain.
+	 * @return the next vehicle in the tile hash chain or nullptr when there isn't a next vehicle.
+	 */
+	inline Vehicle *HashTileNext() const { return this->hash_tile_next; }
 
 	/**
 	 * Get the vehicle at offset \a n of this vehicle chain.
@@ -1494,6 +1500,12 @@ struct SpecializedVehicle : public Vehicle {
 	 * @return Previous vehicle in the consist.
 	 */
 	inline T *GetPrevVehicle() const { return (T *)this->Vehicle::GetPrevVehicle(); }
+
+	/**
+	 * Get the next vehicle in the tile hash chain.
+	 * @return the next vehicle in the tile hash chain or nullptr when there isn't a next vehicle.
+	 */
+	inline T *HashTileNext() const { return (T *)this->Vehicle::HashTileNext(); }
 
 	/**
 	 * Tests whether given index is a valid index for vehicle of this type
