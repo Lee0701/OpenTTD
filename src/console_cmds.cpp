@@ -3949,12 +3949,12 @@ struct coord {
 DEF_CONSOLE_CMD(ConImportTowns)
 {
 	if (argc == 0) {
-		IConsoleHelp("Import map and town data from a CSV file in OpenTTD's base directory to found towns at the appropriate coordinates. Usage: 'import_towns <file>'");
-		IConsoleHelp("File Format:");
-		IConsoleHelp("First line: Coordinates of map edges: north,east,south,west");
-		IConsoleHelp("Other lines: Town name,size(target population),city(0 or 1),latitude,longitude");
-		IConsoleHelp("Lines starting with # are ignored");
-		IConsoleHelp("Coordinates are positive or negative values, with no direction suffix");
+		IConsolePrintF(CC_HELP, "Import map and town data from a CSV file in OpenTTD's base directory to found towns at the appropriate coordinates. Usage: 'import_towns <file>'");
+		IConsolePrintF(CC_HELP, "File Format:");
+		IConsolePrintF(CC_HELP, "First line: Coordinates of map edges: north,east,south,west");
+		IConsolePrintF(CC_HELP, "Other lines: Town name,size(target population),city(0 or 1),latitude,longitude");
+		IConsolePrintF(CC_HELP, "Lines starting with # are ignored");
+		IConsolePrintF(CC_HELP, "Coordinates are positive or negative values, with no direction suffix");
 		return true;
 	}
 
@@ -3967,7 +3967,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 
 	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
 	if (fp == NULL) {
-		IConsolePrintF(CC_ERROR, "Could not open file %s: %s", argv[1], strerror(errno));
+		IConsolePrintF(CC_ERROR, "Could not open file %s", argv[1]);
 		return true;
 	}
 
@@ -4092,12 +4092,12 @@ DEF_CONSOLE_CMD(ConImportTowns)
 DEF_CONSOLE_CMD(ConImportIndustries)
 {
 	if (argc == 0) {
-		IConsoleHelp("Import map and industry data from a CSV file in OpenTTD's base directory to found industries at the appropriate coordinates. Usage: 'import_industries <file>'");
-		IConsoleHelp("File Format:");
-		IConsoleHelp("First line: Coordinates of map edges: north,east,south,west");
-		IConsoleHelp("Other lines: Type,latitude,longitude");
-		IConsoleHelp("Lines starting with # are ignored");
-		IConsoleHelp("Coordinates are positive or negative values, with no direction suffix");
+		IConsolePrintF(CC_HELP, "Import map and industry data from a CSV file in OpenTTD's base directory to found industries at the appropriate coordinates. Usage: 'import_industries <file>'");
+		IConsolePrintF(CC_HELP, "File Format:");
+		IConsolePrintF(CC_HELP, "First line: Coordinates of map edges: north,east,south,west");
+		IConsolePrintF(CC_HELP, "Other lines: Type,latitude,longitude");
+		IConsolePrintF(CC_HELP, "Lines starting with # are ignored");
+		IConsolePrintF(CC_HELP, "Coordinates are positive or negative values, with no direction suffix");
 		return true;
 	}
 
@@ -4115,7 +4115,7 @@ DEF_CONSOLE_CMD(ConImportIndustries)
 
 	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
 	if (fp == NULL) {
-		IConsolePrintF(CC_ERROR, "Could not open file %s: %s", argv[1], strerror(errno));
+		IConsolePrintF(CC_ERROR, "Could not open file %s", argv[1]);
 		return true;
 	}
 
