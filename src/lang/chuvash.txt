@@ -493,6 +493,7 @@ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :расна
 
 
 
+
 # Custom currency window
 
 
@@ -752,6 +753,8 @@ STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_ISO                :ISO (2008-12-31
 
 
 
+###length 3
+
 ###setting-zero-is-special
 
 
@@ -843,8 +846,6 @@ STR_CONFIG_SETTING_VEHICLES                                     :Ҫул-йӗр:
 STR_CONFIG_SETTING_ENVIRONMENT_TOWNS                            :Хуласем
 STR_CONFIG_SETTING_AI                                           :Ӑмӑртуҫӑсем
 
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
 
 
 # Config errors
@@ -997,8 +998,6 @@ STR_NETWORK_START_SERVER_SET_PASSWORD                           :{BLACK}Вырн
 
 
 
-# Network set password
-
 # Network company info join/password
 
 # Network chat
@@ -1054,6 +1053,7 @@ STR_CONTENT_DETAIL_VERSION                                      :{SILVER}Вер�
 # Rail waypoint construction window
 
 # Rail station construction window
+
 
 
 

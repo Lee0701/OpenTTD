@@ -17,6 +17,7 @@
 #include "settings_type.h"
 #include "group.h"
 #include <array>
+#include <numeric>
 #include <string>
 
 static const Money COMPANY_MAX_LOAN_DEFAULT = INT64_MIN;
@@ -31,9 +32,9 @@ struct CompanyEconomyEntry {
 };
 
 struct CompanyInfrastructure {
+	std::array<uint32_t, RAILTYPE_END> rail{}; ///< Count of company owned track bits for each rail type.
 	std::array<uint32_t, ROADTYPE_END> road{}; ///< Count of company owned track bits for each road type.
 	uint32_t signal{};                         ///< Count of company owned signals.
-	std::array<uint32_t, RAILTYPE_END> rail{}; ///< Count of company owned track bits for each rail type.
 	uint32_t water{};                          ///< Count of company owned track bits for canals.
 	uint32_t station{};                        ///< Count of company owned station tiles.
 	uint32_t airport{};                        ///< Count of company owned airports.
@@ -41,9 +42,7 @@ struct CompanyInfrastructure {
 	/** Get total sum of all owned track bits. */
 	uint32_t GetRailTotal() const
 	{
-		uint32_t total = 0;
-		for (RailType rt =  RAILTYPE_BEGIN; rt < RAILTYPE_END; rt++) total += this->rail[rt];
-		return total;
+		return std::accumulate(std::begin(this->rail), std::end(this->rail), 0U);
 	}
 
 	uint32_t GetRoadTotal() const;
@@ -86,6 +85,8 @@ struct CompanyProperties {
 	StringID president_name_1;       ///< Name of the president if the user did not change it.
 	uint32_t president_name_2;       ///< Parameter of #president_name_1
 	std::string president_name;      ///< Name of the president if the user changed it.
+
+	NetworkAuthorizedKeys allow_list; ///< Public keys of clients that are allowed to join this company.
 
 	CompanyManagerFace face;         ///< Face description of the president.
 
@@ -158,7 +159,7 @@ struct Company : CompanyPool::PoolItem<&_company_pool>, CompanyProperties {
 	RailTypes avail_railtypes;         ///< Rail types available to this company.
 	RoadTypes avail_roadtypes;         ///< Road types available to this company.
 
-	class AIInstance *ai_instance;
+	std::unique_ptr<class AIInstance> ai_instance;
 	class AIInfo *ai_info;
 	std::unique_ptr<class AIConfig> ai_config;
 
@@ -168,6 +169,7 @@ struct Company : CompanyPool::PoolItem<&_company_pool>, CompanyProperties {
 	CompanyInfrastructure infrastructure; ///< NOSAVE: Counts of company owned infrastructure.
 
 	FreeUnitIDGenerator freeunits[VEH_COMPANY_END];
+	FreeUnitIDGenerator freegroups;
 
 	Money GetMaxLoan() const;
 

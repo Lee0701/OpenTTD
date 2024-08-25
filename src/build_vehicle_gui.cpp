@@ -62,7 +62,7 @@ static constexpr NWidgetPart _nested_build_vehicle_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
 		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_BV_TOGGLE_DUAL_PANE_SEL),
-			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_BV_TOGGLE_DUAL_PANE), SetDataTip(SPR_LARGE_SMALL_WINDOW, STR_BUY_VEHICLE_TRAIN_TOGGLE_DUAL_PANE_TOOLTIP),
+			NWidget(WWT_IMGBTN, COLOUR_GREY, WID_BV_TOGGLE_DUAL_PANE), SetDataTip(SPR_LARGE_SMALL_WINDOW, STR_BUY_VEHICLE_TRAIN_TOGGLE_DUAL_PANE_TOOLTIP), SetAspect(WidgetDimensions::ASPECT_TOGGLE_SIZE),
 		EndContainer(),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
@@ -104,7 +104,7 @@ static constexpr NWidgetPart _nested_build_vehicle_widgets_train_advanced[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_BV_CAPTION), SetDataTip(STR_JUST_STRING, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS), SetTextStyle(TC_WHITE),
-		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_BV_TOGGLE_DUAL_PANE), SetDataTip(SPR_LARGE_SMALL_WINDOW, STR_BUY_VEHICLE_TRAIN_TOGGLE_DUAL_PANE_TOOLTIP),
+		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_BV_TOGGLE_DUAL_PANE), SetDataTip(SPR_LARGE_SMALL_WINDOW, STR_BUY_VEHICLE_TRAIN_TOGGLE_DUAL_PANE_TOOLTIP), SetAspect(WidgetDimensions::ASPECT_TOGGLE_SIZE),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
@@ -686,7 +686,7 @@ EngList_SortTypeFunction * const _engine_sort_functions[][13] = {{
 }};
 
 /** Dropdown menu strings for the vehicle sort criteria. */
-const StringID _engine_sort_listing[][14] = {{
+const std::initializer_list<const StringID> _engine_sort_listing[] = {{
 	/* Trains */
 	STR_SORT_BY_ENGINE_ID,
 	STR_SORT_BY_COST,
@@ -701,7 +701,6 @@ const StringID _engine_sort_listing[][14] = {{
 	STR_SORT_BY_CARGO_CAPACITY,
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	STR_SORT_BY_VEHICLE_COUNT,
-	INVALID_STRING_ID
 }, {
 	/* Road vehicles */
 	STR_SORT_BY_ENGINE_ID,
@@ -717,7 +716,6 @@ const StringID _engine_sort_listing[][14] = {{
 	STR_SORT_BY_CARGO_CAPACITY,
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	STR_SORT_BY_VEHICLE_COUNT,
-	INVALID_STRING_ID
 }, {
 	/* Ships */
 	STR_SORT_BY_ENGINE_ID,
@@ -730,7 +728,6 @@ const StringID _engine_sort_listing[][14] = {{
 	STR_SORT_BY_CARGO_CAPACITY,
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	STR_SORT_BY_VEHICLE_COUNT,
-	INVALID_STRING_ID
 }, {
 	/* Aircraft */
 	STR_SORT_BY_ENGINE_ID,
@@ -744,7 +741,6 @@ const StringID _engine_sort_listing[][14] = {{
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
 	STR_SORT_BY_VEHICLE_COUNT,
 	STR_SORT_BY_RANGE,
-	INVALID_STRING_ID
 }};
 
 /** Filters vehicles by cargo and engine (in case of rail vehicle). */
@@ -760,7 +756,7 @@ static bool CargoAndEngineFilter(const GUIEngineListItem *item, const CargoID ci
 	}
 }
 
-static GUIEngineList::FilterFunction * const _filter_funcs[] = {
+static GUIEngineList::FilterFunction * const _engine_filter_funcs[] = {
 	&CargoAndEngineFilter,
 };
 
@@ -1700,7 +1696,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 		this->cargo_filter_criteria = _engine_sort_last_cargo_criteria[this->vehicle_type];
 		if (this->cargo_filter_criteria < NUM_CARGO && !HasBit(_standard_cargo_mask, this->cargo_filter_criteria)) this->cargo_filter_criteria = CargoFilterCriteria::CF_ANY;
 
-		this->eng_list.SetFilterFuncs(_filter_funcs);
+		this->eng_list.SetFilterFuncs(_engine_filter_funcs);
 		this->eng_list.SetFilterState(this->cargo_filter_criteria != CargoFilterCriteria::CF_ANY);
 	}
 
@@ -1921,7 +1917,6 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 			case VEH_TRAIN:
 				this->GenerateBuildTrainList(list);
 				GUIEngineListAddChildren(this->eng_list, list);
-				this->eng_list.shrink_to_fit();
 				this->eng_list.RebuildDone();
 				return;
 			case VEH_ROAD:
@@ -1962,7 +1957,6 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 		this->eng_list.swap(list);
 		GUIEngineListAddChildren(this->eng_list, list, INVALID_ENGINE, 0);
-		this->eng_list.shrink_to_fit();
 		this->eng_list.RebuildDone();
 	}
 
@@ -2116,7 +2110,7 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 				break;
 
 			case WID_BV_SORT_DROPDOWN:
-				SetDParam(0, _engine_sort_listing[this->vehicle_type][this->sort_criteria]);
+				SetDParam(0, std::data(_engine_sort_listing[this->vehicle_type])[this->sort_criteria]);
 				break;
 
 			case WID_BV_CARGO_FILTER_DROPDOWN:
@@ -2291,7 +2285,6 @@ struct BuildVehicleWindow : BuildVehicleWindowBase {
 
 static Hotkey buildvehicle_hotkeys[] = {
 	Hotkey('F', "focus_filter_box", BVHK_FOCUS_FILTER_BOX),
-	HOTKEY_LIST_END
 };
 HotkeyList BuildVehicleWindow::hotkeys("buildvehicle", buildvehicle_hotkeys);
 
@@ -2323,7 +2316,7 @@ static EngList_SortTypeFunction * const _sorter_wagon[8] = {
 	&TrainEngineCapacityVsRunningCostSorter
 };
 
-static const StringID _sort_listing_loco[13] = {
+static const StringID _sort_listing_loco[12] = {
 	/* Locomotives */
 	STR_SORT_BY_ENGINE_ID,
 	STR_SORT_BY_COST,
@@ -2337,10 +2330,9 @@ static const StringID _sort_listing_loco[13] = {
 	STR_SORT_BY_RELIABILITY,
 	STR_SORT_BY_CARGO_CAPACITY,
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
-	INVALID_STRING_ID
 };
 
-static const StringID _sort_listing_wagon[9] = {
+static const StringID _sort_listing_wagon[8] = {
 	/* Wagons */
 	STR_SORT_BY_ENGINE_ID,
 	STR_SORT_BY_COST,
@@ -2350,7 +2342,6 @@ static const StringID _sort_listing_wagon[9] = {
 	STR_SORT_BY_RUNNING_COST,
 	STR_SORT_BY_CARGO_CAPACITY,
 	STR_SORT_BY_CARGO_CAPACITY_VS_RUNNING_COST,
-	INVALID_STRING_ID
 };
 
 /**
@@ -2568,7 +2559,7 @@ struct BuildVehicleWindowTrainAdvanced final : BuildVehicleWindowBase {
 		state.cargo_filter_criteria = last_filter;
 		if (state.cargo_filter_criteria < NUM_CARGO && !HasBit(_standard_cargo_mask, state.cargo_filter_criteria)) state.cargo_filter_criteria = CargoFilterCriteria::CF_ANY;
 
-		state.eng_list.SetFilterFuncs(_filter_funcs);
+		state.eng_list.SetFilterFuncs(_engine_filter_funcs);
 		state.eng_list.SetFilterState(state.cargo_filter_criteria != CargoFilterCriteria::CF_ANY);
 	}
 

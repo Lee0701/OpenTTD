@@ -35,10 +35,10 @@ template <>
 /* static */ void StationClass::InsertDefaults()
 {
 	/* Set up initial data */
-	StationClass::Get(StationClass::Allocate('DFLT'))->name = STR_STATION_CLASS_DFLT;
-	StationClass::Get(StationClass::Allocate('DFLT'))->Insert(nullptr);
-	StationClass::Get(StationClass::Allocate('WAYP'))->name = STR_STATION_CLASS_WAYP;
-	StationClass::Get(StationClass::Allocate('WAYP'))->Insert(nullptr);
+	StationClass::Get(StationClass::Allocate(STATION_CLASS_LABEL_DEFAULT))->name = STR_STATION_CLASS_DFLT;
+	StationClass::Get(StationClass::Allocate(STATION_CLASS_LABEL_DEFAULT))->Insert(nullptr);
+	StationClass::Get(StationClass::Allocate(STATION_CLASS_LABEL_WAYPOINT))->name = STR_STATION_CLASS_WAYP;
+	StationClass::Get(StationClass::Allocate(STATION_CLASS_LABEL_WAYPOINT))->Insert(nullptr);
 }
 
 template <>
@@ -257,7 +257,7 @@ static struct {
  */
 TownScopeResolver *StationResolverObject::GetTown()
 {
-	if (this->town_scope == nullptr) {
+	if (!this->town_scope.has_value()) {
 		Town *t = nullptr;
 		if (this->station_scope.st != nullptr) {
 			t = this->station_scope.st->town;
@@ -265,9 +265,9 @@ TownScopeResolver *StationResolverObject::GetTown()
 			t = ClosestTownFromTile(this->station_scope.tile, UINT_MAX);
 		}
 		if (t == nullptr) return nullptr;
-		this->town_scope = new TownScopeResolver(*this, t, this->station_scope.st == nullptr);
+		this->town_scope.emplace(*this, t, this->station_scope.st == nullptr);
 	}
-	return this->town_scope;
+	return &*this->town_scope;
 }
 
 uint32_t StationScopeResolver::GetNearbyStationInfo(uint32_t parameter, StationScopeResolver::NearbyStationInfoMode mode) const
@@ -532,7 +532,7 @@ uint32_t Waypoint::GetNewGRFVariable(const ResolverObject &object, uint16_t vari
 
 /* virtual */ const SpriteGroup *StationResolverObject::ResolveReal(const RealSpriteGroup *group) const
 {
-	if (this->station_scope.st == nullptr || this->station_scope.statspec->cls_id == STAT_CLASS_WAYP) {
+	if (this->station_scope.st == nullptr || !Station::IsExpected(this->station_scope.st)) {
 		return group->loading[0];
 	}
 
@@ -598,7 +598,7 @@ uint32_t StationResolverObject::GetDebugID() const
 StationResolverObject::StationResolverObject(const StationSpec *statspec, BaseStation *base_station, TileIndex tile, RailType rt,
 		CallbackID callback, uint32_t callback_param1, uint32_t callback_param2)
 	: ResolverObject(statspec->grf_prop.grffile, callback, callback_param1, callback_param2),
-	station_scope(*this, statspec, base_station, tile, rt), town_scope(nullptr)
+	station_scope(*this, statspec, base_station, tile, rt)
 {
 	/* Invalidate all cached vars */
 	_svc.valid = 0;
@@ -627,11 +627,6 @@ StationResolverObject::StationResolverObject(const StationSpec *statspec, BaseSt
 	/* Remember the cargo type we've picked */
 	this->station_scope.cargo_type = ctype;
 	this->root_spritegroup = this->station_scope.statspec->grf_prop.spritegroup[this->station_scope.cargo_type];
-}
-
-StationResolverObject::~StationResolverObject()
-{
-	delete this->town_scope;
 }
 
 /**
@@ -817,8 +812,8 @@ bool DrawStationTile(int x, int y, RailType railtype, Axis axis, StationClassID 
 	const StationSpec *statspec = StationClass::Get(sclass)->GetSpec(station);
 	if (statspec == nullptr) return false;
 
-	if (HasBit(statspec->callback_mask, CBM_STATION_SPRITE_LAYOUT)) {
-		uint16_t callback = GetStationCallback(CBID_STATION_SPRITE_LAYOUT, 0, 0, statspec, nullptr, INVALID_TILE, railtype);
+	if (HasBit(statspec->callback_mask, CBM_STATION_DRAW_TILE_LAYOUT)) {
+		uint16_t callback = GetStationCallback(CBID_STATION_DRAW_TILE_LAYOUT, 0, 0, statspec, nullptr, INVALID_TILE, railtype);
 		if (callback != CALLBACK_FAILED) tile = callback & ~1;
 	}
 
@@ -1105,9 +1100,9 @@ void UpdateStationTileCacheFlags(bool force_update)
 			if (statspec == nullptr) continue;
 
 			checksum.Update(j);
-			checksum.Update(statspec->blocked);
-			checksum.Update(statspec->pylons);
-			checksum.Update(statspec->wires);
+			for (StationSpec::TileFlags flags : statspec->tileflags) {
+				checksum.Update(static_cast<uint64_t>(flags));
+			}
 		}
 	}
 

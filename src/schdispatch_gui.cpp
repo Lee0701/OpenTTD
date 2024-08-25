@@ -195,7 +195,6 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 	Scrollbar *vscroll;     ///< Verticle scrollbar
 	uint num_columns;       ///< Number of columns.
 
-	uint item_count = 0;     ///< Number of scheduled item
 	StateTicks next_departure_update = INT64_MAX; ///< Time after which the last departure value should be re-drawn
 	uint warning_count = 0;
 	uint extra_line_count = 0;
@@ -220,6 +219,36 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		SCH_MD_RENAME_TAG,
 	};
 
+	struct DispatchSlotPositionHandler {
+		StateTicks start_tick;
+		uint num_columns;
+		uint last_column = 0;
+		int last_row = -1;
+		int last_hour = INT_MIN;
+
+		DispatchSlotPositionHandler(StateTicks start_tick, uint num_columns) : start_tick(start_tick), num_columns(num_columns) {}
+
+		void AddSlot(DispatchSlot slot)
+		{
+			int hour = -1;
+			if (_settings_time.time_in_minutes) {
+				ClockFaceMinutes slot_minutes = _settings_time.ToTickMinutes(this->start_tick + slot.offset).ToClockFaceMinutes();
+				hour = slot_minutes.ClockHour();
+			}
+			if (hour != this->last_hour || this->last_column + 1 == this->num_columns) {
+				this->last_hour = hour;
+				this->last_row++;
+				this->last_column = 0;
+			} else {
+				this->last_column++;
+			}
+		}
+
+		int GetNumberOfRows() const
+		{
+			return this->last_row + 1;
+		}
+	};
 
 	SchdispatchWindow(WindowDesc *desc, WindowNumber window_number) :
 			GeneralVehicleWindow(desc, Vehicle::Get(window_number))
@@ -316,24 +345,13 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 			}
 
 			case WID_SCHDISPATCH_SUMMARY_PANEL:
-				size.height = (5 + this->extra_line_count) * GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.framerect.Vertical() + (WidgetDimensions::scaled.vsep_wide * 2);
+				size.height = (6 + this->extra_line_count) * GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.framerect.Vertical() + (WidgetDimensions::scaled.vsep_wide * 2);
 				uint warning_count = this->warning_count;
 				if (warning_count > 0) {
 					const Dimension warning_dimensions = GetSpriteSize(SPR_WARNING_SIGN);
 					size.height += warning_count * std::max<int>(warning_dimensions.height, GetCharacterHeight(FS_NORMAL));
 				}
 				break;
-		}
-	}
-
-	/**
-	 * Set proper item_count to number of offsets in the schedule.
-	 */
-	void CountItem()
-	{
-		this->item_count = 0;
-		if (this->IsScheduleSelected()) {
-			this->item_count = (uint)this->GetSelectedSchedule().GetScheduledDispatch().size();
 		}
 	}
 
@@ -356,7 +374,6 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 	virtual void OnPaint() override
 	{
 		const Vehicle *v = this->vehicle;
-		CountItem();
 
 		const bool unviewable = (v->orders == nullptr) || !this->TimeUnitsUsable();
 		const bool uneditable = (v->orders == nullptr) || (v->owner != _local_company);
@@ -396,7 +413,16 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		start_date_widget->widget_data = _settings_time.time_in_minutes ? STR_SCHDISPATCH_START_TIME : STR_SCHDISPATCH_START;
 		start_date_widget->tool_tip = _settings_time.time_in_minutes ? STR_SCHDISPATCH_SET_START_TIME : STR_SCHDISPATCH_SET_START;
 
-		this->vscroll->SetCount(CeilDiv(this->item_count, this->num_columns));
+		if (this->IsScheduleSelected()) {
+			const DispatchSchedule &ds = this->GetSelectedSchedule();
+			DispatchSlotPositionHandler handler(ds.GetScheduledDispatchStartTick(), this->num_columns);
+			for (const DispatchSlot &slot : ds.GetScheduledDispatch()) {
+				handler.AddSlot(slot);
+			}
+			this->vscroll->SetCount(handler.GetNumberOfRows());
+		} else {
+			this->vscroll->SetCount(0);
+		}
 
 		this->SetWidgetLoweredState(WID_SCHDISPATCH_ENABLED, HasBit(v->vehicle_flags, VF_SCHEDULED_DISPATCH));
 		this->DrawWidgets();
@@ -512,31 +538,38 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 						}
 					}
 
-					bool have_last = false;
+					bool have_extra = false;
+					auto show_time = [&](StringID msg, StateTicks dispatch_tick) {
+						if (!have_extra) _temp_special_strings[0] += '\n';
+						_temp_special_strings[0] += GetString(msg);
+						if (_settings_time.time_in_minutes) {
+							ClockFaceMinutes mins = _settings_time.ToTickMinutes(dispatch_tick).ToClockFaceMinutes();
+							if (mins != _settings_time.ToTickMinutes(start_tick + slot->offset).ToClockFaceMinutes()) {
+								SetDParam(0, dispatch_tick);
+								_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX);
+							}
+						}
+						have_extra = true;
+					};
+
+					auto record_iter = this->vehicle->dispatch_records.find(static_cast<uint16_t>(this->schedule_index));
+					if (record_iter != this->vehicle->dispatch_records.end()) {
+						const LastDispatchRecord &record = record_iter->second;
+						int32_t veh_dispatch = ((record.dispatched - start_tick) % ds.GetScheduledDispatchDuration()).base();
+						if (veh_dispatch < 0) veh_dispatch += ds.GetScheduledDispatchDuration();
+						if (veh_dispatch == (int32_t)slot->offset) {
+							show_time(STR_SCHDISPATCH_SLOT_TOOLTIP_VEHICLE, record.dispatched);
+						}
+					}
+
 					int32_t last_dispatch = ds.GetScheduledDispatchLastDispatch();
 					if (last_dispatch != INVALID_SCHEDULED_DISPATCH_OFFSET && (last_dispatch % ds.GetScheduledDispatchDuration() == slot->offset)) {
-						_temp_special_strings[0] += '\n';
-						_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_LAST);
-						if (_settings_time.time_in_minutes) {
-							ClockFaceMinutes mins = _settings_time.ToTickMinutes(start_tick + ds.GetScheduledDispatchLastDispatch()).ToClockFaceMinutes();
-							if (mins != _settings_time.ToTickMinutes(start_tick + slot->offset).ToClockFaceMinutes()) {
-								SetDParam(0, start_tick + ds.GetScheduledDispatchLastDispatch());
-								_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX);
-							}
-						}
-						have_last = true;
+						show_time(STR_SCHDISPATCH_SLOT_TOOLTIP_LAST, start_tick + last_dispatch);
 					}
-					StateTicks next_slot = GetScheduledDispatchTime(ds, _state_ticks);
+
+					StateTicks next_slot = GetScheduledDispatchTime(ds, _state_ticks).first;
 					if (next_slot != INVALID_STATE_TICKS && ((next_slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration() == slot->offset)) {
-						if (!have_last) _temp_special_strings[0] += '\n';
-						_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_NEXT);
-						if (_settings_time.time_in_minutes) {
-							ClockFaceMinutes mins = _settings_time.ToTickMinutes(next_slot).ToClockFaceMinutes();
-							if (mins != _settings_time.ToTickMinutes(start_tick + slot->offset).ToClockFaceMinutes()) {
-								SetDParam(0, next_slot);
-								_temp_special_strings[0] += GetString(STR_SCHDISPATCH_SLOT_TOOLTIP_TIME_SUFFIX);
-							}
-						}
+						show_time(STR_SCHDISPATCH_SLOT_TOOLTIP_NEXT, next_slot);
 					}
 
 					auto flags = slot->flags;
@@ -575,7 +608,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 	 * @param right Right side of the box to draw in.
 	 * @param y     Top of the box to draw in.
 	 */
-	void DrawScheduledTime(const StateTicks time, int left, int right, int y, TextColour colour, bool last, bool next, bool flagged) const
+	void DrawScheduledTime(const StateTicks time, int left, int right, int y, TextColour colour, bool last, bool next, bool veh, bool flagged) const
 	{
 		bool rtl = _current_text_dir == TD_RTL;
 
@@ -593,6 +626,12 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 				int offset_x = (this->header_width - this->arrow_flag_width) / 2;
 				DrawSprite(sprite, PAL_NONE, offset_x + (rtl ? right - this->delete_flag_width : left), y + diff_y);
 			};
+			if (veh) {
+				int width = ScaleSpriteTrad(1);
+				int x = left - WidgetDimensions::scaled.framerect.left;
+				int top = y - WidgetDimensions::scaled.framerect.top;
+				DrawRectOutline({ x, top, x + (int)this->resize.step_width - width, top + (int)this->resize.step_height - width }, PC_LIGHT_BLUE, width);
+			}
 			if (next) {
 				draw_arrow(!rtl);
 			} else if (last) {
@@ -601,7 +640,8 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		}
 
 		SetDParam(0, time);
-		DrawString(text_left, text_right, y + 2, flagged ? STR_SCHDISPATCH_DATE_WALLCLOCK_TINY_FLAGGED : STR_JUST_TT_TIME, colour, SA_HOR_CENTER);
+		DrawString(text_left, text_right, y + (this->resize.step_height - GetCharacterHeight(FS_NORMAL)) / 2,
+				flagged ? STR_SCHDISPATCH_DATE_WALLCLOCK_TINY_FLAGGED : STR_JUST_TT_TIME, colour, SA_HOR_CENTER);
 	}
 
 	virtual void OnGameTick() override
@@ -628,17 +668,10 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 				const uint16_t rows_in_display = wid->current_y / wid->resize_y;
 
 				const DispatchSchedule &ds = this->GetSelectedSchedule();
-
-				uint num = this->vscroll->GetPosition() * this->num_columns;
-				if (num >= ds.GetScheduledDispatch().size()) break;
-
-				const uint maxval = std::min<uint>(this->item_count, num + (rows_in_display * this->num_columns));
-
-				auto current_schedule = ds.GetScheduledDispatch().begin() + num;
 				const StateTicks start_tick = ds.GetScheduledDispatchStartTick();
 				const StateTicks end_tick = ds.GetScheduledDispatchStartTick() + ds.GetScheduledDispatchDuration();
 
-				StateTicks slot = GetScheduledDispatchTime(ds, _state_ticks);
+				StateTicks slot = GetScheduledDispatchTime(ds, _state_ticks).first;
 				int32_t next_offset = (slot != INVALID_STATE_TICKS) ? (slot - ds.GetScheduledDispatchStartTick()).AsTicks() % ds.GetScheduledDispatchDuration() : INT32_MIN;
 
 				int32_t last_dispatch;
@@ -648,29 +681,41 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 					last_dispatch = INT32_MIN;
 				}
 
-				for (int y = r.top + 1; num < maxval; y += this->resize.step_height) { /* Draw the rows */
-					for (uint i = 0; i < this->num_columns && num < maxval; i++, num++) {
-						/* Draw all departure time in the current row */
-						if (current_schedule != ds.GetScheduledDispatch().end()) {
-							int x = r.left + (rtl ? (this->num_columns - i - 1) : i) * this->resize.step_width;
-							StateTicks draw_time = start_tick + current_schedule->offset;
-							bool last = last_dispatch == (int32_t)current_schedule->offset;
-							bool next = next_offset == (int32_t)current_schedule->offset;
-							TextColour colour;
-							if (this->selected_slot == current_schedule->offset) {
-								colour = TC_WHITE;
-							} else {
-								colour = draw_time >= end_tick ? TC_RED : TC_BLACK;
-							}
-							auto flags = current_schedule->flags;
-							if (ds.GetScheduledDispatchReuseSlots()) ClrBit(flags, DispatchSlot::SDSF_REUSE_SLOT);
-							this->DrawScheduledTime(draw_time, x + WidgetDimensions::scaled.framerect.left, x + this->resize.step_width - 1 - (2 * WidgetDimensions::scaled.framerect.left),
-									y, colour, last, next, flags != 0);
-							current_schedule++;
-						} else {
-							break;
-						}
+				int32_t veh_dispatch;
+				auto record_iter = v->dispatch_records.find(static_cast<uint16_t>(this->schedule_index));
+				if (record_iter != v->dispatch_records.end()) {
+					const LastDispatchRecord &record = record_iter->second;
+					veh_dispatch = ((record.dispatched - start_tick) % ds.GetScheduledDispatchDuration()).base();
+					if (veh_dispatch < 0) veh_dispatch += ds.GetScheduledDispatchDuration();
+				} else {
+					veh_dispatch = INT32_MIN;
+				}
+
+				const int begin_row = this->vscroll->GetPosition();
+				const int end_row = begin_row + rows_in_display;
+
+				DispatchSlotPositionHandler handler(start_tick, this->num_columns);
+				for (const DispatchSlot &slot : ds.GetScheduledDispatch()) {
+					handler.AddSlot(slot);
+					if (handler.last_row < begin_row || handler.last_row >= end_row) continue;
+
+					int x = r.left + (rtl ? (this->num_columns - handler.last_column - 1) : handler.last_column) * this->resize.step_width;
+					int y = r.top + WidgetDimensions::scaled.framerect.top + ((handler.last_row - begin_row) * this->resize.step_height);
+
+					StateTicks draw_time = start_tick + slot.offset;
+					bool last = last_dispatch == (int32_t)slot.offset;
+					bool next = next_offset == (int32_t)slot.offset;
+					bool veh = veh_dispatch == (int32_t)slot.offset;
+					TextColour colour;
+					if (this->selected_slot == slot.offset) {
+						colour = TC_WHITE;
+					} else {
+						colour = draw_time >= end_tick ? TC_RED : TC_BLACK;
 					}
+					auto flags = slot.flags;
+					if (ds.GetScheduledDispatchReuseSlots()) ClrBit(flags, DispatchSlot::SDSF_REUSE_SLOT);
+					this->DrawScheduledTime(draw_time, x + WidgetDimensions::scaled.framerect.left, x + this->resize.step_width - 1 - (2 * WidgetDimensions::scaled.framerect.left),
+							y, colour, last, next, veh, flags != 0);
 				}
 				break;
 			}
@@ -806,8 +851,7 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 
 					y += WidgetDimensions::scaled.vsep_wide;
 
-					if (ds.GetScheduledDispatchLastDispatch() != INVALID_SCHEDULED_DISPATCH_OFFSET) {
-						const StateTicks last_departure = ds.GetScheduledDispatchStartTick() + ds.GetScheduledDispatchLastDispatch();
+					auto show_last_departure = [&](const StateTicks last_departure, bool vehicle_mode, std::string details) {
 						StringID str;
 						if (_state_ticks < last_departure) {
 							str = STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE;
@@ -815,7 +859,16 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 						} else {
 							str = STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST;
 						}
+						if (vehicle_mode) str += (STR_SCHDISPATCH_SUMMARY_VEHICLE_DEPARTURE_PAST - STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST);
+
 						SetDParam(0, last_departure);
+						if (details.empty()) {
+							SetDParam(1, STR_EMPTY);
+						} else {
+							SetDParam(1, STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAILS);
+							SetDParamStr(2, std::move(details));
+						}
+
 						DrawString(ir.left, ir.right, y, str);
 						y += GetCharacterHeight(FS_NORMAL);
 
@@ -836,12 +889,42 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 								set_next_departure_update(_settings_time.FromTickMinutes(target + ((hours + 1) * 60) + 1));
 							}
 						}
+					};
+
+					auto record_iter = v->dispatch_records.find(static_cast<uint16_t>(this->schedule_index));
+					if (record_iter != v->dispatch_records.end()) {
+						const LastDispatchRecord &record = record_iter->second;
+						std::string details;
+						auto add_detail = [&](StringID str) {
+							auto tmp_params = MakeParameters(str);
+							GetStringWithArgs(StringBuilder(details), details.empty() ? STR_JUST_STRING : STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_SEPARATOR, tmp_params);
+						};
+						if (HasBit(record.record_flags, LastDispatchRecord::RF_FIRST_SLOT)) add_detail(STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_WAS_FIRST);
+						if (HasBit(record.record_flags, LastDispatchRecord::RF_LAST_SLOT)) add_detail(STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_WAS_LAST);
+
+						for (uint8_t flag_bit = DispatchSlot::SDSF_FIRST_TAG; flag_bit <= DispatchSlot::SDSF_LAST_TAG; flag_bit++) {
+							if (HasBit(record.slot_flags, flag_bit)) {
+								std::string_view name = ds.GetSupplementaryName(SDSNT_DEPARTURE_TAG, flag_bit - DispatchSlot::SDSF_FIRST_TAG);
+								auto tmp_params = MakeParameters(1 + flag_bit - DispatchSlot::SDSF_FIRST_TAG, std::string{name});
+								_temp_special_strings[1] = GetStringWithArgs(name.empty() ? STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_TAG : STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_TAG_NAMED, tmp_params);
+								add_detail(SPECSTR_TEMP_START + 1);
+							}
+						}
+
+						show_last_departure(record.dispatched, true, std::move(details));
+					} else {
+						DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_VEHICLE_NO_LAST_DEPARTURE);
+						y += GetCharacterHeight(FS_NORMAL);
+					}
+
+					if (ds.GetScheduledDispatchLastDispatch() != INVALID_SCHEDULED_DISPATCH_OFFSET) {
+						show_last_departure(ds.GetScheduledDispatchStartTick() + ds.GetScheduledDispatchLastDispatch(), false, "");
 					} else {
 						DrawString(ir.left, ir.right, y, STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE);
 						y += GetCharacterHeight(FS_NORMAL);
 					}
 
-					const StateTicks next_departure = GetScheduledDispatchTime(ds, _state_ticks);
+					const StateTicks next_departure = GetScheduledDispatchTime(ds, _state_ticks).first;
 					if (next_departure != INVALID_STATE_TICKS) {
 						set_next_departure_update(next_departure + ds.GetScheduledDispatchDelay());
 						SetDParam(0, next_departure);
@@ -924,12 +1007,18 @@ struct SchdispatchWindow : GeneralVehicleWindow {
 		int32_t row = y / this->resize.step_height;
 		if (row >= this->vscroll->GetCapacity()) return { nullptr, false };
 
-		uint pos = ((row + this->vscroll->GetPosition()) * this->num_columns) + xt;
+		row += this->vscroll->GetPosition();
 
 		const DispatchSchedule &ds = this->GetSelectedSchedule();
-		if (pos >= this->item_count || pos >= ds.GetScheduledDispatch().size()) return { nullptr, false };
+		DispatchSlotPositionHandler handler(ds.GetScheduledDispatchStartTick(), this->num_columns);
+		for (const DispatchSlot &slot : ds.GetScheduledDispatch()) {
+			handler.AddSlot(slot);
+			if (handler.last_row == row && handler.last_column == xt) {
+				return { &slot, xm <= this->header_width };
+			}
+		}
 
-		return { &ds.GetScheduledDispatch()[pos], xm <= this->header_width };
+		return { nullptr, false };
 	}
 
 	/**
@@ -1405,7 +1494,7 @@ void CcSwapSchDispatchSchedules(const CommandCost &result, TileIndex tile, uint3
 static constexpr NWidgetPart _nested_schdispatch_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SCHDISPATCH_RENAME), SetMinimalSize(12, 14), SetDataTip(SPR_RENAME, STR_SCHDISPATCH_RENAME_SCHEDULE_TOOLTIP),
+		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SCHDISPATCH_RENAME), SetAspect(WidgetDimensions::ASPECT_RENAME), SetDataTip(SPR_RENAME, STR_SCHDISPATCH_RENAME_SCHEDULE_TOOLTIP),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SCHDISPATCH_MOVE_LEFT), SetMinimalSize(12, 14), SetDataTip(SPR_ARROW_LEFT, STR_SCHDISPATCH_MOVE_SCHEDULE),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_SCHDISPATCH_MOVE_RIGHT), SetMinimalSize(12, 14), SetDataTip(SPR_ARROW_RIGHT, STR_SCHDISPATCH_MOVE_SCHEDULE),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SCHDISPATCH_CAPTION), SetDataTip(STR_SCHDISPATCH_CAPTION, STR_NULL),

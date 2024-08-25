@@ -51,11 +51,11 @@ STR_UNIT_NAME_VELOCITY_GAMEUNITS                                :клеток/д
 STR_UNIT_NAME_VELOCITY_GAMEUNITS_WALLCLOCK                      :клеток/сек
 
 STR_UNITS_SECONDS_SHORT                                         :{COMMA}{NBSP}с
-STR_UNITS_PRODUCTION_INTERVALS                                  :{NUM}{NBSP}производственный интервал{P "" а ов}
+STR_UNITS_PRODUCTION_INTERVALS                                  :{NUM}{NBSP}интервал{P "" а ов} производства
 
 STR_BUTTON_RENAME                                               :{BLACK}Переименовать
 
-STR_MEASURE_DIST_HEIGHTDIFF                                     :{BLACK}Расстояние «Манхэттэн»: {NUM}{}Расстояние по прямой: {NUM}{}Расстояние от ближайшего края: {NUM}{}Высота над уровнем моря: {HEIGHT}{}Разница высот: {HEIGHT}
+STR_MEASURE_DIST_HEIGHTDIFF                                     :{BLACK}Манхэттенское расстояние: {NUM}{}Расстояние по прямой: {NUM}{}Расстояние от ближайшего края: {NUM}{}Высота над уровнем моря: {HEIGHT}{}Разница высот: {HEIGHT}
 
 STR_SORT_BY_PROFIT_LIFETIME                                     :Пожизненная прибыль
 STR_SORT_BY_AVG_ORDER_OCCUPANCY                                 :Средняя наполняемость заказа
@@ -81,10 +81,10 @@ STR_VEHICLE_TYPE_AIRCRAFT                                       :Авиатра�
 STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_SPEED                     :{TINY_FONT}{BLACK}Средняя скорость доставки ({STRING})
 STR_GRAPH_CARGO_PAYMENT_RATES_TITLE_AVG_SPEED                   :{TINY_FONT}{BLACK}Оплата за доставку 1 единицы (или 1000 литров) груза на расстояние 200 квадратов
 STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL_MINUTES                   :{TINY_FONT}{BLACK}Минут в пути
-STR_GRAPH_STATION_CARGO_CAPTION                                 :{WHITE}{STATION} - История ожидающих грузов
+STR_GRAPH_STATION_CARGO_CAPTION                                 :{WHITE}{STATION} - История доступного груза
 STR_GRAPH_STATION_CARGO_X_LABEL_DAYS                            :{TINY_FONT}{BLACK}Развитие за последние {NUM} дней
 STR_GRAPH_STATION_CARGO_X_LABEL_SECONDS                         :{TINY_FONT}{BLACK}Развитие за последние {NUM} секунд
-STR_GRAPH_STATION_CARGO_TITLE                                   :{TINY_FONT}{BLACK}Единицы груза, ожидающие на станции
+STR_GRAPH_STATION_CARGO_TITLE                                   :{TINY_FONT}{BLACK}Единицы груза, доступные на станции
 
 STR_GRAPH_CARGO_SPEED_MODE                                      :{TINY_FONT}{BLACK}Средняя скорость
 STR_GRAPH_CARGO_TOOLTIP_TIME_MODE                               :{BLACK}Отображение времени в пути на оси X графика
@@ -102,20 +102,20 @@ STR_SMALLMAP_SCREENSHOT                                         :{BLACK}Скри
 STR_NEWS_VEHICLE_NO_DEPOT_ORDER                                 :{WHITE}{VEHICLE} не имеет заказа на депо в своем расписании
 STR_NEWS_TRAIN_OVERSHOT_STATION                                 :{WHITE}{VEHICLE} не смог остановиться в {STRING} из-за чрезмерной скорости
 
-STR_NEWS_ROAD_REBUILDING_PERIODS                                :{BIG_FONT}{BLACK}Дорожный хаос в {TOWN}!{}{}Программа реконструкции дорог, профинансированая {STRING} принесёт автомобилистам полгода страданий!
-STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_PERIOD                    :{BIG_FONT}{BLACK}Администрация города {TOWN} подписала контракт с {STRING} на 1 период эксклюзивных транспортных прав!
+STR_NEWS_ROAD_REBUILDING_PERIODS                                :{BIG_FONT}{BLACK}Дорожный хаос в городе {TOWN}!{}{}Программа реконструкции дорог, профинансированая компанией {STRING} принесёт автомобилистам полгода страданий!
+STR_NEWS_EXCLUSIVE_RIGHTS_DESCRIPTION_PERIOD                    :{BIG_FONT}{BLACK}Администрация города {TOWN} подписала контракт с компанией {STRING} на 1 период эксклюзивных транспортных прав!
 
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_EVERY_MINUTES_CUSTOM_LABEL   :Пользовательский интервал (минуты реального времени)
 STR_GAME_OPTIONS_AUTOSAVE_MINUTES_QUERY_CAPT                    :{WHITE}Интервал автосохранения в минутах реального времени
 
 STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT                        :Рекомендуется оставить это значение по умолчанию.
 
-STR_CONFIG_SETTING_TRAIN_BRAKING_REALISTIC                      :Реалистичная {PUSH_COLOUR}{RED}(Эксперт){POP_COLOUR}
+STR_CONFIG_SETTING_TRAIN_BRAKING_REALISTIC                      :реалистичное {PUSH_COLOUR}{RED}(эксперт){POP_COLOUR}
 STR_CONFIG_SETTING_TRAIN_BRAKING_ASPECT_LIMITED_ON              :На {PUSH_COLOUR}{RED}(Эксперт, Сложно){POP_COLOUR}
 
 STR_CONFIG_SETTING_REALISTIC_BRAKING_SIGNALS_NOT_ALLOWED        :{WHITE}Реалистичное торможение не может быть включено. Присутствует хотя бы один предварительный или двусторонний сигнал.
 
-STR_CONFIG_SETTING_DELIVERY_BALANCED                            :Сбалансированная
+STR_CONFIG_SETTING_DELIVERY_BALANCED                            :сбалансированное
 
 STR_CONFIG_SETTING_RUNNING_COSTS_IN_DEPOT                       :Эксплуатационные расходы на транспортные средства в депо: {STRING}
 STR_CONFIG_SETTING_RUNNING_COSTS_IN_DEPOT_HELPTEXT              :Установить уровень затрат на техническое обслуживание и эксплуатацию транспортных средств в ожидании в депо (без остановок)
@@ -134,8 +134,8 @@ STR_CONFIG_SETTING_RENAME_TOWNS_MULTIPLAYER_HELPTEXT            :Если эта
 STR_CONFIG_SETTING_OVERRIDE_TOWN_SETTINGS_MULTIPLAYER           :Позволить многопользовательским клиентам изменять настройки города: {STRING}
 STR_CONFIG_SETTING_OVERRIDE_TOWN_SETTINGS_MULTIPLAYER_HELPTEXT  :Если эта функция включена, то многопользовательские клиенты, не являющиеся администраторами и зрителями, смогут изменять настройки каждого конкретного города. Это всегда доступно в одиночной игре, а также администратору многопользовательского сервера.
 
-STR_CONFIG_SETTING_CATCHMENT_INCREASE                           :Увеличение зоны покрытия станции: {STRING}
-STR_CONFIG_SETTING_CATCHMENT_INCREASE_HELPTEXT                  :Увеличить зону покрытия станции на указанное количество клеток
+STR_CONFIG_SETTING_CATCHMENT_INCREASE                           :Увеличить охват станции на: {STRING}
+STR_CONFIG_SETTING_CATCHMENT_INCREASE_HELPTEXT                  :Увеличение области, обслуживаемой станцией, на указанное количество клеток.
 
 STR_CONFIG_SETTING_STATION_RATING_CARGO_CLASS_WAIT_TIME         :Отношение станций к времени ожидания зависит от класса груза: {STRING}
 STR_CONFIG_SETTING_STATION_RATING_CARGO_CLASS_WAIT_TIME_HELPTEXT:Если включено, то время ожидания с момента последнего получения груза влияет на рейтинг станции для этого груза в зависимости от класса груза. Пассажиры, почта, ценности, рефрижераторные грузы и экспресс-грузы в разной степени менее терпимы к ожиданию. Наливные и жидкие грузы более терпимы.
@@ -143,11 +143,11 @@ STR_CONFIG_SETTING_STATION_RATING_CARGO_CLASS_WAIT_TIME_HELPTEXT:Если вкл
 STR_CONFIG_SETTING_STATION_RATING_SIZE_CARGO_AMOUNT             :Вместимость станции и допустимый рейтинг зависят от её размера: {STRING}
 STR_CONFIG_SETTING_STATION_RATING_SIZE_CARGO_AMOUNT_HELPTEXT    :Если включено, то вместимость станций перед ожиданием груза усекается, и влияние количества ожидающего груза на рейтинг станции для этого груза зависит от размера станции. Более крупные станции могут хранить больше грузов и более терпимы к большому количеству ожидающих грузов.
 
-STR_CONFIG_SETTING_CARGO_DELIVERY_MODE                          :Режим распределения доставки грузов: {STRING}
-STR_CONFIG_SETTING_CARGO_DELIVERY_MODE_HELPTEXT                 :Метод, используемый для доставки грузов на предприятия, расположенные вокруг станции.
+STR_CONFIG_SETTING_CARGO_DELIVERY_MODE                          :Распределение доставленных грузов: {STRING}
+STR_CONFIG_SETTING_CARGO_DELIVERY_MODE_HELPTEXT                 :Каким должно быть распределение прибывших на станцию грузов по предприятиям, расположенным в её зоне охвата. {}«Оригинальное» - распределяет все грузы по ближайшим предприятиям (измеряется от клетки со знаком станции).{}«Сбалансированное» - распределяет грузы поровну между всеми принимающими предприятиями в зоне охвата станции.
 
-STR_CONFIG_SETTING_TRAIN_BRAKING_MODEL                          :Модель торможения поезда: {STRING}
-STR_CONFIG_SETTING_TRAIN_BRAKING_MODEL_HELPTEXT                 :Выберите физическую модель торможения поезда. "Оригинальное" позволяет поездам останавливаться мгновенно. При "реалистичной" модели у поездов появится тормозной путь, они будут соответствующе резервировать его и не смогут останавливаться мгновенно.{}{}"Реалистичная" Модель имеет множество ограничений для сигнализации и проектирования путей, поэтому является продвинутой функцией, которая может не подойти новичкам. В частности, не допускаются предварительные и двусторонние сигналы, и везде используюся маршрутные семафоры.
+STR_CONFIG_SETTING_TRAIN_BRAKING_MODEL                          :Модель торможения поездов: {STRING}
+STR_CONFIG_SETTING_TRAIN_BRAKING_MODEL_HELPTEXT                 :Настройка физической модели торможения поездов. «Оригинальная» позволяет поездам останавливаться мгновенно. При «реалистичной» модели у поездов появится тормозной путь, они будут соответствующе резервировать его и не смогут останавливаться мгновенно.{}{}«Реалистичная» модель имеет множество ограничений для сигнализации и проектирования путей, поэтому является продвинутой функцией, которая может не подойти новичкам. В частности, не допускаются предварительные и двусторонние сигналы, и везде используюся маршрутные семафоры.
 
 STR_CONFIG_SETTING_REALISTIC_BRAKING_ASPECT_LIMITED             :Реалистичное торможение поезда ограничено аспектами: {STRING}
 STR_CONFIG_SETTING_REALISTIC_BRAKING_ASPECT_LIMITED_HELPTEXT    :При реалистичной модели торможения поезда ограничить опережающее движение поездов аспектом сигналов (то есть запретить резервировать и опережать неограниченное количество сигналов).{}Для этого необходимы NewGRF, которые обеспечивают многоаспектные сигналы.{}{}Это экспертная настройка, которая, вероятно, повысит сложность игры и потребует дополнительных размышлений о типах и размещении сигналов.
@@ -172,7 +172,7 @@ STR_CONFIG_SETTING_NON_LEADING_ENGINES_KEEP_NAME                :Неведущ�
 STR_CONFIG_SETTING_NON_LEADING_ENGINES_KEEP_NAME_HELPTEXT       :Должны ли локомотивы сохранять своё пользовательское название при перемещении на не ведущую позицию в составе поезда
 
 STR_CONFIG_SETTING_BACK_ONE_WAY_PBS_SAFE_WAITING                :Поиск пути до обратных сигналов одностороннего пути: {STRING}
-STR_CONFIG_SETTING_BACK_ONE_WAY_PBS_SAFE_WAITING_HELPTEXT       :Если включено, алгоритм поиска пути для поездов YAPF сможет находить пути до задней части сигнала одностороннего пути.
+STR_CONFIG_SETTING_BACK_ONE_WAY_PBS_SAFE_WAITING_HELPTEXT       :Если включено, алгоритм поиска пути для поездов сможет находить пути до задней части сигнала одностороннего пути.
 
 STR_CONFIG_SETTING_INFLATION_FIXED_DATES                        :Разрешить инфляцию с 1920 до 2090: {STRING}
 STR_CONFIG_SETTING_INFLATION_FIXED_DATES_HELPTEXT               :Если включено, то инфляция всегда применяется с 1920 до 2090 года, вне зависимости от даты начала игры. Эта модель инфляции используется с OpenTTD версии 1.11.{}Если отключено, то инфляция будет применяться с даты начала игры в течение 170 лет. Эта модель инфляции использовалась в OpenTTD до версии 1.10.
@@ -188,24 +188,24 @@ STR_CONFIG_SETTING_CHUNNEL_HELPTEXT                             :Если вкл
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY                 :Поезда разных компаний не смогут врезаться друг в друга: {STRING}
 STR_CONFIG_SETTING_NO_TRAIN_CRASH_OTHER_COMPANY_HELPTEXT        :Эта настройка предназначена в первую очередь для того, чтобы игроки намеренно не вызывали крушения поездов других компаний в многопользовательских играх с совместным использованием железнодорожной инфраструктуры.
 
-STR_CONFIG_SETTING_ROADVEH_ARTICULATED_OVERTAKING               :Сочлененные автотранспорты могут совершать обгон: {STRING}
-STR_CONFIG_SETTING_ROADVEH_ARTICULATED_OVERTAKING_HELPTEXT      :Позволить сочлененным дорожным траспортным средствам обгонять другие.
+STR_CONFIG_SETTING_ROADVEH_ARTICULATED_OVERTAKING               :Сочленённые автотранспорты могут совершать обгон: {STRING}
+STR_CONFIG_SETTING_ROADVEH_ARTICULATED_OVERTAKING_HELPTEXT      :Позволить сочленённым дорожным траспортным средствам обгонять другие.
 
 STR_CONFIG_SETTING_ROADVEH_CANT_QUANTUM_TUNNEL                  :Автотранспорты не проходят друг через друга при блокировке: {STRING}
 STR_CONFIG_SETTING_ROADVEH_CANT_QUANTUM_TUNNEL_HELPTEXT         :Запретить проезд одних дорожных транспортных средств через другие, если их путь перекрыт в течение длительного периода времени.
 
 STR_CONFIG_SETTING_DRIVE_THROUGH_TRAIN_DEPOT                    :Проходные железнодорожные депо: {STRING}
-STR_CONFIG_SETTING_DRIVE_THROUGH_TRAIN_DEPOT_HELPTEXT           :Включить эмуляцию проходных железнодорожных депо. Поезда могут перемещаться между депо, расположенными друг за другом, опционально с промежуточными депо между ними. Требуется алгоритм поиска пути YAPF.
+STR_CONFIG_SETTING_DRIVE_THROUGH_TRAIN_DEPOT_HELPTEXT           :Включить эмуляцию проходных железнодорожных депо. Поезда могут перемещаться между депо, расположенными друг за другом, опционально с промежуточными депо между ними.
 
 STR_CONFIG_SETTING_WARN_RESTRICTION_WAIT_VEHICLE                :Оповещать, если поезд застрял из-за ограничения маршрута: {STRING}
 STR_CONFIG_SETTING_WARN_RESTRICTION_WAIT_VEHICLE_HELPTEXT       :Запуск сообщений о поездах, которые застряли в ожидании у маршрутного семафора на долгое время из-за ограничения маршрута
 
 STR_CONFIG_SETTING_WARN_NO_DEPOT_ORDER                          :Предупреждать, если у транспортного средства нет заказа на депо: {STRING}
 STR_CONFIG_SETTING_WARN_NO_DEPOT_ORDER_HELPTEXT                 :Если эта функция включена, а также если включен просмотр заказов на транспортные средства, отправляется сообщение, когда поезд, автотранспорт или судно не имеет заказа на депо в своем расписании.
-STR_CONFIG_SETTING_WARN_NO_DEPOT_ORDER_IF_BREAKDOWNS_ON         :Если включены поломки транспортных средств
+STR_CONFIG_SETTING_WARN_NO_DEPOT_ORDER_IF_BREAKDOWNS_ON         :если включены поломки транспортных средств
 
 STR_CONFIG_SETTING_NO_EXPIRE_VEHICLES_AFTER                     :Срок эксплуатации транспортных средств не истекает после: {STRING}
-STR_CONFIG_SETTING_NO_EXPIRE_VEHICLES_AFTER_HELPTEXT            :Транспортные средства, срок эксплуатации которых закончился бы в этом году, будут доступны всегда.{}Снижение надежности двигателя также прекращается по достижении этого года
+STR_CONFIG_SETTING_NO_EXPIRE_VEHICLES_AFTER_HELPTEXT            :Транспортные средства, срок эксплуатации которых закончился бы в этом году, будут доступны всегда.{}Снижение надёжности двигателя также прекращается по достижении этого года
 STR_CONFIG_SETTING_NO_EXPIRE_VEHICLES_AFTER_VALUE               :{NUM}
 STR_CONFIG_SETTING_NO_EXPIRE_VEHICLES_AFTER_ZERO                :Отключено
 
@@ -227,12 +227,12 @@ STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS          :Показыв�
 STR_CONFIG_SETTING_SHOW_TRAIN_WEIGHT_RATIOS_IN_DETAILS_HELPTEXT :Демонстрировать соотношение веса поезда в окне сведений о транспортном средстве
 
 STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_RECOLOUR                 :Отображать сигналы ограничения по умолчанию синими сигнальными столбиками: {STRING}
-STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_RECOLOUR_HELPTEXT        :При использовании графики сигналов по умолчанию электрические сигналы с программами ограничения маршрутизации отображаются синим сигнальным столбиком. Не влияет на графику сигналов из NewGRF. Это сделано для того, чтобы легче было визуально различать запрещенные сигналы.
+STR_CONFIG_SETTING_SHOW_RESTRICTED_SIG_RECOLOUR_HELPTEXT        :При использовании графики сигналов по умолчанию электрические сигналы с программами ограничения маршрутизации отображаются синим сигнальным столбиком. Не влияет на графику сигналов из NewGRF. Это сделано для того, чтобы легче было визуально различать запрещённые сигналы.
 
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF                             :Показывать все сигналы, используя графику по умолчанию: {STRING}
 STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF_HELPTEXT                    :Показывать все сигналы, используя графику сигналов по умолчанию, вместо любой графики сигналов из NewGRF. Необходимо для того, чтобы было проще определить состояние и тип сигналов, если в NewGRF представлены нечеткие или недоступные сигнальные графики.
-STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF_HELPTEXT_EXTRA              :{STRING}{}Режим "Только для запрещенных сигналов" использует графику сигналов по умолчанию для электрических сигналов с подключенными программами ограничения маршрутизации, когда перекрашивание сигнальных столбиков включено и NewGRF не обрабатывает различные графики для сигналов с ограничением самостоятельно.
-STR_CONFIG_SETTING_SHOW_ALL_SIG_RESTRICTED_RECOLOUR             :Только для запрещенных сигналов
+STR_CONFIG_SETTING_SHOW_ALL_SIG_DEF_HELPTEXT_EXTRA              :{STRING}{}Режим «Только для запрещённых сигналов» использует графику сигналов по умолчанию для электрических сигналов с подключенными программами ограничения маршрутизации, когда перекрашивание сигнальных столбиков включено и NewGRF не обрабатывает различные графики для сигналов с ограничением самостоятельно.
+STR_CONFIG_SETTING_SHOW_ALL_SIG_RESTRICTED_RECOLOUR             :Только для запрещённых сигналов
 
 STR_CONFIG_SETTING_SHOW_ADV_TRACE_RESTRICT_FEATURES             :Показывать расширенные функции ограничения маршрутизации: {STRING}
 STR_CONFIG_SETTING_SHOW_ADV_TRACE_RESTRICT_FEATURES_HELPTEXT    :Показывать расширенные возможности ограничения маршрутизации. Если отключено, то некоторые расширенные возможности не будут отображаться в пользовательском интерфейсе, но останутся доступными всем игрокам.
@@ -249,8 +249,8 @@ STR_CONFIG_SETTING_SHOW_ADV_LOADING_MODE_FEATURES_HELPTEXT      :Показыв�
 STR_CONFIG_SETTING_DISABLE_TOP_VEH_LIST_MASS_ACTIONS            :Отключить кнопки массовых действий для списков транспортных средств верхнего уровня: {STRING}
 STR_CONFIG_SETTING_DISABLE_TOP_VEH_LIST_MASS_ACTIONS_HELPTEXT   :Отключить депо/сервис и кнопки запуска/остановки для всех транспортных средств и всех негруппированных списков транспортных средств. Это сделано для того, чтобы избежать негативных последствий случайного нажатия одной из этих кнопок.
 
-STR_CONFIG_SETTING_SHOW_DEPOT_SELL_GUI                          :Отображать функцию "отправить в депо/ангар и продать": {STRING}
-STR_CONFIG_SETTING_SHOW_DEPOT_SELL_GUI_HELPTEXT                 :Отображать функцию для отправки транспортного средства в депо/ангар с последующей продажей. Если включено, то Ctrl+щелчок по кнопке "Перейти в депо" в окне транспортного средства позволит изменить режим работы текущего заказ на депо.
+STR_CONFIG_SETTING_SHOW_DEPOT_SELL_GUI                          :Отображать функцию «отправить в депо/ангар и продать»: {STRING}
+STR_CONFIG_SETTING_SHOW_DEPOT_SELL_GUI_HELPTEXT                 :Отображать функцию для отправки транспортного средства в депо/ангар с последующей продажей. Если включено, то Ctrl+щелчок по кнопке «Перейти в депо» в окне транспортного средства позволит изменить режим работы текущего заказ на депо.
 
 STR_CONFIG_SETTING_OPEN_VEHICLE_GUI_CLONE_SHARE                 :Открывать окно нового транспортного средства при клонировании с общими заказами: {STRING}
 STR_CONFIG_SETTING_OPEN_VEHICLE_GUI_CLONE_SHARE_HELPTEXT        :Если включено, то при клонировании транспортного средства с общими заказами из окна депо открывается окно нового клонированного транспортного средства.
@@ -276,7 +276,7 @@ STR_CONFIG_SETTING_DUAL_PANE_TRAIN_PURCHASE_WINDOW_HELPTEXT     :Если вкл
 STR_CONFIG_SETTING_DUAL_PANE_TRAIN_PURCHASE_WINDOW_DUAL_BUTTONS :Отображать отдельные наборы кнопок в окне покупки поезда: {STRING}
 STR_CONFIG_SETTING_DUAL_PANE_TRAIN_PURCHASE_WINDOW_DUAL_BUTTONS_HELPTEXT:Если включено, то списки вагонов и локомотивов в окне покупки поездов будут иметь свой собственный набор кнопок.
 
-STR_CONFIG_SETTING_ALLOW_HIDE_WAYPOINT_LABEL                    :Разрешить скрывать метки в окне просмотра путевых точек: {STRING}
+STR_CONFIG_SETTING_ALLOW_HIDE_WAYPOINT_LABEL                    :Скрывать метки в окне просмотра путевых точек: {STRING}
 STR_CONFIG_SETTING_ALLOW_HIDE_WAYPOINT_LABEL_HELPTEXT           :Если включено, то ярлыки путевых точек могут быть скрыты по отдельности.{}Полезно, когда незначительные путевые точки не требуют обозначения или путевые точки используются декоративно.
 
 STR_CONFIG_SETTING_DISABLE_WATER_ANIMATION                      :Отключить анимацию воды: {STRING}
@@ -310,12 +310,12 @@ STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL                              :Показыв�
 STR_CONFIG_SHOW_RAIL_POLYLINE_TOOL_HELPTEXT                     :Если включено, то на панели инструментов строительства рельсов появится кнопка для построения в режиме полилинии.
 
 STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR             :Показывать расходы на эксплуатацию транспортного средства за календарный год/период: {STRING}
-STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR_HELPTEXT    :При использовании коэффициента продолжительности дня больше единицы, показывать эксплуатационные расходы транспортного средства за календарный год (в режиме календаря) или за период (в режиме реального времени), а не за оригинальный год.
+STR_CONFIG_SHOW_VEHICLE_RUNNING_COSTS_CALENDAR_YEAR_HELPTEXT    :При использовании коэффициента уменьшения скорости экономики больше единицы, показывать эксплуатационные расходы транспортного средства за календарный год (в режиме календаря) или за период (в режиме реального времени), а не за оригинальный год.
 
 STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES                     :Включить сигналы на мостах/туннелях в расширенных режимах: {STRING}
-STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :Включить использование расширенного режима моделирования сигналов на мостах и в туннелях. Если отключено, то мосты/туннели, которые еще не находятся в расширенном режиме, не смогут быть переведены в него, однако другие игроки могут включить этот параметр и использовать расширенный режим.
+STR_CONFIG_SETTING_ADV_SIG_BRIDGE_TUN_MODES_HELPTEXT            :Включить использование расширенного режима моделирования сигналов на мостах и в туннелях. Если отключено, то мосты/туннели, которые ещё не находятся в расширенном режиме, не смогут быть переведены в него, однако другие игроки могут включить этот параметр и использовать расширенный режим.
 
-STR_CONFIG_SETTING_SORT_TRACK_TYPES_BY_SPEED                    :Сортировать типов дорожек по скорости: {STRING}
+STR_CONFIG_SETTING_SORT_TRACK_TYPES_BY_SPEED                    :Сортировать типы дорожек по скорости: {STRING}
 STR_CONFIG_SETTING_SORT_TRACK_TYPES_BY_SPEED_HELPTEXT           :Сортировать типы дорожек по совместимости и по скорости вместо сортировки по умолчанию.
 
 STR_CONFIG_SETTING_MAX_SIGNAL_EVALUATIONS                       :Максимальное количество программируемых изменений предварительного сигнала, разрешенных одновременно: {STRING}
@@ -412,7 +412,7 @@ STR_CONFIG_SETTING_VIEWPORT_MAP_DEFAULT_MODE_HELPTEXT           :Режим от
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK                 :Функция двойного клика: {STRING}
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_HELPTEXT        :Какое действие следует выполнять при двойном щелчке на окне просмотра при уменьшении масштаба в режиме карты.
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_DO_NOTHING      :Ничего не делать
-STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_ZOOM_MAIN       :Увеличьте масштаб прямо на 1x
+STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_ZOOM_MAIN       :Увеличить масштаб прямо на 1x
 STR_CONFIG_SETTING_VIEWPORT_MAP_ACTION_DBLCLICK_NEW_EXTRA       :Открыть дополнительное окно просмотра
 
 STR_CONFIG_SETTING_VIEWPORT_MAP_SHOW_VEHICLE_ROUTE              :Показывать линии наложения маршрутов транспортных средств: {STRING}
@@ -463,10 +463,10 @@ STR_CONFIG_SETTING_DATE_WITH_TIME_HELPTEXT                      :Показыв�
 STR_CONFIG_SETTING_CLOCK_OFFSET                                 :Смещение часов в минутах: {STRING}
 STR_CONFIG_SETTING_CLOCK_OFFSET_HELPTEXT                        :Количество минут, на которое смещены игровые часы
 
-STR_CONFIG_SETTING_DATE_WITH_TIME_NONE                          :Нет
-STR_CONFIG_SETTING_DATE_WITH_TIME_Y                             :Год
-STR_CONFIG_SETTING_DATE_WITH_TIME_YM                            :Месяц и год
-STR_CONFIG_SETTING_DATE_WITH_TIME_YMD                           :Полная дата
+STR_CONFIG_SETTING_DATE_WITH_TIME_NONE                          :нет
+STR_CONFIG_SETTING_DATE_WITH_TIME_Y                             :год
+STR_CONFIG_SETTING_DATE_WITH_TIME_YM                            :месяц и год
+STR_CONFIG_SETTING_DATE_WITH_TIME_YMD                           :полная дата
 
 STR_CONFIG_SETTING_TIMETABLE_START_TEXT_ENTRY                   :Введите время начала расписания в виде текста (необходимо указать время в минутах): {STRING}
 STR_CONFIG_SETTING_TIMETABLE_START_TEXT_ENTRY_HELPTEXT          :Выберите, можно ли вводить время начала расписания в виде текста, если время показывается в минутах.
@@ -477,7 +477,7 @@ STR_CONFIG_SETTING_TIMETABLE_SEPARATION_RATE                    :Авторас�
 STR_CONFIG_SETTING_TIMETABLE_SEPARATION_RATE_HELPTEXT           :Какое изменение авторасписания разделения транспортных средств следует применять на каждом этапе
 
 STR_CONFIG_SETTING_TIMETABLE_AUTOFILL_ROUNDING_TICKS            :Округлять время автозаполнения расписания до кратных этому количеству тиков: {STRING}
-STR_CONFIG_SETTING_TIMETABLE_AUTOFILL_ROUNDING_TICKS_HELPTEXT   :Время расписания, скорректированное автоматизацией расписания, не округляется. День с длиной 1 равен 74 тикам.{}По умолчанию используется значение тиков игры в минуту, если используются минуты, в противном случае используется 74 тика.
+STR_CONFIG_SETTING_TIMETABLE_AUTOFILL_ROUNDING_TICKS_HELPTEXT   :Время расписания, скорректированное автоматизацией расписания, не округляется. Немасштабированный день равен 74 тикам.{}По умолчанию используется значение тиков игры в минуту, если используются минуты, в противном случае используется 74 тика.
 STR_CONFIG_SETTING_TIMETABLE_AUTOFILL_ROUNDING_TICKS_VALUE      :{COMMA}{NBSP}тик{P "" а ов}
 STR_CONFIG_SETTING_TIMETABLE_AUTOFILL_ROUNDING_TICKS_DEFAULT    :По умолчанию
 
@@ -487,7 +487,7 @@ STR_CONFIG_SETTING_SCHEDULED_DISPATCH_DEFAULT_DURATION_VALUE    :{COMMA}{NBSP}м
 STR_CONFIG_SETTING_SCHEDULED_DISPATCH_DEFAULT_DURATION_DEFAULT  :По умолчанию
 
 STR_CONFIG_SETTING_DEFAULT_ROAD_TYPE                            :Типы дорог/трамвайных путей по умолчанию (после запуска новой игры/загрузки): {STRING}
-STR_CONFIG_SETTING_DEFAULT_ROAD_TYPE_HELPTEXT                   :Выбор типа дороги/трамвайных путей после запуска новой игры или загрузки старой. 'первые доступные' выбирает самый старый тип дороги/трамвайного пути, 'последние доступные' выбирает самый новый тип дороги/трамвайного пути, 'наиболее используемые' выбирает тип, который наиболее часто используется в настоящее время, и 'по умолчанию' выбирает тип по умолчанию.
+STR_CONFIG_SETTING_DEFAULT_ROAD_TYPE_HELPTEXT                   :Выбор типа дороги/трамвайных путей после запуска новой игры или загрузки старой. «Первые доступные» выбирает самый старый тип дороги/трамвайного пути, «последние доступные» выбирает самый новый тип дороги/трамвайного пути, «наиболее используемые» выбирает тип, который наиболее часто используется в настоящее время, и «по умолчанию» выбирает тип по умолчанию.
 
 STR_CONFIG_SETTING_ENABLE_BUILD_RIVER                           :Включить строительство рек: {STRING}
 STR_CONFIG_SETTING_ENABLE_BUILD_RIVER_HELPTEXT                  :Разрешить прокладывать реки не только в редакторе сценариев
@@ -503,15 +503,15 @@ STR_CONFIG_SETTING_SHARING_FEE_RAIL                             :Ежеднев�
 STR_CONFIG_SETTING_SHARING_FEE_ROAD                             :Плата за остановку автотранспорта: {STRING} в день
 STR_CONFIG_SETTING_SHARING_FEE_WATER                            :Плата за причаливание: {STRING} в день
 STR_CONFIG_SETTING_SHARING_FEE_AIR                              :Плата за использование терминала для воздушных транспортных средств: {STRING} в день
-STR_CONFIG_SETTING_SHARING_FEE_HELPTEXT                         :Плата взимается за немасштабированный день (то есть продолжительность дня при длине дня 1, это 74 тика).
+STR_CONFIG_SETTING_SHARING_FEE_HELPTEXT                         :Плата взимается за один немасштабированный экономический день (то есть раз в 74 тика).
 STR_CONFIG_SETTING_SHARING_PAYMENT_IN_DEBT                      :Разрешить компаниям, имеющим задолженность, оплачивать совместное использование: {STRING}
 STR_CONFIG_SETTING_SHARING_USED_BY_VEHICLES                     :Невозможно изменить этот параметр - транспортные средства используют инфраструктуру чужих компаний.
 STR_CONFIG_SETTING_SHARING_ORDERS_TO_OTHERS                     :Невозможно изменить этот параметр - у транспортных средств есть задания с пунктами назначения в инфраструктуре чужих компаний.
 
-STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_RAIL               :Позволять конкурентам покупать и обновлять поезда в депо: {STRING}
-STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_ROAD               :Позволить конкурентам покупать и обновлять автотранспорт в депо: {STRING}
-STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_WATER              :Позволить конкурентам покупать и обновлять корабли в депо: {STRING}
-STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_AIR                :Позволить конкурентам покупать и обновлять авиатранспорт в ангарах: {STRING}
+STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_RAIL               :Конкуренты могут покупать и обновлять поезда в депо: {STRING}
+STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_ROAD               :Конкуренты могут покупать и обновлять автотранспорт в депо: {STRING}
+STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_WATER              :Конкуренты могут покупать и обновлять корабли в депо: {STRING}
+STR_CONFIG_SETTING_INFRA_OTHERS_BUY_IN_DEPOT_AIR                :Конкуренты могут покупать и обновлять авиатранспорт в ангарах: {STRING}
 
 STR_CONFIG_SETTING_TRAIN_SPEED_ADAPTATION                       :Включить адаптацию скорости поезда: {STRING}
 STR_CONFIG_SETTING_TRAIN_SPEED_ADAPTATION_HELPTEXT              :Если включено, более быстрые поезда регулируют свою скорость, чтобы соответствовать более медленным поездам впереди.
@@ -523,8 +523,8 @@ STR_CONFIG_SETTING_SIMULATE_SIGNALS                             :Симуляц�
 STR_CONFIG_SETTING_SIMULATE_SIGNALS_HELPTEXT                    :Устанавливает целевое расстояние между светофорами для новых мостов и туннелей. Фактическое расстояние может немного отличаться от указанного, чтобы избежать неравномерного расположения. Изменение этого параметра не приводит к переоборудованию существующих мостов и туннелей со светофорами.
 STR_CONFIG_SETTING_SIMULATE_SIGNALS_VALUE                       :{COMMA} клет{P ку ки ок}
 
-STR_CONFIG_SETTING_DAY_LENGTH_FACTOR                            :Коэффициент продолжительности дня: {STRING}
-STR_CONFIG_SETTING_DAY_LENGTH_FACTOR_HELPTEXT                   :Темп игры замедляется из-за этого фактора.
+STR_CONFIG_SETTING_DAY_LENGTH_FACTOR                            :Коэффициент уменьшения скорости экономики: {STRING}
+STR_CONFIG_SETTING_DAY_LENGTH_FACTOR_HELPTEXT                   :Изменяет длительность экономических периодов времени и пропорционально замедляет игровые процессы, происходящие в эти периоды. Экономические периоды времени используются для: производства грузов предприятиями и городами, роста городов, естественных процессов (например, роста травы и деревьев), затрат на обслуживание инфраструктуры, подсчёта рейтинга станций и так далее.{}В режиме игрового времени «Календарь» эта настройка изменит продолжительность дней/месяцев/годов, и поэтому также замедляет процессы, контролируемые скоростью календаря, такие как появление и выход из эксплутации транспорта/домов/прочего и сезонные изменения, такие как перемещение снеговой линии.{}В режиме реального времени эта настройка изменит продолжительность периодов и производственных интервалов предприятий.{}{}Раньше эта настройка называлась «Коэффициент продолжительности дня».
 
 STR_CONFIG_SETTING_TOWN_TUNNELS                                 :Строительство тоннелей городами: {STRING}
 STR_CONFIG_SETTING_TOWN_TUNNELS_HELPTEXT                        :При каких условиях городам разрешено строить дорожные тоннели
@@ -541,32 +541,26 @@ STR_CONFIG_SETTING_TOWN_MAX_ROAD_SLOPE_ZERO                     :Нет
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES                           :Города могут строить мосты: {STRING}
 STR_CONFIG_SETTING_ALLOW_TOWN_BRIDGES_HELPTEXT                  :Включение этой настройки разрешает городам строить мосты
 
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT_EXTRA          :{STRING}{}Сюда не входят предприятия, занимающиеся вырубкой деревьев.{}Не гарантируется полная совместимость со всеми NewGRFs с предприятиями.
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_HELPTEXT_EXTRA          :{STRING}{}Не действует на предприятия, занимающиеся вырубкой деревьев.{}Не гарантируется полная совместимость со всеми NewGRF предприятиями.
 
-STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Временной интервал для масштабирования производства грузов городов: {STRING}
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE                    :Временной интервал для масштабирования производства грузов предприятий: {STRING}
+STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Режим масштабирования производства грузов городами: {STRING}
+STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE                    :Режим масштабирования производства грузов предприятиями: {STRING}
 
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Ежемесячно/каждый производственный интервал: Производство груза за месяц или производственный интервал масштабируется.{}{}Игровое время: производство груза за единицу игрового времени масштабируется, (производство груза за месяц или производственный интервал также масштабируется коэффициентом продолжительности дня). Очень высокие коэффициенты масштабирования могут быть недостижимы.
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA     :{STRING}{}Не гарантируется, что режим игрового времени будет полностью совместим со всеми NewGRFs с предприятиями.
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Коэффициент масштабирования производства грузов за месяц/производственный интервал. Может быть опционально умножен на коэффициент уменьшения скорости экономики.
 
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY                     :Ежемесячно
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_GAME_TIME                   :Игровое время
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_NORMAL                      :Обычный
+STR_CONFIG_SETTING_CARGO_SCALE_MODE_ECON_SPEED_REDUCTION_MULT   :Умножение на коэффициент уменьшения скорости экономики
 
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_PER_PRODUCTION_INTERVAL     :Каждый производственный интервал
-
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY                    :{NUM}% (ежемесячно)
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME                  :{NUM}% (игровое время)
-
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL    :{NUM}% (каждый производственный интервал)
+STR_CONFIG_SETTING_CARGO_SCALE_VALUE_ECON_SPEED_REDUCTION_MULT  :{NUM}% x Коэффициент уменьшения скорости экономики
 
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :Никаких городов выше уровня: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :Во время создания карты не строятся города выше указанного уровня высоты.
 
 STR_CONFIG_SETTING_MIN_TOWN_LAND_AREA                           :Минимальная площадь прилегающей территории для городов: {STRING}
-STR_CONFIG_SETTING_MIN_TOWN_LAND_AREA_HELPTEXT                  :Города могут быть размещены только на смежных территориях, занимающих как минимум столько клеток.
+STR_CONFIG_SETTING_MIN_TOWN_LAND_AREA_HELPTEXT                  :Города могут быть размещены только на примыкающих территориях, занимающих как минимум столько клеток.
 
 STR_CONFIG_SETTING_MIN_CITY_LAND_AREA                           :Минимальная площадь прилегающей территории для мегаполисов: {STRING}
-STR_CONFIG_SETTING_MIN_CITY_LAND_AREA_HELPTEXT                  :Мегаполисы могут быть размещены только на смежных территориях, занимающих как минимум столько клеток.
+STR_CONFIG_SETTING_MIN_CITY_LAND_AREA_HELPTEXT                  :Мегаполисы могут быть размещены только на примыкающих территориях, занимающих как минимум столько клеток.
 
 STR_CONFIG_SETTING_MIN_LAND_AREA_VALUE                          :{NUM}
 STR_CONFIG_SETTING_MIN_LAND_AREA_ZERO                           :Отсутсвует
@@ -574,7 +568,7 @@ STR_CONFIG_SETTING_MIN_LAND_AREA_ZERO                           :Отсутсв�
 STR_CONFIG_SETTING_FLOOD_FROM_EDGES                             :Вода заливает края карты: {STRING}
 STR_CONFIG_SETTING_FLOOD_FROM_EDGES_HELPTEXT                    :Заливает ли вода крайние плитки на уровне моря от края карты.
 
-STR_CONFIG_SETTING_MAP_EDGE_MODE                                :Поведение краёв карты: {STRING}
+STR_CONFIG_SETTING_MAP_EDGE_MODE                                :Режим краёв карты: {STRING}
 STR_CONFIG_SETTING_MAP_EDGE_MODE_HELPTEXT                       :Разрешается ли поднимать края карты над уровнем моря и как отображается пустота за пределами карты
 STR_CONFIG_SETTING_MAP_EDGE_MODE_DEFAULT                        :По умолчанию
 STR_CONFIG_SETTING_MAP_EDGE_MODE_SEA_LEVEL                      :Края карты ограничены уровнем моря
@@ -588,7 +582,7 @@ STR_CONFIG_SETTING_TREES_AROUND_SNOWLINE_DYNAMIC_RANGE          :Сезонна�
 STR_CONFIG_SETTING_TREES_AROUND_SNOWLINE_DYNAMIC_RANGE_HELPTEXT :При использовании сезонно изменяющейся снеговой линии, какой процент от вариации снеговой линии использовать в качестве снеговой линии для размещения арктических деревьев. 0% использует нижнюю (зимнюю) снеговую линию, 100% использует весь диапазон между летней и зимней снеговыми линиями.
 
 STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS                           :Построить общественные дороги, соединяющие города: {STRING}
-STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS_HELPTEXT                  :Создаёт общественные дороги, соединяющие города. Занимает некоторое время на больших картах. 'Строить без изгибов' генерирует дороги, которые избегают изгибы и создают соединения, очень похожие на сетку.
+STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS_HELPTEXT                  :Создаёт общественные дороги, соединяющие города. Занимает некоторое время на больших картах. «Строить без изгибов» генерирует дороги, которые избегают изгибы и создают соединения, очень похожие на сетку.
 STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS_NONE                      :Нет (по умолчанию)
 STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS_WITH_CURVES               :Строить с изгибами
 STR_CONFIG_SETTING_BUILD_PUBLIC_ROADS_AVOID_CURVES              :Стройть без изгибов
@@ -626,7 +620,7 @@ STR_CONFIG_SETTING_CITY_ZONE_4_MULT                             :Множите�
 STR_CONFIG_SETTING_CITY_ZONE_4_MULT_HELPTEXT                    :Множитель для размера Зоны Мегаполиса 4 (внутренние дороги с уличным освещением). Эта настройка лучше всего работает при незначительных изменениях.
 
 STR_CONFIG_SETTING_TOWN_GROWTH_CARGO_TRANSPORTED                :Скорость роста города зависит от перевозимых грузов: {STRING}
-STR_CONFIG_SETTING_TOWN_GROWTH_CARGO_TRANSPORTED_HELPTEXT       :Процент скорости роста города, который зависит от доли городских грузов, перевезенных за последний месяц.{}Этот процент от рассчитанной скорости роста города умножается на долю пассажиров и почты, которые были перевезены за последний месяц. Эта настройка может только уменьшить скорость роста города, но не увеличить ее.
+STR_CONFIG_SETTING_TOWN_GROWTH_CARGO_TRANSPORTED_HELPTEXT       :Процент скорости роста города, который зависит от доли городских грузов, перевезённых за последний месяц.{}Этот процент от рассчитанной скорости роста города умножается на долю пассажиров и почты, которые были перевезены за последний месяц. Эта настройка может только уменьшить скорость роста города, но не увеличить её.
 
 STR_CONFIG_SETTING_RANDOM_ROAD_RECONSTRUCTION                   :Вероятность случайной реконструкции городских дорог: {STRING}
 STR_CONFIG_SETTING_RANDOM_ROAD_RECONSTRUCTION_HELPTEXT          :Вероятность случайной реконструкции городских дорог (0 = отсутствует, 1000 = максимальная)
@@ -646,9 +640,9 @@ STR_CONFIG_SETTING_TOWN_MIN_DISTANCE_HELPTEXT                   :Устанав�
 
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO                       :Переопределение режима распределения для этого груза: {STRING}
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_PARAM                 :Переопределение режима распределения для {STRING}: {STRING}
-STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_HELPTEXT              :"(по умолчанию)" означает, что режим распределения является стандартным для класса этого груза. "симметричный" означает, что со станции А на станцию Б будет отправлено примерно столько же грузов, сколько со станции Б на А. "асимметричный" означает, что произвольное количество груза может быть отправлено в любом направлении. "ручной" означает, что для этого груза не будет проводиться автоматическое распределение.
+STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_HELPTEXT              :«(по умолчанию)» означает, что режим распределения является стандартным для класса этого груза. «симметричный» означает, что со станции А на станцию Б будет отправлено примерно столько же грузов, сколько со станции Б на А. «асимметричный» означает, что произвольное количество груза может быть отправлено в любом направлении. «ручной» означает, что для этого груза не будет проводиться автоматическое распределение.
 STR_CONFIG_SETTING_DISTRIBUTION_PER_CARGO_DEFAULT               :(по умолчанию)
-STR_CONFIG_SETTING_DISTRIBUTION_HELPTEXT_EXTRA                  :{STRING}{}"асимметричный (равномерное распределение)" означает, что груз будет распределен таким образом, что каждая принимающая станция получит примерно одинаковое количество груза в целом. "асимметричный (ближайший)" означает, что груз будет отправляться на ту станцию, которая находится ближе всего.
+STR_CONFIG_SETTING_DISTRIBUTION_HELPTEXT_EXTRA                  :{STRING}{}«Асимметричный (равномерное распределение)» означает, что груз будет распределен таким образом, что каждая принимающая станция получит примерно одинаковое количество груза в целом. «Асимметричный (ближайший)» означает, что груз будет отправляться на ту станцию, которая находится ближе всего.
 
 STR_CONFIG_SETTING_AIRCRAFT_PATH_COST                           :Масштаб расстояния путей, на которых используется авиатранспорт: {STRING}
 STR_CONFIG_SETTING_AIRCRAFT_PATH_COST_HELPTEXT                  :Увеличивает стоимость (метрику расстояния) путей, использующих авиатранспорт, так что они кажутся более длинными/менее прямыми, чем есть на самом деле. Снижает вероятность того, что прямые маршруты с использованием самолетов окажутся сильно перегруженными.
@@ -672,14 +666,14 @@ STR_CONFIG_SETTING_SHARING                                      :{ORANGE}Сов�
 STR_CONFIG_SETTING_SCENARIO_EDITOR                              :{ORANGE}Редактор сценариев
 
 STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE                  :Изменять маршрут движения автотранспорта при изменении планировки дороги: {STRING}
-STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE_HELPTEXT         :Нужно ли изменять маршрут всех автотранспортных средств на карте при изменении схемы дорог.{}Это может повысить скорость реагирования автотранспорта на изменение планировки дороги за счет снижения производительности.{}Обратите внимание, что если установить значение "Да", то рост города может вызвать изменение маршрута движения транспорта, что может привести к замедлению работы на больших картах.
+STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE_HELPTEXT         :Нужно ли изменять маршрут всех автотранспортных средств на карте при изменении схемы дорог.{}Это может повысить скорость реагирования автотранспорта на изменение планировки дороги за счет снижения производительности.{}Обратите внимание, что если установить значение «Да», то рост города может вызвать изменение маршрута движения транспорта, что может привести к замедлению работы на больших картах.
 STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE_NO               :Нет
 STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE_REMOVE_ONLY      :Только при удалении дорог
 STR_CONFIG_SETTING_REROUTE_RV_ON_LAYOUT_CHANGE_YES              :Да
 
-STR_CONFIG_SETTING_ENABLE_ROAD_CUSTOM_BRIDGE_HEADS              :Включить настриваемые опоры дорожных мостов: {STRING}
+STR_CONFIG_SETTING_ENABLE_ROAD_CUSTOM_BRIDGE_HEADS              :Включить настраиваемые опоры дорожных мостов: {STRING}
 STR_CONFIG_SETTING_ENABLE_ROAD_CUSTOM_BRIDGE_HEADS_HELPTEXT     :Позволяет дорожным мостам иметь пользовательские, непрямые плоские клетки для въезда/выезда
-STR_CONFIG_SETTING_ENABLE_RAIL_CUSTOM_BRIDGE_HEADS              :Включить настриваемые опоры железнодорожных мостов: {STRING}
+STR_CONFIG_SETTING_ENABLE_RAIL_CUSTOM_BRIDGE_HEADS              :Включить настраиваемые опоры железнодорожных мостов: {STRING}
 STR_CONFIG_SETTING_ENABLE_RAIL_CUSTOM_BRIDGE_HEADS_HELPTEXT     :Позволяет железнодорожным мостам иметь нестандартные, непрямые плоские клетки для въезда/выезда
 
 STR_CONFIG_SETTING_ALLOW_GRF_OBJECTS_UNDER_BRIDGES              :Разрешить все объекты NewGRF под мостами: {STRING}
@@ -712,11 +706,14 @@ STR_CONFIG_SETTING_IGNORE_OBJECT_INTRO_DATES_HELPTEXT           :Установ�
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES            :Разрешить переоборудование городских дорог под дороги, не предназначенные для жилых домов: {STRING}
 STR_CONFIG_SETTING_ALLOW_CONVERT_TOWN_ROAD_NO_HOUSES_HELPTEXT   :Могут ли игроки переводить дороги, принадлежащие городу, в тип дороги, не позволяющий строить дома.{}По умолчанию - отключено, поскольку может помешать городам строить дома, что приведет к уменьшению городов.
 
-STR_CONFIG_SETTING_PURCHASED_LAND_CLEAR_GROUND                  :Использовать чисткю клетку грунта для приобретенной земли: {STRING}
+STR_CONFIG_SETTING_PURCHASED_LAND_CLEAR_GROUND                  :Использовать чистую клетку грунта для приобретенной земли: {STRING}
 STR_CONFIG_SETTING_PURCHASED_LAND_CLEAR_GROUND_HELPTEXT         :Если эта функция включена, то купленная земля будет отображаться с использованием того же типа грунта, что и клетки чистой земли, то емть голая земля - трава, побережье, снег, пустыня и так далее.
 
 STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY                  :Генерировать только сырьевые предприятия: {STRING}
 STR_CONFIG_SETTING_SPAWN_PRIMARY_INDUSTRY_ONLY_HELPTEXT         :Если включено, то при создании карты и во время игры будут появляться только сырьевые предприятия.
+
+STR_CONFIG_SETTING_INDUSTRY_EVENT_RATE                          :Частота событий на предприятиях: {STRING}
+STR_CONFIG_SETTING_INDUSTRY_EVENT_RATE_HELPTEXT                 :Установите количество событий на предприятиях за экономический период времени в системе отчёта времени «Реальное время», или за месяц/год в системе отчёта времени «Календарь». Это включает в себя изменения в производстве, открытие и закрытие предприятий.
 
 STR_PURCHASE_LAND_PERMITTED_NO                                  :Нет
 STR_PURCHASE_LAND_PERMITTED_SINGLE                              :Да, по 1 клетке за раз
@@ -751,7 +748,7 @@ STR_CONFIG_SETTING_COPY_CLONE_ADD_TO_GROUP_HELPTEXT             :Установ�
 STR_CONFIG_SETTING_REMAIN_IF_NEXT_ORDER_SAME_STATION            :Остаться на станции, если следующее задание касается той же станции: {STRING}
 STR_CONFIG_SETTING_REMAIN_IF_NEXT_ORDER_SAME_STATION_HELPTEXT   :Если следующее задание транспортного средства относится к той же станции, с которой оно собиралось уехать, начать погрузку/разгрузку снова, а не уезжать.
 
-STR_CONFIG_SETTING_SCENARIO_MULTIPLE_BUILDINGS                  :Разрешить множественные церкви/стадионы: {STRING}
+STR_CONFIG_SETTING_SCENARIO_MULTIPLE_BUILDINGS                  :Разрешить несколько церквей/стадионов: {STRING}
 STR_CONFIG_SETTING_SCENARIO_MULTIPLE_BUILDINGS_HELPTEXT         :Позволяет вручную добавлять церкви и стадионы, если они уже есть в городе.
 
 STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_DATES                  :Игнорировать ограничения года постройки дома: {STRING}
@@ -777,17 +774,15 @@ STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED_NEWGRF            :{WHITE}...ею 
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Показывать расписание в тиках, а не в днях: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Время пути в графиках движения будет измеряться игровыми тиками, а не днями.
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT_EXTRA         :{STRING}{}Различные функции требуют использования алгоритма поиска пути YAPF, в том числе: ограничения маршрута (все действия, связанные с поиском пути и резервированием), разворот на маршрутной точке/светофоре и проезд через железнодорожные депо.
-
-STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_CALENDAR           :{RED}[Настройка отсключена при системе отчёта времени "Календарь"]
-STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_WALLCLOCK          :{RED}[Настройка отсключена при системе отчёта времени "Реальное время"]
+STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_CALENDAR           :{RED}[Настройка отсключена при системе отчёта времени «Календарь»]
+STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_WALLCLOCK          :{RED}[Настройка отсключена при системе отчёта времени «Реальное время»]
 
 STR_CHEAT_EDIT_MONEY_QUERY_CAPT                                 :{WHITE}Увеличить или уменьшить количество денег
 STR_CHEAT_INFLATION_COST                                        :{LTBLUE}Изменение уровня инфляции: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_COST_QUERY_CAPT                             :{WHITE}Изменение уровня инфляции
 STR_CHEAT_INFLATION_INCOME                                      :{LTBLUE}Изменение уровня инфляции доходов: {ORANGE}{DECIMAL}
 STR_CHEAT_INFLATION_INCOME_QUERY_CAPT                           :{WHITE}Изменение уровня инфляции доходов
-STR_CHEAT_TOWN_RATING                                           :{LTBLUE}Рейтинг у городской администрации зафиксирован на "Великолепном" уровне: {ORANGE}{STRING}
+STR_CHEAT_TOWN_RATING                                           :{LTBLUE}Рейтинг у городской администрации зафиксирован на «Великолепном» уровне: {ORANGE}{STRING}
 
 STR_NETWORK_MESSAGE_GIVE_MONEY_RECEIVE                          :*** {STRING} даёт вашей компании {2:CURRENCY_LONG}
 STR_NETWORK_MESSAGE_GAVE_MONEY_AWAY                             :*** Вы дали {1:STRING} {2:CURRENCY_LONG}
@@ -835,7 +830,7 @@ STR_TRACE_RESTRICT_VARIABLE_TRAIN_LENGTH                        :длина по
 STR_TRACE_RESTRICT_VARIABLE_MAX_SPEED                           :максимальная скорость
 STR_TRACE_RESTRICT_VARIABLE_CURRENT_ORDER                       :текущее задание
 STR_TRACE_RESTRICT_VARIABLE_NEXT_ORDER                          :следующее задание
-STR_TRACE_RESTRICT_VARIABLE_LAST_VISITED_STATION                :последняя посещенная станция
+STR_TRACE_RESTRICT_VARIABLE_LAST_VISITED_STATION                :последняя посещённая станция
 STR_TRACE_RESTRICT_VARIABLE_CARGO                               :груз
 STR_TRACE_RESTRICT_VARIABLE_LOAD_PERCENT                        :процент загрузки
 STR_TRACE_RESTRICT_VARIABLE_ENTRY_DIRECTION                     :направление входа
@@ -1016,10 +1011,15 @@ STR_TRACE_RESTRICT_TIME_DAY_ITEM_SHORT                          :день
 STR_TRACE_RESTRICT_TIME_MONTH_ITEM_SHORT                        :месяц
 STR_TRACE_RESTRICT_TIMETABLE_LATENESS                           :опоздание
 STR_TRACE_RESTRICT_TIMETABLE_EARLINESS                          :ранность
+
 STR_TRACE_RESTRICT_DISPATCH_SLOT_NEXT                           :следующий слот отправления
 STR_TRACE_RESTRICT_DISPATCH_SLOT_LAST                           :последний слот отправления
+STR_TRACE_RESTRICT_DISPATCH_SLOT_VEH                            :слот отправления транспорта
+
 STR_TRACE_RESTRICT_DISPATCH_SLOT_SHORT_NEXT                     :следующий
 STR_TRACE_RESTRICT_DISPATCH_SLOT_SHORT_LAST                     :последний
+STR_TRACE_RESTRICT_DISPATCH_SLOT_SHORT_VEH                      :транспорт
+
 STR_TRACE_RESTRICT_VALUE_CAPTION                                :{WHITE}Значение
 STR_TRACE_RESTRICT_CAPTION                                      :{WHITE}Ограничение на прокладку маршрута
 STR_TRACE_RESTRICT_CAPTION_SHARED                               :{WHITE}Ограничение на прокладку маршрута - всего {COMMA} сигналов
@@ -1074,7 +1074,7 @@ STR_TRACE_RESTRICT_SELECT_TARGET                                :{BLACK}Выбр
 STR_TRACE_RESTRICT_SELECT_SIGNAL                                :{BLACK}Выбрать сигнал
 STR_TRACE_RESTRICT_SELECT_TILE                                  :{BLACK}Выбрать клетку
 STR_TRACE_RESTRICT_INSERT_TOOLTIP                               :{BLACK}Вставить инструкцию
-STR_TRACE_RESTRICT_REMOVE_TOOLTIP                               :{BLACK}Удалить выбранную инструкцию{}Ctrl+клик - удалить выбранную условную инструкцию, но сохранить ее содержимое
+STR_TRACE_RESTRICT_REMOVE_TOOLTIP                               :{BLACK}Удалить выбранную инструкцию{}Ctrl+клик - удалить выбранную условную инструкцию, но сохранить её содержимое
 STR_TRACE_RESTRICT_RESET_TOOLTIP                                :{BLACK}Сбросить текущий сигнал (без влияния на общие программы)
 STR_TRACE_RESTRICT_COPY_TOOLTIP                                 :{BLACK}Копировать программу из другого сигнала{}Ctrl+клик - добавить программу из другого сигнала
 STR_TRACE_RESTRICT_DUPLICATE_TOOLTIP                            :{BLACK}Дублировать выбранную инструкцию{}Ctrl+клик - добавить программу из другого сигнала
@@ -1082,7 +1082,7 @@ STR_TRACE_RESTRICT_SHARE_TOOLTIP                                :{BLACK}Поде
 STR_TRACE_RESTRICT_UNSHARE_TOOLTIP                              :{BLACK}Прекратить делиться программой с другими сигналами, создать копию программы
 STR_TRACE_RESTRICT_SHARE_TOOLTIP_EXTRA                          :{STRING}{}{BLACK}Ctrl+клик - установить другие сигналы для совместного использования с этой программой
 STR_TRACE_RESTRICT_SIGNAL_GUI_TOOLTIP                           :{BLACK}Ограничение на прокладку маршрута
-STR_TRACE_RESTRICT_INSTRUCTION_LIST_TOOLTIP                     :{BLACK}Нажмите на инструкцию, чтобы выбрать ее{}Ctrl+клик - для прокрутки к цели инструкции (если таковая имеется)
+STR_TRACE_RESTRICT_INSTRUCTION_LIST_TOOLTIP                     :{BLACK}Нажмите на инструкцию, чтобы выбрать её{}Ctrl+клик - для прокрутки к цели инструкции (если таковая имеется)
 STR_TRACE_RESTRICT_HIGHLIGHT_TOOLTIP                            :{BLACK}Переключение подсветки всех сигналов, использующих эту программу
 STR_TRACE_RESTRICT_WARNING_REQUIRES_REALISTIC_BRAKING           :{STRING} {PUSH_COLOUR}{RED}(требует реалистичного торможения){POP_COLOUR}
 STR_TRACE_RESTRICT_WARNING_SIGNAL_MODE_CONTROL_ONLY             :{STRING} {PUSH_COLOUR}{RED}(только для действий по управлению режимом сигнала){POP_COLOUR}
@@ -1096,8 +1096,8 @@ STR_TRACE_RESTRICT_ERROR_VALUE_TOO_LARGE                        :{WHITE}Знач
 STR_TRACE_RESTRICT_ERROR_NO_PROGRAM                             :Нет программы
 STR_TRACE_RESTRICT_ERROR_OFFSET_TOO_LARGE                       :Слишком большое смещение
 STR_TRACE_RESTRICT_ERROR_CAN_T_CHANGE_CONDITIONALITY            :Невозможно изменить условия
-STR_TRACE_RESTRICT_ERROR_CAN_T_REMOVE_ENDIF                     :Невозможно удалить 'конец если'
-STR_TRACE_RESTRICT_ERROR_CAN_T_SHALLOW_REMOVE_IF_ELIF           :Нельзя неглубоко удалить блок 'если' с одним или несколькими блоками 'иначе если', 'или если' или 'иначе'.
+STR_TRACE_RESTRICT_ERROR_CAN_T_REMOVE_ENDIF                     :Невозможно удалить «конец если»
+STR_TRACE_RESTRICT_ERROR_CAN_T_SHALLOW_REMOVE_IF_ELIF           :Нельзя неглубоко удалить блок «если» с одним или несколькими блоками «иначе если», «или если» или «иначе».
 STR_TRACE_RESTRICT_ERROR_VALIDATE_END_CONDSTACK                 :Проверка не удалась: кондстек не пуст при выходе
 STR_TRACE_RESTRICT_ERROR_VALIDATE_NO_IF                         :Проверка не удалась: иначе/конец если без открывающего если
 STR_TRACE_RESTRICT_ERROR_VALIDATE_DUP_ELSE                      :Проверка не удалась: дублирующийся иначе
@@ -1238,7 +1238,7 @@ STR_TREES_REMOVE_TREES_TOOLTIP                                  :{BLACK}Удал
 STR_TERRAFORM_PUBLIC_ROADS                                      :{BLACK}Построить общественные дороги
 STR_TERRAFORM_PUBLIC_ROADS_TOOLTIP                              :{BLACK}Создать общественные дороги между городами на карте
 
-STR_INDUSTRY_CARGOES_NOTIFY_SMALLMAP_ALL                        :Все предпрятия
+STR_INDUSTRY_CARGOES_NOTIFY_SMALLMAP_ALL                        :Все предприятия
 
 STR_LAI_RAIL_DESCRIPTION_TRACK_WITH_PROGSIGNALS                 :Железнодорожный путь с программируемыми пресигналами
 STR_LAI_RAIL_DESCRIPTION_TRACK_WITH_NOENTRY2SIGNALS             :Железнодорожный путь с невходящими сигналами
@@ -1313,7 +1313,7 @@ STR_NEWGRF_ERROR_UNIMPLEMETED_MAPPED_PROPERTY                   :Нереали�
 STR_NEWGRF_ERROR_UNIMPLEMETED_MAPPED_ACTION5_TYPE               :Нереализованный тип ремаппинга Action 5: название: {2:STRING}, сопоставленный с: {4:HEX} (спрайт {3:NUM})
 
 STR_NEWGRF_TOO_MANY_STRINGS                                     :{WHITE}Недостаточно идентификаторов строк для всех NewGRF.
-STR_NEWGRF_TOO_MANY_STRINGS_DETAIL                              :{WHITE}Некоторые имена и текстовые поля могут отображаться некорректно. Попробуйте использовать меньше NewGRFs.
+STR_NEWGRF_TOO_MANY_STRINGS_DETAIL                              :{WHITE}Некоторые имена и текстовые поля могут отображаться некорректно. Попробуйте использовать меньше модулей NewGRF.
 
 STR_TOWN_VIEW_NOISE_IN_TOWN_NO_LIMIT                            :{BLACK}Предельный уровень шума в городе: {ORANGE}{COMMA}
 
@@ -1821,8 +1821,8 @@ STR_TIMETABLE_NON_TIMETABLED_BRANCH                             :{BLACK}Не в�
 STR_TIMETABLE_WARNING_NO_SCHEDULED_DISPATCH_ORDER_ASSIGNED      :{BLACK}Расписание отправки не назначено для задания
 STR_TIMETABLE_WARNING_SCHEDULED_DISPATCH_ORDER_NO_WAIT_TIME     :{BLACK}Запланированное задание на отправку должено иметь установленное время ожидания
 STR_TIMETABLE_WARNING_SCHEDULE_ID                               :{BLACK}Расписание {NUM}: {STRING}
-STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION                         :{BLACK}Включить 'Автоматически' для автоматического заполнения и обновления времени ожидания и поездок.
-STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION_2                       :{BLACK}(Альтернативно, включить 'Автозаполнение' или вручную заполнить все поля расписания).
+STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION                         :{BLACK}Включить «Автоматически» для автоматического заполнения и обновления времени ожидания и поездок.
+STR_TIMETABLE_FILL_TIMETABLE_SUGGESTION_2                       :{BLACK}(Альтернативно, включить «Автозаполнение» или вручную заполнить все поля расписания).
 
 STR_TIMETABLE_WARNINGS_OMITTED                                  :{BLACK}{NUM} дальнейшие предупреждения опущены...
 
@@ -1883,8 +1883,8 @@ STR_PLANS_QUERY_RENAME_PLAN                                     :{WHITE}Пере
 STR_WARNING_LOADGAME_REMOVED_UNCORRECTABLE_VEHICLES             :{WHITE}Удалено {NUM} транспорт{P "" а ов}, которые были признаны некорректными во время загрузки
 
 STR_GAME_SAVELOAD_FROM_VERSION                                  : из версии {PUSH_COLOUR}{ORANGE}{STRING}{POP_COLOUR}{}
-STR_GAME_SAVELOAD_ERROR_TOO_NEW_FEATURE_VERSION                 :Сохранение{0:STRING} имеет версию {PUSH_COLOUR}{ORANGE}{2:NUM}{POP_COLOUR} особенности '{PUSH_COLOUR}{ORANGE}{1:STRING}{POP_COLOUR}', но максимальная поддерживаемая версия - {PUSH_COLOUR}{ORANGE}{3:NUM}{POP_COLOUR}
-STR_GAME_SAVELOAD_ERROR_UNKNOWN_FEATURE                         :Сохранение{0:STRING} имеет неизвестную особенность '{PUSH_COLOUR}{ORANGE}{1:STRING}{POP_COLOUR}' (версия: {PUSH_COLOUR}{ORANGE}{2:NUM}{POP_COLOUR}), которая не поддерживается
+STR_GAME_SAVELOAD_ERROR_TOO_NEW_FEATURE_VERSION                 :Сохранение{0:STRING} имеет версию {PUSH_COLOUR}{ORANGE}{2:NUM}{POP_COLOUR} особенности «{PUSH_COLOUR}{ORANGE}{1:STRING}{POP_COLOUR}», но максимальная поддерживаемая версия - {PUSH_COLOUR}{ORANGE}{3:NUM}{POP_COLOUR}
+STR_GAME_SAVELOAD_ERROR_UNKNOWN_FEATURE                         :Сохранение{0:STRING} имеет неизвестную особенность «{PUSH_COLOUR}{ORANGE}{1:STRING}{POP_COLOUR}» (версия: {PUSH_COLOUR}{ORANGE}{2:NUM}{POP_COLOUR}), которая не поддерживается
 
 STR_GAME_SAVELOAD_ERROR_HUGE_AIRPORTS_PRESENT                   :В сохранении используются огромные аэропорты
 STR_GAME_SAVELOAD_ERROR_HELI_OILRIG_BUG                         :В сохранении вертолёт приближается к багованой нефтяной вышке
@@ -1971,7 +1971,7 @@ STR_ZONING_NO_ZONING                                            :Ничего
 STR_ZONING_AUTHORITY                                            :Администрация
 STR_ZONING_CAN_BUILD                                            :Где я не могу строить
 STR_ZONING_STA_CATCH                                            :Охват станции
-STR_ZONING_STA_CATCH_OPEN                                       :Охват станции станции (window open)
+STR_ZONING_STA_CATCH_OPEN                                       :Охват станции станции (окно открыто)
 STR_ZONING_BUL_UNSER                                            :Необслуживаемые здания
 STR_ZONING_IND_UNSER                                            :Необслуживаемые предприятия
 STR_ZONING_TRACERESTRICT                                        :Запрещённые сигналы
@@ -2095,7 +2095,7 @@ STR_TMPL_RPLALLGUI_INSET_BOTTOM                                 :{BLACK}Теку
 STR_TMPL_RPLALLGUI_BUTTON_RPLALL                                :{BLACK}Заменить всё
 STR_TMPL_RPLALLGUI_BUTTON_APPLY                                 :{BLACK}Применить
 STR_TMPL_RPLALLGUI_BUTTON_CANCEL                                :{BLACK}Отмена
-STR_TMPL_RPLALLGUI_USE_TIP                                      :{BLACK}Выберите тип транспортного средства из каждого списка и нажмите 'Заменить всё'. Если вас устраивает результат, отображаемый в списке шаблонов, нажмите 'Применить' чтобы реально применить эти изменения.
+STR_TMPL_RPLALLGUI_USE_TIP                                      :{BLACK}Выберите тип транспортного средства из каждого списка и нажмите «Заменить всё». Если вас устраивает результат, отображаемый в списке шаблонов, нажмите «Применить» чтобы реально применить эти изменения.
 
 STR_TMPL_CANT_CREATE                                            :{WHITE}Невозможно создать шаблон или виртуальное транспортное средство...
 STR_TMPL_CANT_RENAME                                            :{WHITE}Невозможно переименовать шаблон...
@@ -2181,8 +2181,20 @@ STR_SCHDISPATCH_SLOT_TOOLTIP_TAG                                :{}Метка {N
 STR_SCHDISPATCH_SLOT_TOOLTIP_TAG_NAMED                          :{}Метка {NUM}: {STRING}
 
 STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE                       :{BLACK}Предыдущих отправлений нет.
+STR_SCHDISPATCH_SUMMARY_VEHICLE_NO_LAST_DEPARTURE               :{BLACK}Этот транспорт не выезжал.
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAILS                       : ({STRING})
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_SEPARATOR              :, {STRING}
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_WAS_FIRST              :первый слот
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_WAS_LAST               :последний слот
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_TAG                    :метка {NUM}
+STR_SCHDISPATCH_SUMMARY_DEPARTURE_DETAIL_TAG_NAMED              :метка {NUM} ({STRING})
+
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Последнее отправление в {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}Последнее отправление ещё не ушло, оно будет отбывать в {TT_TIME}.
+
+STR_SCHDISPATCH_SUMMARY_VEHICLE_DEPARTURE_PAST                  :{BLACK}Этот транспорт отбыл в {TT_TIME}{STRING}.
+STR_SCHDISPATCH_SUMMARY_VEHICLE_DEPARTURE_FUTURE                :{BLACK}Этот транспорт еще не отбыл, он отправится в {TT_TIME}{STRING}.
+
 STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}По оценкам, для выполнения этого расписания потребуется не менее {COMMA} транспорт{P "" а ов}.
 STR_SCHDISPATCH_SUMMARY_L2                                      :{BLACK}Это расписание повторяется каждый {STRING}.
 STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}Это расписание началось в {TT_TIME}, и закончится в {TT_TIME}.
@@ -2237,7 +2249,7 @@ STR_REFIT_SHIP_PART                                             :Часть {NUM
 
 STR_VERY_REDUCED                                                :очень сниженная
 
-STR_STATION_VIEW_RENAME_TOOLTIP_EXTRA                           :{BLACK}{STRING}{}(Ctrl+клик "{STRING}" чтобы сгенерировать новое имя по умолчанию).{}{}Ctrl+клик - обменяться названиями с другой станцией.
+STR_STATION_VIEW_RENAME_TOOLTIP_EXTRA                           :{BLACK}{STRING}{}(Ctrl+клик «{STRING}» чтобы сгенерировать новое имя по умолчанию).{}{}Ctrl+клик - обменяться названиями с другой станцией.
 STR_ERROR_CAN_T_EXCHANGE_STATION_NAMES                          :{WHITE}Невозможно обменяться названиями станций...
 STR_ERROR_STATIONS_NOT_IN_SAME_TOWN                             :{WHITE}... станции находятся в разных городах
 STR_ERROR_STATION_ATTACHED_TO_INDUSTRY                          :{WHITE}... станция прикреплена к предприятию
@@ -2333,3 +2345,19 @@ STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Инструм�
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Окно клавиши-модификатора
 
 STR_ERROR_CAN_T_CHANGE_SPEED_RESTRICTION                        :{WHITE}Невозможно изменить ограничение скорости транспортного средства...
+
+STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Внимание: администраторы сервера могут увидеть текст, введённый в это поле.
+STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Компания защищена. Введите пароль.
+STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Сбросить пароль
+STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Сбросить пароль у компании «{COMPANY}»?
+
+# Network set password
+STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Не сохранять пароль
+STR_COMPANY_PASSWORD_OK                                         :{BLACK}Задать новый пароль компании
+STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Пароль компании
+STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Пароль компании по умолчанию
+STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Использовать этот пароль для всех новых компаний по умолчанию
+
+STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Пароль
+STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Защитить вашу компанию паролем, чтобы посторонние пользователи не могли присоединиться.
+STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Установить пароль компании

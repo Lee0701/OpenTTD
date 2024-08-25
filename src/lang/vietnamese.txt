@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Khi bậ
 STR_BUTTON_DEFAULT                                              :{BLACK}Mặc định
 STR_BUTTON_CANCEL                                               :{BLACK}Thôi
 STR_BUTTON_OK                                                   :{BLACK}Đồng ý
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Chú ý: quản trị máy chủ có thể đọc mọi dòng chữ nhập ở đây.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -956,11 +955,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Âm lượng
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Hiệu ứng âm thanh
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Âm nhạc
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Đơn vị tiền tệ
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Lựa chọn đơn vị tiền tệ
@@ -1058,11 +1052,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Tuỳ ch
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Phông chữ chống răng cưa
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Tuỳ chọn này để chống răng cưa phông chữ co dãn được
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Khảo sát tự động
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Tham gia khảo sát tự động
@@ -1090,6 +1079,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Thông t
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Gói nhạc chuẩn
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Chọn gói nhạc để sử dụng
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Thông tin thêm về gói nhạc chuẩn
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(không có plugins được cài đặt để tích hợp vào nền tảng xã hội)
 
@@ -1832,7 +1822,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Tần suất b�
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Thiết lập khoảng thời gian bảo trì tùy chọn đối với các máy bay, nếu phương tiện không có riêng thời gian bảo trì này
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Tần suất bảo trì mặc định đối với tàu thủy: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Thiết lập khoảng thời gian bảo trì tùy chọn đối với các tàu thủy, nếu phương tiện không có riêng thời gian bảo trì này
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}ngày/phút/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :tắt
 
@@ -2132,17 +2123,8 @@ STR_CONFIG_SETTING_AI                                           :Đối Thủ
 STR_CONFIG_SETTING_AI_NPC                                       :Nhân vật máy
 STR_CONFIG_SETTING_NETWORK                                      :Kết nối
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Cơ chế tìm đường cho tàu hoả: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Cơ chế tìm đường cho tàu hỏa
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Cơ chế tìm đường cho xe ôtô: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Cơ chế tìm đường cho xe ôtô
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Cơ chế tìm đường cho tàu thủy: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Cơ chế tìm đường dùng cho tàu thủy
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Tự động đổi chiều chạy tại đèn hiệu: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Cho phép xe lửa vòng lại nơi đèn báo, khi nó chờ quá lâu
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Nên dùng)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Thay đổi giá trị
 
@@ -2223,7 +2205,7 @@ STR_QUIT_YES                                                    :{BLACK}Đồng 
 STR_QUIT_NO                                                     :{BLACK}Không đồng ý
 
 # Abandon game
-STR_ABANDON_GAME_CAPTION                                        :{WHITE}Bỏ Màn Chơi
+STR_ABANDON_GAME_CAPTION                                        :{WHITE}Loại bỏ Game
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Bạn có chắc chắn muốn bỏ màn chơi này không?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Bạn có chắc bạn muốn bỏ màn chơi kịch bản này?
 
@@ -2461,7 +2443,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Tải th
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Ngắt kết nối
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server yêu cầu xác thực. Nhập mật khẩu
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Công ty yêu cầu xác thực. Nhập mật khẩu
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Người chơi trực tuyến
@@ -2510,13 +2491,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Thông q
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Đá ra
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Cấm
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Xoá
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Mật khẩu công ty
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Tác vụ quản lý
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Bạn có muốn đá người chơi '{STRING}' ra?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Bạn có muốn cấm người chơi '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Bạn có muốn xoá công ty '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Bạn có muốn đặt lại mật khẩu cho công ty '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Sử dụng chuyển tiếp?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Không thể kết nối giữa bạn tới máy chủ {STRING}.{}Bạn có muốn chuyển tiếp kết nối của bạn thông qua '{STRING}'?
@@ -2533,19 +2512,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Có
 
 STR_NETWORK_SPECTATORS                                          :Người xem
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Không được ghi mật khẩu đã nhập
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Nhập mật khẩu mới cho công ty
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Mật khẩu công ty
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Mật khẩu công ty mặc định
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Dùng mật khẩu công ty này là mật khẩu mặc định cho các công ty mới
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Vào
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Vào và làm chủ công ty này
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Mật khẩu
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Công ty đòi hỏi xác thực mật khẩu sẽ ngăn không cho người khác gia nhập, điều khiển
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Đặt mật khẩu công ty
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Gửi
@@ -2808,7 +2777,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Chọn h
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Điểm mốc
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Chọn kiểu điểm mốc
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Chọn Ga Tàu Hỏa
@@ -2821,8 +2789,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Độ d�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Kéo & thả
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Xây dựng ga bằng các kéo & thả
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Chọn loại ga để hiển thị
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Chọn loại ga để xây dựng
+
 
 STR_STATION_CLASS_DFLT                                          :Mặc định
 STR_STATION_CLASS_DFLT_STATION                                  :Trạm mặc định
@@ -2965,8 +2932,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Mua đ�
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Trình Chọn Đối Tượng
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Chọn đối tượng để xây. Ctrl + Click + kéo để chọn khu vực theo đường chéo. Shift để xem chi phí dự tính
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Chọn lớp đối tượng để xây dựng
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Xem trước đối tượng
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Kích thước: {GOLD}{NUM} x {NUM} ô
 
@@ -3393,10 +3358,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Bạn c
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% hoàn thành
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Tạo màn
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Khởi tạo cảnh quan
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Khởi tạo sông suối
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Trồng cây
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Sinh đối tượng cứng
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Sinh đá và sự gồ ghề
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Khởi tạo thị trấn
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Khởi tạo nhà máy
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Sinh đối tượng cứng
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Trồng cây
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Thiết lập ván chơi
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Đang chạy sinh tile
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Đang chạy tập lệnh
@@ -3488,6 +3456,9 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :Loại đườn
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}Biến số NewGRF là 60+x (dạng hexa)
 
 # Sprite aligner window
+STR_SPRITE_ALIGNER_CAPTION_NO_ACTION                            :{WHITE}Căn chỉnh hình sprite: ({STRING}:{NUM})
+STR_SPRITE_ALIGNER_CAPTION_ACTIONA                              :{WHITE}Căn chỉnh hình sprite: Hành động 0xA, {COMMA} ({STRING}:{NUM})
+STR_SPRITE_ALIGNER_CAPTION_ACTION5                              :{WHITE}Căn chỉnh hình sprite: Hành động 0x5, loại {HEX}, {COMMA} ({STRING}:{NUM})
 STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Sprite tiếp
 STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Chuyển tới sprite bình thường kế tiếp, bỏ qua các loại sprite và căn theo điểm kết thúc
 STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Đi tới sprite
@@ -3496,6 +3467,7 @@ STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}Sprite t
 STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}Xử lý sprite bình thường ở trước, bỏ qua các loại pseudo/recolour/font sprite căn theo điểm bắt đầu
 STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}Theo những thông tin của sprite đã chọn. Thì việc căn chỉnh khi vẽ đối với sprite này sẽ bị bỏ qua
 STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}Di chuyển sprite xung quanh, thay đổi X và Y offsets. Ctrl+Click để di chuyển sprite tám đơn vị một lúc
+STR_SPRITE_ALIGNER_SPRITE                                       :{STRING}:{NUM}
 
 ###length 2
 STR_SPRITE_ALIGNER_CENTRE_OFFSET                                :{BLACK}Toạ độ về trung tâm
@@ -4898,7 +4870,9 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Thu nh�
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Đang lưu vào đĩa,{}hãy chờ cho đến khi hoàn thành!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Tự lưu gặp lỗi
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Không đọc được đĩa
+STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Lưu game thất bại...
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Không thể xoá file
+STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Khởi động game thất bại...
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Lỗi kỹ thuật: {STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Bản lưu ván chơi bị hỏng - {STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Bản lưu ván chơi dành cho phiên bản mới hơn
@@ -5280,6 +5254,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Thay đ�
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Chưa có phương tiện nào có sẵn
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Bắt đầu một màn chơi mới sau {DATE_SHORT} hoặc sử dụng một NewGRF cung cấp sớm phương tiện
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Không có sẵn loại đường có thể xây dựng được trong thị trấn
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Thay đổi cấu hình NewGRF của bạn
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Hiện tại chưa có các loại đường thị trấn
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Hãy bắt đầu trò chơi mới sau {DATE_SHORT} hoặc sử dụng NewGRF khác có hỗ trợ xây dựng sớm các loại đường đô thị
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Không thể để tàu hoả qua tín hiệu đèn khi nguy hiểm...
@@ -5831,6 +5809,7 @@ STR_JUST_DATE_ISO                                               :{DATE_ISO}
 STR_JUST_STRING                                                 :{STRING}
 STR_JUST_STRING1                                                :{STRING}
 STR_JUST_STRING2                                                :{STRING}
+STR_JUST_STRING4                                                :{STRING}
 STR_JUST_STRING_STRING                                          :{STRING}{STRING}
 STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}

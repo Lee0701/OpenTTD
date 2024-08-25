@@ -365,7 +365,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Selle nu
 STR_BUTTON_DEFAULT                                              :{BLACK}Esialgne
 STR_BUTTON_CANCEL                                               :{BLACK}Tühista
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Hoiatus: Serveriadministraatorid võivad olla võimelised lugema siinset teksti.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -1013,11 +1012,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Helitase
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Heliefektid
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muusika
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valuuta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Valuuta valimine
@@ -1068,6 +1063,7 @@ STR_GAME_OPTIONS_CURRENCY_INR                                   :India ruupia
 STR_GAME_OPTIONS_CURRENCY_IDR                                   :Indoneesia ruupia
 STR_GAME_OPTIONS_CURRENCY_MYR                                   :Malaisia ringit
 STR_GAME_OPTIONS_CURRENCY_LVL                                   :Läti Latt
+STR_GAME_OPTIONS_CURRENCY_PTE                                   :Portugali eskuudo
 
 STR_GAME_OPTIONS_AUTOSAVE_FRAME                                 :{BLACK}Salvestusvälp
 STR_GAME_OPTIONS_AUTOSAVE_DROPDOWN_TOOLTIP                      :{BLACK}Vali salvestamise välp
@@ -1110,15 +1106,11 @@ STR_GAME_OPTIONS_GUI_SCALE_BEVELS                               :{BLACK}Skaleeri
 STR_GAME_OPTIONS_GUI_SCALE_BEVELS_TOOLTIP                       :{BLACK}Skaleeri kaldeid liidese suuruse järgi
 
 STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}Kasuta traditsioonilist märgipõhist fonti
-STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Märgi, kui eelistad traditsioonilist kindla suurusega märgipõhist fonti.
+STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Märgi, kui eelistad traditsioonilist kindla suurusega märgipõhist fonti
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Anti-alias fondid
-STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Kasti märkimisel tehakse muudetava suurusega fontidele anti-alias.
+STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Kasti märkimisel tehakse muudetava suurusega fontidele anti-alias
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automaatne uuring
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Osale automaatses uuringus
@@ -1146,6 +1138,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Lisateav
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Põhimuusika komplekt
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Valib kasutatava põhimuusika komplekti
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Rohkem teavet põhimuusika komplekti kohta
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(puuduvad pistikprogrammid sotsiaalplatvormidega integreerumiseks)
 
@@ -1878,7 +1871,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Kui palju vahem
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Hooldusvälp protsentides: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Kui on aktiveeritud, püüavad sõidukid käia hoolduses, kui nende vastupidavus langeb määratud protsendini suurimast vastupidavusest.{}{}Näiteks, kui sõiduki suurim vastupidavus on 90% ja hooldusvälp on 20%, püüab sõiduk käia hoolduses 72% vastupidavuse juures.
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Kui on aktiveeritud, püüavad sõidukid käia hoolduses, kui nende vastupidavus langeb määratud protsendini suurimast vastupidavusest.{}{}Näiteks, kui sõiduki suurim vastupidavus on 90% ja hooldusvälp on 20%, püüab sõiduk käia hoolduses 72% vastupidavuse juures
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Rongide esialgne hooldusvälp: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Määrab uute rööbassõidukite hooldusvälba, kui sõidukile eraldi hooldusvälpa ei määrata
@@ -1888,7 +1881,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Õhusõidukite 
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Määrab uute õhusõidukite hooldusvälba, kui sõidukile eraldi hooldusvälpa ei määrata
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Laevade hooldusvälba vaikeväärtus: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Määrab uute laevade hooldusvälba, kui sõidukile eraldi hooldusvälpa ei määrata
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}Päev{P 0 "" a}/Minut{P 0 "" it}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}Päev{P 0 "" a}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}Minut{P 0 "" it}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Väljas
 
@@ -2188,17 +2185,8 @@ STR_CONFIG_SETTING_AI                                           :Konkurendid
 STR_CONFIG_SETTING_AI_NPC                                       :Arvuti
 STR_CONFIG_SETTING_NETWORK                                      :Võrk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Rongide marsruudileidja: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Marsruudileidja rongide jaoks
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Maanteesõidukite marsruudileidja: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Marsruudileidja maanteesõidukite jaoks
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Laevade marsruudileidja: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Marsruudileidja veesõidukite jaoks
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automaatne tagasipööre signaalide juures: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Luba rongidel ümber pöörata kui nad on pikka aega foori taga oodanud
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(soovitatud)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Määra seade väärtus
 
@@ -2518,7 +2506,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Hangin e
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Katkesta
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server on kaitstud. Sisesta salasõna
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Ettevõte on kaitstud. Sisesta salasõna
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Ühendatud mängijad
@@ -2545,6 +2532,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :Sinu mängija n
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}Haldustegevused, mida teha selle ettevõtte peal
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}Haldustegevused, mida teha selle ettevõtte peal
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}Liitu selle ettevõttega
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}Luba sellel kliendil oma ettevõttega liituda
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}Saada sellele mängijale sõnum
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}Saada sõnum igale selle ettevõtte mängijale
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}Saada sõnum igale vaatlejale
@@ -2567,13 +2555,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Läbi va
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Viska välja
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Keela
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Kustuta
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Salasõnaga avamine
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Haldustoiming
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Kas oled kindel, et välja visata mängija '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Kas oled kindel, et sa tahad keelata mängija '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Kas oled kindel, et tahad kustutada ettevõtte '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Kas oled kindel, et soovid nullida ettevõtte '{COMPANY}' salasõna?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Kasuta vahendajat?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Ühenduse loomine sinu ja serveri '{STRING}' vahel ebaõnnestus .{}Kas sa soovid seda sesiooni vahendada läbi '{STRING}'?
@@ -2590,19 +2576,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Ja
 
 STR_NETWORK_SPECTATORS                                          :Vaatlejad
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Sisestatud salasõna ei salvestata
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Määra ettevõtte uus salasõna
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Ettevõtte salasõna
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Esialgne ettevõtte salasõna
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Määra ettevõtte salasõna uute ettevõtete esialgseks salasõnaks
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Liitu
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Liitu ja mängi selle ettevõttena
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Salasõna
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Ettevõtte kaitsmine salasõnaga, et võõrad ei saaks ilma loata ühineda
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Vali ettevõttele salasõna
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Saada
@@ -2631,6 +2607,7 @@ STR_NETWORK_ERROR_BAD_PLAYER_NAME                               :{WHITE}Sinu mä
 STR_NETWORK_ERROR_BAD_SERVER_NAME                               :{WHITE}Sinu serverile ei ole nime antud. Nime saab määrata mitmikmägu akna ülaosas
 STR_NETWORK_ERROR_WRONG_REVISION                                :{WHITE}Kliendi osa ei vasta serveri osaga
 STR_NETWORK_ERROR_WRONG_PASSWORD                                :{WHITE}Vale salasõna
+STR_NETWORK_ERROR_NOT_ON_ALLOW_LIST                             :{WHITE}Sa ei ole lubatud klientide nimekirjas
 STR_NETWORK_ERROR_SERVER_FULL                                   :{WHITE}Server on täis
 STR_NETWORK_ERROR_SERVER_BANNED                                 :{WHITE}Sinu sisenemine siia serverisse on keelatud
 STR_NETWORK_ERROR_KICKED                                        :{WHITE}Sind visati mängust välja
@@ -2658,6 +2635,7 @@ STR_NETWORK_ERROR_CLIENT_NOT_EXPECTED                           :saadud pakett o
 STR_NETWORK_ERROR_CLIENT_WRONG_REVISION                         :vale osa
 STR_NETWORK_ERROR_CLIENT_NAME_IN_USE                            :nimi on juba kasutusel
 STR_NETWORK_ERROR_CLIENT_WRONG_PASSWORD                         :vale salasõna
+STR_NETWORK_ERROR_CLIENT_NOT_ON_ALLOW_LIST                      :pole lubatute nimekirjas
 STR_NETWORK_ERROR_CLIENT_COMPANY_MISMATCH                       :vale ettevõtte id DoCommand-is
 STR_NETWORK_ERROR_CLIENT_KICKED                                 :server viskas välja
 STR_NETWORK_ERROR_CLIENT_CHEATER                                :üritas pettust kasutada
@@ -2863,7 +2841,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Depoole 
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Meldepunkt
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Vali meldepunkti liik
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Raudteejaama valik
@@ -2876,8 +2853,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Vali rau
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Lohistamine
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Ehita jaam kasutades hiirega lohistamist
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Vali näidatav jaamajärk
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Vali näidatav jaamaliik
+
 
 STR_STATION_CLASS_DFLT                                          :Vaikimisi
 STR_STATION_CLASS_DFLT_STATION                                  :Vaikimisi jaam
@@ -3020,8 +2996,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Maa ostm
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Objekti valik
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Vali ehitatav objekt. Ctrl+klõps+lohistus valib ala diagonaaliti. Lisaks hoia all Shift-klahvi, et vaid näidata eeldatavat hinda
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Vali ehitatava objekti järk
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Objekti eelvaade
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Suurus: {GOLD}{NUM} x {NUM} ruutu
 
@@ -3125,7 +3099,7 @@ STR_INDUSTRY_CARGOES_SELECT_INDUSTRY_TOOLTIP                    :{BLACK}Vali tö
 
 # Land area window
 STR_LAND_AREA_INFORMATION_CAPTION                               :{WHITE}Maa-ala andmed
-STR_LAND_AREA_INFORMATION_LOCATION_TOOLTIP                      :{BLACK}Keskenda vaade ruudu asukohale. Ctrl+klõps avab asukohas uue vaate
+STR_LAND_AREA_INFORMATION_LOCATION_TOOLTIP                      :{BLACK}Keskenda põhivaade ruudu asukohale. Ctrl+klõps, et avada ruudu kohal uus vaade
 STR_LAND_AREA_INFORMATION_COST_TO_CLEAR_N_A                     :{BLACK}Tühjendamise kulu: {LTBLUE}N/A
 STR_LAND_AREA_INFORMATION_COST_TO_CLEAR                         :{BLACK}Tühjendamise kulu: {RED}{CURRENCY_LONG}
 STR_LAND_AREA_INFORMATION_REVENUE_WHEN_CLEARED                  :{BLACK}Tühjendamise tulu: {LTBLUE}{CURRENCY_LONG}
@@ -3136,7 +3110,9 @@ STR_LAND_AREA_INFORMATION_TRAM_OWNER                            :{BLACK}Trammite
 STR_LAND_AREA_INFORMATION_RAIL_OWNER                            :{BLACK}Raudtee omanik: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY                       :{BLACK}Kohalik omavalitsus: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_LOCAL_AUTHORITY_NONE                  :puudub
-STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Ehitatud: {LTBLUE}{DATE_LONG}
+STR_LAND_AREA_INFORMATION_LANDINFO_COORDS                       :{BLACK}Koordinaadid: {LTBLUE}{NUM} x {NUM} x {NUM}
+STR_LAND_AREA_INFORMATION_LANDINFO_INDEX                        :{BLACK}Ruudu järjekorranumber: {LTBLUE}{NUM} ({HEX})
+STR_LAND_AREA_INFORMATION_BUILD_DATE                            :{BLACK}Ehitatud/renoveeritud: {LTBLUE}{DATE_LONG}
 STR_LAND_AREA_INFORMATION_STATION_CLASS                         :{BLACK}Jaama järk: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_STATION_TYPE                          :{BLACK}Jaama liik: {LTBLUE}{STRING}
 STR_LAND_AREA_INFORMATION_AIRPORT_CLASS                         :{BLACK}Lennuvälja järk: {LTBLUE}{STRING}
@@ -3446,10 +3422,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Kas sa 
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% valmis
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Maailma tekitamine
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Maastiku tekitamine
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Jõgede tekitamine
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Puude tekitamine
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objekti tekitamine
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Mägise ja kivise maa-ala tekitamine
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Asulate tekitamine
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Tööstuse tekitamine
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objekti tekitamine
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Puude tekitamine
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Mängu seadistamine
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Ruudustiku töötlemine
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Täitmisel olev skript
@@ -4952,7 +4931,9 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Eeldatav
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Ikka salvestamisel,{}palun oota salvestuse lõpuni!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Välpsalvestus ebaõnnestus
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Ei suuda kettalt lugeda
+STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Mängu salvestamine nurjus...
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Faili ei saa kustutada
+STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Mängu laadimine nurjus...
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Süsteemi viga: {STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Katkine salvestus - {STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Salvestus on tehtud uuemas osas
@@ -5334,6 +5315,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Muuda Ne
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Sõidukeid ei ole veel saadaval
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Alusta mängu pärast {DATE_SHORT} või kasuta NewGRF-i, milles on varasemaid sõidukeid
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Linnas ehitatavaid maanteeliike pole saadaval
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Muuda oma NewGRF-i seadistust
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Linnas ehitatavaid maanteeliike pole veel saadaval
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Alusta uus mäng pärast {DATE_SHORT} või kasuta NewGRF-i, milles on varajasi linnas ehitatavaid maanteeliike
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Rongi ei saa ohu korral sundida signaale eirama...

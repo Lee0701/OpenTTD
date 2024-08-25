@@ -310,7 +310,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Ved å a
 STR_BUTTON_DEFAULT                                              :{BLACK}Standard
 STR_BUTTON_CANCEL                                               :{BLACK}Avbryt
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Advarsel: Tjeneradministratorer kan lese all tekst som blir skrevet her.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -958,11 +957,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Volum
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Lydeffekter
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musikk
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valutaenhet
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Velg valutaenhet som skal brukes
@@ -1060,11 +1055,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Kryss av
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Kantutjevning av skrift
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Kryss av denne knappen for å kantutjevne skalerbar skrift
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatisert undersøkelse
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Delta i automatisert undersøkelse
@@ -1092,6 +1083,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Tilleggs
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Musikksett
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Velg musikksett som skal brukes
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Ytterligere informasjon om det originale musikksettet
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(ingen moduler for integrasjon med sosiale plattformer er installert)
 
@@ -1834,7 +1826,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Standard vedlik
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Angi standard vedlikeholdsintervall for nye fly, hvis det ikke er angitt noe vedlikeholdsintervall for flyet
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Standard vedlikeholdsintervall for skip: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Angi standard vedlikeholdsintervall for nye skip, hvis det ikke er angitt noe vedlikeholdsintervall for fartøyet
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}Dag{P 0 "" er}/Minutt{P 0 "" er}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}Dag{P 0 "" er}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}Minutt{P 0 "" er}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Deaktivert
 
@@ -2134,17 +2130,8 @@ STR_CONFIG_SETTING_AI                                           :Konkurrenter
 STR_CONFIG_SETTING_AI_NPC                                       :Datamaskinspillere
 STR_CONFIG_SETTING_NETWORK                                      :Nettverk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Veifinner for tog: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Stifinner som skal brukes for tog
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Veifinner for kjøretøy: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Stifinner som skal brukes for kjøretøyer
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Veifinner for skip: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Stifinner som brukes for skip
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automatisk reversering ved signaler: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :La tog reversere ved signaler om de har ventet der lenge
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Anbefalt)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Endre verdi
 
@@ -2463,7 +2450,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Henter s
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Koble fra
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Tjeneren er beskyttet. Skriv inn passord
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Selskapet er beskyttet. Skriv inn passord
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Påloggede spillere
@@ -2512,13 +2498,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Via vide
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Spark
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Utesteng
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Slett
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Låse opp passord
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Administratorhandling
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Er du sikker på at du vil utestenge spiller '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Er du sikker på at du vil utestenge spiller '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Er du sikker på at du vil slette selskapet '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Er du sikker på at du vil tilbakestille passordet til selskapet '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Vil du bruke videresending?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Kunne ikke opprette en kobling mellom deg og tjeneren '{STRING}'.{}Vil du videresende denne økten via '{STRING}'?
@@ -2535,19 +2519,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Ja
 
 STR_NETWORK_SPECTATORS                                          :Tilskuere
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Ikke lagre passordet
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Gi selskapet det nye passordet
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Selskapspassord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Standard selskapspassord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Bruk dette passordet som standard for nye selskap
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Bli med
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Bli med og spill som dette selskapet
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Passord
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Passordbeskytt selskapet ditt for å forhindre uautoriserte brukere fra å bli med
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Velg selskapspassord
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Send
@@ -2810,7 +2784,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Velg tog
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Veipunkt
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Velg type veipunkt
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Velg jernbanestasjonstype
@@ -2823,8 +2796,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Velg hvo
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Dra og slipp
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Bygg en stasjon med dra og slipp
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Velg en stasjonstype å vise
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Velg stasjonstypen du vil bygge
+
 
 STR_STATION_CLASS_DFLT                                          :Standard
 STR_STATION_CLASS_DFLT_STATION                                  :Standard stasjon
@@ -2967,8 +2939,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Kjøp op
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Objektvalg
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Velg objekt å bygge. Ctrl+klikk+dra for å velge arealet diagonalt. Trykk også Shift for å kun vise kostnadsestimat
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Velg objektstype du vil bygge
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Forhåndsvisning av objektet
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Størrelse: {GOLD}{NUM} x {NUM} ruter
 
@@ -3395,10 +3365,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Vil du 
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}{NBSP}% ferdig
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Generer en verden
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Landskapsgenerering
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Skap elver
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Tregenerering
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objektgenerering
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generering av ulendt og steinete område
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Bygenerering
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Industrigenerering
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objektgenerering
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Tregenerering
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Klargjør spillet
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Kjører ruteløkke
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Kjører skript
@@ -5288,6 +5261,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Endre di
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Ingen kjøretøyer er tilgjengelig ennå
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Starte et nytt spill etter {DATE_SHORT}, eller bruke en NewGRF som inneholder tidlige kjøretøy
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Ingen veityper som kan bygges i byer er tilgjengelig
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Endre NewGRF-innstillingene dine
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Ingen veityper som kan bygges i byer er tilgjengelig ennå
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Start et nytt spill etter {DATE_SHORT} eller bruk en NewGRF som tilbyr tidlige veityper som kan bygges av byer
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Kan ikke tvinge tog til å passere signal ved fare...

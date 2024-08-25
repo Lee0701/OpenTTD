@@ -89,11 +89,10 @@ enum ObjectViewportMapType {
  * @note If you change this struct, adopt the initialization of
  * default objects in table/object_land.h
  */
-struct ObjectSpec {
+struct ObjectSpec : NewGRFSpecBase<ObjectClassID> {
 	/* 2 because of the "normal" and "buy" sprite stacks. */
 	GRFFilePropsBase<2> grf_prop;   ///< Properties related the the grf file
 	AnimationInfo animation;        ///< Information about the animation.
-	ObjectClassID cls_id;           ///< The class to which this spec belongs.
 	StringID name;                  ///< The name for this object.
 
 	uint8_t climate;                ///< In which climates is this object available?
@@ -169,11 +168,10 @@ struct ObjectScopeResolver : public ScopeResolver {
 /** A resolver object to be used with feature 0F spritegroups. */
 struct ObjectResolverObject : public ResolverObject {
 	ObjectScopeResolver object_scope; ///< The object scope resolver.
-	TownScopeResolver *town_scope;    ///< The town scope resolver (created on the first call).
+	std::optional<TownScopeResolver> town_scope = std::nullopt; ///< The town scope resolver (created on the first call).
 
 	ObjectResolverObject(const ObjectSpec *spec, Object *o, TileIndex tile, uint8_t view = 0,
 			CallbackID callback = CBID_NO_CALLBACK, uint32_t param1 = 0, uint32_t param2 = 0);
-	~ObjectResolverObject();
 
 	ScopeResolver *GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, VarSpriteGroupScopeOffset relative = 0) override
 	{

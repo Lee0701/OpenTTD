@@ -22,6 +22,9 @@
 /** The maximum amount of roadstops a single GRF is allowed to add */
 static const int NUM_ROADSTOPS_PER_GRF = 64000;
 
+static const uint32_t ROADSTOP_CLASS_LABEL_DEFAULT = 'DFLT';
+static const uint32_t ROADSTOP_CLASS_LABEL_WAYPOINT = 'WAYP';
+
 enum RoadStopClassID : uint16_t {
 	ROADSTOP_CLASS_BEGIN = 0,          ///< The lowest valid value
 	ROADSTOP_CLASS_DFLT  = 0,          ///< Default road stop class.
@@ -83,6 +86,15 @@ enum RoadStopSpecIntlFlags {
 	RSIF_BRIDGE_DISALLOWED_PILLARS_SET, ///< bridge_disallowed_pillars[6] is set.
 };
 
+enum RoadStopView {
+	RSV_BAY_NE                  = 0, ///< Bay road stop, facing Northeast
+	RSV_BAY_SE                  = 1, ///< Bay road stop, facing Southeast
+	RSV_BAY_SW                  = 2, ///< Bay road stop, facing Southwest
+	RSV_BAY_NW                  = 3, ///< Bay road stop, facing Northwest
+	RSV_DRIVE_THROUGH_X         = 4, ///< Drive through road stop, X axis
+	RSV_DRIVE_THROUGH_Y         = 5, ///< Drive through road stop, Y axis
+};
+
 /** Scope resolver for road stops. */
 struct RoadStopScopeResolver : public ScopeResolver {
 	TileIndex tile;                             ///< %Tile of the station.
@@ -116,10 +128,9 @@ private:
 /** Road stop resolver. */
 struct RoadStopResolverObject : public ResolverObject {
 	RoadStopScopeResolver roadstop_scope; ///< The stop scope resolver.
-	TownScopeResolver *town_scope;        ///< The town scope resolver (created on the first call).
+	std::optional<TownScopeResolver> town_scope = std::nullopt; ///< The town scope resolver (created on the first call).
 
 	RoadStopResolverObject(const RoadStopSpec *roadstopspec, BaseStation *st, TileIndex tile, RoadType roadtype, StationType type, uint8_t view, CallbackID callback = CBID_NO_CALLBACK, uint32_t param1 = 0, uint32_t param2 = 0);
-	~RoadStopResolverObject();
 
 	ScopeResolver* GetScope(VarSpriteGroupScope scope = VSG_SCOPE_SELF, VarSpriteGroupScopeOffset relative = 0) override {
 		switch (scope) {
@@ -139,7 +150,7 @@ struct RoadStopResolverObject : public ResolverObject {
 };
 
 /** Road stop specification. */
-struct RoadStopSpec {
+struct RoadStopSpec : NewGRFSpecBase<RoadStopClassID> {
 	/**
 	 * Properties related the the grf file.
 	 * NUM_CARGO real cargo plus three pseudo cargo sprite groups.
@@ -147,7 +158,6 @@ struct RoadStopSpec {
 	 * evaluating callbacks.
 	 */
 	GRFFilePropsBase<NUM_CARGO + 3> grf_prop;
-	RoadStopClassID cls_id;     ///< The class to which this spec belongs.
 	StringID name;              ///< Name of this stop
 
 	RoadStopAvailabilityType stop_type = ROADSTOPTYPE_ALL;
@@ -202,5 +212,15 @@ const RoadStopSpec *GetRoadStopSpec(TileIndex t);
 int AllocateRoadStopSpecToStation(const RoadStopSpec *statspec, BaseStation *st, bool exec);
 void DeallocateRoadStopSpecFromStation(BaseStation *st, uint8_t specindex);
 void StationUpdateRoadStopCachedTriggers(BaseStation *st);
+
+/**
+ * Test if a RoadStopClass is the waypoint class.
+ * @param cls RoadStopClass to test.
+ * @return true if the class is the waypoint class.
+ */
+inline bool IsWaypointClass(const RoadStopClass &cls)
+{
+	return cls.global_id == ROADSTOP_CLASS_LABEL_WAYPOINT || GB(cls.global_id, 24, 8) == UINT8_MAX;
+}
 
 #endif /* NEWGRF_ROADSTATION_H */

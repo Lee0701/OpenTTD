@@ -18,13 +18,10 @@
 #include "../landscape.h"
 #include "../subsidy_func.h"
 #include "../strings_func.h"
-#include "../tilematrix_type.hpp"
 
 #include "../safeguards.h"
 
 namespace upstream_sl {
-
-typedef TileMatrix<CargoTypes, 4> AcceptanceMatrix;
 
 class SlTownSupplied : public DefaultSaveLoadHandler<SlTownSupplied, Town> {
 public:
@@ -85,7 +82,7 @@ public:
 
 	void Load(Town *t) const override
 	{
-		size_t length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? (size_t)TAE_END : SlGetStructListLength(TAE_END);
+		size_t length = IsSavegameVersionBefore(SLV_SAVELOAD_LIST_LENGTH) ? static_cast<size_t>(TAE_END) : SlGetStructListLength(TAE_END);
 		for (size_t i = 0; i < length; i++) {
 			SlObject(&t->received[i], this->GetLoadDescription());
 		}
@@ -93,6 +90,12 @@ public:
 };
 
 class SlTownAcceptanceMatrix : public DefaultSaveLoadHandler<SlTownAcceptanceMatrix, Town> {
+private:
+	/** Compatibility struct with just enough of TileMatrix to facilitate loading. */
+	struct AcceptanceMatrix {
+		TileArea area;
+		static const uint GRID = 4;
+	};
 public:
 	inline static const SaveLoad description[] = {
 		SLE_VAR(AcceptanceMatrix, area.tile, SLE_UINT32),

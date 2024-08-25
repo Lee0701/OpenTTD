@@ -70,12 +70,12 @@ private:
 		if (!this->companies.NeedRebuild()) return;
 
 		this->companies.clear();
+		this->companies.reserve(Company::GetNumItems());
 
 		for (const Company *c : Company::Iterate()) {
 			this->companies.push_back(c);
 		}
 
-		this->companies.shrink_to_fit();
 		this->companies.RebuildDone();
 	}
 
@@ -141,11 +141,11 @@ public:
 		this->ordinal_width += WidgetDimensions::scaled.hsep_wide; // Keep some extra spacing
 
 		uint widest_width = 0;
-		uint widest_title = 0;
-		for (uint i = 0; i < lengthof(_performance_titles); i++) {
-			uint width = GetStringBoundingBox(_performance_titles[i]).width;
+		StringID widest_title = STR_NULL;
+		for (auto title : _performance_titles) {
+			uint width = GetStringBoundingBox(title).width;
 			if (width > widest_width) {
-				widest_title = i;
+				widest_title = title;
 				widest_width = width;
 			}
 		}
@@ -156,7 +156,7 @@ public:
 		for (const Company *c : Company::Iterate()) {
 			SetDParam(0, c->index);
 			SetDParam(1, c->index);
-			SetDParam(2, _performance_titles[widest_title]);
+			SetDParam(2, widest_title);
 			widest_width = std::max(widest_width, GetStringBoundingBox(STR_COMPANY_LEAGUE_COMPANY_NAME).width);
 		}
 
@@ -293,7 +293,7 @@ private:
 		for (uint i = 0; i != elements.size(); i++) {
 			auto *lte = elements[i];
 			if (i > 0 && elements[i - 1]->rating != lte->rating) rank = i;
-			this->rows.emplace_back(std::make_pair(rank, lte));
+			this->rows.emplace_back(rank, lte);
 		}
 	}
 

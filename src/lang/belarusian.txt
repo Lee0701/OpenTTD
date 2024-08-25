@@ -621,7 +621,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Калі
 STR_BUTTON_DEFAULT                                              :{BLACK}Па змоўчаньнi
 STR_BUTTON_CANCEL                                               :{BLACK}Скасаваць
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Увага: адміністратары сервера могуць убачыць ваш пароль.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -1270,11 +1269,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Гучнасц�
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Гукавыя эфекты
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Музыка
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Валюта
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Выбар валюты
@@ -1371,11 +1365,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Паст
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Згладжваньне шрыфтоў
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Пастаўце адзнаку, каб уключыць згладжваньне маштабуемых шрыфтоў
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Аўтаматычны збор дадзеных
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Дазволіць збор і адпраўку дадзеных
@@ -1403,6 +1392,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Дада
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Базавы набор музыкі
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Выберыце базавы музычны набор для выкарыстаньня
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Дадатковая інфармацыя аб базавым музычным наборы
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(модулі ўзаемадзеяньня з сацыяльнымі платформамі не ўсталяваны)
 
@@ -2145,7 +2135,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Iнтэрвал
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Усталяваць міжсэрвісны інтэрвал для новых паветраных суднаў, калі пэўны інтэрвал ня вызначаны для канкрэтнага судна.
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Iнтэрвал абслугоўваньня для караблёў: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Усталяваць міжсэрвісны інтэрвал для новых караблёў, калі пэўны інтэрвал ня вызначаны для канкрэтнага судна.
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}д{P зень днi дзён}/хвілін{P а ы ""}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :адключана
 
@@ -2445,17 +2436,8 @@ STR_CONFIG_SETTING_AI                                           :Канкурэ�
 STR_CONFIG_SETTING_AI_NPC                                       :Кампутарныя гульцы
 STR_CONFIG_SETTING_NETWORK                                      :Сетка
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Альґарытм пошуку шляху для цягнікоў: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Мэханізм пошуку шляху для цягнікоў.
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Альґарытм пошуку шляху для аўтатранспарту: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Мэханізм пошуку шляху для аўтатранспарту.
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Альґарытм пошуку шляху для караблёў: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Мэханізм пошуку шляху для караблёў.
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Аўтаматычны разварот перад сыґналамi: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Дазволіць цягнікам разварочвацца перад сыґналамі, калі яны чакаюць доўгі час.
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(рэкамэндуецца)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Зьмяніць значэньне
 
@@ -2774,7 +2756,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Здаб
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Адлучыцца
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Сэрвэр абаронены. Увядзіце пароль
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Кампанія абароненая. Увядзіце пароль
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Сьпіс гульцоў
@@ -2823,13 +2804,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Праз
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Адключыць
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Заблакаваць
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Выдаліць
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Скінуць пароль
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Пацверджаньне дзеяньня
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Адключыць гульца «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Заблакаваць гульца «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Выдаліць кампанію «{COMPANY}»?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Скінуць пароль у кампаніі «{COMPANY}»?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Выкарыстоўваць транслятар?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Не атрымалася ўсталяваць злучэнне з серверам «{STRING}».{}Перанакіраваць злучэнне праз «{STRING}»?
@@ -2846,19 +2825,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Так
 
 STR_NETWORK_SPECTATORS                                          :Гледачы
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Не захоўваць уведзены пароль
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Даць кампаніі новы пароль
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Пароль кампаніі
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Пароль кампаніі па змоўчаньні
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Выкарыстоўваць пароль гэтай кампаніі як пароль па змоўчаньні для новых кампаніяў
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Далучыцца
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Далучыцца й гуляць за гэтую кампанію
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Пароль
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Абараніць вашу кампанію паролем, каб неаўтарызаваныя карыстальнікі не маглі далучыцца
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Усталяваць пароль кампаніі
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Адправіць
@@ -3135,7 +3104,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Выбе
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Маршрутны пункт
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Выберыце тып маршрутнага пункта
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Выбар чыгуначнай станцыі
@@ -3148,8 +3116,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Выбе
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Участак
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Пабудаваць станцыю на выбраным участку зямлі
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Выберыце клясу станцыі для паказу
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Выберыце тып станцыі для пабудовы
+
 
 STR_STATION_CLASS_DFLT                                          :Стандартная станцыя
 STR_STATION_CLASS_DFLT_STATION                                  :Стандартная чыг. станцыя
@@ -3296,8 +3263,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Набы
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Выбар аб'екта
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Абярыце аб'ект для пабудовы. Ctrl+пстрычка+перацягваньне — выбар вобласці па дыяганалі. Пры націснутым Shift — ацэнка кошту пабудовы.
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Абярыце клясу аб'екта для будаўніцтва
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Прагляд аб'екта
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Памер: {GOLD}{NUM} x {NUM} клетак
 
@@ -3723,9 +3688,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% �
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Стварэньне сусьвету
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Стварэньне рэк
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Высаджваньне лясоў
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Ґенэрацыя нерухомасьці
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Расстаноўка дэкарацыяў і камянёў
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Ґенэрацыя нерухомасьці
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Высаджваньне лясоў
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Наладка гульні
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Падрыхтоўка да запуску...
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Выконваецца скрыпт

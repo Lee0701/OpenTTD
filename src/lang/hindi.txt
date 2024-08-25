@@ -361,6 +361,7 @@ STR_GAME_OPTIONS_GUI_SCALE_FRAME                                :{BLACK}इं�
 
 
 
+
 # Custom currency window
 
 STR_CURRENCY_DECREASE_EXCHANGE_RATE_TOOLTIP                     :{BLACK}एक पाउंड (£) की तुलना में अपनी मुद्रा का अवमूल्यन करें
@@ -619,6 +620,8 @@ STR_CONFIG_SETTING_AI_BUILDS_AIRCRAFT                           :कंप्य
 
 
 
+###length 3
+
 ###setting-zero-is-special
 
 
@@ -709,9 +712,7 @@ STR_CONFIG_SETTING_INTERFACE_GENERAL                            :सामान
 STR_CONFIG_SETTING_COMPANY                                      :कंपनी
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :मार्ग
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :नौकाओं द्वारा उपयोग किया जाने वाला पथान्वेषी
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :यदि ट्रेनें लंबे समय तक वहां प्रतीक्षा करती हैं तो उन्हें सिग्नल पर रिवर्स करने की अनुमति दें
-###length 2
 
 
 # Config errors
@@ -797,10 +798,7 @@ STR_NETWORK_CLIENT_LIST_SERVER_NAME_QUERY_CAPTION               :सर्वर
 
 
 
-# Network set password
-
 # Network company info join/password
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}पासवर्ड
 
 # Network chat
 
@@ -868,6 +866,7 @@ STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE                       :{BLACK}अक�
 # Rail waypoint construction window
 
 # Rail station construction window
+
 
 
 STR_STATION_CLASS_DFLT                                          :मानक स्टेशन

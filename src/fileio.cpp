@@ -213,10 +213,6 @@ static FILE *FioFOpenFileSp(const std::string &filename, const char *mode, Searc
 		buf = _searchpaths[sp] + _subdirs[subdir] + filename;
 	}
 
-#if defined(_WIN32)
-	if (mode[0] == 'r' && GetFileAttributes(OTTD2FS(buf).c_str()) == INVALID_FILE_ATTRIBUTES) return nullptr;
-#endif
-
 	f = fopen(buf.c_str(), mode);
 #if !defined(_WIN32)
 	if (f == nullptr && strtolower(buf, subdir == NO_DIRECTORY ? 0 : _searchpaths[sp].size() - 1) ) {
@@ -1000,6 +996,8 @@ void DeterminePaths(const char *exe, bool only_local_path)
 	_private_file = config_dir + "private.cfg";
 	extern std::string _secrets_file;
 	_secrets_file = config_dir + "secrets.cfg";
+	extern std::string _favs_file;
+	_favs_file = config_dir + "favs.cfg";
 
 #ifdef USE_XDG
 	if (config_dir == config_home) {

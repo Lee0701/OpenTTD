@@ -272,7 +272,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Ach an c
 STR_BUTTON_DEFAULT                                              :{BLACK}Réamhshocrú
 STR_BUTTON_CANCEL                                               :{BLACK}Cuir ar ceal
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Rabhadh: D'fhéadfadh sé go mbeidh riarthóirí an fhreastalaí in ann aon téacs a chuirtear isteach anseo a léamh
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -979,6 +978,7 @@ STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Faisnéi
 
 
 
+
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Teipeadh liosta de na taifigh a dtacaítear leo a fháil
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Theip ar an mód lánscáileáin
 
@@ -1648,7 +1648,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Eatramh seirbh�
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Socraigh an t-eatramh seirbhísithe réamhshocraithe d'aerárthaigh nua, mura bhfuil eatramh seirbhísithe sainráite socraithe don fheithicil
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Eatramh seirbhíse réamhshocraithe do longa: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Socraigh an t-eatramh seirbhísithe réamhshocraithe do longa nua, mura bhfuil eatramh seirbhísithe sainráite socraithe don fheithicil
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}lá/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Díchumasaithe
 
@@ -1931,17 +1932,8 @@ STR_CONFIG_SETTING_AI                                           :Iomaitheoirí
 STR_CONFIG_SETTING_AI_NPC                                       :Ríomh-imreoirí
 STR_CONFIG_SETTING_NETWORK                                      :Líonra
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Aimsitheoir bealaigh do thraenacha: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :An t-aimsitheoir bealaigh a úsáidfear do thraenacha
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Aimsitheoir bealaigh d'fheithiclí bóthair: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :An t-aimsitheoir bealaigh a úsáidfear d'fheithiclí bóthair
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Aimsitheoir bealaigh do longa: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :An t-aimsitheoir bealaigh a úsáidfear do longa
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Aisiompú uathoibríoch ag comharthaí: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Ceadaigh do thraenacha aisiompú ag comhartha, más rud é go raibh siad ag fanacht ann píosa fada
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Molta)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Athraigh luach an tsocraithe
 
@@ -2229,7 +2221,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Ag fáil
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Dínasc
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Tá an freastalaí faoi chosaint. Iontráil pasfhocal
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Tá an chuideachta faoi chosaint. Iontráil pasfhocal
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Liosta na gcliant
@@ -2276,13 +2267,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Trí ath
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Ciceáil
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Cuir cosc air
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Scrios
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Díghlasáil le pasfhocal
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Beart riaracháin
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}An bhfuil tú cinnte gur mhaith leat an t-imreoir '{STRING}' a chiceáil?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}An bhfuil tú cinnte gur mian leat cosc a chur ar an imreoir '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}An bhfuil tú cinnte gur mhaith leat an chuideachta '{COMPANY}' a scriosadh?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}An bhfuil tú cinnte gur mhaith leat pasfhocal na cuideachta '{COMPANY}' a athshocrú?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Úsáid athsheachadadh?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Níorbh fhéidir nasc a bhunú idir tú féin agus an freastaláí '{STRING}'.{}Ar mhaith leat an seisiún seo a athsheachadadh trí '{STRING}'?
@@ -2293,19 +2282,9 @@ STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Tá, ná
 
 STR_NETWORK_SPECTATORS                                          :Féachadóirí
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Ná sábháil an pasfhocal a iontráladh
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Tabhair an pasfhocal nua don chuideachta
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Pasfhocal cuideachta
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Pasfhocal cuideachta réamhshocraithe
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Úsáid an pasfhocal cuideachta seo mar réamhshocrú do chuideachtaí nua
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Téigh isteach
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Téigh isteach agus bí ag imirt leis an gcuideachta seo
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Pasfhocal
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Cosain do chuideachta le pasfhocal le nach mbeidh úsáideoirí neamhúdaraithe in ann dul isteach.
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Socraigh pasfhocal cuideachta
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Seol
@@ -2559,7 +2538,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Roghnaig
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Pointe bealaigh
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Roghnaigh an cineál pointe bealaigh
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Stáisiún Iarnróid a Thógáil
@@ -2572,8 +2550,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Roghnaig
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Tarraing & Scaoil
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Tóg stáisiún ag úsáid tarraing & scaoil
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Roghnaigh aicme stáisiúin le taispeáint
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Roghnaigh an cineál stáisiúin le tógáil
+
 
 STR_STATION_CLASS_DFLT                                          :Stáisiún réamhshocraithe
 STR_STATION_CLASS_WAYP                                          :Pointí bealaigh
@@ -2708,8 +2685,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Ceannaig
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Roghnú oibiachta
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Roghnaigh oibiacht le tógáil
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Roghnaigh aicme na hoibiachta le tógáil
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Réamhamharc ar an oibiacht
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Méid: {GOLD}{NUM} x {NUM} tíl
 
@@ -3116,9 +3091,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% c
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Domhan a chruthú
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Giniúint aibhneacha
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Crainn a chruthú
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Cruthú oibiachtaí
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Limistear garbh agus carraigeach a chruthú
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Cruthú oibiachtaí
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Crainn a chruthú
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Cluiche á chumrú
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Lúb tíleanna á rith
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Script reatha

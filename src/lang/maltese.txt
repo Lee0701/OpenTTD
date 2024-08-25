@@ -426,6 +426,7 @@ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oħrajn
 
 
 
+
 # Custom currency window
 
 
@@ -665,6 +666,8 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uz
 
 
 
+###length 3
+
 ###setting-zero-is-special
 
 
@@ -739,7 +742,6 @@ STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uz
 ###length 3
 
 
-###length 2
 
 
 # Config errors
@@ -811,8 +813,6 @@ STR_NETWORK_CONNECTING_DOWNLOADING_2                            :{BLACK}{BYTES} 
 
 
 
-# Network set password
-
 # Network company info join/password
 
 # Network chat
@@ -873,6 +873,7 @@ STR_NETWORK_SERVER_MESSAGE                                      :*** {1:STRING}
 
 
 
+
 # Signal window
 
 # Bridge selection window
@@ -901,7 +902,6 @@ STR_NETWORK_SERVER_MESSAGE                                      :*** {1:STRING}
 # Landscaping toolbar
 
 # Object construction window
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Aghzel il-klassi tal-oggett li se tibni
 
 
 # Tree planting window (last eight for SE only)

@@ -36,7 +36,7 @@
 bool _sprite_group_resolve_check_veh_check = false;
 bool _sprite_group_resolve_check_veh_curvature_check = false;
 
-void SetWagonOverrideSprites(EngineID engine, CargoID cargo, const SpriteGroup *group, EngineID *train_id, uint trains)
+void SetWagonOverrideSprites(EngineID engine, CargoID cargo, const SpriteGroup *group, std::span<EngineID> engine_ids)
 {
 	Engine *e = Engine::Get(engine);
 
@@ -45,7 +45,7 @@ void SetWagonOverrideSprites(EngineID engine, CargoID cargo, const SpriteGroup *
 	WagonOverride *wo = &e->overrides.emplace_back();
 	wo->group = group;
 	wo->cargo = cargo;
-	wo->engines.assign(train_id, train_id + trains);
+	wo->engines.assign(engine_ids.begin(), engine_ids.end());
 }
 
 const SpriteGroup *GetWagonOverrideSpriteSet(EngineID engine, CargoID cargo, EngineID overriding_engine)
@@ -62,7 +62,7 @@ const SpriteGroup *GetWagonOverrideSpriteSet(EngineID engine, CargoID cargo, Eng
 void SetCustomEngineSprites(EngineID engine, uint8_t cargo, const SpriteGroup *group)
 {
 	Engine *e = Engine::Get(engine);
-	assert(cargo < lengthof(e->grf_prop.spritegroup));
+	assert(cargo < std::size(e->grf_prop.spritegroup));
 
 	if (e->grf_prop.spritegroup[cargo] != nullptr) {
 		grfmsg(6, "SetCustomEngineSprites: engine %d cargo %d already has group -- replacing", engine, cargo);
@@ -1234,7 +1234,7 @@ VehicleResolverObject::VehicleResolverObject(EngineID engine_type, const Vehicle
 		if (this->root_spritegroup == nullptr) {
 			const Engine *e = Engine::Get(engine_type);
 			CargoID cargo = v != nullptr ? v->cargo_type : SpriteGroupCargo::SG_PURCHASE;
-			assert(cargo < lengthof(e->grf_prop.spritegroup));
+			assert(cargo < std::size(e->grf_prop.spritegroup));
 			this->root_spritegroup = e->grf_prop.spritegroup[cargo] != nullptr ? e->grf_prop.spritegroup[cargo] : e->grf_prop.spritegroup[SpriteGroupCargo::SG_DEFAULT];
 		}
 	}
@@ -1688,7 +1688,7 @@ void DumpVehicleSpriteGroup(const Vehicle *v, SpriteGroupDumper &dumper)
 
 	if (root_spritegroup == nullptr) {
 		CargoID cargo = v->cargo_type;
-		assert(cargo < lengthof(e->grf_prop.spritegroup));
+		assert(cargo < std::size(e->grf_prop.spritegroup));
 		if (e->grf_prop.spritegroup[cargo] != nullptr) {
 			root_spritegroup = e->grf_prop.spritegroup[cargo];
 			seprintf(buffer, lastof(buffer), "Cargo: %u", cargo);

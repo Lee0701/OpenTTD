@@ -495,7 +495,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Omuguća
 STR_BUTTON_DEFAULT                                              :{BLACK}Podrazumevano
 STR_BUTTON_CANCEL                                               :{BLACK}Otkaži
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Upozorenje: Administratori servera će moći da pročitaju sav tekst koji je ovde unesen.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertzuiopšđasdfghjklčćž yxcvbnm,./'.
@@ -1133,11 +1132,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Jačina zvuka
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Zvučni efekti
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muzika
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valuta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Izbor valute
@@ -1234,11 +1228,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Označi 
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Anti-alias fontova
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Označi ovde za anti-alias fontova promenljive veličine
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatizovana anketa
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Učestvuj u automatizovanoj anketi
@@ -1266,6 +1255,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Dodatni 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Osnovni skup muzike
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Odaberi željeni skup osnovne muzike
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Dodatni podaci o osnovnom skupu muzike
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(nema instaliranih dodataka za integraciju sa drušvenim platformama)
 
@@ -1988,7 +1978,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Podrazumevani s
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Postavi podrazumevani servisni interval za nove letelice, ukoliko nema zadatog servisnog intervala za vozilo
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Podrazumevani servisni interval za brodove: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Postavi podrazumevani servisni interval za nove brodove, ukoliko nema zadatog servisnog intervala za vozilo
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA} dan{P 0 "" a a}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Onemogućeno
 
@@ -2280,17 +2271,8 @@ STR_CONFIG_SETTING_AI                                           :Suparnici
 STR_CONFIG_SETTING_AI_NPC                                       :Računar
 STR_CONFIG_SETTING_NETWORK                                      :Mreža
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Pretraživanje putanja vozova: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Algoritam pronalaženja puta za vozove
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Pretraživanje putanja drumskih vozila: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Algoritam pronalaženja puta za drumska vozila
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Pretraživanje putanja brodova: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Algoritam pronalaženja puta za brodove
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automatska promena smera kod signalizacije: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Dozvoljeno okretanje vozova na signalu, ako su dugo čekali
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Preporučuje se)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Promena vrednosti
 
@@ -2606,7 +2588,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Preuzima
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Isključenje
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server je zaštićen. Unesi lozinku
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Preduzeće je zaštićeno. Unesi lozinku
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Prisutni igrači
@@ -2654,13 +2635,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Preko re
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Izbaci
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Zabrana
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Obriši
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Otključavanje lozinkom
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Administratorska akcija
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Da li zaista želiš da izbaciš igrača '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Da li zaista želiš da blokiraš igrača '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Da li zaista želiš da obrišeš preduzeće '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Da li zaista želiš da promeniš lozinku preduzeća '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Koristi relej?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Neuspelo uspostavljanje konekcije sa serverom '{STRING}'.{}Da li želiš da uspostaviš relejnu konekciju preko '{STRING}'?
@@ -2677,19 +2656,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Da
 
 STR_NETWORK_SPECTATORS                                          :Posmatrači
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Otkaži unetu lozinku
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Postavi preduzeću novu lozinku
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Lozinka za preduzeće
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Podrazumevana lozinka za preduzeće
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Koristi ovu lozinku kao podrazumevanu za nova preduzeća
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Pridruži se
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Pridruži se i igraj kao ovo preduzeće
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Lozinka
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Zaštiti svoje preduzeće lozinkom kako se drugi korisnici ne bi nedozvoljeno pridruživali
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Postavi lozinku za preduzeće
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Pošalji
@@ -2947,7 +2916,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Odabir o
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Putanja
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Odaberi tip putanje
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Izbor železničke stanice
@@ -2960,8 +2928,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Odabir d
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Prevlačenje
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Gradnja stanice prevlačenjem
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Odabir klase stanica za prikaz
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Odabir vrste stanice za izgradnju
+
 
 STR_STATION_CLASS_DFLT                                          :Podrazumevana stanica
 STR_STATION_CLASS_WAYP                                          :Putanje
@@ -3101,8 +3068,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Kupovina
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Izbor Objekta
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Odabir objekta za izgradnju. Ctrl dijagonalno obeležava područje. Shift prebacuje između izgradnje i prikaza procene troškova
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Odabir klase objekata za izgradnju
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Privremeno prikazuje objekat
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Veličina: {GOLD}{NUM} x {NUM} pločica
 
@@ -3520,9 +3485,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% z
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Stvaranje sveta
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Određivanje toka reka
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Postavljanje drveća
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Postavljenje nepomičnih objekata
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Dodavanje grubih i stenovitih područja
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Postavljenje nepomičnih objekata
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Postavljanje drveća
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Podešavanje igre
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Razrađivanje pločica
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Pokretanje skripte

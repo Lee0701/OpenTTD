@@ -50,6 +50,7 @@
 	<li><a href="#varaction2_additional_types">Variational Action 2 - Additional Types</a></li>
 	<li><a href="#varaction2_vehicles">Variational Action 2 - Vehicles</a></li>
 	<li><a href="#varaction2_station">Variational Action 2 - Stations</a></li>
+	<li><a href="#varaction2_house">Variational Action 2 - Houses</a></li>
 	<li><a href="#varaction2_railtypes">Variational Action 2 - Railtypes</a></li>
 	<li><a href="#varaction2_object">Variational Action 2 - Objects</a></li>
 	<li><a href="#varaction2_airporttiles">Variational Action 2 - Airport tiles</a></li>
@@ -200,17 +201,37 @@
 	<h3 id="a0stations"><a href="https://newgrf-specs.tt-wiki.net/wiki/Action0/Stations">Action 0 - Stations</a></h3>
 	<h4 id="station_min_bridge_height"><a href="https://newgrf-specs.tt-wiki.net/wiki/Action0/Stations#Minimum_bridge_height_.281B.29">Minimum bridge height (1B, or mappable property: station_min_bridge_height)</a></h4>
 	<p>This property allows building bridges over stations.<br />
-	The bridge height property defines minimum clearances required for a bridge for each of the 8 station layouts (or 0 to not allow any bridge). Values are given in height level units (1 level == 8px).<br />
-	Each height value is 1 byte, the total property length is 8 bytes.
+	The bridge height property defines minimum clearances required for a bridge for each of the station layouts (or 0 to not allow any bridge). Values are given in height level units (1 level == 8px).<br />
+	</p>
+
+	<p>Fixed length of 8 values:<br />
+	Each height value is 1 byte, the number of values (one for each station layout) is 8, the total property length is 8 bytes.
 	</p>
 	<p>This is indicated by the feature name: <font face="monospace">action0_station_prop1B</font>, version 1</p>
+
+	<p>Variable length:<br />
+	Each height value is 1 byte, the number of values (one for each station layout) is variable, the total property length is variable.<br />
+	The mappable property must be used, not variable 1B. The number of values is determined from the length.
+	</p>
+	<p>This is indicated by the feature name: <font face="monospace">action0_station_min_bridge_height</font>, version 1</p>
+
 	<h4 id="station_disallowed_bridge_pillars">Disallowed bridge pillars (mappable property: station_disallowed_bridge_pillars)</h4>
 	<p>This property describes which bridge pillars are not allowed on the station tile.<br />
-	It consists of 8 pillar flags, for each of the 8 station layouts.<br />
-	Each set of flags is 1 byte, the total property length is 8 bytes.<br />
+	It consists of N pillar flags, for each of the N station layouts.<br />
+	Each set of flags is 1 byte.<br />
 	Each set of flags has the format described in the bridge_pillar_flags property section, below.
 	</p>
+
+	<p>Fixed length of 8 values:<br />
+	Each set of flags is 1 byte, the number of values (one for each station layout) is 8, the total property length is 8 bytes.
+	</p>
 	<p>This is indicated by the feature name: <font face="monospace">action0_station_disallowed_bridge_pillars</font>, version 1</p>
+
+	<p>Variable length:<br />
+	Each set of flags is 1 byte, the number of values (one for each station layout) is variable, the total property length is variable.<br />
+	The number of values is determined from the length.
+	</p>
+	<p>This is indicated by the feature name: <font face="monospace">action0_station_disallowed_bridge_pillars</font>, version 2</p>
 
 	<br />
 	The 8 station layouts are described below.
@@ -824,6 +845,48 @@
 	<br />
 	The remaining bits are reserved for future use and should be masked.<br />
 	This requires <font face="monospace">varaction2_station_station_nearby_info_v2</font>, version 1.
+	</p>
+	<br />
+	<h3 id="varaction2_house"><a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses">Variational Action 2 - Houses</a></h3>
+	<h4 id="house_same_id_town_count">Building count: same ID, current town (mappable variable: house_same_id_town_count)</h4>
+	<p>This is the same as bits 0 - 7 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Building_counts_.2844.29">44/Building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_same_id_map_count">Building count: same ID, whole map (mappable variable: house_same_id_map_count)</h4>
+	<p>This is the same as bits 8 - 15 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Building_counts_.2844.29">44/Building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_same_class_town_count">Building count: same class, current town (mappable variable: house_same_class_town_count)</h4>
+	<p>This is the same as bits 16 - 23 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Building_counts_.2844.29">44/Building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_same_class_map_count">Building count: same class, total (mappable variable: house_same_class_map_count)</h4>
+	<p>This is the same as bits 24 - 31 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Building_counts_.2844.29">44/Building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_old_id_town_count">Building count: other old ID, total (mappable variable: house_other_old_id_town_count)</h4>
+	<p>This is the same as bits 0 - 7 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">60/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_old_id_map_count">Building count: other old ID, total (mappable variable: house_other_old_id_map_count)</h4>
+	<p>This is the same as bits 8 - 15 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">60/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_id_town_count">Building count: other new ID, current town (mappable variable: house_other_id_town_count)</h4>
+	<p>This is the same as bits 0 - 7 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">61/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_id_map_count">Building count: other new ID, whole map (mappable variable: house_other_id_map_count)</h4>
+	<p>This is the same as bits 8 - 15 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">61/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_class_town_count">Building count: other new class, current town (mappable variable: house_other_class_town_count)</h4>
+	<p>This is the same as bits 16 - 23 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">61/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
+	</p>
+	<h4 id="house_other_class_map_count">Building count: other new class, total (mappable variable: house_other_class_map_count)</h4>
+	<p>This is the same as bits 24 - 31 of <a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Houses#Other_building_counts_.2860.2C_61.29">61/Other building counts</a>, except not clamped to a maximum of 0xFF.<br />
+	This requires <font face="monospace">varaction2_house_uncapped_building_counts</font>, version 1.
 	</p>
 	<br />
 	<h3 id="varaction2_railtypes"><a href="https://newgrf-specs.tt-wiki.net/wiki/VariationalAction2/Railtypes">Variational Action 2 - Railtypes</a></h3>

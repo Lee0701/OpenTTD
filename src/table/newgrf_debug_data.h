@@ -587,7 +587,7 @@ class NIHVehicle : public NIHelper {
 					if (v->IsGroundVehicle()) root_spritegroup = GetWagonOverrideSpriteSet(v->engine_type, v->cargo_type, v->GetGroundVehicleCache()->first_engine);
 					if (root_spritegroup == nullptr) {
 						CargoID cargo = v->cargo_type;
-						assert(cargo < lengthof(e->grf_prop.spritegroup));
+						assert(cargo < std::size(e->grf_prop.spritegroup));
 						root_spritegroup = e->grf_prop.spritegroup[cargo] != nullptr ? e->grf_prop.spritegroup[cargo] : e->grf_prop.spritegroup[SpriteGroupCargo::SG_DEFAULT];
 					}
 					auto iter = e->sprite_group_cb36_properties_used.find(root_spritegroup);
@@ -750,8 +750,8 @@ static const NIFeature _nif_vehicle = {
 #define NICS(cb_id, bit) NIC(cb_id, StationSpec, callback_mask, bit)
 static const NICallback _nic_stations[] = {
 	NICS(CBID_STATION_AVAILABILITY,     CBM_STATION_AVAIL),
-	NICS(CBID_STATION_SPRITE_LAYOUT,    CBM_STATION_SPRITE_LAYOUT),
-	NICS(CBID_STATION_TILE_LAYOUT,      CBM_NO_BIT),
+	NICS(CBID_STATION_DRAW_TILE_LAYOUT, CBM_STATION_DRAW_TILE_LAYOUT),
+	NICS(CBID_STATION_BUILD_TILE_LAYOUT,CBM_NO_BIT),
 	NICS(CBID_STATION_ANIM_START_STOP,  CBM_NO_BIT),
 	NICS(CBID_STATION_ANIM_NEXT_FRAME,  CBM_STATION_ANIMATION_NEXT_FRAME),
 	NICS(CBID_STATION_ANIMATION_SPEED,  CBM_STATION_ANIMATION_SPEED),
@@ -789,7 +789,7 @@ static const NIVariable _niv_stations[] = {
 
 class NIHStation : public NIHelper {
 	bool IsInspectable(uint index) const override        { return GetStationSpec(index) != nullptr; }
-	uint GetParent(uint index) const override            { return GetTownInspectWindowNumber(Station::GetByTile(index)->town); }
+	uint GetParent(uint index) const override            { return GetTownInspectWindowNumber(BaseStation::GetByTile(index)->town); }
 	bool ShowSpriteDumpButton(uint index) const override { return true; }
 	const void *GetInstance(uint index)const override    { return nullptr; }
 	const void *GetSpec(uint index) const override       { return GetStationSpec(index); }
@@ -798,7 +798,7 @@ class NIHStation : public NIHelper {
 
 	uint Resolve(uint index, uint var, uint param, GetVariableExtra *extra) const override
 	{
-		StationResolverObject ro(GetStationSpec(index), Station::GetByTile(index), index, INVALID_RAILTYPE);
+		StationResolverObject ro(GetStationSpec(index), BaseStation::GetByTile(index), index, INVALID_RAILTYPE);
 		return ro.GetScope(VSG_SCOPE_SELF)->GetVariable(var, param, extra);
 	}
 
@@ -937,6 +937,16 @@ static const NIVariable _niv_house[] = {
 	NIV(0x65, "distance of nearest house matching a given criterion"),
 	NIV(0x66, "class and ID of nearby house tile"),
 	NIV(0x67, "GRFID of nearby house tile"),
+	NIV(A2VRI_HOUSE_SAME_ID_MAP_COUNT, "building count: same ID, map"),
+	NIV(A2VRI_HOUSE_SAME_CLASS_MAP_COUNT, "building count: same class, map"),
+	NIV(A2VRI_HOUSE_SAME_ID_TOWN_COUNT, "building count: same ID, town"),
+	NIV(A2VRI_HOUSE_SAME_CLASS_TOWN_COUNT, "building count: same class, town"),
+	NIVF(A2VRI_HOUSE_OTHER_OLD_ID_MAP_COUNT, "building count: other old ID, map", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_HOUSE_OTHER_OLD_ID_TOWN_COUNT, "building count: other old ID, town", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_HOUSE_OTHER_ID_MAP_COUNT, "building count: other ID, map", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_HOUSE_OTHER_CLASS_MAP_COUNT, "building count: other class, map", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_HOUSE_OTHER_ID_TOWN_COUNT, "building count: other ID, town", NIVF_SHOW_PARAMS),
+	NIVF(A2VRI_HOUSE_OTHER_CLASS_TOWN_COUNT, "building count: other class, town", NIVF_SHOW_PARAMS),
 	NIV_END()
 };
 
@@ -976,6 +986,14 @@ class NIHHouse : public NIHelper {
 		output.print(buffer);
 		seprintf(buffer, lastof(buffer), "  animation: frames: %u, status: %u, speed: %u, triggers: 0x%X", hs->animation.frames, hs->animation.status, hs->animation.speed, hs->animation.triggers);
 		output.print(buffer);
+
+		{
+			char *b = buffer + seprintf(buffer, lastof(buffer), "  min year: %d", hs->min_year.base());
+			if (hs->max_year < CalTime::MAX_YEAR) {
+				seprintf(b, lastof(buffer), ", max year %d", hs->max_year.base());
+			}
+			output.print(buffer);
+		}
 
 		if (GetCleanHouseType(index) != GetHouseType(index)) {
 			hs = HouseSpec::Get(GetCleanHouseType(index));
@@ -1594,15 +1612,15 @@ class NIHObject : public NIHelper {
 		char buffer[1024];
 		output.print("Debug Info:");
 		const ObjectSpec *spec = ObjectSpec::GetByTile(index);
-		if (spec) {
+		if (spec != nullptr) {
 			ObjectID id = GetObjectIndex(index);
 			const Object *obj = Object::Get(id);
 			char *b = buffer + seprintf(buffer, lastof(buffer), "  index: %u, type ID: %u", id, GetObjectType(index));
 			if (spec->grf_prop.grffile != nullptr) {
 				b += seprintf(b, lastof(buffer), "  (local ID: %u)", spec->grf_prop.local_id);
 			}
-			if (spec->cls_id != INVALID_OBJECT_CLASS) {
-				uint class_id = ObjectClass::Get(spec->cls_id)->global_id;
+			if (spec->class_index != INVALID_OBJECT_CLASS) {
+				uint class_id = ObjectClass::Get(spec->class_index)->global_id;
 				b += seprintf(b, lastof(buffer), ", class ID: %c%c%c%c", class_id >> 24, class_id >> 16, class_id >> 8, class_id);
 			}
 			output.print(buffer);
@@ -1619,11 +1637,11 @@ class NIHObject : public NIHelper {
 
 			{
 				CalTime::YearMonthDay ymd = CalTime::ConvertDateToYMD(spec->introduction_date);
-				char *b = buffer + seprintf(buffer, lastof(buffer), " intro: %4i-%02i-%02i",
+				char *b = buffer + seprintf(buffer, lastof(buffer), "  intro: %i-%02i-%02i",
 						ymd.year.base(), ymd.month + 1, ymd.day);
 				if (spec->end_of_life_date < CalTime::MAX_DATE) {
 					ymd = CalTime::ConvertDateToYMD(spec->end_of_life_date);
-					seprintf(b, lastof(buffer), ", end of life: %4i-%02i-%02i",
+					seprintf(b, lastof(buffer), ", end of life: %i-%02i-%02i",
 							ymd.year.base(), ymd.month + 1, ymd.day);
 				}
 				output.print(buffer);
@@ -2466,8 +2484,8 @@ class NIHRoadStop : public NIHelper {
 		char buffer[1024];
 		output.print("Debug Info:");
 		const RoadStopSpec *spec = GetRoadStopSpec(index);
-		if (spec) {
-			uint class_id = RoadStopClass::Get(spec->cls_id)->global_id;
+		if (spec != nullptr) {
+			uint class_id = RoadStopClass::Get(spec->class_index)->global_id;
 			char *b = buffer + seprintf(buffer, lastof(buffer), "  class ID: %c%c%c%c", class_id >> 24, class_id >> 16, class_id >> 8, class_id);
 			if (spec->grf_prop.grffile != nullptr) {
 				b += seprintf(b, lastof(buffer), "  (local ID: %u)", spec->grf_prop.local_id);

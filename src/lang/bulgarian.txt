@@ -288,7 +288,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}С ак�
 STR_BUTTON_DEFAULT                                              :{BLACK}По подразбиране
 STR_BUTTON_CANCEL                                               :{BLACK}Отказ
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Внимание: Администраторите на сървъра могат да прочетат всеки текст, въведен тук.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-.,уеишщксдзц;(ьяаожгтнвмчюйъэфхпрлб
@@ -971,11 +970,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Отме
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Анти-Alias шрифтове
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Отметни тук за да се добави anti-alias към променливи шрифтове.
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Автоматизирано проучване
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Участвайте в автоматизирано проучване
@@ -1003,6 +997,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Допъ
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Пакет базова музика
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Избери пакет базова музика
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Допълнителна информация за пакетът базовата музика
+
 
 
 
@@ -1665,7 +1660,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Интерва�
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Задайте интервала за обслужване на новите въздухоплавателни средства по подразбиране, ако такъв интервал не е зададен за превозното средство
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Интервал на обслужване за кораби: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Задайте интервала за обслужване на новите кораби по подразбиране, ако такъв интервал не е изрично зададен за превозното средство
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}д{P 0 ен ни}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Изключен
 
@@ -1906,17 +1902,8 @@ STR_CONFIG_SETTING_ENVIRONMENT_INDUSTRIES                       :Индустр�
 STR_CONFIG_SETTING_AI                                           :Съперници
 STR_CONFIG_SETTING_AI_NPC                                       :Компютърни играчи
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Пътенамирач за влакове: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Маршрутизатор използван за влакове
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Пътенамирач за автомобили: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Маршрутизатор използван за автомобили
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Пътенамирач за кораби: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Маршрутизатор използван за кораби
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Автоматично обръщане при сигнали: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Позволява на влаковете да обръщат ако са чакали твърде дълго
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(препоръчва се)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Промяна стойноста на настройка
 
@@ -2203,7 +2190,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Свал
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Изключване
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Сървъра е защитен. Въведете парола
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Компанията е защитена. Въведете парола
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Списък с играчите
@@ -2220,26 +2206,15 @@ STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :Админис�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Изхвърлен
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Бан
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Изтриване
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Отключване на парола
 
 
 
 
 STR_NETWORK_SPECTATORS                                          :Наблюдатели
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Незапазвай паролата
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Дай на компанията новата парола
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Парола на компанията
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Парола по подразбиране за компания
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Използване на тази парола по подразбиране за нови компании
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Присъедини се
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Присъедини се, управлявайки тази компания
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Парола
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Постави парола за да предпазиш компанията си от неоторизирани потребители.
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Поставяне парола на компанията
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Изпращане
@@ -2476,7 +2451,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Изби
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Пътна точка
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Избор тип на пътни точки
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Избор на жп гара
@@ -2489,8 +2463,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Дълж
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Влачене & Пускане
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Строене на станция чрез изтегляне
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Избор на клас станция за показване
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Избор тип на станция за строене
+
 
 STR_STATION_CLASS_DFLT                                          :Станция по подразбиране
 STR_STATION_CLASS_WAYP                                          :Пътни точки
@@ -2622,8 +2595,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Купи
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Избор на обект
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Избери обект за построяване. Shift строеж/цена за построяване
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Избор на клас на обекта за строене
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Изглед на обекта
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Размер: {GOLD}{NUM} x {NUM} плочки
 
@@ -2963,9 +2934,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% �
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Генерация на свят
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Създаване на река
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Генерация на дърва
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Генерация на статични
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Създаване на твърда и скална повърност
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Генерация на статични
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Генерация на дърва
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Настройка на играта
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Изпълняване цикъл на плочките
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Пускане на програмен език

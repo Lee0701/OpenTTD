@@ -309,7 +309,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Activant
 STR_BUTTON_DEFAULT                                              :{BLACK}Predeterminat
 STR_BUTTON_CANCEL                                               :{BLACK}Cancel·la
 STR_BUTTON_OK                                                   :{BLACK}D'acord
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Avís: Els administradors del servidor potser poden llegir el que escriviu aquí.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -957,11 +956,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Volum
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Efectes de so
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Música
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0{NBSP}%
-STR_GAME_OPTIONS_VOLUME_25                                      :25{NBSP}%
-STR_GAME_OPTIONS_VOLUME_50                                      :50{NBSP}%
-STR_GAME_OPTIONS_VOLUME_75                                      :75{NBSP}%
-STR_GAME_OPTIONS_VOLUME_100                                     :100{NBSP}%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}{NBSP}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Moneda
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Selecció de la unitat monetària
@@ -1059,11 +1054,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Marqueu 
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Aplica anti-àlies a les fonts
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Marqueu aquesta casella per a fer servir tècniques d'anti-àlies a les fonts redimensionables.
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :x1
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :x2
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :x3
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :x4
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :x5
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Sondeig automatitzat
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Participa al sondeig automatitzat
@@ -1091,6 +1082,9 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Informac
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Conjunt de peces de música base
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Selecciona el conjunt de peces de música base a utilitzar
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Informació addicional sobre el conjunt de peces de música base
+
+STR_GAME_OPTIONS_ONLINE_CONTENT                                 :Descarrega contingut
+STR_GAME_OPTIONS_ONLINE_CONTENT_TOOLTIP                         :Comprova si hi ha continguts nous o actualitzats per a descarregar.
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(no s'han instal·lat complements per a interactuar amb plataformes socials)
 
@@ -1833,7 +1827,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Interval per de
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Estableix l'interval de revisió predeterminat pels nous avions, si no hi ha un interval de revisió explícit pel vehicle
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Interval per defecte de servei per als vaixells: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Estableix l'interval de revisió predeterminat pels vaixells que es comprin, si no hi ha un interval de revisió explícit pel vehicle.
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}di{P 0 a es}/minut{P 0 "" s}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}di{P 0 a es}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}minut{P 0 "" s}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Desactivat
 
@@ -2133,17 +2131,8 @@ STR_CONFIG_SETTING_AI                                           :Competidors
 STR_CONFIG_SETTING_AI_NPC                                       :Jugadors IA
 STR_CONFIG_SETTING_NETWORK                                      :Xarxa
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Encaminador dels trens: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Algorisme a emprar per a escollir les rutes dels trens
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Encaminador d'automòbils: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Algorisme a emprar per a escollir les rutes dels automòbils
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Encaminador dels vaixells: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Algorisme a emprar per a escollir les rutes dels vaixells
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Canvi de sentit automàtic als senyals: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Permetre als trens girar en un senyal, si esperaven allà durant molt temps
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Recomanat)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Canvia el valor de l'ajustament
 
@@ -2462,7 +2451,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Obtenint
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Desconnecta
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Servidor protegit: escriviu-ne la contrasenya
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Companyia protegida: escriviu-ne la contrasenya
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Jugadors en línia
@@ -2489,6 +2477,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :El vostre nom d
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}Accions d'administració que s'han de realitzar per a aquest client.
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}Accions d'administració que s'han de realitzar per a aquesta companyia.
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}Uniu-vos a aquesta companyia.
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}Autoritza al client a unir-se a la vostra companyia.
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}Envia un missatge a aquest jugador.
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}Envia un missatge a tots els jugadors de la companyia.
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}Envieu un missatge a tots els espectadors.
@@ -2511,13 +2500,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Via serv
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Treu
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Expulsa
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Esborra
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Desbloca la contrasenya
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Acció de l'administrador
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Esteu segur que voleu treure el jugador «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Esteu segur que voleu expulsar el jugador «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Esteu segur que voleu esborrar la companyia «{COMPANY}»?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Esteu segur que voleu restablir la contrasenya de la companyia «{COMPANY}»?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Voleu usar un servei de transmissió?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}No s'ha pogut establir una connexió amb el servidor «{STRING}».{}Voleu transmetre aquesta sessió via «{STRING}»?
@@ -2534,19 +2521,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Sí
 
 STR_NETWORK_SPECTATORS                                          :Espectadors
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}No desis la nova contrasenya.
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Estableix aquesta nova contrasenya per a la companyia.
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Contrasenya de la companyia
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Contrasenya predeterminada de companyies noves
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Utilitza com a contrasenya predeterminada de companyies noves la d'aquesta companyia.
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Uniu-vos
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Uniu-vos a aquesta companyia per poder-hi jugar.
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Contrasenya
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Protegeix la vostra companyia amb una contrasenya per tal d'evitar que la controlin altres usuaris no autoritzats.
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Estableix la contrasenya de la companyia.
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Envia
@@ -2809,7 +2786,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Seleccio
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Punt de pas
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Seleccioneu el tipus de punt de pas.
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Estacions de Tren
@@ -2822,8 +2798,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Seleccio
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Arrossega i solta
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Construeix una estació amb el mètode arrossega i solta.
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Selecciona un tipus de estació a mostrar
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Selecciona el tipus de estació a construir
+
 
 STR_STATION_CLASS_DFLT                                          :Per defecte
 STR_STATION_CLASS_DFLT_STATION                                  :Estació per defecte
@@ -2966,8 +2941,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Compra t
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Selecció d'objecte
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Seleccioneu l'objecte a construir. Amb Ctrl, se selecciona una àrea diagonal. Amb Maj, es commuta entre construir i mostrar el cost estimat.
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Selecciona la classe d'objecte a construir
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Previsualització de l'objecte
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Mida: {GOLD}{NUM} x {NUM} cel·les
 
@@ -3394,10 +3367,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Realmen
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}{NBSP}% complet
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Generació del món
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Generació del terreny
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generació de rius
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generació d'arbres
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generació inamovible
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generació d'una àrea escarpada i rocosa
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Generació de poblacions
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Generació d'indústries
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generació inamovible
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generació d'arbres
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Configurant la partida
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Passant el bucle de cel·les
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Executant l'script
@@ -5287,6 +5263,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Canvia l
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Encara no hi ha vehicles disponibles
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Inicieu una partida nova després de {DATE_SHORT} o useu un NewGRF que proporcioni vehicles primerencs.
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Les poblacions no disposen de tipus de carretera que puguin construir.
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Canvieu la configuració dels NewGRF
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Encara no hi ha tipus de carretera disponibles per a les poblacions.
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Comenceu una partida nova després del {DATE_SHORT} o feu servir un NewGRF que proporcioni tipus de carretera que puguin construir les poblacions.
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}No pots fer que un tren passi d'una senyal amb perill...

@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Mat dës
 STR_BUTTON_DEFAULT                                              :{BLACK}Standard
 STR_BUTTON_CANCEL                                               :{BLACK}Ofbriechen
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Warnung: Server-Administratoren kënnen all Text aus desem Feld liesen.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :§1234567890'^\qwertzuiopè¨asdfghjkléà  yxcvbnm,.- .
@@ -956,11 +955,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Volume
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Soundeffekter
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musik
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Währungseenheet
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Währungseenheet wielen
@@ -1057,11 +1051,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Klick d�
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Anti-alias Schrëften
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Klick dës Optioun fir verännerbar Schrëften ze anti-aliasen
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatesch Emfro
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}An enger automatescher Emfro matmaachen
@@ -1089,6 +1078,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Méi Inf
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Basis Musikset
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Wiel de Basis Musikset dee soll benotzt ginn
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Méi Informatiounen iwwer de Basis Musikset
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(keng Plugins déi mat Social Platforms kommunizéiren installéiert)
 
@@ -1831,7 +1821,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Standard Revisi
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Definéiert de Standardrevisiounsintervall fir nei Fligeren, wann keen expliziten Revisiounsintervall uginn ass
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Standard Revisiounsintervall fir Schëffer: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Definéiert de Standardrevisiounsintervall fir nei Schëffer, wann keen expliziten Revisiounsintervall uginn ass
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}D{P 0 ag eeg}/Minutt{P 0 "" en}%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Ausgeschalt
 
@@ -2131,17 +2122,8 @@ STR_CONFIG_SETTING_AI                                           :Géigner
 STR_CONFIG_SETTING_AI_NPC                                       :Computergéigner
 STR_CONFIG_SETTING_NETWORK                                      :Netzwierk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Pfadfinder fir Zich: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Pfadfinder dee fir Zich benotzt gëtt
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Pfadfinder fir Stroossegefierer: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Pfadfinder dee fir Gefierer benotzt gëtt
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Pfadfinder fir Schëffer: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Pfadfinder dee fir Schëffer benotzt gëtt
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automatescht Emdréinen bei Signaler: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Erlab Zich bei engem Signal emzedréinen, wann se eng laang Zäit geward hunn
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(recommandéiert)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Astellung änneren
 
@@ -2460,7 +2442,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Ruffen d
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Verbindung trennen
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server ass geschützt. Passwuert aginn
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Firma ass geschützt. Passwuert aginn
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Online Spiller
@@ -2509,13 +2490,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Via e Re
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Kicken
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Bannen
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Läschen
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Password entspären
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Administrativ Actioun
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Bassde sécher dass du de Spiller '{STRING}' kicke wëlls?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Bass du sécher, dass du de Spiller '{STRING}' banne wëlls?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Bass du sécher, dass du d'Firma '{COMPANY}' läsche wëlls?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Bassde sécher dass du d'Password vun der Firma '{COMPANY}' wëlls reseten?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Relay benotzen?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Konnt keng Verbindung tëschend dir an dem Server '{STRING}' opbauen.{}Wëlls du des Verbindung iwwert de Relay '{STRING}' man?
@@ -2532,19 +2511,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Jo
 
 STR_NETWORK_SPECTATORS                                          :Zuschauer
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Späicher d'Passwuert net
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Benotz daat neit Passwuert fir d'Firma
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Firma-Passwuert
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Standard Firma-Passwuert
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Benotzt dëst Passwuert als Standard fir nei Firmen
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Bäitrieden
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Bäitrieden an mat deser Firma spillen
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Passwuert
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Setzt en Passwuert fir nëmmen authoriséiert Benotzer spillen ze loossen
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Setzt d'Firmen-Passwuert
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Ofschécken
@@ -2805,7 +2774,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Wielt d'
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Weepunkt
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Wielt de Weepunktyp
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Gare Auswiel
@@ -2818,8 +2786,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Wielt d'
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & Drop
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}D'Statioun per drag & drop bauen
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Wielt eng Statiounsklass déi ugewise gëtt
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Wielt den Typ vu Statioun dee gebaut gëtt
+
 
 STR_STATION_CLASS_DFLT                                          :Standard
 STR_STATION_CLASS_DFLT_STATION                                  :Standardstatioun
@@ -2962,8 +2929,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Kaf Land
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Objetsauswiel
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Wiel den Objet dee gebaut gëtt. Ctrl+Klick+Zéien wielt d'Areal diagonal. Dréck Shift fir nëmmen déi ongeféier Käschten unzeweisen
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Wiel d'Klass vun dem Objet dee sollt gebaut ginn
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Preview vum Objet
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Gréisst: {GOLD}{NUM} x {NUM} Felder
 
@@ -3391,9 +3356,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% k
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Welt-Generatioun
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generéiren vu Flëss
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Baam Generatioun
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objets-Generatioun
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generatioun vu knubbelegem a stengege Land
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objets-Generatioun
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Baam Generatioun
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Spill gëtt opgestallt
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Felder-Verdeelung
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Lafende Script

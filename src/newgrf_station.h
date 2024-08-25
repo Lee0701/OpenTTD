@@ -10,6 +10,7 @@
 #ifndef NEWGRF_STATION_H
 #define NEWGRF_STATION_H
 
+#include "core/enum_type.hpp"
 #include "newgrf_animation_type.h"
 #include "newgrf_callbacks.h"
 #include "newgrf_class.h"
@@ -20,6 +21,7 @@
 #include "newgrf_spritegroup.h"
 #include "newgrf_town.h"
 #include <vector>
+#include <unordered_map>
 
 /** Scope resolver for stations. */
 struct StationScopeResolver : public ScopeResolver {
@@ -59,11 +61,10 @@ private:
 /** Station resolver. */
 struct StationResolverObject : public ResolverObject {
 	StationScopeResolver station_scope; ///< The station scope resolver.
-	TownScopeResolver *town_scope;      ///< The town scope resolver (created on the first call).
+	std::optional<TownScopeResolver> town_scope = std::nullopt; ///< The town scope resolver (created on the first call).
 
 	StationResolverObject(const StationSpec *statspec, BaseStation *st, TileIndex tile, RailType rt,
 			CallbackID callback = CBID_NO_CALLBACK, uint32_t callback_param1 = 0, uint32_t callback_param2 = 0);
-	~StationResolverObject();
 
 	TownScopeResolver *GetTown();
 
@@ -89,6 +90,9 @@ struct StationResolverObject : public ResolverObject {
 	GrfSpecFeature GetFeature() const override;
 	uint32_t GetDebugID() const override;
 };
+
+static const uint32_t STATION_CLASS_LABEL_DEFAULT = 'DFLT';
+static const uint32_t STATION_CLASS_LABEL_WAYPOINT = 'WAYP';
 
 enum StationClassID : uint16_t {
 	STAT_CLASS_BEGIN = 0,    ///< the lowest valid value
@@ -125,11 +129,11 @@ enum StationSpecIntlFlags {
 };
 
 /** Station specification. */
-struct StationSpec {
-	StationSpec() : cls_id(STAT_CLASS_DFLT), name(0),
+struct StationSpec : NewGRFSpecBase<StationClassID> {
+	StationSpec() : name(0),
 		disallowed_platforms(0), disallowed_lengths(0),
 		cargo_threshold(0), cargo_triggers(0),
-		callback_mask(0), flags(0), pylons(0), wires(0), blocked(0),
+		callback_mask(0), flags(0),
 		animation({0, 0, 0, 0}), internal_flags(0) {}
 	/**
 	 * Properties related the the grf file.
@@ -138,7 +142,6 @@ struct StationSpec {
 	 * evaluating callbacks.
 	 */
 	GRFFilePropsBase<NUM_CARGO + 3> grf_prop;
-	StationClassID cls_id;     ///< The class to which this spec belongs.
 	StringID name;             ///< Name of this station.
 
 	/**
@@ -174,31 +177,60 @@ struct StationSpec {
 
 	uint8_t flags; ///< Bitmask of flags, bit 0: use different sprite set; bit 1: divide cargo about by station size
 
-	uint8_t pylons;  ///< Bitmask of base tiles (0 - 7) which should contain elrail pylons
-	uint8_t wires;   ///< Bitmask of base tiles (0 - 7) which should contain elrail wires
-	uint8_t blocked; ///< Bitmask of base tiles (0 - 7) which are blocked to trains
-	uint8_t bridge_height[8]; ///< Minimum height for a bridge above, 0 for none
-	uint8_t bridge_disallowed_pillars[8]; ///< Disallowed pillar flags for a bridge above
+	struct BridgeAboveFlags {
+		uint8_t height = UINT8_MAX;     ///< Minimum height for a bridge above, 0 for none
+		uint8_t disallowed_pillars = 0; ///< Disallowed pillar flags for a bridge above
+	};
+	std::vector<BridgeAboveFlags> bridge_above_flags; ///< List of bridge above flags.
+
+	enum class TileFlags : uint8_t {
+		None = 0,
+		Pylons = 1U << 0, ///< Tile should contain catenary pylons.
+		NoWires = 1U << 1, ///< Tile should NOT contain catenary wires.
+		Blocked = 1U << 2, ///< Tile is blocked to vehicles.
+	};
+	std::vector<TileFlags> tileflags; ///< List of tile flags.
 
 	AnimationInfo animation;
 
 	uint8_t internal_flags; ///< Bitmask of internal spec flags (StationSpecIntlFlags)
 
-	/**
-	 * Custom platform layouts.
-	 * This is a 2D array containing an array of tiles.
-	 * 1st layer is platform lengths.
-	 * 2nd layer is tracks (width).
-	 * These can be sparsely populated, and the upper limit is not defined but
-	 * limited to 255.
-	 */
-	std::vector<std::vector<std::vector<uint8_t>>> layouts;
+	/** Custom platform layouts, keyed by platform and length combined. */
+	std::unordered_map<uint16_t, std::vector<uint8_t>> layouts;
+
+	BridgeAboveFlags GetBridgeAboveFlags(uint gfx) const
+	{
+		if (gfx < this->bridge_above_flags.size()) return this->bridge_above_flags[gfx];
+		return {};
+	}
 };
+DECLARE_ENUM_AS_BIT_SET(StationSpec::TileFlags);
 
 /** Class containing information relating to station classes. */
 using StationClass = NewGRFClass<StationSpec, StationClassID, STAT_CLASS_MAX>;
 
 const StationSpec *GetStationSpec(TileIndex t);
+
+/**
+ * Get the station layout key for a given station layout size.
+ * @param platforms Number of platforms.
+ * @param length Length of platforms.
+ * @returns Key of station layout.
+ */
+inline uint16_t GetStationLayoutKey(uint8_t platforms, uint8_t length)
+{
+	return (length << 8U) | platforms;
+}
+
+/**
+ * Test if a StationClass is the waypoint class.
+ * @param cls StationClass to test.
+ * @return true if the class is the waypoint class.
+ */
+inline bool IsWaypointClass(const StationClass &cls)
+{
+	return cls.global_id == STATION_CLASS_LABEL_WAYPOINT || GB(cls.global_id, 24, 8) == UINT8_MAX;
+}
 
 /* Evaluate a tile's position within a station, and return the result a bitstuffed format. */
 uint32_t GetPlatformInfo(Axis axis, uint8_t tile, int platforms, int length, int x, int y, bool centred);

@@ -309,7 +309,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Bu düğ
 STR_BUTTON_DEFAULT                                              :{BLACK}Varsayılan
 STR_BUTTON_CANCEL                                               :{BLACK}İptal
 STR_BUTTON_OK                                                   :{BLACK}Tamam
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Uyarı: Sunucu yöneticileri buraya yazılan yazıları okuyabilir.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :"1234567890*-\qwertyuıopğüasdfghjklşi,'  zxcvbnmöç. .
@@ -957,11 +956,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Ses seviyesi
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Ses efektleri
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Müzik
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Para birimleri
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Para birimi seçimi
@@ -1059,11 +1053,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Yazı ti
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Yazı tipi kenarlarını yumuşatma
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Yeniden boyutlandırılabilir yazı tiplerinin kenarlarını yumuşatmak için bu kutuyu işaretleyin
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Otomatik anket
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Otomatik ankete katılın
@@ -1091,6 +1080,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Temel se
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Temel müzik kümesi
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Kullanılacak temel müzik kümesini seçin
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Temel müzik hakkında daha fazla bilgi
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(yüklü sosyal platformlarla entegre edilecek eklenti yok)
 
@@ -1833,7 +1823,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Hava araçları
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Yeni hava araçları için varsayılan bakım aralığını ayarlar, eğer araç için özel bir bakım aralığı belirtilmemişse geçerlidir
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Gemiler için varsayılan bakım aralığı: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Yeni gemiler için varsayılan bakım aralığını ayarlar, eğer araç için özel bir bakım aralığı belirtilmemişse geçerlidir
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}%gün/dakika
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Etkisiz
 
@@ -2133,17 +2124,8 @@ STR_CONFIG_SETTING_AI                                           :Rakipler
 STR_CONFIG_SETTING_AI_NPC                                       :Bilgisayar oyuncuları
 STR_CONFIG_SETTING_NETWORK                                      :Ağ
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Trenler için yol bulucu: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Trenler için kullanılacak "yol bulucu" algoritma
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Karayolu taşıtları için yol bulucu: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Karayolu araçları için kullanılacak "yol bulucu" algoritma
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Gemiler için yol bulucu: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Gemiler için kullanılacak "yol bulucu" algoritma
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :İşaretlerde otomatik geri çevirme: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Tren sinyalde uzun süre beklediği takdirde ters yöne gitmesine izin ver
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Önerilen)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Ayar değerini değiştir
 
@@ -2462,7 +2444,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Şirket 
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Bağlantıyı kes
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Sunucu korumalı. Parola girin
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Şirket korumalı. Parola girin
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Aktif oyuncular
@@ -2511,13 +2492,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Aktarıc
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :At
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Yasakla
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Sil
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Parola ile kilit açma
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Yönetici eylemi
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}'{STRING}' adlı oyuncuyu atmak istediğine emin misin?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}'{STRING}' adlı oyunucuyu yasaklamak istediğine emin misin?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}'{COMPANY}' şirketini silmek istediğine emin misin?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}'{COMPANY}' adlı şirketin şifresini sıfırlamak istediğine emin misin?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Aktarıcı kullan?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Sunucu '{STRING}' ile sizin aranızda bağlantı kurma başarısız oldu.{}Bu oturumu '{STRING}' ile aktarmak ister misiniz?
@@ -2534,19 +2513,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Evet
 
 STR_NETWORK_SPECTATORS                                          :İzleyiciler
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Girilen parolayı kaydetme
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Yeni parolayı şirkete ver
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Şirket parolası
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Öntanımlı şirket parolası
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Bu şirketin parolasını yeni şirketlerde öntanımlı olarak kullan
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Katıl
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Katıl ve bu şirket olarak oyna
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Parola
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Başkalarınin girmemesi için parola koy
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Şirket parolası
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Gönder
@@ -2602,6 +2571,7 @@ STR_NETWORK_ERROR_CLIENT_NOT_EXPECTED                           :geçersiz ya da
 STR_NETWORK_ERROR_CLIENT_WRONG_REVISION                         :yanlış düzeltme
 STR_NETWORK_ERROR_CLIENT_NAME_IN_USE                            :isim kullanımda
 STR_NETWORK_ERROR_CLIENT_WRONG_PASSWORD                         :yanlış parola
+STR_NETWORK_ERROR_CLIENT_NOT_ON_ALLOW_LIST                      :izin verilenler listesinde değil
 STR_NETWORK_ERROR_CLIENT_COMPANY_MISMATCH                       :DoCommand için yanlış company-id
 STR_NETWORK_ERROR_CLIENT_KICKED                                 :sunucu tarafından atıldı
 STR_NETWORK_ERROR_CLIENT_CHEATER                                :hile yapmaya çalıştı
@@ -2807,7 +2777,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Tren gar
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Yerimi
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Yerimi türü seç
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Tren istasyonu Seçimi
@@ -2820,8 +2789,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Tren ist
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Sürükle Bırak
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Sürükle bırak tekniğiyle istasyon kur
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Görüntülenecek istasyon türünü seçin
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Yapılacak istasyon türünü seçin
+
 
 STR_STATION_CLASS_DFLT                                          :Varsayılan
 STR_STATION_CLASS_DFLT_STATION                                  :Varsayılan istasyon
@@ -2964,8 +2932,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Gelecekt
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Nesne Seçimi
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Yapılacak nesneyi seçin.Ctrl + Sol Tık'a basılı tutarak sürüklerseniz çapraz olarak seçersiniz. Ayrıca Shift tuşuna basılı tutarsanız sadece maliyetini görüntülersiniz.
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}İnşa edilecek nesnenin sınıfını seçin
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Nesnenin önizlemesi
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Boyut: {GOLD}{NUM} x {NUM} kare
 
@@ -3392,10 +3358,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Oluştu
 STR_GENERATION_PROGRESS                                         :{WHITE}%{NUM} tamamlandı
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Harita üretimi
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Peyzaj oluşumu
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Nehir oluşturma
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Ağaç üretimi
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Nesne oluşturma
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Engebeli ve kayalık alan oluştur
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Kasaba Oluşumu
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Endüstri Oluşumu
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Nesne oluşturma
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Ağaç üretimi
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Oyun ayarlanıyor
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}tile-loop çalıştırılıyor
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Betik çalıştırılıyor
@@ -3487,6 +3456,7 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :Yol türü:
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}NewGRF değişkeni 60+x parametresi (onaltılı)
 
 # Sprite aligner window
+STR_SPRITE_ALIGNER_CAPTION_NO_ACTION                            :{WHITE}Hizalanan Görüntü: ({STRING}:{NUM})
 STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Sonraki nesne
 STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Tüm sahte/yeniden renklendirme/yazı tipi nesnelerini ve sondaki nesneden atlayarak bir sonraki normal nesneye geç
 STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Nesneye git
@@ -5279,6 +5249,8 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Yeni New
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Henüz hiçbir araç kullanılabilir değil
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}{DATE_SHORT} sonra yeni bir oyun başlat veya erken araç sağlayan NewGRF kullan
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Kasabada inşa edilebilir yol türleri mevcut değil
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}NewGRF Yapılandırma Ayarlarını Değiştir
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Tehlikedeki tren sinyali geçemez...

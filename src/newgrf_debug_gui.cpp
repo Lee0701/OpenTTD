@@ -779,7 +779,7 @@ struct NewGRFInspectWindow : Window {
 					if (psa[j] != 0) last_non_blank = j + 1;
 				}
 				const uint psa_limit = (last_non_blank + 3) & ~3;
-				for (uint j = 0; j < psa_limit; j += 44) {
+				for (uint j = 0; j < psa_limit; j += 4) {
 					this->DrawString(r, i++, "  %i: %i %i %i %i", j, psa[j], psa[j + 1], psa[j + 2], psa[j + 3]);
 				}
 				if (last_non_blank != (uint)psa.size()) {
@@ -1352,8 +1352,12 @@ GrfSpecFeature GetGrfSpecFeature(TileIndex tile)
 
 		case MP_STATION:
 			switch (GetStationType(tile)) {
-				case STATION_RAIL:    return GSF_STATIONS;
-				case STATION_AIRPORT: return GSF_AIRPORTTILES;
+				case STATION_RAIL:
+				case STATION_WAYPOINT:
+					return GSF_STATIONS;
+
+				case STATION_AIRPORT:
+					return GSF_AIRPORTTILES;
 
 				case STATION_BUS:
 				case STATION_TRUCK:
@@ -1820,7 +1824,7 @@ const char *GetNewGRFCallbackName(CallbackID cbid)
 		CBID(CBID_VEHICLE_LENGTH)
 		CBID(CBID_VEHICLE_LOAD_AMOUNT)
 		CBID(CBID_STATION_AVAILABILITY)
-		CBID(CBID_STATION_SPRITE_LAYOUT)
+		CBID(CBID_STATION_DRAW_TILE_LAYOUT)
 		CBID(CBID_VEHICLE_REFIT_CAPACITY)
 		CBID(CBID_VEHICLE_ARTIC_ENGINE)
 		CBID(CBID_HOUSE_ALLOW_CONSTRUCTION)
@@ -1836,7 +1840,7 @@ const char *GetNewGRFCallbackName(CallbackID cbid)
 		CBID(CBID_HOUSE_DESTRUCTION)
 		CBID(CBID_INDUSTRY_PROBABILITY)
 		CBID(CBID_VEHICLE_ADDITIONAL_TEXT)
-		CBID(CBID_STATION_TILE_LAYOUT)
+		CBID(CBID_STATION_BUILD_TILE_LAYOUT)
 		CBID(CBID_INDTILE_ANIM_START_STOP)
 		CBID(CBID_INDTILE_ANIM_NEXT_FRAME)
 		CBID(CBID_INDTILE_ANIMATION_SPEED)

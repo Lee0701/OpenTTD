@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Activân
 STR_BUTTON_DEFAULT                                              :{BLACK}Prestabilit(e)
 STR_BUTTON_CANCEL                                               :{BLACK}Anulează
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Avertisment: Administratorii serverului pot citi orice text introdus aici.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -956,11 +955,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Volum
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Efecte sonore
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muzică
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Unitate monetară
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Alege unitatea monetară
@@ -1057,11 +1051,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Bifați 
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Fonturi anti-alias
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Bifați această casetă pentru anti-alias fonturi redimensionabile.
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Sondaj automat
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Participă în sondaje automate
@@ -1089,6 +1078,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Informa�
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Setul de muzică de bază
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Selectați setul de muzică de bază
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Informații adiționale despre setul de muzică de bază
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(fără pluginuri care să fie integrate cu platformele sociale instalate)
 
@@ -1829,7 +1819,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Intervalul de �
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Alege perioada de întreținere implicită pentru noi aeronave, dacă nu există un interval de întreținere stabilit pentru aeronave
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Intervalul de întreținere implicit al navelor: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Alege perioada de întreținere implicită pentru noi nave, dacă nu există un interval de întreținere stabilit pentru nave
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}{P 0 zi zile "de zile"}/{P 0 minut minute minute}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Dezactivat
 
@@ -2129,17 +2120,8 @@ STR_CONFIG_SETTING_AI                                           :Concurenți
 STR_CONFIG_SETTING_AI_NPC                                       :Jucători virtuali
 STR_CONFIG_SETTING_NETWORK                                      :Rețea
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Algoritm de rutare pentru trenuri: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Algoritm de rutare pentru trenuri
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Algoritm de rutare pentru autovehicule: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Algoritmul de rutare folosit pentru autovehicule
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Algoritm de rutare pentru nave: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Algoritmul de rutare folosit pentru nave
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Întoarcere automată la semafoare: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Permite trenurilor să întoarcă la semafor, dacă așteaptă de mult timp
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Recomandat)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Schimbă valoarea setării
 
@@ -2458,7 +2440,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Preluare
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Deconectare
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server protejat. Introdu parola
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Companie protejată. Introdu parola
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Jucători conectați
@@ -2507,13 +2488,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Prin rel
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Dă afară
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Blochează
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Șterge
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Deblocare cu parolă
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Acțiune administrativă
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Sigur vrei să dai afară jucătorul '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Sigur vrei să blochezi jucătorul '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Sigur dorești ștergerea companiei '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Sigur vrei să resetezi parola companiei '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Folosești releul?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Conexiunea la server nu s-a putut realiza '{STRING}'.{}Doriți să redirecționați această sesiune prin '{STRING}'?
@@ -2530,19 +2509,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Da
 
 STR_NETWORK_SPECTATORS                                          :Spectatori
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Parola introdusă nu se va salva
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Schimbarea parolei pentru companie
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Parola pentru companie
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Parola implicită pentru companie
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Folosește implicit parola acestei companii pentru cele nou create
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Intră
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Intră în joc ca membru al acestei companii
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Parola
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Protejează-ți compania cu o parolă pentru a preveni accesul neautorizat
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Alege parola companiei
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Trimite
@@ -2803,7 +2772,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Alege or
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Punct de tranzit
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Alege tipul de punct de tranzit
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Alege tipul de gară
@@ -2816,8 +2784,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Alege lu
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & Drop
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Construiește o stație prin drag & drop
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Alege o clasă de stații pentru afișare
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Alege tipul de stație pentru construcție
+
 
 STR_STATION_CLASS_DFLT                                          :Implicită
 STR_STATION_CLASS_DFLT_STATION                                  :Stație implicită
@@ -2960,8 +2927,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Cumpăra
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Selecția obiectelor
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Selectați obiectul de construit. Ctrl+Click+Drag pentru a selecta zona în diagonală. De asemenea, apăsați Shift pentru a afișa numai estimarea costurilor
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Selectează clasa obiectului de construit
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Previzualizarea obiectului
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Dimensiune: {GOLD}{NUM} x {NUM} pătrățele
 
@@ -3387,9 +3352,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% e
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Generare lume
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generarea râurilor
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generare arbori
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generare fixă
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generare zonă dură și pietroasă
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generare fixă
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generare arbori
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Se configurează jocul
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Initializez ciclul dalelor
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Se rulează script-ul

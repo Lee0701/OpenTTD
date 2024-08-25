@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Wanneer 
 STR_BUTTON_DEFAULT                                              :{BLACK}Standaard
 STR_BUTTON_CANCEL                                               :{BLACK}Annuleren
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Waarschuwing: het kan zijn dat serverbeheerders de tekst kunnen lezen die hier is ingevoerd.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -956,11 +955,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Volume
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Geluidseffecten
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muziek
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valuta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Valuta kiezen
@@ -1058,11 +1053,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Vink dit
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Lettertypen met anti-alias
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Vink dit vakje aan voor in grootte aanpasbare lettertypen met anti-alias
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Geautomatiseerd onderzoek
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Deelnemen aan geautomatiseerd onderzoek
@@ -1090,6 +1081,9 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Aanvulle
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Basisset voor muziek
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Selecteer de te gebruiken basisset voor muziek
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Aanvullende informatie over the basisset voor muziek
+
+STR_GAME_OPTIONS_ONLINE_CONTENT                                 :Inhoud ophalen
+STR_GAME_OPTIONS_ONLINE_CONTENT_TOOLTIP                         :Controleren op nieuwe en aangepaste inhoud om te downloaden
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(geen invoegtoepassingen voor integratie met sociale platforms geïnstalleerd)
 
@@ -1832,7 +1826,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Standaardonderh
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Standaardonderhoudsterrmijn voor nieuwe vliegtuigen als er geen expliciete onderhoudstermijn is ingesteld voor het voertuig
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Standaardonderhoudstermijn voor schepen: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Standaardonderhoudstermijn voor nieuwe schepen als er geen expliciete onderhoudstermijn is ingesteld voor het voertuig
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}dag{P 0 "" en}/minu{P 0 ut ten}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}Dag{P 0 "" en}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}Minu{P 0 ut ten}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Uitgeschakeld
 
@@ -2132,17 +2130,8 @@ STR_CONFIG_SETTING_AI                                           :Tegenstanders
 STR_CONFIG_SETTING_AI_NPC                                       :Computerspelers
 STR_CONFIG_SETTING_NETWORK                                      :Netwerk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Routezoeker voor treinen: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Routezoeker voor treinen.
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Routezoeker voor wegvoertuigen: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Routezoeker voor wegvoertuigen
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Routezoeker voor schepen: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Routezoeker voor schepen
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automatisch omdraaien bij seinen: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Treinen mogen keren bij een sein als ze hier lang staan wachten
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Aanbevolen)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Instelwaarde wijzigen
 
@@ -2461,7 +2450,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Bedrijfs
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Verbinding verbreken
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server is beveiligd. Voer wachtwoord in
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Bedrijf is beveiligd. Voer wachtwoord in
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Spelers online
@@ -2488,6 +2476,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :Je spelernaam
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}Beheeracties die nodig zijn voor deze client
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}Beheeracties die nodig zijn voor dit bedrijf
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}Meedoen met dit bedrijf
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}Geef deze client toestemming om met je bedrijf mee te doen
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}Een bericht sturen naar deze speler
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}Een bericht versturen naar alle spelers van dit bedrijf
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}Een bericht sturen naar alle toeschouwers
@@ -2510,13 +2499,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Via omle
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Eruit schoppen
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Bannen
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Verwijderen
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Wachtwoord ontgrendelen
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Beheeractie
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Weet je zeker dat je de speler '{STRING}' eruit wilt schoppen?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Weet je zeker dat je de speler '{STRING}' wilt bannen?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Weet je zeker dat je het bedrijf '{COMPANY}' wilt verwijderen?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Weet je zeker dat je het wachtwoord voor bedrijf '{COMPANY}' wilt terugstellen?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Omleiden?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Kan geen verbinding maken tussen jou en server '{STRING}'.{}Wil je deze sessie omleiden via '{STRING}'?
@@ -2533,19 +2520,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Ja
 
 STR_NETWORK_SPECTATORS                                          :Toeschouwers
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Ingevoerd wachtwoord niet opslaan
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Bedrijf het nieuwe wachtwoord geven
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Bedrijfswachtwoord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Standaard bedrijfswachtwoord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Dit bedrijfswachtwoord gebruiken als standaard voor nieuwe bedrijven
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Meedoen
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Doe mee en speel als dit bedrijf
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Wachtwoord
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Beveilig het bedrijf met een wachtwoord zodat niet-geautoriseerde personen niet mee kunnen doen
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Bedrijfswachtwoord instellen
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Verstuur
@@ -2808,7 +2785,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Selectee
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Routepunt
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Type routepunt selecteren
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Stationskeuze
@@ -2821,8 +2797,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Selectee
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Slepen
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Je kunt een station bouwen door te slepen
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Selecteer een stationsklasse om weer te geven
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Selecteer het type station om te bouwen
+
 
 STR_STATION_CLASS_DFLT                                          :Standaard
 STR_STATION_CLASS_DFLT_STATION                                  :Standaard station
@@ -2965,8 +2940,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Land kop
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Keuze van object
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Selecteer object om te bouwen. Ctrl+klik voor diagonaal gebied. Voeg Shift toe voor alleen inschatting van de kosten
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Hiermee selecteer je de klasse van het te bouwen object
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Bekijk het object
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Grootte: {GOLD}{NUM} x {NUM} tegels
 
@@ -3393,10 +3366,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Weet je
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% compleet
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Wereldontwikkeling
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Landschap genereren
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Rivierplaatsing
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Bosplaatsing
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Ontwikkeling van onverplaatsbare objecten
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Ontwikkeling van ruig en rotsachtig gebied
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Steden genereren
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Industrieën genereren
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Ontwikkeling van onverplaatsbare objecten
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Bosplaatsing
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Spel wordt geconfigureerd
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Bezig met tile-loop
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Script loopt
@@ -5286,6 +5262,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Pas je N
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Nog geen voertuigen beschikbaar
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE} Start een nieuw spel na {DATE_SHORT} of gebruik een NewGRF dat in vroege voertuigen voorziet
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Geen wegtypen beschikbaar voor in de stad
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Wijzig je NewGRF-configuratie
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Er zijn nog geen wegtypen beschikbaar voor steden
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Start een nieuw spel na {DATE_SHORT} of gebruik een NewGRF met wegtypen die al vroeg in steden gebruikt kunnen worden
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Kan trein niet het sein laten passeren bij gevaar...

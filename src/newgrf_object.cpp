@@ -114,7 +114,7 @@ uint ObjectSpec::Index() const
 /* static */ void ObjectSpec::BindToClasses()
 {
 	for (auto &spec : _object_specs) {
-		if (spec.IsEnabled() && spec.cls_id != INVALID_OBJECT_CLASS) {
+		if (spec.IsEnabled() && spec.class_index != INVALID_OBJECT_CLASS) {
 			ObjectClass::Assign(&spec);
 		}
 	}
@@ -135,8 +135,8 @@ void ResetObjects()
 	}
 
 	/* Set class for originals. */
-	_object_specs[OBJECT_LIGHTHOUSE].cls_id = ObjectClass::Allocate('LTHS');
-	_object_specs[OBJECT_TRANSMITTER].cls_id = ObjectClass::Allocate('TRNS');
+	_object_specs[OBJECT_LIGHTHOUSE].class_index = ObjectClass::Allocate('LTHS');
+	_object_specs[OBJECT_TRANSMITTER].class_index = ObjectClass::Allocate('TRNS');
 }
 
 template <>
@@ -404,14 +404,8 @@ ObjectResolverObject::ObjectResolverObject(const ObjectSpec *spec, Object *obj, 
 		CallbackID callback, uint32_t param1, uint32_t param2)
 	: ResolverObject(spec->grf_prop.grffile, callback, param1, param2), object_scope(*this, obj, spec, tile, view)
 {
-	this->town_scope = nullptr;
 	this->root_spritegroup = (obj == nullptr && spec->grf_prop.spritegroup[OBJECT_SPRITE_GROUP_PURCHASE] != nullptr) ?
 			spec->grf_prop.spritegroup[OBJECT_SPRITE_GROUP_PURCHASE] : spec->grf_prop.spritegroup[OBJECT_SPRITE_GROUP_DEFAULT];
-}
-
-ObjectResolverObject::~ObjectResolverObject()
-{
-	delete this->town_scope;
 }
 
 /**
@@ -421,7 +415,7 @@ ObjectResolverObject::~ObjectResolverObject()
  */
 TownScopeResolver *ObjectResolverObject::GetTown()
 {
-	if (this->town_scope == nullptr) {
+	if (!this->town_scope.has_value()) {
 		Town *t;
 		if (this->object_scope.obj != nullptr) {
 			t = this->object_scope.obj->town;
@@ -429,9 +423,9 @@ TownScopeResolver *ObjectResolverObject::GetTown()
 			t = ClosestTownFromTile(this->object_scope.tile, UINT_MAX);
 		}
 		if (t == nullptr) return nullptr;
-		this->town_scope = new TownScopeResolver(*this, t, this->object_scope.obj == nullptr);
+		this->town_scope.emplace(*this, t, this->object_scope.obj == nullptr);
 	}
-	return this->town_scope;
+	return &*this->town_scope;
 }
 
 GrfSpecFeature ObjectResolverObject::GetFeature() const

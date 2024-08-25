@@ -182,10 +182,12 @@ bool NetworkAuthorizedKeys::Contains(std::string_view key) const
 /**
  * Add the given key to the authorized keys, when it is not already contained.
  * @param key The key to add.
- * @return \c true when the key was added, \c false when the key already existed.
+ * @return \c true when the key was added, \c false when the key already existed or the key was empty.
  */
 bool NetworkAuthorizedKeys::Add(std::string_view key)
 {
+	if (key.empty()) return false;
+
 	auto iter = FindKey(this, key);
 	if (iter != this->end()) return false;
 
@@ -1049,10 +1051,38 @@ bool NetworkServerStart()
 	/* if the server is dedicated ... add some other script */
 	if (_network_dedicated) IConsoleCmdExec("exec scripts/on_dedicated.scr 0");
 
-	/* welcome possibly still connected admins - this can only happen on a dedicated server. */
-	if (_network_dedicated) ServerNetworkAdminSocketHandler::WelcomeAll();
-
 	return true;
+}
+
+/**
+ * Perform tasks when the server is started. This consists of things
+ * like putting the server's client in a valid company and resetting the restart time.
+ */
+void NetworkOnGameStart()
+{
+	if (!_network_server) return;
+
+	/* Update the static game info to set the values from the new game. */
+	NetworkServerUpdateGameInfo();
+
+	ChangeNetworkRestartTime(true);
+
+	if (!_network_dedicated) {
+		Company *c = Company::GetIfValid(_local_company);
+		NetworkClientInfo *ci = NetworkClientInfo::GetByClientID(CLIENT_ID_SERVER);
+		if (c != nullptr && ci != nullptr) {
+			/*
+			 * If the company has not been named yet, the company was just started.
+			 * Otherwise it would have gotten a name already, so announce it as a new company.
+			 */
+			if (c->name_1 == STR_SV_UNNAMED && c->name.empty()) NetworkServerNewCompany(c, ci);
+		}
+
+		ShowClientList();
+	} else {
+		/* welcome possibly still connected admins - this can only happen on a dedicated server. */
+		ServerNetworkAdminSocketHandler::WelcomeAll();
+	}
 }
 
 /* The server is rebooting...

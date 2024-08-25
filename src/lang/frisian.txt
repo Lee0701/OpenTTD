@@ -946,6 +946,7 @@ STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Oanfolje
 
 
 
+
 STR_ERROR_RESOLUTION_LIST_FAILED                                :{WHITE}Koe gjin list mei brûkbere resolúsjes ophelje
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Folslein skermmodus mislearre
 
@@ -1570,7 +1571,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Standert repara
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Stel it standert reparaasjeskema yn foar nije fleantugen dy't gjin eigen reparaasjeskema kenne
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Standerd reparaasjeskema foar skippen: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Stel it standerd reparaasjeskema yn foar nije skippen dy't gjin eigen reparaasjeskema kenne
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}{P 0 dei dagen}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Útskeakele
 
@@ -1800,14 +1802,7 @@ STR_CONFIG_SETTING_AI                                           :Tsjinstânners
 STR_CONFIG_SETTING_AI_NPC                                       :Computer spilers
 STR_CONFIG_SETTING_NETWORK                                      :Netwurk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Pathfinder foar treinen: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Pathfinder foar auto's: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Pathfinder foar skippen: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Pathfinder te brûken foar skippen
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Omkeare fan treinen by seinen: {STRING}
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Recommended)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Feroarje wearde
 
@@ -2052,7 +2047,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Bedriuws
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Ferbining ferbrekke
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server is beskerme. Fier wachtwurd yn
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Bedriuw is beskerme. Fier wachtwurd yn
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Online spilers
@@ -2077,16 +2071,8 @@ STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}Ja, net 
 
 STR_NETWORK_SPECTATORS                                          :Taskôgers
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}It ynfulde wachtwurd net bewarje
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Jou it bedriuw it nije wachtwurd
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Bedriuwswachtwurd
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Brûk dit bedriuwswachtwurd gewoanwei foar alle nije bedriuwen
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Mei spielje
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Wachtwurd
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Bedriuwswachtwurd ynstelle
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Stjoer
@@ -2276,7 +2262,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Selektea
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Kontrôlepost
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Selectear type kontrôlepost
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Treinstasjon Seleksje
@@ -2288,7 +2273,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH                               :{BLACK}Stasjon 
 STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Selektear lengte fan treinstasjon
 STR_STATION_BUILD_DRAG_DROP                                     :Sleepe en los litte
 
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Selektearje type stasjon om te bouwe
+
 
 STR_STATION_CLASS_DFLT                                          :Standert stasjon
 STR_STATION_CLASS_WAYP                                          :Kontrôleposten
@@ -2392,8 +2377,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Keapje l
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Objekt seleksje
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Selektearje te bouen objekt
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Selektearje klasse fan it te bouwen objekt
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Besjoch objekt yn it foar
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Grutte: {GOLD}{NUM} x {NUM} Flakken
 
@@ -2719,9 +2702,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% k
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Wrâldgeneraasje
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Riviergeneraasje
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Bostgeneraasje
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objekt meitsje
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Rûchtes en rotsen generearje
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Objekt meitsje
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Bostgeneraasje
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Set spul klear
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Trochrint tegellus
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Fiert skript út

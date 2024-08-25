@@ -547,17 +547,6 @@ STR_CONFIG_SETTING_TOWN_CARGO_SCALE_MODE                        :Intervalo de te
 STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE                    :Intervalo de tempo para o escalado da produción de carga da industria: {STRING}
 
 STR_CONFIG_SETTING_CARGO_SCALE_MODE_HELPTEXT                    :Mensual: A produción de carga por mes é escalada.{}{}Tempo de xogo: A produción de carga por unidade de tempo de xogo é escalada (a produción de carga por mes tamén é escalada polo factor de lonxitude do día). Pode non ser posible alcanzar factores de escalado moi altos.
-STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA     :{STRING}{}O modo de tempo de xogo non se garante que sexa totalmente compatible con todos os NewGRFs de industria.
-
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY                     :Mensualmente
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_GAME_TIME                   :Tempo de xogo
-
-STR_CONFIG_SETTING_CARGO_SCALE_MODE_PER_PRODUCTION_INTERVAL     :Por intervalo de produción
-
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY                    :{NUM}% (mensualmente)
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME                  :{NUM}% (tempo de xogo)
-
-STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL    :{NUM}% (por intervalo de produción)
 
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT                            :Sen vilas por enriba da altitude: {STRING}
 STR_CONFIG_SETTING_TOWN_ABOVE_HEIGHT_HELPTEXT                   :Non se constrúen vilas por enriba da altitude especificada durante a creación do mapa.
@@ -768,13 +757,14 @@ STR_CONFIG_SETTING_SCENARIO_HOUSE_IGNORE_ZONES_ANYWHERE         :En calquer luga
 STR_CONFIG_SETTING_DRAG_SIGNALS_SKIP_STATIONS                   :Cando arrastras de auto-recheo, continúa máis aló das estacións/puntos de referencia: {STRING}
 STR_CONFIG_SETTING_DRAG_SIGNALS_SKIP_STATIONS_HELPTEXT          :Selecciona o comportamento da colocación de sinais cando se fai Ctrl+arrastrar coas sinais. Se estiver desactivado, a colocación de sinais detense ao alcanzar unha baldosa de estación/punto de referencia. Se estiver activado, a colocación de sinais continúa no lado afastado das estacións de ferrocarril/puntos de referencia.
 
+STR_CONFIG_SETTING_DRAG_SIGNALS_STOP_RESTRICTED_SIGNAL          :Cando se eliminan sinais usando arrastre automático, deter nos sinais restrinxidos: {STRING}
+STR_CONFIG_SETTING_DRAG_SIGNALS_STOP_RESTRICTED_SIGNAL_HELPTEXT :Selecciona o comportamento da colocación de sinais ao eliminar sinais usando Ctrl+arrastre. Se está habilitado, a eliminación de sinais detense ao chegar a un sinal cun programa de restrición de ruta adxunto
+
 STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED                   :{WHITE}Non se pode modificar a opción...
 STR_CONFIG_SETTING_NETWORK_CHANGE_NOT_ALLOWED_NEWGRF            :{WHITE}...o axuste está controlado por un NewGRF
 
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS                           :Mostra-lo horario en ticks en lugar de en días: {STRING}
 STR_CONFIG_SETTING_TIMETABLE_IN_TICKS_HELPTEXT                  :Mostra-los tempos de viaxe nos horarios en ticks en vez de en días
-
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT_EXTRA         :{STRING}{}Varias características requiren o uso do pathfinder YAPF, incluíndo: restricións de enrutamento (todas as accións relacionadas co pathfinder e a reserva), inversión en puntos de referencia/sinais e pasaxe a través de depósitos de trens.
 
 STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_CALENDAR           :{RED}[Configuración desactivada no modo de tempo do calendario]
 STR_CONFIG_SETTING_DISABLED_TIMEKEEPING_MODE_WALLCLOCK          :{RED}[Configuración desactivada no modo de tempo do reloxo]
@@ -1013,10 +1003,13 @@ STR_TRACE_RESTRICT_TIME_DAY_ITEM_SHORT                          :día
 STR_TRACE_RESTRICT_TIME_MONTH_ITEM_SHORT                        :mes
 STR_TRACE_RESTRICT_TIMETABLE_LATENESS                           :atraso
 STR_TRACE_RESTRICT_TIMETABLE_EARLINESS                          :adianto
+
 STR_TRACE_RESTRICT_DISPATCH_SLOT_NEXT                           :seguinte slot de saída
 STR_TRACE_RESTRICT_DISPATCH_SLOT_LAST                           :último slot de saída
+
 STR_TRACE_RESTRICT_DISPATCH_SLOT_SHORT_NEXT                     :seguinte
 STR_TRACE_RESTRICT_DISPATCH_SLOT_SHORT_LAST                     :último
+
 STR_TRACE_RESTRICT_VALUE_CAPTION                                :{WHITE}Valor
 STR_TRACE_RESTRICT_CAPTION                                      :{WHITE}Restrición de busca de rutas
 STR_TRACE_RESTRICT_CAPTION_SHARED                               :{WHITE}Restrición de busca de rutas - compartida por {COMMA} sinais
@@ -1904,6 +1897,7 @@ STR_ERROR_CAN_T_BUILD_ROAD_WAYPOINT                             :{WHITE}Non se p
 STR_ERROR_CAN_T_REMOVE_ROAD_WAYPOINT                            :{WHITE}Non se pode eliminar o punto de ruta aqui...
 STR_ERROR_MUST_REMOVE_ROADWAYPOINT_FIRST                        :{WHITE}Debes eliminar o punto de ruta de estrada primeiro
 STR_ERROR_UNSUITABLE_SIGNAL_TYPE                                :{WHITE}... tipo de sinal non axeitado
+STR_ERROR_RESTRICTED_SIGNAL                                     :{WHITE}... o sinal ten un programa de restrición de ruta adxunto
 STR_ERROR_SIGNAL_CHANGES                                        :{WHITE}O número de avaliacións de pre-sinais programables excedeu o límite.
 
 STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION                            :{WHITE}A pont é demasiado baixa para unha estación
@@ -2174,8 +2168,10 @@ STR_SCHDISPATCH_SLOT_TOOLTIP_TAG                                :{}Etiqueta {NUM
 STR_SCHDISPATCH_SLOT_TOOLTIP_TAG_NAMED                          :{}Etiqueta {NUM}: {STRING}
 
 STR_SCHDISPATCH_SUMMARY_NO_LAST_DEPARTURE                       :{BLACK}Sen saídas previas.
+
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_PAST                     :{BLACK}Última saída ás {TT_TIME}.
 STR_SCHDISPATCH_SUMMARY_LAST_DEPARTURE_FUTURE                   :{BLACK}A última saída aínda non saíu, sairá ás {TT_TIME}.
+
 STR_SCHDISPATCH_SUMMARY_L1                                      :{BLACK}Este programa require {COMMA} vehículo{P "" s}.
 STR_SCHDISPATCH_SUMMARY_L2                                      :{BLACK}Este programa repítese cada {STRING}.
 STR_SCHDISPATCH_SUMMARY_L3                                      :{BLACK}Este programa comezou ás {TT_TIME}, e remata ás {TT_TIME}.
@@ -2325,3 +2321,19 @@ STR_ABOUT_MENU_SHOW_PICKER_TOOL                                 :Ferramenta de s
 STR_ABOUT_MENU_SHOW_TOGGLE_MODIFIER_KEYS                        :Fiestra da tecla modificadora
 
 STR_ERROR_CAN_T_CHANGE_SPEED_RESTRICTION                        :{WHITE}Non se pode cambiar a restrición de velocidade do vehículo...
+
+STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Ollo: Os administradores do servidor poderían ler calquer texto escrito aquí.
+STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}A compañía está protexida. Introduce o contrasinal
+STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Desbloquear contrasinal
+STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Estás seguro de querer restablecer o contrasinal da compañía '{COMPANY}'?
+
+# Network set password
+STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Non grava-lo contrasinal introducido
+STR_COMPANY_PASSWORD_OK                                         :{BLACK}Asignar á compañía o novo contrasinal
+STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Contrasinal da compañía
+STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Contrasinal por defecto para a compañía
+STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Usar o contrasinal desta compañía por defecto para as novas compañías
+
+STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Contrasinal
+STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Protexe a túa compañía cun contrasinal para evitar que usuarios non autorizados se unan
+STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Establece o contrasinal da compañía

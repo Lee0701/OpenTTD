@@ -2332,14 +2332,13 @@ static Hotkey maintoolbar_hotkeys[] = {
 	Hotkey((uint16_t)0, "client_list", MTHK_CLIENT_LIST),
 	Hotkey((uint16_t)0, "sign_list", MTHK_SIGN_LIST),
 	Hotkey((uint16_t)0, "land_info", MTHK_LANDINFO),
-	Hotkey((uint16_t)0, "picker_tool", MTHK_PICKER),
+	Hotkey(WKC_SLASH, "picker_tool", MTHK_PICKER),
 	Hotkey('P', "plan_list", MTHK_PLAN_LIST),
 	Hotkey('Y', "link_graph_legend", MTHK_LINK_GRAPH_LEGEND),
 	Hotkey((uint16_t)0, "message_history", MTHK_MESSAGE_HISTORY),
 	Hotkey((uint16_t)0, "template_replacement", MTHK_TEMPLATE_REPLACEMENT),
 	Hotkey((uint16_t)0, "train_slots", MTHK_TRAIN_SLOTS),
 	Hotkey((uint16_t)0, "train_counters", MTHK_TRAIN_COUNTERS),
-	HOTKEY_LIST_END
 };
 HotkeyList MainToolbarWindow::hotkeys("maintoolbar", maintoolbar_hotkeys);
 
@@ -2713,7 +2712,7 @@ static Hotkey scenedit_maintoolbar_hotkeys[] = {
 	Hotkey(WKC_F10, "build_sign", MTEHK_SIGN),
 	Hotkey(WKC_F11, "music", MTEHK_MUSIC),
 	Hotkey(WKC_F12, "land_info", MTEHK_LANDINFO),
-	Hotkey((uint16_t)0, "picker_tool", MTEHK_PICKER),
+	Hotkey(WKC_SLASH, "picker_tool", MTEHK_PICKER),
 	Hotkey('P', "plan_list", MTEHK_PLAN_LIST),
 	Hotkey(WKC_CTRL  | 'S', "small_screenshot", MTEHK_SMALL_SCREENSHOT),
 	Hotkey(WKC_CTRL  | 'P', "zoomedin_screenshot", MTEHK_ZOOMEDIN_SCREENSHOT),
@@ -2724,7 +2723,6 @@ static Hotkey scenedit_maintoolbar_hotkeys[] = {
 	Hotkey('L', "terraform", MTEHK_TERRAFORM),
 	Hotkey('M', "smallmap", MTEHK_SMALLMAP),
 	Hotkey('V', "extra_viewport", MTEHK_EXTRA_VIEWPORT),
-	HOTKEY_LIST_END
 };
 HotkeyList ScenarioEditorToolbarWindow::hotkeys("scenedit_maintoolbar", scenedit_maintoolbar_hotkeys);
 

@@ -946,6 +946,7 @@ STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}ข้�
 
 
 
+
 STR_ERROR_FULLSCREEN_FAILED                                     :{WHITE}Fullscreen โหมดล้มเหลว
 
 # Custom currency window
@@ -1575,7 +1576,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :ตั้งค
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :ตั้งค่าแรกเริ่มสำหรับการเข้าซ่อมบำรุงสำหรับอากาศยาน เป็นหน่วยวัน หรือหากเลือกการตั้งค่าโดยคิดจากเปอร์เซนต์ของประสิทธิภาพ จะเปลี่ยนไปใช้่หน่วยเปอร์เซนต์แทน
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :ตั้งค่าแรกเริ่มสำหรับการเข้าซ่อมบำรุงของพาหนะทางน้ำ: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :ตั้งค่าแรกเริ่มสำหรับการเข้าซ่อมบำรุงสำหรับพาหนะทางน้ำ เป็นหน่วยวัน หรือหากเลือกการตั้งค่าโดยคิดจากเปอร์เซนต์ของประสิทธิ์ภาพ จะเปลี่ยนไปใช้่หน่วยเปอร์เซนต์แทน
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA} วัน/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :ไม่ตั้ง
 
@@ -1838,17 +1840,8 @@ STR_CONFIG_SETTING_ENVIRONMENT_CARGODIST                        :การกร
 STR_CONFIG_SETTING_AI                                           :คู่แข่ง
 STR_CONFIG_SETTING_AI_NPC                                       :ผู้เล่นคอมพิวเตอร์
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :ตัวค้นหาเส้นทางสำหรับรถไฟ: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :การหาค้นหาเส้นทางของขบวนรถไฟ
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :ตัวค้นหาเส้นทางสำหรับรถยนต์: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :การค้นหาเส้นทางของยานพาหนะทางบก
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :ตัวค้นหาเส้นทางสำหรับเรือ: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :การค้นหาเส้นทางของยานพาหนะทางน้ำ
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :หมุนกลับขบวนอัตโนมัติที่เสาอาณัติสัญญาณ: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :อนุญาตให้ขบวนรถไฟกลับขบวนที่เสาอาณัติสัญญาณเมื่อมีการรอสัญญาณอนุญาตเป็นเวลานาน
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(แนะนำ)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}เปลี่ยนค่าการตั้งค่า
 
@@ -2126,7 +2119,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}รว�
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}ตัดการเชื่อมต่อ
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}เซิฟเวอร์มีการป้องกัน กรุณากรอกพาสเวิร์ด
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}บริษัทมีการป้องกัน. กรุณากรอกพาสเวิร์ด
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :รายชื่อผู้เล่นที่ออนไลน์
@@ -2151,7 +2143,6 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_STUN             :{BLACK}Behind N
 STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}ทางรีเลย์
 
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :ลบ
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :ปลดล็อครหัสผ่าน
 
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}คุณแน่ใจว่าจะเตะผู้เล่น '{STRING}' ใช่มั้ย?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}คุณแน่ใจหรือไม่ที่จะแบนผู้เล่น '{STRING}' คนนี้?
@@ -2163,19 +2154,9 @@ STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}ใช�
 
 STR_NETWORK_SPECTATORS                                          :ผู้ชม
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}ไม่ทำการเก็บพาสเวิร์ดที่กรอกไว้แล้ว
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}ตั้งพาสเวิร์ดของบริษัทใหม่
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}พาสเวิร์ดของบริษัท
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}พาสเวิร์ดตั้งต้นของบริษัท
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}ใช้พาสเวิร์ดของบริษัทนี้เป็นพาสเวิร์ดตั้งต้นของบริษัทใหม่
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}เข้าร่วม
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}เข้าร่วมและเล่นเป็นบริษัทนี้
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}พาสเวิร์ด
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}รหัสผ่านป้องกันบริษัทของคุณจากผู้เล่นที่ไม่ได้รับอนุญาตให้เข้าร่วม
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}ตั้งพาสเวิร์ดของบริษัท
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}ส่ง
@@ -2417,7 +2398,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}เล�
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}จุดตรวจ
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}เลือกชนิดของจุดตรวจ
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}ตัวเลือกของสถานีรถไฟ
@@ -2430,8 +2410,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}เล�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}ลากและวาง
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}สร้างสถานีโดยใช้การลากและวาง
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}เลือกชนิดของสถานีที่จะแสดง
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}เลือกชนิดของสถานีที่จะสร้าง
+
 
 STR_STATION_CLASS_DFLT                                          :สถานีมาตรฐาน
 STR_STATION_CLASS_WAYP                                          :จุดตรวจ
@@ -2564,8 +2543,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}ซื�
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}การเลือกวัตถุ
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}เลือกวัตถุเพื่อสร้าง กด Shift เพื่อสลับระหว่างสิ่งปลูกสร้างและการแสดงมูลค่าโดยประมาณ
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}เลือกชนิดของวัตถุที่จะสร้าง
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}ตัวอย่างวัตถุ
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}ขนาด: {GOLD}{NUM} x {NUM} ช่อง
 
@@ -2930,9 +2907,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% �
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}เครื่องมือสร้างแผนที่
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}สร้างแม่น้ำ
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}สร้างต้นไม่
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}สร้างวัตถุ
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}สร้างพื้นหิน
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}สร้างวัตถุ
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}สร้างต้นไม่
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}ตั้งค่าให้กับเกม
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Running tile-loop
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Running script

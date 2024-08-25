@@ -20,6 +20,7 @@
 #include "network/network_base.h"
 #include "network/network_admin.h"
 #include "ai/ai.hpp"
+#include "ai/ai_instance.hpp"
 #include "ai/ai_config.hpp"
 #include "company_manager_face.h"
 #include "window_func.h"
@@ -712,12 +713,12 @@ void UninitializeCompanies()
 }
 
 /**
- * May company \a cbig buy company \a csmall?
+ * Can company \a cbig buy company \a csmall without exceeding vehicle limits?
  * @param cbig   Company buying \a csmall.
  * @param csmall Company getting bought.
  * @return Return \c true if it is allowed.
  */
-bool MayCompanyTakeOver(CompanyID cbig, CompanyID csmall)
+bool CheckTakeoverVehicleLimit(CompanyID cbig, CompanyID csmall)
 {
 	const Company *c1 = Company::Get(cbig);
 	const Company *c2 = Company::Get(csmall);
@@ -780,7 +781,7 @@ static void HandleBankruptcyTakeover(Company *c)
 		if ((c2->bankrupt_asked == 0 || (c2->bankrupt_flags & CBRF_SALE_ONLY)) && // Don't ask companies going bankrupt themselves
 				!HasBit(c->bankrupt_asked, c2->index) &&
 				best_performance < c2->old_economy[1].performance_history &&
-				MayCompanyTakeOver(c2->index, c->index)) {
+				CheckTakeoverVehicleLimit(c2->index, c->index)) {
 			best_performance = c2->old_economy[1].performance_history;
 			best = c2;
 		}
@@ -1113,6 +1114,28 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32_t p1, uin
 	InvalidateWindowClassesData(WC_SCRIPT_LIST);
 
 	return CommandCost();
+}
+
+/**
+ * Add the given public key to the allow list of this company.
+ * @param flags Operation to perform.
+ * @param public_key The public key of the client to add.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdCompanyAddAllowList(TileIndex tile, DoCommandFlag flags, uint32_t p1, uint32_t p2, const char *text)
+{
+	return CMD_ERROR; // Not implemented at this time
+
+/*
+	if (flags & DC_EXEC) {
+		if (Company::Get(_current_company)->allow_list.Add(public_key)) {
+			InvalidateWindowData(WC_CLIENT_LIST, 0);
+			SetWindowDirty(WC_COMPANY, _current_company);
+		}
+	}
+
+	return CommandCost();
+*/
 }
 
 /**

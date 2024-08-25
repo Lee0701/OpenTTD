@@ -249,7 +249,7 @@ STR_QUANTITY_TOFFEE                                             :{WEIGHT_LONG} �
 STR_QUANTITY_BATTERIES                                          :{COMMA} батарей{P ка ки ок}
 STR_QUANTITY_PLASTIC                                            :{VOLUME_LONG} пластику
 STR_QUANTITY_FIZZY_DRINKS                                       :{COMMA} пляш{P ка ки ок} газованої води
-STR_QUANTITY_N_A                                                :немає
+STR_QUANTITY_N_A                                                :Відсутня
 
 # Two letter abbreviation of cargo name
 STR_ABBREV_NOTHING                                              :
@@ -442,7 +442,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}нати
 STR_BUTTON_DEFAULT                                              :{BLACK}Стандартно
 STR_BUTTON_CANCEL                                               :{BLACK}Скасувати
 STR_BUTTON_OK                                                   :{BLACK}Так
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Попередження: Адміністратори серверів можуть мати можливість читати будь-який текст, введений тут.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\йцукенгшщзхїфівапролджє  ячсмитьбю. .
@@ -1093,11 +1092,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Гучніст�
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Звукові ефекти
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Музика
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Грошова одиниця
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Виберіть грошову одиницю
@@ -1195,11 +1189,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Позн
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Згладжування шрифтів
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Позначте цей прапорець для того, щоби згладжувати шрифти змінних розмірів
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Автоматизований збір даних
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Брати участь в автоматизованому зборі даних
@@ -1227,6 +1216,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Дода
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Базовий музичний набір
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Оберіть базовий музичний набір для використання
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Допоміжна інформація про базовий музичний набір
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(не встановлено додатків для інтеграції з соціальними платформами)
 
@@ -1969,7 +1959,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Інтерва�
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Налаштування інтервалу техогляду для нового повітряного транспорту (встановлений інтервал може бути змінено окремо для кожного транспортного засобу в його інтерфейсі).
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Інтервал техогляду водного транспорту: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Налаштування інтервалу техогляду для нового водного транспорту (встановлений інтервал може бути змінено окремо для кожного транспортного засобу в його інтерфейсі).
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}д{P 0 "ень" "ні" "нів"}/хвилин{P 0 а и ""}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Відключено
 
@@ -2269,17 +2260,8 @@ STR_CONFIG_SETTING_AI                                           :Конкуре�
 STR_CONFIG_SETTING_AI_NPC                                       :Віртуальні гравці
 STR_CONFIG_SETTING_NETWORK                                      :Мережа
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Алгоритм пошуку шляху для поїздів: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Вибір алгоритма пошуку шляху для залізничного транспорту.
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Алгоритм пошуку шляху для автомобілів: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Вибір алгоритма пошуку шляху для дорожнього транспорту.
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Алгоритм пошуку шляху для кораблів: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Вибір алгоритма пошуку шляху для водного транспорту.
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Автоматично розвертатися біля сигналів: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Дозволяє поїздам розвертатися на сигналах, котрі не вдається проїхати впродовж довгого часу.
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(рекомендовано)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Змініть значення
 
@@ -2598,7 +2580,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Запи
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Роз'єднання
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Сервер захищено паролем. Введіть пароль
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Компанія захищена паролем. Введіть пароль
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Гравців у мережі
@@ -2647,13 +2628,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}З ме�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Викинути
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Бан
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Видалити
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Розблокувати пароль
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Дія адміністратора
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Дійсно бажаєте викинути гравця '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Дійсно бажаєш заблокувати гравця '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Дійсно бажаєш видалити компанію '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Дійсно бажаєш скинути пароль компанії '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Використати мережеве реле?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Не вдалося з'єднатися з сервером '{STRING}'.{}Чи бажаєш використати мережеве реле '{STRING}'?
@@ -2670,19 +2649,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Так
 
 STR_NETWORK_SPECTATORS                                          :Спостерігачі
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Не запам'ятовувати введений пароль
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Дати компанії новий пароль
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Пароль компанії
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Використовувати як стандартний
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Використовувати цей пароль для нових компаній
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Приєднатись
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Приєднатись і грати за цю компанію
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Пароль
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Пароль захищає вашу компанію від приєднання інших гравців
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Встановлення паролю
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Відправити
@@ -2948,7 +2917,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Вибі
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Точка маршруту
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Виберіть тип точки маршруту
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Вибір станції
@@ -2961,8 +2929,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Вибе
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Довільно
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Будувати станцію за методом "перетягнути й відпустити"
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Виберіть тип станції для відображення
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Виберіть тип станції для забудови
+
 
 STR_STATION_CLASS_DFLT                                          :Звичайна
 STR_STATION_CLASS_DFLT_STATION                                  :Звичайна станція
@@ -3105,8 +3072,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Купи
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Вибір об'єкта
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Обрання об'єкту для побудови. Ctrl+клац+протягування для виділення діагональної ділянки. Утримуйте Shift для показу очікуваних витрат
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Вибрати тип об'єкту для будівництва
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Попередній перегляд об'єкта
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Розмір: {GOLD}{NUM} x {NUM} клітинок
 
@@ -3534,9 +3499,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% �
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Створення світу
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Генерація річок
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Насадження дерев
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Генерація нерухомості
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Розкидати каміння
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Генерація нерухомості
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Насадження дерев
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Налаштування гри
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Виконуємо цикл
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Виконується скрипт

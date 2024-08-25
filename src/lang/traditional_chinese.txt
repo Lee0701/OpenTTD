@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}如啟�
 STR_BUTTON_DEFAULT                                              :{BLACK}預設值
 STR_BUTTON_CANCEL                                               :{BLACK}取消
 STR_BUTTON_OK                                                   :{BLACK}確定
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}警告：伺服器管理者可能可以閱讀在此處輸入的任何文字訊息
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -931,11 +930,6 @@ STR_GAME_OPTIONS_VOLUME                                         :音量
 STR_GAME_OPTIONS_SFX_VOLUME                                     :音效
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :音樂
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}幣值單位
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}選擇幣值單位
@@ -1031,11 +1025,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}勾選�
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}反鋸齒字體
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}勾選此方框以使用反鋸齒字體。
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1倍
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2倍
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3倍
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4倍
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5倍
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}自動問卷
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}參與自動問卷
@@ -1059,6 +1048,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}關於�
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}基本音樂集
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}選擇要使用的基本音樂集
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}關於基本音樂集的額外資訊
+
 
 
 
@@ -1759,7 +1749,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :預設的飛機
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :設定預設的飛機維護作業時距。所有沒有指定維護作業時距的飛機都會使用這個預設值。
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :預設的船舶維護作業時距：{STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :設定預設的船舶維護作業時距。所有沒有指定維護作業時距的船舶都會使用這個預設值。
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}日/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :停用
 
@@ -2050,17 +2041,8 @@ STR_CONFIG_SETTING_AI                                           :競爭對手
 STR_CONFIG_SETTING_AI_NPC                                       :電腦玩家
 STR_CONFIG_SETTING_NETWORK                                      :網路
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :列車的路徑搜尋方式：{STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :設定列車使用的路徑搜尋方式。
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :車輛的路徑搜尋方式：{STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :設定公路車輛（包括電車）使用的路徑搜尋方式。
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :船舶的路徑搜尋方式：{STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :設定船舶使用的路徑搜尋方式。
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :在號誌自動倒轉：{STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :設定是否容許列車在號誌前等候超過一段時間後調頭。
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(建議)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}修改設定值
 
@@ -2367,7 +2349,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}取得�
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}斷線
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}伺服器受保護，輸入密碼
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}公司受保護，輸入密碼
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :在線玩家
@@ -2416,13 +2397,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}使用�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :踢出
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :停權
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :刪除
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :密碼解鎖
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}管理員指令
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}你確定要踢出玩家 '{STRING}' 嗎?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}你確定要將玩家 '{STRING}' 列入黑名單嗎?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}你確定要刪除「{COMPANY}」公司嗎？
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}你確定要重設 '{COMPANY}'的公司密碼嗎?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}是否使用中繼伺服器?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}無法與伺服器 '{STRING}'連結.{}是否要透過中繼伺服 '{STRING}'進行連結?
@@ -2437,19 +2416,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :是
 
 STR_NETWORK_SPECTATORS                                          :旁觀者
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}不要儲存所輸入的密碼
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}為公司設定新的密碼
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}公司密碼
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}預設公司密碼
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}使用此密碼當作未來新公司的預設密碼
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}加入
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}加入並操控此公司
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}密碼
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}以密碼保護您的公司，避免未授權的玩家接手
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}設定公司密碼
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}傳送
@@ -2704,7 +2673,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}選擇�
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}號誌站
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}顯示號誌站種類
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}選擇火車站
@@ -2717,8 +2685,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}選擇�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}拖放
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}以拖曳方式興建車站
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}選擇要顯示的車站種類
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}選擇要興建的車站種類
+
 
 STR_STATION_CLASS_DFLT                                          :預設
 STR_STATION_CLASS_DFLT_STATION                                  :預設車站
@@ -2861,8 +2828,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}購買�
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}選擇物件
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}選擇要建立的物件。按 Ctrl 以對角線選擇區域。按 Shift 可切換建立／顯示預估的建立費用。
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}選擇物件的類別以進行建造
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}預覽此物件
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}大小：{GOLD}{NUM} x {NUM} 格
 
@@ -3280,9 +3245,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}完成 {
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}產生世界
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}產生河流
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}產生樹木
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}無法移動
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}產生粗地與岩石區域
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}無法移動
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}產生樹木
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}設定遊戲
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}執行單格迴圈中
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}正在運行腳本

@@ -1134,7 +1134,7 @@ bool AfterLoadGame()
 		}
 	}
 
-	if (SlXvIsFeatureMissing(XSLFI_MORE_STATION_TYPES)) {
+	if (SlXvIsFeatureMissing(XSLFI_MORE_STATION_TYPES) && IsSavegameVersionBefore(SLV_INCREASE_STATION_TYPE_FIELD_SIZE)) {
 		/* Expansion of station type field in m6 */
 		for (TileIndex t = 0; t < MapSize(); t++) {
 			if (IsTileType(t, MP_STATION)) {
@@ -2312,25 +2312,6 @@ bool AfterLoadGame()
 			} else if (IsPlainRailTile(t)) {
 				if (!Company::IsValidID(GetTileOwner(t))) FixOwnerOfRailTrack(t);
 			}
-		}
-
-		/* Convert old PF settings to new */
-		if (_settings_game.pf.yapf.rail_use_yapf || IsSavegameVersionBefore(SLV_28)) {
-			_settings_game.pf.pathfinder_for_trains = VPF_YAPF;
-		} else {
-			_settings_game.pf.pathfinder_for_trains = VPF_NPF;
-		}
-
-		if (_settings_game.pf.yapf.road_use_yapf || IsSavegameVersionBefore(SLV_28)) {
-			_settings_game.pf.pathfinder_for_roadvehs = VPF_YAPF;
-		} else {
-			_settings_game.pf.pathfinder_for_roadvehs = VPF_NPF;
-		}
-
-		if (_settings_game.pf.yapf.ship_use_yapf) {
-			_settings_game.pf.pathfinder_for_ships = VPF_YAPF;
-		} else {
-			_settings_game.pf.pathfinder_for_ships = VPF_NPF;
 		}
 	}
 
@@ -4063,7 +4044,7 @@ bool AfterLoadGame()
 			_settings_game.economy.town_cargo_scale = ScaleQuantity(100, _settings_game.old_economy.town_cargo_scale_factor);
 		}
 		if (!SlXvIsFeaturePresent(XSLFI_TOWN_CARGO_ADJ, 3)) {
-			_settings_game.economy.town_cargo_scale_mode = CSM_MONTHLY;
+			_settings_game.economy.town_cargo_scale_mode = CSM_NORMAL;
 		}
 
 		if (SlXvIsFeatureMissing(XSLFI_INDUSTRY_CARGO_ADJ)) {
@@ -4072,7 +4053,7 @@ bool AfterLoadGame()
 			_settings_game.economy.industry_cargo_scale = ScaleQuantity(100, _settings_game.old_economy.industry_cargo_scale_factor);
 		}
 		if (!SlXvIsFeaturePresent(XSLFI_INDUSTRY_CARGO_ADJ, 2)) {
-			_settings_game.economy.industry_cargo_scale_mode = CSM_MONTHLY;
+			_settings_game.economy.industry_cargo_scale_mode = CSM_NORMAL;
 		}
 	}
 
@@ -4451,6 +4432,17 @@ bool AfterLoadGame()
 
 	for (Company *c : Company::Iterate()) {
 		UpdateCompanyLiveries(c);
+	}
+
+	/* Update free group numbers data for each company, required regardless of savegame version. */
+	for (Group *g : Group::Iterate()) {
+		Company *c = Company::Get(g->owner);
+		if (IsSavegameVersionBefore(SLV_GROUP_NUMBERS) && SlXvIsFeatureMissing(XSLFI_GROUP_NUMBERS)) {
+			/* Use the index as group number when converting old savegames. */
+			g->number = c->freegroups.UseID(g->index);
+		} else {
+			c->freegroups.UseID(g->number);
+		}
 	}
 
 	/*

@@ -434,7 +434,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Если
 STR_BUTTON_DEFAULT                                              :{BLACK}По умолчанию
 STR_BUTTON_CANCEL                                               :{BLACK}Отмена
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Внимание: администраторы сервера могут увидеть текст, введённый в это поле.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -1101,11 +1100,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Громкос�
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Звуковые эффекты
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Музыка
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Валюта
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Смена используемой в игре валюты
@@ -1203,11 +1198,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Пост
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Сглаживание шрифтов
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Поставьте отметку, чтобы включить сглаживание масштабируемых шрифтов
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Автоматический сбор данных
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Разрешить сбор и отправку данных
@@ -1235,6 +1226,9 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Допо
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Основной музыкальный пакет
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Выбор основного музыкального пакета
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Дополнительная информация о выбранном музыкальном пакете
+
+STR_GAME_OPTIONS_ONLINE_CONTENT                                 :Загрузка контента
+STR_GAME_OPTIONS_ONLINE_CONTENT_TOOLTIP                         :Получить список контента для установки и обновления
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(модули взаимодействия с социальными платформами не установлены)
 
@@ -1983,7 +1977,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Интерва�
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Настройка периодичности технического обслуживания для новых воздушных судов
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Интервал ТО по умолчанию для судов: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Настройка периодичности технического обслуживания для новых судов
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}д{P ень ня ней}/минут{P а ы ""}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}д{P 0 ень ня ней}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}минут{P 0 а ы ""}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :отключен
 
@@ -2283,17 +2281,8 @@ STR_CONFIG_SETTING_AI                                           :Конкуре�
 STR_CONFIG_SETTING_AI_NPC                                       :Искусственный интеллект
 STR_CONFIG_SETTING_NETWORK                                      :Сеть
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Алгоритм поиска пути для поездов: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Алгоритм поиска пути, используемый поездами
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Алгоритм поиска пути для автотранспорта: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Алгоритм поиска пути, используемый автомобилями
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Алгоритм поиска пути для судов: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Алгоритм поиска пути, используемый водным транспортом
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Автоматический разворот у сигналов: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Разрешить поездам разворачиваться у светофора, если они долго ждут разрешающего сигнала
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Рекомендуется)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Изменить значение
 
@@ -2375,7 +2364,7 @@ STR_QUIT_NO                                                     :{BLACK}Нет
 
 # Abandon game
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}В главное меню
-STR_ABANDON_GAME_QUERY                                          :{YELLOW}Вы действительно хотите выйти из игры?
+STR_ABANDON_GAME_QUERY                                          :{YELLOW}Вы уверены, что хотите выйти из игры?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Вы уверены, что хотите выйти из этого сценария?
 
 # Help window
@@ -2612,7 +2601,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Полу
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Отключиться
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Сервер защищён. Введите пароль.
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Компания защищена. Введите пароль.
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Список игроков
@@ -2639,6 +2627,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :Ваше игр
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}Административные действия, применимые к этому игроку
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}Административные действия, применимые к этой компании
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}Присоединиться к этой компании
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}Разрешить этому клиенту присоединиться к вашей компании
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}Отправить сообщение этому игроку
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}Послать сообщение всем игрокам этой компании
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}Послать сообщение всем зрителям
@@ -2661,13 +2650,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Чере
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Отключить
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Заблокировать
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Удалить
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Сбросить пароль
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Подтверждение действия
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Отключить игрока «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Заблокировать игрока «{STRING}»?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Удалить компанию «{COMPANY}»?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Сбросить пароль у компании «{COMPANY}»?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Использовать транслятор?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Не удалось установить соединение с сервером «{STRING}».{}Перенаправить соединение через «{STRING}»?
@@ -2684,19 +2671,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Да
 
 STR_NETWORK_SPECTATORS                                          :Зрители
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Не сохранять пароль
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Задать новый пароль компании
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Пароль компании
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Пароль компании по умолчанию
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Использовать этот пароль для всех новых компаний по умолчанию
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Подключиться
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Подключиться и играть за эту компанию
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Пароль
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Защитить вашу компанию паролем, чтобы посторонние пользователи не могли присоединиться.
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Установить пароль компании
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Отправить
@@ -2979,7 +2956,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Выбо
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Маршрутная точка
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Выбор типа маршрутной точки
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Выбор ж/д станции
@@ -2992,8 +2968,23 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Укаж
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Произвольно
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Постройка станции на указанном игроком участке
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Выберите класс станций для отображения
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Выберите тип станции для постройки
+STR_PICKER_MODE_ALL                                             :Все
+STR_PICKER_MODE_ALL_TOOLTIP                                     :Показать все элементы
+STR_PICKER_MODE_USED                                            :Существующие
+STR_PICKER_MODE_USED_TOOLTIP                                    :Показать уже существующие элементы
+STR_PICKER_MODE_SAVED                                           :Избранное
+STR_PICKER_MODE_SAVED_TOOLTIP                                   :Показать сохранённые элементы
+
+STR_PICKER_STATION_CLASS_TOOLTIP                                :Выберите тип станций для отображения
+STR_PICKER_STATION_TYPE_TOOLTIP                                 :Выберите станцию для строительства. Ctrl+щелчок добавит её в «избранное» или удалит.
+STR_PICKER_WAYPOINT_CLASS_TOOLTIP                               :Выберите тип маршрутных точек для отображения
+STR_PICKER_WAYPOINT_TYPE_TOOLTIP                                :Выберите маршрутную точку для строительства. Ctrl+щелчок добавит её в «избранное» или удалит.
+STR_PICKER_ROADSTOP_BUS_CLASS_TOOLTIP                           :Выберите тип остановок для отображения
+STR_PICKER_ROADSTOP_BUS_TYPE_TOOLTIP                            :Выберите остановку для строительства. Ctrl+щелчок добавит её в «избранное» или удалит.
+STR_PICKER_ROADSTOP_TRUCK_CLASS_TOOLTIP                         :Выберите тип грузовых терминалов для отображения
+STR_PICKER_ROADSTOP_TRUCK_TYPE_TOOLTIP                          :Выберите грузовой терминал для строительства. Ctrl+щелчок добавит его в «избранное» или удалит.
+STR_PICKER_OBJECT_CLASS_TOOLTIP                                 :Выберите тип объектов для отображения
+STR_PICKER_OBJECT_TYPE_TOOLTIP                                  :Выберите объект для строительства. Ctrl+щелчок добавит его в «избранное» или удалит. Ctrl+перетаскивание - выбор диагональной области. При нажатом Shift - оценка стоимости строительства.
 
 STR_STATION_CLASS_DFLT                                          :Стандартная станция
 STR_STATION_CLASS_DFLT_STATION                                  :Стандартная ж/д станция
@@ -3127,7 +3118,7 @@ STR_AIRPORT_CLASS_LARGE.nom                                     :Средний
 STR_AIRPORT_CLASS_HUB                                           :Большие аэропорты
 STR_AIRPORT_CLASS_HUB.nom                                       :Большой
 STR_AIRPORT_CLASS_HELIPORTS                                     :Вертолётные площадки
-STR_AIRPORT_CLASS_HELIPORTS.nom                                 :Вертолётный
+STR_AIRPORT_CLASS_HELIPORTS.nom                                 :Вертолётная
 
 STR_STATION_BUILD_NOISE                                         :{BLACK}Производимый шум: {GOLD}{COMMA}
 
@@ -3140,8 +3131,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Поку
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Выбор объекта
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Выберите создаваемый объект. Ctrl+щелчок+перетаскивание - выбор диагональной области. При нажатом Shift - оценка стоимости строительства.
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Выберите класс объекта для строительства
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Предварительный просмотр объекта
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Размер: {GOLD}{NUM} × {NUM} клеток
 
@@ -3152,7 +3141,7 @@ STR_OBJECT_CLASS_TRNS                                           :Передат�
 STR_PLANT_TREE_CAPTION                                          :{WHITE}Деревья
 STR_PLANT_TREE_TOOLTIP                                          :{BLACK}Выберите тип деревьев для посадки. Если на участке уже есть деревья, будут добавлены несколько деревьев различного типа, независимо от выбранного.
 STR_TREES_RANDOM_TYPE                                           :{BLACK}Деревья случайного типа
-STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Высадка деревьев случайного типа. Ctrl+щелчок+перетаскивание - выбор диагональной области. При нажатом Shift - оценка стоимости высадки.
+STR_TREES_RANDOM_TYPE_TOOLTIP                                   :{BLACK}Высадка деревьев случайного типа. Ctrl+перетаскивание - выбор диагональной области. При нажатом Shift - оценка стоимости высадки.
 STR_TREES_RANDOM_TREES_BUTTON                                   :{BLACK}Расставить по карте
 STR_TREES_RANDOM_TREES_TOOLTIP                                  :{BLACK}Разместить деревья на местности случайным образом
 STR_TREES_MODE_NORMAL_BUTTON                                    :{BLACK}Дерево
@@ -3568,10 +3557,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Вы д
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% готово
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Создание мира
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Создание ландшафта
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Создание рек
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Высадка лесов
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Создание объектов
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Расстановка декораций и камней
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Создание городов
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Создание предприятий
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Создание объектов
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Высадка лесов
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Настройка
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Подготовка к запуску...
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Выполняется скрипт

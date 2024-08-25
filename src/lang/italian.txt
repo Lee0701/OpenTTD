@@ -310,7 +310,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Mostra a
 STR_BUTTON_DEFAULT                                              :{BLACK}Predefinito
 STR_BUTTON_CANCEL                                               :{BLACK}Annulla
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Attenzione: gli amministratori del server potrebbero leggere il testo inserito qui.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :\1234567890'ì qwertyuiopè+asdfghjklòàù<zxcvbnm,.- .
@@ -958,11 +957,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Volume
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Effetti sonori
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musica
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valuta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Selezione della valuta
@@ -1060,11 +1054,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Selezion
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Font anti-aliasing
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Seleziona questa casella per applicare l'anti-aliasing ai caratteri ridimensionabili
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Sondaggio automatizzato
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Partecipare al sondaggio automatico
@@ -1092,6 +1081,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Informaz
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Pacchetto musicale di base
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Seleziona il pacchetto musicale di base da utilizzare
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Informazioni aggiuntive sul pacchetto musicale di base
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(nessun plugin installato per integrarsi con le piattaforme social)
 
@@ -1867,7 +1857,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Intervallo manu
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Imposta l'intervallo di manutenzione predefinito per i nuovi aeromobili, quando non viene impostato nessun intervallo esplicito
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Intervallo manutenzione predefinito navi: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Imposta l'intervallo di manutenzione predefinito per le nuove navi, quando non viene impostato nessun intervallo esplicito
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}Giorn{P 0 o i}/Minut{P 0 o i}%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Disabilitato
 
@@ -2167,17 +2158,8 @@ STR_CONFIG_SETTING_AI                                           :Avversari
 STR_CONFIG_SETTING_AI_NPC                                       :Giocatori controllati dal computer
 STR_CONFIG_SETTING_NETWORK                                      :Rete
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Pathfinder per i treni: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Pathfinder da utilizzare per i treni
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Pathfinder per gli automezzi: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Pathfinder da utilizzare per gli automezzi
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Pathfinder per le navi: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Pathfinder da utilizzare per le navi
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Inversione automatica ai segnali: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Consente ai treni di invertire la marcia dopo aver atteso a lungo a un segnale.
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(raccomandato)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Cambia impostazione
 
@@ -2496,7 +2478,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Recupero
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Disconnetti
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Server protetto. Inserire la password
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Compagnia protetta. Inserire la password
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Giocatori online
@@ -2545,13 +2526,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Tramite 
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :espelli
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Bandire
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Elimina
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Sblocco con password
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Azione dell'amministratore
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Sei sicuro di voler cacciare il giocatore '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Sei sicuro di voler bannare il giocatore '{STRING}'
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Sei sicuro di voler eliminare la compagnia '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Sei sicuro di voler reimpostare la password della compagnia '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Usare il relay?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Impossibile stabilire una connessione tra te e il server '{STRING}'.{}Vuoi usare un servizio di relay per creare una connessione tramite '{STRING}'?
@@ -2568,19 +2547,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Sì
 
 STR_NETWORK_SPECTATORS                                          :Spettatori
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Non salvare la password inserita
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Assegna la nuova password alla compagnia
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Password della compagnia
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Password predefinita compagnia
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Usa questa password come predefinita per le nuove compagnie
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Controlla
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Gioca controllando questa compagnia
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Password
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Protegge la compagnia con una password per impedire ad utenti non autorizzati di accedervi
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Imposta password compagnia
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Invia
@@ -2847,7 +2816,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Selezion
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Waypoint
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Seleziona il tipo di waypoint
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Selezione stazione
@@ -2860,8 +2828,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Selezion
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & drop
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Costruisce una stazione con il drag & drop
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Seleziona il tipo di stazioni da mostrare
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Seleziona il tipo di stazione da costruire
+
 
 STR_STATION_CLASS_DFLT                                          :Predefinita
 STR_STATION_CLASS_DFLT_STATION                                  :Stazione predefinita
@@ -3004,8 +2971,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Acquista
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Selezione oggetto
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Seleziona l'oggetto da costruire. Ctrl+Clic+trascinamento per selezionare l'area in diagonale. Premere anche Shift per visualizzare solo la stima dei costi
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Seleziona la classe dell'oggetto da costruire
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Anteprima dell'oggetto
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Dimensione: {GOLD}{NUM} x {NUM} caselle
 
@@ -3433,9 +3398,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% c
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Generazione mondo
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generazione fiumi
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generazione alberi
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generazione oggetti inamovibili
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generazione aree brulle e rocciose
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generazione oggetti inamovibili
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generazione alberi
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Impostazione partita
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Generazione caselle del terreno
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Esecuzione script

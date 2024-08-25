@@ -307,7 +307,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}இந�
 STR_BUTTON_DEFAULT                                              :{BLACK}இயல்பிருப்பு
 STR_BUTTON_CANCEL                                               :{BLACK}தவிர்
 STR_BUTTON_OK                                                   :{BLACK}சரி
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}எச்சரிக்கை: சேவையக நிர்வாகிகளால் இங்கு உள்ளிட்டப்படும் எந்த உரையையும் படிக்க முடியும்.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -928,11 +927,6 @@ STR_GAME_OPTIONS_VOLUME                                         :ஒலி அ�
 STR_GAME_OPTIONS_SFX_VOLUME                                     :ஒலி விளைவுகள்
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :இசை
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}நாணய பிரிவுகள்
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}நாணய பிரிவு தேர்ந்தெடுத்தல்
@@ -1023,11 +1017,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE                                :{BLACK}வழ�
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}மாற்றுப்பெயர் எதிர்ப்பு எழுத்துருக்கள்
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}மறுஅளவிடக்கூடிய மாற்றுப்பெயர் எதிர்ப்பு எழுத்துருக்களுக்கு இந்தப் பெட்டியைத் தேர்வு செய்யவும்.
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}தானியங்கி கணக்கெடுப்பு
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}தானியங்கி கணக்கெடுப்பில் சேர்
@@ -1055,6 +1044,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}அட�
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}அடிப்படை இசைத் தொகுப்பு
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}பயன்படுத்தப்போகும் அடிப்படை இசைத் தொகுப்பினைத் தேர்ந்தெடுக்கவும்
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}அடிப்படை இசைத் தொகுப்பு பற்றிய கூடுதல் தகவல்கள்
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(no plugins to integrate with social platforms installed)
 
@@ -1690,7 +1680,8 @@ STR_CONFIG_SETTING_SERVINT_ROAD_VEHICLES                        :சாலை �
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :விமாங்களின் பழுதுபார்த்தல் இடைவேளி: {STRING}
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :புதிய விமானங்களுக்கான இயல்புநிலை சேவை இடைவெளியை அமைக்கவும், வாகனத்திற்கு வெளிப்படையான சேவை இடைவெளி எதுவும் அமைக்கப்படவில்லை என்றால்
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :கப்பல்களின் பழுதுபார்த்தல் இடைவேளி: {STRING}
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}நா{P 0 "ள்" ட்கள்}/நிமிட{P 0 "ம்" ங்கள்}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :செயலிழக்க செய்யப்பட்டது
 
@@ -1946,17 +1937,8 @@ STR_CONFIG_SETTING_AI                                           :போட்ட
 STR_CONFIG_SETTING_AI_NPC                                       :கணினி வீரர்கள்
 STR_CONFIG_SETTING_NETWORK                                      :இணையம்
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :இரயில்களுக்கான வழிகண்டுபிடிப்பான்: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :இரயில்கள் பயன்படுத்தப்போகும் வழிகண்டுபிடிப்பான்
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :சாலை வாகனங்களுக்கான வழிகண்டுபிடிப்பான்: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :சாலை வாகனங்கள் பயன்படுத்தப்போகும் வழிகண்டுபிடிப்பான்
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :கப்பல்களுக்கான வழிகண்டுபிடிப்பான்: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :கப்பல்கள் பயன்படுத்தப்போகும் வழிகண்டுபிடிப்பான்
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :சிக்னல்களில் தானியங்கி மீட்சி: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :இரயில்கள் நீண்ட நேரம் காத்திருந்தால், சிக்னலில் திரும்புவதற்கு அனுமதிக்கவும்
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(பரிந்துரைக்கப்பட்டது)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}அமைப்பின் மதிப்பினை மாற்று
 
@@ -2260,7 +2242,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}நி�
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}இணைப்பை துண்டி
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}சர்வர் காக்கப்பட்டுள்ளது. கடவுச்சொல்லினை இடவும்
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}நிற்வனம் காக்கப்பட்டுள்ளது. கடவுச்சொல்லினை இடவும்
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :இணைய வீரர்கள்
@@ -2301,7 +2282,6 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}ரி�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :வெளியேற்று
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :தடை செய்
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :நீக்கு
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :கடவுச்சொல் திறத்தல்
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}நிர்வாக நடவடிக்கை
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}நீங்கள் '{STRING}' வீரரை வெளியேற்ற விரும்புகிறீர்களா?
@@ -2321,18 +2301,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :ஆம்
 
 STR_NETWORK_SPECTATORS                                          :கவனிப்பவர்கள்
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}கடவுச்சொல்லினை நினைவில் வைத்திருக்காதே
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}நிற்வனத்திற்கு புதிய கடவுச்சொல்லினை கொடுக்கவும்
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}நிறுவனத்தின் கடவுச்சொல்
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}முதன்மையான நிறுவனத்தின் கடவுச்சொல்
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}இந்த நிறுவனத்தின் கடவுச்சொல்லையே புதிய நிறுவனங்களுக்கு பயன்படுத்து
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}சேர்
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}இந்த நிறுவனமாக சேர்ந்து விளையாடு
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}கடவுச்சொல்
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}நிறுவனத்தின் கடவுச்சொல்லை அமை
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}அனுப்பு
@@ -2574,7 +2545,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}இர�
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}பாதைப்புள்ளி
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}பாதைப்புள்ளி வகையினைத் தேர்ந்தெடுக்கவும்
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}இரயில் நிலையம் தேர்ந்தெடுத்தல்
@@ -2587,8 +2557,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}இர�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}இழுத்து விடவும்
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}இழுத்து விடுவதன் மூலம் நிலையத்தினைக் கட்டவும்
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}காட்டுவதற்கு ஒரு நிலைய வகையினைத் தேர்ந்தெடுக்கவும்
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}கட்டப்போகும் நிலையத்தின் வகையினைத் தேர்ந்தெடுக்கவும்
+
 
 STR_STATION_CLASS_DFLT                                          :இயல்பிருப்பு
 STR_STATION_CLASS_DFLT_STATION                                  :இயல்பிருப்பு நிலையம்
@@ -2708,7 +2677,6 @@ STR_LANDSCAPING_TOOLBAR                                         :{WHITE}நி�
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}பொருள் தேர்ந்தெடுத்தல்
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}கட்டப்போகும் பொருளின் வகையினைத் தேர்ந்தெடு
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}பொருளின் முன்பார்வை
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}அளவு: {GOLD}{NUM} x {NUM} கட்டங்கள்
 
@@ -3108,9 +3076,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% �
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}உலகம் உருவாக்குதல்
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}ஆறு உருவாக்குதல்
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}மரங்கள் உருவாக்குதல்
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}பொருள் உருவாக்குதல்
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}சமமில்லாத மற்றும் கல்லான பகுதி உருவாக்குதல்
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}பொருள் உருவாக்குதல்
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}மரங்கள் உருவாக்குதல்
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}ஆட்டம் அமைக்கப்படுகின்றது
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}வரிவடிவம் செயல்படுத்தப்படுகின்றது
 STR_GENERATION_PREPARING_GAME                                   :{BLACK}ஆட்டம் தயாராகிறது

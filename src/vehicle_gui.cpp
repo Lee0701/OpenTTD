@@ -115,7 +115,7 @@ enum VehicleGroupSortType
 	VGST_AVERAGE_ORDER_OCCUPANCY,
 };
 
-BaseVehicleListWindow::VehicleGroupSortFunction * const BaseVehicleListWindow::vehicle_group_none_sorter_funcs[] = {
+const std::initializer_list<BaseVehicleListWindow::VehicleGroupSortFunction * const> BaseVehicleListWindow::vehicle_group_none_sorter_funcs = {
 	&VehicleIndividualToGroupSorterWrapper<VehicleNumberSorter>,
 	&VehicleIndividualToGroupSorterWrapper<VehicleNameSorter>,
 	&VehicleIndividualToGroupSorterWrapper<VehicleAgeSorter>,
@@ -134,7 +134,7 @@ BaseVehicleListWindow::VehicleGroupSortFunction * const BaseVehicleListWindow::v
 	&VehicleIndividualToGroupSorterWrapper<VehicleMaxSpeedLoadedSorter>,
 };
 
-const StringID BaseVehicleListWindow::vehicle_group_none_sorter_names_calendar[] = {
+const std::initializer_list<const StringID> BaseVehicleListWindow::vehicle_group_none_sorter_names_calendar = {
 	STR_SORT_BY_NUMBER,
 	STR_SORT_BY_NAME,
 	STR_SORT_BY_AGE,
@@ -151,10 +151,9 @@ const StringID BaseVehicleListWindow::vehicle_group_none_sorter_names_calendar[]
 	STR_SORT_BY_TIMETABLE_DELAY,
 	STR_SORT_BY_AVG_ORDER_OCCUPANCY,
 	STR_SORT_BY_MAX_SPEED_LOADED,
-	INVALID_STRING_ID
 };
 
-const StringID BaseVehicleListWindow::vehicle_group_none_sorter_names_wallclock[] = {
+const std::initializer_list<const StringID> BaseVehicleListWindow::vehicle_group_none_sorter_names_wallclock = {
 	STR_SORT_BY_NUMBER,
 	STR_SORT_BY_NAME,
 	STR_SORT_BY_AGE,
@@ -171,10 +170,9 @@ const StringID BaseVehicleListWindow::vehicle_group_none_sorter_names_wallclock[
 	STR_SORT_BY_TIMETABLE_DELAY,
 	STR_SORT_BY_AVG_ORDER_OCCUPANCY,
 	STR_SORT_BY_MAX_SPEED_LOADED,
-	INVALID_STRING_ID
 };
 
-BaseVehicleListWindow::VehicleGroupSortFunction * const BaseVehicleListWindow::vehicle_group_shared_orders_sorter_funcs[] = {
+const std::initializer_list<BaseVehicleListWindow::VehicleGroupSortFunction * const> BaseVehicleListWindow::vehicle_group_shared_orders_sorter_funcs = {
 	&VehicleGroupLengthSorter,
 	&VehicleGroupTotalProfitThisYearSorter,
 	&VehicleGroupTotalProfitLastYearSorter,
@@ -183,30 +181,27 @@ BaseVehicleListWindow::VehicleGroupSortFunction * const BaseVehicleListWindow::v
 	&VehicleGroupAverageOrderOccupancySorter,
 };
 
-const StringID BaseVehicleListWindow::vehicle_group_shared_orders_sorter_names_calendar[] = {
+const std::initializer_list<const StringID> BaseVehicleListWindow::vehicle_group_shared_orders_sorter_names_calendar = {
 	STR_SORT_BY_NUM_VEHICLES,
 	STR_SORT_BY_TOTAL_PROFIT_THIS_YEAR,
 	STR_SORT_BY_TOTAL_PROFIT_LAST_YEAR,
 	STR_SORT_BY_AVERAGE_PROFIT_THIS_YEAR,
 	STR_SORT_BY_AVERAGE_PROFIT_LAST_YEAR,
 	STR_SORT_BY_AVG_ORDER_OCCUPANCY,
-	INVALID_STRING_ID
 };
 
-const StringID BaseVehicleListWindow::vehicle_group_shared_orders_sorter_names_wallclock[] = {
+const std::initializer_list<const StringID> BaseVehicleListWindow::vehicle_group_shared_orders_sorter_names_wallclock = {
 	STR_SORT_BY_NUM_VEHICLES,
 	STR_SORT_BY_TOTAL_PROFIT_THIS_PERIOD,
 	STR_SORT_BY_TOTAL_PROFIT_LAST_PERIOD,
 	STR_SORT_BY_AVERAGE_PROFIT_THIS_PERIOD,
 	STR_SORT_BY_AVERAGE_PROFIT_LAST_PERIOD,
 	STR_SORT_BY_AVG_ORDER_OCCUPANCY,
-	INVALID_STRING_ID
 };
 
-const StringID BaseVehicleListWindow::vehicle_group_by_names[] = {
+const std::initializer_list<const StringID> BaseVehicleListWindow::vehicle_group_by_names = {
 	STR_GROUP_BY_NONE,
 	STR_GROUP_BY_SHARED_ORDERS,
-	INVALID_STRING_ID
 };
 
 const StringID BaseVehicleListWindow::vehicle_depot_name[] = {
@@ -338,7 +333,7 @@ static bool GroupCargoFilter(const GUIVehicleGroup* group, const CargoID cid)
 	return false;
 }
 
-static GUIVehicleGroupList::FilterFunction * const _filter_funcs[] = {
+static GUIVehicleGroupList::FilterFunction * const _vehicle_group_filter_funcs[] = {
 	&GroupCargoFilter,
 };
 
@@ -361,7 +356,7 @@ void BaseVehicleListWindow::SetCargoFilter(CargoID cid)
 void BaseVehicleListWindow::SetCargoFilterArray()
 {
 	this->cargo_filter_criteria = CargoFilterCriteria::CF_ANY;
-	this->vehgroups.SetFilterFuncs(_filter_funcs);
+	this->vehgroups.SetFilterFuncs(_vehicle_group_filter_funcs);
 	this->vehgroups.SetFilterState(this->cargo_filter_criteria != CargoFilterCriteria::CF_ANY);
 }
 
@@ -1820,9 +1815,9 @@ static constexpr NWidgetPart _nested_vehicle_list[] = {
 				NWidget(WWT_PANEL, COLOUR_GREY), SetMinimalSize(0, 12), SetResize(1, 0), SetFill(1, 1), EndContainer(),
 				NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_VL_MANAGE_VEHICLES_DROPDOWN), SetMinimalSize(118, 12), SetFill(0, 1),
 								SetDataTip(STR_VEHICLE_LIST_MANAGE_LIST, STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP),
-				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VL_STOP_ALL), SetMinimalSize(12, 12), SetFill(0, 1),
+				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VL_STOP_ALL), SetAspect(WidgetDimensions::ASPECT_VEHICLE_FLAG), SetFill(0, 1),
 								SetDataTip(SPR_FLAG_VEH_STOPPED, STR_VEHICLE_LIST_MASS_STOP_LIST_TOOLTIP),
-				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VL_START_ALL), SetMinimalSize(12, 12), SetFill(0, 1),
+				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VL_START_ALL), SetAspect(WidgetDimensions::ASPECT_VEHICLE_FLAG), SetFill(0, 1),
 								SetDataTip(SPR_FLAG_VEH_RUNNING, STR_VEHICLE_LIST_MASS_START_LIST_TOOLTIP),
 			EndContainer(),
 			/* Widget to be shown for other companies hiding the previous 5 widgets. */
@@ -1921,6 +1916,17 @@ uint GetVehicleListHeight(VehicleType type, uint divisor)
 }
 
 /**
+ * Get width required for the formatted unit number display.
+ * @param digits Number of digits required for unit number.
+ * @return Required width in pixels.
+ */
+static int GetUnitNumberWidth(int digits)
+{
+	SetDParamMaxDigits(0, digits);
+	return GetStringBoundingBox(STR_JUST_COMMA).width;
+}
+
+/**
  * Draw all the vehicle list items.
  * @param selected_vehicle The vehicle that is to be highlighted.
  * @param line_height      Height of a single item line.
@@ -1932,7 +1938,7 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 	bool rtl = _current_text_dir == TD_RTL;
 
 	Dimension profit = GetSpriteSize(SPR_PROFIT_LOT);
-	int text_offset = std::max<int>(profit.width, GetDigitWidth() * this->unitnumber_digits) + WidgetDimensions::scaled.hsep_normal;
+	int text_offset = std::max<int>(profit.width, GetUnitNumberWidth(this->unitnumber_digits)) + WidgetDimensions::scaled.hsep_normal;
 	Rect tr = ir.Indent(text_offset, rtl);
 
 	bool show_orderlist = this->vli.vtype >= VEH_SHIP;
@@ -2466,7 +2472,7 @@ public:
 		}
 
 		/* Set text of group by dropdown widget. */
-		this->GetWidget<NWidgetCore>(WID_VL_GROUP_BY_PULLDOWN)->widget_data = this->vehicle_group_by_names[this->grouping];
+		this->GetWidget<NWidgetCore>(WID_VL_GROUP_BY_PULLDOWN)->widget_data = std::data(this->vehicle_group_by_names)[this->grouping];
 
 		/* Set text of sort by dropdown widget. */
 		this->GetWidget<NWidgetCore>(WID_VL_SORT_BY_PULLDOWN)->widget_data = this->GetVehicleSorterNames()[this->vehgroups.SortType()];
@@ -2903,24 +2909,21 @@ static StringID _service_interval_dropdown_calendar[] = {
 	STR_VEHICLE_DETAILS_DEFAULT,
 	STR_VEHICLE_DETAILS_DAYS,
 	STR_VEHICLE_DETAILS_PERCENT,
-	INVALID_STRING_ID,
 };
 
 static StringID _service_interval_dropdown_wallclock[] = {
 	STR_VEHICLE_DETAILS_DEFAULT,
 	STR_VEHICLE_DETAILS_MINUTES,
 	STR_VEHICLE_DETAILS_PERCENT,
-	INVALID_STRING_ID,
 };
 
 static StringID _service_interval_dropdown_wallclock_daylength[] = {
 	STR_VEHICLE_DETAILS_DEFAULT,
 	STR_VEHICLE_DETAILS_PRODUCTION_INTERVALS,
 	STR_VEHICLE_DETAILS_PERCENT,
-	INVALID_STRING_ID,
 };
 
-const StringID *GetServiceIntervalDropDownTexts()
+std::span<const StringID> GetServiceIntervalDropDownTexts()
 {
 	if (EconTime::UsingWallclockUnits()) {
 		return DayLengthFactor() > 1 ? _service_interval_dropdown_wallclock_daylength : _service_interval_dropdown_wallclock;
@@ -3146,13 +3149,7 @@ struct VehicleDetailsWindow : Window {
 				break;
 
 			case WID_VD_SERVICE_INTERVAL_DROPDOWN: {
-				Dimension d{0, 0};
-				{
-					const StringID *strs = GetServiceIntervalDropDownTexts();
-					while (*strs != INVALID_STRING_ID) {
-						d = maxdim(d, GetStringBoundingBox(*strs++));
-					}
-				}
+				Dimension d = GetStringListBoundingBox(GetServiceIntervalDropDownTexts());
 				d.width += padding.width;
 				d.height += padding.height;
 				size = maxdim(size, d);
@@ -3449,7 +3446,7 @@ struct VehicleDetailsWindow : Window {
 
 		this->SetWidgetDisabledState(WID_VD_EXTRA_ACTIONS, v->type != VEH_TRAIN && !HasBit(v->vehicle_flags, VF_HAVE_SLOT));
 
-		const StringID *texts = GetServiceIntervalDropDownTexts();
+		std::span<const StringID> texts = GetServiceIntervalDropDownTexts();
 		StringID str = !v->ServiceIntervalIsCustom() ? texts[0] : (v->ServiceIntervalIsPercent() ? texts[2] : texts[1]);
 		this->GetWidget<NWidgetCore>(WID_VD_SERVICE_INTERVAL_DROPDOWN)->widget_data = str;
 
@@ -3649,9 +3646,9 @@ static void ShowVehicleDetailsWindow(const Vehicle *v)
 static constexpr NWidgetPart _nested_vehicle_view_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
-		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VV_RENAME), SetMinimalSize(12, 14), SetDataTip(SPR_RENAME, STR_NULL /* filled in later */),
+		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VV_RENAME), SetAspect(WidgetDimensions::ASPECT_RENAME), SetDataTip(SPR_RENAME, STR_NULL /* filled in later */),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_VV_CAPTION), SetDataTip(STR_VEHICLE_VIEW_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
-		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_VV_LOCATION), SetMinimalSize(12, 14), SetDataTip(SPR_GOTO_LOCATION, STR_NULL /* filled in later */),
+		NWidget(WWT_IMGBTN, COLOUR_GREY, WID_VV_LOCATION), SetAspect(WidgetDimensions::ASPECT_LOCATION), SetDataTip(SPR_GOTO_LOCATION, STR_NULL /* filled in later */),
 		NWidget(WWT_DEBUGBOX, COLOUR_GREY),
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
@@ -3683,7 +3680,7 @@ static constexpr NWidgetPart _nested_vehicle_view_widgets[] = {
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PUSHBTN, COLOUR_GREY, WID_VV_START_STOP), SetResize(1, 0), SetFill(1, 0),
-		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VV_ORDER_LOCATION), SetMinimalSize(12, 14), SetDataTip(SPR_GOTO_LOCATION, STR_VEHICLE_VIEW_ORDER_LOCATION_TOOLTIP),
+		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VV_ORDER_LOCATION), SetAspect(WidgetDimensions::ASPECT_LOCATION), SetDataTip(SPR_GOTO_LOCATION, STR_VEHICLE_VIEW_ORDER_LOCATION_TOOLTIP),
 		NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 	EndContainer(),
 };
@@ -4476,7 +4473,6 @@ public:
 
 static Hotkey vehicleview_hotkeys[] = {
 	Hotkey('H', "honk", WID_VV_HONK_HORN),
-	HOTKEY_LIST_END
 };
 HotkeyList VehicleViewWindow::hotkeys("vehicleview", vehicleview_hotkeys);
 
@@ -4626,7 +4622,7 @@ void SetMouseCursorVehicle(const Vehicle *v, EngineImageType image_type)
 {
 	bool rtl = _current_text_dir == TD_RTL;
 
-	_cursor.sprite_count = 0;
+	_cursor.sprites.clear();
 	int total_width = 0;
 	int y_offset = 0;
 	bool rotor_seq = false; // Whether to draw the rotor of the vehicle in this step.
@@ -4646,18 +4642,12 @@ void SetMouseCursorVehicle(const Vehicle *v, EngineImageType image_type)
 			v->GetImage(rtl ? DIR_E : DIR_W, image_type, &seq);
 		}
 
-		if (_cursor.sprite_count + seq.count > lengthof(_cursor.sprite_seq)) break;
-
 		int x_offs = 0;
 		if (v->type == VEH_TRAIN) x_offs = Train::From(v)->GetCursorImageOffset();
 
 		for (uint i = 0; i < seq.count; ++i) {
 			PaletteID pal2 = (v->vehstatus & VS_CRASHED) || !seq.seq[i].pal ? pal : seq.seq[i].pal;
-			_cursor.sprite_seq[_cursor.sprite_count].sprite = seq.seq[i].sprite;
-			_cursor.sprite_seq[_cursor.sprite_count].pal = pal2;
-			_cursor.sprite_pos[_cursor.sprite_count].x = rtl ? (-total_width + x_offs) : (total_width + x_offs);
-			_cursor.sprite_pos[_cursor.sprite_count].y = y_offset;
-			_cursor.sprite_count++;
+			_cursor.sprites.emplace_back(seq.seq[i].sprite, pal2, rtl ? (-total_width + x_offs) : (total_width + x_offs), y_offset);
 		}
 
 		if (v->type == VEH_AIRCRAFT && v->subtype == AIR_HELICOPTER && !rotor_seq) {
@@ -4673,8 +4663,8 @@ void SetMouseCursorVehicle(const Vehicle *v, EngineImageType image_type)
 		/* Center trains and road vehicles on the front vehicle */
 		int offs = (ScaleSpriteTrad(VEHICLEINFO_FULL_VEHICLE_WIDTH) - total_width) / 2;
 		if (rtl) offs = -offs;
-		for (uint i = 0; i < _cursor.sprite_count; ++i) {
-			_cursor.sprite_pos[i].x += offs;
+		for (auto &cs : _cursor.sprites) {
+			cs.pos.x += offs;
 		}
 	}
 

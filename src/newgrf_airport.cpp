@@ -95,11 +95,11 @@ bool AirportSpec::IsAvailable() const
  */
 bool AirportSpec::IsWithinMapBounds(uint8_t table, TileIndex tile) const
 {
-	if (table >= this->num_table) return false;
+	if (table >= this->layouts.size()) return false;
 
 	uint8_t w = this->size_x;
 	uint8_t h = this->size_y;
-	if (this->rotation[table] == DIR_E || this->rotation[table] == DIR_W) Swap(w, h);
+	if (this->layouts[table].rotation == DIR_E || this->layouts[table].rotation == DIR_W) Swap(w, h);
 
 	return TileX(tile) + w < MapSizeX() &&
 		TileY(tile) + h < MapSizeY();
@@ -219,7 +219,7 @@ uint32_t AirportResolverObject::GetDebugID() const
  */
 TownScopeResolver *AirportResolverObject::GetTown()
 {
-	if (!this->town_scope) {
+	if (!this->town_scope.has_value()) {
 		Town *t = nullptr;
 		if (this->airport_scope.st != nullptr) {
 			t = this->airport_scope.st->town;
@@ -227,9 +227,9 @@ TownScopeResolver *AirportResolverObject::GetTown()
 			t = ClosestTownFromTile(this->airport_scope.tile, UINT_MAX);
 		}
 		if (t == nullptr) return nullptr;
-		this->town_scope.reset(new TownScopeResolver(*this, t, this->airport_scope.st == nullptr));
+		this->town_scope.emplace(*this, t, this->airport_scope.st == nullptr);
 	}
-	return this->town_scope.get();
+	return &*this->town_scope;
 }
 
 /**

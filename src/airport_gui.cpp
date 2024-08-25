@@ -183,7 +183,6 @@ static EventState AirportToolbarGlobalHotkeys(int hotkey)
 static Hotkey airtoolbar_hotkeys[] = {
 	Hotkey('1', "airport", WID_AT_AIRPORT),
 	Hotkey('2', "demolish", WID_AT_DEMOLISH),
-	HOTKEY_LIST_END
 };
 HotkeyList BuildAirToolbarWindow::hotkeys("airtoolbar", airtoolbar_hotkeys, AirportToolbarGlobalHotkeys);
 
@@ -269,7 +268,7 @@ public:
 			const AirportSpec *as = ac->GetSpec(_selected_airport_index);
 			if (as->IsAvailable()) {
 				/* Ensure the airport layout is valid. */
-				_selected_airport_layout = Clamp(_selected_airport_layout, 0, as->num_table - 1);
+				_selected_airport_layout = Clamp(_selected_airport_layout, 0, static_cast<uint8_t>(as->layouts.size() - 1));
 				selectFirstAirport = false;
 				this->UpdateSelectSize();
 			}
@@ -298,7 +297,7 @@ public:
 					StringID string = GetAirportTextCallback(as, _selected_airport_layout, CBID_AIRPORT_LAYOUT_NAME);
 					if (string != STR_UNDEFINED) {
 						SetDParam(0, string);
-					} else if (as->num_table > 1) {
+					} else if (as->layouts.size() > 1) {
 						SetDParam(0, STR_STATION_BUILD_AIRPORT_LAYOUT_NAME);
 						SetDParam(1, _selected_airport_layout + 1);
 					}
@@ -340,7 +339,7 @@ public:
 				for (int i = 0; i < NUM_AIRPORTS; i++) {
 					const AirportSpec *as = AirportSpec::Get(i);
 					if (!as->enabled) continue;
-					for (uint8_t layout = 0; layout < as->num_table; layout++) {
+					for (uint8_t layout = 0; layout < static_cast<uint8_t>(as->layouts.size()); layout++) {
 						SpriteID sprite = GetCustomAirportSprite(as, layout);
 						if (sprite != 0) {
 							Dimension d = GetSpriteSize(sprite);
@@ -356,7 +355,7 @@ public:
 				for (int i = NEW_AIRPORT_OFFSET; i < NUM_AIRPORTS; i++) {
 					const AirportSpec *as = AirportSpec::Get(i);
 					if (!as->enabled) continue;
-					for (uint8_t layout = 0; layout < as->num_table; layout++) {
+					for (uint8_t layout = 0; layout < static_cast<uint8_t>(as->layouts.size()); layout++) {
 						StringID string = GetAirportTextCallback(as, layout, CBID_AIRPORT_ADDITIONAL_TEXT);
 						if (string == STR_UNDEFINED) continue;
 
@@ -466,14 +465,14 @@ public:
 			const AirportSpec *as = AirportClass::Get(_selected_airport_class)->GetSpec(_selected_airport_index);
 			int w = as->size_x;
 			int h = as->size_y;
-			Direction rotation = as->rotation[_selected_airport_layout];
+			Direction rotation = as->layouts[_selected_airport_layout].rotation;
 			if (rotation == DIR_E || rotation == DIR_W) Swap(w, h);
 			SetTileSelectSize(w, h);
 
 			this->preview_sprite = GetCustomAirportSprite(as, _selected_airport_layout);
 
 			this->SetWidgetDisabledState(WID_AP_LAYOUT_DECREASE, _selected_airport_layout == 0);
-			this->SetWidgetDisabledState(WID_AP_LAYOUT_INCREASE, _selected_airport_layout + 1 >= as->num_table);
+			this->SetWidgetDisabledState(WID_AP_LAYOUT_INCREASE, _selected_airport_layout + 1U >= as->layouts.size());
 
 			int rad = (_settings_game.station.modified_catchment ? as->catchment : (uint)CA_UNMODIFIED) + _settings_game.station.catchment_increase;
 			if (_settings_client.gui.station_show_coverage) SetTileSelectBigSize(-rad, -rad, 2 * rad, 2 * rad);
@@ -539,11 +538,12 @@ public:
 			/* If that fails, select the first available airport
 			 * from the first class where airports are available. */
 			for (const auto &cls : AirportClass::Classes()) {
-				for (const auto &as : cls.Specs()) {
+				for (uint i = 0; i < cls.GetSpecCount(); i++) {
+					const AirportSpec *as = cls.GetSpec(i);
 					if (as->IsAvailable()) {
 						_selected_airport_class = cls.Index();
 						this->vscroll->SetCount(cls.GetSpecCount());
-						this->SelectOtherAirport(as->GetIndex());
+						this->SelectOtherAirport(i);
 						return;
 					}
 				}

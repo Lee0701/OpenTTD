@@ -71,6 +71,8 @@
 
 #include "safeguards.h"
 
+static StationSpec::TileFlags GetStationTileFlags(StationGfx gfx, const StationSpec *statspec);
+
 bool _town_noise_no_update = false;
 
 /**
@@ -89,8 +91,8 @@ bool IsHangar(TileIndex t)
 	const Station *st = Station::GetByTile(t);
 	const AirportSpec *as = st->airport.GetSpec();
 
-	for (uint i = 0; i < as->nof_depots; i++) {
-		if (st->airport.GetHangarTile(i) == t) return true;
+	for (const auto &depot : as->depots) {
+		if (st->airport.GetRotatedTileFromOffset(depot.ti) == TileIndex(t)) return true;
 	}
 
 	return false;
@@ -922,15 +924,14 @@ CommandCost CheckBuildableTile(TileIndex tile, uint invalid_dirs, int &allowed_z
 CommandCost IsRailStationBridgeAboveOk(TileIndex tile, const StationSpec *statspec, uint8_t layout, TileIndex northern_bridge_end, TileIndex southern_bridge_end, int bridge_height,
 		BridgeType bridge_type, TransportType bridge_transport_type)
 {
-	assert(layout < 8);
-
-	if (statspec && HasBit(statspec->internal_flags, SSIF_BRIDGE_HEIGHTS_SET)) {
-		if (statspec->bridge_height[layout] == 0) return CommandCost(INVALID_STRING_ID);
-		if (GetTileMaxZ(tile) + statspec->bridge_height[layout] > bridge_height) {
+	if (statspec != nullptr && HasBit(statspec->internal_flags, SSIF_BRIDGE_HEIGHTS_SET)) {
+		int height_above = statspec->GetBridgeAboveFlags(layout).height;
+		if (height_above == 0) return CommandCost(INVALID_STRING_ID);
+		if (GetTileMaxZ(tile) + height_above > bridge_height) {
 			return CommandCost(STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION);
 		}
 	} else if (!statspec) {
-		// default stations/waypoints
+		/* Default stations/waypoints */
 		const int height = layout < 4 ? 2 : 5;
 		if (GetTileMaxZ(tile) + height > bridge_height) return CommandCost(STR_ERROR_BRIDGE_TOO_LOW_FOR_STATION);
 	} else {
@@ -938,18 +939,22 @@ CommandCost IsRailStationBridgeAboveOk(TileIndex tile, const StationSpec *statsp
 	}
 
 	BridgePiecePillarFlags disallowed_pillar_flags;
-	if (statspec && HasBit(statspec->internal_flags, SSIF_BRIDGE_DISALLOWED_PILLARS_SET)) {
-		// pillar flags set by NewGRF
-		disallowed_pillar_flags = (BridgePiecePillarFlags) statspec->bridge_disallowed_pillars[layout];
+	if (statspec != nullptr && HasBit(statspec->internal_flags, SSIF_BRIDGE_DISALLOWED_PILLARS_SET)) {
+		/* Pillar flags set by NewGRF */
+		disallowed_pillar_flags = (BridgePiecePillarFlags) statspec->GetBridgeAboveFlags(layout).disallowed_pillars;
 	} else if (!statspec) {
-		// default stations/waypoints
-		static const uint8_t st_flags[8] = { 0x50, 0xA0, 0x50, 0xA0, 0x50 | 0x26, 0xA0 | 0x1C, 0x50 | 0x89, 0xA0 | 0x43 };
-		disallowed_pillar_flags = (BridgePiecePillarFlags) st_flags[layout];
-	} else if (HasBit(statspec->blocked, layout)) {
-		// non-track station tiles
+		/* Default stations/waypoints */
+		if (layout < 8) {
+			static const uint8_t st_flags[8] = { 0x50, 0xA0, 0x50, 0xA0, 0x50 | 0x26, 0xA0 | 0x1C, 0x50 | 0x89, 0xA0 | 0x43 };
+			disallowed_pillar_flags = (BridgePiecePillarFlags) st_flags[layout];
+		} else {
+			disallowed_pillar_flags = (BridgePiecePillarFlags) 0;
+		}
+	} else if ((GetStationTileFlags(layout, statspec) & StationSpec::TileFlags::Blocked) == StationSpec::TileFlags::Blocked) {
+		/* Non-track station tiles */
 		disallowed_pillar_flags = (BridgePiecePillarFlags) 0;
 	} else {
-		// tracked station tiles
+		/* Tracked station tiles */
 		const Axis axis = HasBit(layout, 0) ? AXIS_Y : AXIS_X;
 		disallowed_pillar_flags = (BridgePiecePillarFlags) (axis == AXIS_X ? 0x50 : 0xA0);
 	}
@@ -1323,13 +1328,13 @@ static inline uint8_t *CreateMulti(uint8_t *layout, int n, uint8_t b)
  */
 void GetStationLayout(uint8_t *layout, uint numtracks, uint plat_len, const StationSpec *statspec)
 {
-	if (statspec != nullptr && statspec->layouts.size() >= plat_len &&
-			statspec->layouts[plat_len - 1].size() >= numtracks &&
-			!statspec->layouts[plat_len - 1][numtracks - 1].empty()) {
-		/* Custom layout defined, follow it. */
-		memcpy(layout, statspec->layouts[plat_len - 1][numtracks - 1].data(),
-			static_cast<size_t>(plat_len) * numtracks);
-		return;
+	if (statspec != nullptr) {
+		auto found = statspec->layouts.find(GetStationLayoutKey(numtracks, plat_len));
+		if (found != std::end(statspec->layouts)) {
+			/* Custom layout defined, copy to buffer. */
+			std::copy(std::begin(found->second), std::end(found->second), layout);
+			return;
+		}
 	}
 
 	if (plat_len == 1) {
@@ -1459,21 +1464,29 @@ static void RestoreTrainReservation(Train *v)
 }
 
 /**
+ * Get station tile flags for the given StationGfx.
+ * @param gfx StationGfx of station tile.
+ * @param statspec Station spec of station tile.
+ * @return Tile flags to apply.
+ */
+static StationSpec::TileFlags GetStationTileFlags(StationGfx gfx, const StationSpec *statspec)
+{
+	/* Default stations do not draw pylons under roofs (gfx >= 4) */
+	if (statspec == nullptr || gfx >= statspec->tileflags.size()) return gfx < 4 ? StationSpec::TileFlags::Pylons : StationSpec::TileFlags::None;
+	return statspec->tileflags[gfx];
+}
+
+/**
  * Set rail station tile flags for the given tile.
  * @param tile Tile to set flags on.
  * @param statspec Statspec of the tile.
  */
 void SetRailStationTileFlags(TileIndex tile, const StationSpec *statspec)
 {
-	const StationGfx gfx = GetStationGfx(tile);
-	bool blocked = statspec != nullptr && HasBit(statspec->blocked, gfx);
-	/* Default stations do not draw pylons under roofs (gfx >= 4) */
-	bool pylons = statspec != nullptr ? HasBit(statspec->pylons, gfx) : gfx < 4;
-	bool wires = statspec == nullptr || !HasBit(statspec->wires, gfx);
-
-	SetStationTileBlocked(tile, blocked);
-	SetStationTileHavePylons(tile, pylons);
-	SetStationTileHaveWires(tile, wires);
+	const auto flags = GetStationTileFlags(GetStationGfx(tile), statspec);
+	SetStationTileBlocked(tile, (flags & StationSpec::TileFlags::Blocked) == StationSpec::TileFlags::Blocked);
+	SetStationTileHavePylons(tile, (flags & StationSpec::TileFlags::Pylons) == StationSpec::TileFlags::Pylons);
+	SetStationTileHaveWires(tile, (flags & StationSpec::TileFlags::NoWires) != StationSpec::TileFlags::NoWires);
 }
 
 /**
@@ -1514,8 +1527,10 @@ CommandCost CmdBuildRailStation(TileIndex tile_org, DoCommandFlag flags, uint32_
 	if (!ValParamRailType(rt)) return CMD_ERROR;
 
 	/* Check if the given station class is valid */
-	if ((uint)spec_class >= StationClass::GetClassCount() || spec_class == STAT_CLASS_WAYP) return CMD_ERROR;
-	if (spec_index >= StationClass::Get(spec_class)->GetSpecCount()) return CMD_ERROR;
+	if (static_cast<uint>(spec_class) >= StationClass::GetClassCount()) return CMD_ERROR;
+	const StationClass *cls = StationClass::Get(spec_class);
+	if (IsWaypointClass(*cls)) return CMD_ERROR;
+	if (spec_index >= cls->GetSpecCount()) return CMD_ERROR;
 	if (plat_len == 0 || numtracks == 0) return CMD_ERROR;
 
 	int w_org, h_org;
@@ -1664,12 +1679,12 @@ CommandCost CmdBuildRailStation(TileIndex tile_org, DoCommandFlag flags, uint32_
 					uint32_t platinfo = GetPlatformInfo(AXIS_X, GetStationGfx(tile), plat_len, numtracks_orig, plat_len - w, numtracks_orig - numtracks, false);
 
 					/* As the station is not yet completely finished, the station does not yet exist. */
-					uint16_t callback = GetStationCallback(CBID_STATION_TILE_LAYOUT, platinfo, 0, statspec, nullptr, tile, rt);
+					uint16_t callback = GetStationCallback(CBID_STATION_BUILD_TILE_LAYOUT, platinfo, 0, statspec, nullptr, tile, rt);
 					if (callback != CALLBACK_FAILED) {
-						if (callback < 8) {
+						if (callback <= UINT8_MAX) {
 							SetStationGfx(tile, (callback & ~1) + axis);
 						} else {
-							ErrorUnknownCallbackResult(statspec->grf_prop.grffile->grfid, CBID_STATION_TILE_LAYOUT, callback);
+							ErrorUnknownCallbackResult(statspec->grf_prop.grffile->grfid, CBID_STATION_BUILD_TILE_LAYOUT, callback);
 						}
 					}
 
@@ -2140,10 +2155,12 @@ CommandCost CmdBuildRoadStop(TileIndex tile, DoCommandFlag flags, uint32_t p1, u
 	uint16_t spec_index          = GB(p3, 16, 16);
 
 	/* Check if the given station class is valid */
-	if ((uint)spec_class >= RoadStopClass::GetClassCount() || spec_class == ROADSTOP_CLASS_WAYP) return CMD_ERROR;
-	if (spec_index >= RoadStopClass::Get(spec_class)->GetSpecCount()) return CMD_ERROR;
+	if (static_cast<uint>(spec_class) >= RoadStopClass::GetClassCount()) return CMD_ERROR;
+	const RoadStopClass *cls = RoadStopClass::Get(spec_class);
+	if (IsWaypointClass(*cls)) return CMD_ERROR;
+	if (spec_index >= cls->GetSpecCount()) return CMD_ERROR;
 
-	const RoadStopSpec *roadstopspec = RoadStopClass::Get(spec_class)->GetSpec(spec_index);
+	const RoadStopSpec *roadstopspec = cls->GetSpec(spec_index);
 	if (roadstopspec != nullptr) {
 		if (type && roadstopspec->stop_type != ROADSTOPTYPE_FREIGHT && roadstopspec->stop_type != ROADSTOPTYPE_ALL) return CMD_ERROR;
 		if (!type && roadstopspec->stop_type != ROADSTOPTYPE_PASSENGER && roadstopspec->stop_type != ROADSTOPTYPE_ALL) return CMD_ERROR;
@@ -2744,10 +2761,10 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 
 	/* Check if a valid, buildable airport was chosen for construction */
 	const AirportSpec *as = AirportSpec::Get(airport_type);
-	if (!as->IsAvailable() || layout >= as->num_table) return CMD_ERROR;
+	if (!as->IsAvailable() || layout >= as->layouts.size()) return CMD_ERROR;
 	if (!as->IsWithinMapBounds(layout, tile)) return CMD_ERROR;
 
-	Direction rotation = as->rotation[layout];
+	Direction rotation = as->layouts[layout].rotation;
 	int w = as->size_x;
 	int h = as->size_y;
 	if (rotation == DIR_E || rotation == DIR_W) Swap(w, h);
@@ -2758,7 +2775,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 	}
 
 	StationID est = INVALID_STATION;
-	AirportTileTableIterator iter(as->table[layout], tile);
+	AirportTileTableIterator iter(as->layouts[layout].tiles.data(), tile);
 	CommandCost cost = CheckFlatLandAirport(iter, flags, &est);
 	if (cost.Failed()) return cost;
 
@@ -2837,7 +2854,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 		cost.AddCost(r);
 	}
 
-	for (AirportTileTableIterator iter(as->table[layout], tile); iter != INVALID_TILE; ++iter) {
+	for (AirportTileTableIterator iter(as->layouts[layout].tiles.data(), tile); iter != INVALID_TILE; ++iter) {
 		cost.AddCost(_price[PR_BUILD_STATION_AIRPORT]);
 	}
 
@@ -2884,7 +2901,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 
 		st->rect.BeforeAddRect(tile, w, h, StationRect::ADD_TRY);
 
-		for (AirportTileTableIterator iter(as->table[layout], tile); iter != INVALID_TILE; ++iter) {
+		for (AirportTileTableIterator iter(as->layouts[layout].tiles.data(), tile); iter != INVALID_TILE; ++iter) {
 			MakeAirport(iter, st->owner, st->index, iter.GetStationGfx(), WATER_CLASS_INVALID);
 			SetStationTileRandomBits(iter, GB(Random(), 0, 4));
 			st->airport.Add(iter);
@@ -2893,7 +2910,7 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32_t p1, ui
 		}
 
 		/* Only call the animation trigger after all tiles have been built */
-		for (AirportTileTableIterator iter(as->table[layout], tile); iter != INVALID_TILE; ++iter) {
+		for (AirportTileTableIterator iter(as->layouts[layout].tiles.data(), tile); iter != INVALID_TILE; ++iter) {
 			AirportTileAnimationTrigger(st, iter, AAT_BUILT);
 		}
 
@@ -3366,8 +3383,8 @@ static void DrawTile_Station(TileInfo *ti, DrawTileProcParams params)
 			if (statspec != nullptr) {
 				tile_layout = GetStationGfx(ti->tile);
 
-				if (HasBit(statspec->callback_mask, CBM_STATION_SPRITE_LAYOUT)) {
-					uint16_t callback = GetStationCallback(CBID_STATION_SPRITE_LAYOUT, 0, 0, statspec, st, ti->tile, INVALID_RAILTYPE);
+				if (HasBit(statspec->callback_mask, CBM_STATION_DRAW_TILE_LAYOUT)) {
+					uint16_t callback = GetStationCallback(CBID_STATION_DRAW_TILE_LAYOUT, 0, 0, statspec, st, ti->tile, INVALID_RAILTYPE);
 					if (callback != CALLBACK_FAILED) tile_layout = (callback & ~1) + GetRailStationAxis(ti->tile);
 				}
 
@@ -3758,7 +3775,7 @@ void FillTileDescRailStation(TileIndex tile, TileDesc *td)
 	const StationSpec *spec = GetStationSpec(tile);
 
 	if (spec != nullptr) {
-		td->station_class = StationClass::Get(spec->cls_id)->name;
+		td->station_class = StationClass::Get(spec->class_index)->name;
 		td->station_name  = spec->name;
 
 		if (spec->grf_prop.grffile != nullptr) {
@@ -3775,7 +3792,7 @@ void FillTileDescRailStation(TileIndex tile, TileDesc *td)
 void FillTileDescAirport(TileIndex tile, TileDesc *td)
 {
 	const AirportSpec *as = Station::GetByTile(tile)->airport.GetSpec();
-	td->airport_class = AirportClass::Get(as->cls_id)->name;
+	td->airport_class = AirportClass::Get(as->class_index)->name;
 	td->airport_name = as->name;
 
 	const AirportTileSpec *ats = AirportTileSpec::GetByTile(tile);
@@ -4967,9 +4984,9 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 		}
 		if (used_stations.empty()) {
 			used_stations.reserve(2);
-			used_stations.emplace_back(std::make_pair(first_station, 0));
+			used_stations.emplace_back(first_station, 0);
 		}
-		used_stations.emplace_back(std::make_pair(st, 0));
+		used_stations.emplace_back(st, 0);
 	}
 
 	/* no stations around at all? */

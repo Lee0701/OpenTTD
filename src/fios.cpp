@@ -415,8 +415,6 @@ static void FiosGetFileList(SaveLoadOperation fop, bool show_dirs, fios_getlist_
 
 	/* Show drives */
 	FiosGetDrives(file_list);
-
-	file_list.shrink_to_fit();
 }
 
 /**
@@ -763,7 +761,7 @@ FiosNumberedSaveName::FiosNumberedSaveName(const std::string &prefix) : prefix(p
 	/* Get the save list. */
 	FileList list;
 	FiosFileScanner scanner(SLO_SAVE, proc, list);
-	scanner.Scan(".sav", _autosave_path->c_str(), false);
+	scanner.Scan(".sav", *_autosave_path, false);
 
 	/* Find the number for the most recent save, if any. */
 	if (list.begin() != list.end()) {

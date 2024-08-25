@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}När den
 STR_BUTTON_DEFAULT                                              :{BLACK}Standardinställning
 STR_BUTTON_CANCEL                                               :{BLACK}Avbryt
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Varning: Serveradministratörer kan ha möjlighet att läsa text som skrivs här.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -956,11 +955,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Volym
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Ljudeffekter
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Musik
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Valutaenheter
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Välj valutaenhet
@@ -1058,11 +1053,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Kryssa i
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Anti-alias-typsnitt
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Kryssa i den här rutan för anti-aliasing av typsnitt med justerbar storlek
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatisk undersökning
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Delta i en automatisk undersökning
@@ -1090,6 +1081,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Ytterlig
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Musikpaket valt
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Välj vilket musikpaket som ska användas
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Yttligare information om musikpaketet
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(inga tillägg för att integrera med sociala plattformar installerade)
 
@@ -1832,7 +1824,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Normalt service
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Välj vilket serviceintervall som normalt sett ska användas för nya flygplan, om inget annat serviceintervall uttryckligen anges
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Normalt serviceintervall för skepp: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Välj vilket serviceintervall som normalt sett ska användas för nya skepp, om inget annat serviceintervall uttryckligen anges
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}Dag{P 0 "" ar}/Minut{P 0 "" er}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}dag{P 0 "" ar}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}minut{P 0 "" er}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Inaktiverat
 
@@ -2132,17 +2128,8 @@ STR_CONFIG_SETTING_AI                                           :Motståndare
 STR_CONFIG_SETTING_AI_NPC                                       :Datorspelare
 STR_CONFIG_SETTING_NETWORK                                      :Nätverk
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Vägfinnare för tåg: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Vägfinnare som tåg ska använda
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Vägfinnare för vägfordon: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Vägfinnare som vägfordon ska använda
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Vägfinnare för skepp: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Vägfinnare som skepp ska använda
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Vänd automatiskt vid signaler: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Tillåt att tåg vänder vid en signal om de har väntat där länge
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Rekommenderad)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Ändra inställningsvärde
 
@@ -2461,7 +2448,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Hämtar 
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Koppla ifrån
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Servern är skyddad. Ange lösenord
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Företaget är skyddat. Ange lösenord
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Spelare online
@@ -2510,13 +2496,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Via rel�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Kasta ut
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Bannlys
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Ta bort
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Lås upp med lösenord
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Administratörshandling
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Är du säker på att du vill kasta ut spelaren '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Är du säker på att du vill bannlysa spelaren '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Är du säker på att du vill ta bort företaget {COMPANY}?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Är du säker på att du vill återställa företaget {COMPANY}s lösenord?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Använd relä?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Misslyckades med att etablera en anslutning mellan dig och servern '{STRING}'.{}Vill du använda '{STRING}' som relä för denna session?
@@ -2533,19 +2517,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Ja
 
 STR_NETWORK_SPECTATORS                                          :Åskådare
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Spara inte det inmatade lösenordet
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Ge företaget det nya lösenordet
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Företagslösenord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Förvalt företagslösenord
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Använd detta företagslösenord som förval för nya företag
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Gå med
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Gå med och spela som detta företag
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Lösenord
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Lösenordsskydda ditt företag för att förhindra att obehöriga spelare ansluter
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Ange företagets lösenord
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Skicka
@@ -2808,7 +2782,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Välj ri
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Riktmärke
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Välj riktmärkestyp
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Val av tågstation
@@ -2821,8 +2794,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Välj l�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & Släpp
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Bygg en station genom att dra & släppa
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Välj vilken stationsklass som ska visas
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Välj stationstyp att bygga
+
 
 STR_STATION_CLASS_DFLT                                          :Original
 STR_STATION_CLASS_DFLT_STATION                                  :Standardstation
@@ -2965,8 +2937,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Köp mar
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Val av objekt
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Välj objekt att bygga. Ctrl+Klick+Drag för att välja ytan diagonalt. Håll även in Shift för att endast visa uppskattad kostnad
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Välj typ av objekt att bygga
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Förhandsvisning av objektet
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Storlek: {GOLD}{NUM} x {NUM} rutor
 
@@ -3393,10 +3363,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Vill du
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% färdigt
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Generera värld
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Landskapsgenerering
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generera Flod
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generera Träd
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generera objekt
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Svår och stenig markgenerering
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Stadsgenerering
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Industrigenerering
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Generera objekt
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Generera Träd
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Ställer in spel
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Kör tile-loop
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Kör skript
@@ -5286,6 +5259,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Ändra d
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Inga fordon är tillgängliga än
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Starta ett nytt spel efter {DATE_SHORT} eller använd en NewGRF som erbjuder tidiga fordon
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Inga vägtyper som kan byggas av städer finns tillgängliga
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Ändra din NewGRF-konfiguration
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Inga vägtyper som kan byggas av städer finns tillgängliga ännu
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Starta ett nytt spel efter {DATE_SHORT} eller använd en NewGRF som tidigt erbjuder vägtyper som städer kan bygga
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Kan inte tillåta tåg att passera signal under fara...

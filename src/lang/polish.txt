@@ -687,7 +687,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Włącze
 STR_BUTTON_DEFAULT                                              :{BLACK}Domyślna
 STR_BUTTON_CANCEL                                               :{BLACK}Anuluj
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Uwaga: Administratorzy serwera mogą być w stanie przeczytać każdy wpisany tutaj tekst.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -1336,11 +1335,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Głośność
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Efekty dźwiękowe
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muzyka
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Waluta
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Wybór waluty
@@ -1438,11 +1433,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Zaznacz 
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Antyaliasing fontów
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Zaznacz to pole, aby wygładzać fonty o zmiennym rozmiarze
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Automatyczna ankieta
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Udział w automatycznej ankiecie
@@ -1470,6 +1461,9 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Dodatkow
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Podstawowy zestaw muzyki
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Wybierz podstawowy zestaw muzyki do użycia
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Dodatkowe informacje o muzyce podstawowej
+
+STR_GAME_OPTIONS_ONLINE_CONTENT                                 :Pobierz
+STR_GAME_OPTIONS_ONLINE_CONTENT_TOOLTIP                         :Wyszukaj nową lub zaktualizowaną zawartość do pobrania
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(brak zainstalowanych wtyczek do integracji z platformami społecznościowymi)
 
@@ -2212,7 +2206,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Domyślny inter
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Ustaw domyślny okres serwisowania dla nowych maszyn latających, jeśli takowy nie istnieje dla określonego pojazdu
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Domyślny interwał serwisowania statków: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Ustaw domyślny okres serwisowania dla nowych statków, jeśli takowy nie istnieje dla określonego pojazdu
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}D{P zień ni ni}/Minut{P a y ""}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}d{P 0 zień ni ni}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}minut{P 0 a y ""}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Wyłączone
 
@@ -2512,17 +2510,8 @@ STR_CONFIG_SETTING_AI                                           :Rywale
 STR_CONFIG_SETTING_AI_NPC                                       :Gracze komputerowi
 STR_CONFIG_SETTING_NETWORK                                      :Sieć
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Wytyczanie drogi dla pociągów: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :System wyszukiwania trasy dla pociągów
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Wytyczanie drogi dla pojazdów: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :System wyszukiwania trasy dla pojazdów drogowych
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Wytyczanie drogi dla statków: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :System wyszukiwania trasy dla statków
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Automatycznie zawracaj przy sygnałach: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Pozwól pociągom zawracać przed semaforem, jeśli czekają tam bardzo długo
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Zalecane)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Zmiana wartości
 
@@ -2841,7 +2830,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Uzyskiwa
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Rozłącz
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Serwer jest chroniony. Wprowadź hasło
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Firma jest chroniona. Wprowadź hasło
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Połączeni gracze
@@ -2868,6 +2856,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :Twoja nazwa gra
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}Działania administracyjne, które można wykonać dla tego klienta
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}Działania administracyjne, które można wykonać dla tej firmy
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}Dołącz do tej firmy
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}Zezwól temu klientowi na dołączenie do twojej firmy
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}Wyślij wiadomość do tego gracza
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}Wyślij wiadomość do wszystkich graczy tej firmy
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}Wyślij wiadomość do wszystkich obserwatorów
@@ -2890,13 +2879,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Przez pr
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Wyrzuć
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Zbanuj
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Usuń
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Wyczyść hasło
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Działanie administratora
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Czy na pewno chcesz wyrzucić gracza „{STRING}”?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Czy na pewno chcesz zbanować gracza „{STRING}”?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Czy na pewno chcesz usunąć firmę „{COMPANY}”?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Czy na pewno chcesz zresetować hasło firmy „{COMPANY}”?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}Używać przekaźnika?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Nie udało się nawiązać połączenia między tobą a serwerem „{STRING}”.{}Czy chcesz przekazać tę sesję za pośrednictwem „{STRING}”?
@@ -2913,19 +2900,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Tak
 
 STR_NETWORK_SPECTATORS                                          :Widzowie
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Nie zapisuj podanego hasła
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Nadaj firmie nowe hasło
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Hasło firmy
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Hasło domyślne
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Użyj tego hasła jako domyślnego dla nowych firm
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Dołącz
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Dołącz i graj jako ta firma
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Hasło
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Ochrona hasłem twojej firmy zapobiega nieautoryzowanemu przyłączeniu się
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Ustaw hasło firmy
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Wyślij
@@ -3188,7 +3165,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Wybierz 
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Posterunek
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Wybierz typ posterunku
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Wybór stacji
@@ -3201,8 +3177,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Wybierz 
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Przeciągnij i upuść
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Buduj stację używając „przeciągnij i upuść”
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Wybierz rodzaj stacji do pokazania
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Wybierz typ stacji do zbudowania
+
 
 STR_STATION_CLASS_DFLT                                          :Standardowa
 STR_STATION_CLASS_DFLT_STATION                                  :Standardowa stacja
@@ -3345,8 +3320,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Zakup te
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Wybór obiektu
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Wybierz obiekt do budowy. Ctrl+klik+przeciągnięcie zaznacza obszar po przekątnej. Dodatkowo wciśnięcie Shift wyświetli jedynie szacunkowy koszt
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Wybierz rodzaj obiektu do budowy
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Podgląd obiektu
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Rozmiar: {GOLD}{NUM} x {NUM} pól
 
@@ -3773,11 +3746,14 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Czy na 
 STR_GENERATION_PROGRESS                                         :{WHITE}Ukończono w {NUM}%
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Tworzenie świata
-STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Generator rzek
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Tworzenie drzew
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Tworzenie obiektów
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Tworzenie krajobrazu
+STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Tworzenie rzek
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Tworzenie terenów skalistych i nierówności
-STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Ustawianie gry
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Tworzenie miast
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Rozmieszczanie przedsiębiorstw
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Rozmieszczanie obiektów
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Rozmieszczanie drzew
+STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Konfigurowanie rozgrywki
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Uaktywnianie pól
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Uruchamianie skryptu
 STR_GENERATION_PREPARING_GAME                                   :{BLACK}Przygotowywanie gry

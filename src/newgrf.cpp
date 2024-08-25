@@ -277,7 +277,7 @@ struct GRFLocation {
 	}
 };
 
-static btree::btree_map<GRFLocation, SpriteID> _grm_sprites;
+static btree::btree_map<GRFLocation, std::pair<SpriteID, uint16_t>> _grm_sprites;
 typedef btree::btree_map<GRFLocation, std::unique_ptr<uint8_t[]>> GRFLineToSpriteOverride;
 static GRFLineToSpriteOverride _grf_line_to_action6_sprite_override;
 static bool _action6_override_active = false;
@@ -543,8 +543,13 @@ static btree::btree_map<uint32_t, uint32_t> _grf_id_overrides;
  */
 static void SetNewGRFOverride(uint32_t source_grfid, uint32_t target_grfid)
 {
-	_grf_id_overrides[source_grfid] = target_grfid;
-	GrfMsg(5, "SetNewGRFOverride: Added override of 0x{:X} to 0x{:X}", BSWAP32(source_grfid), BSWAP32(target_grfid));
+	if (target_grfid == 0) {
+		_grf_id_overrides.erase(source_grfid);
+		GrfMsg(5, "SetNewGRFOverride: Removed override of 0x{:X}", BSWAP32(source_grfid));
+	} else {
+		_grf_id_overrides[source_grfid] = target_grfid;
+		GrfMsg(5, "SetNewGRFOverride: Added override of 0x{:X} to 0x{:X}", BSWAP32(source_grfid), BSWAP32(target_grfid));
+	}
 }
 
 /**
@@ -563,14 +568,13 @@ static Engine *GetNewEngine(const GRFFile *file, VehicleType type, uint16_t inte
 	if (_settings_game.vehicle.dynamic_engines) {
 		/* If dynamic_engies is enabled, there can be multiple independent ID ranges. */
 		scope_grfid = file->grfid;
-		uint32_t override = _grf_id_overrides[file->grfid];
-		if (override != 0) {
-			scope_grfid = override;
-			const GRFFile *grf_match = GetFileByGRFID(override);
+		if (auto it = _grf_id_overrides.find(file->grfid); it != std::end(_grf_id_overrides)) {
+			scope_grfid = it->second;
+			const GRFFile *grf_match = GetFileByGRFID(scope_grfid);
 			if (grf_match == nullptr) {
-				GrfMsg(5, "Tried mapping from GRFID {:x} to {:x} but target is not loaded", BSWAP32(file->grfid), BSWAP32(override));
+				GrfMsg(5, "Tried mapping from GRFID {:x} to {:x} but target is not loaded", BSWAP32(file->grfid), BSWAP32(scope_grfid));
 			} else {
-				GrfMsg(5, "Mapping from GRFID {:x} to {:x}", BSWAP32(file->grfid), BSWAP32(override));
+				GrfMsg(5, "Mapping from GRFID {:x} to {:x}", BSWAP32(file->grfid), BSWAP32(scope_grfid));
 			}
 		}
 
@@ -655,8 +659,9 @@ EngineID GetNewEngineID(const GRFFile *file, VehicleType type, uint16_t internal
 	uint32_t scope_grfid = INVALID_GRFID; // If not using dynamic_engines, all newgrfs share their ID range
 	if (_settings_game.vehicle.dynamic_engines) {
 		scope_grfid = file->grfid;
-		uint32_t override = _grf_id_overrides[file->grfid];
-		if (override != 0) scope_grfid = override;
+		if (auto it = _grf_id_overrides.find(file->grfid); it != std::end(_grf_id_overrides)) {
+			scope_grfid = it->second;
+		}
 	}
 
 	return _engine_mngr.GetID(type, internal_id, scope_grfid);
@@ -1932,7 +1937,7 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 
 				/* Swap classid because we read it in BE meaning WAYP or DFLT */
 				uint32_t classid = buf->ReadDWord();
-				statspec->cls_id = StationClass::Allocate(BSWAP32(classid));
+				statspec->class_index = StationClass::Allocate(BSWAP32(classid));
 				break;
 			}
 
@@ -2024,17 +2029,17 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 
 					if (length == 0 || number == 0) break;
 
-					if (statspec->layouts.size() < length) statspec->layouts.resize(length);
-					if (statspec->layouts[length - 1].size() < number) statspec->layouts[length - 1].resize(number);
+					const uint8_t *buf_layout = buf->ReadBytes(length * number);
 
-					const uint8_t *layout = buf->ReadBytes(length * number);
-					statspec->layouts[length - 1][number - 1].assign(layout, layout + length * number);
+					/* Create entry in layouts and assign the layout to it. */
+					auto &layout = statspec->layouts[GetStationLayoutKey(number, length)];
+					layout.assign(buf_layout, buf_layout + length * number);
 
-					/* Validate tile values are only the permitted 00, 02, 04 and 06. */
-					for (auto &tile : statspec->layouts[length - 1][number - 1]) {
-						if ((tile & 6) != tile) {
+					/* Ensure the first bit, axis, is zero. The rest of the value is validated during rendering, as we don't know the range yet. */
+					for (auto &tile : layout) {
+						if ((tile & ~1U) != tile) {
 							GrfMsg(1, "StationChangeInfo: Invalid tile {} in layout {}x{}", tile, length, number);
-							tile &= 6;
+							tile &= ~1U;
 						}
 					}
 				}
@@ -2057,9 +2062,18 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 				statspec->cargo_threshold = buf->ReadWord();
 				break;
 
-			case 0x11: // Pylon placement
-				statspec->pylons = buf->ReadByte();
+			case 0x11: { // Pylon placement
+				uint8_t pylons = buf->ReadByte();
+				if (statspec->tileflags.size() < 8) statspec->tileflags.resize(8);
+				for (int j = 0; j < 8; ++j) {
+					if (HasBit(pylons, j)) {
+						statspec->tileflags[j] |= StationSpec::TileFlags::Pylons;
+					} else {
+						statspec->tileflags[j] &= ~StationSpec::TileFlags::Pylons;
+					}
+				}
 				break;
+			}
 
 			case 0x12: // Cargo types for random triggers
 				if (_cur.grffile->grf_version >= 7) {
@@ -2073,13 +2087,31 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 				statspec->flags = buf->ReadByte();
 				break;
 
-			case 0x14: // Overhead wire placement
-				statspec->wires = buf->ReadByte();
+			case 0x14: { // Overhead wire placement
+				uint8_t wires = buf->ReadByte();
+				if (statspec->tileflags.size() < 8) statspec->tileflags.resize(8);
+				for (int j = 0; j < 8; ++j) {
+					if (HasBit(wires, j)) {
+						statspec->tileflags[j] |= StationSpec::TileFlags::NoWires;
+					} else {
+						statspec->tileflags[j] &= ~StationSpec::TileFlags::NoWires;
+					}
+				}
 				break;
+			}
 
-			case 0x15: // Blocked tiles
-				statspec->blocked = buf->ReadByte();
+			case 0x15: { // Blocked tiles
+				uint8_t blocked = buf->ReadByte();
+				if (statspec->tileflags.size() < 8) statspec->tileflags.resize(8);
+				for (int j = 0; j < 8; ++j) {
+					if (HasBit(blocked, j)) {
+						statspec->tileflags[j] |= StationSpec::TileFlags::Blocked;
+					} else {
+						statspec->tileflags[j] &= ~StationSpec::TileFlags::Blocked;
+					}
+				}
 				break;
+			}
 
 			case 0x16: // Animation info
 				statspec->animation.frames = buf->ReadByte();
@@ -2116,31 +2148,48 @@ static ChangeInfoResult StationChangeInfo(uint stid, int numinfo, int prop, cons
 				break;
 			}
 
-			case A0RPI_STATION_MIN_BRIDGE_HEIGHT:
-				if (MappedPropertyLengthMismatch(buf, 8, mapping_entry)) break;
-				[[fallthrough]];
+			case A0RPI_STATION_MIN_BRIDGE_HEIGHT: {
+				SetBit(statspec->internal_flags, SSIF_BRIDGE_HEIGHTS_SET);
+				size_t length = buf->ReadExtendedByte();
+				if (statspec->bridge_above_flags.size() < length) statspec->bridge_above_flags.resize(length);
+				for (size_t i = 0; i < length; i++) {
+					statspec->bridge_above_flags[i].height = buf->ReadByte();
+				}
+				break;
+			}
+
 			case 0x1B: // Minimum height for a bridge above
 				SetBit(statspec->internal_flags, SSIF_BRIDGE_HEIGHTS_SET);
+				if (statspec->bridge_above_flags.size() < 8) statspec->bridge_above_flags.resize(8);
 				for (uint i = 0; i < 8; i++) {
-					statspec->bridge_height[i] = buf->ReadByte();
+					statspec->bridge_above_flags[i].height = buf->ReadByte();
 				}
 				break;
 
-			case A0RPI_STATION_DISALLOWED_BRIDGE_PILLARS:
-				if (MappedPropertyLengthMismatch(buf, 8, mapping_entry)) break;
+			case A0RPI_STATION_DISALLOWED_BRIDGE_PILLARS: {
 				SetBit(statspec->internal_flags, SSIF_BRIDGE_DISALLOWED_PILLARS_SET);
-				for (uint i = 0; i < 8; i++) {
-					statspec->bridge_disallowed_pillars[i] = buf->ReadByte();
+				size_t length = buf->ReadExtendedByte();
+				if (statspec->bridge_above_flags.size() < length) statspec->bridge_above_flags.resize(length);
+				for (size_t i = 0; i < length; i++) {
+					statspec->bridge_above_flags[i].disallowed_pillars = buf->ReadByte();
 				}
 				break;
+			}
 
 			case 0x1C: // Station Name
 				AddStringForMapping(buf->ReadWord(), &statspec->name);
 				break;
 
 			case 0x1D: // Station Class name
-				AddStringForMapping(buf->ReadWord(), statspec, [](StringID str, StationSpec *statspec) { StationClass::Get(statspec->cls_id)->name = str; });
+				AddStringForMapping(buf->ReadWord(), statspec, [](StringID str, StationSpec *statspec) { StationClass::Get(statspec->class_index)->name = str; });
 				break;
+
+			case 0x1E: { // Extended tile flags (replaces prop 11, 14 and 15)
+				uint16_t tiles = buf->ReadExtendedByte();
+				auto flags = reinterpret_cast<const StationSpec::TileFlags *>(buf->ReadBytes(tiles));
+				statspec->tileflags.assign(flags, flags + tiles);
+				break;
+			}
 
 			default:
 				ret = HandleAction0PropertyDefault(buf, prop);
@@ -2583,7 +2632,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 				/* Check if the cargo types should not be changed */
 				if (cargotypes == 0xFFFFFFFF) break;
 
-				for (uint j = 0; j < 3; j++) {
+				for (uint j = 0; j < HOUSE_ORIGINAL_NUM_ACCEPTS; j++) {
 					/* Get the cargo number from the 'list' */
 					uint8_t cargo_part = GB(cargotypes, 8 * j, 8);
 					CargoID cargo = GetCargoTranslation(cargo_part, _cur.grffile);
@@ -2594,6 +2643,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 					} else {
 						housespec->accepts_cargo[j] = cargo;
 					}
+					housespec->accepts_cargo_label[j] = CT_INVALID;
 				}
 				break;
 			}
@@ -2617,6 +2667,7 @@ static ChangeInfoResult TownHouseChangeInfo(uint hid, int numinfo, int prop, con
 
 			case 0x22: // long maximum year
 				housespec->max_year = buf->ReadWord();
+				if (housespec->max_year == UINT16_MAX) housespec->max_year = CalTime::MAX_YEAR;
 				break;
 
 			case 0x23: { // variable length cargo types accepted
@@ -3373,6 +3424,7 @@ static ChangeInfoResult IndustrytilesChangeInfo(uint indtid, int numinfo, int pr
 				uint16_t acctp = buf->ReadWord();
 				tsp->accepts_cargo[prop - 0x0A] = GetCargoTranslation(GB(acctp, 0, 8), _cur.grffile);
 				tsp->acceptance[prop - 0x0A] = Clamp(GB(acctp, 8, 8), 0, 16);
+				tsp->accepts_cargo_label[prop - 0x0A] = CT_INVALID;
 				break;
 			}
 
@@ -3459,14 +3511,14 @@ static ChangeInfoResult IgnoreIndustryProperty(int prop, ByteReader *buf)
 		case 0x0C:
 		case 0x0D:
 		case 0x0E:
-		case 0x10:
+		case 0x10: // INDUSTRY_ORIGINAL_NUM_OUTPUTS bytes
 		case 0x1B:
 		case 0x1F:
 		case 0x24:
 			buf->ReadWord();
 			break;
 
-		case 0x11:
+		case 0x11: // INDUSTRY_ORIGINAL_NUM_INPUTS bytes + 1
 		case 0x1A:
 		case 0x1C:
 		case 0x1D:
@@ -3498,7 +3550,7 @@ static ChangeInfoResult IgnoreIndustryProperty(int prop, ByteReader *buf)
 		}
 
 		case 0x16:
-			for (uint8_t j = 0; j < 3; j++) buf->ReadByte();
+			for (uint8_t j = 0; j < INDUSTRY_ORIGINAL_NUM_INPUTS; j++) buf->ReadByte();
 			break;
 
 		case 0x15:
@@ -3746,14 +3798,14 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 				break;
 
 			case 0x10: // Production cargo types
-				for (uint8_t j = 0; j < 2; j++) {
+				for (uint8_t j = 0; j < INDUSTRY_ORIGINAL_NUM_OUTPUTS; j++) {
 					indsp->produced_cargo[j] = GetCargoTranslation(buf->ReadByte(), _cur.grffile);
 					indsp->produced_cargo_label[j] = CT_INVALID;
 				}
 				break;
 
 			case 0x11: // Acceptance cargo types
-				for (uint8_t j = 0; j < 3; j++) {
+				for (uint8_t j = 0; j < INDUSTRY_ORIGINAL_NUM_INPUTS; j++) {
 					indsp->accepts_cargo[j] = GetCargoTranslation(buf->ReadByte(), _cur.grffile);
 					indsp->accepts_cargo_label[j] = CT_INVALID;
 				}
@@ -3770,23 +3822,15 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 				break;
 
 			case 0x15: { // Random sound effects
-				indsp->number_of_sounds = buf->ReadByte();
-				uint8_t *sounds = MallocT<uint8_t>(indsp->number_of_sounds);
+				uint8_t num_sounds = buf->ReadByte();
 
-				try {
-					for (uint8_t j = 0; j < indsp->number_of_sounds; j++) {
-						sounds[j] = buf->ReadByte();
-					}
-				} catch (...) {
-					free(sounds);
-					throw;
+				std::vector<uint8_t> sounds;
+				sounds.reserve(num_sounds);
+				for (uint8_t j = 0; j < num_sounds; ++j) {
+					sounds.push_back(buf->ReadByte());
 				}
 
-				if (HasBit(indsp->cleanup_flag, CLEAN_RANDOMSOUNDS)) {
-					free(indsp->random_sounds);
-				}
-				indsp->random_sounds = sounds;
-				SetBit(indsp->cleanup_flag, CLEAN_RANDOMSOUNDS);
+				indsp->random_sounds = std::move(sounds);
 				break;
 			}
 
@@ -3935,35 +3979,6 @@ static ChangeInfoResult IndustriesChangeInfo(uint indid, int numinfo, int prop, 
 }
 
 /**
- * Create a copy of the tile table so it can be freed later
- * without problems.
- * @param as The AirportSpec to copy the arrays of.
- */
-static void DuplicateTileTable(AirportSpec *as)
-{
-	AirportTileTable **table_list = MallocT<AirportTileTable*>(as->num_table);
-	for (int i = 0; i < as->num_table; i++) {
-		uint num_tiles = 1;
-		const AirportTileTable *it = as->table[0];
-		do {
-			num_tiles++;
-		} while ((++it)->ti.x != -0x80);
-		table_list[i] = MallocT<AirportTileTable>(num_tiles);
-		MemCpyT(table_list[i], as->table[i], num_tiles);
-	}
-	as->table = table_list;
-	HangarTileTable *depot_table = nullptr;
-	if (as->nof_depots > 0) {
-		depot_table = MallocT<HangarTileTable>(as->nof_depots);
-		MemCpyT(depot_table, as->depot_table, as->nof_depots);
-	}
-	as->depot_table = depot_table;
-	Direction *rotation = MallocT<Direction>(as->num_table);
-	MemCpyT(rotation, as->rotation, as->num_table);
-	as->rotation = rotation;
-}
-
-/**
  * Define properties for airports
  * @param airport Local ID of the airport.
  * @param numinfo Number of subsequent airport IDs to change the property for.
@@ -4018,89 +4033,68 @@ static ChangeInfoResult AirportChangeInfo(uint airport, int numinfo, int prop, c
 					as->grf_prop.grffile = _cur.grffile;
 					/* override the default airport */
 					_airport_mngr.Add(airport + i, _cur.grffile->grfid, subs_id);
-					/* Create a copy of the original tiletable so it can be freed later. */
-					DuplicateTileTable(as);
 				}
 				break;
 			}
 
 			case 0x0A: { // Set airport layout
-				uint8_t old_num_table = as->num_table;
-				as->num_table = buf->ReadByte(); // Number of layouts
-				free(as->rotation);
-				as->rotation = MallocT<Direction>(as->num_table);
-				uint32_t defsize = buf->ReadDWord();  // Total size of the definition
-				AirportTileTable **tile_table = CallocT<AirportTileTable*>(as->num_table); // Table with tiles to compose the airport
-				AirportTileTable *att = CallocT<AirportTileTable>(defsize); // Temporary array to read the tile layouts from the GRF
-				int size;
-				const AirportTileTable *copy_from;
-				try {
-					for (uint8_t j = 0; j < as->num_table; j++) {
-						const_cast<Direction&>(as->rotation[j]) = (Direction)buf->ReadByte();
-						for (int k = 0;; k++) {
-							att[k].ti.x = buf->ReadByte(); // Offsets from northermost tile
-							att[k].ti.y = buf->ReadByte();
+				uint8_t num_layouts = buf->ReadByte();
+				buf->ReadDWord(); // Total size of definition, unneeded.
+				uint8_t size_x = 0;
+				uint8_t size_y = 0;
 
-							if (att[k].ti.x == 0 && att[k].ti.y == 0x80) {
-								/*  Not the same terminator.  The one we are using is rather
-								 * x = -80, y = 0 .  So, adjust it. */
-								att[k].ti.x = -0x80;
-								att[k].ti.y =  0;
-								att[k].gfx  =  0;
+				std::vector<AirportTileLayout> layouts;
+				layouts.reserve(num_layouts);
 
-								size = k + 1;
-								copy_from = att;
-								break;
-							}
+				for (uint8_t j = 0; j != num_layouts; ++j) {
+					auto &layout = layouts.emplace_back();
+					layout.rotation = static_cast<Direction>(buf->ReadByte() & 6); // Rotation can only be DIR_NORTH, DIR_EAST, DIR_SOUTH or DIR_WEST.
 
-							att[k].gfx = buf->ReadByte();
-
-							if (att[k].gfx == 0xFE) {
-								/* Use a new tile from this GRF */
-								int local_tile_id = buf->ReadWord();
-
-								/* Read the ID from the _airporttile_mngr. */
-								uint16_t tempid = _airporttile_mngr.GetID(local_tile_id, _cur.grffile->grfid);
-
-								if (tempid == INVALID_AIRPORTTILE) {
-									GrfMsg(2, "AirportChangeInfo: Attempt to use airport tile {} with airport id {}, not yet defined. Ignoring.", local_tile_id, airport + i);
-								} else {
-									/* Declared as been valid, can be used */
-									att[k].gfx = tempid;
-								}
-							} else if (att[k].gfx == 0xFF) {
-								att[k].ti.x = (int8_t)GB(att[k].ti.x, 0, 8);
-								att[k].ti.y = (int8_t)GB(att[k].ti.y, 0, 8);
-							}
-
-							if (as->rotation[j] == DIR_E || as->rotation[j] == DIR_W) {
-								as->size_x = std::max<uint8_t>(as->size_x, att[k].ti.y + 1);
-								as->size_y = std::max<uint8_t>(as->size_y, att[k].ti.x + 1);
-							} else {
-								as->size_x = std::max<uint8_t>(as->size_x, att[k].ti.x + 1);
-								as->size_y = std::max<uint8_t>(as->size_y, att[k].ti.y + 1);
-							}
+					for (;;) {
+						auto &tile = layout.tiles.emplace_back();
+						tile.ti.x = buf->ReadByte();
+						tile.ti.y = buf->ReadByte();
+						if (tile.ti.x == 0 && tile.ti.y == 0x80) {
+							/* Convert terminator to our own. */
+							tile.ti.x = -0x80;
+							tile.ti.y = 0;
+							tile.gfx = 0;
+							break;
 						}
-						tile_table[j] = CallocT<AirportTileTable>(size);
-						memcpy(tile_table[j], copy_from, sizeof(*copy_from) * size);
+
+						tile.gfx = buf->ReadByte();
+
+						if (tile.gfx == 0xFE) {
+							/* Use a new tile from this GRF */
+							int local_tile_id = buf->ReadWord();
+
+							/* Read the ID from the _airporttile_mngr. */
+							uint16_t tempid = _airporttile_mngr.GetID(local_tile_id, _cur.grffile->grfid);
+
+							if (tempid == INVALID_AIRPORTTILE) {
+								GrfMsg(2, "AirportChangeInfo: Attempt to use airport tile {} with airport id {}, not yet defined. Ignoring.", local_tile_id, airport + i);
+							} else {
+								/* Declared as been valid, can be used */
+								tile.gfx = tempid;
+							}
+						} else if (tile.gfx == 0xFF) {
+							tile.ti.x = static_cast<int8_t>(GB(tile.ti.x, 0, 8));
+							tile.ti.y = static_cast<int8_t>(GB(tile.ti.y, 0, 8));
+						}
+
+						/* Determine largest size. */
+						if (layout.rotation == DIR_E || layout.rotation == DIR_W) {
+							size_x = std::max<uint8_t>(size_x, tile.ti.y + 1);
+							size_y = std::max<uint8_t>(size_y, tile.ti.x + 1);
+						} else {
+							size_x = std::max<uint8_t>(size_x, tile.ti.x + 1);
+							size_y = std::max<uint8_t>(size_y, tile.ti.y + 1);
+						}
 					}
-					/* Free old layouts in the airport spec */
-					for (int j = 0; j < old_num_table; j++) {
-						/* remove the individual layouts */
-						free(as->table[j]);
-					}
-					free(as->table);
-					/* Install final layout construction in the airport spec */
-					as->table = tile_table;
-					free(att);
-				} catch (...) {
-					for (int i = 0; i < as->num_table; i++) {
-						free(tile_table[i]);
-					}
-					free(tile_table);
-					free(att);
-					throw;
 				}
+				as->layouts = std::move(layouts);
+				as->size_x = size_x;
+				as->size_y = size_y;
 				break;
 			}
 
@@ -4397,12 +4391,12 @@ static ChangeInfoResult ObjectChangeInfo(uint id, int numinfo, int prop, const G
 
 				/* Swap classid because we read it in BE. */
 				uint32_t classid = buf->ReadDWord();
-				spec->cls_id = ObjectClass::Allocate(BSWAP32(classid));
+				spec->class_index = ObjectClass::Allocate(BSWAP32(classid));
 				break;
 			}
 
 			case 0x09: { // Class name
-				AddStringForMapping(buf->ReadWord(), spec, [](StringID str, ObjectSpec *spec) { ObjectClass::Get(spec->cls_id)->name = str; });
+				AddStringForMapping(buf->ReadWord(), spec, [](StringID str, ObjectSpec *spec) { ObjectClass::Get(spec->class_index)->name = str; });
 				break;
 			}
 
@@ -5179,7 +5173,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 				}
 
 				uint32_t classid = buf->ReadDWord();
-				rs->cls_id = RoadStopClass::Allocate(BSWAP32(classid));
+				rs->class_index = RoadStopClass::Allocate(BSWAP32(classid));
 				break;
 			}
 
@@ -5201,7 +5195,7 @@ static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, const
 				if (MappedPropertyLengthMismatch(buf, 2, mapping_entry)) break;
 				[[fallthrough]];
 			case 0x0B: // Road Stop Class name
-				AddStringForMapping(buf->ReadWord(), rs, [](StringID str, RoadStopSpec *rs) { RoadStopClass::Get(rs->cls_id)->name = str; });
+				AddStringForMapping(buf->ReadWord(), rs, [](StringID str, RoadStopSpec *rs) { RoadStopClass::Get(rs->class_index)->name = str; });
 				break;
 
 			case A0RPI_ROADSTOP_DRAW_MODE:
@@ -6102,10 +6096,10 @@ static void NewSpriteGroup(ByteReader *buf)
 
 			std::vector<DeterministicSpriteGroupRange> ranges;
 			ranges.resize(buf->ReadByte());
-			for (uint i = 0; i < ranges.size(); i++) {
-				ranges[i].group = GetGroupFromGroupID(setid, type, buf->ReadWord());
-				ranges[i].low   = buf->ReadVarSize(varsize);
-				ranges[i].high  = buf->ReadVarSize(varsize);
+			for (auto &range : ranges) {
+				range.group = GetGroupFromGroupID(setid, type, buf->ReadWord());
+				range.low   = buf->ReadVarSize(varsize);
+				range.high  = buf->ReadVarSize(varsize);
 			}
 
 			group->default_group = GetGroupFromGroupID(setid, type, buf->ReadWord());
@@ -6300,22 +6294,22 @@ static void NewSpriteGroup(ByteReader *buf)
 					act_group = group;
 					group->version = type;
 					if (type == 0) {
-						group->num_input = 3;
-						for (uint i = 0; i < 3; i++) {
+						group->num_input = INDUSTRY_ORIGINAL_NUM_INPUTS;
+						for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_INPUTS; i++) {
 							group->subtract_input[i] = (int16_t)buf->ReadWord(); // signed
 						}
-						group->num_output = 2;
-						for (uint i = 0; i < 2; i++) {
+						group->num_output = INDUSTRY_ORIGINAL_NUM_OUTPUTS;
+						for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_OUTPUTS; i++) {
 							group->add_output[i] = buf->ReadWord(); // unsigned
 						}
 						group->again = buf->ReadByte();
 					} else if (type == 1) {
-						group->num_input = 3;
-						for (uint i = 0; i < 3; i++) {
+						group->num_input = INDUSTRY_ORIGINAL_NUM_INPUTS;
+						for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_INPUTS; i++) {
 							group->subtract_input[i] = buf->ReadByte();
 						}
-						group->num_output = 2;
-						for (uint i = 0; i < 2; i++) {
+						group->num_output = INDUSTRY_ORIGINAL_NUM_OUTPUTS;
+						for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_OUTPUTS; i++) {
 							group->add_output[i] = buf->ReadByte();
 						}
 						group->again = buf->ReadByte();
@@ -6443,8 +6437,7 @@ static bool IsValidGroupID(uint16_t groupid, const char *function)
 
 static void VehicleMapSpriteGroup(ByteReader *buf, uint8_t feature, uint8_t idcount)
 {
-	static EngineID *last_engines;
-	static uint last_engines_count;
+	static std::vector<EngineID> last_engines; // Engine IDs are remembered in case the next action is a wagon override.
 	bool wagover = false;
 
 	/* Test for 'wagon override' flag */
@@ -6453,18 +6446,14 @@ static void VehicleMapSpriteGroup(ByteReader *buf, uint8_t feature, uint8_t idco
 		/* Strip off the flag */
 		idcount = GB(idcount, 0, 7);
 
-		if (last_engines_count == 0) {
+		if (last_engines.empty()) {
 			GrfMsg(0, "VehicleMapSpriteGroup: WagonOverride: No engine to do override with");
 			return;
 		}
 
-		GrfMsg(6, "VehicleMapSpriteGroup: WagonOverride: {} engines, {} wagons",
-				last_engines_count, idcount);
+		GrfMsg(6, "VehicleMapSpriteGroup: WagonOverride: {} engines, {} wagons", last_engines.size(), idcount);
 	} else {
-		if (last_engines_count != idcount) {
-			last_engines = ReallocT(last_engines, idcount);
-			last_engines_count = idcount;
-		}
+		last_engines.resize(idcount);
 	}
 
 	EngineID *engines = AllocaM(EngineID, idcount);
@@ -6499,7 +6488,7 @@ static void VehicleMapSpriteGroup(ByteReader *buf, uint8_t feature, uint8_t idco
 			GrfMsg(7, "VehicleMapSpriteGroup: [{}] Engine {}...", i, engine);
 
 			if (wagover) {
-				SetWagonOverrideSprites(engine, cid, GetGroupByID(groupid), last_engines, last_engines_count);
+				SetWagonOverrideSprites(engine, cid, GetGroupByID(groupid), last_engines);
 			} else {
 				SetCustomEngineSprites(engine, cid, GetGroupByID(groupid));
 			}
@@ -6515,7 +6504,7 @@ static void VehicleMapSpriteGroup(ByteReader *buf, uint8_t feature, uint8_t idco
 		EngineID engine = engines[i];
 
 		if (wagover) {
-			SetWagonOverrideSprites(engine, SpriteGroupCargo::SG_DEFAULT, GetGroupByID(groupid), last_engines, last_engines_count);
+			SetWagonOverrideSprites(engine, SpriteGroupCargo::SG_DEFAULT, GetGroupByID(groupid), last_engines);
 		} else {
 			SetCustomEngineSprites(engine, SpriteGroupCargo::SG_DEFAULT, GetGroupByID(groupid));
 			SetEngineGRF(engine, _cur.grffile);
@@ -7230,8 +7219,8 @@ static void FeatureNewName(ByteReader *buf)
 						if (GB(id, 0, 8) >= _cur.grffile->stations.size() || _cur.grffile->stations[GB(id, 0, 8)] == nullptr) {
 							GrfMsg(1, "FeatureNewName: Attempt to name undefined station 0x{:X}, ignoring", GB(id, 0, 8));
 						} else {
-							StationClassID cls_id = _cur.grffile->stations[GB(id, 0, 8)]->cls_id;
-							StationClass::Get(cls_id)->name = AddGRFString(_cur.grffile->grfid, id, lang, new_scheme, false, name, STR_UNDEFINED);
+							StationClassID class_index = _cur.grffile->stations[GB(id, 0, 8)]->class_index;
+							StationClass::Get(class_index)->name = AddGRFString(_cur.grffile->grfid, id, lang, new_scheme, false, name, STR_UNDEFINED);
 						}
 						break;
 
@@ -8028,6 +8017,21 @@ static void GRFInfo(ByteReader *buf)
 	Debug(grf, 1, "GRFInfo: Loaded GRFv{} set {:08X} - {} (palette: {}, version: {})", version, BSWAP32(grfid), StrMakeValid(name), (_cur.grfconfig->palette & GRFP_USE_MASK) ? "Windows" : "DOS", _cur.grfconfig->version);
 }
 
+/**
+ * Check if a sprite ID range is within the GRM reversed range for the currently loading NewGRF.
+ * @param first_sprite First sprite of range.
+ * @param num_sprites Number of sprites in the range.
+ * @return True iff the NewGRF has reserved a range equal to or greater than the provided range.
+ */
+static bool IsGRMReservedSprite(SpriteID first_sprite, uint16_t num_sprites)
+{
+	for (const auto &grm_sprite : _grm_sprites) {
+		if (grm_sprite.first.grfid != _cur.grffile->grfid) continue;
+		if (grm_sprite.second.first <= first_sprite && grm_sprite.second.first + grm_sprite.second.second >= first_sprite + num_sprites) return true;
+	}
+	return false;
+}
+
 /* Action 0x0A */
 static void SpriteReplace(ByteReader *buf)
 {
@@ -8048,6 +8052,20 @@ static void SpriteReplace(ByteReader *buf)
 		GrfMsg(2, "SpriteReplace: [Set {}] Changing {} sprites, beginning with {}",
 			i, num_sprites, first_sprite
 		);
+
+		if (first_sprite + num_sprites >= SPR_OPENTTD_BASE) {
+			/* Outside allowed range, check for GRM sprite reservations. */
+			if (!IsGRMReservedSprite(first_sprite, num_sprites)) {
+				GrfMsg(0, "SpriteReplace: [Set {}] Changing {} sprites, beginning with {}, above limit of {} and not within reserved range, ignoring.",
+					i, num_sprites, first_sprite, SPR_OPENTTD_BASE);
+
+				for (uint j = 0; j < num_sprites; j++) {
+					_cur.nfo_line++;
+					LoadNextSprite(-1, *_cur.file, _cur.nfo_line);
+				}
+				return;
+			}
+		}
 
 		for (uint j = 0; j < num_sprites; j++) {
 			int load_index = first_sprite + j;
@@ -8423,7 +8441,7 @@ static void ParamSet(ByteReader *buf)
 
 							/* Reserve space at the current sprite ID */
 							GrfMsg(4, "ParamSet: GRM: Allocated {} sprites at {}", count, _cur.spriteid);
-							_grm_sprites[GRFLocation(_cur.grffile->grfid, _cur.nfo_line)] = _cur.spriteid;
+							_grm_sprites[GRFLocation(_cur.grffile->grfid, _cur.nfo_line)] = std::make_pair(_cur.spriteid, count);
 							_cur.spriteid += count;
 						}
 					}
@@ -8457,7 +8475,7 @@ static void ParamSet(ByteReader *buf)
 							switch (op) {
 								case 0:
 									/* Return space reserved during reservation stage */
-									src1 = _grm_sprites[GRFLocation(_cur.grffile->grfid, _cur.nfo_line)];
+									src1 = _grm_sprites[GRFLocation(_cur.grffile->grfid, _cur.nfo_line)].first;
 									GrfMsg(4, "ParamSet: GRM: Using pre-allocated sprites at {}", src1);
 									break;
 
@@ -9195,9 +9213,9 @@ static bool ChangeGRFParamType(size_t len, ByteReader *buf)
 		GrfMsg(2, "StaticGRFInfo: expected 1 byte for 'INFO'->'PARA'->'TYPE' but got {}, ignoring this field", len);
 		buf->Skip(len);
 	} else {
-		GRFParameterType type = (GRFParameterType)buf->ReadByte();
+		uint8_t type = buf->ReadByte();
 		if (type < PTYPE_END) {
-			_cur_parameter->type = type;
+			_cur_parameter->type = (GRFParameterType)type;
 		} else {
 			GrfMsg(3, "StaticGRFInfo: unknown parameter type {}, ignoring this field", type);
 		}
@@ -10399,18 +10417,6 @@ static void ResetCustomHouses()
 static void ResetCustomAirports()
 {
 	for (GRFFile * const file : _grf_files) {
-		for (auto &as : file->airportspec) {
-			if (as != nullptr) {
-				/* We need to remove the tiles layouts */
-				for (int j = 0; j < as->num_table; j++) {
-					/* remove the individual layouts */
-					free(as->table[j]);
-				}
-				free(as->table);
-				free(as->depot_table);
-				free(as->rotation);
-			}
-		}
 		file->airportspec.clear();
 		file->airtspec.clear();
 	}
@@ -11534,8 +11540,9 @@ static void FinalisePriceBaseMultipliers()
 		grf_overrides[i] = -1;
 
 		GRFFile *source = _grf_files[i];
-		uint32_t override = _grf_id_overrides[source->grfid];
-		if (override == 0) continue;
+		auto it = _grf_id_overrides.find(source->grfid);
+		if (it == std::end(_grf_id_overrides)) continue;
+		uint32_t override = it->second;
 
 		GRFFile *dest = GetFileByGRFID(override);
 		if (dest == nullptr) continue;
@@ -11756,6 +11763,11 @@ static void AfterLoadGRFs()
 	/* Deallocate temporary loading data */
 	_gted.clear();
 	_grm_sprites.clear();
+
+	ObjectClass::PrepareIndices();
+	StationClass::PrepareIndices();
+	AirportClass::PrepareIndices();
+	RoadStopClass::PrepareIndices();
 }
 
 /**

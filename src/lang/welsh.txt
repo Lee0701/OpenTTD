@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Drwy all
 STR_BUTTON_DEFAULT                                              :{BLACK}Rhagosodiad
 STR_BUTTON_CANCEL                                               :{BLACK}Diddymu
 STR_BUTTON_OK                                                   :{BLACK}Iawn
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Rhybudd: Gall gweinyddwyr ddarllen unrhyw neges a roddir yma.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -956,11 +955,7 @@ STR_GAME_OPTIONS_VOLUME                                         :Lefel Sain
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Effeithiau sŵn
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Cerddoriaeth
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Uned Arian
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Dewis unedau arian
@@ -1058,11 +1053,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Marciwch
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Gwynebfathau dadamgenu
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Marciwch y blwch hwn i ddadamgennu ffontiau y gellir eu hailfeintio
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Arolwg awtomatig
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Cymryd rhan mewn arolwg awtomatig
@@ -1090,6 +1081,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Gwybodae
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Set cerddoriaeth sylfaenol
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Dewisiwch y set cerddoriaeth sylfaenol i'w ddefnyddio
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Gwybodaeth bellach am y set gerddoriaeth sylfaenol
+
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}(dim ategolion integreiddio gyda llwyfannau cymdeithasol wedi'u gosod)
 
@@ -1832,7 +1824,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Ystod gwasanaet
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Gosod yr ystod gwasanaethu rhagosodedig ar gyfer awyrennau newydd, os na ddynodir ystod gwasanaethu penodol ar gyfer y cerbyd
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Ystod gwasanaethu rhagosodedig ar gyfer llongau: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Gosod yr ystod gwasanaethu rhagosodedig ar gyfer llongau newydd, os na ddynodir ystod gwasanaethu penodol ar gyfer y cerbyd
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}Diwrnod{P 0 "" ""}/Munud{P 0 "" ""}/%
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}Diwrnod{P 0 "" ""}
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}Munud{P 0 "" ""}
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Analluogwyd
 
@@ -2132,17 +2128,8 @@ STR_CONFIG_SETTING_AI                                           :Cystadleuwyr
 STR_CONFIG_SETTING_AI_NPC                                       :Chwaraewyr Cyfrifiadurol
 STR_CONFIG_SETTING_NETWORK                                      :Rhwydwaith
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Llwybrwr ar gyfer trenau: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :Llwybrwr i'w ddefnyddio ar gyfer trenau
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Llwybrwr ar gyfer cerbydau ffordd: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Llwybrwr i'w ddefnyddio ar gyfer cerbydau ffordd
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Llwybrwr ar gyfer llongau: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :Llwybrwr i'w ddefnyddio ar gyfer llongau
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Troi'n ôl yn awtomatig wrth signalau: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Caniatáu i drenau gwrthdroi wrth signal, os ydynt wedi aros yno am beth amser
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Argymellir)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Newid gwerth gosodiad
 
@@ -2461,7 +2448,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Estyn gw
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Datgysylltu
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Mae'r gweinydd wedi'i ddiogelu. Rhowch y cyfrinair.
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Mae'r cwmni wedi'i ddiogelu. rhowch y cyfrinair.
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Chwaraewyr ar-lein
@@ -2510,13 +2496,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}Trwy rel
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :Cicio
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :Rhwystro
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :Dileu
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :Cyfrinair datgloi
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}Gweithred gweinydd
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}Ydych chi'n siŵr eich bod am gicio'r chwaraewr '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}Ydych chi'n siwr eich bod chi eisiau rhwystro'r chwaraewr '{STRING}'?
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}Ydych chi'n siŵr eich bod am ddileu'r cwmni '{COMPANY}'?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}Ydych chi'n siwr eich bod am ailosod cyfrinair y cwmni '{COMPANY}'?
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :Defnyddi relai?
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW}Methwyd creu cysylltiad rhyngoch chi a'r gweinydd '{STRING}'.{}A hoffech osod relai ar gyfer y sesiwn yma trwy '{STRING}'?
@@ -2533,19 +2517,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Ia
 
 STR_NETWORK_SPECTATORS                                          :Gwylwyr
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Peidio cadw'r cyfrinair a roddwyd
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Rhoi'r cyfrinair newydd i'r cwmni
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Cyfrinair cwmni
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Cyfrinair rhagosodedig cwmni
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Defnyddio'r cyfrinair cwmni yma fel y rhagosodiad ar gyfer cwmnïau
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Ymuno
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Ymuno a chwarae fel y cwmni yma
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Cyfrinair
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Diogelwch eich cwmni gyda cyfrinair er mwyn rhwystro rhai heb awdurdod rhag ymuno
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Gosod cyfrinair cwmni
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Anfon
@@ -2808,7 +2782,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Dewiswch
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Pwynt Llwybro
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Dewis math o bwynt llwybro
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Dewiswch Orsaf Reilffordd
@@ -2821,8 +2794,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Dewiswch
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Llusgo a Gollwng
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Adeiladu gorsaf gan ddefnyddio llusgo a gollwng
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Dewiswch y dosbarth o orsaf i'w dangos
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Dewiswch y math o orsaf i'w hadeiladu
+
 
 STR_STATION_CLASS_DFLT                                          :Rhagosodiad
 STR_STATION_CLASS_DFLT_STATION                                  :Gorsaf rhagosodedig
@@ -2965,8 +2937,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Prynu ti
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Dewis Gwrthrych
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Dewisiwch wrthrych i'w hadeiladu. Ctrl+Clic+Llusgo i dewis yr ardal yn ddeiagonal. Pwyso Shift hefyd i ddangos amcangyfrif o'r gost yn unig
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Dewisiwch dosbarth y gwrthrych i'w hadeiladu
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Rhagolwg o'r gwrthrych
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Maint: {GOLD}{NUM} x {NUM} teil
 
@@ -3393,10 +3363,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Ydych c
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% cyflawn
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Cynhyrchu byd
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}Creu tirwedd
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Cynhyrchu afonydd
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Cynhyrchu coed
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Cynhyrchu gwrthrych
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Cynhyrchu ardaloedd creigiog a chnapiog
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}Creu trefi
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}Creu diwydiant
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Cynhyrchu gwrthrych
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Cynhyrchu coed
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Gosod gêm yn ei le
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Rhedeg dolen teiliau
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Rhedeg sgript
@@ -3488,6 +3461,9 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :Math ffordd
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}Paramedr newidyn NewGRF 60+x (hecsaddigidol)
 
 # Sprite aligner window
+STR_SPRITE_ALIGNER_CAPTION_NO_ACTION                            :{WHITE}Alinio corlun: ({STRING}:{NUM})
+STR_SPRITE_ALIGNER_CAPTION_ACTIONA                              :{WHITE}Alinio corlun: Gweithred 0xA, {COMMA} ({STRING}:{NUM})
+STR_SPRITE_ALIGNER_CAPTION_ACTION5                              :{WHITE}Alinio corlun: Gweithred 0x5, math {HEX}, {COMMA} ({STRING}:{NUM})
 STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}Corlun nesaf
 STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}Mynd i'r corlun cyffredin nesaf, gan hepgor unrhyw gorluniau ailliwio/ffont/llidgorluniau, ac amlapio o'r corlun olaf i'r gyntaf
 STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}Mynd i gorlun
@@ -3496,6 +3472,7 @@ STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}Corlun b
 STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}Mynd i'r corlun cyffredin blaenorol, gan hepgor unrhyw gorluniau ailliwio/ffont/llidgorluniau, ac amlapio o'r corlun cyntaf i'r olaf
 STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}Cynrychioliad o'r corlun a ddewiswyd. Fe anwybyddir yr aliniad wrth lunio'r corlun
 STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}Symud y corlun, gan newid yr atredau X ac Y. Mae Ctrl+Clic yn symud y corlun wyth uned ar y tro
+STR_SPRITE_ALIGNER_SPRITE                                       :{STRING}:{NUM}
 
 ###length 2
 STR_SPRITE_ALIGNER_CENTRE_OFFSET                                :{BLACK}Canoli dodiad
@@ -4898,7 +4875,9 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Amcangyf
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Mae'r gêm wrthi'n cael ei chadw,{}Arhoswch nes y bydd y broses wedi'i chwblhau!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Methodd yr Awtogadw
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Methu darllen y gyriant
+STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Methwyd â chadw gêm...
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Methu Dileu Ffeil
+STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Methwyd â llwytho gêm..
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Gwall mewnol: {STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Mae'r gêm a gadwyd wedi torri - {STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Mae'r gêm a gadwyd wedi ei chadw mewn fersiwn ddiweddarach
@@ -5280,6 +5259,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Newid ei
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}Dim cerbydau ar gael eto
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Dechreuwch gêm newydd wedi {DATE_SHORT} neu defnyddiwch NewGRF sy'n darparu cerbydau cynnar
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}Dim mathau lôn a adeiledir gan drefi ar gael
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}Newid eich ffurfweddiad NewGRF
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}Dim mathau lôn a adeiledir gan drefi ar gael eto
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}Dechreuwch gêm newydd wedi {DATE_SHORT} neu defnyddiwch NewGRF sy'n darparu mathau lôn a adeiledir gan drefi yn gynnar
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Does dim modd gwneud i drên basio signal pan fo perygl...
@@ -5831,6 +5814,7 @@ STR_JUST_DATE_ISO                                               :{DATE_ISO}
 STR_JUST_STRING                                                 :{STRING}
 STR_JUST_STRING1                                                :{STRING}
 STR_JUST_STRING2                                                :{STRING}
+STR_JUST_STRING4                                                :{STRING}
 STR_JUST_STRING_STRING                                          :{STRING}{STRING}
 STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}

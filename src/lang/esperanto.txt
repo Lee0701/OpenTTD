@@ -391,7 +391,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}Post akt
 STR_BUTTON_DEFAULT                                              :{BLACK}Normo
 STR_BUTTON_CANCEL                                               :{BLACK}Nuligu
 STR_BUTTON_OK                                                   :{BLACK}Bone
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Atentu: La serviladministrantoj eventuale povas legi ajnan tekston entajpitan ĉi tie.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -1018,11 +1017,6 @@ STR_GAME_OPTIONS_VOLUME                                         :Laŭteco
 STR_GAME_OPTIONS_SFX_VOLUME                                     :Sonefektoj
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :Muziko
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}Monunuoj
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}Elekto de monunuoj
@@ -1116,11 +1110,6 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}Ŝaltu �
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :{BLACK}Glatigu tiparojn
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}Ŝaltu ĉi tiun kvadrateton por glatigi aligrandigeblajn tiparojn
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1x
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2x
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3x
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4x
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}Aŭtomata sondado
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}Partopreni aŭtomatan sondadon
@@ -1148,6 +1137,7 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}Aldonaj 
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}Baza muzikaro.
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}Elekti bazan muzikaron por uzi.
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}Pluaj informoj pri la baza muzikaro.
+
 
 
 STR_GAME_OPTIONS_SOCIAL_PLUGIN_STATE                            :{BLACK}Stato de la kromprogramo:
@@ -1841,7 +1831,8 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :Defaŭlta prise
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :Elektu la defaŭltan priservintervalon por novaj aviadiloj, se ne estas eksplicite agordita priservintervalo por la veturilo
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :Defaŭlta priservintervalo por ŝipoj: {STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :Elektu la defaŭltan priservintervalon por novaj ŝipoj, se ne estas eksplicite agordita priservintervalo por la veturilo
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}tago{P 0 "" j}/minuto{P 0 "" j}/%
+###length 3
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :Malaktiva
 
@@ -2123,15 +2114,8 @@ STR_CONFIG_SETTING_AI                                           :Konkurantoj
 STR_CONFIG_SETTING_AI_NPC                                       :Komputil-ludantoj
 STR_CONFIG_SETTING_NETWORK                                      :Reto
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :Padtrovilo por vagonaroj: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :Padtrovilo por stratveturiloj: {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :Padtrovilo uzota por stratveturiloj
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :Padtrovilo por ŝipoj: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :Aŭtomata dorsflankante ĉe signaloj: {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Permesu al vagonaro turniĝi ĉe semaforo, se ĝi jam atendis dum longa tempo
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(Rekomendite)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Ŝanĝu agord-valoron
 
@@ -2437,7 +2421,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}Kaptante
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}Malkonektu
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}Servilo estas protektata. Enigu pasvorton
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}Kompanio estas protektata. Enigu pasvorton
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :Enretaj ludantoj
@@ -2503,19 +2486,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :Jes
 
 STR_NETWORK_SPECTATORS                                          :Spektantoj
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}Ne konservu la pasvorton.
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}Donu la novan pasvorton al la kompanio.
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Kompania pasvorto
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Fari defaŭltan kompanipasvorton.
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Uzu ĉi tiun kompanipasvorton kiel defaŭlto por novaj kompanioj.
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Anigi
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}Anigi kaj ludi kiel ĉi tiu kompanio.
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}Pasvorto
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}Pasvorte protektu vian kompanion por eviti ke eksteruloj aliĝu
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}Agordu kompanian pasvorton
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}Sendu
@@ -2766,7 +2739,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Elekti d
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}Vojpunkto
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Elekti tipon de vojpunkto
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Elekto de Stacidomo
@@ -2779,8 +2751,7 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Elektu l
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Tiru k metu
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Tiru por konstrui stacidomon
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Elekti stacidomklason por montri.
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}Elekti stacidomotipon por konstrui.
+
 
 STR_STATION_CLASS_DFLT                                          :Defaŭlta
 STR_STATION_CLASS_DFLT_STATION                                  :Defaŭlta stacio
@@ -2915,8 +2886,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Aĉetu l
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Elekto de Objekto
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Elektu objekton por konstrui. La majuskliga klavo baskuligas inter konstrui/(kosto)taksi
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Elektu klason de la objekto konstrui
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Antaŭvido de la objekto
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}Grandeco: {GOLD}{NUM} x {NUM} kaheloj
 
@@ -3333,9 +3302,9 @@ STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% k
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}Mondgenerado
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}Rivergenerado
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}Arba generado
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Nemoveblaĵa generado
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}Generado de malglataj kaj rokaj regionoj
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}Nemoveblaĵa generado
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}Arba generado
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}Agordante ludon
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}Trakurante kvadratojn
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Ruligas la skripton

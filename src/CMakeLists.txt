@@ -75,6 +75,7 @@ add_files(
     bridge_map.h
     bridge_signal_map.h
     build_vehicle_gui.cpp
+    cachecheck.cpp
     cargo_type.h
     cargoaction.cpp
     cargoaction.h
@@ -357,6 +358,9 @@ add_files(
     palette_func.h
     pbs.cpp
     pbs.h
+    picker_func.h
+    picker_gui.cpp
+    picker_gui.h
     plans.cpp
     plans_base.h
     plans_cmd.cpp
@@ -510,7 +514,6 @@ add_files(
     tilearea_type.h
     tilehighlight_func.h
     tilehighlight_type.h
-    tilematrix_type.hpp
     timetable.h
     timetable_cmd.cpp
     timetable_gui.cpp

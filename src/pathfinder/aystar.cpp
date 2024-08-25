@@ -147,10 +147,6 @@ void AyStar::CheckTile(AyStarNode *current, OpenListNode *parent)
 		/* It is lower, so change it to this item */
 		check->g = new_g;
 		check->path.parent = closedlist_parent;
-		/* Copy user data, will probably have changed */
-		for (uint i = 0; i < lengthof(current->user_data); i++) {
-			check->path.node.user_data[i] = current->user_data[i];
-		}
 		/* Re-add it in the openlist_queue. */
 		this->openlist_queue.Push(check_idx, new_f);
 	} else {
@@ -180,7 +176,7 @@ int AyStar::Loop()
 	if (current == nullptr) return AYSTAR_EMPTY_OPENLIST;
 
 	/* Check for end node and if found, return that code */
-	if (this->EndNodeCheck(this, current) == AYSTAR_FOUND_END_NODE && !CheckIgnoreFirstTile(&current->path)) {
+	if (this->EndNodeCheck(this, current) == AYSTAR_FOUND_END_NODE && (&current->path)->parent != nullptr) {
 		if (this->FoundEndNode != nullptr) {
 			this->FoundEndNode(this, current);
 		}

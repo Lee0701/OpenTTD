@@ -66,6 +66,7 @@
 #include "smallmap_gui.h"
 #include "roadveh.h"
 #include "newgrf_config.h"
+#include "picker_func.h"
 #include "fios.h"
 #include "load_check.h"
 #include "strings_func.h"
@@ -109,6 +110,7 @@ std::string _config_file; ///< Configuration file of OpenTTD.
 std::string _config_file_text;
 std::string _private_file; ///< Private configuration file of OpenTTD.
 std::string _secrets_file; ///< Secrets configuration file of OpenTTD.
+std::string _favs_file; ///< Picker favourites configuration file of OpenTTD.
 
 static ErrorList _settings_error_list; ///< Errors while loading minimal settings.
 
@@ -238,7 +240,7 @@ const uint16_t INIFILE_VERSION = (IniFileVersion)(IFV_MAX_VERSION - 1); ///< Cur
  * @param str the current value of the setting for which a value needs found
  * @param len length of the string
  * @param many full domain of values the ONEofMANY setting can have
- * @return the integer index of the full-list, or -1 if not found
+ * @return the integer index of the full-list, or SIZE_MAX if not found
  */
 size_t OneOfManySettingDesc::ParseSingleValue(const char *str, size_t len, const std::vector<std::string> &many)
 {
@@ -251,7 +253,7 @@ size_t OneOfManySettingDesc::ParseSingleValue(const char *str, size_t len, const
 		idx++;
 	}
 
-	return (size_t)-1;
+	return SIZE_MAX;
 }
 
 /**
@@ -273,7 +275,7 @@ std::optional<bool> BoolSettingDesc::ParseSingleValue(const char *str)
  * @param many full domain of values the MANYofMANY setting can have
  * @param str the current string value of the setting, each individual
  * of separated by a whitespace,tab or | character
- * @return the 'fully' set integer, or -1 if a set is not found
+ * @return the 'fully' set integer, or SIZE_MAX if a set is not found
  */
 static size_t LookupManyOfMany(const std::vector<std::string> &many, const char *str)
 {
@@ -290,7 +292,7 @@ static size_t LookupManyOfMany(const std::vector<std::string> &many, const char 
 		while (*s != 0 && *s != ' ' && *s != '\t' && *s != '|') s++;
 
 		r = OneOfManySettingDesc::ParseSingleValue(str, s - str, many);
-		if (r == (size_t)-1) return r;
+		if (r == SIZE_MAX) return r;
 
 		SetBit(res, (uint8_t)r); // value found, set it
 		if (*s == 0) break;
@@ -300,24 +302,20 @@ static size_t LookupManyOfMany(const std::vector<std::string> &many, const char 
 }
 
 /**
- * Parse an integerlist string and set each found value
- * @param p the string to be parsed. Each element in the list is separated by a
- * comma or a space character
- * @param items pointer to the integerlist-array that will be filled with values
- * @param maxitems the maximum number of elements the integerlist-array has
- * @return returns the number of items found, or -1 on an error
+ * Parse a string into a vector of uint32s.
+ * @param p the string to be parsed. Each element in the list is separated by a comma or a space character
+ * @return std::optional with a vector of parsed integers. The optional is empty upon an error.
  */
-template<typename T>
-static int ParseIntList(const char *p, T *items, size_t maxitems)
+static std::optional<std::vector<uint32_t>> ParseIntList(const char *p)
 {
-	size_t n = 0; // number of items read so far
 	bool comma = false; // do we accept comma?
+	std::vector<uint32_t> result;
 
 	while (*p != '\0') {
 		switch (*p) {
 			case ',':
 				/* Do not accept multiple commas between numbers */
-				if (!comma) return -1;
+				if (!comma) return std::nullopt;
 				comma = false;
 				[[fallthrough]];
 
@@ -326,12 +324,11 @@ static int ParseIntList(const char *p, T *items, size_t maxitems)
 				break;
 
 			default: {
-				if (n == maxitems) return -1; // we don't accept that many numbers
 				char *end;
 				unsigned long v = std::strtoul(p, &end, 0);
-				if (p == end) return -1; // invalid character (not a number)
-				if (sizeof(T) < sizeof(v)) v = Clamp<unsigned long>(v, std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
-				items[n++] = v;
+				if (p == end) return std::nullopt; // invalid character (not a number)
+
+				result.push_back(ClampTo<uint32_t>(v));
 				p = end; // first non-number
 				comma = true; // we accept comma now
 				break;
@@ -341,52 +338,35 @@ static int ParseIntList(const char *p, T *items, size_t maxitems)
 
 	/* If we have read comma but no number after it, fail.
 	 * We have read comma when (n != 0) and comma is not allowed */
-	if (n != 0 && !comma) return -1;
+	if (!result.empty() && !comma) return std::nullopt;
 
-	return ClampTo<int>(n);
+	return result;
 }
 
 /**
  * Load parsed string-values into an integer-array (intlist)
  * @param str the string that contains the values (and will be parsed)
  * @param array pointer to the integer-arrays that will be filled
- * @param nelems the number of elements the array holds. Maximum is 64 elements
+ * @param nelems the number of elements the array holds.
  * @param type the type of elements the array holds (eg INT8, UINT16, etc.)
  * @return return true on success and false on error
  */
 static bool LoadIntList(const char *str, void *array, int nelems, VarType type)
 {
-	unsigned long items[64];
-	int i, nitems;
-
+	size_t elem_size = SlVarSize(type);
 	if (str == nullptr) {
-		memset(items, 0, sizeof(items));
-		nitems = nelems;
-	} else {
-		nitems = ParseIntList(str, items, lengthof(items));
-		if (nitems != nelems) return false;
+		memset(array, 0, nelems * elem_size);
+		return true;
 	}
 
-	switch (type) {
-		case SLE_VAR_BL:
-		case SLE_VAR_I8:
-		case SLE_VAR_U8:
-			for (i = 0; i != nitems; i++) ((uint8_t*)array)[i] = items[i];
-			break;
+	auto opt_items = ParseIntList(str);
+	if (!opt_items.has_value() || opt_items->size() != (size_t)nelems) return false;
 
-		case SLE_VAR_I16:
-		case SLE_VAR_U16:
-			for (i = 0; i != nitems; i++) ((uint16_t*)array)[i] = items[i];
-			break;
-
-		case SLE_VAR_I32:
-		case SLE_VAR_U32:
-			for (i = 0; i != nitems; i++) ((uint32_t*)array)[i] = items[i];
-			break;
-
-		default: NOT_REACHED();
+	char *p = static_cast<char *>(array);
+	for (auto item : *opt_items) {
+		WriteValue(p, type, item);
+		p += elem_size;
 	}
-
 	return true;
 }
 
@@ -487,8 +467,8 @@ size_t OneOfManySettingDesc::ParseValue(const char *str) const
 	size_t r = OneOfManySettingDesc::ParseSingleValue(str, strlen(str), this->many);
 	/* if the first attempt of conversion from string to the appropriate value fails,
 	 * look if we have defined a converter from old value to new value. */
-	if (r == (size_t)-1 && this->many_cnvt != nullptr) r = this->many_cnvt(str);
-	if (r != (size_t)-1) return r; // and here goes converted value
+	if (r == SIZE_MAX && this->many_cnvt != nullptr) r = this->many_cnvt(str);
+	if (r != SIZE_MAX) return r; // and here goes converted value
 
 	ErrorMessageData msg(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_VALUE);
 	msg.SetDParamStr(0, str);
@@ -500,7 +480,7 @@ size_t OneOfManySettingDesc::ParseValue(const char *str) const
 size_t ManyOfManySettingDesc::ParseValue(const char *str) const
 {
 	size_t r = LookupManyOfMany(this->many, str);
-	if (r != (size_t)-1) return r;
+	if (r != SIZE_MAX) return r;
 	ErrorMessageData msg(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_VALUE);
 	msg.SetDParamStr(0, str);
 	msg.SetDParamStr(1, this->name);
@@ -1127,6 +1107,28 @@ static void SettingsValueAbsolute(const IntSettingDesc &sd, uint first_param, in
 	SetDParam(first_param + 1, abs(value));
 }
 
+/** Service Interval Settings Default Value displays the correct units or as a percentage */
+static void ServiceIntervalSettingsValueText(const IntSettingDesc &sd, uint first_param, int32_t value)
+{
+	VehicleDefaultSettings *vds;
+	if (_game_mode == GM_MENU || !Company::IsValidID(_current_company)) {
+		vds = &_settings_client.company.vehicle;
+	} else {
+		vds = &Company::Get(_current_company)->settings.vehicle;
+	}
+
+	if (value == 0) {
+		SetDParam(first_param, sd.str_val + 3);
+	} else if (vds->servint_ispercent) {
+		SetDParam(first_param, sd.str_val + 2);
+	} else if (EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) {
+		SetDParam(first_param, sd.str_val + 1);
+	} else {
+		SetDParam(first_param, sd.str_val);
+	}
+	SetDParam(first_param + 1, value);
+}
+
 /** Reposition the main toolbar as the setting changed. */
 static void v_PositionMainToolbar(int32_t new_value)
 {
@@ -1258,6 +1260,43 @@ static void UpdateServiceInterval(VehicleType type, int32_t new_value)
 	}
 
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
+}
+
+/**
+ * Checks if the service intervals in the settings are specified as percentages and corrects the default value accordingly.
+ * @param new_value Contains the service interval's default value in days, or 50 (default in percentage).
+ */
+static int32_t GetDefaultServiceInterval(VehicleType type)
+{
+	VehicleDefaultSettings *vds;
+	if (_game_mode == GM_MENU || !Company::IsValidID(_current_company)) {
+		vds = &_settings_client.company.vehicle;
+	} else {
+		vds = &Company::Get(_current_company)->settings.vehicle;
+	}
+
+	int32_t new_value;
+	if (vds->servint_ispercent) {
+		new_value = DEF_SERVINT_PERCENT;
+	} else if (EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) {
+		switch (type) {
+			case VEH_TRAIN:    new_value = DEF_SERVINT_MINUTES_TRAINS; break;
+			case VEH_ROAD:     new_value = DEF_SERVINT_MINUTES_ROADVEH; break;
+			case VEH_AIRCRAFT: new_value = DEF_SERVINT_MINUTES_AIRCRAFT; break;
+			case VEH_SHIP:     new_value = DEF_SERVINT_MINUTES_SHIPS; break;
+			default: NOT_REACHED();
+		}
+	} else {
+		switch (type) {
+			case VEH_TRAIN:    new_value = DEF_SERVINT_DAYS_TRAINS; break;
+			case VEH_ROAD:     new_value = DEF_SERVINT_DAYS_ROADVEH; break;
+			case VEH_AIRCRAFT: new_value = DEF_SERVINT_DAYS_AIRCRAFT; break;
+			case VEH_SHIP:     new_value = DEF_SERVINT_DAYS_SHIPS; break;
+			default: NOT_REACHED();
+		}
+	}
+
+	return new_value;
 }
 
 /**
@@ -2034,13 +2073,6 @@ static void MaxVehiclesChanged(int32_t new_value)
 	MarkWholeScreenDirty();
 }
 
-static void InvalidateShipPathCache(int32_t new_value)
-{
-	for (Ship *s : Ship::Iterate()) {
-		s->cached_path.clear();
-	}
-}
-
 static void ImprovedBreakdownsSettingChanged(int32_t new_value)
 {
 	if (!_settings_game.vehicle.improved_breakdowns) return;
@@ -2072,6 +2104,11 @@ static void DayLengthChanged(int32_t new_value)
 	RecalculateStateTicksOffset();
 
 	MarkWholeScreenDirty();
+}
+
+static void IndustryEventRateChanged(int32_t new_value)
+{
+	if (_game_mode != GM_MENU) StartupIndustryDailyChanges(false);
 }
 
 static void TownZoneModeChanged(int32_t new_value)
@@ -2267,43 +2304,12 @@ static bool ChunnelSettingGUI(SettingOnGuiCtrlData &data)
 	}
 }
 
-static bool TrainPathfinderSettingGUI(SettingOnGuiCtrlData &data)
-{
-	switch (data.type) {
-		case SOGCT_DESCRIPTION_TEXT:
-			SetDParam(0, data.text);
-			data.text = STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT_EXTRA;
-			return true;
-
-		case SOGCT_GUI_SPRITE:
-			if (data.val != VPF_YAPF) {
-				data.output = SPR_WARNING_SIGN;
-				return true;
-			}
-			return false;
-
-		case SOGCT_GUI_WARNING_TEXT:
-			if (data.val != VPF_YAPF) {
-				data.text = STR_CONFIG_SETTING_ADVISED_LEAVE_DEFAULT;
-				return true;
-			}
-			return false;
-
-		default:
-			return false;
-	}
-}
-
 static bool TownCargoScaleGUI(SettingOnGuiCtrlData &data)
 {
 	switch (data.type) {
 		case SOGCT_VALUE_DPARAMS:
-			if (GetGameSettings().economy.day_length_factor > 1) {
-				if (GetGameSettings().economy.town_cargo_scale_mode == CSM_DAYLENGTH) {
-					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
-				} else {
-					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
-				}
+			if (GetGameSettings().economy.day_length_factor > 1 && GetGameSettings().economy.town_cargo_scale_mode == CSM_DAYLENGTH) {
+				SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_ECON_SPEED_REDUCTION_MULT);
 			}
 			return true;
 
@@ -2321,44 +2327,13 @@ static bool IndustryCargoScaleGUI(SettingOnGuiCtrlData &data)
 			return true;
 
 		case SOGCT_VALUE_DPARAMS:
-			if (GetGameSettings().economy.day_length_factor > 1) {
-				if (GetGameSettings().economy.industry_cargo_scale_mode == CSM_DAYLENGTH) {
-					SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_REAL_TIME);
-				} else {
-					SetDParam(data.offset, EconTime::UsingWallclockUnits(_game_mode == GM_MENU) ? STR_CONFIG_SETTING_CARGO_SCALE_VALUE_PER_PRODUCTION_INTERVAL : STR_CONFIG_SETTING_CARGO_SCALE_VALUE_MONTHLY);
-				}
+			if (GetGameSettings().economy.day_length_factor > 1 && GetGameSettings().economy.industry_cargo_scale_mode == CSM_DAYLENGTH) {
+				SetDParam(data.offset, STR_CONFIG_SETTING_CARGO_SCALE_VALUE_ECON_SPEED_REDUCTION_MULT);
 			}
 			return true;
 
 		default:
 			return false;
-	}
-}
-
-static bool TownCargoScaleModeGUI(SettingOnGuiCtrlData &data)
-{
-	switch (data.type) {
-		case SOGCT_VALUE_DPARAMS:
-			if (data.text == STR_CONFIG_SETTING_CARGO_SCALE_MODE_MONTHLY && EconTime::UsingWallclockUnits(_game_mode == GM_MENU)) {
-				data.text = STR_CONFIG_SETTING_CARGO_SCALE_MODE_PER_PRODUCTION_INTERVAL;
-			}
-			return true;
-
-		default:
-			return false;
-	}
-}
-
-static bool IndustryCargoScaleModeGUI(SettingOnGuiCtrlData &data)
-{
-	switch (data.type) {
-		case SOGCT_DESCRIPTION_TEXT:
-			SetDParam(0, data.text);
-			data.text = STR_CONFIG_SETTING_INDUSTRY_CARGO_SCALE_MODE_HELPTEXT_EXTRA;
-			return true;
-
-		default:
-			return TownCargoScaleModeGUI(data);
 	}
 }
 
@@ -2519,15 +2494,13 @@ static void GraphicsSetLoadConfig(IniFile &ini)
 		if (const IniItem *item = group->GetItem("extra_version"); item != nullptr && item->value) BaseGraphics::ini_data.extra_version = std::strtoul(item->value->c_str(), nullptr, 10);
 
 		if (const IniItem *item = group->GetItem("extra_params"); item != nullptr && item->value) {
-			auto &extra_params = BaseGraphics::ini_data.extra_params;
-			extra_params.resize(0x80); // TODO: make ParseIntList work nicely with C++ containers
-			int count = ParseIntList(item->value->c_str(), &extra_params.front(), extra_params.size());
-			if (count < 0) {
+			auto params = ParseIntList(item->value->c_str());
+			if (params.has_value()) {
+				BaseGraphics::ini_data.extra_params = params.value();
+			} else {
 				SetDParamStr(0, BaseGraphics::ini_data.name);
 				ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_ARRAY, WL_CRITICAL);
-				count = 0;
 			}
-			extra_params.resize(count);
 		}
 	}
 }
@@ -2588,13 +2561,13 @@ static GRFConfig *GRFLoadConfig(const IniFile &ini, const char *grpname, bool is
 
 		/* Parse parameters */
 		if (item.value.has_value() && !item.value->empty()) {
-			int count = ParseIntList(item.value->c_str(), c->param.data(), c->param.size());
-			if (count < 0) {
+			auto params = ParseIntList(item.value->c_str());
+			if (params.has_value()) {
+				c->SetParams(params.value());
+			} else {
 				SetDParamStr(0, filename);
 				ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_ARRAY, WL_CRITICAL);
-				count = 0;
 			}
-			c->num_params = count;
 		}
 
 		/* Check if item is valid */
@@ -2878,6 +2851,7 @@ void LoadFromConfig(bool startup)
 	ConfigIniFile generic_ini(_config_file, &_config_file_text);
 	ConfigIniFile private_ini(_private_file);
 	ConfigIniFile secrets_ini(_secrets_file);
+	ConfigIniFile favs_ini(_favs_file);
 
 	if (!startup) ResetCurrencies(false); // Initialize the array of currencies, without preserving the custom one
 
@@ -2967,6 +2941,7 @@ void LoadFromConfig(bool startup)
 		_grfconfig_static  = GRFLoadConfig(generic_ini, "newgrf-static", true);
 		AILoadConfig(generic_ini, "ai_players");
 		GameLoadConfig(generic_ini, "game_scripts");
+		PickerLoadConfig(favs_ini);
 
 		PrepareOldDiffCustom();
 		IniLoadSettings(generic_ini, _old_gameopt_settings, "gameopt", &_settings_newgame, false);
@@ -3017,6 +2992,13 @@ void SaveToConfig(SaveToConfigFlags flags)
 		HandleSecretsSettingDescs(secrets_ini, IniSaveSettings, IniSaveSettingList);
 		SaveVersionInConfig(secrets_ini);
 		secrets_ini.SaveToDisk(_secrets_file);
+	}
+
+	if (flags & STCF_FAVS) {
+		ConfigIniFile favs_ini(_favs_file);
+		PickerSaveConfig(favs_ini);
+		SaveVersionInConfig(favs_ini);
+		favs_ini.SaveToDisk(_favs_file);
 	}
 
 	if ((flags & STCF_GENERIC) == 0) return;
@@ -3706,21 +3688,6 @@ static const SaveLoad _settings_ext_load_desc[] = {
 };
 
 /**
- * Internal structure used in SaveSettingsPlyx()
- */
-struct SettingsExtSave {
-	uint32_t flags;
-	const char *name;
-	uint32_t setting_length;
-};
-
-static const SaveLoad _settings_ext_save_desc[] = {
-	SLE_VAR(SettingsExtSave, flags,          SLE_UINT32),
-	SLE_STR(SettingsExtSave, name,           SLE_STR, 0),
-	SLE_VAR(SettingsExtSave, setting_length, SLE_UINT32),
-};
-
-/**
  * Load handler for settings which go in the PATX chunk
  * @param object can be either nullptr in which case we load global variables or
  * a pointer to a struct which is getting saved
@@ -3865,65 +3832,17 @@ void LoadSettingsPlyx(bool skip)
 	}
 }
 
-/**
- * Save handler for settings which go in the PLYX chunk
- */
-void SaveSettingsPlyx()
+std::vector<NamedSaveLoad> FillPlyrExtraSettingsDesc()
 {
-	SettingsExtSave current_setting;
+	std::vector<NamedSaveLoad> settings_desc;
 
-	std::vector<uint32_t> company_setting_counts;
-
-	size_t length = 8;
-	uint32_t companies_count = 0;
-
-	for (Company *c : Company::Iterate()) {
-		length += 12;
-		companies_count++;
-		uint32_t setting_count = 0;
-		for (auto &sd : _company_settings) {
-			if (sd->patx_name == nullptr) continue;
-			uint32_t setting_length = (uint32_t)SlCalcObjMemberLength(&(c->settings), sd->save);
-			if (!setting_length) continue;
-
-			current_setting.name = sd->patx_name;
-
-			// add length of setting header
-			length += SlCalcObjLength(&current_setting, _settings_ext_save_desc);
-
-			// add length of actual setting
-			length += setting_length;
-
-			setting_count++;
-		}
-		company_setting_counts.push_back(setting_count);
-	}
-	SlSetLength(length);
-
-	SlWriteUint32(0);                          // flags
-	SlWriteUint32(companies_count);            // companies count
-
-	size_t index = 0;
-	for (Company *c : Company::Iterate()) {
-		length += 12;
-		companies_count++;
-		SlWriteUint32(c->index);               // company ID
-		SlWriteUint32(0);                      // flags
-		SlWriteUint32(company_setting_counts[index]); // setting count
-		index++;
-
-		for (auto &sd : _company_settings) {
-			if (sd->patx_name == nullptr) continue;
-			uint32_t setting_length = (uint32_t)SlCalcObjMemberLength(&(c->settings), sd->save);
-			if (!setting_length) continue;
-
-			current_setting.flags = 0;
-			current_setting.name = sd->patx_name;
-			current_setting.setting_length = setting_length;
-			SlObject(&current_setting, _settings_ext_save_desc);
-			SlObjectMember(&(c->settings), sd->save);
+	for (auto &sd : _company_settings) {
+		if (sd->patx_name != nullptr) {
+			settings_desc.push_back(NSL(sd->patx_name, sd->save));
 		}
 	}
+
+	return settings_desc;
 }
 
 static void Load_OPTS()
@@ -3960,9 +3879,9 @@ static void Check_PATX()
 }
 
 static const ChunkHandler setting_chunk_handlers[] = {
-	{ 'OPTS', nullptr,   Load_OPTS, nullptr, nullptr,    CH_RIFF },
+	{ 'OPTS', nullptr,   Load_OPTS, nullptr, nullptr,    CH_READONLY },
 	MakeSaveUpstreamFeatureConditionalLoadUpstreamChunkHandler<'PATS', XSLFI_TABLE_PATS>(Load_PATS, nullptr, Check_PATS),
-	{ 'PATX', nullptr,   Load_PATX, nullptr, Check_PATX, CH_RIFF },
+	{ 'PATX', nullptr,   Load_PATX, nullptr, Check_PATX, CH_READONLY },
 };
 
 extern const ChunkHandlerTable _setting_chunk_handlers(setting_chunk_handlers);

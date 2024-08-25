@@ -94,16 +94,18 @@ struct HangarTileTable {
 	uint8_t hangar_num;   ///< The hangar to which this tile belongs.
 };
 
+struct AirportTileLayout {
+	std::vector<AirportTileTable> tiles; ///< List of all tiles in this layout.
+	Direction rotation; ///< The rotation of this layout.
+};
+
 /**
  * Defines the data structure for an airport.
  */
-struct AirportSpec {
+struct AirportSpec : NewGRFSpecBase<AirportClassID> {
 	const struct AirportFTAClass *fsm;     ///< the finite statemachine for the default airports
-	const AirportTileTable * const *table; ///< list of the tiles composing the airport
-	const Direction *rotation;             ///< the rotation of each tiletable
-	uint8_t num_table;                     ///< number of elements in the table
-	const HangarTileTable *depot_table;    ///< gives the position of the depots on the airports
-	uint8_t nof_depots;                    ///< the number of hangar tiles in this airport
+	std::vector<AirportTileLayout> layouts; ///< List of layouts composing the airport.
+	std::span<const HangarTileTable> depots; ///< Position of the depots on the airports.
 	uint8_t size_x;                        ///< size of airport in x direction
 	uint8_t size_y;                        ///< size of airport in y direction
 	uint8_t noise_level;                   ///< noise that this airport generates
@@ -112,7 +114,6 @@ struct AirportSpec {
 	CalTime::Year max_year;                ///< last year the airport is available
 	StringID name;                         ///< name of this airport
 	TTDPAirportType ttd_airport_type;      ///< ttdpatch airport type (Small/Large/Helipad/Oilrig)
-	AirportClassID cls_id;                 ///< the class to which this airport type belongs
 	SpriteID preview_sprite;               ///< preview sprite for this airport
 	uint16_t maintenance_cost;             ///< maintenance cost multiplier
 	/* Newgrf data */
@@ -130,8 +131,8 @@ struct AirportSpec {
 	/** Get the index of this spec. */
 	uint8_t GetIndex() const
 	{
-		assert(this >= specs && this < endof(specs));
-		return (uint8_t)(this - specs);
+		assert(this >= std::begin(specs) && this < std::end(specs));
+		return static_cast<uint8_t>(std::distance(std::cbegin(specs), this));
 	}
 
 	static const AirportSpec dummy; ///< The dummy airport.
@@ -174,7 +175,7 @@ struct AirportScopeResolver : public ScopeResolver {
 /** Resolver object for airports. */
 struct AirportResolverObject : public ResolverObject {
 	AirportScopeResolver airport_scope;
-	std::unique_ptr<TownScopeResolver> town_scope; ///< The town scope resolver (created on the first call).
+	std::optional<TownScopeResolver> town_scope = std::nullopt; ///< The town scope resolver (created on the first call).
 
 	AirportResolverObject(TileIndex tile, Station *st, uint8_t airport_id, uint8_t layout,
 			CallbackID callback = CBID_NO_CALLBACK, uint32_t callback_param1 = 0, uint32_t callback_param2 = 0);

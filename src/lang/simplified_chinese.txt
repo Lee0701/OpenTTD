@@ -308,7 +308,6 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}如启�
 STR_BUTTON_DEFAULT                                              :{BLACK}默认
 STR_BUTTON_CANCEL                                               :{BLACK}取消
 STR_BUTTON_OK                                                   :{BLACK}确定
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}注意：服务器管理员可以看到你所输入的文字
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -348,7 +347,7 @@ STR_SORT_BY_WAITING_TOTAL                                       :等候中的货
 STR_SORT_BY_WAITING_AVAILABLE                                   :等候中的可运载货物总量
 STR_SORT_BY_RATING_MAX                                          :车站中最高的货物评价
 STR_SORT_BY_RATING_MIN                                          :车站中最低的货物评价
-STR_SORT_BY_ENGINE_ID                                           :引擎ID （默认方式）
+STR_SORT_BY_ENGINE_ID                                           :引擎编号
 STR_SORT_BY_COST                                                :售价
 STR_SORT_BY_POWER                                               :功率
 STR_SORT_BY_TRACTIVE_EFFORT                                     :牵引力
@@ -863,7 +862,7 @@ STR_PRESIDENT_NAME_MANAGER                                      :{BLACK}{PRESIDE
 STR_NEWS_NEW_TOWN                                               :{BLACK}{BIG_FONT}{STRING} 赞助了城镇 {TOWN} 的建设！
 STR_NEWS_NEW_TOWN_UNSPONSORED                                   :{BLACK}{BIG_FONT}一个名叫{TOWN}的城镇刚刚成立了！
 
-STR_NEWS_INDUSTRY_CONSTRUCTION                                  :{BIG_FONT}{BLACK}新的{STRING} 正在 {TOWN} 加紧建设！
+STR_NEWS_INDUSTRY_CONSTRUCTION                                  :{BIG_FONT}{BLACK}新的{STRING}正在 {TOWN} 附近建设！
 STR_NEWS_INDUSTRY_PLANTED                                       :{BIG_FONT}{BLACK}新的{STRING} 即将落户 {TOWN}！
 
 STR_NEWS_INDUSTRY_CLOSURE_GENERAL                               :{BIG_FONT}{BLACK}{STRING} 即将倒闭！
@@ -956,11 +955,7 @@ STR_GAME_OPTIONS_VOLUME                                         :音量
 STR_GAME_OPTIONS_SFX_VOLUME                                     :音效
 STR_GAME_OPTIONS_MUSIC_VOLUME                                   :音乐
 
-STR_GAME_OPTIONS_VOLUME_0                                       :0%
-STR_GAME_OPTIONS_VOLUME_25                                      :25%
-STR_GAME_OPTIONS_VOLUME_50                                      :50%
-STR_GAME_OPTIONS_VOLUME_75                                      :75%
-STR_GAME_OPTIONS_VOLUME_100                                     :100%
+STR_GAME_OPTIONS_VOLUME_MARK                                    :{NUM}%
 
 STR_GAME_OPTIONS_CURRENCY_UNITS_FRAME                           :{BLACK}货币单位
 STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP                :{BLACK}货币单位选择
@@ -1058,11 +1053,7 @@ STR_GAME_OPTIONS_GUI_FONT_SPRITE_TOOLTIP                        :{BLACK}如果�
 STR_GAME_OPTIONS_GUI_FONT_AA                                    :字体抗锯齿
 STR_GAME_OPTIONS_GUI_FONT_AA_TOOLTIP                            :{BLACK}勾选此框以对游戏字体应用抗锯齿
 
-STR_GAME_OPTIONS_GUI_SCALE_1X                                   :1倍
-STR_GAME_OPTIONS_GUI_SCALE_2X                                   :2倍
-STR_GAME_OPTIONS_GUI_SCALE_3X                                   :3倍
-STR_GAME_OPTIONS_GUI_SCALE_4X                                   :4倍
-STR_GAME_OPTIONS_GUI_SCALE_5X                                   :5倍
+STR_GAME_OPTIONS_GUI_SCALE_MARK                                 :{DECIMAL}x
 
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY_FRAME                       :{BLACK}自动体验调查
 STR_GAME_OPTIONS_PARTICIPATE_SURVEY                             :{BLACK}参与自动体验调查
@@ -1090,6 +1081,9 @@ STR_GAME_OPTIONS_BASE_SFX_DESCRIPTION_TOOLTIP                   :{BLACK}有关�
 STR_GAME_OPTIONS_BASE_MUSIC                                     :{BLACK}基础音乐组
 STR_GAME_OPTIONS_BASE_MUSIC_TOOLTIP                             :{BLACK}选择要使用的基础音乐组
 STR_GAME_OPTIONS_BASE_MUSIC_DESCRIPTION_TOOLTIP                 :{BLACK}有关基础音乐组的附加信息
+
+STR_GAME_OPTIONS_ONLINE_CONTENT                                 :获取内容
+STR_GAME_OPTIONS_ONLINE_CONTENT_TOOLTIP                         :查询并下载最新内容
 
 STR_GAME_OPTIONS_SOCIAL_PLUGINS_NONE                            :{LTBLUE}（未安装社交平台插件）
 
@@ -1136,7 +1130,7 @@ STR_CURRENCY_PREVIEW                                            :{LTBLUE}预览�
 STR_CURRENCY_CUSTOM_CURRENCY_PREVIEW_TOOLTIP                    :{BLACK}10000 英磅(£) 兑换自定义货币的数量
 STR_CURRENCY_CHANGE_PARAMETER                                   :{BLACK}改变当前的货币参数
 
-STR_NONE                                                        :没有
+STR_NONE                                                        :无
 STR_FUNDING_ONLY                                                :不生成
 STR_MINIMAL                                                     :每种仅一个
 STR_NUM_VERY_LOW                                                :非常低
@@ -1832,7 +1826,11 @@ STR_CONFIG_SETTING_SERVINT_AIRCRAFT                             :飞机默认保
 STR_CONFIG_SETTING_SERVINT_AIRCRAFT_HELPTEXT                    :如果没有为飞机指定保养周期，设定飞机的默认保养周期
 STR_CONFIG_SETTING_SERVINT_SHIPS                                :船只默认保养周期：{STRING}
 STR_CONFIG_SETTING_SERVINT_SHIPS_HELPTEXT                       :如果没有为船只设定保养周期，按照这里设定的默认保养周期执行
-STR_CONFIG_SETTING_SERVINT_VALUE                                :{COMMA}{NBSP}日 / 分钟 / %
+###length 3
+STR_CONFIG_SETTING_SERVINT_VALUE_DAYS                           :{COMMA}{NBSP}日
+STR_CONFIG_SETTING_SERVINT_VALUE_MINUTES                        :{COMMA}{NBSP}分
+STR_CONFIG_SETTING_SERVINT_VALUE_PERCENTAGE                     :{COMMA}{NBSP}%
+
 ###setting-zero-is-special
 STR_CONFIG_SETTING_SERVINT_DISABLED                             :关闭
 
@@ -2132,17 +2130,8 @@ STR_CONFIG_SETTING_AI                                           :竞争
 STR_CONFIG_SETTING_AI_NPC                                       :电脑玩家
 STR_CONFIG_SETTING_NETWORK                                      :网络
 
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS                        :火车寻路： {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_TRAINS_HELPTEXT               :列车寻路方式
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES                 :汽车寻路： {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_ROAD_VEHICLES_HELPTEXT        :汽车寻路方式
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS                         :船只寻路： {STRING}
-STR_CONFIG_SETTING_PATHFINDER_FOR_SHIPS_HELPTEXT                :船只寻路方式
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS                           :遇到红灯时自动掉头 {STRING}
 STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :当列车在信号灯前长时间等待时，允许掉头
-###length 2
-STR_CONFIG_SETTING_PATHFINDER_NPF                               :NPF
-STR_CONFIG_SETTING_PATHFINDER_YAPF                              :YAPF {BLUE}(推荐)
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}改变设置值
 
@@ -2161,7 +2150,7 @@ STR_CONFIG_ERROR_INVALID_GRF_UNKNOWN                            :未知
 STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_LEVEL             :{WHITE}... 压缩等级 '{STRING}' 无效
 STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_ALGORITHM         :{WHITE}...存档格式 '{STRING}' 不适用. 请转换成 '{STRING}'
 STR_CONFIG_ERROR_INVALID_BASE_GRAPHICS_NOT_FOUND                :{WHITE}... 禁用基础图形设置 '{STRING}': 未找到
-STR_CONFIG_ERROR_INVALID_BASE_SOUNDS_NOT_FOUND                  :{WHITE}... 禁用基础意义设置 '{STRING}': 未找到
+STR_CONFIG_ERROR_INVALID_BASE_SOUNDS_NOT_FOUND                  :{WHITE}……禁用基础音效设置 '{STRING}': 未找到
 STR_CONFIG_ERROR_INVALID_BASE_MUSIC_NOT_FOUND                   :{WHITE}... 禁用基础音乐设置 '{STRING}': 未找到
 STR_CONFIG_ERROR_OUT_OF_MEMORY                                  :{WHITE}内存溢出
 STR_CONFIG_ERROR_SPRITECACHE_TOO_BIG                            :{WHITE}无法分配 {BYTES} 的 Sprite 缓存。Sprite 缓存的大小已降至 {BYTES}。OpenTTD 的性能将受到影响。请尝试停用 32bpp 图形及／或减少放大倍数，以降低内存需求
@@ -2242,8 +2231,8 @@ STR_HELP_WINDOW_COMMUNITY                                       :{BLACK}社区
 
 # Cheat window
 STR_CHEATS                                                      :{WHITE}沙盒选项
-STR_CHEAT_MONEY                                                 :{LTBLUE}增加 {CURRENCY_LONG} 现金
-STR_CHEAT_CHANGE_COMPANY                                        :{LTBLUE}作为{ORANGE}{COMMA}进行游戏
+STR_CHEAT_MONEY                                                 :{LTBLUE}增加现金 {CURRENCY_LONG}
+STR_CHEAT_CHANGE_COMPANY                                        :{LTBLUE}作为{ORANGE}公司 {COMMA} {LTBLUE}进行游戏
 STR_CHEAT_EXTRA_DYNAMITE                                        :{LTBLUE}神奇推土机 (清除工业设施和其他不可移除物)： {ORANGE}{STRING}
 STR_CHEAT_CROSSINGTUNNELS                                       :{LTBLUE}隧道可以相交：{ORANGE}{STRING}
 STR_CHEAT_NO_JETCRASH                                           :{LTBLUE}喷气式飞机不会(经常)在小机场坠毁：{ORANGE}{STRING}
@@ -2461,7 +2450,6 @@ STR_NETWORK_CONNECTING_SPECIAL_2                                :{BLACK}获取�
 STR_NETWORK_CONNECTION_DISCONNECT                               :{BLACK}断开
 
 STR_NETWORK_NEED_GAME_PASSWORD_CAPTION                          :{WHITE}服务器需要密码：
-STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION                       :{WHITE}公司需要密码：
 
 # Network company list added strings
 STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :在线玩家
@@ -2488,6 +2476,7 @@ STR_NETWORK_CLIENT_LIST_PLAYER_NAME_QUERY_CAPTION               :你的玩家名
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_TOOLTIP                    :{BLACK}要在此客户端执行的管理命令
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_TOOLTIP                   :{BLACK}要在此公司执行的管理命令
 STR_NETWORK_CLIENT_LIST_JOIN_TOOLTIP                            :{BLACK}加入该公司
+STR_NETWORK_CLIENT_LIST_COMPANY_AUTHORIZE_TOOLTIP               :{BLACK}授权此客户端加入你的公司
 STR_NETWORK_CLIENT_LIST_CHAT_CLIENT_TOOLTIP                     :{BLACK}给这位玩家发消息
 STR_NETWORK_CLIENT_LIST_CHAT_COMPANY_TOOLTIP                    :{BLACK}给公司中的所有玩家发消息
 STR_NETWORK_CLIENT_LIST_CHAT_SPECTATOR_TOOLTIP                  :{BLACK}给所有旁观者发消息
@@ -2510,13 +2499,11 @@ STR_NETWORK_CLIENT_LIST_SERVER_CONNECTION_TYPE_TURN             :{BLACK}使用�
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_KICK                       :踢出
 STR_NETWORK_CLIENT_LIST_ADMIN_CLIENT_BAN                        :封禁
 STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_RESET                     :删除
-STR_NETWORK_CLIENT_LIST_ADMIN_COMPANY_UNLOCK                    :密码解锁
 
 STR_NETWORK_CLIENT_LIST_ASK_CAPTION                             :{WHITE}管理命令
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_KICK                         :{YELLOW}你确定要踢出名为 {STRING} 的玩家吗？
 STR_NETWORK_CLIENT_LIST_ASK_CLIENT_BAN                          :{YELLOW}你确定要封禁名为 {STRING} 的玩家吗？
 STR_NETWORK_CLIENT_LIST_ASK_COMPANY_RESET                       :{YELLOW}你确定要删除 {COMPANY} 公司吗?
-STR_NETWORK_CLIENT_LIST_ASK_COMPANY_UNLOCK                      :{YELLOW}你确定要重置 {COMPANY} 的公司密码吗？
 
 STR_NETWORK_ASK_RELAY_CAPTION                                   :{WHITE}使用中继？
 STR_NETWORK_ASK_RELAY_TEXT                                      :{YELLOW} 无法建立你与服务器 {STRING} 的连接。{}你是否想通过 {STRING} 中继此次会话？
@@ -2525,7 +2512,7 @@ STR_NETWORK_ASK_RELAY_YES_ONCE                                  :{BLACK}是，�
 STR_NETWORK_ASK_RELAY_YES_ALWAYS                                :{BLACK}是，不要再次询问
 
 STR_NETWORK_ASK_SURVEY_CAPTION                                  :是否参与自动调查？
-STR_NETWORK_ASK_SURVEY_TEXT                                     :您是否愿意参与自动体验调查？{} OpenTTD 会在结束游戏时传输调查结果。{} 您可以在任意时刻在“游戏选项”菜单修改本选项。
+STR_NETWORK_ASK_SURVEY_TEXT                                     :您是否愿意参与自动体验调查？{} OpenTTD 会在结束游戏时传输调查结果。{}您可以在任意时刻在“游戏选项”菜单修改本选项。
 STR_NETWORK_ASK_SURVEY_PREVIEW                                  :预览调查结果
 STR_NETWORK_ASK_SURVEY_LINK                                     :关于体验调查和隐私
 STR_NETWORK_ASK_SURVEY_NO                                       :否
@@ -2533,19 +2520,9 @@ STR_NETWORK_ASK_SURVEY_YES                                      :是
 
 STR_NETWORK_SPECTATORS                                          :旁观者
 
-# Network set password
-STR_COMPANY_PASSWORD_CANCEL                                     :{BLACK}不保存所输入的密码
-STR_COMPANY_PASSWORD_OK                                         :{BLACK}为公司设置新密码
-STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}公司密码
-STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}默认公司密码
-STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}将此公司密码作为新公司的默认密码
-
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}加入
 STR_COMPANY_VIEW_JOIN_TOOLTIP                                   :{BLACK}加入该公司
-STR_COMPANY_VIEW_PASSWORD                                       :{BLACK}密码
-STR_COMPANY_VIEW_PASSWORD_TOOLTIP                               :{BLACK}设置密码可以防止未经授权的用户随意加入。
-STR_COMPANY_VIEW_SET_PASSWORD                                   :{BLACK}设置公司密码
 
 # Network chat
 STR_NETWORK_CHAT_SEND                                           :{BLACK}发送
@@ -2766,7 +2743,7 @@ STR_STATION_BUILD_COVERAGE_ON                                   :{BLACK}开启
 STR_STATION_BUILD_COVERAGE_AREA_OFF_TOOLTIP                     :{BLACK}不显示覆盖的区域
 STR_STATION_BUILD_COVERAGE_AREA_ON_TOOLTIP                      :{BLACK}显示可以覆盖的区域
 STR_STATION_BUILD_ACCEPTS_CARGO                                 :{BLACK}接受：{GOLD}{CARGO_LIST}
-STR_STATION_BUILD_SUPPLIES_CARGO                                :{BLACK}供给: {GOLD}{CARGO_LIST}
+STR_STATION_BUILD_SUPPLIES_CARGO                                :{BLACK}供给：{GOLD}{CARGO_LIST}
 STR_STATION_BUILD_INFRASTRUCTURE_COST_YEAR                      :{BLACK}维护成本：{GOLD}{CURRENCY_SHORT}/年
 STR_STATION_BUILD_INFRASTRUCTURE_COST_PERIOD                    :{BLACK}维护成本：{GOLD}{CURRENCY_SHORT}/周期
 
@@ -2808,7 +2785,6 @@ STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}选择�
 
 # Rail waypoint construction window
 STR_WAYPOINT_CAPTION                                            :{WHITE}路点
-STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}选择路点类型
 
 # Rail station construction window
 STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}火车站选单
@@ -2821,8 +2797,23 @@ STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}选择�
 STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}拖动模式
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}使用拖动模式建设车站
 
-STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}选择一个要显示车站类型
-STR_STATION_BUILD_STATION_TYPE_TOOLTIP                          :{BLACK}选择要建造的车站类型
+STR_PICKER_MODE_ALL                                             :全部
+STR_PICKER_MODE_ALL_TOOLTIP                                     :切换为显示所有类别中的项目
+STR_PICKER_MODE_USED                                            :已使用
+STR_PICKER_MODE_USED_TOOLTIP                                    :切换为仅显示现有的项目
+STR_PICKER_MODE_SAVED                                           :已保存
+STR_PICKER_MODE_SAVED_TOOLTIP                                   :切换为仅显示已保存的项目
+
+STR_PICKER_STATION_CLASS_TOOLTIP                                :选择显示的车站类别
+STR_PICKER_STATION_TYPE_TOOLTIP                                 :选择建造的车站类型。按住 <Ctrl> 键操作以保存或删除当前项目
+STR_PICKER_WAYPOINT_CLASS_TOOLTIP                               :选择显示的路点类别
+STR_PICKER_WAYPOINT_TYPE_TOOLTIP                                :选择要建造的路点类型。按住<Ctrl>键以添加或删除已保存的项目。
+STR_PICKER_ROADSTOP_BUS_CLASS_TOOLTIP                           :选择显示的公共汽车站类别
+STR_PICKER_ROADSTOP_BUS_TYPE_TOOLTIP                            :选择建造的公共汽车站类型。按住 <Ctrl> 键操作以保存或删除当前项目
+STR_PICKER_ROADSTOP_TRUCK_CLASS_TOOLTIP                         :选择显示的汽车货场类别
+STR_PICKER_ROADSTOP_TRUCK_TYPE_TOOLTIP                          :选择建造的汽车货场类型。按住 <Ctrl> 键操作以保存或删除当前项目
+STR_PICKER_OBJECT_CLASS_TOOLTIP                                 :选择显示的物件类别
+STR_PICKER_OBJECT_TYPE_TOOLTIP                                  :选择建造的物件类型。按住 <Ctrl> 键选择物件以保存或删除当前项目。按住 <Ctrl> 键拖拽以沿对角线放置，按住 <Shift> 键以显示预计费用
 
 STR_STATION_CLASS_DFLT                                          :默认
 STR_STATION_CLASS_DFLT_STATION                                  :默认车站
@@ -2965,8 +2956,6 @@ STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}购买�
 
 # Object construction window
 STR_OBJECT_BUILD_CAPTION                                        :{WHITE}物体选单
-STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}选择要建设的物体。按住 <Ctrl> 键以沿对角线建设，按住 <Shift> 键操作以显示预计成本。
-STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}选择要建造的物件类型
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}物件预览
 STR_OBJECT_BUILD_SIZE                                           :{BLACK}大小: {GOLD}{NUM} x {NUM} 格
 
@@ -3064,7 +3053,7 @@ STR_INDUSTRY_DISPLAY_CHAIN_TOOLTIP                              :{BLACK}显示�
 STR_INDUSTRY_CARGOES_NOTIFY_SMALLMAP                            :{BLACK}在缩略地图显示
 STR_INDUSTRY_CARGOES_NOTIFY_SMALLMAP_TOOLTIP                    :{BLACK}将该产业链的工业显示在缩略地图中
 STR_INDUSTRY_CARGOES_SELECT_CARGO                               :{BLACK}选择货物
-STR_INDUSTRY_CARGOES_SELECT_CARGO_TOOLTIP                       :{BLACK}选择需要显示的货物
+STR_INDUSTRY_CARGOES_SELECT_CARGO_TOOLTIP                       :{BLACK}选择显示的货物
 STR_INDUSTRY_CARGOES_SELECT_INDUSTRY                            :{BLACK}选择工业
 STR_INDUSTRY_CARGOES_SELECT_INDUSTRY_TOOLTIP                    :{BLACK}选择需要显示的工业
 
@@ -3393,10 +3382,13 @@ STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}确定�
 STR_GENERATION_PROGRESS                                         :{WHITE}已完成 {NUM}%
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
 STR_GENERATION_WORLD_GENERATION                                 :{BLACK}地图生成
+STR_GENERATION_LANDSCAPE_GENERATION                             :{BLACK}景观生成
 STR_GENERATION_RIVER_GENERATION                                 :{BLACK}生成河流
-STR_GENERATION_TREE_GENERATION                                  :{BLACK}生成树木
-STR_GENERATION_OBJECT_GENERATION                                :{BLACK}生成固定设施
 STR_GENERATION_CLEARING_TILES                                   :{BLACK}生成岩石地貌
+STR_GENERATION_TOWN_GENERATION                                  :{BLACK}城镇生成
+STR_GENERATION_INDUSTRY_GENERATION                              :{BLACK}工业生成
+STR_GENERATION_OBJECT_GENERATION                                :{BLACK}生成固定设施
+STR_GENERATION_TREE_GENERATION                                  :{BLACK}生成树木
 STR_GENERATION_SETTINGUP_GAME                                   :{BLACK}设置游戏
 STR_GENERATION_PREPARING_TILELOOP                               :{BLACK}地貌细节生成
 STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}当前脚本
@@ -3488,7 +3480,9 @@ STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_ROAD_TYPE                  :道路类型
 STR_NEWGRF_INSPECT_QUERY_CAPTION                                :{WHITE}NewGRF variable 60+x 参数 (十六进制)
 
 # Sprite aligner window
+STR_SPRITE_ALIGNER_CAPTION_NO_ACTION                            :{WHITE}对齐中的 Sprite：({STRING}:{NUM})
 STR_SPRITE_ALIGNER_CAPTION_ACTIONA                              :{WHITE}对齐中的 Sprite：Action 0xA, {COMMA} ({STRING}:{NUM})
+STR_SPRITE_ALIGNER_CAPTION_ACTION5                              :{WHITE}对齐中的 Sprite：Action 0x5, 类别 {HEX}, {COMMA} ({STRING}:{NUM})
 STR_SPRITE_ALIGNER_NEXT_BUTTON                                  :{BLACK}下一个 sprite
 STR_SPRITE_ALIGNER_NEXT_TOOLTIP                                 :{BLACK}继续处理下个正常的图形元素，略过任何虚位／重新着色／文字字型相关的图形元素；并且在处理到最后的图形元素后，返回第一个图形元素继续处理。
 STR_SPRITE_ALIGNER_GOTO_BUTTON                                  :{BLACK}前往 sprite
@@ -3497,6 +3491,7 @@ STR_SPRITE_ALIGNER_PREVIOUS_BUTTON                              :{BLACK}上一�
 STR_SPRITE_ALIGNER_PREVIOUS_TOOLTIP                             :{BLACK}继续处理上一个正常的图形元素，略过任何虚位／重新着色／文字字型相关的图形元素；并且在处理到第一个图形元素后，返回最后的图形元素继续处理。
 STR_SPRITE_ALIGNER_SPRITE_TOOLTIP                               :{BLACK}显示目前选取的 sprite。当 sprite 正在描绘时会忽略其定位。
 STR_SPRITE_ALIGNER_MOVE_TOOLTIP                                 :{BLACK}从 X 及 Y 座标方向移动图形元素。如按住 Ctrl 键再点击，可一次移动 8 个单位
+STR_SPRITE_ALIGNER_SPRITE                                       :{STRING}:{NUM}
 
 ###length 2
 STR_SPRITE_ALIGNER_CENTRE_OFFSET                                :{BLACK}偏移居中
@@ -3743,7 +3738,7 @@ STR_STORY_BOOK_INVALID_GOAL_REF                                 :{RED}无效的�
 # Station list window
 STR_STATION_LIST_TOOLTIP                                        :{BLACK}车站名称 - 点选名称以将屏幕中心移动到车站的位置。按住 <Ctrl> 键点选会在新视点中显示车站位置。
 STR_STATION_LIST_USE_CTRL_TO_SELECT_MORE                        :{BLACK}按住 <Ctrl> 键点选以选择多个项目
-STR_STATION_LIST_CAPTION                                        :{WHITE}{COMPANY} - {COMMA} 车站
+STR_STATION_LIST_CAPTION                                        :{WHITE}{COMPANY} - 车站 {COMMA} 座
 STR_STATION_LIST_STATION                                        :{YELLOW}{STATION} {STATION_FEATURES}
 STR_STATION_LIST_WAYPOINT                                       :{YELLOW}{WAYPOINT}
 STR_STATION_LIST_NONE                                           :{YELLOW}- 没有 -
@@ -3901,7 +3896,7 @@ STR_COMPANY_VIEW_VIEW_HQ_BUTTON                                 :{BLACK}查看�
 STR_COMPANY_VIEW_VIEW_HQ_TOOLTIP                                :{BLACK}查看公司总部
 STR_COMPANY_VIEW_RELOCATE_HQ                                    :{BLACK}重置总部
 STR_COMPANY_VIEW_RELOCATE_COMPANY_HEADQUARTERS                  :{BLACK}以公司市值 1% 的代价重建总部，按住 <Shift> 键单击可以显示所需资金。
-STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON                          :{BLACK}固定资产维护费明细
+STR_COMPANY_VIEW_INFRASTRUCTURE_BUTTON                          :{BLACK}基建详情
 STR_COMPANY_VIEW_INFRASTRUCTURE_TOOLTIP                         :{BLACK}显示详细的设施情况
 STR_COMPANY_VIEW_GIVE_MONEY_BUTTON                              :{BLACK}给予资金
 STR_COMPANY_VIEW_GIVE_MONEY_TOOLTIP                             :{BLACK}给予该公司资金
@@ -3944,12 +3939,12 @@ STR_INDUSTRY_DIRECTORY_NONE                                     :{ORANGE}- 没�
 STR_INDUSTRY_DIRECTORY_ITEM_INFO                                :{BLACK}{CARGO_LONG}{STRING}{YELLOW}（{COMMA}% 已运输）{BLACK}
 STR_INDUSTRY_DIRECTORY_ITEM_NOPROD                              :{ORANGE}{INDUSTRY}
 STR_INDUSTRY_DIRECTORY_ITEM_PROD1                               :{ORANGE}{INDUSTRY} {STRING}
-STR_INDUSTRY_DIRECTORY_ITEM_PROD2                               :{ORANGE}{INDUSTRY} {STRING}, {STRING}
-STR_INDUSTRY_DIRECTORY_ITEM_PROD3                               :{ORANGE}{INDUSTRY} {STRING}, {STRING}, {STRING}
+STR_INDUSTRY_DIRECTORY_ITEM_PROD2                               :{ORANGE}{INDUSTRY} {STRING}、{STRING}
+STR_INDUSTRY_DIRECTORY_ITEM_PROD3                               :{ORANGE}{INDUSTRY} {STRING}、{STRING}、{STRING}
 STR_INDUSTRY_DIRECTORY_ITEM_PRODMORE                            :{ORANGE}{INDUSTRY} {STRING}、{STRING}、{STRING}……（尚有 {NUM} 个未显示）
 STR_INDUSTRY_DIRECTORY_LIST_CAPTION                             :{BLACK}工业名称 - 点选名称以将屏幕中心移动到当前工业的位置。按住 <Ctrl> 键点选会在新视点中显示工业位置。
-STR_INDUSTRY_DIRECTORY_ACCEPTED_CARGO_FILTER                    :{BLACK}接受的货物：{SILVER}{STRING}
-STR_INDUSTRY_DIRECTORY_PRODUCED_CARGO_FILTER                    :{BLACK}产出的货物：{SILVER}{STRING}
+STR_INDUSTRY_DIRECTORY_ACCEPTED_CARGO_FILTER                    :{BLACK}接受货物：{SILVER}{STRING}
+STR_INDUSTRY_DIRECTORY_PRODUCED_CARGO_FILTER                    :{BLACK}产出货物：{SILVER}{STRING}
 STR_INDUSTRY_DIRECTORY_FILTER_ALL_TYPES                         :所有货物类型
 STR_INDUSTRY_DIRECTORY_FILTER_NONE                              :无
 
@@ -5283,6 +5278,10 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}请改�
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET                             :{WHITE}暂时沒有可用的载具
 STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}在{DATE_SHORT}后开始新游戏，或使用一款能提供早期载具的NewGRF
 
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL                    :{WHITE}没有可用的城镇道路类型
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_AT_ALL_EXPLANATION        :{WHITE}请改动您的 NewGRF 设置
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET                       :{WHITE}目前没有可用的城镇道路类型
+STR_ERROR_NO_TOWN_ROADTYPES_AVAILABLE_YET_EXPLANATION           :{WHITE}在 {DATE_SHORT} 后开始新游戏，或使用一款能提供早期城镇可建造的道路类型的NewGRF
 
 # Specific vehicle errors
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}不能让列车冒险通过信号...
@@ -5834,6 +5833,7 @@ STR_JUST_DATE_ISO                                               :{DATE_ISO}
 STR_JUST_STRING                                                 :{STRING}
 STR_JUST_STRING1                                                :{STRING}
 STR_JUST_STRING2                                                :{STRING}
+STR_JUST_STRING4                                                :{STRING}
 STR_JUST_STRING_STRING                                          :{STRING}{STRING}
 STR_JUST_RAW_STRING                                             :{STRING}
 STR_JUST_BIG_RAW_STRING                                         :{BIG_FONT}{STRING}

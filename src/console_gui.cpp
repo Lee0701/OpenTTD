@@ -116,6 +116,7 @@ struct IConsoleWindow : Window
 	static size_t scroll;
 	int line_height;   ///< Height of one line of text in the console.
 	int line_offset;
+	int cursor_width;
 	GUITimer truncate_timer;
 
 	IConsoleWindow() : Window(&_console_window_desc)
@@ -131,6 +132,7 @@ struct IConsoleWindow : Window
 	{
 		this->line_height = GetCharacterHeight(FS_NORMAL) + WidgetDimensions::scaled.hsep_normal;
 		this->line_offset = GetStringBoundingBox("] ").width + WidgetDimensions::scaled.frametext.left;
+		this->cursor_width = GetCharacterWidth(FS_NORMAL, '_');
 	}
 
 	void Close([[maybe_unused]] int data = 0) override
@@ -147,11 +149,11 @@ struct IConsoleWindow : Window
 	void Scroll(int amount)
 	{
 		if (amount < 0) {
-			size_t namount = (size_t) -amount;
+			size_t namount = static_cast<size_t>(-amount);
 			IConsoleWindow::scroll = (namount > IConsoleWindow::scroll) ? 0 : IConsoleWindow::scroll - namount;
 		} else {
 			assert(this->height >= 0 && this->line_height > 0);
-			size_t visible_lines = (size_t)(this->height / this->line_height);
+			size_t visible_lines = static_cast<size_t>(this->height / this->line_height);
 			size_t max_scroll = (visible_lines > _iconsole_buffer.size()) ? 0 : _iconsole_buffer.size() + 1 - visible_lines;
 			IConsoleWindow::scroll = std::min<size_t>(IConsoleWindow::scroll + amount, max_scroll);
 		}
@@ -171,7 +173,7 @@ struct IConsoleWindow : Window
 			if (ypos < 0) break;
 		}
 		/* If the text is longer than the window, don't show the starting ']' */
-		int delta = this->width - this->line_offset - _iconsole_cmdline.pixels - ICON_RIGHT_BORDERWIDTH;
+		int delta = this->width - WidgetDimensions::scaled.frametext.right - cursor_width - this->line_offset - _iconsole_cmdline.pixels - ICON_RIGHT_BORDERWIDTH;
 		if (delta > 0) {
 			DrawString(WidgetDimensions::scaled.frametext.left, right, this->height - this->line_height, "]", (TextColour)CC_COMMAND, SA_LEFT | SA_FORCE);
 			delta = 0;
@@ -192,7 +194,7 @@ struct IConsoleWindow : Window
 		if (this->truncate_timer.CountElapsed(delta_ms) == 0) return;
 
 		assert(this->height >= 0 && this->line_height > 0);
-		size_t visible_lines = (size_t)(this->height / this->line_height);
+		size_t visible_lines = static_cast<size_t>(this->height / this->line_height);
 
 		if (TruncateBuffer() && IConsoleWindow::scroll + visible_lines > _iconsole_buffer.size()) {
 			size_t max_scroll = (visible_lines > _iconsole_buffer.size()) ? 0 : _iconsole_buffer.size() + 1 - visible_lines;

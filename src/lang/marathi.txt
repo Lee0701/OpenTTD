@@ -724,6 +724,7 @@ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :अन्य
 
 
 
+
 # Custom currency window
 
 
@@ -952,6 +953,8 @@ STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_ACTIONS              :सर्व �
 
 
 
+###length 3
+
 ###setting-zero-is-special
 
 
@@ -1027,7 +1030,6 @@ STR_CONFIG_SETTING_STATUSBAR_POS                                :स्टेट
 ###length 3
 
 
-###length 2
 
 
 # Config errors
@@ -1135,8 +1137,6 @@ STR_NETWORK_CONNECTING_DOWNLOADING_2                            :{BLACK}{BYTES} 
 
 
 
-# Network set password
-
 # Network company info join/password
 
 # Network chat
@@ -1193,6 +1193,7 @@ STR_NETWORK_SERVER_MESSAGE                                      :*** {1:STRING}
 # Rail waypoint construction window
 
 # Rail station construction window
+
 
 
 

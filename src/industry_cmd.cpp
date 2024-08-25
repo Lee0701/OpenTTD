@@ -79,9 +79,9 @@ void ResetIndustries()
 	auto industry_insert = std::copy(std::begin(_origin_industry_specs), std::end(_origin_industry_specs), std::begin(_industry_specs));
 	std::fill(industry_insert, std::end(_industry_specs), IndustrySpec{});
 
-	for (IndustryType i = 0; i < lengthof(_origin_industry_specs); i++) {
-		/* Enable only the current climate industries */
-		_industry_specs[i].enabled = HasBit(_industry_specs[i].climate_availability, _settings_game.game_creation.landscape);
+	/* Enable only the current climate industries */
+	for (auto it = std::begin(_industry_specs); it != industry_insert; ++it) {
+		it->enabled = HasBit(it->climate_availability, _settings_game.game_creation.landscape);
 	}
 
 	auto industry_tile_insert = std::copy(std::begin(_origin_industry_tile_specs), std::end(_origin_industry_tile_specs), std::begin(_industry_tile_specs));
@@ -437,7 +437,7 @@ static void AddAcceptedCargo_Industry(TileIndex tile, CargoArray &acceptance, Ca
 		uint16_t res = GetIndustryTileCallback(CBID_INDTILE_ACCEPT_CARGO, 0, 0, gfx, Industry::GetByTile(tile), tile);
 		if (res != CALLBACK_FAILED) {
 			accepts_cargo.fill(INVALID_CARGO);
-			for (uint i = 0; i < 3; i++) accepts_cargo[i] = GetCargoTranslation(GB(res, i * 5, 5), itspec->grf_prop.grffile);
+			for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_INPUTS; i++) accepts_cargo[i] = GetCargoTranslation(GB(res, i * 5, 5), itspec->grf_prop.grffile);
 		}
 	}
 
@@ -446,7 +446,7 @@ static void AddAcceptedCargo_Industry(TileIndex tile, CargoArray &acceptance, Ca
 		uint16_t res = GetIndustryTileCallback(CBID_INDTILE_CARGO_ACCEPTANCE, 0, 0, gfx, Industry::GetByTile(tile), tile);
 		if (res != CALLBACK_FAILED) {
 			cargo_acceptance.fill(0);
-			for (uint i = 0; i < 3; i++) cargo_acceptance[i] = GB(res, i * 4, 4);
+			for (uint i = 0; i < INDUSTRY_ORIGINAL_NUM_INPUTS; i++) cargo_acceptance[i] = GB(res, i * 4, 4);
 		}
 	}
 
@@ -1208,12 +1208,12 @@ static void ProduceIndustryGoods(Industry *i)
 	/* play a sound? */
 	if ((i->counter & 0x3F) == 0) {
 		uint32_t r;
-		if (Chance16R(1, 14, r) && indsp->number_of_sounds != 0 && _settings_client.sound.ambient) {
+		if (Chance16R(1, 14, r) && !indsp->random_sounds.empty()  && _settings_client.sound.ambient) {
 			for (size_t j = 0; j < std::size(i->last_month_production); j++) {
 				if (i->last_month_production[j] > 0) {
 					/* Play sound since last month had production */
 					SndPlayTileFx(
-						(SoundFx)(indsp->random_sounds[((r >> 16) * indsp->number_of_sounds) >> 16]),
+						static_cast<SoundFx>(indsp->random_sounds[((r >> 16) * indsp->random_sounds.size()) >> 16]),
 						i->location.tile);
 					break;
 				}
@@ -1745,7 +1745,7 @@ static CommandCost CheckIfFarEnoughFromConflictingIndustry(TileIndex tile, int t
 
 	/* On a large map with many industries, it may be faster to check an area. */
 	static const int dmax = 14;
-	if (Industry::GetNumItems() > (size_t) (dmax * dmax * 2)) {
+	if (Industry::GetNumItems() > static_cast<size_t>(dmax * dmax * 2)) {
 		const Industry *i = nullptr;
 		TileArea tile_area = TileArea(tile, 1, 1).Expand(dmax);
 		for (TileIndex atile : tile_area) {
@@ -3236,13 +3236,6 @@ bool IndustrySpec::UsesOriginalEconomy() const
 	return _settings_game.economy.type == ET_ORIGINAL ||
 		HasBit(this->callback_mask, CBM_IND_PRODUCTION_256_TICKS) || HasBit(this->callback_mask, CBM_IND_PRODUCTION_CARGO_ARRIVAL) || // production callbacks
 		HasBit(this->callback_mask, CBM_IND_MONTHLYPROD_CHANGE) || HasBit(this->callback_mask, CBM_IND_PRODUCTION_CHANGE) || HasBit(this->callback_mask, CBM_IND_PROD_CHANGE_BUILD); // production change callbacks
-}
-
-IndustrySpec::~IndustrySpec()
-{
-	if (HasBit(this->cleanup_flag, CLEAN_RANDOMSOUNDS)) {
-		free(this->random_sounds);
-	}
 }
 
 static CommandCost TerraformTile_Industry(TileIndex tile, DoCommandFlag flags, int z_new, Slope tileh_new)
