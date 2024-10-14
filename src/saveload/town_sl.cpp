@@ -128,18 +128,22 @@ static const SaveLoad _town_desc[] = {
 	SLE_CONDSTR(Town, name,                  SLE_STR | SLF_ALLOW_CONTROL, 0, 84, SL_MAX_VERSION),
 
 	    SLE_VAR(Town, flags,                 SLE_UINT8),
-	SLE_CONDVAR(Town, statues,               SLE_FILE_U8  | SLE_VAR_U16, 0, 103),
-	SLE_CONDVAR(Town, statues,               SLE_UINT16,               104, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U8  | SLE_VAR_U64, 0, 103),
+	SLE_CONDVAR(Town, statues.data,          SLE_FILE_U16 | SLE_VAR_U64, 104, 195),
+	SLE_CONDARR(Town, statues.data,          SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
 
 	SLE_CONDNULL(1, 0, 1),                   ///< sort_index, no longer in use
 
-	SLE_CONDVAR(Town, have_ratings,          SLE_FILE_U8  | SLE_VAR_U16, 0, 103),
-	SLE_CONDVAR(Town, have_ratings,          SLE_UINT16,               104, SL_MAX_VERSION),
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U8  | SLE_VAR_U64, 0, 103),
+	SLE_CONDVAR(Town, have_ratings.data,     SLE_FILE_U16 | SLE_VAR_U64, 104, 195),
+	SLE_CONDARR(Town, have_ratings.data,     SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
 	SLE_CONDARR(Town, ratings,               SLE_INT16, 8,               0, 103),
-	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, 104, SL_MAX_VERSION),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, OLD_MAX_COMPANIES, 104, 195),
+	SLE_CONDARR(Town, ratings,               SLE_INT16, MAX_COMPANIES, 196, SL_MAX_VERSION),
 	/* failed bribe attempts are stored since savegame format 4 */
 	SLE_CONDARR(Town, unwanted,              SLE_INT8,  8,               4, 103),
-	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, 104, SL_MAX_VERSION),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  OLD_MAX_COMPANIES, 104, 195),
+	SLE_CONDARR(Town, unwanted,              SLE_INT8,  MAX_COMPANIES, 196, SL_MAX_VERSION),
 
 	SLE_CONDVAR(Town, supplied[CT_PASSENGERS].old_max, SLE_FILE_U16 | SLE_VAR_U32, 0, 8),
 	SLE_CONDVAR(Town, supplied[CT_MAIL].old_max,       SLE_FILE_U16 | SLE_VAR_U32, 0, 8),

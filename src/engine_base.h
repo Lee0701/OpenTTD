@@ -119,7 +119,7 @@ struct Engine : EnginePool::PoolItem<&_engine_pool> {
 	 */
 	inline bool IsHidden(CompanyByte c) const
 	{
-		return c < MAX_COMPANIES && HasBit(this->company_hidden, c);
+		return c < MAX_COMPANIES && this->company_hidden.at(c);
 	}
 
 	/**

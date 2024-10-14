@@ -692,7 +692,7 @@ static CommandCost BuildStationPart(Station **st, DoCommandFlag flags, bool reus
 			(*st)->string_id = GenerateStationName(*st, area.tile, name_class);
 
 			if (Company::IsValidID(_current_company)) {
-				SetBit((*st)->town->have_ratings, _current_company);
+				(*st)->town->have_ratings.set(_current_company);
 			}
 		}
 	}
@@ -3338,7 +3338,7 @@ static void UpdateStationRating(Station *st)
 				(rating += 10, true);
 			}
 
-			if (Company::IsValidID(st->owner) && HasBit(st->town->statues, st->owner)) rating += 26;
+			if (Company::IsValidID(st->owner) && st->town->statues.at(st->owner)) rating += 26;
 
 			byte age = ge->last_age;
 			(age >= 3) ||

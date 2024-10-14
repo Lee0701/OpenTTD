@@ -174,7 +174,7 @@ static inline Owner GetTileOwner(TileIndex tile)
 	assert(!IsTileType(tile, MP_HOUSE));
 	assert(!IsTileType(tile, MP_INDUSTRY));
 
-	return (Owner)GB(_m[tile].m1, 0, 5);
+	return (Owner)((_m[tile].m1 & 0x9F) | ((_me[tile].m6 & 0x03) << 5));
 }
 
 /**
@@ -194,7 +194,8 @@ static inline void SetTileOwner(TileIndex tile, Owner owner)
 	assert(!IsTileType(tile, MP_HOUSE));
 	assert(!IsTileType(tile, MP_INDUSTRY));
 
-	SB(_m[tile].m1, 0, 5, owner);
+	_m[tile].m1 = (_m[tile].m1 & (~0x9F)) | (owner & 0x9F);
+	_me[tile].m6 = (_me[tile].m6 & (~0x03)) | ((owner & 0x60) >> 5);
 }
 
 /**

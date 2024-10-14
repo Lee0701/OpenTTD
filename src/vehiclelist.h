@@ -34,8 +34,8 @@ struct VehicleListIdentifier {
 	CompanyID company;    ///< The company associated with this list.
 	uint32 index;         ///< A vehicle list type specific index.
 
-	uint32 Pack() const;
-	bool Unpack(uint32 data);
+	uint64 Pack() const;
+	bool Unpack(uint64 data);
 
 	/**
 	 * Create a simple vehicle list.
@@ -47,7 +47,7 @@ struct VehicleListIdentifier {
 	VehicleListIdentifier(VehicleListType type, VehicleType vtype, CompanyID company, uint index = 0) :
 		type(type), vtype(vtype), company(company), index(index) {}
 
-	VehicleListIdentifier(uint32 data = 0);
+	VehicleListIdentifier(uint64 data = 0);
 };
 
 /** A list of vehicles. */

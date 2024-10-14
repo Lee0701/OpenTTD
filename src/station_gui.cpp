@@ -625,7 +625,7 @@ public:
 	{
 		if (_pause_mode != PM_UNPAUSED) return;
 		if (this->stations.NeedResort()) {
-			DEBUG(misc, 3, "Periodic rebuild station list company %d", this->window_number);
+			DEBUG(misc, 3, "Periodic rebuild station list company %lld", this->window_number);
 			this->SetDirty();
 		}
 	}

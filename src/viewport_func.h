@@ -34,7 +34,7 @@ void MarkAllViewportsDirty(int left, int top, int right, int bottom);
 bool DoZoomInOutWindow(ZoomStateChange how, Window *w);
 void ZoomInOrOutToCursorWindow(bool in, Window * w);
 Point GetTileZoomCenterWindow(bool in, Window * w);
-void HandleZoomMessage(Window *w, const ViewPort *vp, byte widget_zoom_in, byte widget_zoom_out);
+void HandleZoomMessage(Window *w, const ViewPort *vp, int widget_zoom_in, int widget_zoom_out);
 
 /**
  * Zoom a viewport as far as possible in the given direction.

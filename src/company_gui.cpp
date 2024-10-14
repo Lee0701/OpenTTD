@@ -567,14 +567,6 @@ private:
 		const Livery *livery;
 		LiveryScheme scheme;
 
-		/* Disallow other company colours for the primary colour */
-		if (HasBit(this->sel, LS_DEFAULT) && widget == WID_SCL_PRI_COL_DROPDOWN) {
-			const Company *c;
-			FOR_ALL_COMPANIES(c) {
-				if (c->index != _local_company) SetBit(used_colours, c->colour);
-			}
-		}
-
 		/* Get the first selected livery to use as the default dropdown item */
 		for (scheme = LS_BEGIN; scheme < LS_END; scheme++) {
 			if (HasBit(this->sel, scheme)) break;
@@ -1059,7 +1051,7 @@ class SelectCompanyManagerFaceWindow : public Window
 	 * @param val            the value which will be draw
 	 * @param is_bool_widget is it a bool button
 	 */
-	void DrawFaceStringLabel(byte widget_index, uint8 val, bool is_bool_widget) const
+	void DrawFaceStringLabel(int widget_index, uint8 val, bool is_bool_widget) const
 	{
 		StringID str;
 		const NWidgetCore *nwi_widget = this->GetWidget<NWidgetCore>(widget_index);

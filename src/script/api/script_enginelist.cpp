@@ -19,6 +19,6 @@ ScriptEngineList::ScriptEngineList(ScriptVehicle::VehicleType vehicle_type)
 {
 	Engine *e;
 	FOR_ALL_ENGINES_OF_TYPE(e, (::VehicleType)vehicle_type) {
-		if (ScriptObject::GetCompany() == OWNER_DEITY || HasBit(e->company_avail, ScriptObject::GetCompany())) this->AddItem(e->index);
+		if (ScriptObject::GetCompany() == OWNER_DEITY || e->company_avail.at(ScriptObject::GetCompany())) this->AddItem(e->index);
 	}
 }

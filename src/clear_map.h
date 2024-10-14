@@ -262,13 +262,13 @@ static inline void MakeClear(TileIndex t, ClearGround g, uint density)
 {
 	SetTileType(t, MP_CLEAR);
 	_m[t].m1 = 0;
-	SetTileOwner(t, OWNER_NONE);
 	_m[t].m2 = 0;
 	_m[t].m3 = 0;
 	_m[t].m4 = 0 << 5 | 0 << 2;
 	SetClearGroundDensity(t, g, density); // Sets m5
 	_me[t].m6 = 0;
 	_me[t].m7 = 0;
+	SetTileOwner(t, OWNER_NONE);
 }
 
 

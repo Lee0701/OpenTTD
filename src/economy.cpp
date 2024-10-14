@@ -372,12 +372,12 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	FOR_ALL_TOWNS(t) {
 		/* If a company takes over, give the ratings to that company. */
 		if (new_owner != INVALID_OWNER) {
-			if (HasBit(t->have_ratings, old_owner)) {
-				if (HasBit(t->have_ratings, new_owner)) {
+			if (t->have_ratings.at(old_owner)) {
+				if (t->have_ratings.at(new_owner)) {
 					/* use max of the two ratings. */
 					t->ratings[new_owner] = max(t->ratings[new_owner], t->ratings[old_owner]);
 				} else {
-					SetBit(t->have_ratings, new_owner);
+					t->have_ratings.set(new_owner);
 					t->ratings[new_owner] = t->ratings[old_owner];
 				}
 			}
@@ -385,7 +385,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 
 		/* Reset the ratings for the old owner */
 		t->ratings[old_owner] = RATING_INITIAL;
-		ClrBit(t->have_ratings, old_owner);
+		t->have_ratings.reset(old_owner);
 
 		/* Transfer exclusive rights */
 		if (t->exclusive_counter > 0 && t->exclusivity == old_owner) {
@@ -573,7 +573,7 @@ static void CompanyCheckBankrupt(Company *c)
 	/*  If the company has money again, it does not go bankrupt */
 	if (c->money - c->current_loan >= -_economy.max_loan) {
 		c->months_of_bankruptcy = 0;
-		c->bankrupt_asked = 0;
+		c->bankrupt_asked.reset();
 		return;
 	}
 
@@ -612,7 +612,8 @@ static void CompanyCheckBankrupt(Company *c)
 			Money val = CalculateCompanyValue(c, false);
 
 			c->bankrupt_value = val;
-			c->bankrupt_asked = 1 << c->index; // Don't ask the owner
+			c->bankrupt_asked.reset();
+			c->bankrupt_asked.set(c->index, true); // Don't ask the owner
 			c->bankrupt_timeout = 0;
 
 			/* The company assets should always have some value */
@@ -629,7 +630,7 @@ static void CompanyCheckBankrupt(Company *c)
 				 * is no THE-END, otherwise mark the client as spectator to make sure
 				 * he/she is no long in control of this company. However... when you
 				 * join another company (cheat) the "unowned" company can bankrupt. */
-				c->bankrupt_asked = MAX_UVALUE(CompanyMask);
+				c->bankrupt_asked.set();
 				break;
 			}
 
@@ -2099,7 +2100,7 @@ CommandCost CmdBuyCompany(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 	if (c == NULL) return CMD_ERROR;
 
 	/* Disable takeovers when not asked */
-	if (!HasBit(c->bankrupt_asked, _current_company)) return CMD_ERROR;
+	if (!c->bankrupt_asked.at(_current_company)) return CMD_ERROR;
 
 	/* Disable taking over the local company in single player */
 	if (!_networking && _local_company == c->index) return CMD_ERROR;

@@ -55,6 +55,7 @@ enum CargoPaymentRatesWidgets {
 /** Widget of the #CompanyLeagueWindow class. */
 enum CompanyLeagueWidgets {
 	WID_CL_BACKGROUND, ///< Background of the window.
+	WID_CL_SCROLLBAR,
 };
 
 /** Widget of the #PerformanceRatingDetailWindow class. */

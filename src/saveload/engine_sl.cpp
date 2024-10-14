@@ -34,13 +34,16 @@ static const SaveLoad _engine_desc[] = {
 	SLE_CONDNULL(1,                                                        0, 120),
 	     SLE_VAR(Engine, flags,               SLE_UINT8),
 	SLE_CONDNULL(1,                                                        0, 178), // old preview_company_rank
-	 SLE_CONDVAR(Engine, preview_asked,       SLE_UINT16,                179, SL_MAX_VERSION),
+	 SLE_CONDVAR(Engine, preview_asked.data,  SLE_FILE_U16 | SLE_VAR_U64,  179, 195),
+	 SLE_CONDARR(Engine, preview_asked.data,  SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
 	 SLE_CONDVAR(Engine, preview_company,     SLE_UINT8,                 179, SL_MAX_VERSION),
 	     SLE_VAR(Engine, preview_wait,        SLE_UINT8),
 	SLE_CONDNULL(1,                                                        0,  44),
-	 SLE_CONDVAR(Engine, company_avail,       SLE_FILE_U8  | SLE_VAR_U16,  0, 103),
-	 SLE_CONDVAR(Engine, company_avail,       SLE_UINT16,                104, SL_MAX_VERSION),
-	 SLE_CONDVAR(Engine, company_hidden,      SLE_UINT16,                193, SL_MAX_VERSION),
+	 SLE_CONDVAR(Engine, company_avail.data,  SLE_FILE_U8  | SLE_VAR_U64,  0, 103),
+	 SLE_CONDVAR(Engine, company_avail.data,  SLE_FILE_U16 | SLE_VAR_U64,  104, 195),
+	 SLE_CONDARR(Engine, company_avail.data,  SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
+	 SLE_CONDVAR(Engine, company_hidden.data, SLE_FILE_U16 | SLE_VAR_U64,  193, 195),
+	 SLE_CONDARR(Engine, company_hidden.data, SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
 	 SLE_CONDSTR(Engine, name,                SLE_STR, 0,                 84, SL_MAX_VERSION),
 
 	SLE_CONDNULL(16,                                                       2, 143), // old reserved space
@@ -110,7 +113,7 @@ static void Load_ENGN()
 			 * Just cancel any previews. */
 			e->flags &= ~4; // ENGINE_OFFER_WINDOW_OPEN
 			e->preview_company = INVALID_COMPANY;
-			e->preview_asked = (CompanyMask)-1;
+			e->preview_asked.set();
 		}
 	}
 }

@@ -18,23 +18,32 @@
  * Enum for all companies/owners.
  */
 enum Owner {
+	OLD_MAX_COMPANIES   = 0x0F,
+	OLD_OWNER_TOWN      = 0x0F,
+	OLD_OWNER_NONE      = 0x10,
+	OLD_OWNER_WATER     = 0x11,
+	OLD_OWNER_DEITY     = 0x12,
+	OLD_OWNER_END,
+
 	/* All companies below MAX_COMPANIES are playable
 	 * companies, above, they are special, computer controlled 'companies' */
+
 	OWNER_BEGIN     = 0x00, ///< First owner
 	COMPANY_FIRST   = 0x00, ///< First company, same as owner
-	MAX_COMPANIES   = 0x0F, ///< Maximum number of companies
-	OWNER_TOWN      = 0x0F, ///< A town owns the tile, or a town is expanding
-	OWNER_NONE      = 0x10, ///< The tile has no ownership
-	OWNER_WATER     = 0x11, ///< The tile/execution is done by "water"
-	OWNER_DEITY     = 0x12, ///< The object is owned by a superuser / goal script
+
+	MAX_COMPANIES   = 0xF0, ///< Maximum number of companies
+	OWNER_TOWN      = 0xF0, ///< A town owns the tile, or a town is expanding
+	OWNER_NONE      = 0xF1, ///< The tile has no ownership
+	OWNER_WATER     = 0xF2, ///< The tile/execution is done by "water"
+	OWNER_DEITY     = 0xF3, ///< The object is owned by a superuser / goal script
 	OWNER_END,              ///< Last + 1 owner
 	INVALID_OWNER   = 0xFF, ///< An invalid owner
 	INVALID_COMPANY = 0xFF, ///< An invalid company
 
 	/* 'Fake' companies used for networks */
-	COMPANY_INACTIVE_CLIENT = 253, ///< The client is joining
-	COMPANY_NEW_COMPANY     = 254, ///< The client wants a new company
-	COMPANY_SPECTATOR       = 255, ///< The client is spectating
+	COMPANY_INACTIVE_CLIENT = 0xFD, ///< The client is joining
+	COMPANY_NEW_COMPANY     = 0xFE, ///< The client wants a new company
+	COMPANY_SPECTATOR       = 0xFF, ///< The client is spectating
 };
 DECLARE_POSTFIX_INCREMENT(Owner)
 
@@ -50,7 +59,8 @@ typedef TinyEnumT<Owner> OwnerByte;
 typedef Owner CompanyID;
 typedef OwnerByte CompanyByte;
 
-typedef uint16 CompanyMask;
+#include "core/bitmath_func.hpp"
+typedef Bitset<MAX_COMPANIES> CompanyMask;
 
 struct Company;
 typedef uint32 CompanyManagerFace; ///< Company manager face bits, info see in company_manager_face.h

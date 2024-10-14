@@ -201,13 +201,8 @@ static inline Owner GetRoadOwner(TileIndex t, RoadType rt)
 	assert(IsTileType(t, MP_ROAD) || IsTileType(t, MP_STATION) || IsTileType(t, MP_TUNNELBRIDGE));
 	switch (rt) {
 		default: NOT_REACHED();
-		case ROADTYPE_ROAD: return (Owner)GB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5);
-		case ROADTYPE_TRAM: {
-			/* Trams don't need OWNER_TOWN, and remapping OWNER_NONE
-			 * to OWNER_TOWN makes it use one bit less */
-			Owner o = (Owner)GB(_m[t].m3, 4, 4);
-			return o == OWNER_TOWN ? OWNER_NONE : o;
-		}
+		case ROADTYPE_ROAD: return (Owner)(IsNormalRoadTile(t) ? GetTileOwner(t) : ((_me[t].m7 & 0x1F) | (_m[t].m4 & 0xE0)));
+		case ROADTYPE_TRAM: return (Owner)(((_m[t].m3 & 0xF0) >> 4) | ((_m[t].m4 & 0x0F) << 4));
 	}
 }
 
@@ -221,8 +216,19 @@ static inline void SetRoadOwner(TileIndex t, RoadType rt, Owner o)
 {
 	switch (rt) {
 		default: NOT_REACHED();
-		case ROADTYPE_ROAD: SB(IsNormalRoadTile(t) ? _m[t].m1 : _me[t].m7, 0, 5, o); break;
-		case ROADTYPE_TRAM: SB(_m[t].m3, 4, 4, o == OWNER_NONE ? OWNER_TOWN : o); break;
+		case ROADTYPE_ROAD:
+			if (IsNormalRoadTile(t))
+				SetTileOwner(t, o);
+			else
+			{
+				_me[t].m7 = (_me[t].m7 & (~0x1F)) | (o & 0x1F);
+				_m[t].m4 = (_m[t].m4 & (~0xE0)) | (o & 0xE0);
+			}
+			break;
+		case ROADTYPE_TRAM:
+			_m[t].m3 = (_m[t].m3 & (~0xF0)) | (o << 4);
+			_m[t].m4 = (_m[t].m4 & (~0x0F)) | ((o & 0xF0) >> 4);
+			break;
 	}
 }
 
@@ -583,7 +589,8 @@ static inline void MakeRoadCrossing(TileIndex t, Owner road, Owner tram, Owner r
 	_m[t].m4 = 0;
 	_m[t].m5 = ROAD_TILE_CROSSING << 6 | roaddir;
 	SB(_me[t].m6, 2, 4, 0);
-	_me[t].m7 = rot << 6 | road;
+	_me[t].m7 = rot << 6;
+	SetRoadOwner(t, ROADTYPE_ROAD, road);
 	SetRoadOwner(t, ROADTYPE_TRAM, tram);
 }
 
@@ -604,7 +611,8 @@ static inline void MakeRoadDepot(TileIndex t, Owner owner, DepotID did, DiagDire
 	_m[t].m4 = 0;
 	_m[t].m5 = ROAD_TILE_DEPOT << 6 | dir;
 	SB(_me[t].m6, 2, 4, 0);
-	_me[t].m7 = RoadTypeToRoadTypes(rt) << 6 | owner;
+	_me[t].m7 = RoadTypeToRoadTypes(rt) << 6;
+	SetRoadOwner(t, ROADTYPE_ROAD, owner);
 	SetRoadOwner(t, ROADTYPE_TRAM, owner);
 }
 

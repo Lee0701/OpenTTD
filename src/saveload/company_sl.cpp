@@ -275,8 +275,9 @@ static const SaveLoad _company_desc[] = {
 	    SLE_VAR(CompanyProperties, num_valid_stat_ent,    SLE_UINT8),
 
 	    SLE_VAR(CompanyProperties, months_of_bankruptcy,  SLE_UINT8),
-	SLE_CONDVAR(CompanyProperties, bankrupt_asked,        SLE_FILE_U8  | SLE_VAR_U16,  0, 103),
-	SLE_CONDVAR(CompanyProperties, bankrupt_asked,        SLE_UINT16,                104, SL_MAX_VERSION),
+	SLE_CONDVAR(CompanyProperties, bankrupt_asked.data,   SLE_FILE_U8  | SLE_VAR_U64,  0, 103),
+	SLE_CONDVAR(CompanyProperties, bankrupt_asked.data,   SLE_FILE_U16 | SLE_VAR_U64,  104, 195),
+	SLE_CONDARR(CompanyProperties, bankrupt_asked.data,   SLE_UINT64, CompanyMask::bsize, 196, SL_MAX_VERSION),
 	    SLE_VAR(CompanyProperties, bankrupt_timeout,      SLE_INT16),
 	SLE_CONDVAR(CompanyProperties, bankrupt_value,        SLE_VAR_I64 | SLE_FILE_I32,  0, 64),
 	SLE_CONDVAR(CompanyProperties, bankrupt_value,        SLE_INT64,                  65, SL_MAX_VERSION),

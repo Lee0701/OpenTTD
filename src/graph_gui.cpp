@@ -29,11 +29,12 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 #include <math.h>
+#include <string>
 
 #include "safeguards.h"
 
 /* Bitmasks of company and cargo indices that shouldn't be drawn. */
-static uint _legend_excluded_companies;
+static Bitset<MAX_COMPANIES> _legend_excluded_companies;
 static uint _legend_excluded_cargo;
 
 /* Apparently these don't play well with enums. */
@@ -50,7 +51,7 @@ struct GraphLegendWindow : Window {
 		this->InitNested(window_number);
 
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!HasBit(_legend_excluded_companies, c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
+			if (!_legend_excluded_companies.at(c)) this->LowerWidget(c + WID_GL_FIRST_COMPANY);
 
 			this->OnInvalidateData(c);
 		}
@@ -71,14 +72,14 @@ struct GraphLegendWindow : Window {
 
 		SetDParam(0, cid);
 		SetDParam(1, cid);
-		DrawString(r.left + (rtl ? (uint)WD_FRAMERECT_LEFT : (d.width + 4)), r.right - (rtl ? (d.width + 4) : (uint)WD_FRAMERECT_RIGHT), r.top + (r.bottom - r.top + 1 - FONT_HEIGHT_NORMAL) / 2, STR_COMPANY_NAME_COMPANY_NUM, HasBit(_legend_excluded_companies, cid) ? TC_BLACK : TC_WHITE);
+		DrawString(r.left + (rtl ? (uint)WD_FRAMERECT_LEFT : (d.width + 4)), r.right - (rtl ? (d.width + 4) : (uint)WD_FRAMERECT_RIGHT), r.top + (r.bottom - r.top + 1 - FONT_HEIGHT_NORMAL) / 2, STR_COMPANY_NAME_COMPANY_NUM, _legend_excluded_companies.at(cid) ? TC_BLACK : TC_WHITE);
 	}
 
 	virtual void OnClick(Point pt, int widget, int click_count)
 	{
 		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
 
-		ToggleBit(_legend_excluded_companies, widget - WID_GL_FIRST_COMPANY);
+		_legend_excluded_companies.toggle(widget - WID_GL_FIRST_COMPANY);
 		this->ToggleWidgetLoweredState(widget);
 		this->SetDirty();
 		InvalidateWindowData(WC_INCOME_GRAPH, 0);
@@ -98,7 +99,7 @@ struct GraphLegendWindow : Window {
 		if (!gui_scope) return;
 		if (Company::IsValidID(data)) return;
 
-		SetBit(_legend_excluded_companies, data);
+		_legend_excluded_companies.set(data);
 		this->RaiseWidget(data + WID_GL_FIRST_COMPANY);
 	}
 };
@@ -166,15 +167,15 @@ struct ValuesInterval {
 
 struct BaseGraphWindow : Window {
 protected:
-	static const int GRAPH_MAX_DATASETS     =  32;
+	static const int GRAPH_MAX_DATASETS     =  (int)MAX_COMPANIES > (int)NUM_CARGO ? (int)MAX_COMPANIES : (int)NUM_CARGO;
 	static const int GRAPH_AXIS_LINE_COLOUR = PC_BLACK;
 	static const int GRAPH_NUM_MONTHS       =  24; ///< Number of months displayed in the graph.
 
 	static const int MIN_GRAPH_NUM_LINES_Y  =   9; ///< Minimal number of horizontal lines to draw.
 	static const int MIN_GRID_PIXEL_SIZE    =  20; ///< Minimum distance between graph lines.
 
-	uint excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
-	byte num_dataset;
+	Bitset<GRAPH_MAX_DATASETS> excluded_data; ///< bitmask of the datasets that shouldn't be displayed.
+	int num_dataset;
 	byte num_on_x_axis;
 	byte num_vert_lines;
 	static const TextColour graph_axis_label_colour = TC_BLACK; ///< colour of the graph axis label.
@@ -209,7 +210,7 @@ protected:
 		current_interval.lowest  = INT64_MAX;
 
 		for (int i = 0; i < this->num_dataset; i++) {
-			if (HasBit(this->excluded_data, i)) continue;
+			if (this->excluded_data.at(i)) continue;
 			for (int j = 0; j < this->num_on_x_axis; j++) {
 				OverflowSafeInt64 datapoint = this->cost[i][j];
 
@@ -413,7 +414,7 @@ protected:
 		uint pointoffs1 = (linewidth + 1) / 2;
 		uint pointoffs2 = linewidth + 1 - pointoffs1;
 		for (int i = 0; i < this->num_dataset; i++) {
-			if (!HasBit(this->excluded_data, i)) {
+			if (!this->excluded_data.at(i)) {
 				/* Centre the dot between the grid lines. */
 				x = r.left + (x_sep / 2);
 
@@ -561,11 +562,11 @@ public:
 	 */
 	void UpdateStatistics(bool initialize)
 	{
-		uint excluded_companies = _legend_excluded_companies;
+		Bitset<GRAPH_MAX_DATASETS> excluded_companies = _legend_excluded_companies;
 
 		/* Exclude the companies which aren't valid */
 		for (CompanyID c = COMPANY_FIRST; c < MAX_COMPANIES; c++) {
-			if (!Company::IsValidID(c)) SetBit(excluded_companies, c);
+			if (!Company::IsValidID(c)) excluded_companies.set(c);
 		}
 
 		byte nums = 0;
@@ -902,12 +903,12 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 
 	void UpdateExcludedData()
 	{
-		this->excluded_data = 0;
+		this->excluded_data.reset();
 
 		int i = 0;
 		const CargoSpec *cs;
 		FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
-			if (HasBit(_legend_excluded_cargo, cs->Index())) SetBit(this->excluded_data, i);
+			if (HasBit(_legend_excluded_cargo, cs->Index())) this->excluded_data.set(i);
 			i++;
 		}
 	}
@@ -915,7 +916,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	void UpdateLoweredWidgets()
 	{
 		for (int i = 0; i < _sorted_standard_cargo_specs_size; i++) {
-			this->SetWidgetLoweredState(WID_CPR_CARGO_FIRST + i, !HasBit(this->excluded_data, i));
+			this->SetWidgetLoweredState(WID_CPR_CARGO_FIRST + i, !this->excluded_data.at(i));
 		}
 	}
 
@@ -967,7 +968,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 			case WID_CPR_ENABLE_CARGOES:
 				/* Remove all cargoes from the excluded lists. */
 				_legend_excluded_cargo = 0;
-				this->excluded_data = 0;
+				this->excluded_data.reset();
 				this->UpdateLoweredWidgets();
 				this->SetDirty();
 				break;
@@ -978,7 +979,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 				const CargoSpec *cs;
 				FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
 					SetBit(_legend_excluded_cargo, cs->Index());
-					SetBit(this->excluded_data, i);
+					this->excluded_data.set(i);
 					i++;
 				}
 				this->UpdateLoweredWidgets();
@@ -1127,6 +1128,7 @@ static inline StringID GetPerformanceTitleFromValue(uint value)
 class CompanyLeagueWindow : public Window {
 private:
 	GUIList<const Company*> companies;
+	Scrollbar *vscroll;
 	uint ordinal_width; ///< The width of the ordinal number
 	uint text_width;    ///< The width of the actual text
 	uint icon_width;    ///< The width of the company icon
@@ -1159,7 +1161,10 @@ private:
 public:
 	CompanyLeagueWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
 	{
-		this->InitNested(window_number);
+		this->CreateNestedTree();
+		this->vscroll = this->GetScrollbar(WID_CL_SCROLLBAR);
+		this->FinishInitNested(window_number);
+
 		this->companies.ForceRebuild();
 		this->companies.NeedResort();
 	}
@@ -1169,6 +1174,7 @@ public:
 		this->BuildCompanyList();
 		this->companies.Sort(&PerformanceSorter);
 
+		this->vscroll->SetCount(this->companies.Length());
 		this->DrawWidgets();
 	}
 
@@ -1186,9 +1192,13 @@ public:
 		uint text_left     = rtl ? r.left + WD_FRAMERECT_LEFT : r.right - WD_FRAMERECT_LEFT - this->text_width;
 		uint text_right    = rtl ? r.left + WD_FRAMERECT_LEFT + this->text_width : r.right - WD_FRAMERECT_LEFT;
 
-		for (uint i = 0; i != this->companies.Length(); i++) {
+		uint count = min(this->vscroll->GetCapacity(), this->companies.Length());
+		for (uint i = this->vscroll->GetPosition(), t = i + count; i != t; i++) {
 			const Company *c = this->companies[i];
-			DrawString(ordinal_left, ordinal_right, y, i + STR_ORDINAL_NUMBER_1ST, i == 0 ? TC_WHITE : TC_YELLOW);
+			if (i + STR_ORDINAL_NUMBER_1ST <= STR_ORDINAL_NUMBER_15TH)
+				DrawString(ordinal_left, ordinal_right, y, i + STR_ORDINAL_NUMBER_1ST, i == 0 ? TC_WHITE : TC_YELLOW);
+			else
+				DrawString(ordinal_left, ordinal_right, y, (std::to_string(i + 1) + ".").c_str(), i == 0 ? TC_WHITE : TC_YELLOW);
 
 			DrawCompanyIcon(c->index, icon_left, y + icon_y_offset);
 
@@ -1206,7 +1216,10 @@ public:
 
 		this->ordinal_width = 0;
 		for (uint i = 0; i < MAX_COMPANIES; i++) {
-			this->ordinal_width = max(this->ordinal_width, GetStringBoundingBox(STR_ORDINAL_NUMBER_1ST + i).width);
+			if (i + STR_ORDINAL_NUMBER_1ST <= STR_ORDINAL_NUMBER_15TH)
+				this->ordinal_width = max(this->ordinal_width, GetStringBoundingBox(i + STR_ORDINAL_NUMBER_1ST).width);
+			else
+				this->ordinal_width = max(this->ordinal_width, GetStringBoundingBox((std::to_string(i + 1) + ".").c_str()).width);
 		}
 		this->ordinal_width += 5; // Keep some extra spacing
 
@@ -1234,10 +1247,15 @@ public:
 
 		this->text_width = widest_width + 30; // Keep some extra spacing
 
+		resize->height = this->line_height;
 		size->width = WD_FRAMERECT_LEFT + this->ordinal_width + WD_FRAMERECT_RIGHT + this->icon_width + WD_FRAMERECT_LEFT + this->text_width + WD_FRAMERECT_RIGHT;
-		size->height = WD_FRAMERECT_TOP + this->line_height * MAX_COMPANIES + WD_FRAMERECT_BOTTOM;
+		size->height = WD_FRAMERECT_TOP + this->line_height * OLD_MAX_COMPANIES + WD_FRAMERECT_BOTTOM;
 	}
 
+	virtual void OnResize()
+	{
+		this->vscroll->SetCapacityFromWidget(this, WID_CL_BACKGROUND, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM);
+	}
 
 	virtual void OnTick()
 	{
@@ -1269,7 +1287,13 @@ static const NWidgetPart _nested_company_league_widgets[] = {
 		NWidget(WWT_SHADEBOX, COLOUR_GREY),
 		NWidget(WWT_STICKYBOX, COLOUR_GREY),
 	EndContainer(),
-	NWidget(WWT_PANEL, COLOUR_GREY, WID_CL_BACKGROUND), SetMinimalSize(400, 0), SetMinimalTextLines(15, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PANEL, COLOUR_GREY, WID_CL_BACKGROUND), SetMinimalSize(400, 0), SetScrollbar(WID_CL_SCROLLBAR), EndContainer(),
+		NWidget(NWID_VERTICAL),
+			NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_CL_SCROLLBAR),
+			NWidget(WWT_RESIZEBOX, COLOUR_GREY),
+		EndContainer(),
+	EndContainer(),
 };
 
 static WindowDesc _company_league_desc(

@@ -35,7 +35,7 @@ the array so you can quickly see what is used and what is not.
   <li><span style="font-weight: bold;">m3</span> - 8 bits in size, is used for general storage</li>
   <li><span style="font-weight: bold;">m4</span> - 8 bits in size, is used for general storage</li>
   <li><span style="font-weight: bold;">m5</span> - 8 bits in size, is used for general storage</li>
-  <li><span style="font-weight: bold;">m6</span> - 8 bits in size, is used for general storage</li>
+  <li><span style="font-weight: bold;">m6</span> - 8 bits in size, is used for general storage and owner storage</li>
   <li><span style="font-weight: bold;">m7</span> - 8 bits in size, is used for general storage</li>
 </ul>
 
@@ -70,12 +70,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">ground</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span><span class="option">~ ~~~~</span></td>
+      <td class="bits"><span class="option">~</span><span class="free">OO</span><span class="option">~ ~~~~</span></td>
       <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
       <td class="bits">XXXX <span class="free">OOOO</span></td>
       <td class="bits">XXXX XX<span class="free">OO</span></td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span>X XX<span class="free">OO</span></td>
+      <td class="bits"><span class="free">OOO</span>X XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -87,7 +87,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">XXXX XXXX</td>
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
-      <td class="bits"><span class="free">OOO</span>X XX<span class="free">OO</span></td>
+      <td class="bits"><span class="free">OOO</span>X XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -95,12 +95,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">rail</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span>X XXXX</td>
+      <td class="bits">X<span class="free">OO</span>X XXXX</td>
       <td class="bits"><span class="free">OOOO</span> XXXX <span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO</span> XXXX</td>
       <td class="bits"><span class="free">OOOO</span> XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -112,7 +112,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">-inherit-</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -124,7 +124,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO</span> XXXX</td>
       <td class="bits"><span class="free">OOOO</span> XXXX</td>
       <td class="bits">XX<span class="free">O</span>X <span class="free">OO</span>XX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -132,12 +132,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">road</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span>X XXXX</td>
+      <td class="bits">X<span class="free">OO</span>X XXXX</td>
       <td class="bits">XXXX XXXX XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO</span> XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits">XXX<span class="free">O</span> XXXX</td>
     </tr>
     <tr>
@@ -147,9 +147,9 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits">-inherit-</td>
+      <td class="bits">XXX<span class="free">O</span> XXXX</td>
       <td class="bits">XXXX<span class="free"> OOO</span>X</td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits">XXXX XXXX</td>
     </tr>
     <tr>
@@ -159,9 +159,9 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
       <td class="bits">XXXX <span class="free">OOOO</span></td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits">XXX<span class="free">O</span> XXXX</td>
       <td class="bits">XX<span class="free">OO OO</span>XX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits">XXX<span class="free">O</span> XXXX</td>
     </tr>
     <tr>
@@ -182,12 +182,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">trees</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span><span class="option">~ ~~~~</span></td>
+      <td class="bits"><span class="option">~</span><span class="free">OO</span><span class="option">~ ~~~~</span></td>
       <td class="bits"><span class="free">OOOO OOO</span>X XXXX XXXX</td>
       <td class="bits"><span class="option">~~</span>XX XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">XX<span class="free">OO O</span>XXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span><span class="option">~~</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -195,12 +195,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">rail station</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">O</span>XXX XXXX</td>
+      <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OO</span>XX XX<span class="free">OO</span></td>
+      <td class="bits"><span class="free">OO</span>XX XXXX</td>
       <td class="bits">XXXX XXXX</td>
     </tr>
     <tr>
@@ -222,9 +222,9 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
       <td class="bits">XXXX <span class="free">OOOO</span></td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits">XXX<span class="free">O</span> XXXX</td>
       <td class="bits"><span class="option">~~~~ ~</span>XXX</td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits">XX<span class="free">O</span>X XXXX</td>
     </tr>
     <tr>
@@ -236,7 +236,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="option">~~~~ ~</span>XXX</td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -248,7 +248,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">XXXX <span class="free">OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits">XXXX XXXX</td>
     </tr>
     <tr>
@@ -260,7 +260,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="option">~~~~ ~~~~</span></td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -272,7 +272,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="option">~~~~ ~~~~</span></td>
-      <td class="bits"><span class="free">OO</span>XX X<span class="free">OOO</span></td>
+      <td class="bits"><span class="free">OO</span>XX X<span class="free">O</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -280,12 +280,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">sea, shore</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">O</span>XXX XXXX</td>
+      <td class="bits">XXXX XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">X<span class="option">~~</span>X XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -297,7 +297,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">-inherit-</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -309,7 +309,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">-inherit-</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
@@ -330,12 +330,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">tunnel entrance</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOO</span>X XXXX</td>
+      <td class="bits">X<span class="free">OO</span>X XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits">XXX<span class="free">O</span> XXXX</td>
       <td class="bits">X<span class="free">OO</span>X XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits">XXXX XXXX</td>
     </tr>
     <tr>
@@ -347,7 +347,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
       <td class="bits">-inherit-</td>
-      <td class="bits"><span class="free">OO</span>XX XX<span class="free">OO</span></td>
+      <td class="bits"><span class="free">OO</span>XX XXXX</td>
       <td class="bits">-inherit-</td>
     </tr>
     <tr>
@@ -355,12 +355,12 @@ the array so you can quickly see what is used and what is not.
       <td class="caption">objects</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">O</span>XXX XXXX</td>
+      <td class="bits">XXXX XXXX</td>
       <td class="bits">XXXX XXXX XXXX XXXX</td>
       <td class="bits">XXXX XXXX</td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits">XXXX XXXX</td>
-      <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OO</span>XX</td>
       <td class="bits">XXXX XXXX</td>
     </tr>
   </tbody>
