@@ -46,6 +46,8 @@
 #include "company_cmd.h"
 #include "misc_cmd.h"
 #include "battle_royale_mode.h"
+#include "town_cmd.h"
+#include "signs_cmd.h"
 
 #include <sstream>
 
@@ -2150,6 +2152,126 @@ DEF_CONSOLE_CMD(ConNewGRFReload)
 	return true;
 }
 
+/** World-coordinates for a town or map corner. */
+struct coord {
+	double latitude,longitude;
+};
+
+DEF_CONSOLE_CMD(ConImportTowns)
+{
+	if (argc == 0) {
+		IConsolePrint(CC_HELP, "Import map and town data from a CSV file in OpenTTD's base directory to found towns at the appropriate coordinates. Usage: 'import_towns <file>'");
+		IConsolePrint(CC_HELP, "File Format:");
+		IConsolePrint(CC_HELP, "First line: Coordinates of map edges: north,east,south,west");
+		IConsolePrint(CC_HELP, "Other lines: Town name,size(S, M or L),city(0 or 1),latitude,longitude");
+		IConsolePrint(CC_HELP, "Lines starting with # are ignored");
+		IConsolePrint(CC_HELP, "Coordinates are positive or negative values, with no direction suffix");
+		return true;
+	}
+
+	if (_game_mode != GM_EDITOR) {
+		IConsolePrint(CC_ERROR, "This function is only available in the scenario editor");
+		return true;
+	}
+
+	if (argc != 2) return false;
+
+	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
+	if (fp == NULL) {
+		IConsolePrint(CC_ERROR, "Could not open file {}: {}", argv[1], strerror(errno));
+		return true;
+	}
+
+	char buf[512];
+	char *nbuf, is_city;
+	struct coord top, bottom, town_loc;
+	double long_per_tile = 0, lat_per_tile = 0;
+	bool have_edges = false;
+	int line = 0, failed = 0, founded = 0;
+	char town_size_char;
+	while (fgets(buf, sizeof buf, fp)) {
+		line++;
+		/* Skip comments and empty lines. */
+		if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') continue;
+		
+		/* Read edge coords. */
+		if (!have_edges) {
+			if (sscanf(buf, "%lg,%lg,%lg,%lg", &top.latitude, &top.longitude, &bottom.latitude, &bottom.longitude) != 4) {
+				IConsolePrint(CC_ERROR, "Error reading edge coordinates at {}:{}", argv[1], line);
+				return true;
+			}
+			if (top.latitude < bottom.latitude || top.longitude < bottom.longitude) {
+				IConsolePrint(CC_ERROR, "Invalid edge coordinates.");
+				return true;
+			}
+			/* Calculate longitude and latitude per tile. */
+			long_per_tile = (bottom.longitude - top.longitude) / MapSizeX();
+			lat_per_tile = (top.latitude - bottom.latitude) / MapSizeY();
+			have_edges = true;
+			continue;
+		}
+
+		/* Replace comma after town name with NUL and advance nbuf to rest of line. */
+		nbuf = strchr(buf, ',');
+		if (nbuf == NULL) {
+			IConsolePrint(CC_ERROR, "Expected a comma somewhere in {}:{}", argv[1], line);
+			return true;
+		}
+		buf[nbuf-buf] = '\0';
+		nbuf++;
+
+		/* Scan population and coords. */
+		if (sscanf(nbuf, "%c,%c,%lg,%lg", &town_size_char, &is_city, &town_loc.latitude, &town_loc.longitude) != 4) {
+			IConsolePrint(CC_ERROR, "Syntax error at {}:{} ({})", argv[1], line, buf);
+			return true;
+		}
+
+		/* Found town. */
+		if (town_loc.latitude > bottom.latitude && town_loc.latitude < top.latitude && town_loc.longitude > bottom.longitude && town_loc.longitude < top.longitude) {
+			/* Decide town size. */
+			TownSize town_size = TSZ_SMALL;
+			if (town_size_char == 'M') town_size = TSZ_MEDIUM;
+			else if (town_size_char == 'L')  town_size = TSZ_LARGE;
+
+			/* City and layout. */
+			bool city = (is_city=='1');
+			TownLayout town_layout = _settings_game.economy.town_layout;
+
+			/* Found the town, trying tiles around it if it fails. */
+			TileIndex tile = TileXY((town_loc.longitude - top.longitude) / long_per_tile, MapSizeY() - ((town_loc.latitude - bottom.latitude) / lat_per_tile));
+			bool success = Command<CMD_FOUND_TOWN>::Post(tile, town_size, city, town_layout, false, 0, buf);
+			if (!success) {
+				for (int x = -1; x <= 1; x++) {
+					for (int y = -1; y <= 1; y++) {
+						if (x == 0 && y == 0) continue;
+						success = Command<CMD_FOUND_TOWN>::Post(TILE_ADDXY(tile, x, y), town_size, city, town_layout, false, 0, buf);
+						if (success) break;
+					}
+					if (success) break;
+				}
+			}
+
+			if (success) {
+				founded++;
+			} else {
+				/* Place a sign at the tile if founding fails. */
+				char *sign_text = MallocT<char>(strlen(buf)+8);
+				seprintf(sign_text, sign_text + strlen(buf), "%s (%c%s)", buf, town_size_char, city?",C":"");
+				Command<CMD_PLACE_SIGN>::Post(tile, sign_text);
+				free(sign_text);
+
+				failed++;
+				IConsolePrint(CC_ERROR, "Could not found {} at 0x{:X}", buf, tile);
+			}
+		} else {
+			IConsolePrint(CC_ERROR, "Town out of bounds: {}", buf);
+		}
+	}
+	IConsolePrint(CC_DEFAULT, "Founded {} towns, failed to found {}", founded, failed);
+	FioFCloseFile(fp);
+	return true;
+}
+
 DEF_CONSOLE_CMD(ConListDirs)
 {
 	struct SubdirNameMap {
@@ -2688,6 +2810,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("gamelog",                 ConGamelogPrint);
 	IConsole::CmdRegister("rescan_newgrf",           ConRescanNewGRF);
 	IConsole::CmdRegister("list_dirs",               ConListDirs);
+	IConsole::CmdRegister("import_towns", 			 ConImportTowns);
 
 	IConsole::AliasRegister("dir",                   "ls");
 	IConsole::AliasRegister("del",                   "rm %+");
