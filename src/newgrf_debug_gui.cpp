@@ -54,7 +54,7 @@ NewGrfDebugSpritePicker _newgrf_debug_sprite_picker = { SPM_NONE, nullptr, std::
  */
 static inline uint GetFeatureIndex(uint window_number)
 {
-	return GB(window_number, 0, 24);
+	return GB(window_number, 0, 27);
 }
 
 /**
@@ -66,8 +66,8 @@ static inline uint GetFeatureIndex(uint window_number)
  */
 static inline uint GetInspectWindowNumber(GrfSpecFeature feature, uint index)
 {
-	assert((index >> 24) == 0);
-	return (feature << 24) | index;
+	assert((index >> 27) == 0);
+	return (feature << 27) | index;
 }
 
 /**
@@ -246,7 +246,7 @@ struct NIFeature {
  */
 static inline GrfSpecFeature GetFeatureNum(uint window_number)
 {
-	return (GrfSpecFeature)GB(window_number, 24, 8);
+	return (GrfSpecFeature)GB(window_number, 27, 5);
 }
 
 /**

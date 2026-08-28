@@ -601,6 +601,7 @@ void NetworkClose(bool close_admins)
 
 		_network_coordinator_client.CloseAllConnections();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 
 	TCPConnecter::KillAll();
 
@@ -998,12 +999,15 @@ void NetworkUpdateServerGameType()
  */
 static bool NetworkReceive()
 {
+	bool result;
 	if (_network_server) {
 		ServerNetworkAdminSocketHandler::Receive();
-		return ServerNetworkGameSocketHandler::Receive();
+		result = ServerNetworkGameSocketHandler::Receive();
 	} else {
-		return ClientNetworkGameSocketHandler::Receive();
+		result = ClientNetworkGameSocketHandler::Receive();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
+	return result;
 }
 
 /* This sends all buffered commands (if possible) */
@@ -1015,6 +1019,7 @@ static void NetworkSend()
 	} else {
 		ClientNetworkGameSocketHandler::Send();
 	}
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 }
 
 /**
@@ -1029,6 +1034,7 @@ void NetworkBackgroundLoop()
 	TCPConnecter::CheckCallbacks();
 	NetworkHTTPSocketHandler::HTTPReceive();
 	QueryNetworkGameSocketHandler::SendReceive();
+	NetworkGameSocketHandler::ProcessDeferredDeletions();
 
 	NetworkBackgroundUDPLoop();
 }

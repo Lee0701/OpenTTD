@@ -343,9 +343,9 @@ STR_GOTO_ORDER_VIEW_TOOLTIP                                     :{BLACK}Mở b�
 ###length 31
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Tạm dừng trò chơi
 STR_TOOLBAR_TOOLTIP_FORWARD                                     :{BLACK}Tua nhanh trò chơi
-STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Tùy chọn
-STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Lưu, bỏ ván chơi, thoát chương trình
-STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Hiển thị bản đồ
+STR_TOOLBAR_TOOLTIP_OPTIONS                                     :{BLACK}Tùy chọn và thiết lập
+STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME                      :{BLACK}Lưu, nạp hoặc bỏ ván chơi, thoát chương trình
+STR_TOOLBAR_TOOLTIP_DISPLAY_MAP                                 :{BLACK}Hiển thị bản đồ, khung nhìn bổ sung, dòng chảy hàng hóa hoặc danh sách biển hiệu
 STR_TOOLBAR_TOOLTIP_DISPLAY_TOWN_DIRECTORY                      :{BLACK}Hiển thị danh sách đô thị
 STR_TOOLBAR_TOOLTIP_DISPLAY_SUBSIDIES                           :{BLACK}Hiện tiền trợ cấp
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_STATIONS            :{BLACK}Hiển thị danh sách công ty
@@ -353,9 +353,9 @@ STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_FINANCES                    :{BLACK}Hiện t
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_GENERAL                     :{BLACK}Hiện thông tin tổng quát của công ty
 STR_TOOLBAR_TOOLTIP_DISPLAY_STORY_BOOK                          :{BLACK}Hiển thị tình tiết
 STR_TOOLBAR_TOOLTIP_DISPLAY_GOALS_LIST                          :{BLACK}Hiển thị danh sách mục tiêu
-STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Hiển thị biểu đồ
+STR_TOOLBAR_TOOLTIP_DISPLAY_GRAPHS                              :{BLACK}Hiển thị biểu đồ của công ty và giá cước hàng hóa
 STR_TOOLBAR_TOOLTIP_DISPLAY_COMPANY_LEAGUE                      :{BLACK}Hiện bảng tầm cỡ các công ty
-STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Bỏ vốn cho những ngành mới hoặc hiện tất cả các ngành
+STR_TOOLBAR_TOOLTIP_FUND_CONSTRUCTION_OF_NEW                    :{BLACK}Khảo sát các ngành công nghiệp hoặc bỏ vốn cho những ngành mới
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_TRAINS              :{BLACK}Hiện danh sách tàu hỏa của công ty. Ctrl+Click vào chốt néo để mở danh sách nhóm/phương tiện
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_ROAD_VEHICLES       :{BLACK}Hiện danh sách xe cộ của công ty. Ctrl+Click vào chốt néo để mở danh sách nhóm/phương tiện
 STR_TOOLBAR_TOOLTIP_DISPLAY_LIST_OF_COMPANY_SHIPS               :{BLACK}Hiện danh sách tàu thủy của công ty. Ctrl+Click vào chốt néo để mở danh sách nhóm/phương tiện
@@ -369,8 +369,8 @@ STR_TOOLBAR_TOOLTIP_BUILD_SHIP_DOCKS                            :{BLACK}Xây b�
 STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Xây sân bay
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Mở thanh địa hình để nâng cao/hạ thấp ô đất, trồng cây, etc.
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Hiện cửa sổ âm thanh/nhạc
-STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Hiện thông báo/tin tức cuối cùng, hiện tùy chọn thông báo
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Thông tin vùng đất, bảng lệnh, script debug, ảnh chụp, về OpenTTD
+STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Hiện thông báo/tin tức cuối cùng, lịch sử thông báo hoặc xóa tất cả thông báo
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Thông tin vùng đất, chụp màng hình, công cụ dành cho nhà phát triển và thông tin về OpenTTD
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Chuyển thanh công cụ
 
 # Extra tooltips for the scenario editor toolbar
@@ -816,7 +816,7 @@ STR_NEWS_MESSAGE_CAPTION                                        :{WHITE}Thông �
 STR_NEWS_CUSTOM_ITEM                                            :{BIG_FONT}{BLACK}{STRING}
 
 STR_NEWS_FIRST_TRAIN_ARRIVAL                                    :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Tàu hoả đầu tiên đến {STATION}!
-STR_NEWS_FIRST_BUS_ARRIVAL                                      :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Xe bus đầu tiên đến {STATION}!
+STR_NEWS_FIRST_BUS_ARRIVAL                                      :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Xe buýt đầu tiên đến {STATION}!
 STR_NEWS_FIRST_TRUCK_ARRIVAL                                    :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Xe tải đầu tiên đến {STATION}!
 STR_NEWS_FIRST_PASSENGER_TRAM_ARRIVAL                           :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Xe điện chở khách đầu tiên đến {STATION}!
 STR_NEWS_FIRST_CARGO_TRAM_ARRIVAL                               :{BIG_FONT}{BLACK}Người dân chào đón . . .{}Xe tải điện đầu tiên đến {STATION}!
@@ -1287,7 +1287,7 @@ STR_CONFIG_SETTING_ROAD_VEHICLE_SLOPE_STEEPNESS                 :Sự giảm t�
 STR_CONFIG_SETTING_ROAD_VEHICLE_SLOPE_STEEPNESS_HELPTEXT        :Sự giảm tốc cho ôtô tại một ô dốc. Giá trị càng cao thì càng khó leo dốc
 
 STR_CONFIG_SETTING_FORBID_90_DEG                                :Ngăn tàu hỏa chuyển hướng 90 độ: {STRING}
-STR_CONFIG_SETTING_FORBID_90_DEG_HELPTEXT                       :quay 90 độ chỉ xảy ra khi một ray ngang nối với một ray dọc ở 2 ô liền kề, khiến cho tàu hỏa cua 90 độ khi đến ô rẽ thay vì 45 độ như bình thường.
+STR_CONFIG_SETTING_FORBID_90_DEG_HELPTEXT                       :Chuyển hướng 90 độ chỉ xảy ra khi một ray ngang nối với một ray dọc ở 2 ô liền kề, khiến cho tàu hỏa cua 90 độ khi đến ô rẽ thay vì 45 độ như bình thường.
 
 STR_CONFIG_SETTING_DISTANT_JOIN_STATIONS                        :Cho phép gộp ga, bến, cảng không sát nhau: {STRING}
 STR_CONFIG_SETTING_DISTANT_JOIN_STATIONS_HELPTEXT               :Cho phép thêm đoạn vào ga mà không phải sửa cái hiện có. Phải bấm Ctrl+Click để thêm đoạn vào ga
@@ -1375,9 +1375,9 @@ STR_CONFIG_SETTING_PLANE_CRASHES_REDUCED                        :giảm bớt
 STR_CONFIG_SETTING_PLANE_CRASHES_NORMAL                         :bình thường
 
 STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD                            :Cho phép xây điểm dừng xe buýt trên đường của thị trấn: {STRING}
-STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Cho phép xây dựng điểm dừng xe bus trên đường sở hữu bởi địa phương
+STR_CONFIG_SETTING_STOP_ON_TOWN_ROAD_HELPTEXT                   :Cho phép xây dựng điểm dừng xe buýt trên đường sở hữu bởi địa phương
 STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD                      :Cho phép xây điểm dừng xe buýt trên đường của đối thủ: {STRING}
-STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD_HELPTEXT             :Cho phép xây dựng điểm dừng xe bus trên đường sở hữu bởi công ty khác
+STR_CONFIG_SETTING_STOP_ON_COMPETITOR_ROAD_HELPTEXT             :Cho phép xây dựng điểm dừng xe buýt trên đường sở hữu bởi công ty khác
 STR_CONFIG_SETTING_DYNAMIC_ENGINES_EXISTING_VEHICLES            :{WHITE}Không thể đổi thiết đặt này khi vẫn còn các phương tiện giao thông.
 
 STR_CONFIG_SETTING_INFRASTRUCTURE_MAINTENANCE                   :Phí bảo trì cơ sở hạ tầng: {STRING}
@@ -1530,7 +1530,7 @@ STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREY_TO_RED                :Xám tới đ�
 STR_CONFIG_SETTING_LINKGRAPH_COLOURS_GREYSCALE                  :Thang màu xám
 
 STR_CONFIG_SETTING_SCROLLMODE                                   :Kiểu cuộn khung nhìn: {STRING}
-STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Hành xử khi kéo, cuộn bản đồ
+STR_CONFIG_SETTING_SCROLLMODE_HELPTEXT                          :Hành xử khi kéo, cuộn bản đồ. Tùy chọn "khóa vị trí chuột" không hoạt động ở một số phiên bản, như phiên bản web, phiên bản cảm ứng, Linux với Wayland, và một số phiên bản khác
 ###length 4
 STR_CONFIG_SETTING_SCROLLMODE_DEFAULT                           :Kéo cuộn khung nhìn kiểu RMB, khoá vị trí con trỏ chuột
 STR_CONFIG_SETTING_SCROLLMODE_RMB_LOCKED                        :Kéo cuộn kiểu RMB, khoá vị trí con trỏ chuột
@@ -1711,7 +1711,7 @@ STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_HELPTEXT                   :Số lượng b
 STR_CONFIG_SETTING_SCRIPT_MAX_MEMORY_VALUE                      :{COMMA} MiB
 
 STR_CONFIG_SETTING_SERVINT_ISPERCENT                            :Tần suất bảo trì theo đơn vị phần trăm: {STRING}
-STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Lựa chọn liệu rằng việc bảo trì phương tiện sẽ được tiến hành sau một khoảng thời gian nhất định hay là độ tin cậy bị giảm xuống bao nhiều phần trăm so với mức tối đa
+STR_CONFIG_SETTING_SERVINT_ISPERCENT_HELPTEXT                   :Khi được bật, việc bảo trì phương tiện sẽ được thực thực hiện khi độ tin cậy của phương tiện giảm xuống so với độ tin cậy tối đa.{}{}Ví dụ, nếu độ tin cậy tối đa của phương tiện là 90% và tần suất bảo trì là 20%, phương tiện sẽ được bảo trì khi độ tin cậy giảm xuống 72%.
 
 STR_CONFIG_SETTING_SERVINT_TRAINS                               :Tần suất bảo trì mặc định đối với tàu hỏa: {STRING}
 STR_CONFIG_SETTING_SERVINT_TRAINS_HELPTEXT                      :Thiết lập khoảng thời gian bảo trì tùy chọn đối với các tàu hỏa, nếu phương tiện không có riêng thời gian bảo trì này
@@ -2056,6 +2056,7 @@ STR_CONFIG_ERROR_SPRITECACHE_TOO_BIG                            :{WHITE}Phân b�
 # Video initalization errors
 STR_VIDEO_DRIVER_ERROR                                          :{WHITE}Lỗi ở thiết lập hình ảnh...
 STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :{WHITE}... không tìm thấy GPU tương thích. Tăng tốc phần cứng đã được tắt
+STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :{WHITE}... trình điều khiển GPU đã làm trò chơi bị lỗi. Tăng tốc phần cứng đã được tắt
 
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD {REV}
@@ -3941,7 +3942,7 @@ STR_BUY_VEHICLE_SHIP_BUY_VEHICLE_TOOLTIP                        :{BLACK}Mua tàu
 STR_BUY_VEHICLE_AIRCRAFT_BUY_VEHICLE_TOOLTIP                    :{BLACK}Mua máy bay đã ấn định. Shift+Click để xem giá mua dự tính
 
 ###length VEHICLE_TYPES
-STR_BUY_VEHICLE_TRAIN_BUY_REFIT_VEHICLE_TOOLTIP                 :{BLACK}Mua và cải biến toa tầu được chọn. Shift+Click để xem giá mua dự tính
+STR_BUY_VEHICLE_TRAIN_BUY_REFIT_VEHICLE_TOOLTIP                 :{BLACK}Mua và cải biến toa tàu được chọn. Shift+Click để xem giá mua dự tính
 STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_REFIT_VEHICLE_TOOLTIP          :{BLACK}Mua và cải biến ô-tô đang chọn. Shift+Click để xem giá mua dự tính
 STR_BUY_VEHICLE_SHIP_BUY_REFIT_VEHICLE_TOOLTIP                  :{BLACK}Mua và cải biến tàu thuỷ đã chọn. Shift+Click để dự tính giá mà không mua
 STR_BUY_VEHICLE_AIRCRAFT_BUY_REFIT_VEHICLE_TOOLTIP              :{BLACK}Mua và cải biến máy bay được chọn. Shift+Click để xem chi phí dự tính
@@ -4072,7 +4073,7 @@ STR_DEPOT_SELL_CONFIRMATION_TEXT                                :{YELLOW}Bạn �
 STR_ENGINE_PREVIEW_CAPTION                                      :{WHITE}Thông cáo từ nhà sản xuất phương tiện vận tải
 STR_ENGINE_PREVIEW_MESSAGE                                      :{GOLD}Chúng tôi vừa thiết kế một {STRING} mới - bạn có muốn mua nó trước khi chúng tôi hoàn thiện 1 năm, để chúng tôi đánh giá nó trước khi bán rộng rãi?
 
-STR_ENGINE_PREVIEW_RAILROAD_LOCOMOTIVE                          :đầu máy tầu hoả
+STR_ENGINE_PREVIEW_RAILROAD_LOCOMOTIVE                          :đầu máy tàu hoả
 STR_ENGINE_PREVIEW_ELRAIL_LOCOMOTIVE                            :ngành vận tải đường sắt điện lực
 STR_ENGINE_PREVIEW_MONORAIL_LOCOMOTIVE                          :đầu máy ray đơn
 STR_ENGINE_PREVIEW_MAGLEV_LOCOMOTIVE                            :đầu máy đệm từ
@@ -5087,6 +5088,7 @@ STR_ERROR_AIRCRAFT_NOT_ENOUGH_RANGE                             :{WHITE}... máy
 STR_ERROR_CAN_T_TIMETABLE_VEHICLE                               :{WHITE}Không thể lập lịch trình cho phương tiện...
 STR_ERROR_TIMETABLE_ONLY_WAIT_AT_STATIONS                       :{WHITE}Phương tiện chỉ có thể chờ ở nhà ga, bến, cảng.
 STR_ERROR_TIMETABLE_NOT_STOPPING_HERE                           :{WHITE}Phương tiện này không dừng lại tại ga, bến này theo lộ trình.
+STR_ERROR_TIMETABLE_INCOMPLETE                                  :{WHITE}... lịch trình chưa hoàn thiện
 
 # Sign related errors
 STR_ERROR_TOO_MANY_SIGNS                                        :{WHITE}... quá nhiều biển hiệu
