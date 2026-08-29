@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 
+if(WIN32)
+    include( C:/vcpkg/scripts/buildsystems/vcpkg.cmake )
+endif()
+
 if(NOT BINARY_NAME)
     set(BINARY_NAME openttd)
 endif()
