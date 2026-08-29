@@ -2155,7 +2155,7 @@ DEF_CONSOLE_CMD(ConImportTowns)
 
 	FILE *fp = FioFOpenFile(argv[1], "r", BASE_DIR);
 	if (fp == NULL) {
-		IConsolePrint(CC_ERROR, "Could not open file {}: {}", argv[1], strerror(errno));
+		IConsolePrint(CC_ERROR, "Could not open file {}", argv[1]);
 		return true;
 	}
 
