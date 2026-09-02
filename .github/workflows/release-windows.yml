@@ -26,7 +26,7 @@ jobs:
 
     steps:
     - name: Download source
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v8
       with:
         name: internal-source
 
@@ -189,7 +189,7 @@ jobs:
         WINDOWS_CERTIFICATE_COMMON_NAME: ${{ secrets.WINDOWS_CERTIFICATE_COMMON_NAME }}
 
     - name: Store bundles
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: openttd-windows-${{ matrix.arch }}
         path: build/bundles
