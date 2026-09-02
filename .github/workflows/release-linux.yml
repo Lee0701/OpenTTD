@@ -7,7 +7,7 @@ jobs:
   linux:
     name: Linux (Generic)
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     container:
       # manylinux2014 is based on CentOS 7, but already has a lot of things
       # installed and preconfigured. It makes it easier to build OpenTTD.
@@ -27,9 +27,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /vcpkg/installed
-        key: ubuntu-20.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
+        key: ubuntu-24.04-vcpkg-release-0 # Increase the number whenever dependencies are modified
         restore-keys: |
-          ubuntu-20.04-vcpkg-release
+          ubuntu-24.04-vcpkg-release
 
     - name: Install dependencies
       run: |
